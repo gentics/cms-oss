@@ -1,0 +1,30 @@
+25 <> 24
+25 != 24
+!('a' <> 'a')
+25 > 24
+24 < 42
+"4,919.1" > 1000
+4919.1 > 1000
+"1,000." == 1000
+"1,000" == 1000
+"1,000,000" == 1000000
+-0.0001 < 0
+2.34e4 == "23,400"
+"25,000" < "26,000"
+fromArray(["100,100", 42.0, 0.001], 1) == 42
+1 < 2 AND 2 < 3
+1 < 2 OR 2 < 1
+['42', '21', '7'] CONTAINSALL ['7', '21']
+(['1', '2', '3'] CONTAINSALL ['3', '2', '1']) AND (['3', '2', '1'] CONTAINSALL ['1', '2', '3'])
+!(['7', '21'] CONTAINSALL ['42', '21', '7'])
+[42, 21] == [42, 21]
+1234567890123L >= 1234567890123L
+[3, 20, 100] CONTAINSONEOF ['1', '2', '3', '4', '5']
+[3, 20, 100] CONTAINSNONE ['1', '2', '7', '4', '5']
+filter(true, 'com.gentics.node.tests.expressionparser.TruePostProcessor')
+false || true
+null || true
+true || false
+true || null
+!null
+if(null, false, true)

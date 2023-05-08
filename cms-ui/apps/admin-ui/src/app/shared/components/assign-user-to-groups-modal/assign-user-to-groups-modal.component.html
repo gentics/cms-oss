@@ -1,0 +1,41 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ getModalTitle() | async }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-group-table
+            [(selected)]="userGroupIds"
+            [hideActions]="true"
+        ></gtx-group-table>
+    </div>
+
+    <div class="modal-footer">
+        <!-- NOTE: `gtxActionAllowed` will override any `disabled` directive, thus the code below is a workaround -->
+        <gtx-button
+            *ngIf="userGroupIds?.length < 1"
+            type="primary"
+            (click)="buttonAssignUserToGroupsClicked()"
+            [disabled]="true"
+        >
+            {{ 'shared.assign_users_to_groups' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            *ngIf="userGroupIds?.length > 0"
+            type="primary"
+            (click)="buttonAssignUserToGroupsClicked()"
+            gtxActionAllowed="group.userassignment"
+        >
+            {{ 'shared.assign_users_to_groups' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

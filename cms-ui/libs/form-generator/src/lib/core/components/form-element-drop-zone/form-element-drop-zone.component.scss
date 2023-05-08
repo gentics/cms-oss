@@ -1,0 +1,82 @@
+@import "../../../../styles/variables";
+
+.form-element-drop-zone {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    color: hsl(0, 50.5%, 20%);
+
+    position: relative;
+    background-color: hsl(240, 50.5%, 90%);
+    margin-top: 3px;
+    margin-bottom: 3px;
+    border: 2px solid hsl(240, 50.5%, 80%);
+    opacity: 0;
+    transform: scale(1);
+    transition: opacity $gcms-form-editor-transition-duration ease-in-out,
+                height $gcms-form-editor-transition-duration ease-in-out,
+                transform $gcms-form-editor-transition-duration ease-in-out,
+                border-width $gcms-form-editor-transition-duration ease-in-out;
+    z-index: 8;
+
+    icon {
+        display: none;
+        position: relative;
+        top: -0.05rem;
+        font-size: 1rem;
+        margin-left: 2px;
+        margin-right: 2px;
+    }
+
+    span {
+        display: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.form-element-drop-zone.hidden {
+    height: 1rem;
+    opacity: 0;
+}
+
+.form-element-drop-zone:not(.hidden) {
+    height: 1.5rem;
+    opacity: 0.5;
+
+    &.targeted:not(.illegal) {
+        opacity: 1;
+        height: 1.5rem;
+        animation: color-animation 1.5s infinite ease-in-out;
+        transform: scale(1.05, 2);
+        border-width: 2px 3.81px;
+
+        @keyframes color-animation {
+            0% {
+              background-color: hsl(240, 50.5%, 90%);
+              border-color: hsl(240, 50.5%, 80%);
+            }
+            50% {
+                background-color: hsl(240, 50.5%, 80%);
+                border-color: hsl(240, 50.5%, 71.1%);
+            }
+            100% {
+                background-color: hsl(240, 50.5%, 90%);
+                border-color: hsl(240, 50.5%, 80%);
+            }
+        }
+    }
+
+    &.targeted.illegal {
+        opacity: 1;
+        height: 1.5rem;
+        background-color: hsl(0, 50.5%, 80%);
+        border-color: hsl(0, 50.5%, 80%);
+
+        icon, span {
+            display: inline;
+        }
+    }
+}
+

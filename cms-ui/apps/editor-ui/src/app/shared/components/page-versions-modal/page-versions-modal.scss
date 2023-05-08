@@ -1,0 +1,162 @@
+@import 'variables';
+@import 'flex-modal';
+
+@include flex-modal;
+:host {
+    width: 1000px;
+}
+
+h5 {
+    display: flex;
+    line-height: 1.25em;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+
+    .page-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .clickable {
+        color: $gtx-color-primary;
+        cursor: pointer;
+    }
+
+    .pre {
+        white-space: pre;
+    }
+}
+
+.modal-content {
+    width: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+    position: relative;
+    overflow: auto;
+
+    .activity-overlay {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 46px;
+        background: rgba($gtx-color-off-white, 0.5);
+        z-index: 1;
+    }
+}
+
+.modal-footer {
+    width: 100%;
+}
+
+.loading-placeholder {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+gtx-dropdown-list::shadow .dropdown-trigger {
+    cursor: pointer;
+    color: inherit;
+
+    gtx-button {
+        position: relative;
+        top: -2px;
+
+        &::shadow .material-icons,
+        &::shadow icon {
+            margin-left: -4px;
+            width: 20px;
+        }
+    }
+}
+
+gtx-contents-list-item::shadow {
+    .item-primary > * {
+        white-space: nowrap;
+    }
+
+    .item-icon {
+        cursor: default;
+        align-self: baseline;
+        height: 24px;
+        user-select: none;
+    }
+
+    .item-name {
+        align-self: baseline;
+    }
+
+    .item-date,
+    .item-editor {
+        color: $gtx-color-mid-gray;
+    }
+
+    .item-indicators {
+        margin-right: 20px;
+        white-space: normal;
+        width: 25%;
+
+        span {
+            border: 1px solid transparentize($gtx-color-very-dark-gray, 0.8);
+            border-radius: 3px;
+            color: $gtx-color-very-dark-gray;
+            cursor: help;
+            display: inline-flex;
+            font-size: 10px;
+            line-height: 13px;
+            padding: 1px 4px;
+            opacity: 0.9;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+
+        .current, .planned_offline, .planned_online  {
+            border-color: transparentize($gtx-color-mid-gray, 0.8);
+            color: $gtx-color-mid-gray;
+        }
+
+        .published {
+            border-color: transparentize($gtx-color-success, 0.8);
+            color: $gtx-color-success;
+        }
+
+        .published i, .planned_offline i, .planned_online i {
+            font-size: 12px;
+            margin: 0 2px;
+            transition: color 0.15s ease-in-out;
+        }
+    }
+
+    .item-actions {
+        text-align: right;
+        display: flex;
+
+        gtx-button {
+            white-space: nowrap;
+        }
+
+        .dropdown-trigger {
+            height: 25px;
+            margin-right: -10px;
+        }
+    }
+}
+
+gtx-dropdown-item.disabled {
+    cursor: default;
+    color: $gtx-color-mid-gray;
+
+    a {
+        color: $gtx-color-mid-gray;
+    }
+}
+
+
+gtx-contents-list-item:not(:hover)::shadow {
+    .item-actions {
+        opacity: 0.2;
+    }
+}

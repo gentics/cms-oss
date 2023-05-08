@@ -1,0 +1,185 @@
+<div class="row container">
+    <div class="small-12 large-8 columns dashboard-items">
+        <gtx-dashboard-item-group [title]="'dashboard.group_user_management' | i18n">
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.USERS"
+                icon="user-management"
+                [title]="'dashboard.item_users' | i18n"
+                [class.disabled]="!(usersModuleEnabled$ | async)"
+                [disabled]="!(usersModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.GROUPS"
+                icon="group-management"
+                [title]="'dashboard.item_groups' | i18n"
+                [class.disabled]="!(groupsModuleEnabled$ | async)"
+                [disabled]="!(groupsModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.ROLES"
+                icon="role-management"
+                [title]="'dashboard.item_roles' | i18n"
+                [class.disabled]="!(rolesModuleEnabled$ | async)"
+                [disabled]="!(rolesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.FOLDERS"
+                icon="folder-management"
+                [title]="'dashboard.item_folders' | i18n"
+                [class.disabled]="!(foldersModuleEnabled$ | async)"
+                [disabled]="!(foldersModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+        </gtx-dashboard-item-group>
+
+        <gtx-dashboard-item-group [title]="'dashboard.group_configuration' | i18n">
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.NODES"
+                icon="node-management"
+                [title]="'dashboard.item_node_management' | i18n"
+                [class.disabled]="!(nodesModuleEnabled$ | async)"
+                [disabled]="!(nodesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.LANGUAGES"
+                icon="languages"
+                [title]="'dashboard.item_languages' | i18n"
+                [class.disabled]="!(languagesModuleEnabled$ | async)"
+                [disabled]="!(languagesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_REPOSITORIES"
+                icon="content-repositories"
+                [title]="'dashboard.item_content_repositories' | i18n"
+                [class.disabled]="!(contentRepositoriesModuleEnabled$ | async)"
+                [disabled]="!(contentRepositoriesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+        </gtx-dashboard-item-group>
+
+        <gtx-dashboard-item-group [title]="'dashboard.group_operations' | i18n">
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.SEARCH_INDEX_MAINTENANCE"
+                icon="search-index-maintenance"
+                [title]="'dashboard.search_index_maintenance' | i18n"
+                [class.disabled]="!(searchMaintenanceModuleEnabled$ | async)"
+                [disabled]="!(searchMaintenanceModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.LOGS"
+                icon="logs"
+                [title]="'dashboard.item_logs' | i18n"
+                [class.disabled]="!(logsModuleEnabled$ | async)"
+                [disabled]="!(logsModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.SCHEDULER"
+                icon="scheduler"
+                [title]="'dashboard.item_scheduler' | i18n"
+                [class.disabled]="!(schedulerModuleEnabled$ | async)"
+                [disabled]="!(schedulerModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_MAINTENANCE"
+                icon="system-maintenance"
+                [title]="'dashboard.item_content_maintenance' | i18n"
+                [class.disabled]="!(contentMaintenanceModuleEnabled$ | async)"
+                [disabled]="!(contentMaintenanceModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.MAINTENANCE_MODE"
+                icon="maintenance"
+                [title]="'dashboard.item_maintenance_mode' | i18n"
+                [class.disabled]="!(maintenancemodeModuleEnabled$ | async)"
+                [disabled]="!(maintenancemodeModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.CONTENT_STAGING"
+                icon="import-export"
+                [title]="'dashboard.item_content_staging' | i18n"
+                [class.disabled]="!(contentStagingModuleEnabled$ | async)"
+                [disabled]="!(contentStagingModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+        </gtx-dashboard-item-group>
+
+        <gtx-dashboard-item-group [title]="'dashboard.group_development' | i18n">
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.OBJECT_PROPERTIES"
+                icon="object-properties"
+                [title]="'dashboard.item_object_properties' | i18n"
+                [class.disabled]="!(objectPropertiesModuleEnabled$ | async)"
+                [disabled]="!(objectPropertiesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.CONSTRUCTS"
+                icon="tagtypes"
+                [title]="'dashboard.item_tagtypes_constructs' | i18n"
+                [class.disabled]="!(constructsModuleEnabled$ | async)"
+                [disabled]="!(constructsModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.DATA_SOURCES"
+                icon="datasources"
+                [title]="'dashboard.item_data_sources' | i18n"
+                [class.disabled]="!(dataSourcesModuleEnabled$ | async)"
+                [disabled]="!(dataSourcesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.CR_FRAGMENTS"
+                icon="cr-fragments"
+                [title]="'dashboard.item_cr_fragments' | i18n"
+                [class.disabled]="!(crFragmentsModuleEnabled$ | async)"
+                [disabled]="!(crFragmentsModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.PACKAGES"
+                icon="packages"
+                [title]="'dashboard.item_packages' | i18n"
+                [class.disabled]="!(packagesModuleEnabled$ | async)"
+                [disabled]="!(packagesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.TEMPLATES"
+                icon="template-management"
+                [title]="'dashboard.item_templates' | i18n"
+                [class.disabled]="!(templatesModuleEnabled$ | async)"
+                [disabled]="!(templatesModuleEnabled$ | async)"
+            ></gtx-dashboard-item>
+            <!-- <gtx-dashboard-item routerLink="/testing" icon="help_outline" title="Testing" [disabled]="!(testingModuleEnabled$ | async)"></gtx-dashboard-item> -->
+            <!-- <gtx-dashboard-item routerLink="/testing" icon="help_outline" title="Testing (always clickable)"></gtx-dashboard-item> -->
+        </gtx-dashboard-item-group>
+
+        <!-- <gtx-dashboard-item-group [title]="'dashboard.group_custom_tools' | i18n">
+            <gtx-dashboard-item disabled icon="widgets" title="Custom Tool A"></gtx-dashboard-item>
+            <gtx-dashboard-item disabled icon="widgets" title="Custom Tool B"></gtx-dashboard-item>
+        </gtx-dashboard-item-group> -->
+    </div>
+    <div class="small-12 medium-6 large-2 columns">
+        <!-- Sidebar 1 -->
+        <gtx-sidebar-item-group>
+            <gtx-widget-cms-status gtxWidget></gtx-widget-cms-status>
+            <div gtxWidget>
+                <gtx-sidebar-item [title]="'widget.publishing_process_title' | i18n">
+                    <gtx-widget-publishing-process></gtx-widget-publishing-process>
+                </gtx-sidebar-item>
+            </div>
+        </gtx-sidebar-item-group>
+    </div>
+    <div class="small-12 medium-6 large-2 columns">
+        <!-- Sidebar 2 -->
+        <gtx-sidebar-item-group></gtx-sidebar-item-group>
+    </div>
+</div>

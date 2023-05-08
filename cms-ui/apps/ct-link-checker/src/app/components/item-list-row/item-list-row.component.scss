@@ -1,0 +1,250 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+$item-list-min-height: 63px;
+
+icon-checkbox {
+    margin-top: 7px;
+}
+
+.liveurl-icon {
+    align-self: baseline;
+}
+
+.live-icon {
+    color: $gtx-color-dark-gray;
+    &:hover { color: transparentize($gtx-color-dark-gray, 0.2); }
+    &:active { color: darken($gtx-color-dark-gray, 10%); }
+    &:focus { border-color: transparentize($gtx-color-secondary, 0.6); }
+    font-size: 16px;
+}
+
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    gtx-contents-list-item ::ng-deep i.invalidIcon {
+        margin-top: -35px !important;
+    }
+}
+
+gtx-contents-list-item {
+    align-items: start;
+    border-bottom: 1px dotted $gtx-color-very-light-gray;
+    min-height: $item-list-min-height;
+    padding-left: 55px;
+
+    // .valid {
+    //     margin-left: 20px;
+    // }
+
+    icon.invalidIcon {
+        font-size: 16px;
+        margin: 3px 2px;
+        transition: color 0.15s ease-in-out;
+
+        &.alert { color: $gtx-color-alert; }
+    }
+
+    .item-name {
+        align-items: baseline;
+    }
+
+    &.item-in-editor {
+        .language-icon > div::after {
+            background-color: #ebf6fb !important;
+        }
+    }
+
+    .show-on-hover {
+        display: inline-block;
+        filter: grayscale(20%);
+        opacity: 0.35;
+    }
+
+    &:hover {
+        .show-on-hover {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+    }
+}
+
+icon {
+    &.alert { color: $gtx-color-alert; }
+    &.success { color: $gtx-color-success; }
+}
+
+gtx-contents-list-item.item-in-editor {
+    background-color: desaturate(lighten($gtx-color-primary, 52%), 35%);
+}
+
+gtx-contents-list-item::shadow {
+    @media only screen and (max-width: $small-screen) {
+        .item-primary {
+            width: 49%;
+        }
+    }
+
+    @media only screen and (max-width: $small-screen + 15px) and (orientation: landscape) {
+        .item-primary {
+            width: 30%;
+        }
+    }
+
+    .item-actions {
+        position: relative;
+        float: right;
+    }
+
+    .item-primary {
+        width: 40%;
+
+        a {
+            &:not(.hasIcon) {
+                // margin-left: 20px;
+            }
+
+            span {
+                border-bottom: 1px dotted;
+
+                ::ng-deep .hl-pipe {
+                    background-color: rgba(255, 236, 10, 0.18);
+                    border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+                }
+            }
+        }
+    }
+
+    .item-name {
+        align-items: baseline;
+        overflow: hidden;
+        max-width: 100%;
+
+        > .item-name-only {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        ::ng-deep .hl-pipe {
+            background-color: rgba(255, 236, 10, 0.18);
+            border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+        }
+    }
+
+    .linkText {
+        color: 	#a9a9a9;
+
+        .linkTextInner {
+            color: #696969;
+            font-weight: 500;
+        }
+    }
+
+    .checkHistory {
+        color: #a9a9a9;
+        font-size: 12px;
+
+        ::ng-deep i {
+            font-size: 12px;
+            margin: 0 2px;
+            transition: color 0.15s ease-in-out;
+            opacity: 0.6;
+        }
+
+        .firstUnsuccess {
+            text-transform: none;
+
+            .firstUnsuccessDate {
+                color: #000;
+                font-weight: 700;
+            }
+        }
+    }
+
+    .file-name {
+        color: $gtx-color-mid-gray;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        font-size: 14px;
+
+        ::ng-deep .hl-pipe {
+            background-color: rgba(255, 236, 10, 0.1);
+            border-bottom: 2px solid transparentize($gcms-color-highlight, 0.6);
+        }
+
+        a {
+            color: desaturate(lighten($gtx-color-primary, 20%), 45%);
+            &:hover {
+                color: desaturate(lighten($gtx-color-primary, 10%), 10%);
+            }
+        }
+    }
+
+    @media screen and (max-width: $small-screen) {
+        .file-name {
+            font-size: 12px;
+        }
+    }
+
+    .display-fields {
+        max-width: 50vw;
+        max-width: fit-content;
+        flex: 1;
+    }
+
+    @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+        .item-primary {
+            flex: 1;
+        }
+
+        .display-fields {
+            flex: 0.5;
+        }
+    }
+
+    .show-on-hover {
+        white-space: nowrap;
+    }
+}
+
+.history-tooltip {
+    // --tooltip-extra-offset: 0.75rem;
+
+    &::ng-deep .tooltip-content {
+        background: #fff !important;
+    }
+}
+
+.short-history-title {
+    margin-right: 0.5rem;
+}
+
+.history-entry {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .history-icon {
+        margin: 0 0.5rem;
+        height: 24px;
+
+        icon + icon {
+            margin-left: 0.5rem;
+        }
+    }
+
+    .history-text {
+        margin: auto 0.5rem;
+    }
+}
+
+.full-history {
+    .history-entry {
+        padding: 0.5rem 0;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid $gtx-color-mid-gray;
+        }
+    }
+}

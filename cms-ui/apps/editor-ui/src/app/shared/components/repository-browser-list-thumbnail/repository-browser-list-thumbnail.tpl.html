@@ -1,0 +1,42 @@
+<image-thumbnail [image]="item" [nodeId]="nodeId" [width]="240"></image-thumbnail>
+<div class="thumbnail-overlay" [class.selected]="isSelected">
+    <div class="top-bar">
+        <gtx-checkbox
+            [checked]="isSelected"
+            (change)="toggleSelect.emit(!isSelected)"
+        ></gtx-checkbox>
+        <div class="image-info">
+            <span>{{ item.fileSize | filesize }}</span>
+            <span>{{ { width: item.sizeX, height: item.sizeY } | imagedimensions | i18n }}</span>
+        </div>
+    </div>
+
+    <div class="thumbnail-middle" (click)="toggleSelect.emit(!isSelected)">
+        <div class="display-fields">
+            <list-item-details
+                [autoCompact]="false"
+                [fields]="itemsInfo?.displayFields"
+                [item]="item"
+            ></list-item-details>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <div
+            *ngIf="item.inherited"
+            class="inherited-icon"
+            [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }"
+        >
+            <icon>input</icon>
+        </div>
+        <div
+            *ngIf="item | itemIsLocalized"
+            class="localized-icon"
+            [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }"
+        >
+            <icon>file_copy</icon>
+        </div>
+        <a class="item-name" [title]="item.name" (click)="itemClick.emit()">{{ item.name }}</a>
+        <file-status-label [item]="item"></file-status-label>
+    </div>
+</div>

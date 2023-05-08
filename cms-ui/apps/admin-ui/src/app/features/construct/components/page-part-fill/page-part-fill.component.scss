@@ -1,0 +1,35 @@
+@import 'variables';
+
+label {
+    font-size: 0.8rem;
+    display: block;
+    color: $gtx-color-dark-gray;
+    transition: color 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    user-select: none;
+    margin-bottom: 0.5rem;
+}
+
+.link-group {
+    margin-bottom: 1rem;
+
+    .radio-select {
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .fill {
+        display: block;
+        padding-left: 2.25rem;
+    }
+
+    gtx-input.fill::ng-deep {
+        > input {
+            margin-top: 0;
+        }
+    }
+}

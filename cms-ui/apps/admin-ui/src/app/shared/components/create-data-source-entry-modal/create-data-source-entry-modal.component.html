@@ -1,0 +1,60 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_dataSource_entry_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-data-source-entry-modal-tab-content-body-form">
+        <div class="input-container small-12 medium-12 row">
+            <div class="input-container small-12 medium-12 columns">
+                <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="50"
+                    [label]="('shared.dataSource_entry_key' | i18n) + ' *'"
+                    [placeholder]="'shared.enter_dataSource_entry_key' | i18n"
+                    formControlName="key"
+                >
+                </gtx-input>
+            </div>
+            <div class="input-container small-12 medium-12 columns">
+                <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="50"
+                    [label]="('shared.dataSource_entry_value' | i18n) + ' *'"
+                    [placeholder]="'shared.enter_dataSource_entry_value' | i18n"
+                    formControlName="value"
+                >
+                </gtx-input>
+            </div>
+            <!--<div class="input-container small-12 medium-12 columns">
+                <gtx-input
+                    type="text"
+                    [required]="true"
+                    maxlength="50"
+                    [label]="('shared.dataSource_entry_order' | i18n) + ' *'"
+                    [placeholder]="'shared.enter_dataSource_entry_order' | i18n"
+                    formControlName="order"
+                >
+                </gtx-input>
+            </div>-->
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!isValid()"
+        (click)="buttonCreateEntityClicked()"
+        gtxActionAllowed="dataSource.createDataSourceEntry"
+    >
+        {{ 'modal.create_dataSource_entry_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

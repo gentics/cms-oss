@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_objectProperty_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <gtx-object-property-properties
+        *ngIf="form"
+        [formControl]="form"
+        [mode]="create"
+    >
+    </gtx-object-property-properties>
+</div>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form || form.disabled || form.invalid || form.pristine"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ 'modal.create_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

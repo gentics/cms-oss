@@ -1,0 +1,38 @@
+{
+  "globalId" : "B230.93539",
+  "keyword" : "folderurl",
+  "icon" : "link.gif",
+  "name" : {
+    "de" : "[URL] Folder",
+    "en" : "[URL] Folder"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "newEditor" : true,
+  "parts" : [ {
+    "globalId" : "B230.93547",
+    "name" : {
+      "de" : "Ordner",
+      "en" : "Folder"
+    },
+    "keyword" : "folder",
+    "editable" : true,
+    "typeId" : 25,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

@@ -1,0 +1,79 @@
+<div (gtxClickOutside)="dropDownMenuClose()" [id]="'gtx-input-select-' + compId">
+    <div
+        *ngIf="iconOnly; else contentDefault"
+        class="custom-content"
+    >
+        <gtx-button
+            icon
+            type="primary"
+            size="regular"
+            [class.disabled]="disabled"
+            [disabled]="disabled"
+            (click)="dropDownMenuTrigger($event)"
+            (keydown.space)="dropDownMenuTrigger($event)"
+            (keydown.escape)="dropDownMenuClose()"
+        >
+            <i class="material-icons" [attr.translate]="'no'">filter_list</i>
+        </gtx-button>
+
+    </div>
+
+    <ng-template #contentDefault>
+        <button
+            *ngIf="!noInput; else triggerNoInput"
+            #buttonDefault
+            class="default-trigger"
+            [class.disabled]="disabled"
+            [disabled]="disabled"
+            [title]="labelGetByValue(value) | i18n"
+            (click)="dropDownMenuTrigger($event)"
+            (keydown.space)="dropDownMenuTrigger($event)"
+            (keydown.escape)="dropDownMenuClose()"
+        >
+            <span class="default-trigger-label">{{ labelGetByValue(value) | i18n }}</span> <icon right>arrow_drop_down</icon>
+        </button>
+
+        <ng-template #triggerNoInput>
+            <div class="default-trigger no-input">
+                <span class="default-trigger-label">{{ labelGetByValue(value) | i18n }}</span>
+            </div>
+        </ng-template>
+    </ng-template>
+    <div [hidden]="!dropDownMenuIsOpen" class="custom-content-menu">
+        <input
+            #dropDownMenuItemsFilterElement
+            type="text"
+            class="custom-content-menu-filter"
+            [hidden]="!dropDownMenuItemsFilterIsDisplayed()"
+            [(ngModel)]="dropDownMenuItemsFilterTerm"
+            [placeholder]="'common.search_placeholder' | i18n"
+            (keydown.escape)="dropDownMenuClose()"
+        >
+        <div class="custom-content-menu-inner">
+            <button
+                *ngIf="!dropDownMenuItems || dropDownMenuItems.length === 0"
+                disabled="true"
+                class="custom-content-menu-button custom-content-menu-no-match"
+                [attr.data-value]="null"
+            >
+                {{ 'common.no_matching_options' | i18n }}
+            </button>
+            <ng-container *ngFor="let option of options; let i = index">
+                <button
+                    *ngIf="dropDownMenuOptionIsVisible(option.label | i18n)"
+                    #dropDownMenuItems
+                    class="custom-content-menu-button"
+                    [attr.data-value]="option.value"
+                    (click)="onDropDownMenuItemTriggered(option.value, $event)"
+                    (keydown.enter)="onDropDownMenuItemTriggered(option.value, $event)"
+                    (keydown.space)="onDropDownMenuItemTriggered(option.value, $event)"
+                    (keydown.arrowup)="dropDownMenuItemFocus(i - 1)"
+                    (keydown.arrowdown)="dropDownMenuItemFocus(i + 1)"
+                    (keydown.escape)="dropDownMenuClose()"
+                >
+                    <span>{{ option.label | i18n }}</span>
+                </button>
+            </ng-container>
+        </div>
+    </div>
+</div>

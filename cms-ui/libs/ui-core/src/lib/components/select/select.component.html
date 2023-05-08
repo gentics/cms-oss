@@ -1,0 +1,82 @@
+<gtx-dropdown-list
+    width="expand"
+    belowTrigger="false"
+    [sticky]="multiple"
+    [disabled]="disabled"
+    [class.clearable]="clearable"
+    [class.select-all]="selectAll"
+    [class.has-addon]="clearable || selectAll"
+    (open)="dropdownOpened()"
+>
+    <gtx-dropdown-trigger [class.with-label]="label != null">
+        <div
+            #viewValueContainer
+            class="view-value select-input"
+            [attr.tabindex]="disabled ? null : 0"
+            [attr.disabled]="disabled ? true : null"
+            (blur)="inputBlur($event)"
+        >
+            <div *ngIf="selectedOptions.length > 0">{{ viewValue }}</div>
+            <div *ngIf="placeholder && selectedOptions.length == 0" class="placeholder">{{ placeholder }}</div>
+            <div *ngIf="!placeholder && selectedOptions.length == 0"></div>
+            <icon>arrow_drop_down</icon>
+        </div>
+
+        <label *ngIf="label != null" (click)="viewValueContainer.focus()">{{ label }}</label>
+    </gtx-dropdown-trigger>
+
+    <gtx-dropdown-content (keydown)="handleKeydown($event)">
+        <ul
+            class="select-options"
+            (click)="viewValueContainer.focus()"
+            (mouseover)="deselect()"
+        >
+            <ng-template ngFor [ngForOf]="optionGroups" let-group let-groupIndex="index">
+                <li
+                    *ngIf="!group.isDefaultGroup"
+                    class="group-label"
+                >{{ group.label }}</li>
+
+                <li
+                    *ngFor="let option of group.options; let optionIndex = index"
+                    class="select-option"
+                    [class.disabled]="group.disabled || option.disabled"
+                    [class.selected]="selectedIndex[0] === groupIndex && selectedIndex[1] === optionIndex"
+                    (click)="selectItem(groupIndex, optionIndex)"
+                >
+                    <gtx-checkbox
+                        *ngIf="multiple"
+                        [checked]="isSelected(option)"
+                        (change)="selectItem(groupIndex, optionIndex)"
+                    ></gtx-checkbox>
+
+                    <icon *ngIf="option.icon" class="material-icons">{{ option.icon }}</icon>
+
+                     {{ option.viewValue }}
+                </li>
+            </ng-template>
+        </ul>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>
+
+<gtx-button
+    *ngIf="clearable"
+    icon
+    class="addon-button clear-button"
+    type="secondary"
+    [disabled]="disabled"
+    (click)="clearSelection()"
+>
+    <icon>clear</icon>
+</gtx-button>
+
+<gtx-button
+    *ngIf="selectAll"
+    icon
+    class="addon-button select-all-button"
+    type="secondary"
+    [disabled]="disabled"
+    (click)="selectAllOptions()"
+>
+    <icon>done_all</icon>
+</gtx-button>

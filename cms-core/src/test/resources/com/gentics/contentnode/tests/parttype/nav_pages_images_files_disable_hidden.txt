@@ -1,0 +1,10 @@
+0: Node Name	0/0 (0) true: 9
+1: file1.txt	1/9 (1) false
+1: file2.txt	2/9 (2) false
+1: hidden_file.txt	3/9 (3) false
+1: hidden_image.jpg	4/9 (4) false
+1: image1.jpg	5/9 (5) false
+1: image2.jpg	6/9 (6) false
+1: NavPage	7/9 (7) true
+1: Page 1	8/9 (8) false
+1: Page 2	9/9 (9) false

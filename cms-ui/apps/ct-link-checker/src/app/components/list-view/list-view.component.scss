@@ -1,0 +1,22 @@
+@import "variables";
+
+:host {
+    position: relative;
+    width: 100%;
+}
+
+gtx-progress-bar {
+    width: 100%;
+    position: relative;
+}
+
+.no-pages {
+    width: 100%;
+    padding: 6em 2em;
+    text-align: center;
+
+    icon {
+        color: $gtx-color-mid-gray;
+        vertical-align: middle;
+    }
+}

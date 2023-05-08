@@ -1,0 +1,32 @@
+<div class="gtx-entity-details-tab-content-header flex-container">
+    <h2 class="gtx-entity-details-tab-content-header-title flex-item">
+        {{ title }}
+    </h2>
+    <div class="gtx-entity-details-tab-content-header-buttons flex-item">
+        <gtx-button
+            *ngIf="saveClick.observers.length > 0"
+            class="gtx-save-button"
+            flat
+            type="primary"
+            size="small"
+            [disabled]="saveDisabled"
+            [gtxActionAllowed]="saveActionAllowedId"
+            [aaInstanceId]="saveActionAllowedInstanceId"
+            [aaNodeId]="saveActionAllowedNodeId"
+            (click)="saveClick.emit()"
+        >
+            <icon left>save</icon> {{ 'common.save_button' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            *ngIf="cancelClick.observers.length > 0"
+            class="gtx-cancel-button"
+            flat
+            type="primary"
+            size="small"
+            (click)="cancelClick.emit()"
+        >
+            <icon left>close</icon>
+        </gtx-button>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+<div
+    class="side-menu-overlay"
+    [@overlayState]="animationParams"
+    (click)="close()"
+></div>
+
+<div
+    #toggleButton
+    class="toggle-button"
+    [@toggleState]="animationParams"
+    (@toggleState.start)="animationStarted($event)"
+    (click)="toggleState()"
+>
+    <ng-content select="gtx-side-menu-toggle"></ng-content>
+</div>
+
+<div
+    *ngIf="opened"
+    class="menu"
+    [@menuState]="menuAnimationState"
+    [style.width]="responsiveWidth"
+>
+    <div
+        class="menu-content"
+        [@contentState]="animationParams"
+    >
+        <ng-content></ng-content>
+    </div>
+</div>

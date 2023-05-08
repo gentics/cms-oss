@@ -1,0 +1,24 @@
+<div class="modal-title">
+    <h5>{{ title }}</h5>
+</div>
+
+<div class="modal-content">
+
+    <iframe
+        id="container"
+        [src]="iframeSrcUrl | safe"
+        frameborder="0"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"
+    >
+    </iframe>
+
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat (click)="cancelButtonClicked()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

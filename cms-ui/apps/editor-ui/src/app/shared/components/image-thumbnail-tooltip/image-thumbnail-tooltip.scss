@@ -1,0 +1,46 @@
+@import "variables";
+
+.tooltip-wrapper {
+    position: relative;
+    display: inline-block;
+
+    .tooltip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 2px;
+        transform: translateY(-100%);
+        border-width: 1px;
+        border-radius: 2px;
+        border-style: solid;
+        border-color: lighten($gtx-color-secondary, 10%);
+        background-color: lighten($gtx-color-secondary, 10%);
+        z-index: 1;
+
+        .image-info {
+            flex: 1;
+            text-align: center;
+
+            span {
+                margin: 4px 5px;
+                font-size: 12px;
+                display: inline-block;
+                color: $gtx-color-dark-gray;
+                background-color: rgba(255, 255, 255, 0.56);
+                padding: 0 3px;
+                border-radius: 2px;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .trigger:not(:hover) + .tooltip {
+        opacity: 0;
+        display: none;
+    }
+
+    .trigger:hover + .tooltip {
+        opacity: 1;
+        display: block;
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": [
+            "jasmine",
+            "node",
+            "jasminewd2",
+            "webpack-env",
+            "jquery",
+            "masonry-layout"
+        ]
+    },
+    "files": [
+        "src/test.ts",
+        "src/polyfills.ts"
+    ],
+    "include": [
+        "src/**/*.spec.ts",
+        "src/**/*.d.ts",
+        "../../libs/cms-components/src/public-api.ts",
+        "../../libs/form-generator/src/public-api.ts",
+        "../../libs/cms-rest-clients-angular/src/public-api.ts",
+        "../../libs/cms-models/src/public-api.ts",
+        "../../libs/image-editor/src/public-api.ts",
+        "../../libs/ui-core/src/public-api.ts"
+    ],
+}

@@ -1,0 +1,21 @@
+{
+  "globalId" : "A547.75740",
+  "type" : "folder",
+  "keyword" : "object.navhidden",
+  "name" : {
+    "de" : "Diesen Eintrag in der Navigation verstecken",
+    "en" : "Hide this entry in navigation"
+  },
+  "constructId" : "A547.69744",
+  "required" : false,
+  "inheritable" : true,
+  "syncChannelset" : false,
+  "category" : {
+    "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

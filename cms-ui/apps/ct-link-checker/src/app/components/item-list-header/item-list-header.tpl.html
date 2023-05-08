@@ -1,0 +1,52 @@
+<div class="left-items">
+    <div class="group-actions">
+        <div class="collapse-icon"
+            [class.collapsed]="isCollapsed"
+            (click)="toggleCollapse()">
+            <gtx-button icon type="secondary">
+                <i class="material-icons">keyboard_arrow_down</i>
+            </gtx-button>
+        </div>
+    </div>
+    <span class="pageLanguage">{{ item.page.language }}</span>
+    <span class="type">
+        <a (click)="openPageInPreviewMode(item.page)" [title]="item?.page?.name" [innerHTML]="item?.page?.name | highlight:filterTerm"></a>
+    </span>
+    <div class="show-on-hover" *ngIf="item.page.liveUrl">
+        <a [href]="item?.page?.liveUrl"
+            target="_blank"
+            class="liveurl-icon"
+            [title]="'common.live_url_tooltip' | translate">
+            <gtx-button icon size="small" type="secondary">
+                <i class="material-icons">open_in_new</i>
+            </gtx-button>
+        </a>
+    </div>
+    <gtxct-status-indicator
+        [iconName]="brokenLinksPerPage > 0 ? 'warning' : 'check_box'"
+        [alert]="brokenLinksPerPage > 0"
+        [success]="brokenLinksPerPage == 0">
+        <div [innerHTML]="'common.status_broken' | translate:{ number: brokenLinksPerPage }"></div>
+    </gtxct-status-indicator>
+</div>
+<div class="header-controls right-items">
+    <div class="display-fields">
+        <list-item-details [fields]="itemsInfo?.displayFields"
+                            [item]="item.page"></list-item-details>
+    </div>
+    <div class="group-actions">
+        <gtx-button *ngIf="item?.editable" size="small" type="secondary" flat (click)="openPageInEditMode(item.page)">
+            <i class="material-icons left">edit</i> {{ 'common.edit_page' | translate }}
+        </gtx-button>
+        <gtx-dropdown-list align="right">
+                <gtx-dropdown-trigger>
+                    <gtx-button icon type="secondary">
+                        <i class="material-icons">more_vert</i>
+                    </gtx-button>
+                </gtx-dropdown-trigger>
+                <gtx-dropdown-content>
+                    <gtx-dropdown-item icon="red_eye" (click)="openPageInPreviewMode(item.page)">{{ 'common.preview' | translate }}</gtx-dropdown-item>
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+    </div>
+</div>

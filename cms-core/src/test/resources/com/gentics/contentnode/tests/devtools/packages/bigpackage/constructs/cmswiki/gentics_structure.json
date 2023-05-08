@@ -1,0 +1,129 @@
+{
+  "globalId" : "A547.14584",
+  "keyword" : "cmswiki",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "CMS Wiki",
+    "en" : "CMS Wiki"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.14211",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14464",
+    "name" : {
+      "de" : "Edition Icon",
+      "en" : "Edition"
+    },
+    "keyword" : "editimg",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14495",
+    "name" : {
+      "de" : "New Icon",
+      "en" : "New Icon"
+    },
+    "keyword" : "newimg",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 20,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58447",
+    "name" : {
+      "de" : "Share Icon",
+      "en" : "Share"
+    },
+    "keyword" : "shareimg",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 25,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58448",
+    "name" : {
+      "de" : "RSS Icon",
+      "en" : "RSS Icon"
+    },
+    "keyword" : "rssimg",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 27,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58449",
+    "name" : {
+      "de" : "CMS-URL falls nicht am selben Server",
+      "en" : "CMS-URL falls nicht am selben Server"
+    },
+    "keyword" : "cmsurl",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 30,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58450",
+    "name" : {
+      "de" : "Standard LoginUser",
+      "en" : "Standard LoginUser"
+    },
+    "keyword" : "defaultuser",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 31,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58451",
+    "name" : {
+      "de" : "Standard LoginPasswort",
+      "en" : "Standard LoginPasswort"
+    },
+    "keyword" : "defaultpassword",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 32,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

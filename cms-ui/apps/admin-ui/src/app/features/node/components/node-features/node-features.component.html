@@ -1,0 +1,57 @@
+<form *ngIf="fgFeatures" [formGroup]="fgFeatures" class="gtx-form">
+    <div class="row">
+
+        <div *ngFor="let feature of availableFeatures" class="input-container node-feature small-12 medium-12 columns">
+            <gtx-tooltip
+                [type]="'light'"
+                [position]="'right'"
+                [align]="'top'"
+            >
+                <div class="gtx-form-section-title">
+                    {{ feature.name }}
+                    <icon
+                        gtx-tooltip-trigger
+                        class="feature-info no-select"
+                        #descriptionTarget
+                        (mouseenter)="toggleDescription($event, feature)"
+                        (mouseleave)="toggleDescription($event, feature)"
+                    >error_outline</icon>
+                </div>
+
+                <div
+                    gtx-tooltip-content
+                    class="feature-description"
+                    (mouseenter)="onHoverState(true, feature)"
+                    (mouseleave)="onHoverState(false, feature)"
+                >
+                    <!-- <h2>{{ feature.name }}</h2> -->
+                    <div class="gtx-form-section-title">{{ 'node.description' | i18n }}</div>
+                    <p>{{ feature.description }}</p>
+
+                    <ng-container [ngSwitch]="feature.id">
+                        <div *ngSwitchCase="'contentfile_auto_offline'">
+                            <a target="_blank" href="https://www.gentics.com/Content.Node/guides/feature_file_publish_dependencies.html">
+                                {{ 'node.online_documentation' | i18n }} <icon>open_in_new</icon>
+                            </a>
+                        </div>
+                        <div *ngSwitchCase="'new_tageditor'">
+                            <a target="_blank" href="https://www.gentics.com/Content.Node/guides/feature_new_tag_editor.html">
+                                {{ 'node.online_documentation' | i18n }} <icon>open_in_new</icon>
+                            </a>
+                        </div>
+                        <div *ngSwitchDefault>
+                            <a target="_blank" [href]="'https://www.gentics.com/Content.Node/guides/feature_' + feature.id + '.html'">
+                                {{ 'node.online_documentation' | i18n }} <icon>open_in_new</icon>
+                            </a>
+                        </div>
+                    </ng-container>
+                </div>
+            </gtx-tooltip>
+
+            <gtx-checkbox
+                [formControlName]="feature.id"
+                [label]="'node.feature_active' | i18n"
+            ></gtx-checkbox>
+        </div>
+    </div>
+</form>

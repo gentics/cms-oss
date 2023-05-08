@@ -1,0 +1,16 @@
+<form [formGroup]="form">
+    <div class="flex-row row">
+        <gtx-input
+            class="columns small-12"
+            [label]="('common.name' | i18n) + ' *'"
+            [required]="true"
+            formControlName="name"
+        ></gtx-input>
+
+        <gtx-input
+            class="columns small-12"
+            [label]="'common.description' | i18n"
+            formControlName="description"
+        ></gtx-input>
+    </div>
+</form>

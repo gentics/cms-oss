@@ -1,0 +1,10 @@
+.folder-trable {
+    display: block;
+    height: 100%;
+}
+
+:host::ng-deep {
+    .dx-treelist-table tr > td:nth-child(2) {
+        width: 2rem;
+    }
+}

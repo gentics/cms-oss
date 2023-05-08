@@ -1,0 +1,12 @@
+<div class="gtx-entity-master">
+    <gtx-node-table
+        class="entity-table"
+        [showSearch]="true"
+        [activeEntity]="activeEntity"
+        [extraActions]="masterActions"
+        [(selected)]="selected"
+        (actionClick)="handleActionClick($event)"
+        (createClick)="handleCreateClick()"
+        (rowClick)="handleRowClick($event)"
+    ></gtx-node-table>
+</div>

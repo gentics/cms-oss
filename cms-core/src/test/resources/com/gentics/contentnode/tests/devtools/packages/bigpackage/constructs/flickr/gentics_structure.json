@@ -1,0 +1,185 @@
+{
+  "globalId" : "A547.58473",
+  "keyword" : "flickr",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "Flickr Galerie",
+    "en" : "Flickr Gallery"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58265",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58307",
+    "name" : {
+      "de" : "Ihr Flickr API-Key",
+      "en" : "Your Flickr API-Key"
+    },
+    "keyword" : "apikey",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58340",
+    "name" : {
+      "de" : "Ihr Flickr Secure-Key",
+      "en" : "Your Flickr Secure-Key"
+    },
+    "keyword" : "securekey",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58362",
+    "name" : {
+      "de" : "Flickr Suchtyp",
+      "en" : "Flickr Searchtype"
+    },
+    "keyword" : "type",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58412",
+    "name" : {
+      "de" : "Suchbegriffe mit Beistrich getrennt",
+      "en" : "Searchterms limited with commatas"
+    },
+    "keyword" : "tags",
+    "editable" : true,
+    "typeId" : 3,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58420",
+    "name" : {
+      "de" : "Max. Anzahl Bilder",
+      "en" : "Max. number of images"
+    },
+    "keyword" : "perpage",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58425",
+    "name" : {
+      "de" : "Bilder pro Zeile",
+      "en" : "Images per row"
+    },
+    "keyword" : "perrow",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58434",
+    "name" : {
+      "de" : "Bilderbreite (in Pixel)",
+      "en" : "Images width (in Pixel)"
+    },
+    "keyword" : "width",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 11,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58439",
+    "name" : {
+      "de" : "Template pro Bildereintrag",
+      "en" : "Template per each image"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 12,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58380",
+    "name" : {
+      "de" : "Longitude (falls Sie Bilder geographisch eingrenzen wollen)",
+      "en" : "Longitude (geographical limit)"
+    },
+    "keyword" : "lon",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 13,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58394",
+    "name" : {
+      "de" : "Latitude (falls Sie Bilder geographisch eingrenzen wollen)",
+      "en" : "Latitude (geographical limit)"
+    },
+    "keyword" : "lat",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 14,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58403",
+    "name" : {
+      "de" : "Umkreis zur geographischen Eingrenzung in KM (1-20)",
+      "en" : "Range for geographical limit in KM (1-20)"
+    },
+    "keyword" : "range",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 15,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,170 @@
+{
+  "globalId" : "A547.70950",
+  "keyword" : "gtxalohapagelink",
+  "icon" : "url.gif",
+  "name" : {
+    "de" : "Aloha Link",
+    "en" : "Aloha Link"
+  },
+  "description" : {
+    "de" : "Spezieller Aloha Tagtyp zum Einfügen von Links",
+    "en" : "Special Aloha link content element"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "newEditor" : true,
+  "parts" : [ {
+    "globalId" : "A547.70956",
+    "name" : {
+      "de" : "VTL",
+      "en" : "VTL"
+    },
+    "keyword" : "vtl",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.75233",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 10,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.70966",
+    "name" : {
+      "de" : "Text",
+      "en" : "Text"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.70961",
+    "name" : {
+      "de" : "URL",
+      "en" : "URL"
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.75228",
+    "name" : {
+      "de" : "File URL",
+      "en" : "File URL"
+    },
+    "keyword" : "fileurl",
+    "editable" : true,
+    "typeId" : 8,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "2ABB.f67edd75-eb88-11e5-9d68-02420a2b4001",
+    "name" : {
+      "de" : "Anchor",
+      "en" : "anchor"
+    },
+    "keyword" : "anchor",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "71E1.77234",
+    "name" : {
+      "de" : "Title",
+      "en" : "Title"
+    },
+    "keyword" : "title",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "71E1.77239",
+    "name" : {
+      "de" : "Target",
+      "en" : "Target"
+    },
+    "keyword" : "target",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.70971",
+    "name" : {
+      "de" : "Class",
+      "en" : "class"
+    },
+    "keyword" : "class",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

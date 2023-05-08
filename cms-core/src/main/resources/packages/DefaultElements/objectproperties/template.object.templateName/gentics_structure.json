@@ -1,0 +1,23 @@
+{
+  "globalId" : "B9E7.ec7ce768-5eb2-11ed-a5ab-0242ac140005",
+  "type" : "template",
+  "keyword" : "object.templateName",
+  "name" : {
+    "de" : "Vorlagenname",
+    "en" : "Template Name"
+  },
+  "description" : {
+    "de" : "Name der Portal-Vorlage.",
+    "en" : "Name of the portal template."
+  },
+  "constructId" : "A547.69478",
+  "required" : true,
+  "category" : {
+    "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

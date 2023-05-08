@@ -1,0 +1,56 @@
+@import 'ui-core/src/styles/base-import';
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.entity-table-actions-bar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .table-action-button {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .table-action-button + .table-action-button {
+        margin-left: 0.5rem;
+    }
+}
+
+.search-bar {
+    flex: 0 0 auto;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.entity-table-selection {
+    flex: 0 0 auto;
+    color: $gtx-color-dark-gray;
+    font-size: 0.9rem;
+    margin: 0 1rem 1rem;
+}
+
+.load-bar {
+    position: relative;
+}
+
+.entity-table {
+    flex: 0 1 auto;
+    min-height: 1px;
+}
+
+.search-bar + .entity-table {
+    margin-top: 1rem;
+}
+
+.text-overflow-wrapper {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}

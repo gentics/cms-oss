@@ -1,0 +1,3 @@
+#foreach($page in $cms.page.languageset.pages)
+#if($page.online)$page.id ($page.name)#end
+#end

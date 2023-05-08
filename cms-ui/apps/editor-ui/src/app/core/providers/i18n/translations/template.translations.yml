@@ -1,0 +1,6 @@
+link_mode_append:
+    en: 'Append'
+    de: 'Hinzufügen'
+link_mode_apply:
+    en: 'Apply'
+    de: 'Anwenden'

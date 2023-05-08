@@ -1,0 +1,13 @@
+[ {
+  "uuid" : "#MICRONODE_UUID#",
+  "microschema" : {
+    "name" : "test_construct",
+    "uuid" : "#MICROSCHEMA_UUID#",
+    "version" : "1.0",
+    "versionUuid" : "#VERSION_UUID#"
+  },
+  "fields" : {
+    "part_ordered" : true,
+    "part" : [ "one", "two", "three", "changeable" ]
+  }
+} ]

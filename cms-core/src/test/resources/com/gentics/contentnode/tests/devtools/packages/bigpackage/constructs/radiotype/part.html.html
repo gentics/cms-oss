@@ -1,0 +1,24 @@
+<tr>
+  <td colspan="2"><? if ($error[<node name>]) echo $errPrefix; ?><node label><? if ($error[<node name>]) echo $errPostfix; ?><br/><xnl if ("<node mandatory>" == 1)><input type="hidden" name="mandatory[<node name>]" value="true"><xnl end>
+
+<input type="hidden" name="label[<node name>]" value="<node label>">
+
+<!--//
+<?
+    $options = str_replace("\r", "", "<node options>");
+    $entries = explode("\n", $options);
+    $outaput = "";
+    foreach ($entries as $entry) {
+        unset($checked);
+        if (!$_REQUEST['submitted'] && $entry == "<node checked>") {
+            $checked = " checked";
+        } else if (htmlentities($entry) == htmlentities($_REQUEST['element']["<node name>"])) {
+            $checked = " checked";
+        }
+        $outaput .= "<input type=\"radio\" name=\"element[<node name>]\" value=\"$entry\"".$checked." class=\"form_radio\"> $entry<br>";
+    }
+?>
+//-->
+<?=$outaput?>
+  </td>
+</tr>

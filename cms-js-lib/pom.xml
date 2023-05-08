@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms-oss</artifactId>
+		<version>6.0.0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-js-lib</artifactId>
+	<name>Gentics CMS - Javascript Library</name>
+	<packaging>jar</packaging>
+	<description>This is the Gentics CMS Javascript module.</description>
+
+	<url>http://www.gentics.com</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>2.25.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-ie-driver</artifactId>
+			<version>2.25.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics</groupId>
+			<artifactId>generic-testutils</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey.contribs</groupId>
+			<artifactId>jersey-apache-client</artifactId>
+			<version>1.1.5.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/js</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+		<testResources>
+			<testResource>
+				<directory>src/test/js</directory>
+			</testResource>
+			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<?m2e ignore?>
+						<id>dist</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/src/main/assembly/package.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+					<execution>
+						<?m2e ignore?>
+						<id>doc</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<attach>true</attach>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/src/main/assembly/doc-package.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>ro.isdc.wro4j</groupId>
+				<artifactId>wro4j-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<?m2e execute?>
+						<id>minify</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<minimize>true</minimize>
+							<destinationFolder>${project.build.directory}/bin/</destinationFolder>
+							<jsDestinationFolder>${project.build.directory}/bin/</jsDestinationFolder>
+						</configuration>
+					</execution>
+					<execution>
+						<?m2e execute?>
+						<id>debug</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<minimize>false</minimize>
+							<destinationFolder>${project.build.directory}/debug/</destinationFolder>
+							<jsDestinationFolder>${project.build.directory}/debug/</jsDestinationFolder>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<targetGroups>gcnjsapi</targetGroups>
+					<jsDestinationFolder>${project.build.directory}/static/js/</jsDestinationFolder>
+					<contextFolder>${basedir}/src/main/js/</contextFolder>
+					<buildDirectory>${basedir}</buildDirectory>
+					<ignoreMissingResources>false</ignoreMissingResources>
+					<wroFile>${basedir}/src/main/wro/wro.xml</wroFile>
+					<wroManagerFactory>ro.isdc.wro.extensions.manager.standalone.GoogleStandaloneManagerFactory</wroManagerFactory>
+					<!-- <wroManagerFactory>ro.isdc.wro.extensions.manager.standalone.YUIStandaloneManagerFactory</wroManagerFactory> -->
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>nl.windgazer</groupId>
+				<artifactId>jsdoctk-plugin</artifactId>
+				<executions>
+					<execution>
+						<?m2e execute?>
+						<id>jsdoc</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>jsdoc</goal>
+						</goals>
+						<configuration>
+							<template>../../../src/main/jsdoc/templates/gentics</template> <!-- Alternatives are not pre-installed for version 2.x -->
+							<directory>${project.build.directory}/jsdoc</directory>
+							<recurse>1</recurse>
+							<ext>js</ext>
+							<allfunctions>true</allfunctions>
+							<Allfunctions>true</Allfunctions>
+							<verbose>true</verbose>
+							<privateOption>false</privateOption>
+							<!-- If you're using the maven default setup this alternative is sometimes 
+								required to make the plugin work: ${basedir}/src/main/webapp/ -->
+							<srcDir>${basedir}/src/main/js</srcDir>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>jslint-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>test</phase>
+						<goals>
+							<goal>jslint</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>gcnjsapi.js</exclude>
+								<exclude>vendor/**</exclude>
+							</excludes>
+							<allowOneVarStatementPerFunction>false</allowOneVarStatementPerFunction>
+							<predefinedVars>window, global, process, require, jQuery, GCN</predefinedVars>
+							<assumeABrowser>true</assumeABrowser>
+							<tolerateContinuation>true</tolerateContinuation>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

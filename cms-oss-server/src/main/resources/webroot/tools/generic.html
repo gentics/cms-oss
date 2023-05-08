@@ -1,0 +1,223 @@
+<html>
+<head>
+<title>Generic Testing Tool</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+	function execute (type) {
+		var start = new Date().getTime();
+		$('#time').text('--');
+		$('#response').text('Waiting for response...');
+
+		var queryParameters = '';
+		if ($('#sid').val()) {
+			queryParameters = '?sid=' + $('#sid').val();
+		}
+
+		if ($('#param').val()) {
+			if (queryParameters) {
+				queryParameters += "&";
+			} else {
+				queryParameters += "?";
+			}
+
+			queryParameters += $('#param').val();
+		}
+
+		$.ajax({
+			accepts: {
+				text: "application/json"
+			},
+			url: $('#url').val() + queryParameters,
+			data: $('#body').val(),
+			dataType: 'text',
+			contentType: $('#contenttype').val(),
+			type: type,
+			success: function(data, textStatus, jqXHR) {
+				var duration = new Date().getTime() - start;
+				$('#time').text(duration + ' ms');
+				$('#responsecode').text(jqXHR.status);
+
+				// Try to parse the response as JSON
+				if (data) {
+					try {
+						// Prettify the JSON object and output it
+						var dataObject = $.parseJSON(data);
+						var prettyJson = JSON.stringify(dataObject, null, "\t");
+						$('#response').text(prettyJson);
+					}
+					catch (e) {
+						// Invalid json, output as plain data
+						$('#response').text(data);
+					};
+				} else {
+					$('#response').text("");
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				var duration = new Date().getTime() - start;
+				$('#time').text(duration + ' ms');
+				$('#responsecode').text(jqXHR.status);
+
+				$('#response').text(jqXHR.responseText);
+			}
+		});
+	}
+
+	var baseurl = '/rest';
+	$('#url').val(baseurl);
+
+	$('#get').click(function() {
+		execute('GET');
+	});
+	$('#post').click(function () {
+		execute('POST');
+		
+	});
+	$('#put').click(function () {
+		execute('PUT');
+	});
+	$('#delete').click(function () {
+		execute('DELETE');
+	});
+	$('#dologin').click(function() {
+		$.ajax({
+			url: baseurl + '/auth/login.json',
+			data: '{"login":"'+$('#login').val()+'", "password": "'+$('#password').val()+'"}',
+			dataType: 'json',
+			contentType: 'application/json; charset=utf-8',
+			type: 'POST',
+			success: function(data) {
+				if (data.responseInfo.responseCode == 'OK') {
+					$('#sid').val(data.sid);
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#response').text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+			}
+		});
+	});
+	$('#ssologin').click(function() {
+		// SSO login works with an iframe
+		var $iframe = $("<iframe></iframe>");
+		$iframe.hide();
+		$("body").append($iframe);
+
+		// add an onload handler
+		$iframe.load(function() {
+			var response = $iframe.contents().text();
+			switch(response) {
+			case 'NOTFOUND':
+				break;
+			case 'FAILURE':
+				break;
+			default:
+				$('#sid').val(response);
+			}
+			$iframe.remove();
+		});
+
+		// set the source
+		$iframe.attr("src", baseurl + '/auth/ssologin?ts=' + (new Date()).getTime());
+	});
+	$('#dologout').click(function() {
+		$.ajax({
+			accepts: {
+				text: "application/json"
+			},
+			url: baseurl + '/auth/logout/' + $('#sid').val(),
+			dataType: 'json',
+			contentType: 'application/json; charset=utf-8',
+			type: 'POST',
+			success: function(data) {
+				if (data.responseInfo.responseCode == 'OK') {
+					$('#login').val('');
+					$('#password').val('');
+					$('#sid').val('');
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#response').text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+			}
+		});
+	});
+});
+</script>
+<style type="text/css">
+body * {
+	font-family: Sans;
+	font-size: 14px;
+}
+label {
+	display: inline-block;
+	width: 100px;
+}
+input, textarea {
+	width: 500px;
+}
+button {
+	margin-top: 10px;
+	margin-left: 10px;
+}
+input, textarea, select {
+	border: 2px solid #bfbfbf;
+	background-color: #efefef;
+	box-shadow: inset 2px 2px 4px #999;
+	-webkit-box-shadow: inset 2px 2px 4px #999;
+	-moz-box-shadow: inset 2px 2px 4px #999;
+}
+fieldset {
+	border: 2px solid #afafaf;
+}
+div.container {
+	overflow: auto;
+	width: 100%;
+}
+div.box {
+	float: left;
+	width: 50%;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="box">
+<fieldset id="form">
+<legend>Test Data</legend>
+<label for="url">URL</label> <input type="text" id="url"/><br/>
+<label for="sid">SID</label> <input type="text" id="sid"/><br/>
+<label for="param">Params</label> <input type="text" id="param"/> var1=value1&var2=value2<br/>
+<label for="body">Body</label> <textarea cols="60" rows="10" id="body"></textarea><br/>
+<label for="contenttype">Content-Type</label> <select id="contenttype"><option selected="selected">application/json; charset=utf-8</option><option>text/html; charset=UTF-8</option></select><br/>
+<button id="get">GET</button><button id="post">POST</button><button id="put">PUT</button><button id="delete">DELETE</button>
+</fieldset>
+</div>
+<div class="box">
+<fieldset>
+<legend>Login</legend>
+<label for="login">Login</label> <input type="text" id="login"/><br/>
+<label for="password">Password</label> <input type="password" id="password"/><br/>
+<button id="dologin">Login</button><button id="ssologin">SSO Login</button><button id="dologout">Logout</button>
+</fieldset>
+</div>
+</div>
+<div class="container">
+<div class="box">
+<fieldset>
+<legend>Response Code</legend>
+<pre id="responsecode"></pre>
+</fieldset>
+</div>
+<div class="box">
+<fieldset>
+<legend>Time</legend>
+<pre id="time"></pre>
+</fieldset>
+</div>
+</div>
+<fieldset>
+<legend>Response</legend>
+<pre id="response"></pre>
+</fieldset>
+</body>
+</html>

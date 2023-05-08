@@ -1,0 +1,21 @@
+0: Node Name	0/0 (0) true: 4
+1: Folder 1	1/4 (1) true: 4
+2: Folder 1.1	1/4 (2) true: 2
+3: image1_2.jpg	1/2 (3) false
+3: image2_2.jpg	2/2 (4) false
+2: Folder 1.2	2/4 (5) true: 2
+3: image1_3.jpg	1/2 (6) false
+3: image2_3.jpg	2/2 (7) false
+2: image1_1.jpg	3/4 (8) false
+2: image2_1.jpg	4/4 (9) false
+1: Folder 2	2/4 (10) true: 4
+2: Folder 2.1	1/4 (11) true: 2
+3: image1_5.jpg	1/2 (12) false
+3: image2_5.jpg	2/2 (13) false
+2: Folder 2.2	2/4 (14) true: 2
+3: image1_6.jpg	1/2 (15) false
+3: image2_6.jpg	2/2 (16) false
+2: image1_4.jpg	3/4 (17) false
+2: image2_4.jpg	4/4 (18) false
+1: image1.jpg	3/4 (19) false
+1: image2.jpg	4/4 (20) false

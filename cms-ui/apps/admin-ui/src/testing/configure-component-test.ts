@@ -1,0 +1,47 @@
+import {Pipe, PipeTransform} from '@angular/core';
+import {getTestBed, TestModuleMetadata} from '@angular/core/testing';
+
+import {I18nService} from '../app/core/providers/i18n/i18n.service';
+import {MockI18nService} from '../app/core/providers/i18n/i18n.service.mock';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+
+
+@Pipe({
+    name: 'i18n'
+})
+class MockI18nPipe implements PipeTransform {
+    transform(): void {}
+}
+
+/**
+ * Merge two arrays and remove duplicate items.
+ */
+function mergeUnique(a: any[], b: any[]): any[] {
+    const arr1 = a instanceof Array ? a : [];
+    const arr2 = b instanceof Array ? b : [];
+    return arr1.concat(arr2.filter(item => arr1.indexOf(item) < 0));
+}
+
+/**
+ * Wraps the TestBed.configureTestingModule() and provides a mocked implementation of the i18n pipe/service, which
+ * is used it virtually every component.
+ *
+ * For tests which are testing non-component functionality (e.g. reducer tests), this function is
+ * not needed.
+ */
+export function configureComponentTest(config: TestModuleMetadata): void {
+    const testBed = getTestBed();
+    const defaultConfig: TestModuleMetadata = {
+        imports: [GenticsUICoreModule.forRoot()],
+        declarations: [ MockI18nPipe ],
+        providers: [{ provide: I18nService, useClass: MockI18nService }]
+    };
+
+    const mergedConfig: TestModuleMetadata = {
+        imports: mergeUnique(defaultConfig.imports, config.imports),
+        declarations: mergeUnique(defaultConfig.declarations, config.declarations),
+        providers: mergeUnique(defaultConfig.providers, config.providers),
+        schemas: mergeUnique(defaultConfig.schemas, config.schemas)
+    };
+    testBed.configureTestingModule(mergedConfig);
+}

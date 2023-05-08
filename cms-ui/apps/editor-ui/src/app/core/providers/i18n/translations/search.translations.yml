@@ -1,0 +1,147 @@
+all:
+    en: All
+    de: Alles
+template_id:
+    en: Template
+    de: Vorlage
+file:
+    en: File
+    de: Datei
+folder:
+    en: Folder
+    de: Ordner
+form:
+    en: Form
+    de: Formular
+image:
+    en: Image
+    de: Bild
+page:
+    en: Page
+    de: Seite
+nodeId:
+    en: Node
+    de: Node
+objecttype:
+    en: Object Type
+    de: Objekttyp
+languageCode:
+    en: Language
+    de: Sprache
+id:
+    en: ID
+    de: ID
+name:
+    en: Name
+    de: Name
+filename:
+    en: Filename
+    de: Dateiname
+description:
+    en: Description
+    de: Beschreibung
+path:
+    en: Path
+    de: Pfad
+content:
+    en: Content
+    de: Inhalt
+created:
+    en: Creation Date
+    de: Erstelldatum
+edited:
+    en: Edited date
+    de: Bearbeitungsdatum
+published:
+    en: Published Date
+    de: Veröffentlichungsdatum
+creatorId:
+    en: Creator
+    de: ErstellerIn
+editorId:
+    en: Editor
+    de: BearbeiterIn
+publisherId:
+    en: Publisher
+    de: VeröffentlicherIn
+niceUrl:
+    en: NiceUrl
+    de: NiceUrl
+alternateUrls:
+    en: Alternate URLs
+    de: Alternative URLs
+online:
+    en: Published
+    de: Veröffentlicht
+modified:
+    en: Edited
+    de: Bearbeitet
+queued:
+    en: Queued
+    de: In Warteschlange
+planned:
+    en: Planned
+    de: Geplant
+publishAt:
+    en: Publish at
+    de: Veröffentlichen am
+offlineAt:
+    en: Take offline at
+    de: Vom Server nehmen am
+queuedPublishAt:
+    en: Queued - Publish Date
+    de: In Warteschlange - Veröffentlichungsdatum
+queuedOfflineAt:
+    en: Queued - Take offline Date
+    de: In Warteschlange - "Vom Server nehmen"-Datum
+systemCreationDate:
+    en: System Creation Date
+    de: Systemerstelldatum
+customCreationDate:
+    en: Creation Date
+    de: Erstelldatum
+systemEditDate:
+    en: System Edit Date
+    de: Systembearbeitungsdatum
+customEditDate:
+    en: Edit Date
+    de: Bearbeitungsdatum
+mimetype:
+    en: File type
+    de: Dateityp
+is:
+    en: is
+    de: ist
+is_not:
+    en: is not
+    de: ist nicht
+contains:
+    en: contains
+    de: enthält
+contains_not:
+    en: contains not
+    de: enthält nicht
+at:
+    en: at
+    de: am
+after:
+    en: after
+    de: nach
+before:
+    en: before
+    de: vor
+between:
+    en: between
+    de: zwischen
+all_nodes:
+    en: All
+    de: Alle
+all_languages:
+    en: All
+    de: Alle
+broken:
+    en: Broken
+    de: Beschädigt
+search_hintbox:
+    en: Query parameter changed. Press Enter key or click search icon to execute new query.
+    de: Suchkriterien verändert. Eingabetaste drücken oder auf Such-Icon klicken, um Suche zu aktualisieren.

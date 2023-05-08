@@ -1,0 +1,11 @@
+:host {
+    background-color: white;
+    margin: 0;
+    display: block;
+    min-width: 100px;
+    overflow-y: auto;
+    overflow-x: auto;
+    opacity: 1;
+    will-change: width, height;
+    position: relative;
+}

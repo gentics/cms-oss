@@ -1,0 +1,37 @@
+<div
+    #formBackground
+    class="form-editor-background"
+    (dragenter)="onDragEnter($event)"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+>
+    <div
+        class="form-editor-form"
+        [class.read-only]="formEditorIsReadOnly()"
+    >
+        <gtx-form-editor-element-list
+            #formEditorElementListComponent
+            [elements]="formElements"
+            (elementsChange)="onElementsChange($event)"
+            [formEditMode]="formEditMode"
+            [activeUiLanguageCode]="activeUiLanguageCode"
+            [activeContentLanguageCode]="activeContentLanguageCode"
+            [hideDropZones]="dragEnterDepth === 0"
+            (beforeFormElementInsert)="onFormElementInsert($event)"
+            (propertiesErrorChange)="onPropertiesErrorChange($event)"
+        ></gtx-form-editor-element-list>
+    </div>
+
+    <div
+        class="form-editor-menu-container"
+        [class.read-only]="formEditorIsReadOnly()"
+    >
+        <gtx-form-editor-menu
+            *ngIf="menuVisible"
+            [@fadeAnim]
+            [formType]="formType"
+            (selected)="onMenuSelect($event)"
+        ></gtx-form-editor-menu>
+    </div>
+</div>

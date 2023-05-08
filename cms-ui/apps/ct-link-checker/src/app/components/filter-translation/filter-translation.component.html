@@ -1,0 +1,6 @@
+<div class="filter">
+    <span>{{ 'common.filter_page_translation' | translate }}:</span>
+    <div class="languages">
+        <a [class.active]="isActive(item.id)" (click)="select(item)" *ngFor="let item of languages">{{ item.code }}</a>
+    </div>
+</div>

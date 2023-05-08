@@ -1,0 +1,29 @@
+@import "../../../../styles/variables";
+
+.form-element-properties-editor-form {
+    cursor: auto;
+}
+
+.form-element-properties-editor-property {
+    @include gtxSmall;
+
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+gtx-key-i18n-value-list-input ::ng-deep input {
+    margin-top: 0;
+}
+
+.unsupported-label {
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
+}
+
+pre {
+    margin: 0;
+}
+
+.browse-button {
+    height: 1.8rem;
+}

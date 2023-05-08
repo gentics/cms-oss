@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.69744",
+  "keyword" : "truefalse",
+  "icon" : "undef.gif",
+  "name" : {
+    "de" : "Checkbox",
+    "en" : "True/False"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.69750",
+    "name" : {
+      "de" : "Aktivieren",
+      "en" : "True / False"
+    },
+    "keyword" : "check",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,29 @@
+<label *ngIf="label">{{ label }}</label>
+
+<div class="input-container" [formGroup]="form">
+    <gtx-select
+        [label]="'construct.overview_listTypes' | i18n"
+        [multiple]="true"
+        formControlName="listTypes"
+    >
+        <gtx-option *ngFor="let type of availableListTypes" [value]="type">{{ ('construct.overview_listType_' + type) | i18n }}</gtx-option>
+    </gtx-select>
+
+    <gtx-select
+        [label]="'construct.overview_selectTypes' | i18n"
+        [multiple]="true"
+        formControlName="selectTypes"
+    >
+        <gtx-option *ngFor="let type of availableSelectTypes" [value]="type">{{ ('construct.overview_selectType_' + type) | i18n }}</gtx-option>
+    </gtx-select>
+
+    <gtx-checkbox
+        [label]="'construct.overview_hideSortOptions' | i18n"
+        formControlName="hideSortOptions"
+    ></gtx-checkbox>
+
+    <gtx-checkbox
+        [label]="'construct.overview_stickyChannel' | i18n"
+        formControlName="stickyChannel"
+    ></gtx-checkbox>
+</div>

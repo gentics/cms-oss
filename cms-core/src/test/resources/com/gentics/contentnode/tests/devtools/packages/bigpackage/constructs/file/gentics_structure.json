@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.70151",
+  "keyword" : "file",
+  "icon" : "datei.gif",
+  "name" : {
+    "de" : "Datei - Download",
+    "en" : "File Download"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.70157",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70162",
+    "name" : {
+      "de" : "Datei",
+      "en" : "File"
+    },
+    "keyword" : "file",
+    "editable" : true,
+    "typeId" : 8,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70167",
+    "name" : {
+      "de" : "icon",
+      "en" : "Icon"
+    },
+    "keyword" : "icon",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.73817",
+    "name" : {
+      "de" : "Verweistext",
+      "en" : "Verweistext"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

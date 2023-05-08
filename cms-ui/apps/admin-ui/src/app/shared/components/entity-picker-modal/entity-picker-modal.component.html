@@ -1,0 +1,38 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ multiple ? 'modal.select_generic_entities' : 'modal.select_generic_entity' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-content-item-trable
+            class="entity-trable"
+            [multiple]="multiple"
+            [selectableItems]="types"
+            [listableItems]="types"
+            [inlineExpansion]="true"
+            [inlineSelection]="true"
+            [selectable]="true"
+            [selection]="selectedIds | values"
+            (select)="handleRowSelect($event)"
+            (selectionChange)="selectionChanges($event)"
+        ></gtx-content-item-trable>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            (click)="confirmSelection()"
+            gtxActionAllowed=""
+        >
+            {{ 'shared.confirm_selection' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn(false)"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

@@ -1,0 +1,26 @@
+<div class="modal-title">
+    <h5>{{ 'modal.confirm_delete_title' | i18n: { entityName: entityIdentifierTranslation } }}</h5>
+</div>
+<div class="modal-content row">
+    <p class="medium-12 columns">{{ confirmDeleteMessageTranslation }}:</p>
+    <ul>
+        <li class="medium-12 columns" *ngFor="let name of entityNames"><b>{{ name }}</b></li>
+    </ul>
+    <br>
+</div>
+<div class="modal-footer">
+    <gtx-button
+        type="alert"
+        (click)="buttonDeleteConfirmClicked()"
+    >
+        {{ 'modal.confirm_delete_button' | i18n: { entityName: entityIdentifierTranslation, entityAmount: entityAmount } }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

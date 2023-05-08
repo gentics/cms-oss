@@ -1,0 +1,141 @@
+@import "variables";
+
+@mixin item-icon-color($type, $base-color) {
+    .item-icon.#{$type} {
+        color: $base-color;
+    }
+    :hover > .item-icon.#{$type} {
+        color: lighten($base-color, 20%);
+    }
+}
+
+:host {
+    display: block;
+    position: relative;
+    // Flexbox fix for y-scrollable children https://stackoverflow.com/a/28639686/772859
+    min-height: 0;
+    // required to enable y-scroll in IE 11
+    //    height: 0;
+    // TODO: has to be checked / re-enabled
+}
+
+.title {
+    font-size: 18px;
+    text-align: center;
+    font-weight: normal;
+    margin: 0;
+    padding: 1rem 0;
+}
+
+gtx-sortable-list {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+gtx-sortable-list ::ng-deep {
+    @include item-icon-color(folder, $gcms-color-folder);
+    @include item-icon-color(page, $gcms-color-page);
+    @include item-icon-color(file, $gcms-color-file);
+    @include item-icon-color(image, $gcms-color-image);
+    @include item-icon-color(template, $gcms-color-template);
+}
+
+gtx-sortable-list::shadow gtx-sortable-item {
+    display: flex;
+    margin-bottom: 8px;
+    position: relative;
+
+    .material-icons {
+        display: block;
+    }
+
+    .item-icon {
+        cursor: default;
+    }
+
+    .item-primary {
+        display: flex;
+        cursor: pointer;
+        padding-left: 10px;
+        flex-grow: 1;
+        flex-direction: column;
+        align-self: baseline;
+        align-items: baseline;
+        white-space: nowrap;
+        height: 3.5rem;
+        overflow: hidden;
+
+        > a {
+            flex: 1 1 auto;
+            line-height: 1.5;
+            overflow: hidden;
+            max-width: 100%;
+            text-overflow: ellipsis;
+        }
+    }
+
+    ul.breadcrumbs {
+        margin: 0;
+        margin-left: 5px;
+        vertical-align: top;
+        flex: 0 1 auto;
+        text-overflow: ellipsis;
+        overflow: hidden;
+
+        li {
+            display: inline-block;
+            color: $gtx-color-mid-gray;
+            font-size: $gtx-font-size-small;
+            line-height: 22px;
+            margin: 0;
+
+        }
+
+        li::before {
+            content: '\E5CC';
+            color: $gtx-breadcrumbs-inactive-color;
+            vertical-align: top;
+            display: inline-block;
+            font-family: 'Material Icons';
+            font-weight: normal;
+            font-style: normal;
+            font-size: $gtx-font-size-small;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        li:first-child:before {
+            content: '';
+        }
+    }
+
+    .remove-button {
+        line-height: 0;
+        align-self: baseline;
+    }
+
+    // We can not use ":not(:hover)" here due to buggy CSS after drag&drop
+    .remove-button {
+        visibility: hidden;
+    }
+    &:hover .remove-button {
+        visibility: visible;
+    }
+
+    @media screen and (max-width: $small-screen){
+        .remove-button {
+            visibility: visible;
+        }
+    }
+}
+
+gtx-drag-handle {
+    height: 29px;
+    margin-top: -4px;
+    color: $gtx-color-mid-gray;
+}
+
+.empty-placeholder {
+    color: $gtx-color-mid-gray;
+    align-self: center;
+}

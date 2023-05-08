@@ -1,0 +1,30 @@
+<gtx-dropdown-list *ngIf="visible$ | async"
+        belowTrigger="true" align="right" (open)="dropdownOpened()">
+    <gtx-dropdown-trigger>
+        <gtx-button icon type="secondary">
+            <icon>apps</icon>
+        </gtx-button>
+    </gtx-dropdown-trigger>
+    <gtx-dropdown-content #dropdownContent>
+        <div class="arrow"></div>
+        <div class="buttons">
+            <a *ngIf="isAdmin$ | async" class="adminUILink" [href]="adminUILink" (click)="adminUIClicked($event)">
+                <div class="tool-icon">
+                    <icon class="material-icons" [attr.translate]="'no'">tune</icon>
+                </div>
+                <a class="close-button" *ngIf="toolsService.isAdminUIOpen()" (click)="closeAdminUI($event)">
+                    <icon>close</icon>
+                </a>
+                <div class="new-tab-icon" *ngIf="(isAdmin$ | async) && !(toolsService.isAdminUIOpen())">
+                    <icon [title]="'common.tool_opens_in_new_tab' | i18n">open_in_new</icon>
+                </div>
+                <div class="tool-name">
+                    <span>Administration</span>
+                </div>
+            </a>
+            <hr *ngIf="(tools$ | async).length > 0 && (isAdmin$ | async)">
+            <tool-button *ngFor="let tool of tools$ | async" [tool]="tool">
+            </tool-button>
+        </div>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>

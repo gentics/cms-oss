@@ -1,0 +1,23 @@
+@import "variables";
+
+.list-header {
+    padding-left: 10px;
+    display: flex;
+
+    > gtx-checkbox {
+        flex-grow: 1;
+    }
+}
+
+.row-checkbox {
+    height: 22px;
+    width: 24px;
+}
+
+.language {
+    color: $gcms-color-highlight;
+}
+
+.list-body {
+    overflow: auto;
+}

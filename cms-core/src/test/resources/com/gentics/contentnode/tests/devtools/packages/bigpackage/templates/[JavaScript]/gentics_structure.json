@@ -1,0 +1,13 @@
+{
+  "globalId" : "A547.74864",
+  "name" : "[JavaScript]",
+  "type" : "JavaScript",
+  "templateTags" : [ {
+    "globalId" : "A547.74866",
+    "name" : "htmllang",
+    "active" : false,
+    "constructId" : "A547.14530",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ]
+}

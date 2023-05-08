@@ -1,0 +1,8 @@
+@import "variables";
+@import "flex-modal";
+
+@include flex-modal;
+
+.modal-content {
+    min-width: 500px;
+}

@@ -1,0 +1,16 @@
+<ul class="teaser">
+#foreach( $item in $cms.tag.parts.overview.items )##
+<li>
+#if ( "$!item.object.image" != "" )##
+<div style="background-image: url('/GenticsImageStore/50/50/smart/$item.object.image')"></div>
+#end##
+<h2><a href="$item.object.startpage">$item.name</a></h2>
+<!--
+#foreach( $p in $item.pages )##
+<a href="$p.url">$p.name</a>
+#end##
+-->
+<br class="clear" />
+</li>
+#end##
+</ul>

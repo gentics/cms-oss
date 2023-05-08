@@ -1,0 +1,24 @@
+<input
+    #inputElement
+
+    [attr.autocomplete]="autocomplete || null"
+    [attr.id]="id"
+    [attr.max]="max"
+    [attr.maxlength]="maxlength"
+    [attr.min]="min"
+    [attr.name]="name"
+    [attr.pattern]="pattern"
+    [attr.placeholder]="placeholder"
+    [attr.step]="step"
+
+    [disabled]="disabled"
+    [readonly]="readonly"
+    [required]="required"
+    [type]="type"
+
+    (blur)="onBlur($event)"
+    (change)="onBlur($event)"
+    (focus)="onFocus($event)"
+    (input)="onInput($event)"
+/>
+<label [attr.for]="id" (click)="inputElement.focus()" #labelElement>{{ label }}</label>

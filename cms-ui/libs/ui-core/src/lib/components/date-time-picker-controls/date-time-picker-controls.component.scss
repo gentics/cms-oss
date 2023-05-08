@@ -1,0 +1,142 @@
+@import '../../../styles/base-import';
+
+@mixin compact-header() {
+    .month, .date, .year {
+        display: inline-block;
+        font-size: $gtx-font-size-regular;
+        margin: 0 2px;
+    }
+}
+
+:host {
+
+    tr {
+        border-bottom: none;
+    }
+
+    thead {
+        border-bottom: 1px solid #d0d0d0;
+    }
+
+    .controls-header::ng-deep {
+        text-align: center;
+        background-color: $secondary-color;
+        font-weight: 300;
+
+        .day {
+            color: white;
+            padding: 5px;
+            background-color: darken($secondary-color, 10%);
+        }
+        .month {
+            text-transform: uppercase;
+            color: white;
+            font-size: 24px;
+        }
+        .date {
+            color: white;
+            font-size: 48px;
+            line-height: 48px;
+        }
+        .year {
+            color: lighten($secondary-color, 30%);
+            font-size: 24px;
+        }
+
+        @media #{$small-and-down} {
+            @include compact-header();
+        }
+    }
+
+    .year-selector {
+        gtx-select::ng-deep {
+            .view-value {
+                color: lighten($secondary-color, 30%);
+                font-size: 24px;
+                padding-left: 28px;
+                border-color: transparent;
+                display: flex;
+                align-items: center;
+                icon {
+                    color: $gtx-color-off-white;
+                }
+            }
+
+            gtx-dropdown-trigger {
+                margin-top: 0;
+            }
+        }
+    }
+
+    .calendar-container {
+        text-align: center;
+        min-width: 210px;
+        padding-top: 10px;
+
+        @media #{$medium-and-up} {
+            padding-top: 20px;
+        }
+    }
+
+    .time-picker {
+        @media #{$medium-and-up} {
+            margin-top: 20px;
+        }
+        &::ng-deep input[type=number] {
+            text-align: center;
+            font-size: 24px;
+            height: 40px;
+            @media #{$small-and-down} {
+                font-size: 18px;
+                height: 34px;
+            }
+            /* remove the spinner arrows */
+            &::-webkit-outer-spin-button,
+            &::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+            // -moz-appearance:textfield;
+
+            & + label {
+                text-align: center;
+                width: 100%;
+            }
+        }
+    }
+
+    .increment-button {
+        width: 100%;
+        text-align: center;
+        border: none;
+        background: transparent;
+        font-size: 24px;
+        color: $secondary-color;
+        line-height: 16px;
+        transition: background 0.2s;
+        &:hover {
+            background-color: transparentize($secondary-color, 0.5);
+        }
+    }
+
+    &.compact {
+        .controls-header {
+            @include compact-header();
+        }
+
+        .calendar-container {
+            @media #{$medium-and-up} {
+                padding-top: 10px;
+            }
+        }
+        .time-picker {
+            @media #{$medium-and-up} {
+                margin-top: 0;
+            }
+            input[type=number] {
+                font-size: 18px;
+                height: 34px;
+            }
+        }
+    }
+}

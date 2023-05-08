@@ -1,0 +1,105 @@
+import { ChangeDetectorRef, Component, Directive, ViewChild } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ButtonComponent, CheckboxComponent, IconDirective, ModalService } from '@gentics/ui-core';
+import { componentTest, configureComponentTest } from '../../../../testing';
+import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
+import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
+import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
+import { ApplicationStateService, FolderActionsService, MessageActionsService } from '../../../state';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
+import { I18nService } from '../../providers/i18n/i18n.service';
+import { NavigationService } from '../../providers/navigation/navigation.service';
+import { PermissionService } from '../../providers/permissions/permission.service';
+import { MessageBody } from '../message-body/message-body.component';
+import { MessageList } from '../message-list/message-list.component';
+import { MessageInbox } from './message-inbox.component';
+
+describe('MessageInbox', () => {
+
+    let appState: TestApplicationState;
+    let modalService: MockModalService;
+
+    beforeEach(() => {
+        configureComponentTest({
+            imports: [RouterTestingModule],
+            providers: [
+                { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: NavigationService, useClass: MockNavigationService },
+                { provide: EntityResolver, useClass: MockEntityResolver },
+                { provide: FolderActionsService, useClass: MockFolderActions },
+                { provide: MessageActionsService, useClass: MockMessageActions },
+                { provide: ChangeDetectorRef, useClass: MockChangeDetectorRef },
+                { provide: PermissionService, useClass: MockPermissionService },
+                { provide: ModalService, useClass: MockModalService },
+                { provide: I18nService, useClass: MockI18nService },
+            ],
+            declarations: [
+                ButtonComponent,
+                IconDirective,
+                CheckboxComponent,
+                MessageBody,
+                MessageInbox,
+                MessageList,
+                IconCheckbox,
+                ImageThumbnailComponent,
+                MockOverrideSlotDirective,
+                TestComponent,
+            ],
+        });
+
+        appState = TestBed.get(ApplicationStateService);
+        modalService = TestBed.get(ModalService);
+    });
+
+    it('is created ok',
+        componentTest(() => TestComponent, (fixture, testComponent) => {
+            fixture.detectChanges();
+            expect(testComponent.messageInbox).toBeDefined();
+        }),
+    );
+
+    it('clicking the "new message" button opens SendMessageModal',
+        componentTest(() => TestComponent, (fixture, testComponent) => {
+            fixture.detectChanges();
+
+            fixture.debugElement.query(By.css('.new-message-button')).triggerEventHandler('click', {});
+
+            expect(modalService.fromComponent).toHaveBeenCalledWith(SendMessageModal);
+        }),
+    );
+
+});
+
+@Component({
+    template: `
+        <message-inbox (navigate)="navigate($event)">
+        </message-inbox>`
+})
+class TestComponent {
+    @ViewChild(MessageInbox, { static: true }) messageInbox: MessageInbox;
+
+    navigate(): void { }
+}
+
+
+@Directive({ selector: '[overrideSlot],[overrideParams]' })
+class MockOverrideSlotDirective {}
+
+class MockNavigationService {}
+class MockEntityResolver {}
+class MockFolderActions {}
+class MockMessageActions {}
+class MockChangeDetectorRef {}
+class MockPermissionService {}
+
+class MockModalService {
+    fromComponent = jasmine.createSpy('ModalService.fromComponent')
+        .and.returnValue(new Promise(neverResolve => {}));
+}
+
+class MockI18nService {
+    translate = jasmine.createSpy('I18nService.get').and.returnValue('');
+}

@@ -1,0 +1,1 @@
+<img src='<?php $this->widget('genticsimagestore.widgets.GenticsImageStoreWidget', array('id' => #IMAGEID#, 'publishPath' => "/nowhere/mother/bla/#IMAGENAME#", 'resizeOptions' => array('width' => "auto", 'height' => 50, 'mode' => "smart"), 'cropOptions' => array('x' => 10, 'y' => 15, 'width' => 30, 'height' => 35))); ?>'>

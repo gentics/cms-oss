@@ -1,0 +1,21 @@
+@import "variables";
+
+li.disabled {
+    cursor: default;
+
+    a {
+        color: $gtx-color-mid-gray;
+        cursor: default;
+    }
+}
+
+.edit-parent {
+    text-overflow: ellipsis;
+    max-width: 500px;
+    overflow-x: hidden;
+}
+
+.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}

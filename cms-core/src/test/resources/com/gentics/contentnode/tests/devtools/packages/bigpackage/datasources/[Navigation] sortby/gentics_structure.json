@@ -1,0 +1,30 @@
+{
+  "globalId" : "A547.14657",
+  "type" : "statical",
+  "name" : "[Navigation] sortby",
+  "values" : [ {
+    "globalId" : "A547.75152",
+    "key" : "Name of page/folder / Name der Seite/des Ordners",
+    "value" : "name"
+  }, {
+    "globalId" : "A547.75153",
+    "key" : "Descriptiontext / Beschreibungstext",
+    "value" : "description"
+  }, {
+    "globalId" : "A547.75154",
+    "key" : "Edit date / Bearbeitungsdatum",
+    "value" : "edittimestamp"
+  }, {
+    "globalId" : "A547.75155",
+    "key" : "Creation date / Erstellungsdatum",
+    "value" : "createtimestamp"
+  }, {
+    "globalId" : "A547.75156",
+    "key" : "Publishing date / Veröffentlichungsdatum",
+    "value" : "publishtimestamp"
+  }, {
+    "globalId" : "A547.75157",
+    "key" : "Folder Sorting / Ordnersortierung",
+    "value" : "object.sortorder"
+  } ]
+}

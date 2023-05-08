@@ -1,0 +1,22 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "types": [
+            "jasmine",
+            "node",
+            "jasminewd2"
+        ]
+    },
+    "files": [
+        "src/test.ts",
+        "src/polyfills.ts"
+    ],
+    "include": [
+        "src/**/*.d.ts",
+        "src/**/*.spec.ts",
+        "../../libs/cms-components/src/public-api.ts",
+        "../../libs/cms-rest-clients-angular/src/public-api.ts",
+        "../../libs/cms-models/src/public-api.ts",
+        "../../libs/ui-core/src/public-api.ts"
+    ],
+}

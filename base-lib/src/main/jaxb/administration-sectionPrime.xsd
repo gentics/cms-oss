@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="1.0" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:appinfo>
+			<jaxb:globalBindings generateIsSetMethod="true" collectionType="indexed"/>
+			<jaxb:schemaBindings>
+				<jaxb:package name="com.gentics.portalnode.administration"/>
+				<jaxb:nameXmlTransform>
+					<jaxb:typeName prefix="JAXB"/>
+				</jaxb:nameXmlTransform>
+			</jaxb:schemaBindings>
+		</xs:appinfo>
+	</xs:annotation>
+	<xs:element name="administration-section" type="adminSectionType"/>
+	<xs:complexType name="adminSectionType">
+		<xs:all>
+			<xs:element name="deployer" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:all>
+						<xs:element name="class-name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+						<xs:element name="parameters" minOccurs="0" maxOccurs="1">
+							<xs:annotation>
+								<xs:appinfo>
+									<jaxb:property name="parametersContainer"/>
+								</xs:appinfo>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+										<xs:annotation>
+											<xs:appinfo>
+												<jaxb:property name="parameters"/>
+											</xs:appinfo>
+										</xs:annotation>
+										<xs:complexType>
+											<xs:simpleContent>
+												<xs:extension base="xs:string">
+													<xs:attribute name="id" type="xs:string" use="required"/>
+												</xs:extension>
+											</xs:simpleContent>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:all>
+				</xs:complexType>
+			</xs:element>
+		</xs:all>
+	</xs:complexType>
+</xs:schema>

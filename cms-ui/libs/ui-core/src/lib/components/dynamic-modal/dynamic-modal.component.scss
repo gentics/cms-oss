@@ -1,0 +1,40 @@
+@import '../../../styles/base-import';
+
+$easeOutCubic: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+
+:host {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+}
+
+.gtx-modal-overlay {
+    position: fixed;
+    z-index: 999;
+    top: -100px;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: 125%;
+    width: 100%;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    overflow: hidden;
+    max-height: 0;
+    will-change: opacity;
+    transition: opacity 0.5s $easeOutCubic, visibility 0s 0.5s, max-height 0s 0.5s;
+
+    &.visible {
+        transition: opacity 0.5s $easeOutCubic;
+        visibility: visible;
+        max-height: 9999999px;
+        opacity: 1;
+    }
+}

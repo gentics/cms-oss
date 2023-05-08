@@ -1,0 +1,62 @@
+<gtx-dropdown-list *ngIf="uiMode === UIMode.EDIT && item && (item.type === 'page' || item.type === 'form')" width="contents">
+    <gtx-dropdown-trigger>
+        <div class="status-label" [class.online]="item.online">
+            <icon *ngIf="!labelTextStateDeleted() && item.online" class="success">cloud_upload</icon>
+            <icon *ngIf="!labelTextStateDeleted() && !item.online" class="alert">cloud_off</icon>
+            <icon *ngIf="labelTextStateDeleted()" class="alert">delete</icon>
+
+            <span *ngIf="labelTextStateInQueue()">
+                {{ 'common.status_queue' | i18n }}
+                <span *ngIf="stateModified()" class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStatePlannedForPublishing()">
+                {{ 'common.status_publish_at' | i18n }}
+                <span *ngIf="stateModified()" class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStatePlannedForTakingOffline()">
+                {{ 'common.status_offline_at' | i18n }}
+                <span *ngIf="stateModified()" class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStateModified()">
+                {{ 'common.status_edited' | i18n }}
+                <span class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStatePublished()">
+                {{ 'common.status_published' | i18n }}
+                <span *ngIf="stateModified()" class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStateOffline()">
+                {{ 'common.status_offline' | i18n }}
+                <span *ngIf="stateModified()" class="icon-modified">*</span>
+            </span>
+            <span *ngIf="labelTextStateDeleted()">{{ 'common.status_deleted' | i18n }}</span>
+
+            <icon *ngIf="labelTextStateLocked()" class="info">lock</icon>
+        </div>
+    </gtx-dropdown-trigger>
+
+    <gtx-dropdown-content>
+        <item-state-contextmenu
+            [nodeLanguages]="nodeLanguages"
+            [item]="item"
+            [activeNodeId]="activeNodeId"
+            [uiMode]="uiMode"
+        ></item-state-contextmenu>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>
+
+<div *ngIf="uiMode === UIMode.STAGING && item">
+    <div class="status-label" [class.included]="stagingMap?.[item.globalId]?.included">
+        <icon>{{ (stagingMap?.[item.globalId]?.included) ? 'check' : 'close' }}</icon>
+        {{ ((stagingMap?.[item.globalId]?.included) ? 'common.staging_status_included' : 'common.staging_status_excluded') | i18n }}
+    </div>
+    <!-- <div
+        *ngIf="stagingMap?.[item.globalId]?.included"
+        class="recency-label"
+        [class.recent]="!!(stagingMap?.[item.globalId]?.recent)"
+        [class.old]="!(stagingMap?.[item.globalId]?.recent)"
+    >
+        <icon>{{ (stagingMap?.[item.globalId]?.recent) ? 'thumb_up' : 'watch_later' }}</icon>
+        {{ ((stagingMap?.[item.globalId]?.recent) ? 'common.staging_recency_recent' : 'common.staging_recency_old') | i18n }}
+    </div> -->
+</div>

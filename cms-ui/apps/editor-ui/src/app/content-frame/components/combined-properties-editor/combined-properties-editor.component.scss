@@ -1,0 +1,314 @@
+@import 'variables';
+
+@mixin mobile-scroll {
+    @media screen and (max-width: $small-screen) {
+        width: auto;
+        flex: 0 0 90%;
+        scroll-snap-align: start;
+        scroll-snap-coordinate: 0% 0%;
+    }
+}
+
+:host {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    // overflow: auto;
+
+    .hidden {
+        display: none;
+    }
+
+    @media screen and (max-width: $small-screen) {
+        position: relative;
+        width: auto;
+        white-space: nowrap;
+        scroll-snap-type: x mandatory;
+        scroll-snap-destination: 0% 0%;
+    }
+}
+
+.object-property-tooltip {
+    width: 100%;
+    display: block;
+
+    &::ng-deep .tooltip-wrapper {
+        width: 100%;
+    }
+
+    .property-tab {
+        display: flex;
+
+        .property-tab-icon {
+            margin: auto 0;
+        }
+
+        .property-tab-label {
+            margin: auto 0;
+        }
+    }
+}
+
+hr {
+    height: 100%;
+    margin: 0px 0 0 -1px;
+    width: 1px;
+    background-color: $gtx-color-light-gray;
+    border-style: solid;
+
+    @media screen and (max-width: $small-screen) {
+        flex: 0 0 1px;
+    }
+}
+
+.tag-wrapper {
+    border: 1px solid $gtx-color-light-gray;
+    margin: 25px;
+
+    &.tagfillLightEnabled {
+        border: none;
+    }
+
+    &.nonActive {
+        box-shadow: 0px 0px 0px 5px $gtx-color-light-gray;
+    }
+
+    &.disabled {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+
+    .activate-obj-prop {
+        float: right;
+        background: white;
+        margin-top: -25px;
+        margin-right: 45px;
+        padding: 10px;
+    }
+}
+
+.properties-tabs {
+    width: 20%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    overflow-y: auto;
+    padding-left: 8px;
+
+    @media screen and (max-width: $medium-screen) {
+        width: 35%;
+    }
+
+    @include mobile-scroll;
+
+    &::ng-deep {
+        .grouped-tabs {
+            width: 100%;
+            min-height: 100%;
+            overflow: visible;
+
+            .collapsible {
+                border-right: none;
+
+                .tab-link > a {
+                    display: flex;
+
+                    &::after {
+                        background: linear-gradient(to left, white 25%, rgba(255, 255, 255, 0));
+                        content: '';
+                        height: 100%;
+                        width: 20px;
+                        position: absolute;
+                        right: 0;
+                        top: 0;
+                    }
+
+                    icon[left] {
+                        float: left;
+                        margin-right: 8px;
+                        font-size: 16px;
+                    }
+                }
+
+                .tab-link.is-active {
+                    border-left-color: $gtx-color-warning !important;
+
+                    &.status-icon::before {
+                        color: $gtx-color-warning !important;
+                    }
+                }
+
+                > li.tab-link,
+                li.tab-group div {
+                    text-transform: none;
+                }
+
+                > li.tab-link:not(.is-active) {
+                    border-left: 1px solid $gtx-color-light-gray;
+                    border-right: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group:not(.is-active) {
+                    padding-left: 1px;
+                    border-left: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group li.tab-link:not(.is-active), .collapsible-header {
+                    border-right: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group li.tab-link.is-active {
+                    border-right: 2px solid white;
+                    border-left-color: $gtx-color-warning;
+                }
+            }
+        }
+
+        .grouped-tab-content {
+            display: none;
+        }
+
+        .tab-group {
+            .tab-link {
+                margin-left: 32px !important;
+            }
+        }
+
+        .tab-link {
+            .obj-prop-inactive {
+                opacity: 0.5;
+
+                icon {
+                    opacity: 0.4;
+                }
+            }
+        }
+    }
+}
+
+.item-properties,
+.item-tag-list,
+.form-reports {
+    flex-grow: 1;
+    overflow: auto;
+    width: 80%;
+
+    @include mobile-scroll;
+
+    .item-properties-heading,
+    .item-tag-list-heading,
+    .form-reports-heading {
+        padding-left: 24px;
+    }
+}
+
+.item-tag-list {
+    .item-tag {
+        display: flex;
+        padding: 8px;
+        padding-left: 24px;
+
+        > icon-checkbox {
+            ::ng-deep .item-icon {
+
+            }
+        }
+
+        > icon-checkbox,
+        > gtx-checkbox {
+            flex: 0 0 48px;
+        }
+
+        > gtx-checkbox {
+            margin-top: 2px;
+            margin-left: 3px;
+        }
+
+        span {
+            flex: 1 1;
+
+            &.tag-name {
+                color: $link-color;
+                cursor: pointer;
+
+                detail-chip {
+                    float: right;
+                    margin-right: 4px;
+                }
+            }
+
+            &.tag-actions {
+                flex: 0 0 32px;
+            }
+        }
+
+        border-bottom: 1px dotted #efefef;
+
+        &.item-tag-head {
+            border-bottom-color: #ffb84f;
+        }
+
+        .tag-actions {
+            i {
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+.object-property {
+    flex-grow: 1;
+    pointer-events: none;
+    opacity: 0.4;
+    filter: grayscale(1);
+    overflow: auto;
+
+    &.has-editing-permission {
+        pointer-events: all;
+        opacity: 1;
+        filter: grayscale(0);
+    }
+
+    @include mobile-scroll;
+
+    .tag-editor {
+        overflow-y: auto;
+    }
+
+    .old-tagfill-iframe {
+        width: 100%;
+        flex-grow: 1;
+        overflow: hidden;
+
+        ::ng-deep iframe {
+            transition: opacity .15s ease-in-out;
+            max-height: calc(100% - 3px); /* Remove Progress Bar height */
+        }
+
+        &[data-gcms-ui-iframe-loaded="true"] ::ng-deep iframe {
+            opacity: 1;
+            transition-delay: .2s; /* reveal delayed loading content */
+        }
+
+        &[data-gcms-ui-iframe-loaded="false"] ::ng-deep iframe {
+            opacity: 0;
+            transition-delay: -50ms; /* hide faster unloading content */
+        }
+    }
+
+}
+
+tag-editor-overlay-host.active {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    @media screen and (max-width: $small-screen) {
+        left: auto;
+        width: 90%;
+    }
+}

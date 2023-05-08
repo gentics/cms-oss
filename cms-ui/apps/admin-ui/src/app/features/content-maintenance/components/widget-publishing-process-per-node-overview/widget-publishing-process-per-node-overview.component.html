@@ -1,0 +1,69 @@
+<h2 class="title">{{ 'widget.widget_publishing_process_total_title' | i18n }}</h2>
+
+<ng-container *ngFor="let state of publishState; trackBy: identify">
+    <div class="gtx-table-publishqueue-container">
+        <h3 class="subtitle">{{ ('common.' + state.publishType + '_plural') | i18n }}</h3>
+
+        <ng-container *ngFor="let statusKey of ['toPublish', 'delayed']">
+            <table class="gtx-table-publishqueue">
+                <tr class="gtx-header-row">
+                    <th width="60%">{{ 'shared.' + statusKey | i18n }}:</th>
+
+                    <th class="gtx-cell-value" width="20%">
+                        <div class="gtx-cell-value-inner">
+                            {{ state[statusKey + 'Total'] }}
+                        </div>
+                    </th>
+
+                    <th width="20%"></th>
+                </tr>
+
+                <ng-container *ngFor="let node of state.nodes">
+                    <!-- only nodes are display which are > 0 -->
+                    <tr
+                        *ngIf="node[statusKey].amount > 0"
+                        class="gtx-data-row"
+                    >
+                        <td class="gtx-data-row-cell" width="60%">
+                            <div class="gtx-data-row-cell-container">
+                                <span [class.disable-publish-true]="node.disablePublish">
+                                    {{ node.name }}
+                                </span>
+                                <span
+                                    *ngIf="node.disablePublish"
+                                    class="disable-publish-true-hint"
+                                    [title]="'shared.disable_publish_true' | i18n"
+                                >&nbsp;*</span>
+                            </div>
+                        </td>
+
+                        <td class="gtx-cell-value" width="20%">
+                            <div class="gtx-cell-value-inner">
+                                {{ node[statusKey].amount }}
+                            </div>
+                        </td>
+
+                        <td class="gtx-cell-value" width="20%">
+                            <div class="gtx-cell-value-inner percentage">
+                                {{ node[statusKey].percentage.toFixed(1) + ' %' }}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="node[statusKey].amount > 0">
+                        <td class="gtx-loading-bar-row" colspan="3">
+                            <div
+                                class="loading-bar"
+                                [style.width]="node[statusKey].percentage.toFixed(1) + '%'"
+                            ></div>
+                        </td>
+                    </tr>
+
+                    <tr *ngIf="node[statusKey].amount">
+                        <td colspan="3"></td>
+                    </tr>
+                </ng-container>
+            </table>
+        </ng-container>
+    </div>
+</ng-container>

@@ -1,0 +1,46 @@
+:host {
+    display: flex;
+    flex-direction: column;
+}
+
+.publish-now,
+.publish-at {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.item-primary {
+    display: flex;
+}
+
+.item-language {
+    color: #ffb84f;
+    padding: 1px 4px;
+    border: 1px solid #ffb84f;
+    text-transform: uppercase;
+    margin-left: auto;
+}
+
+th {
+    padding: 15px 0 5px 0;
+    font-weight: normal;
+}
+
+td {
+    padding: 5px;
+}
+
+.publish-at-date {
+    font-size: 17px;
+    padding-left: 25px;
+}
+
+.modal-content table {
+    margin-bottom: 25px;
+}
+
+gtx-contents-list-item {
+    display: table-row;
+}

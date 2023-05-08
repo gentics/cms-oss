@@ -1,0 +1,55 @@
+<div id="javascriptappend"></div> 
+<script type="text/javascript">
+//attention this is lazy coded, only execute in Gentics Content.Node pages
+//(it triggers javcascript errors in Microsoft Internet Explorer, which are caught by the CMS Framework)
+var head = document.getElementsByTagName("head")[0];
+var jsdiv =document.getElementById("javascriptappend");
+
+function init_calendar(){
+	var script = document.createElement("script");
+	script.type = "text/javascript";
+	script.id = "include1";
+	script.src = "/cft/datepicker/calendar.js";
+	jsdiv.appendChild(script);
+}
+
+function init_calendar_setup(){
+	var setupscript = document.createElement("script");
+	setupscript.type = "text/javascript";
+	setupscript.src ="/cft/datepicker/calendar-setup.js";
+	jsdiv.appendChild(setupscript);
+}
+
+function init_calendar_language(){
+	var langscript = document.createElement("script");
+	langscript.type = "text/javascript";
+	langscript.src = "/cft/datepicker/calendar-lang.js";
+	jsdiv.appendChild(langscript);
+}
+
+function init_css(){
+	var style = document.createElement("link");
+	style.type = "text/css";
+	style.rel = "stylesheet";
+	style.href  = "/cft/datepicker/calendar.css";
+	document.getElementsByName("tagfill")[0].appendChild(style);
+}
+
+var mytimeouthandler;
+function detect_calendar_loaded(){
+	//this function is specially for IE ;-)
+	mytimeouthandler=window.setTimeout("detect_calendar_loaded()",500);
+	//if Calendar is null this causes an javascript error and the code below is not evaluated in this case.
+	if (Calendar) {
+		//if Calendar exists we clear the timeout (so the loop is stopped) an load the other calendercomponents
+		window.clearTimeout(mytimeouthandler);
+		init_calendar_setup();
+		init_calendar_language();
+		init_css();
+	}
+}
+
+init_calendar();
+detect_calendar_loaded();
+//code below this line will not be evaluated because of previous js errors
+</script>

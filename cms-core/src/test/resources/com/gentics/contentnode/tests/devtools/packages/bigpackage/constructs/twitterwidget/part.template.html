@@ -1,0 +1,35 @@
+#if (!$cms.rendermode.edit)
+<script src="http://widgets.twimg.com/j/2/widget.js"></script>
+<script>
+new TWTR.Widget({
+  version: 2,
+  type: 'profile',
+  rpp: 4,
+  interval: 6000,
+  width: 150,
+  height: 300,
+  theme: {
+    shell: {
+      background: '#589ff5',
+      color: '#050005'
+    },
+    tweets: {
+      background: '#fafafa',
+      color: '#000000',
+      links: '#80827f'
+    }
+  },
+  features: {
+    scrollbar: false,
+    loop: false,
+    live: false,
+    hashtags: true,
+    timestamp: true,
+    avatars: false,
+    behavior: 'all'
+  }
+}).render().setUser('<node twittername>').start();
+</script>
+#else
+Twitter Widget will not be rendered in editing mode
+#end

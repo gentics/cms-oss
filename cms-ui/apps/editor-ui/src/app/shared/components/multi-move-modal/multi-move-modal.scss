@@ -1,0 +1,48 @@
+@import "variables";
+@import "list-styles";
+@import "flex-modal";
+
+@include flex-modal;
+
+.modal-content {
+    min-height: 100px;
+    max-height: calc(96vh - 100px);
+}
+
+gtx-contents-list-item {
+    &.folder .item-icon { color: $gcms-color-folder; }
+    &.page .item-icon { color: $gcms-color-page; }
+    &.file .item-icon { color: $gcms-color-file; }
+    &.image .item-icon { color: $gcms-color-image; }
+
+    .inherited-icon, .localized-icon {
+        display: inline-block;
+        cursor: help;
+        margin-right: 3px;
+
+        icon {
+            color: $gcms-color-icon-inheritance;
+            font-size: $gtx-font-size-small;
+        }
+    }
+    .inherited-icon icon {
+        color: $gcms-color-icon-inheritance;
+    }
+    .localized-icon icon {
+        color: $gcms-color-icon-localized;
+    }
+
+    .item-icon {
+        height: 25px;
+    }
+}
+
+.can-not-be-moved {
+    .item-icon {
+        opacity: 0.8;
+    }
+
+    .reason {
+        color: $gtx-color-mid-gray;
+    }
+}

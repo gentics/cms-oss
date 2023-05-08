@@ -1,0 +1,66 @@
+<div class="modal-title">
+    <h5>{{ 'modal.multi_move_title' | i18n:{
+                count: items.length,
+                _type: itemType }
+        }}
+    </h5>
+</div>
+<div class="modal-content">
+    <div class="list can-not-be-moved" *ngIf="canNotBeMoved.length > 0">
+        <p class="lead" *ngIf="canNotBeMoved.length === 1">
+            {{ 'modal.multi_move_can_not_be_moved_header_singular' | i18n:{ _type: itemType } }}
+        </p>
+        <p class="lead" *ngIf="canNotBeMoved.length > 1">
+            {{ 'modal.multi_move_can_not_be_moved_header_plural' | i18n:{
+                count: canNotBeMoved.length,
+                _type: itemType
+            } }}
+        </p>
+        <gtx-contents-list-item *ngFor="let item of canNotBeMoved" [ngClass]="itemType || ''">
+            <div class="item-icon">
+                <icon>{{ iconForItemType(itemType) }}</icon>
+            </div>
+            <div class="item-primary">
+                <span class="inherited-icon" *ngIf="item.inherited"
+                        [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }">
+                    <icon>input</icon>
+                </span>
+                <div class="localized-icon" *ngIf="!item.inherited"
+                        [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }">
+                    <icon>file_copy</icon>
+                </div>
+                <span class="item-name">{{ item.name }}</span>
+                <span class="reason" *ngIf="item.inherited">
+                    {{ 'modal.multi_move_inherited' | i18n:{ inheritedFrom: item.inheritedFrom } }}
+                </span>
+                <span class="reason" *ngIf="!item.inherited">
+                    {{ 'modal.multi_move_localized' | i18n:{ channel: item.inheritedFrom, inheritedFrom: item.masterNode } }}
+                </span>
+            </div>
+        </gtx-contents-list-item>
+    </div>
+    <div class="list will-be-moved" *ngIf="willBeMoved.length > 0">
+        <p class="lead">
+            {{ ('modal.multi_move_will_be_moved_header_' + (willBeMoved.length === 1 ? 'singular' : 'plural')) | i18n:{
+                count: willBeMoved.length,
+                _type: itemType,
+                channel: targetNode.name,
+                folder: targetFolder.name
+            } }}
+        </p>
+        <gtx-contents-list-item *ngFor="let item of willBeMoved" [ngClass]="itemType || ''">
+            <div class="item-icon">
+                <icon>{{ iconForItemType(itemType) }}</icon>
+            </div>
+            <div class="item-primary">
+                <span class="item-name">{{ item.name }}</span>
+            </div>
+        </gtx-contents-list-item>
+    </div>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="default" (click)="confirm()" class="confirm-button" *ngIf="willBeMoved.length > 0">
+        {{ 'modal.multi_move_confirm_button' | i18n:{ count: willBeMoved.length, _type: itemType } }}
+    </gtx-button>
+</div>

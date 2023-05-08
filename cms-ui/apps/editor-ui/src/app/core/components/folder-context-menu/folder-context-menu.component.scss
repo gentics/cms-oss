@@ -1,0 +1,11 @@
+@import "variables";
+
+:host {
+    display: flex;
+    align-items: center;
+    padding-top: 2px;
+}
+
+.node-properties {
+    border-bottom: 1px solid $gtx-color-light-gray;
+}

@@ -1,0 +1,101 @@
+{
+  "globalId" : "A547.14560",
+  "keyword" : "checkbox",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Checkbox",
+    "en" : "[Form] -- Checkbox"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14187",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14274",
+    "name" : {
+      "de" : "Text, der als Beschreibung des Checkboxelements dienen soll<br />z.B.: \"Welche Themengebiete sind für Sie von Interesse\"",
+      "en" : "Text, der als Beschreibung des Checkboxelements dienen soll<br />z.B.: \"Welche Themengebiete sind für Sie von Interesse\""
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14322",
+    "name" : {
+      "de" : "Name des Checkboxelements intern<br />z.B.: themengebiet",
+      "en" : "Name des Checkboxelements intern<br />z.B.: themengebiet"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14364",
+    "name" : {
+      "de" : "Checkbox, welche bereits vorselektiert ist, die Vorselektion bezieht sich auf die Zeilennummer, der unten verwendeten Checkboxen",
+      "en" : "Checkbox, welche bereits vorselektiert ist, die Vorselektion bezieht sich auf die Zeilennummer, der unten verwendeten Checkboxen"
+    },
+    "keyword" : "checked",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14391",
+    "name" : {
+      "de" : "Fügen Sie hier alle Checkboxen des checkboxelements ein<br />Jede neue Zeile stellt eine neue Checkbox dar",
+      "en" : "Fügen Sie hier alle Checkboxen des checkboxelements ein<br />Jede neue Zeile stellt eine neue Checkbox dar"
+    },
+    "keyword" : "options",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14413",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

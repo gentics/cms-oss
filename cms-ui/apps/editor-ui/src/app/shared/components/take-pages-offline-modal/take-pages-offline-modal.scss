@@ -1,0 +1,37 @@
+@import "variables";
+@import "flex-modal";
+
+@include flex-modal;
+
+.language-list {
+    margin-left: 35px;
+    margin-bottom: 30px;
+    max-height: 300px;
+    overflow: auto;
+
+    .offline {
+        opacity: 0.5;
+    }
+
+    .language-name {
+        color: darken($gcms_color-highlight, 15%);
+    }
+}
+
+th {
+    padding: 15px 0 5px 0;
+    font-weight: normal;
+}
+
+td {
+    padding: 5px;
+}
+
+.selected-languages-header {
+    font-size: 12px;
+    padding-left: 22px;
+}
+
+gtx-contents-list-item {
+    display: table-row;
+}

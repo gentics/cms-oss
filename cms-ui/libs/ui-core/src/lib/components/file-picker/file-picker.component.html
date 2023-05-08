@@ -1,0 +1,23 @@
+<div class="hidden-file-wrapper">
+    <input
+        #fileInput
+        type="file"
+        class="hidden-file-input"
+        tabindex="-1"
+        [accept]="inputAccept"
+        [disabled]="disabled"
+        [multiple]="multiple"
+        (change)="onChange($event, fileInput)"
+    />
+</div>
+
+<gtx-button
+    [disabled]="disabled"
+    [size]="size"
+    [icon]="icon"
+    [type]="dropArea?.pageDragHovered ? 'success' : type"
+    [flat]="flat || dropArea?.dragHovered"
+    (click)="!disabled && fileInput.click()"
+>
+    <ng-content></ng-content>
+</gtx-button>

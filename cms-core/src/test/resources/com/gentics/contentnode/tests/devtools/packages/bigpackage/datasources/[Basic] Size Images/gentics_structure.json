@@ -1,0 +1,18 @@
+{
+  "globalId" : "A547.71254",
+  "type" : "statical",
+  "name" : "[Basic] Size Images",
+  "values" : [ {
+    "globalId" : "A547.75166",
+    "key" : "Small / Klein",
+    "value" : "100"
+  }, {
+    "globalId" : "A547.75167",
+    "key" : "Medium / Mittel",
+    "value" : "250"
+  }, {
+    "globalId" : "A547.75168",
+    "key" : "Large / Groß",
+    "value" : "430"
+  } ]
+}

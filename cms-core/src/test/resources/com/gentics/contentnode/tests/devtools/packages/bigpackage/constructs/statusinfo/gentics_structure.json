@@ -1,0 +1,45 @@
+{
+  "globalId" : "A547.70190",
+  "keyword" : "statusinfo",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "Status information",
+    "en" : "Status information"
+  },
+  "description" : {
+    "de" : "Calls a portal velocimacro with status information",
+    "en" : "Calls a portal velocimacro with status information"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.74132",
+    "name" : {
+      "de" : "Velocity",
+      "en" : ""
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70196",
+    "name" : {
+      "de" : "Template",
+      "en" : ""
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 10,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

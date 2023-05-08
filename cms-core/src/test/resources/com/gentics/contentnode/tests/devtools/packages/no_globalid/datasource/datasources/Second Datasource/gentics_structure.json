@@ -1,0 +1,9 @@
+{
+  "type" : "statical",
+  "name" : "Second Datasource",
+  "values" : [ {
+    "key" : "Entry Key",
+    "value" : "Entry Value",
+    "dsId" : 0
+  } ]
+}

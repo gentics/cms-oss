@@ -1,0 +1,37 @@
+<div class="tag-editor" *ngIf="useNewTagEditor$ | async; else oldTagEditorIFrame">
+    <div
+        class="tag-wrapper"
+        [class.disabled]="isDisabled"
+        [class.nonActive]="!editedTag?.active"
+        [class.tagfillLightEnabled]="(tagfillLightEnabled$ | async)"
+    >
+        <div *ngIf="!(tagfillLightEnabled$ | async)" class="activate-obj-prop">
+            <gtx-checkbox
+                [label]="'editor.obj_prop_active_label' | i18n"
+                [checked]="editedTag?.active"
+                [disabled]="!(itemPermissions.edit) || (editedTag?.readOnly)"
+                (change)="toggleDisplayContent()"
+            ></gtx-checkbox>
+        </div>
+        <tag-editor-host
+            *ngIf="(tagToEdit$ | async)?.tag?.tagType; else tagTypeLoadError"
+            [showTitle]="showTitle$ | async"
+        ></tag-editor-host>
+    </div>
+
+    <ng-template #tagTypeLoadError>
+        <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
+    </ng-template>
+</div>
+
+<ng-template #oldTagEditorIFrame>
+    <iframe-wrapper
+        *ngIf="showOldTagFill && oldTagfillUrl"
+        class="old-tagfill-iframe"
+        height="100%"
+        [attr.data-gcms-ui-iframe-loaded]="oldTagFillIFrameState"
+        [srcUrl]="oldTagfillUrl"
+        [disableValidation]="!canSave"
+        (iFrameLoadedStateChange)="onOldTagEditorIFrameLoad($event)">
+    </iframe-wrapper>
+</ng-template>

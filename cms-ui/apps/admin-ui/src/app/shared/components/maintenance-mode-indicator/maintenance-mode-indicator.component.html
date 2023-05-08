@@ -1,0 +1,23 @@
+<ng-container *ngIf="settings$ | async as settings">
+    <div
+        *ngIf="settings.active || settings.showBanner"
+        class="banner"
+        [class.maintenance-is-active]="settings.active"
+    >
+        <span
+            *ngIf="settings.active"
+            class="maintenance-is-active-note"
+        >{{ 'shared.maintenance_mode_is_active' | i18n }} &nbsp;&#124;&nbsp;</span>
+
+        <ng-container *ngIf="settings.showBanner; else templateNoBanner">
+            <span
+                class="banner-message-title"
+            >{{ 'shared.banner_message' | i18n }}:</span>&nbsp;{{ settings.message }}
+        </ng-container>
+
+        <ng-template #templateNoBanner>
+            <span class="banner-is-active-note">{{ 'shared.maintenance_banner_is_not_active' | i18n }}</span>
+        </ng-template>
+
+    </div>
+</ng-container>

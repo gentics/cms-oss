@@ -1,0 +1,76 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+$item-list-min-height: 63px;
+
+.paginate-wrapper {
+    display: flex;
+    position: relative;
+
+    paging-controls {
+        display: block;
+        flex: 1 1;
+    }
+}
+
+.content-list {
+    @include item-type-icon-colors;
+
+    margin-bottom: 20px;
+
+    &.empty {
+        color: $gtx-color-mid-gray;
+        > .list-header {
+            border-bottom: none;
+        }
+    }
+
+    > .list-header {
+        padding: 10px;
+        border-bottom: 1px dotted $gcms-color-highlight;
+        display: flex;
+
+    }
+
+    .list-body {
+        // commented out because causes strange layout issues on mobile (pages list)
+        //overflow: hidden;
+
+        &.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .load-more gtx-button {
+            margin: auto;
+        }
+
+        @include masonry-thumbnail-grid;
+
+        masonry-grid masonry-item.item-in-editor ::ng-deep image-thumbnail {
+            box-shadow: 0 0 9px 2px rgba($gtx-color-primary, 0.5);
+        }
+
+        masonry-item .display-fields {
+            // Fixes a display bug in IE11 where the ListItemDetails spill out of the wrapper
+            max-width: 99%;
+        }
+    }
+
+    paging-controls {
+        &.hidden {
+            display: none;
+        }
+    }
+}
+
+.sort-mode i {
+    font-size: $gtx-font-size-small;
+}
+
+::ng-deep .page-language-toggle {
+    gtx-checkbox {
+        float: left;
+    }
+}

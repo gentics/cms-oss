@@ -1,0 +1,22 @@
+<div class="modal-title">
+    <h5>{{ 'modal.debug_tool_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <div class="debug-tool-icons">
+        <icon>bug_report</icon> <icon>arrow_forward</icon> <icon>description</icon>
+    </div>
+    <div class="description" [hidden]="inProgress">
+        <span class="lead debug-tool-introduction" [innerHTML]="'modal.debug_tool_introduction' | i18n"></span>
+        <span class="lead">{{ 'modal.debug_tool_usage_title' | i18n }}:</span>
+        <ol>
+            <li *ngFor="let step of ('modal.debug_tool_usage_steps' | i18n)">{{ step }}</li>
+        </ol>
+        <span class="debug-tool-privacy" [innerHTML]="'modal.debug_tool_privacy_details' | i18n"></span>
+    </div>
+    <div class="loader" [hidden]="!inProgress">Loading...</div>
+</div>
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="cancelFn()" [disabled]="clearingData">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button id="debug-btn-clear" type="secondary" (click)="clearSiteData()" [disabled]="inProgress">{{ 'modal.debug_tool_clear_button' | i18n }}</gtx-button>
+    <gtx-button id="debug-btn-report" type="default" (click)="generateReport()" [disabled]="inProgress">{{ 'modal.debug_tool_generate_button' | i18n }}</gtx-button>
+</div>

@@ -1,0 +1,112 @@
+<gtx-progress-bar [active]="loading || backgroundActivity"></gtx-progress-bar>
+<div class="activity-overlay" *ngIf="backgroundActivity"></div>
+
+<div class="modal-title">
+    <h5>
+        <span>{{ 'modal.page_versions_title_prefix' | i18n }}</span>
+        <span class="page-name" title="(selectedPageVariant || page).name">{{ (selectedPageVariant || page).name }}</span>
+        <span class="pre" *ngIf="languageVariants ? languageVariants.length > 0 : page.language != null">{{ 'modal.page_versions_title_suffix' | i18n }}</span>
+        <span class="pre" *ngIf="languageVariants ? languageVariants.length === 0 : page.language == null">{{ 'modal.page_versions_title_suffix_no_languages' | i18n }}</span>
+        <span *ngIf="!languageVariants && !!page.language">{{ 'lang.' + page.language | i18n }}</span>
+        <span *ngIf="languageVariants?.length === 1">{{ 'lang.' + selectedPageVariant.language | i18n }}</span>
+        <span *ngIf="languageVariants?.length > 1">
+            <gtx-dropdown-list align="right">
+                <gtx-dropdown-trigger>
+                    <span class="clickable">{{ 'lang.' + selectedPageVariant.language | i18n }}</span>
+                    <gtx-button flat icon><i class="material-icons" [attr.translate]="'no'">arrow_drop_down</i></gtx-button>
+                </gtx-dropdown-trigger>
+                <gtx-dropdown-content>
+                    <gtx-dropdown-item *ngFor="let variant of languageVariants" (click)="selectVariant(variant)">
+                        {{ 'lang.' + variant.language | i18n }}
+                    </gtx-dropdown-item>
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </span>
+    </h5>
+</div>
+
+<div class="modal-content">
+
+    <div class="loading-placeholder" *ngIf="!selectedPageVariant">
+        <span class="text">{{ 'modal.page_versions_loading' | i18n }}</span>
+    </div>
+
+    <div *ngIf="selectedPageVariant?.versions?.length === 0">
+        <gtx-contents-list-item>
+            <div class="item-icon"><i class="material-icons" [attr.translate]="'no'">not_interested</i></div>
+            <div class="item-primary">{{ 'modal.page_versions_empty_label' | i18n }}</div>
+        </gtx-contents-list-item>
+    </div>
+
+    <div class="version-list" *ngIf="selectedPageVariant?.versions?.length > 0">
+        <gtx-contents-list-item *ngFor="let version of selectedPageVariant.versions">
+            <div class="item-primary">
+                <span class="item-name">{{ 'modal.page_versions_item' | i18n:{ version: version.number } }}</span>
+                <span class="item-date">{{ 'modal.page_versions_date_label' | i18n:{ date: (version.timestamp | i18nDate), time: (version.timestamp | i18nDate:'time') } }}</span>
+                <span class="item-editor">{{ 'modal.page_versions_editor_label' | i18n:{ name: version.editor.firstName + ' ' + version.editor.lastName } }}</span>
+            </div>
+
+            <div class="item-indicators">
+                <span [title]="'modal.page_versions_tooltip_published_version' | i18n:{ _language: selectedPageVariant.language }"
+                    *ngIf="version === published" class="published">
+                    <i class="material-icons" [attr.translate]="'no'">cloud_upload</i>{{ 'modal.page_versions_published_label' | i18n }}
+                </span>
+                <span [title]="'modal.page_versions_tooltip_planned_offline_version' | i18n:{ _language: selectedPageVariant.language }"
+                    *ngIf="planned && version === current && (plannedOfflineDate > 0 && plannedOnlineDate === 0 || plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOfflineDate < plannedOnlineDate)" class="planned_offline">
+                    <i class="material-icons" [attr.translate]="'no'">cloud_off</i>{{ 'modal.page_version_planned_offline_date' | i18n:{ date: (plannedOfflineDate | i18nDate)} }}
+                </span>
+                <span [title]="'modal.page_versions_tooltip_planned_online_version' | i18n:{ _language: selectedPageVariant.language }"
+                    *ngIf="planned && version.number === plannedVersion && (plannedOnlineDate > 0 && plannedOfflineDate === 0 || plannedOfflineDate > 0 && plannedOnlineDate > 0 && plannedOnlineDate < plannedOfflineDate)" class="planned_online">
+                    <i class="material-icons" [attr.translate]="'no'">cloud_off</i>{{ 'modal.page_version_planned_online_date' | i18n:{ date: (plannedOnlineDate | i18nDate)} }}
+                </span>
+                <span [title]="'modal.page_versions_tooltip_current_version' | i18n:{ _language: selectedPageVariant.language }"
+                    *ngIf="version === current" class="current">{{ 'modal.page_versions_current_label' | i18n }}
+                </span>
+            </div>
+
+            <div class="item-actions" *ngIf="!compareBaseVersion">
+                <div class="action-buttons">
+                    <gtx-button flat type="primary" size="small" (click)="previewVersion(version)"
+                                [title]="'page_versions_tooltip_preview' | i18n:{ version: version.number }">
+                        <i class="material-icons left" [attr.translate]="'no'">pageview</i>
+                        <span> {{ 'modal.page_versions_preview_button' | i18n }}</span>
+                    </gtx-button>
+
+                    <gtx-button flat type="primary" size="small"
+                                (click)="compareFromVersion(version)"
+                                *ngIf="selectedPageVariant.versions.length >= 2">
+                        <i class="material-icons left" [attr.translate]="'no'">compare_arrows</i> {{ 'modal.page_versions_compare_button' | i18n }}
+                    </gtx-button>
+                </div>
+
+                <gtx-dropdown-list align="right">
+                    <gtx-dropdown-trigger>
+                        <gtx-button icon type="secondary">
+                            <i class="material-icons" [attr.translate]="'no'">more_vert</i>
+                        </gtx-button>
+                    </gtx-dropdown-trigger>
+                    <gtx-dropdown-content>
+                        <gtx-dropdown-item *ngIf="version === current" class="disabled" [title]="'modal.page_versions_tooltip_already_current_version' | i18n">
+                            <i class="material-icons left" [attr.translate]="'no'">settings_backup_restore</i> {{ 'modal.page_versions_restore_button' | i18n }}
+                        </gtx-dropdown-item>
+                        <gtx-dropdown-item *ngIf="version !== current" (click)="restoreVersion(version)">
+                            <i class="material-icons left" [attr.translate]="'no'">settings_backup_restore</i> {{ 'modal.page_versions_restore_button' | i18n }}
+                        </gtx-dropdown-item>
+                    </gtx-dropdown-content>
+                </gtx-dropdown-list>
+            </div>
+            <div *ngIf="version === compareBaseVersion" class="item-actions">
+                <gtx-button flat size="small" type="secondary" (click)="cancelComparing()">{{ 'modal.page_versions_cancel_button' | i18n }}</gtx-button>
+            </div>
+            <div *ngIf="compareBaseVersion != null && version !== compareBaseVersion" class="item-actions">
+                <gtx-button flat size="small" (click)="compareWithVersion(version)">
+                    <i class="material-icons left" [attr.translate]="'no'">compare_arrows</i> {{ 'modal.page_versions_compare_button' | i18n }}
+                </gtx-button>
+            </div>
+
+        </gtx-contents-list-item>
+    </div>
+</div>
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="closeFn()">{{ 'modal.page_versions_close_button' | i18n }}</gtx-button>
+</div>

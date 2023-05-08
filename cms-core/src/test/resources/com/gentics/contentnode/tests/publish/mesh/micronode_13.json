@@ -1,0 +1,22 @@
+[ {
+  "uuid" : "#MICRONODE_UUID#",
+  "microschema" : {
+    "name" : "test_construct",
+    "uuid" : "#MICROSCHEMA_UUID#",
+    "version" : "1.0",
+    "versionUuid" : "#VERSION_UUID#"
+  },
+  "fields" : {
+    "part_listType" : "PAGE",
+    "part_selectType" : "MANUAL",
+    "part_orderDir" : "DESC",
+    "part_orderBy" : "ALPHABETICALLY",
+    "part_items" : [ {
+      "uuid" : "#TARGET_PAGE_UUID#"
+    } ],
+    "part_nodeIds" : [ 0 ],
+    "part_source" : "<node page.name>",
+    "part_recursive" : false,
+    "part_maxItems" : 10
+  }
+} ]

@@ -1,0 +1,257 @@
+@import "variables";
+
+/* State colours */
+$gcms-color-stateUntranslated: #959595;
+$gcms-color-stateDeleted: #F84340;
+$gcms-color-statePublished: #34AD34;
+$gcms-color-stateUnpublished: #F84340;
+$gcms-color-stateModified: #444;
+$gcms-color-stateInQueue: #ED7b35;
+$gcms-color-statePlanned: #0096DC;
+$gcms-color-stateInherited: $gcms-color-icon-inheritance;
+$gcms-color-stateLocalized: $gcms-color-icon-localized;
+
+/* State icon sizes */
+$gcms-icon-background-size: $gcms-icon-size;
+
+.status-icons {
+    position: absolute;
+    direction: ltr;
+    display: inline-block;
+    font-family: 'Material Icons';
+    font-size: $gcms-icon-font-size;
+    font-style: normal;
+    font-weight: normal;
+    letter-spacing: normal;
+    line-height: 1;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    z-index: 1;
+}
+
+.status-icons-background {
+    content: '';
+    display: block;
+    position: absolute;
+    background-color: white;
+    width: $gcms-icon-background-size;
+    height: $gcms-icon-background-size;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.stateUntranslatedColor {
+    color: $gcms-color-stateUntranslated;
+}
+.stateDeletedColor {
+    color: $gcms-color-stateDeleted;
+}
+.statePublishedColor {
+    color: $gcms-color-statePublished;
+}
+.stateUnpublishedColor {
+    color: $gcms-color-stateUnpublished;
+}
+.stateModifiedColor {
+    color: $gcms-color-stateModified;
+}
+.stateInQueueColor {
+    color: $gcms-color-stateInQueue;
+}
+.statePlannedColor {
+    color: $gcms-color-statePlanned;
+}
+.stateInheritedColor {
+    color: $gcms-color-stateInherited;
+}
+.stateLocalizedColor {
+    color: $gcms-color-stateLocalized;
+}
+
+:host {
+    display: inline-block;
+    position: relative;
+    z-index: 0;
+}
+
+.item-primary > * {
+    align-items: flex-start;
+}
+
+.language-icons {
+    display: inline-block;
+}
+
+.language-icon {
+    display: inline-block;
+    position: relative;
+    font-size: $gcms-icon-size;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    margin-right: -6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+
+    gtx-dropdown-trigger {
+        padding: 0.4rem 0.4rem 0.4rem 0;
+    }
+
+    &.column {
+        margin-right: 2px;
+    }
+
+    .stateUntranslated, .stateDeleted {
+        &:before {
+            @extend .status-icons;
+            @extend .stateUntranslatedColor;
+            content: '\e145';
+            right: 0;
+            bottom: 0;
+        }
+        &:after {
+            @extend .status-icons-background;
+            right: 0;
+            bottom: 0;
+        }
+    }
+
+    &.statusInfos {
+        margin-right: 10px;
+
+        &.column {
+            margin-right: 2px;
+        }
+
+        &.statePublished.multiLang {
+            .language-code {
+                border: 1px solid transparentize($gcms-color-statePublished, 0.5);
+            }
+        }
+
+        .stateDeleted {
+            &:after {
+                content: "";
+                position: absolute;
+                width: 1.4rem;
+                height: 1px;
+                bottom: 0;
+                top: 0;
+                left: -0.55rem;
+                right: 0;
+                margin: auto;
+                background-color: $gcms-color-stateUntranslated;
+            }
+        }
+    
+        .stateModified {
+            &:before {
+                @extend .status-icons;
+                @extend .stateModifiedColor;
+                content: '\204E';
+                font-size: 1.3rem;
+                right: 0;
+                top: -0.7rem;
+            }
+            &:after {
+                @extend .status-icons-background;
+                right: 0;
+                top: 0;
+            }
+        }
+    
+        .stateInQueue {
+            &:before {
+                @extend .status-icons;
+                @extend .stateInQueueColor;
+                content: '\e86a';
+                right: 2rem;
+                top: 0;
+            }
+            &:after {
+                @extend .status-icons-background;
+                right: 1.9rem;
+                top: 0;
+            }
+        }
+    
+        .statePlanned {
+            &:before {
+                @extend .status-icons;
+                @extend .statePlannedColor;
+                content: '\e192';
+                right: 2rem;
+                bottom: 0;
+            }
+            &:after {
+                @extend .status-icons-background;
+                right: 1.9rem;
+                bottom: 0;
+            }
+        }
+    
+        .stateInherited {
+            &:before {
+                @extend .status-icons;
+                @extend .stateInheritedColor;
+                content: '\e890';
+                right: 0;
+                bottom: 0;
+            }
+            &:after {
+                @extend .status-icons-background;
+                right: 0;
+                bottom: 0;
+            }
+        }
+    
+        .stateLocalized {
+            &:before {
+                @extend .status-icons;
+                color: transparentize($gcms-color-stateLocalized, 0.3);
+                content: '\e173';
+                right: 0;
+                bottom: 0;
+            }
+            &:after {
+                @extend .status-icons-background;
+                right: 0;
+                bottom: 0;
+            }
+        }
+    }
+
+    a {
+        color: $gtx-color-mid-gray;
+    }
+
+    &.available a {
+        color: $gcms-color-highlight;
+    }
+
+    &:hover, 
+    &:hover .stateModified:after,
+    &:hover .stateInQueue:after,
+    &:hover .statePlanned:after,
+    &:hover .stateInherited:after,
+    &:hover .stateLocalized:after
+    {
+        background-color: $gtx-color-off-white;
+    }
+
+    @media screen and (min-width: $large-screen){
+        &.compact {
+            display: none;
+        }
+    }
+
+    .language-code {
+        padding: 1px 4px;
+    }
+}
+
+.expand-toggle {
+    display: inline-block;
+}

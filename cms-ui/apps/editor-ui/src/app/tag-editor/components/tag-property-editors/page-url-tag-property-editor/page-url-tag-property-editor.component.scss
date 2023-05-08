@@ -1,0 +1,28 @@
+@import "variables";
+
+:host {
+
+    .column {
+        padding: 0;
+    }
+
+    ::ng-deep input[type=text] {
+        margin-bottom: 5px;
+    }
+
+    @include input-label-styles('.tag-prop-label');
+
+    .tag-prop-label {
+        position: static;
+        font-size: 0.8rem;
+    }
+
+    .row.internal-external-selector {
+        margin-left: 0;
+
+        gtx-radio-button {
+            margin-right: 10px;
+        }
+    }
+
+}

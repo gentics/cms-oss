@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "exclude": [
+        "src/test.ts",
+        "**/*.spec.ts",
+        "**/*.mock.ts"
+    ],
+    "include": [
+        "**/*.ts",
+        "../ui-core/src/public-api.ts"
+    ]
+}

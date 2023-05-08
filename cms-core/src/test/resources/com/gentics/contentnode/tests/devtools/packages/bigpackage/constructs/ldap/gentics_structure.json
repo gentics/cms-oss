@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.14581",
+  "keyword" : "ldap",
+  "icon" : "uliste.gif",
+  "name" : {
+    "de" : "Adressbuchabfrage (LDAP)",
+    "en" : "Addressbook Query (LDAP)"
+  },
+  "description" : {
+    "de" : "Tag which uses the xnl ldap object to send a query to an ldap server and return the results in a tag. Mainly used for display of addressbookinformation in a page.",
+    "en" : "Tag which uses the XNL LDAP object to send a query to an LDAP server and return the results in a tag. Mainly used for display of addressbookinformation in a page."
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14208",
+    "name" : {
+      "de" : "LDAP Design Template",
+      "en" : "LDAP Design Template"
+    },
+    "keyword" : "ldap_template_design",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14288",
+    "name" : {
+      "de" : "Anzuzeigende Daten",
+      "en" : "Anzuzeigende Daten"
+    },
+    "keyword" : "ldap_searchtemplate",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14338",
+    "name" : {
+      "de" : "Anzuwendender Suchtyp",
+      "en" : "anzuwendender Suchtyp"
+    },
+    "keyword" : "ldap_searchfilter",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14374",
+    "name" : {
+      "de" : "Suchbegriff",
+      "en" : "Suchbegriff"
+    },
+    "keyword" : "ldap_searchterm",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

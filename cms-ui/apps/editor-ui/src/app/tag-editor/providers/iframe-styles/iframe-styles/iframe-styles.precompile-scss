@@ -1,0 +1,40 @@
+@import "content-frame-variables";
+
+html {
+    @include gcms-font();
+
+    @include custom-checkbox();
+    @include custom-radio-button();
+
+    input[type="text"] {
+        @include form-input;
+    }
+
+    textarea {
+        @include form-input;
+        height: auto;
+    }
+
+    select {
+        @include form-input;
+        &[multiple] {
+            height: auto;
+        }
+    }
+
+    button, button.primary {
+        @include primary-button;
+    }
+
+    button.secondary {
+        @include secondary-button;
+    }
+
+    @include input-label-styles('label,.gtx-tag-prop-label');
+
+    label,.gtx-tag-prop-label {
+        position: static;
+        font-size: 0.8rem;
+    }
+
+}

@@ -1,0 +1,20 @@
+<gtx-dropdown-list>
+    <gtx-dropdown-trigger>
+        <gtx-button icon type="default" title="{{ 'common.select_node' | translate }}…">
+            <i class="material-icons arrow-icon">arrow_drop_down</i>
+        </gtx-button>
+    </gtx-dropdown-trigger>
+    <gtx-dropdown-content>
+        <ng-content></ng-content>
+        <gtxct-list-filter selector="gtx-dropdown-item"
+                        filterThreshhold="10"
+                        [label]="'editor.filter_nodes' | translate">
+            <gtxct-node-selector-tree [stats]="stats | async" [branches]="nodeBranches$ | async"
+                                (nodeSelected)="select($event)"></gtxct-node-selector-tree>
+        </gtxct-list-filter>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>
+<span class="selectedNode">
+    {{ (currentSelectedNode$ | async)?.name }}
+</span>
+

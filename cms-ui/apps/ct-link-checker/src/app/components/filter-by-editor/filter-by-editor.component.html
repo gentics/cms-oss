@@ -1,0 +1,14 @@
+<div class="filter">
+    <span>{{ 'common.filter_by_editor' | translate }}:</span>
+    <gtx-dropdown-list>
+        <gtx-dropdown-trigger>
+            <span class="editor">{{ (editor$ | async)?.label | translate }}</span>
+            <gtx-button icon type="default">
+                <i class="material-icons arrow-icon">arrow_drop_down</i>
+            </gtx-button>
+        </gtx-dropdown-trigger>
+        <gtx-dropdown-content>
+            <gtx-dropdown-item *ngFor="let item of editors" (click)="select(item)">{{ item.label | translate }}</gtx-dropdown-item>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+</div>

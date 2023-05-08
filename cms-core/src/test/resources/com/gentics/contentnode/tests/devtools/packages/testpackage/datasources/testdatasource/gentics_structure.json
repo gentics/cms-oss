@@ -1,0 +1,14 @@
+{
+  "globalId" : "ABCD.0deb28a7-dbc1-11e6-8b5d-ea5d8efab9e8",
+  "type" : "statical",
+  "name" : "testdatasource",
+  "values" : [ {
+    "globalId" : "ABCD.1e12d9f3-dbc1-11e6-8b5d-ea5d8efab9e8",
+    "key" : "First Key",
+    "value" : "First Value"
+  }, {
+    "globalId" : "ABCD.2890c7e2-dbc1-11e6-8b5d-ea5d8efab9e8",
+    "key" : "Second Key",
+    "value" : "Second Value"
+  } ]
+}

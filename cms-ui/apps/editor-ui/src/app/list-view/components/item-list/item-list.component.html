@@ -1,0 +1,90 @@
+<div
+    *ngIf="activeNode" class="content-list"
+    [class.empty]="items?.length === 0"
+    [ngClass]="itemType || ''"
+    [class.not-loading]="!(areItemsLoading$ | async)"
+>
+    <item-list-header
+        #header
+        class="list-header icon-checkbox-trigger"
+        [itemsInfo]="itemsInfo"
+        [selectedItems]="selectedItems$ | async"
+        [items]="items"
+        [icon]="icon"
+        [filterTerm]="filterTerm"
+        [nodeLanguages]="languages$ | async"
+        [itemType]="itemType"
+        [acceptUploads]="acceptUploads"
+        [folderPermissions]="folderPermissions"
+        [canCreateItem]="canCreateItem"
+        [activeNode]="activeNode"
+        [currentFolderId]="currentFolderId"
+        [showAllLanguages]="showAllLanguages$ | async"
+        [showStatusIcons]="showStatusIcons$ | async"
+        [showDeleted]="showDeleted$ | async"
+        [showImagesGridView]="showImagesGridView$ | async"
+        [paginationConfig]="paginationConfig"
+        [uiMode]="uiMode"
+    ></item-list-header>
+
+    <div class="list-body" [class.collapsed]="header.isCollapsed">
+        <div *ngIf="itemType !== 'image' || !(showImagesGridView$ | async)">
+            <div *ngFor="let item of items | paginate: paginationConfig; trackBy: identify">
+                <item-list-row
+                    [activeNode]="activeNode"
+                    [item]="item"
+                    [nodeId]="appState?.now?.folder?.activeNode"
+                    [itemInEditor]="itemInEditor"
+                    [icon]="icon"
+                    [filterTerm]="filterTerm"
+                    [selected]="isSelected(item)"
+                    [itemType]="itemType"
+                    [startPageId]="startPageId"
+                    [linkPaths]="linkPaths"
+                    [expandByDefault]="showAllLanguages$ | async"
+                    [nodeLanguages]="languages$ | async"
+                    [itemsInfo]="itemsInfo"
+                    [showDeleted]="showDeleted$ | async"
+                    [uiMode]="uiMode"
+                    [stagingMap]="stagingMap"
+                ></item-list-row>
+            </div>
+        </div>
+
+        <masonry-grid
+            *ngIf="itemType === 'image' && (showImagesGridView$ | async)"
+            [gutter]="10"
+            [columnWidth]="280"
+        >
+            <masonry-item
+                *ngFor="let item of items | paginate: paginationConfig; trackBy: identify"
+                class="icon-checkbox-trigger"
+                [class.item-in-editor]="item === itemInEditor"
+            >
+                <!-- since item list is only used in folder content context, we can simply fetch the respective active node from state -->
+                <grid-item
+                    [item]="item"
+                    [nodeId]="appState?.now?.folder?.activeNode"
+                    [selected]="isSelected(item)"
+                    [itemsInfo]="itemsInfo"
+                    [linkPaths]="linkPaths"
+                    [itemType]="itemType"
+                    [activeNode]="activeNode"
+                    [icon]="icon"
+                    [filterTerm]="filterTerm"
+                    [uiMode]="uiMode"
+                    [stagingMap]="stagingMap"
+                ></grid-item>
+            </masonry-item>
+        </masonry-grid>
+
+        <div class="paginate-wrapper">
+            <paging-controls (pageChange)="pageChange.emit($event)"></paging-controls>
+            <gtx-page-size-selector
+                *ngIf="itemsInfo?.total > 10"
+                [size]="itemsInfo.itemsPerPage"
+                (sizeChange)="itemsPerPageChange.emit($event)"
+            ></gtx-page-size-selector>
+        </div>
+    </div>
+</div>

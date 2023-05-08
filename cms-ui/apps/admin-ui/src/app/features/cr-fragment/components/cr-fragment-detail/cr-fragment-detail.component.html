@@ -1,0 +1,61 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="ContentRepositoryFragmentDetailTabs.PROPERTIES"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="crFragment.updateFragment"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                (saveClick)="btnSavePropertiesOnClick()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form
+                        *ngIf="fgProperties"
+                        [formGroup]="fgProperties"
+                        class="buttons-form small-12 medium-9 row"
+                    >
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                type="text"
+                                [required]="true"
+                                maxlength="255"
+                                [label]="('shared.crfragment_name' | i18n) + ' *'"
+                                [placeholder]="'shared.crfragment_name' | i18n"
+                                formControlName="name"
+                                gtxActionAllowed="crFragment.updateFragment"
+                                [aaInstanceId]="currentEntity?.name"
+                            >
+                            </gtx-input>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="ContentRepositoryFragmentDetailTabs.ENTRIES"
+            gtxDetailTabLink
+            [title]="'shared.title_entries' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_entries_of_entity' | i18n: { entityName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <gtx-tag-map-entry-table
+                [showSearch]="true"
+                [parentType]="'contentRepositoryFragment'"
+                [parentId]="currentEntity.id"
+                [displayFields]="TagmapEntryDisplayFields.ALL"
+            ></gtx-tag-map-entry-table>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

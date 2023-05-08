@@ -1,0 +1,5 @@
+config:
+  accesscontrol:
+    default:
+      secured: true
+      allowedfrom: allowed-host

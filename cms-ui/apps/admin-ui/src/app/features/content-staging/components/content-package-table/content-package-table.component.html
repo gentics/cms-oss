@@ -1,0 +1,61 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<div *ngIf="!hideActions" class="entity-table-actions-bar">
+    <gtx-button
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || !canCreate"
+        (click)="handleCreateButton()"
+    >
+        <icon left>add</icon> {{ 'content_staging.create_content_package' | i18n }}
+    </gtx-button>
+</div>
+
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'content_staging.info_selected_content_packages' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+</div>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    [renderers]="{ date: dateRenderer }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #dateRenderer let-value="value">
+    {{ value | i18nDate }}
+</ng-template>

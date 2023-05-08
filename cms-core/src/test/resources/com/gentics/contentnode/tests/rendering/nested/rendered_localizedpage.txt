@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<body>
+<div data-gcn-pageid="##PAGE_ID##" data-gcn-tagid="##OUTER_TAG_ID##" data-gcn-tagname="outer_tag" data-gcn-i18n-constructname="Velocity" class="aloha-block" id="GENTICS_BLOCK_##OUTER_TAG_ID##">Tag ID: ##OUTER_TAG_ID##
+Tag name: outer_tag
+editmode: true
+[Tag ID: ##INNER_TAG_ID##
+Tag name: inner_tag
+editmode: false
+]</div></body>

@@ -1,0 +1,94 @@
+@import "../../../../styles/variables";
+
+.modal-inner {
+    max-height: 80%;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    display: flex;
+    font-size: $gtx-font-size-lead;
+}
+
+.modal-compatibility-state {
+    font-size: $gtx-font-size-lead;
+    margin: auto 0;
+    display: inline-block;
+    height: 24px;
+
+    icon {
+        margin-right: 0.5rem;
+        font-size: 1.5rem;
+    }
+}
+
+.modal-btn-close {
+    display: flex;
+    margin-left: 2rem;
+    cursor: pointer;
+
+    icon {
+        font-size: 2rem;
+    }
+}
+
+.modal-body {
+
+    table tr td:last-child {
+        text-align: right;
+    }
+}
+
+.list-gmcs-components {
+    padding-left: 1rem;
+}
+
+.node-versions-title {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+.node-versions-list {
+    margin-block-start: 0;
+    list-style-type: square;
+
+    tr {
+        border-bottom: none;
+    }
+
+    td {
+        padding: 4px 0;
+    }
+
+    li {
+        text-indent: 1rem;
+        margin-bottom: 1rem;
+    }
+    li > ul > li {
+        text-indent: 2rem;
+    }
+}
+
+.compatibility-state {
+
+    icon {
+        font-size: $gtx-font-size-lead;
+        cursor: help;
+    }
+}
+
+.not-supported {
+    color: $gtx-color-alert;
+}
+.supported {
+    color: $gtx-color-success;
+}
+.unknown {
+    color: $gtx-color-warning;
+}

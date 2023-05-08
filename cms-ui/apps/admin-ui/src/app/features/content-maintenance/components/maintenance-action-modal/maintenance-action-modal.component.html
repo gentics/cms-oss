@@ -1,0 +1,109 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'contentmaintenance.' + modalAction | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <form
+            *ngIf="formGroup"
+            [formGroup]="formGroup"
+            class="row"
+        >
+            <div class="columns medium-6 small-12">
+                <gtx-select
+                    [label]="'contentmaintenance.types' | i18n"
+                    [multiple]="true"
+                    [required]="true"
+                    [selectAll]="true"
+                    formControlName="types"
+                >
+                    <gtx-option *ngFor="let mType of TYPE_LIST" [value]="mType">
+                        {{ 'common.' + mType + '_plural' | i18n }}
+                    </gtx-option>
+                </gtx-select>
+
+                <!-- contentRepositories -->
+                <ng-container *ngIf="allContentRespositories$ | async as crs; else contentRespositoriesLoading">
+                    <gtx-select
+                        [label]="'contentmaintenance.contentRepositories' | i18n"
+                        [multiple]="true"
+                        [required]="true"
+                        [selectAll]="true"
+                        formControlName="contentRepositories"
+                    >
+                        <gtx-option *ngFor="let cr of crs" [value]="cr.id">
+                            {{ cr.name }}
+                        </gtx-option>
+                    </gtx-select>
+                </ng-container>
+
+                <ng-template #contentRespositoriesLoading>
+                    <span>{{ 'shared.loading' | i18n }}</span>
+                </ng-template>
+
+                <!-- attributes -->
+                <gtx-textarea
+                    formControlName="attributes"
+                    [label]="'contentmaintenance.attributes' | i18n"
+                    maxlength="255"
+                    title="Comma separated list of attributes, that shall be republished for the selected objects (empty for all attributes)."
+                ></gtx-textarea>
+            </div>
+
+            <div class="columns medium-6 small-12">
+                <div class="padding-wrapper">
+                    <!-- clearPublishCache -->
+                    <gtx-checkbox
+                        formControlName="clearPublishCache"
+                        [label]="'contentmaintenance.clearPublishCache' | i18n"
+                    ></gtx-checkbox>
+                </div>
+
+                <div
+                    class="gtx-limit-to-date-range"
+                    [class.active]="formGroup.value.limitToDateRange"
+                >
+                    <!-- limitToDateRange -->
+                    <gtx-checkbox
+                        [label]="'contentmaintenance.limit_to_date_range' | i18n"
+                        formControlName="limitToDateRange"
+                    ></gtx-checkbox>
+
+                    <ng-container *ngIf="formGroup.value.limitToDateRange">
+                        <gtx-date-time-picker
+                            [label]="'contentmaintenance.limit_to_date_start' | i18n"
+                            [displayTime]="false"
+                            [max]="formGroup.value.end"
+                            formControlName="start"
+                        ></gtx-date-time-picker>
+
+                        <gtx-date-time-picker
+                            [label]="'contentmaintenance.limit_to_date_end' | i18n"
+                            [displayTime]="false"
+                            [min]="formGroup.value.start"
+                            formControlName="end"
+                        ></gtx-date-time-picker>
+                    </ng-container>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            [disabled]="formGroup?.invalid"
+            (click)="buttonOkClicked()"
+        >
+            {{ 'common.ok_button' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

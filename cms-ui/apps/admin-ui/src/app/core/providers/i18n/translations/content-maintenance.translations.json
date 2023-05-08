@@ -1,0 +1,110 @@
+{
+    "info_selected_tasks": {
+        "en": "{{amountSelected}} of {{amountTotal}} Tasks selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Aufgaben ausgewählt"
+    },
+    "title_general": {
+        "en": "Content Maintenance",
+        "de": "Content-Wartung"
+    },
+    "title_failedTasks": {
+        "en": "Failed Tasks",
+        "de": "Fehlgeschlagene Aufgaben"
+    },
+    "republish_objects": {
+        "en": "Republish objects",
+        "de": "Objekte neu publizieren"
+    },
+    "delay_objects": {
+        "en": "Delay objects",
+        "de": "Objekte zurückstellen"
+    },
+    "republish_delayed_objects": {
+        "en": "Republish delayed objects",
+        "de": "Zurückgestellte Objekte publizieren"
+    },
+    "mark_objects_as_published": {
+        "en": "Mark objects as published",
+        "de": "Objekte als publiziert markieren"
+    },
+    "stop_publishing": {
+        "en": "Publizierung abbrechen",
+        "de": "Stop publishing"
+    },
+    "reload_configuration": {
+        "en": "Reload configuration",
+        "de": "Konfiguration neu laden"
+    },
+    "attributes": {
+        "en": "Attributes",
+        "de": "Attribute"
+    },
+    "clearPublishCache": {
+        "en": "Clear publish cache",
+        "de": "Publish-Cache leeren"
+    },
+    "types": {
+        "en": "Types",
+        "de": "Typen"
+    },
+    "contentRepositories": {
+        "en": "ContentRepositories",
+        "de": "ContentRepositories"
+    },
+    "life_sync": {
+        "en": "Auto Refresh",
+        "de": "Auto-Aktualisierung"
+    },
+    "life_sync_intervall": {
+        "en": "Refresh Intervall (in seconds)",
+        "de": "Aktualisierungsintervall (in Sekunden)"
+    },
+    "id": {
+        "en": "Id",
+        "de": "Id"
+    },
+    "label": {
+        "en": "Label",
+        "de": "Bezeichnung"
+    },
+    "object_type": {
+        "en": "Object Type",
+        "de": "Objekttyp"
+    },
+    "object_id": {
+        "en": "Object Id",
+        "de": "Objekt-Id"
+    },
+    "timestamp": {
+        "en": "Timestamp",
+        "de": "Zeitstempel"
+    },
+    "failed": {
+        "en": "Failed",
+        "de": "Gescheitert"
+    },
+    "failReason": {
+        "en": "Failure reason",
+        "de": "Fehlerursache"
+    },
+    "limit_to_date_range": {
+        "en": "Limit to date range",
+        "de": "Einschränken auf Datum"
+    },
+    "limit_to_date_start": {
+        "en": "Start date",
+        "de": "Zeitraum Begin"
+    },
+    "limit_to_date_end": {
+        "en": "End date",
+        "de": "Zeitraum Ende"
+    },
+    "error_no_nodes_selected": {
+        "en": "No nodes selected to perform action on",
+        "de": "Keine Nodes für Aktion ausgewählt"
+    },
+    "delete_all": {
+        "en": "Delete all",
+        "de": "Alle löschen"
+    }
+}

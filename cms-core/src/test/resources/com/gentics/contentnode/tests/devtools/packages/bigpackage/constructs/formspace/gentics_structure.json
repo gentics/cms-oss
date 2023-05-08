@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.14566",
+  "keyword" : "formspace",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] --- (Leerraum)",
+    "en" : "[Form] --- (Spacer)"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14193",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

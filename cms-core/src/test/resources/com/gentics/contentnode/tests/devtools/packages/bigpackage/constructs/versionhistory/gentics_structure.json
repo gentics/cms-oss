@@ -1,0 +1,44 @@
+{
+  "globalId" : "A547.69989",
+  "keyword" : "versionhistory",
+  "icon" : "ds.gif",
+  "name" : {
+    "de" : "Versionierung",
+    "en" : "Version History"
+  },
+  "description" : {
+    "de" : "Include a version history, containing velocity macros for the portal",
+    "en" : "Include a version history, containing velocity macros for hte portal"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.69995",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70000",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,110 @@
+@import "variables";
+
+.custom-content {
+    &.disabled {
+        color: gray;
+        &:hover {
+            cursor: not-allowed;
+        }
+    }
+}
+
+.custom-content-menu {
+    position: absolute;
+    z-index: 1;
+    background-color: white;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                0 1px 5px 0 rgba(0, 0, 0, 0.12),
+                0 3px 1px -2px rgba(0, 0, 0, 0.2);
+}
+
+.custom-content-menu-inner {
+    position: relative;
+    min-width: 15em;
+    max-height: 50vh;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+        -webkit-appearance: none;
+    }
+    
+    &::-webkit-scrollbar:vertical {
+        width: 11px;
+    }
+    
+    &::-webkit-scrollbar:horizontal {
+        height: 11px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        border-radius: 8px;
+        border: 2px solid white; /* should match background, can't be transparent */
+        background-color: rgba(0, 0, 0, .5);
+    }
+    
+    &::-webkit-scrollbar-track { 
+        background-color: #fff; 
+        border-radius: 8px; 
+    }
+}
+
+.custom-content-menu-filter {
+    background-color: white;
+    width: 100%;
+    border-bottom: 1px #eee solid !important;
+    border-radius: none;
+    padding: 10px 20px;
+
+    &:focus {
+        outline: 0;
+    }
+}
+
+.custom-content-menu-button {
+    display: block;
+    background-color: white;
+    width: 100%;
+    border: none;
+    border-radius: none;
+    padding: 10px 20px;
+    color: $gtx-color-primary;
+    text-align: left;
+    transition: background-color 0.1s ease-in-out;
+
+    &:hover, &:focus {
+        background-color: transparentize($gtx-color-primary, 0.75);
+        outline: 0;
+    }
+
+    &.custom-content-menu-no-match {
+        color: gray;
+        font-size: 80%;
+    }
+}
+
+.default-trigger {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: white;
+    min-width: 16px;
+    width: 100%;
+    border: none;
+    border-radius: none;
+    padding: 0 10px !important;
+
+    span {
+        line-height: 1.5rem;
+    }
+
+    &.disabled {
+        color: gray;
+        &:hover {
+            cursor: not-allowed;
+        }
+    }
+
+    icon {
+        margin-left: 0;
+    }
+}

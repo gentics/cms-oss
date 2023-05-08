@@ -1,0 +1,29 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_contentRepository_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <gtx-content-repository-properties
+        *ngIf="form"
+        [formControl]="form"
+        mode="create"
+        (isValidChange)="isValid = $event"
+    >
+    </gtx-content-repository-properties>
+</div>
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!isValid"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ 'modal.create_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

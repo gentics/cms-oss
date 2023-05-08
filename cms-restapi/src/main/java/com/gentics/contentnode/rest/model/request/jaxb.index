@@ -1,0 +1,12 @@
+FileCreateRequest
+FileSaveRequest
+FolderCreateRequest
+FolderSaveRequest
+ImageCreateRequest
+ImageSaveRequest
+PageCreateRequest
+PagePreviewRequest
+PagePublishRequest
+PageSaveRequest
+TagCreateRequest
+WorkflowRequest

@@ -1,0 +1,87 @@
+@import "variables";
+
+.action-buttons-dropdown-content {
+
+    margin: 1rem 0 1.5rem;
+
+    .action-button-group {
+        .action-button-group-label {
+            margin: 0.25rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-bottom: 1px solid $gtx-color-light-gray;
+        }
+
+        .action-button-group-content {
+            display: flex;
+            flex-wrap: nowrap;
+            flex-direction: row;
+            margin: 1rem;
+            align-items: baseline;
+        }
+    }
+
+    .action-button {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        text-align: center;
+        position: relative;
+        cursor: pointer;
+        width: 8rem;
+        max-width: 8rem;
+
+        .action-button-icon-wrapper {
+            margin: auto auto 0;
+            width: 64px;
+            height: 64px;
+            background-color: $gtx-color-very-light-gray;
+            border-radius: 8px;
+            position: relative;
+
+            .tool-new-tab {
+                position: absolute;
+                top: -0.5rem;
+                right: -1rem;
+                color: $gtx-color-light-gray;
+            }
+
+            .action-button-icon {
+                display: block;
+                font-size: 64px;
+                color: $gtx-color-dark-gray;
+                transition: 300ms;
+
+                &.action-button-text-icon {
+                    line-height: 64px;
+                    text-transform: uppercase;
+                }
+
+                &.action-button-url-icon {
+                    margin: 2px;
+                }
+            }
+        }
+
+        .action-button-label {
+            color: $gtx-color-dark-gray;
+            transition: 300ms;
+            margin: 0.5rem auto auto;
+            width: 100%;
+            text-align: center;
+            white-space: initial;
+            word-break: break-word;
+        }
+
+        &:hover {
+            .action-button-icon-wrapper .action-button-icon {
+                color: $gtx-color-primary;
+            }
+
+            .action-button-label {
+                color: $gtx-color-very-dark-gray;
+            }
+        }
+    }
+}

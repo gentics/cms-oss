@@ -1,0 +1,115 @@
+{
+  "globalId" : "A547.14559",
+  "keyword" : "select",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Auswahlliste",
+    "en" : "[Form] -- Selectfield"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14186",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14273",
+    "name" : {
+      "de" : "Text, der vor der Auswahlliste stehen soll<br />z.B.: \"Wählen Sie einen Fahrzeugtyp:\")",
+      "en" : "Text, der vor der Auswahlliste stehen soll<br />z.B.: \"Wählen Sie einen Fahrzeugtyp:\")"
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14321",
+    "name" : {
+      "de" : "Name der Auswahlliste intern<br /> z.B.:fahrzeugtyp",
+      "en" : "Name der Auswahlliste intern<br /> z.B.:fahrzeugtyp"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14363",
+    "name" : {
+      "de" : "Zeile, welche bereits vorselktiert ist<br />(keine Eingabe = keine Vorselektion)",
+      "en" : "Zeile, welche bereits vorselktiert ist<br />(keine Eingabe = keine Vorselektion)"
+    },
+    "keyword" : "selected",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14390",
+    "name" : {
+      "de" : "Anzahl der angezeigten Zeilen der Auswahlliste (1=Dropdown)",
+      "en" : "Anzahl der angezeigten Zeilen der Auswahlliste (1=Dropdown)"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14412",
+    "name" : {
+      "de" : "Fügen Sie hier den Inhalt der Auswahlliste ein.<br />Jede neue Zeile stellt ein neues Element der Liste dar",
+      "en" : "Fügen Sie hier den Inhalt der Auswahlliste ein.<br />Jede neue Zeile stellt ein neues Element der Liste dar"
+    },
+    "keyword" : "options",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14431",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

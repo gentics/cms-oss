@@ -1,0 +1,55 @@
+{{ 'JUST SOME OUTPUT FOR DEBUGGING PURPOSES' }}
+<gtx-contents-list-item [class.selected]="isSelected">
+
+    <div class="checkbox-wrapper" *ngIf="canBeSelected">
+        <gtx-checkbox
+            [checked]="isSelected"
+            (change)="toggleSelect.emit(!isSelected)"></gtx-checkbox>
+    </div>
+    <div class="item-icon" *ngIf="!canBeSelected">
+        <icon>{{ iconForItemType(item.type) }}</icon>
+    </div>
+
+    <div #itemPrimary class="item-primary" [class.selected]="isSelected">
+        <ng-template #itemName>
+            <span *ngIf="item.inherited"
+                class="inherited-icon"
+                title="Inherited from: {{ item.inheritedFrom }}">
+                <icon>input</icon>
+            </span>
+            <div *ngIf="item | itemIsLocalized"
+                class="localized-icon"
+                [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }">
+                <icon>file_copy</icon>
+            </div>
+
+            <div class="item-name">
+                <a (click)="itemClick.emit(item)">
+                    <div *ngIf="displayNodeName" class="node-name">{{ item | nodeNameOfItem }}</div>
+                    {{ item.name }}
+                </a>
+                <item-status-label *ngIf="item.type === 'page'" [item]="item"></item-status-label>
+                <file-status-label [item]="item"></file-status-label>
+                <start-page-icon *ngIf="startPageId && item.type === 'page' && item.id === startPageId"></start-page-icon>
+            </div>
+
+            <div class="item-breadcrumbs" *ngIf="searching">
+                <item-breadcrumbs [item]="item" [linkPaths]="false"></item-breadcrumbs>
+            </div>
+
+            <div class="item-path" *ngIf="displayFields?.showPath && item.type !== 'folder'"
+                [title]="item | itemPath:(item | nodeNameOfItem)"
+                [innerHTML]="item | itemPath:(item | nodeNameOfItem) | truncatePath:60">
+            </div>
+        </ng-template>
+
+        <image-thumbnail-tooltip *ngIf="item.type === 'image'; else itemName" [image]="item" [nodeId]="nodeId" [parent]="itemPrimary">
+            <ng-container *ngTemplateOutlet="itemName"></ng-container>
+        </image-thumbnail-tooltip>
+    </div>
+    <div class="display-fields">
+        <list-item-details [fields]="displayFields?.selection" [item]="item">
+        </list-item-details>
+    </div>
+
+</gtx-contents-list-item>

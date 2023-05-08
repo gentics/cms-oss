@@ -1,0 +1,32 @@
+@import "../../../../styles/variables";
+
+.form-element-preview-container {
+    display: flex;
+    flex-flow: row nowrap;
+    min-height: 1.65rem;
+    align-items: flex-end;
+}
+
+.label-property-value-container,
+.element-type-label-container {
+    font-size: 1.1rem;
+}
+
+.label-property-no-value-container {
+    font-style: italic;
+    color: #aaa;
+}
+
+.no-preview {
+    font-style: italic;
+    color: #aaa;
+}
+
+.label-property-value-container,
+.label-property-no-value-container,
+.element-type-label-container,
+.no-preview {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

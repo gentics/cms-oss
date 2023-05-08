@@ -1,0 +1,75 @@
+#aloha-spellcheck-marker-menu {
+    background-color:  #f5f5f5;
+    width:             200px;
+    position:          absolute;
+    z-index:           10200;
+    border:            1px solid #d2d2d2;
+}
+
+.aloha-spellcheck-message {
+    display: block;
+    font-style: italic;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.aloha-spellcheck-subject {
+    color: #333;
+    font-style: initial;
+    margin-left: 4px;
+}
+
+.aloha-spellcheck-replacements-title {
+    display: block;
+    border-top: 1px solid #d2d2d2;
+    color: #777;
+    padding: 8px;
+}
+
+.aloha-spellcheck-replacements-title:after {
+    content: ':';
+}
+
+ul.aloha-spellcheck-replacements-list li {
+    padding: 6px 8px;
+    list-style-type: none;
+    font-weight: bold;
+    margin: 0;
+}
+
+ul.aloha-spellcheck-replacements-list li:hover {
+    background-color: #ddd;
+}
+
+ul.aloha-spellcheck-replacements-list li {
+    color: #555 !important;
+    text-decoration: none;
+    cursor: pointer;
+} 
+
+.aloha-spellcheck-marker {
+  position: relative;
+  background-size: 10px 10px;
+}
+
+.aloha-spellcheck-marker:before {
+  content: ' ';
+  position: absolute;
+  left: 0;
+  top: 90%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(45deg, transparent, transparent 40%, red 40%, transparent 60%);
+  background-size: 4px 4px;
+}
+
+.aloha-spellcheck-marker:after {
+  content: ' ';
+  position: absolute;
+  left: 0;
+  top: 90%;
+  width: 100%;
+  height: 2px;
+      background: linear-gradient(-45deg, transparent, transparent 40%, red 40%, transparent 60%);
+  background-size: 4px 4px;
+}

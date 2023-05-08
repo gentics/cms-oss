@@ -1,0 +1,395 @@
+{
+  "globalId" : "A547.74971",
+  "keyword" : "genticssharebar",
+  "icon" : "undef.gif",
+  "name" : {
+    "de" : "Gentics Sharebar",
+    "en" : "Gentics Sharebar"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.74977",
+    "name" : {
+      "de" : "Template",
+      "en" : ""
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74982",
+    "name" : {
+      "de" : "Velocity",
+      "en" : ""
+    },
+    "keyword" : "vtl",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74987",
+    "name" : {
+      "de" : "FB Icon (small)",
+      "en" : "FB Icon small"
+    },
+    "keyword" : "fbiconsmall",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74992",
+    "name" : {
+      "de" : "Twitter Icons (small)",
+      "en" : "Twitter Icons (small)"
+    },
+    "keyword" : "twittericonsmall",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74997",
+    "name" : {
+      "de" : "Send Icon (small)",
+      "en" : "Send Icon (small)"
+    },
+    "keyword" : "sendiconsmall",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75002",
+    "name" : {
+      "de" : "Print Icon (small)",
+      "en" : "FB Icon (middle)"
+    },
+    "keyword" : "printiconsmall",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75007",
+    "name" : {
+      "de" : "FB Icon (middle)",
+      "en" : "FB Icon (middle)"
+    },
+    "keyword" : "fbiconmiddle",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75012",
+    "name" : {
+      "de" : "Twitter Icons (middle)",
+      "en" : "Twitter Icons (middle)"
+    },
+    "keyword" : "twittericonmiddle",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75017",
+    "name" : {
+      "de" : "Send Icon (middle)",
+      "en" : "Send Icon (middle)"
+    },
+    "keyword" : "sendiconmiddle",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75022",
+    "name" : {
+      "de" : "Print Icon (middle)",
+      "en" : "Print Icon (middle)"
+    },
+    "keyword" : "printiconmiddle",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75027",
+    "name" : {
+      "de" : "FB Icon (large)",
+      "en" : "FB Icon (large)"
+    },
+    "keyword" : "fbiconlarge",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 11,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75032",
+    "name" : {
+      "de" : "Twitter Icon (large)",
+      "en" : "Twitter Icon (large)"
+    },
+    "keyword" : "twittericonlarge",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 12,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75037",
+    "name" : {
+      "de" : "Send Icon (large)",
+      "en" : "Send Icon (large)"
+    },
+    "keyword" : "sendiconlarge",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 13,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75042",
+    "name" : {
+      "de" : "Print Icon (large)",
+      "en" : "Print Icon (large)"
+    },
+    "keyword" : "printiconlarge",
+    "editable" : false,
+    "typeId" : 6,
+    "order" : 14,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75047",
+    "name" : {
+      "de" : "FB Share Text (english)",
+      "en" : "FB Share Text (english)"
+    },
+    "keyword" : "fbsharetextenglish",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 15,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75052",
+    "name" : {
+      "de" : "FB Share Text (german)",
+      "en" : "FB Share Text (german)"
+    },
+    "keyword" : "fbsharetextgerman",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 16,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75057",
+    "name" : {
+      "de" : "Twitter Share Text (english)",
+      "en" : "Twitter Share Text (english)"
+    },
+    "keyword" : "twittersharetextenglish",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 17,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75062",
+    "name" : {
+      "de" : "Twitter Share Text (german)",
+      "en" : "Send Share Text (english)"
+    },
+    "keyword" : "twittersharetextgerman",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 18,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75067",
+    "name" : {
+      "de" : "Send Share Text (english)",
+      "en" : "Send Share Text (english)"
+    },
+    "keyword" : "sendsharetextenglish",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 19,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75072",
+    "name" : {
+      "de" : "Send Share Text (german)",
+      "en" : "Send Share Text (german)"
+    },
+    "keyword" : "sendsharetextgerman",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 20,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75077",
+    "name" : {
+      "de" : "Print Share Text (english)",
+      "en" : "Print Share Text (english)"
+    },
+    "keyword" : "printsharetextenglish",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 21,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75082",
+    "name" : {
+      "de" : "Print Share Text (german)",
+      "en" : "Print Share Text (german)"
+    },
+    "keyword" : "printsharetextgerman",
+    "editable" : false,
+    "typeId" : 1,
+    "order" : 22,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75087",
+    "name" : {
+      "de" : "Size of share buttons",
+      "en" : "Size of share buttons"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 23,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75194",
+    "name" : {
+      "de" : "Twitter?",
+      "en" : "Twitter?"
+    },
+    "keyword" : "twitter",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 24,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75199",
+    "name" : {
+      "de" : "Facebook?",
+      "en" : "Facebook?"
+    },
+    "keyword" : "facebook",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 25,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75204",
+    "name" : {
+      "de" : "Send?",
+      "en" : "Send?"
+    },
+    "keyword" : "send",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 26,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75209",
+    "name" : {
+      "de" : "Print?",
+      "en" : "Print?"
+    },
+    "keyword" : "print",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 27,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

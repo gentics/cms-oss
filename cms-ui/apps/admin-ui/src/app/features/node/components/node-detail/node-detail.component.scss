@@ -1,0 +1,29 @@
+@import 'variables';
+
+.gtx-entity-details-tab-content-body-form {
+    width: 100%;
+}
+
+gtx-entity-detail-header {
+    ::ng-deep .gtx-entity-details-tab-content-header {
+        padding-left: 0.625rem;
+    }
+    @media screen and (min-width: $small-screen-up) {
+        ::ng-deep .gtx-entity-details-tab-content-header {
+            padding-left: 0.9375rem;
+        }
+    }
+}
+
+.disabledArea ::ng-deep dx-data-grid {
+    pointer-events: none;
+
+    dx-check-box {
+        opacity: 0.2;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+      to { opacity: 1; }
+}

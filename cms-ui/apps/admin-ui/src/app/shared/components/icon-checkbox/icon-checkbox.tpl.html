@@ -1,0 +1,14 @@
+<div #wrapper
+     class="icon-checkbox-wrapper"
+     [class.checked]="selected">
+    <div class="item-icon">
+        <i class="material-icons" [attr.translate]="'no'">{{ icon }}</i>
+    </div>
+    <div class="item-checkbox">
+        <gtx-checkbox
+            [checked]="selected"
+            [disabled]="disabled"
+            (change)="checkboxClicked($event)"
+        ></gtx-checkbox>
+    </div>
+</div>

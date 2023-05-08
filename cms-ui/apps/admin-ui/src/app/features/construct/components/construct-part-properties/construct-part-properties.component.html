@@ -1,0 +1,172 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <div class="row">
+        <div class="input-container small-12 medium-4 columns">
+
+            <!-- partOrder -->
+            <gtx-input
+                [label]="('construct.partOrder' | i18n) + ' *'"
+                [required]="true"
+                formControlName="partOrder"
+                [min]="1"
+                [max]="999"
+                type="number"
+            ></gtx-input>
+
+            <!-- keyword -->
+            <gtx-input
+                [required]="true"
+                [label]="('construct.keyword' | i18n) + ' *'"
+                formControlName="keyword"
+                type="text"
+                maxlength="255"
+            ></gtx-input>
+
+            <!-- typeId -->
+            <gtx-select
+                [label]="('construct.type' | i18n) + ' *'"
+                [required]="true"
+                [clearable]="false"
+                formControlName="typeId"
+            >
+                <gtx-option *ngFor="let part of VIABLE_CONSTRUCT_PART_TYPES" [value]="part">{{ ('construct.tagPartType_' + part) | i18n }}</gtx-option>
+                <ng-container *ngIf="form?.value?.typeId && REMOVED_CONSTRUCT_PART_TYPES.includes(form?.value?.typeId)">
+                    <gtx-option [value]="form.value.typeId" [disabled]="true">{{ ('construct.tagPartType_' + form.value.typeId) | i18n }}</gtx-option>
+                </ng-container>
+            </gtx-select>
+
+            <!-- markupLanguageId -->
+            <gtx-select
+                *ngIf="form.get('markupLanguageId').enabled"
+                [label]="('construct.markupLanguage' | i18n)"
+                [clearable]="true"
+                formControlName="markupLanguageId"
+            >
+                <gtx-option *ngFor="let item of markupLanguages$ | async" [value]="item.id">{{ item.name }}</gtx-option>
+            </gtx-select>
+
+            <!-- regex -->
+            <gtx-select
+                *ngIf="form.get('regex').enabled"
+                [label]="'construct.regex' | i18n"
+                [clearable]="true"
+                formControlName="regex"
+            >
+                <gtx-option *ngFor="let item of TagPartValidatorConfigs | values" [value]="item.id">{{ ('construct.' + item.name) | i18n }}</gtx-option>
+            </gtx-select>
+
+            <!-- overviewSettings -->
+            <gtx-overview-part-settings
+                *ngIf="form.get('overviewSettings').enabled"
+                [label]="'construct.overviewSettings' | i18n"
+                class="settings-group"
+                formControlName="overviewSettings"
+            ></gtx-overview-part-settings>
+
+            <!-- selectSettings -->
+            <gtx-select-part-settings
+                *ngIf="form.get('selectSettings').enabled"
+                [label]="'construct.selectSettings' | i18n"
+                formControlName="selectSettings"
+            ></gtx-select-part-settings>
+
+            <!-- editable -->
+            <gtx-checkbox
+                [label]="'construct.editable' | i18n"
+                formControlName="editable"
+            ></gtx-checkbox>
+
+            <!-- mandatory -->
+            <gtx-checkbox
+                [label]="'construct.mandatory' | i18n"
+                formControlName="mandatory"
+            ></gtx-checkbox>
+
+            <!-- hidden -->
+            <gtx-checkbox
+                [label]="'construct.hidden' | i18n"
+                formControlName="hidden"
+            ></gtx-checkbox>
+
+            <!-- liveEditable -->
+            <gtx-checkbox
+                [label]="'construct.liveEditable' | i18n"
+                formControlName="liveEditable"
+            ></gtx-checkbox>
+
+            <!-- hideInEditor -->
+            <gtx-checkbox
+                [label]="'construct.hideInEditor' | i18n"
+                formControlName="hideInEditor"
+            ></gtx-checkbox>
+
+        </div>
+
+        <div class="input-container small-12 medium-8 columns">
+
+            <!-- externalEditorUrl -->
+            <gtx-input
+                [label]="'construct.externalEditorUrl' | i18n"
+                type="text"
+                maxlength="255"
+                formControlName="externalEditorUrl"
+            ></gtx-input>
+
+            <ng-container *ngIf="supportedLanguages">
+                <h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
+
+                <div class="properties-editor-i18n">
+                    <gtx-grouped-tabs
+                        class="properties-tabs"
+                        pure
+                        wrap
+                        statusIcons
+                        [activeId]="activeTabI18nLanguage?.id"
+                    >
+                        <gtx-tab-pane
+                            *ngFor="let language of supportedLanguages"
+                            [id]="language?.id"
+                            (select)="setActiveI18nTab($event)"
+                            [readonly]="disabled"
+                            [inactive]="!activeI18nTabValueExists(language?.code)"
+                        >
+                            <ng-template gtx-tab-label>
+                                <div
+                                    class="language-pane-label"
+                                    [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+                                >{{ language?.name }}</div>
+                            </ng-template>
+                        </gtx-tab-pane>
+                    </gtx-grouped-tabs>
+
+                    <div
+                        *ngIf="activeTabI18nLanguage?.code as activeLanguage"
+                        class="tab-content"
+                    >
+                        <h3>{{ activeTabI18nLanguage?.name }}</h3>
+
+                        <gtx-i18n-input
+                            [label]="('common.name' | i18n) + ' *'"
+                            [language]="activeLanguage"
+                            [availableLanguages]="languages"
+                            [requiredInCurrentLanguage]="true"
+                            formControlName="nameI18n"
+                        ></gtx-i18n-input>
+                    </div>
+                </div>
+            </ng-container>
+
+            <!-- defaultProperty -->
+            <gtx-construct-part-fill
+                *ngIf="form.get('defaultProperty').enabled"
+                [label]="'construct.defaultProperty' | i18n"
+                [type]="TagPartTypePropertyType[form?.value?.typeId]"
+                [selectOptions]="form?.value?.selectSettings?.options"
+                formControlName="defaultProperty"
+            ></gtx-construct-part-fill>
+        </div>
+    </div>
+
+</form>

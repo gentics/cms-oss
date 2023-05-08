@@ -1,0 +1,50 @@
+#if ( '<node page.language.code>' == 'de' )
+#set($fbsharetext = '<node fbsharetextgerman>')
+#set($twittersharetext = '<node twittersharetextgerman>')
+#set($sendsharetext = '<node sendsharetextgerman>')
+#set($printsharetext = '<node printsharetextgerman>')
+#else
+#set($fbsharetext = '<node fbsharetextenglish>')
+#set($twittersharetext = '<node twittersharetextenglish>')
+#set($sendsharetext = '<node sendsharetextenglish>')
+#set($printsharetext = '<node printsharetextenglish>')
+#end
+
+#if ( '<node size>' == 'large' )
+#set($fbicon = '<node fbiconlarge>')
+#set($twittericon = '<node twittericonlarge>')
+#set($sendicon = '<node sendiconlarge>')
+#set($printicon = '<node printiconlarge>')
+#elseif ( '<node size>' == 'middle' )
+#set($fbicon = '<node fbiconmiddle>')
+#set($twittericon = '<node twittericonmiddle>')
+#set($sendicon = '<node sendiconmiddle>')
+#set($printicon = '<node printiconmiddle>')
+#else
+#set($fbicon = '<node fbiconsmall>')
+#set($twittericon = '<node twittericonsmall>')
+#set($sendicon = '<node sendiconsmall>')
+#set($printicon = '<node printiconsmall>')
+#end
+
+<div>
+<noscript>These services only work with JavaScript!</noscript>
+<script language="JavaScript" type="text/javascript">
+<!--
+var tinyurl_generate = 'http://<node node.host><node page.url>';
+-->
+</script>
+
+#if ( '<node twitter>' == '1' )
+<a title="$!fbsharetext" href="http://www.facebook.com/sharer/sharer.php?u=http://<node node.host><node page.url>" target="_blank"><img alt="$!fbsharetext" src="$fbicon" /></a> <span style="display:none;">|</span> 
+#end
+#if ('<node facebook>' == '1' )
+<a title="$!twittersharetext" href="#" onClick="#if ($cms.rendermode.publish)javascript:var twittersharetext=' <node page.name:escape> @gentics'; var tinyurl=tinyurl_generate; var twittertext = tinyurl + twittersharetext; twittertext = twittertext.substring(0,140); var twitterurl = 'http://twitter.com/?status=' + twittertext; var newWindow = window.open(twitterurl, '_blank'); newWindow.focus();return false;#end" target="_blank"><img alt="$!twittersharetext" src="$twittericon" /></a> <span style="display:none;">|</span> 
+#end
+#if ( '<node send>' == '1' )
+<a title="$!sendsharetext" href="#" onClick="javascript:var newWindoe2 = window.open('http://www.gentics.com/shareservice/?lang=<node page.language.code>&amp;url=http://<node node.host><node page.url>','_blank', 'menubar=1,resizable=1,width=400,height=600');return false;"><img alt="$!sendsharetext" src="$sendicon" /></a> <span style="display:none;">|</span> 
+#end
+#if ('<node print>' == '1' )
+<a title="$!printsharetext" href="#" onClick="window.print();return false;"><img alt="$!printsharetext" src="$printicon" /></a>
+#end
+</div>

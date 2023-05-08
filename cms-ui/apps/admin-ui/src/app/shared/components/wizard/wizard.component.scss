@@ -1,0 +1,9 @@
+
+:host {
+    display: flex;
+    flex-direction: column;
+
+    // ToDo: This value is currently a copy of what is defined for '.gtx-modal-dialog.visible > * '.
+    // We should find a better solution than copying.
+    max-height: 80vh;
+}

@@ -1,0 +1,115 @@
+{
+  "globalId" : "A547.14561",
+  "keyword" : "passwordtype",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Eingabefeld für Passwörter",
+    "en" : "[Form] -- Textfield for passwords"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14188",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14275",
+    "name" : {
+      "de" : "Text, der als Beschreibung vor dem Eingabefeld stehen soll<br />z.B.: \"Geben Sie hier Ihr Passwort ein:\"",
+      "en" : "Text, der als Beschreibung vor dem Eingabefeld stehen soll<br />z.B.: \"Geben Sie hier Ihr Passwort ein:\""
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14323",
+    "name" : {
+      "de" : "Name des Passwortfeldes intern<br />z.B.: passwort",
+      "en" : "Name des Passwortfeldes intern<br />z.B.: passwort"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14365",
+    "name" : {
+      "de" : "Text, welcher bereits als Inhalt für das Textfeld vorhanden sein soll",
+      "en" : "Text, welcher bereits als Inhalt für das Textfeld vorhanden sein soll"
+    },
+    "keyword" : "value",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14392",
+    "name" : {
+      "de" : "Länge des Feldes im Formular selbst<br />z.B.: 25",
+      "en" : "Länge des Feldes im Formular selbst<br />z.B.: 25"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14414",
+    "name" : {
+      "de" : "Maximale Länge des Textes, der im Textfeld eingegeben werden kann<br />z.B.: 100",
+      "en" : "Maximale Länge des Textes, der im Textfeld eingegeben werden kann<br />z.B.: 100"
+    },
+    "keyword" : "maxlength",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14432",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

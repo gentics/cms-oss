@@ -1,0 +1,4 @@
+$nav.level: $nav.object.name	$nav.relativenr/$nav.relativecount ($nav.absolutenr)#if($nav.object.isfolder) $nav.hasItems(): ${nav.childrencount}
+#else ${nav.currentpage}
+#end
+#if($nav.object.isfolder)${nav.subtree}#end

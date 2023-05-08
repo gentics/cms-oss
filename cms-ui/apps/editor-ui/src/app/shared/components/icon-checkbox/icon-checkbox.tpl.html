@@ -1,0 +1,22 @@
+<div #wrapper
+     class="icon-checkbox-wrapper"
+     [class.checked]="selected">
+    <div class="item-icon">
+        <i *ngIf="icon || !image; else showImage" class="material-icons" [attr.translate]="'no'">{{ icon }}</i>
+        <ng-template #showImage>
+            <image-thumbnail
+                [image]="image"
+                [nodeId]="nodeId"
+                [width]="wrapper.clientWidth"
+                [maxHeight]="wrapper.clientHeight" >
+            </image-thumbnail>
+        </ng-template>
+    </div>
+    <div class="item-checkbox">
+        <gtx-checkbox
+            [checked]="selected"
+            [disabled]="disabled"
+            (change)="checkboxClicked($event)"
+        ></gtx-checkbox>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+@import "variables";
+@import "list-styles";
+@import "flex-modal";
+
+@include flex-modal;
+
+.modal-content {
+    min-height: 100px;
+    max-height: calc(82vh - 200px);
+    @media screen and (min-width: $small-screen-up) {
+        max-height: calc(72vh - 240px);
+    }
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.list-header {
+    padding: 10px 7px;
+    border-bottom: 1px dotted $gcms-color-highlight;
+    display: flex;
+    justify-content: flex-end;
+
+    gtx-button.replace {
+        margin-right: 10px;
+
+    }
+}
+
+gtx-contents-list-item {
+    &.file {
+        .item-icon {
+            color: $gcms-color-file;
+        }
+    }
+    &.image {
+        .item-icon {
+            color: $gcms-color-image;
+        }
+    }
+
+    gtx-radio-button:first-of-type {
+        margin-right: 10px;
+    }
+}
+
+.confirm-button {
+    span + span {
+        &:before {
+            content: ', '
+        }
+    }
+}

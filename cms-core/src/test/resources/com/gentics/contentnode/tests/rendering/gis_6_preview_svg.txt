@@ -1,0 +1,1 @@
+/GenticsImageStore/100/1000/smart/rest/file/content/load/#IMAGEID#?sid=1&nodeId=#NODEID#&fingerprint=#IMAGEMD5#

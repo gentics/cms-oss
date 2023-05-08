@@ -1,0 +1,785 @@
+db:
+  settings:
+    driverClass: "org.mariadb.jdbc.Driver"
+server:
+  port: 8080
+dbfiles: "data/content/dbfiles"
+accesscontrol:
+  default:
+    secured: true
+    allowedfrom: "127.0.0.1, ::1"
+fileutils:
+  class: "com.gentics.contentnode.publish.NativeFileUtils"
+representative_page_count: 100
+javaparser_eta_statistics_graphdelay: 30
+javaparser_eta_statistics_graphwidth: 350
+javaparser_eta_statistics_graphheight: 100
+loadbalancing:
+  threadlimit: 2
+ui_languages:
+  - "de"
+  - "en"
+portletapp_prefix: "/"
+stag_prefix: "/"
+cn_local_path: "/"
+cn_local_server: "http://localhost"
+jp_renderers:
+  - name: "tagnode"
+    class: "com.gentics.contentnode.parser.tag.ContentTagRenderer"
+    default: "true"
+  - name: "aloha"
+    class: "com.gentics.contentnode.aloha.AlohaRenderer"
+  - name: "echo"
+    class: "com.gentics.contentnode.render.renderer.EchoRenderer"
+rsync: ""
+ftpsync: ""
+lftp_path: ""
+dateformatter_config: ""
+image_resizer_jpeg_quality: ""
+plink_attributes: ""
+contentrepository_driverclass:
+  mysql: "org.mariadb.jdbc.Driver"
+contentrepository_dummyquery:
+  mysql: "SELECT 1"
+  oracle: "SELECT 1 FROM dual"
+  mssql: "SELECT 1"
+mailhost: "localhost"
+backgroundjob_foreground_time: 5
+aloha_includes: ""
+lock_time: 600
+folder_startpage_objprop_name: "object.startpage"
+folder_startpage_objprop_per_node: ""
+aloha_settings:
+  plugins:
+    image:
+      maxWidth: 1024
+      maxHeight: 786
+      minWidth: 5
+      minHeight: 5
+      fixedAspectRatio: "true"
+    link:
+      objectTypeFilter:
+        - "website"
+    gcn-linkbrowser:
+      objectTypeFilter:
+        - "website"
+        - "files"
+    block:
+      dragdrop: "true"
+    list:
+      templates:
+        ul:
+          classes: []
+        ol:
+          classes: []
+        dl:
+          classes: []
+  contentHandler:
+    initEditable:
+      - "blockelement"
+    getContents:
+      - "blockelement"
+      - "basic"
+    insertHtml:
+      - "gcn-tagcopy"
+      - "word"
+      - "generic"
+      - "block"
+      - "formatless"
+  toolbar:
+    tabs:
+      - label: "tab.format.label"
+        components:
+          - - "bold"
+            - "strong"
+            - "italic"
+            - "emphasis"
+            - "underline"
+            - "\\n"
+            - "subscript"
+            - "superscript"
+            - "strikethrough"
+            - "code"
+            - "quote"
+          - - "formatLink"
+            - "formatAbbr"
+            - "formatNumeratedHeaders"
+            - "toggleDragDrop"
+            - "\\n"
+            - "toggleMetaView"
+            - "wailang"
+            - "toggleFormatlessPaste"
+            - "gcnSpellCheck"
+          - - "alignLeft"
+            - "alignCenter"
+            - "alignRight"
+            - "alignJustify"
+            - "\\n"
+            - "orderedListFormatSelector"
+            - "unorderedListFormatSelector"
+            - "definitionListFormatSelector"
+            - "\\n"
+            - "indentList"
+            - "outdentList"
+            - "colorPicker"
+      - label: "tab.insert.label"
+        components:
+          - - "gcnArena"
+      - label: "tab.link.label"
+        components:
+          - "editLink"
+          - "toggleAnchor"
+          - "editAnchor"
+          - "removeLink"
+          - "linkBrowser"
+          - "gcnLinkBrowser"
+          - "gcnFileUpload"
+aloha_settings_node: ""
+magic_part_names:
+  - "text"
+validation:
+  shortcutRegex: "~^[\\w\\s\\.,-]*$~s"
+session_secret_cookie_name: "GCN_SESSION_SECRET"
+session_cookie_samesite: lax
+build_root_timestamp: "DEV"
+gcn_lib_version: "debug"
+aloha_plugins_global:
+  - "common/ui"
+  - "common/block"
+  - "common/format"
+  - "common/autoparagraph"
+  - "common/highlighteditables"
+  - "common/list"
+  - "common/link"
+  - "common/table"
+  - "common/paste"
+  - "common/contenthandler"
+  - "common/commands"
+  - "gcn/gcn-linkbrowser"
+  - "gcn/gcn"
+  - "common/dom-to-xhtml"
+aloha_plugins_node: []
+custom_aloha_plugins:
+  - "common/dom-to-xhtml"
+  - "common/block"
+http_auth_login: ""
+fileupload_manipulator_url: ""
+fileupload_manipulator_options: ""
+fileupload_manipulator_socketoptions: ""
+fileupload_manipulator_accept_host: ""
+regex:
+  1: "^[1-9][0-9]{0,8}$"
+  4: "^([-_.&0-9a-zA-Z\\+])+@[0-9a-z]([-.]?[0-9a-z])*.[a-z]{2,}$"
+  5: ".+"
+  8: "^.{1,255}$"
+  9: ""
+  10: "^[-+]{0,1}[0-9]{1,9}.{0,1}[0-9]{0,2}$"
+  11: "^[ßäöüÄÖÜa-zA-Z .-]{1,50}$"
+  12: "^[+-]{0,1}[0-9]{1,9}$"
+  13: "^[a-zA-Z0-9\\._@\\+\\-]{4,40}$"
+  14: "^[a-zA-Z0-9\\._@\\+\\-]{4,40}$"
+  15: ".+"
+  16: "^[a-zA-Z0-9\\._-]{1,64}$"
+  17: "^[0-9ßäöüÄÖÜa-zA-Z \\.-]{1,255}$"
+  18: "^(.){1,64}$"
+  19: "^([0-9]{1,2})[.,_/ -]([0-9]{1,2})[.,_/ -]([0-9]{2}|[0-9]{4})$"
+  20: "^([0-9]{1,2}):([0-9]{1,2})$"
+  21: "^([0-1]?[0-9]|2[0-3])(:([0-5]?[0-9])|())$"
+  22: "^[1-5]{0,1}[0-9]$"
+  23: "^([0-2]?[0-9]|3[0-1])([.:_ /-]([0]?[0-9]|1[0-2])([.:_ /-]([0-9]{1,2}|[0-9]{4})|[.:_ /-]|())|[.:_ /-]|())$"
+  24: "^/{0,1}([a-zA-Z0-9\\._-]{1,64}/{0,1}){0,127}$"
+  25: "^[0-9a-z]([-.]?[0-9a-z:])*$"
+  26: "^[a-z0-9]{3,64}$"
+  27: "[A-Z]{0,2}[\\-]{0,1}[0-9]{4,6}"
+  28: "^[0-9\\-\\/ \\+\\(\\)]{4,25}$"
+  29: "^[0-9]{1,12}.{0,1}[0-9]{0,2}$"
+  30: "^\\\\.*$"
+  31: "^[a-zA-Z0-9\\_\\-]{3,255}$"
+  40: "(?:http(?:s)?://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)(?:/(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;:@&=])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;:@&=])*))*)(?:\\?(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;:@&=])*))?)?)|(?:ftp://(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?&=])*)(?::(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?&=])*))?@)?(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?))(?:/(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*))*)(?:;type=[AIDaid])?)?)|(?:news:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;/?:&=])+@(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3})))|(?:[a-zA-Z](?:[a-zA-Z\\d]|[_.+-])*)|\\*))|(?:nntp://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)/(?:[a-zA-Z](?:[a-zA-Z\\d]|[_.+-])*)(?:/(?:\\d+))?)|(?:telnet://(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?&=])*)(?::(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?&=])*))?@)?(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?))/?)|(?:gopher://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)(?:/(?:[a-zA-Z\\d$\\-_.+!*'(),;/?:@&=]|(?:%[a-fA-F\\d]{2}))(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),;/?:@&=]|(?:%[a-fA-F\\d]{2}))*)(?:%09(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;:@&=])*)(?:%09(?:(?:[a-zA-Z\\d$\\-_.+!*'(),;/?:@&=]|(?:%[a-fA-F\\d]{2}))*))?)?)?)?)|(?:wais://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)/(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*)(?:(?:/(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*)/(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*))|\\?(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;:@&=])*))?)|(?:mailto:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),;/?:@&=]|(?:%[a-fA-F\\d]{2}))+))|(?:file://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))|localhost)?/(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*))*))|(?:prospero://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)/(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&=])*))*)(?:(?:;(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&])*)=(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[?:@&])*)))*)|(?:ldap://(?:(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?))?/(?:(?:(?:(?:(?:(?:(?:[a-zA-Z\\d]|%(?:3\\d|[46][a-fA-F\\d]|[57][Aa\\d]))|(?:%20))+|(?:OID|oid)\\.(?:(?:\\d+)(?:\\.(?:\\d+))*))(?:(?:%0[Aa])?(?:%20)*)=(?:(?:%0[Aa])?(?:%20)*))?(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*))(?:(?:(?:%0[Aa])?(?:%20)*)\\+(?:(?:%0[Aa])?(?:%20)*)(?:(?:(?:(?:(?:[a-zA-Z\\d]|%(?:3\\d|[46][a-fA-F\\d]|[57][Aa\\d]))|(?:%20))+|(?:OID|oid)\\.(?:(?:\\d+)(?:\\.(?:\\d+))*))(?:(?:%0[Aa])?(?:%20)*)=(?:(?:%0[Aa])?(?:%20)*))?(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*)))*)(?:(?:(?:(?:%0[Aa])?(?:%20)*)(?:[;,])(?:(?:%0[Aa])?(?:%20)*))(?:(?:(?:(?:(?:(?:[a-zA-Z\\d]|%(?:3\\d|[46][a-fA-F\\d]|[57][Aa\\d]))|(?:%20))+|(?:OID|oid)\\.(?:(?:\\d+)(?:\\.(?:\\d+))*))(?:(?:%0[Aa])?(?:%20)*)=(?:(?:%0[Aa])?(?:%20)*))?(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*))(?:(?:(?:%0[Aa])?(?:%20)*)\\+(?:(?:%0[Aa])?(?:%20)*)(?:(?:(?:(?:(?:[a-zA-Z\\d]|%(?:3\\d|[46][a-fA-F\\d]|[57][Aa\\d]))|(?:%20))+|(?:OID|oid)\\.(?:(?:\\d+)(?:\\.(?:\\d+))*))(?:(?:%0[Aa])?(?:%20)*)=(?:(?:%0[Aa])?(?:%20)*))?(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))*)))*))*(?:(?:(?:%0[Aa])?(?:%20)*)(?:[;,])(?:(?:%0[Aa])?(?:%20)*))?)(?:\\?(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+)(?:,(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+))*)?)(?:\\?(?:base|one|sub)(?:\\?(?:((?:[a-zA-Z\\d$\\-_.+!*'(),;/?:@&=]|(?:%[a-fA-F\\d]{2}))+)))?)?)?)|(?:(?:z39\\.50[rs])://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+)(?:\\+(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+))*(?:\\?(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+))?)?(?:;esn=(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+))?(?:;rs=(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+)(?:\\+(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))+))*)?))|(?:cid:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?:@&=])*))|(?:mid:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?:@&=])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[;?:@&=])*))?)|(?:vemmi://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[/?:@&=])*)(?:(?:;(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[/?:@&])*)=(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[/?:@&])*))*))?)|(?:imap://(?:(?:(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~])+)(?:(?:;[Aa][Uu][Tt][Hh]=(?:\\*|(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~])+))))?)|(?:(?:;[Aa][Uu][Tt][Hh]=(?:\\*|(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~])+)))(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~])+))?))@)?(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?))/(?:(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~:@/])+)?;[Tt][Yy][Pp][Ee]=(?:[Ll](?:[Ii][Ss][Tt]|[Ss][Uu][Bb])))|(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~:@/])+)(?:\\?(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~:@/])+))?(?:(?:;[Uu][Ii][Dd][Vv][Aa][Ll][Ii][Dd][Ii][Tt][Yy]=(?:[1-9]\\d*)))?)|(?:(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~:@/])+)(?:(?:;[Uu][Ii][Dd][Vv][Aa][Ll][Ii][Dd][Ii][Tt][Yy]=(?:[1-9]\\d*)))?(?:/;[Uu][Ii][Dd]=(?:[1-9]\\d*))(?:(?:/;[Ss][Ee][Cc][Tt][Ii][Oo][Nn]=(?:(?:(?:[a-zA-Z\\d$\\-_.+!*'(),]|(?:%[a-fA-F\\d]{2}))|[&=~:@/])+)))?)))?)|(?:nfs:(?:(?://(?:(?:(?:(?:(?:[a-zA-Z\\d](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?)\\.)*(?:[a-zA-Z](?:(?:[a-zA-Z\\d]|-)*[a-zA-Z\\d])?))|(?:(?:\\d+)(?:\\.(?:\\d+)){3}))(?::(?:\\d+))?)(?:(?:/(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*))*)?)))?)|(?:/(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*))*)?))|(?:(?:(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*)(?:/(?:(?:(?:[a-zA-Z\\d$\\-_.!~*'(),])|(?:%[a-fA-F\\d]{2})|[:@&=+])*))*)?)))"
+  41: "^[0-5]{0,1}[0-9]$"
+  42: "^([0-5]{0,1}[0-9])?$"
+  43: "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$"
+  44: "^[a-z0-9_]{3,64}$"
+  45: "^([A-Za-z0-9_ \\.\\-\\(\\)\\[\\]{}$]){0,64}$"
+  46: "^([a-zA-Z0-9/\\._-]){0,255}$"
+  47: "^.{0,255}$"
+  48: "^(.|\\n|\\r){1,255}$"
+tmppath:
+multilevel_pub_workflow: ""
+mailreturnpath: ""
+contentmap_keepalive_interval: 3600
+gis_request_decorator: ""
+sanitize_character:
+  é: "e"
+  è: "e"
+  ë: "e"
+  ê: "e"
+  à: "a"
+  ä: "ae"
+  â: "a"
+  Ä: "Ae"
+  ù: "u"
+  ü: "ue"
+  û: "u"
+  Ü: "Ue"
+  ö: "oe"
+  ô: "o"
+  Ö: "Oe"
+  ï: "i"
+  î: "i"
+  ß: "ss"
+sanitize_replacement_character: "-"
+sanitize_allowed_characters: ""
+aloha_migrate_tagtypes: ""
+multithreaded_publishing: ""
+contentrepository_fetchsize: ""
+instant_cr_publishing: ""
+images_maxdimensions: "4000x4000"
+images_mimetypes_supported:
+  - "image/jpeg"
+  - "image/pjpeg"
+  - "image/png"
+  - "image/x-png"
+  - "image/gif"
+  - "image/bmp"
+  - "image/x-windows-bmp"
+background_thread_poolsize: 10
+session_age: 3600
+wastebin_maxage: ""
+wastebin_maxage_node: ""
+node_cache: ""
+no_max_filesize: ""
+processes: ""
+devtools: ""
+jmx:
+  java.lang:type=Memory:
+    - "HeapMemoryUsage"
+    - "NonHeapMemoryUsage"
+    - "ObjectPendingFinalizationCount"
+  java.lang:type=Threading: "*"
+  java.lang:type=OperatingSystem: "*"
+  com.gentics.contentnode.mbeans:type=Publish,name=PublisherInfo: "*"
+  com.gentics.contentnode.mbeans:type=System,name=SessionInfo: "*"
+  com.gentics.contentnode.mbeans:type=System,name=TrxInfo: "*"
+  org.glassfish.jersey:type=GCMS,subType=Global,executionTimes=AllRequestTimes: "*"
+elasticsearch:
+  content:
+    blacklist:
+      - application/zip
+      - audio/.*
+      - video/.*
+  index_template:
+    settings:
+      index:
+        analysis:
+          analyzer:
+            filename_analyzer:
+              type: custom
+              tokenizer: keyword
+              filter:
+                - lowercase
+  settings:
+    folder:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: standard
+          search_analyzer:
+            type: standard
+    file:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: standard
+          search_analyzer:
+            type: standard
+    image:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: standard
+          search_analyzer:
+            type: standard
+    page:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: standard
+          search_analyzer:
+            type: standard
+    page_de:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - german_stop
+              - german_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - german_stop
+              - german_snowball
+        filter:
+          german_stop:
+            type: stop
+            stopwords: _german_
+          german_snowball:
+            type: snowball
+            language: German
+    page_en:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - english_stop
+              - english_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - english_stop
+              - english_snowball
+        filter:
+          english_stop:
+            type: stop
+            stopwords: _english_
+          english_snowball:
+            type: snowball
+            language: English
+    page_fr:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - french_stop
+              - french_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - french_stop
+              - french_snowball
+        filter:
+          french_stop:
+            type: stop
+            stopwords: _french_
+          french_snowball:
+            type: snowball
+            language: French
+    page_it:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - italian_stop
+              - italian_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - italian_stop
+              - italian_snowball
+        filter:
+          italian_stop:
+            type: stop
+            stopwords: _italian_
+          italian_snowball:
+            type: snowball
+            language: Italian
+    form:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: standard
+          search_analyzer:
+            type: standard
+    form_de:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - german_stop
+              - german_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - german_stop
+              - german_snowball
+        filter:
+          german_stop:
+            type: stop
+            stopwords: _german_
+          german_snowball:
+            type: snowball
+            language: German
+    form_en:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - english_stop
+              - english_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - english_stop
+              - english_snowball
+        filter:
+          english_stop:
+            type: stop
+            stopwords: _english_
+          english_snowball:
+            type: snowball
+            language: English
+    form_fr:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - french_stop
+              - french_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - french_stop
+              - french_snowball
+        filter:
+          french_stop:
+            type: stop
+            stopwords: _french_
+          french_snowball:
+            type: snowball
+            language: French
+    form_it:
+      analysis:
+        analyzer:
+          content_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - italian_stop
+              - italian_snowball
+          search_analyzer:
+            type: custom
+            char_filter:
+              - html_strip
+            tokenizer: standard
+            filter:
+              - lowercase
+              - italian_stop
+              - italian_snowball
+        filter:
+          italian_stop:
+            type: stop
+            stopwords: _italian_
+          italian_snowball:
+            type: snowball
+            language: Italian
+node_settings_global: ""
+node_settings: ""
+custom_tools: ""
+custom_proxy: ""
+gis_requests: ""
+portletapp_prefix_internal: "/"
+mesh: ""
+selfupdate:
+  baseUrl:
+    prefix: "https://"
+    user: "gcn"
+    baseurl: "updates.gentics.com/maven2/com/gentics/contentnode-server/"
+  latestHotfixOnly: true
+cn_versionage: 12
+cn_keeplogs: 12
+keep_inbox_messages: 12
+feature:
+  dirt2: true
+  user_debug: true
+  import2: true
+  export2: true
+  page_copy_java: true
+  ieframerenderfix: true
+  enable_image_upload_in_tagfill: true
+  imagemanipulation2: true
+  tagfill_light: true
+  liveedit_tag_perconstruct: true
+  useDaisyDiff: true
+  use_default_gzcompress: true
+  gentics_meta_tag: true
+  objprop: true
+  inboxuserlist: true
+  dhtmlinbox: false
+  tpl_tagdef2: true
+  no_node_isolation: true
+  pagecopy: true
+  tpllink2: true
+  start2: true
+  pageduplicate: true
+  diffpub: true
+  crypt_pwds: true
+  selectall: true
+  constructlink: true
+  pagevar: true
+  fullscreen: true
+  tpltagdel: true
+  tpltagsync: true
+  managelinkurl: true
+  invalidpageurlmsg: true
+  noeditpreview: true
+  html_import: true
+  file_fetch: false
+  folderfullpath: true
+  oracle: false
+  force_node2: false
+  force_menu2: false
+  stream: true
+  keepsession: true
+  gallery: true
+  workflow: true
+  workflow_random: false
+  thumbnails: true
+  dhtml_texttags: false
+  dhtml_editor: true
+  jedit: true
+  jedit_texttags: false
+  objtranslatecache: true
+  superedit_template: true
+  inbox_to_email: true
+  img_resize: true
+  contextmenu: true
+  template_fetch: true
+  template_fetch_2: true
+  product_preview: false
+  dsfallback: false
+  objprop_recursive: true
+  ldap: true
+  ldap_login: false
+  page_pubtime: true
+  symlink_files: false
+  http_auth_login: false
+  infobox_actions: false
+  dirt2_cache: true
+  keep_published_pages: false
+  ds_current_folder: true
+  pidsync: true
+  instant_cr_publishing: true
+  channelsync: true
+  multichannelling: true
+  resizable_itemlist_columns: true
+  publish_cache: true
+  multithreaded_publishing: true
+  view_perms: false
+  use_php_streaming_api: true
+  log_dirt_events: true
+  liveedit_p_nodeids: false
+  history: true
+  del_single_transaction: false
+  checkall_perm: true
+  instantmessages_customtime: false
+  popupcheck: true
+  advanced_word_paste: true
+  autoupdate_policy: false
+  instantmessages: true
+  suspend_scheduler: true
+  maintenance_mode: true
+  autocomplete_folder_path: false
+  pageusage_variants: false
+  disableIE7StandardsMode: true
+  quickjump: true
+  quickrecursivetranslations: false
+  pageusage: true
+  disablepreviewurlappendfilename: false
+  grow_selectbox_in_ie: false
+  url_folder_clear: true
+  publish_node_resolve_direct: true
+  nodecopy_files: true
+  item_list_simple_contextmenus: true
+  itemlist_configurepagesize: true
+  clear_templatecache_on_contentdirt: true
+  workflow_event_onpagedelete_all_lang: true
+  tag_image_resizer: true
+  hardlink_files: true
+  javaparser_eta_statistics: true
+  pagevar_all_contentgroups: true
+  image_gallery_showdescription: true
+  2dotool: true
+  minibrowser_search: true
+  liveedit_stripwordpaste: true
+  search_contents: true
+  image_manipulation: true
+  versiondiff: true
+  roles: true
+  translate: true
+  language_usability: true
+  construct_categories: true
+  objprop_page_edit_assistant: true
+  htmlform_markrequired: true
+  nodecopy: true
+  javaparser: true
+  custom_streams: true
+  log_jserrors: false
+  nl_usesendmail: false
+  edit_mimetype: false
+  dirt_walktree_threshold: false
+  logout_page: false
+  ldapv3: true
+  live-br2nl: true
+  replace_live_spaces: true
+  template_release: true
+  wikiedit: true
+  tagtype_copy: true
+  construct_autoenable: true
+  template_copy: true
+  cn_page_import_fill_editable_part: false
+  ml_import_diff_by_filename: false
+  republish_marked_only: true
+  skip_writefs_filelog: true
+  log_publish_page_filename: true
+  contentgroup3_pagefilename_no_pagename: false
+  contentgroup3_pagefilename_no_apachefilename: true
+  tn_export: true
+  contentmap_files: true
+  dskeepselectvalues: false
+  nofindtagerror: false
+  nodirectselection: true
+  webdav_files: true
+  template_objprop: true
+  inheritable_objtags: false
+  url_file_clear: true
+  url_page_clear: true
+  url_image_clear: true
+  ds_folder_workflow: false
+  ds_folder_perm: false
+  ds_folder: true
+  objtag_perm: true
+  objtag_preview: true
+  deactivate_objpropedit: false
+  dssource: true
+  republish_pages: true
+  addressnode_merge: false
+  ds_empty_cs: true
+  republish_nodes: false
+  win_halt: true
+  dsfile: true
+  contentmap: true
+  UTF8: true
+  switch_template: true
+  get_filename_as_pagename: true
+  contentgroup: false
+  contentgroup3: true
+  contentgroup3_pagefilename: true
+  usefirsttemplate: true
+  tuning_pagesave: true
+  contentversion2: true
+  realeditor: true
+  magic_part_value: true
+  map: false
+  constr_ml_dep: true
+  contenttopic: false
+  error_autopopup: false
+  progressbar: true
+  nodecache: false
+  list_pagepreview: false
+  ldap_utf8decode: true
+  bn_time_filter_noperm: true
+  usergroup_popup: false
+  no_pageedit_js: false
+  norevalidate: true
+  home_gentics_news: true
+  personalloginstream: true
+  object_usageinfo: true
+  autoresize_popups: true
+  set_folder_start_page: true
+  liveedit_smartremoveformat: true
+  tagmap_useexpressionparser: true
+  wastebin: true
+  attribute_dirting: true
+  resumable_publish_process: true
+  new_tageditor: true
+nodepath: "/Node/node"
+tagprefix: "node"
+url: "http://localhost/.Node/"
+linkway: "auto"
+linkway_file: "portal"
+linkway_file_path: ""
+internal:
+  globalprefix: false
+maxfilesize: 4194304
+ttm_skip_backup: false
+ttm_commit_batch_size: -1
+globalCacheClearTransactionalThreshold: 10000
+velocity:
+  runtime.introspector.uberspect: "com.gentics.lib.render.velocity.ChangeableVelocityUberspectImpl"
+  output.encoding: "UTF-8"
+  input.encoding: "UTF-8"
+  directive.foreach.counter.initial.value: 1
+  runtime.log.logsystem.class: "com.gentics.contentnode.logger.VelocityLogSystem"
+  velocimacro.library.autoreload: "true"
+  velocimacro.permissions.allow.inline.to.replace.global: "true"
+  velocimacro.permissions.allow.inline.local.scope: "true"
+  string.loader.description: "String Resource Loader"
+  string.resource.loader.class: "org.apache.velocity.runtime.resource.loader.StringResourceLoader"
+  resource.loader: "string"
+  userdirective: "com.gentics.contentnode.render.RenderDirective,com.gentics.contentnode.render.EditDirective,com.gentics.contentnode.render.GisDirective,com.gentics.contentnode.render.ChannelDirective,com.gentics.contentnode.render.FormDirective"

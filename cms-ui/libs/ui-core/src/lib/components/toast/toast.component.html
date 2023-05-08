@@ -1,0 +1,26 @@
+<div
+    #toast
+    class="gtx-toast z-depth-3"
+    [ngClass]="type || 'default'"
+    [class.dismissing]="dismissing"
+    [style.transform]="getTransform()"
+    (click)="dismiss()"
+>
+    <span class="gtx-toast-btn_close"
+        [hidden]="!dismissOnClick">
+        <icon>close</icon>
+    </span>
+
+    <span class="action" *ngIf="actionLabel">
+        <button (click)="actionClick()">
+            {{ actionLabel }}
+        </button>
+    </span>
+
+    <span class="message">
+        <ng-template ngFor let-line [ngForOf]="messageLines" let-i="index">
+            <br *ngIf="i > 0">
+            <span class="line">{{ line }}</span>
+        </ng-template>
+    </span>
+</div>

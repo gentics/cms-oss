@@ -1,0 +1,80 @@
+<gtx-dropdown-list
+    #dropdown
+    [hidden]="buttonGroups.length < 1"
+    [align]="'right'"
+    [belowTrigger]="true"
+>
+    <gtx-dropdown-trigger>
+        <gtx-button icon type="secondary">
+            <icon>apps</icon>
+        </gtx-button>
+    </gtx-dropdown-trigger>
+
+    <gtx-dropdown-content>
+        <div class="action-buttons-dropdown-content">
+            <div *ngFor="let group of buttonGroups" class="action-button-group">
+                <div class="action-button-group-label">
+                    {{ group.i18nLabel | i18n }}
+                </div>
+
+                <div *ngFor="let btnGroup of group.buttons" class="action-button-group-content">
+                    <ng-container *ngFor="let btn of btnGroup">
+                        <a
+                            *ngIf="btn.type === ActionButtonType.TOOL && btn.newTab; else regularButton"
+                            class="action-button"
+                            [href]="btn.toolLink | safe"
+                            [target]="btn.newTab ? '_blank' : '_top'"
+                            [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
+                            [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                            (click)="triggerClick(btn, $event)"
+                        >
+                            <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
+                        </a>
+
+                        <ng-template #regularButton>
+                            <div
+                                class="action-button"
+                                [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
+                                [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                                (click)="triggerClick(btn, $event)"
+                            >
+                                <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
+                            </div>
+                        </ng-template>
+
+                        <ng-template #buttonContent>
+                            <div class="action-button-icon-wrapper">
+                                <icon *ngIf="btn.type === ActionButtonType.TOOL && btn.newTab" class="tool-new-tab">open_in_new</icon>
+
+                                <ng-container [ngSwitch]="btn.iconType">
+                                    <icon
+                                        *ngSwitchCase="ActionButtonIconType.FONT"
+                                        class="action-button-icon action-button-font-icon"
+                                    >{{ btn.icon }}</icon>
+
+                                    <img
+                                        *ngSwitchCase="ActionButtonIconType.URL"
+                                        [src]="btn.icon"
+                                        width="58"
+                                        height="58"
+                                        class="action-button-icon action-button-url-icon"
+                                    />
+
+                                    <span
+                                        *ngSwitchCase="ActionButtonIconType.TEXT"
+                                        class="action-button-icon action-button-text-icon"
+                                    >{{ btn.icon }}</span>
+                                </ng-container>
+
+                            </div>
+
+                            <div class="action-button-label">
+                                {{ btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label }}
+                            </div>
+                        </ng-template>
+                    </ng-container>
+                </div>
+            </div>
+        </div>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>

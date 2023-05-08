@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="1.0">
+	<xs:annotation>
+		<xs:appinfo>
+			<jaxb:globalBindings generateIsSetMethod="true"
+				collectionType="indexed">
+				<!-- jaxb:javaType name="java.lang.Integer" xmlType="xs:integer" 
+					parseMethod="valueOf" printMethod="toString"/ -->
+			</jaxb:globalBindings>
+			<jaxb:schemaBindings>
+				<jaxb:package
+					name="com.gentics.contentnode.dbcopy.jaxb" />
+				<jaxb:nameXmlTransform>
+					<jaxb:typeName prefix="JAXB" />
+				</jaxb:nameXmlTransform>
+			</jaxb:schemaBindings>
+		</xs:appinfo>
+	</xs:annotation>
+	<xs:element name="tables">
+		<xs:annotation>
+			<xs:appinfo>
+				<jaxb:class implClass="com.gentics.contentnode.dbcopy.Tables" />
+			</xs:appinfo>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="table" minOccurs="0"
+					maxOccurs="unbounded" type="tableType" />
+			</xs:sequence>
+			<xs:attribute name="roottable" use="required"
+				type="xs:token">
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:complexType name="tableType">
+		<xs:annotation>
+			<xs:appinfo>
+				<jaxb:class implClass="com.gentics.contentnode.dbcopy.Table" />
+			</xs:appinfo>
+		</xs:annotation>
+		<xs:all>
+			<xs:element name="restrict" minOccurs="0" maxOccurs="1"
+				type="xs:string" />
+			<xs:element name="modificators" type="modificatorsType" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="references" minOccurs="0" maxOccurs="1"
+				type="referencesType" />
+			<xs:element name="properties" type="PropertiesType" minOccurs="0" maxOccurs="1"/>
+		</xs:all>
+		<xs:attribute name="name" use="required" type="xs:token" />
+		<xs:attribute name="id" use="optional" type="xs:token"/>
+		<xs:attribute name="idcol" use="optional" type="xs:token" />
+		<xs:attribute name="exportable" use="optional" type="xs:boolean" default="true"/>
+		<xs:attribute name="type" use="optional" default="normal">
+			<xs:simpleType>
+				<xs:restriction base="xs:token">
+					<xs:enumeration value="normal"></xs:enumeration>
+					<xs:enumeration value="cross"></xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+
+	<xs:complexType name="modificatorsType">
+		<xs:sequence>
+			<xs:element name="modificator" minOccurs="0" maxOccurs="unbounded" type="xs:token"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="referencesType">
+		<xs:sequence>
+			<xs:element name="ref" type="referenceType" minOccurs="0"
+				maxOccurs="unbounded" />
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="referenceType">
+		<xs:annotation>
+			<xs:appinfo>
+				<jaxb:class implClass="com.gentics.contentnode.dbcopy.Reference" />
+			</xs:appinfo>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="parameter" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="id" type="xs:token" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="target" type="xs:token" use="optional" />
+		<xs:attribute name="col" type="xs:token" use="optional" />
+		<xs:attribute name="class" type="xs:token" use="optional">
+			<xs:annotation>
+				<xs:appinfo>
+					<jaxb:property name="implementationClass" />
+				</xs:appinfo>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="deepcopy" type="deepcopytype" use="optional"
+			default="true" />
+		<xs:attribute name="foreigndeepcopy" type="deepcopytype" use="optional"
+			default="true" />
+	</xs:complexType>
+
+	<xs:complexType name="PropertiesType">
+		<xs:sequence>
+			<xs:element name="property" minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo>
+						<jaxb:property collectionType="indexed" name="propertyList"/>
+					</xs:appinfo>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="id" type="xs:token" use="required"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:simpleType name="deepcopytype">
+	  <xs:restriction base="xs:token">
+		<xs:enumeration value="true"/>
+		<xs:enumeration value="false"/>
+		<xs:enumeration value="ask"/>
+	  </xs:restriction>
+	</xs:simpleType>
+</xs:schema>

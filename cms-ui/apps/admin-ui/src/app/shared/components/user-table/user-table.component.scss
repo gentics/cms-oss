@@ -1,0 +1,9 @@
+@import '../base-entity-table/base-entity-table.component.scss';
+
+.group-link {
+    transition: 300ms;
+
+    &:hover {
+        color: darken($gtx-color-primary, 30%);
+    }
+}

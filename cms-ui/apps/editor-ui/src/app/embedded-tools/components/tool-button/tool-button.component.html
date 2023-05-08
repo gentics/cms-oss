@@ -1,0 +1,16 @@
+<a class="frame" tabindex="0" (click)="iconClicked($event)" [href]="href$ | async" [attr.target]="target" rel="nofollow">
+    <div class="tool-icon" [ngClass]="'icon-from-' + iconType">
+        <img *ngIf="iconType === 'url'" [src]="tool.iconUrl" (error)="useFallbackIcon()">
+        <icon *ngIf="iconType === 'font'">{{ tool.iconUrl }}</icon>
+        <div class="fallback-icon" *ngIf="iconType === 'fallback'">{{ fallbackChar$ | async }}</div>
+    </div>
+    <a class="close-button" *ngIf="isActive$ | async" tabindex="0" (click)="closeTool($event)">
+        <icon>close</icon>
+    </a>
+    <div class="new-tab-icon" *ngIf="tool.newtab && !(isActive$ | async)">
+        <icon [title]="'common.tool_opens_in_new_tab' | i18n">open_in_new</icon>
+    </div>
+    <div class="tool-name">
+        <span>{{ name$ | async }}</span>
+    </div>
+</a>

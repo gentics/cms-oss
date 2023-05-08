@@ -1,0 +1,69 @@
+<gtx-wizard
+    [title]="'node.create_node_wizard_title' | i18n"
+    [finishButtonTitle]="'node.create_node_wizard_create_button' | i18n"
+    class="gtx-modal-datagrid-in-tab"
+>
+
+    <gtx-wizard-step
+        [title]="'node.create_node_wizard_step_properties' | i18n"
+        [nextEnabled]="fgPropertiesValid$ | async"
+    >
+        <ng-template>
+            <div>
+                <form [formGroup]="fgProperties" class="gtx-entity-details-form">
+                    <gtx-node-properties
+                        formControlName="data"
+                        [allowChangingInheritedFrom]="true"
+                        [allowEditingDefaultUploadFolders]="false"
+                    ></gtx-node-properties>
+                </form>
+            </div>
+        </ng-template>
+    </gtx-wizard-step>
+
+    <gtx-wizard-step
+        [title]="'node.create_node_wizard_step_publishing' | i18n"
+        [nextEnabled]="fgPublishingValid$ | async"
+        (activate)="onPublishingStepActivate()"
+    >
+        <ng-template>
+            <div>
+                <form [formGroup]="fgPublishing" class="gtx-entity-details-form">
+                    <gtx-node-publishing-properties formControlName="data"></gtx-node-publishing-properties>
+                </form>
+            </div>
+        </ng-template>
+    </gtx-wizard-step>
+
+    <gtx-wizard-step
+        [title]="'node.create_node_wizard_step_node_features' | i18n"
+        [nextEnabled]="fgNodeFeaturesValid$ | async"
+        [nextClick]="isChildNode && finishClickAction"
+    >
+        <ng-template>
+            <div>
+                <form [formGroup]="fgNodeFeatures" class="gtx-entity-details-form">
+                    <gtx-node-features formControlName="data" [availableFeatures]="nodeFeatures$ | async"></gtx-node-features>
+                </form>
+            </div>
+        </ng-template>
+    </gtx-wizard-step>
+
+    <gtx-wizard-step
+        *ngIf="!isChildNode"
+        [title]="'node.create_node_wizard_step_languages' | i18n"
+        [nextEnabled]="fgNodeFeatures.valid"
+        [nextClick]="finishClickAction"
+    >
+        <ng-template>
+            <div>
+                <gtx-language-table
+                    [showSearch]="true"
+                    [hideActions]="true"
+                    [(selected)]="selectedLanguages"
+                ></gtx-language-table>
+            </div>
+        </ng-template>
+    </gtx-wizard-step>
+
+</gtx-wizard>

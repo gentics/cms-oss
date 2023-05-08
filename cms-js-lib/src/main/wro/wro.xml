@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<groups xmlns="http://www.isdc.ro/wro">
+	<group name='gcnjsapi'>
+		<js>/wrapper-head.frag</js>
+		<js>/vendor/json2.js</js>
+		<js>/core.js</js>
+		<js>/util.js</js>
+		<js>/chainback.js</js>
+		<js>/session.js</js>
+		<js>/abstract-content-object.js</js>
+		<js>/abstract-tag-container.js</js>
+		
+		<js>/admin.js</js>
+		<js>/node.js</js>
+		<js>/folder.js</js>
+		<js>/page.js</js>
+		<js>/template.js</js>
+		<js>/file.js</js>
+		<js>/image.js</js>
+		<js>/tagparts.js</js>
+		<js>/tag.js</js>
+		<js>/message.js</js>
+		<js>/multichannelling.js</js>
+		<js>/nodejs-features.js</js>
+		<js>/wrapper-bottom.frag</js>
+	</group>
+</groups>

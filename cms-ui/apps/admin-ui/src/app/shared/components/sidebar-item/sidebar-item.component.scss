@@ -1,0 +1,60 @@
+@import 'variables';
+
+:host {
+    ::ng-deep .row {
+        margin: 0;
+        margin-bottom: 10px;
+    }
+
+    ::ng-deep .title {
+        margin: 0;
+        color: $gtx-color-dark-gray;
+        font-weight: 400;
+        display: block;
+        width: 100%;
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    > .title {
+        margin: 0.82rem 0 0 0;
+        text-transform: uppercase;
+        color: $gtx-color-very-dark-gray;
+        font-weight: 400;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: 100ms margin;
+
+        &:before {
+            font-family: 'Material Icons';
+            content: 'keyboard_arrow_up';
+            color: $gtx-color-primary;
+            position: absolute;
+            margin-left: -17px;
+            margin-top: 0;
+            text-transform: none;
+        }
+
+        &.open:before {
+            content: 'keyboard_arrow_down';
+        }
+
+        &.open {
+            margin-bottom: 0.656rem;
+        }
+    }
+
+    > .content {
+        display: block;
+        position: relative;
+        font-size: 0.8em;
+        height: 0;
+        overflow: hidden;
+        transition: 100ms height, 100ms padding;
+
+        &.open {
+            padding: 10px 0;
+            height: auto;
+        }
+    }
+}

@@ -1,0 +1,11 @@
+@import "variables";
+
+// Gentics UI Core
+@import "ui-core/src/styles/core";
+
+// Admin UI
+@import "utils";
+@import "entity-master";
+@import "entity-details";
+@import "entity-form";
+@import "global-styles";

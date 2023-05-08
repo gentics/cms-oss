@@ -1,0 +1,28 @@
+<form [formGroup]="form">
+    <gtx-input
+        [label]="('editor.item_name_label' | i18n) + '*'"
+        formControlName="name"
+        [gtxDisabled]="disabled"
+        pattern=".+\.\w+"
+        required>
+    </gtx-input>
+    <div class="error-message" *ngIf="form.get('name').invalid">{{ 'editor.item_file_name_error' | i18n }}</div>
+    <gtx-input [label]="'editor.item_description_label' | i18n" formControlName="description" [gtxDisabled]="disabled"></gtx-input>
+    <gtx-checkbox *ngIf="contentAutoOfflineActive$ | async" [label]="'editor.forcePublish_label' | i18n" formControlName="forceOnline"></gtx-checkbox>
+
+    <div *ngIf="niceUrlsActivated">
+        <gtx-input [label]="'editor.item_nice_url_label' | i18n"
+                   [gtxDisabled]="disabled"
+                   formControlName="niceUrl">
+        </gtx-input>
+        <div class="error-message" *ngIf="form.get('niceUrl').invalid">{{ 'editor.item_nice_url_error' | i18n }}</div>
+
+        <gtx-string-list [label]="'editor.item_alternate_urls_label' | i18n"
+                         [addLabel]="'editor.add_label' | i18n"
+                         [errors]="form.get('alternateUrls').errors"
+                         class="alternate-urls"
+                         formControlName="alternateUrls">
+        </gtx-string-list>
+        <div class="error-message" *ngIf="form.get('alternateUrls').invalid">{{ 'editor.item_alternate_urls_error' | i18n }}</div>
+    </div>
+</form>

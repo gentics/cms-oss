@@ -1,0 +1,90 @@
+<div class="fields-wrapper" #fieldsWrapper>
+    <detail-chip *ngIf="isDeleted" class="deleted">
+        {{ 'editor.item_page_status_deleted_label' | i18n:{
+            name: getUserName(item),
+            date: (item?.deleted?.at | i18nDate),
+            time: (item?.deleted?.at | i18nDate:'time')
+        } }}
+    </detail-chip>
+    <div *ngFor="let field of fields">
+        <div [ngSwitch]="field">
+            <ng-container *ngSwitchCase="'pdate'">
+                <detail-chip *ngIf="item.type === 'page' && item.pdate && item.pdate > 0">
+                    {{ 'editor.published_label' | i18n:{
+                        publisher: (item.publisher | userFullName),
+                        date: (item.pdate | i18nDate),
+                        time: (item.pdate | i18nDate:'time')
+                    } }}
+                </detail-chip>
+            </ng-container>
+            <ng-container *ngSwitchCase="'at'">
+                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
+                    {{ 'editor.publish_planned_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+                </detail-chip>
+            </ng-container>
+            <ng-container *ngSwitchCase="'offlineAt'">
+                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
+                    {{ 'editor.publish_planned_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+                </detail-chip>
+            </ng-container>
+            <ng-container *ngSwitchCase="'queuedPublish'">
+                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
+                    {{ 'editor.publish_queue_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+                </detail-chip>
+            </ng-container>
+            <ng-container *ngSwitchCase="'queuedOffline'">
+                <detail-chip *ngIf="getFormattedTimeMgmtValue(item, field) | async">
+                    {{ 'editor.publish_queue_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue(item, field) | async }}
+                </detail-chip>
+            </ng-container>
+            <detail-chip *ngSwitchCase="'creator'">
+                {{ 'common.creator_label' | i18n }}: {{ item[field] | userFullName }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'editor'">
+                {{ 'common.editor_label' | i18n }}: {{ item[field] | userFullName }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'cdate'">
+                {{ 'common.date_created_label' | i18n }}: {{ item[field] | i18nDate }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'customCdate'">
+                {{ 'common.date_custom_created_label' | i18n }}: {{ item[field] ? (item[field] | i18nDate) : (item['cdate'] | i18nDate) }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'edate'">
+                {{ 'common.date_edited_label' | i18n }}: {{ item[field] | i18nDate }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'customEdate'">
+                {{ 'common.date_custom_edited_label' | i18n }}: {{ item[field] ? (item[field] | i18nDate) : (item['edate'] | i18nDate) }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'fileSize'">
+                {{ item[field] | filesize }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'pageStatus'">
+                {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'priority'">
+                Priority: {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'template'">
+                <i class="material-icons" [attr.translate]="'no'">dashboard</i> {{ templateName(item.templateId) }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'fileType'">
+                <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i> {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'usage'" (click)="usageClicked($event, item)" class="usage">
+                <span>{{ 'common.usage_label' | i18n }}:</span>
+                <span *ngIf="item?.usage?.total !== undefined" class="usage-count">{{ totalUsage(item) }}</span>
+                <i *ngIf="item?.usage?.total === undefined"
+                   class="usage-spinner material-icons usage-count" [attr.translate]="'no'">hourglass_empty</i>
+            </detail-chip>
+            <detail-chip *ngSwitchDefault>
+                {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'globalId'">
+                {{ 'editor.item_global_id_label' | i18n }}:<br>{{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'inheritance'">
+                <i class="material-icons inheritance-icon-{{ item | getInheritance }}" [attr.translate]="'no'"></i> {{ 'common.inheritance_label_' + (item | getInheritance) | i18n }}
+            </detail-chip>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,39 @@
+<div class="modal-title">
+    <h5>{{ 'modal.execution_detail_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <table>
+        <tr>
+            <td>{{ 'scheduler.execution_result' | i18n }}</td>
+            <td>{{ (execution.result ? 'scheduler.execution_result_true' : 'scheduler.execution_result_false') | i18n }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'scheduler.execution_startTime' | i18n }}</td>
+            <td>{{ execution.startTime | i18nDate:'dateTimeDetailed' }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'scheduler.execution_endTime' | i18n }}</td>
+            <td>{{ execution.endTime | i18nDate:'dateTimeDetailed' }}</td>
+        </tr>
+        <tr>
+            <td>{{ 'scheduler.execution_duration' | i18n }}</td>
+            <td>{{ execution.duration | duration }}</td>
+        </tr>
+    </table>
+
+    <div class="log-wrapper">
+        <label class="log-label">{{ 'scheduler.execution_log' | i18n }}</label>
+        <pre class="log-output">{{ execution.log }}</pre>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        flat
+        (click)="closeFn()"
+    >
+        {{ 'common.close_button' | i18n }}
+    </gtx-button>
+</div>

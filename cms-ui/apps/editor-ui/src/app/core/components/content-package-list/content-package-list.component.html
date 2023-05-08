@@ -1,0 +1,19 @@
+<div class="list">
+    <gtx-contents-list-item *ngFor="let item of displayItems; trackBy: identify | paginate: { itemsPerPage: perPage, currentPage: page }">
+        <div class="item-primary">
+            <gtx-checkbox
+                *ngIf="selectable"
+                class="selection-checkbox"
+                [checked]="item.selected"
+                (change)="selectPackage(item)"
+            ></gtx-checkbox>
+
+            <span class="item-name">{{ item.value.name }}</span>
+        </div>
+    </gtx-contents-list-item>
+</div>
+
+<paging-controls
+    [class.hidden]="perPage < displayItems.length"
+    (pageChange)="updatePage($event)"
+></paging-controls>

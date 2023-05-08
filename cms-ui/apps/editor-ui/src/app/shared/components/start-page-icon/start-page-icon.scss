@@ -1,0 +1,32 @@
+@import "variables";
+
+:host {
+    display: inline-block;
+    align-self: center;
+    height: 16px;
+    cursor: help;
+
+    .startpage-icon {
+        i {
+            color: rgb(197, 113, 111);
+            font-size: $gtx-font-size-regular;
+        }
+    }
+
+
+    &[disabled] {
+        .startpage-icon {
+            i {
+                color: $gtx-color-dark-gray;
+
+                &::before {
+                    content: 'block';
+                    position: absolute;
+                    color: #c9302c;
+                    transform: scale(-1.5, 1.5);
+                }
+                margin-right: 5px;
+            }
+        }
+    }
+}

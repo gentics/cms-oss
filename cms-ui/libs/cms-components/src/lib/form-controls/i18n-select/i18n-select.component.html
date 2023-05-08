@@ -1,0 +1,29 @@
+<gtx-select
+    [formControl]="i18nSelect"
+    [label]="label"
+    [disabled]="disabled"
+    [required]="requiredInCurrentLanguage"
+    [class.untranslated]="!isTranslated"
+    [class.invalid-selection]="invalidSelection"
+    (blur)="_onTouched()"
+>
+    <gtx-option
+        *ngFor="let selectOption of selectOptions"
+        [value]="selectOption.value"
+    >
+        {{ selectOption.viewValue }}
+    </gtx-option>
+</gtx-select>
+<div *ngIf="!isTranslated" class="translation-suggestions">
+    <div>{{ 'gtxFormGenerator.error_no_translation' | i18n }}:&nbsp;</div>
+    <div class="translation-suggestions__values">
+        <div class="translation-suggestions__value">[{{ translationSuggestions[0]?.language | uppercase }}] {{ translationSuggestions[0]?.value }}</div>
+        <div class="translation-suggestions__additional-values">
+            <ng-container *ngFor="let translationSuggestion of translationSuggestions; let first = first">
+                <div *ngIf="!first">
+                    [{{ translationSuggestion.language | uppercase }}] {{ translationSuggestion.value }}
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>

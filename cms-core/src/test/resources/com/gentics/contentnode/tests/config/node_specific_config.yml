@@ -1,0 +1,23 @@
+global:
+  config:
+    aloha_plugins_global:
+        - "general/general"
+    aloha_plugins_node:
+      {{key}}:
+        - "specific/specific"
+    aloha_settings:
+      test: general
+      plugins:
+        gcn:
+          magiclinkconstruct: {{generalMagicLinkConstruct}}
+    aloha_settings_node:
+      {{key}}:
+        test: specific
+        plugins:
+          gcn:
+            magiclinkconstruct: {{specificMagicLinkConstruct}}
+    node_settings_global:
+      test: general_node
+    node_settings:
+      {{key}}:
+        test: specific_node

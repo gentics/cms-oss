@@ -1,0 +1,74 @@
+{
+	"properties": {
+		"id": {
+			"type": "integer",
+			"gtx_tagname": "folder.id"
+		},
+		"nodeId": {
+			"type": "integer",
+			"gtx_tagname": "folder.node.id"
+		},
+		"folderId": {
+			"type": "integer",
+			"gtx_tagname": "folder.mother"
+		},
+		"name": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "folder.name",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"description": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "folder.description",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"created": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "folder.creationdate.timestamp"
+		},
+		"creatorId": {
+			"type": "integer",
+			"gtx_tagname": "folder.creator.id"
+		},
+		"edited": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "folder.editdate.timestamp"
+		},
+		"editorId": {
+			"type": "integer",
+			"gtx_tagname": "folder.editor.id"
+		},
+		"systemCreationDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "folder.creationdate.timestamp"
+		},
+		"systemEditDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "folder.editdate.timestamp"
+		},
+		"deleted": {
+			"type": "boolean"
+		},
+		"groupId": {
+			"type": "integer"
+		}
+	}
+}

@@ -1,0 +1,69 @@
+@import "variables";
+
+.modal-content {
+    max-height: calc(85vh - 100px);
+    @media screen and (min-width: $small-screen-up) {
+        min-width: 480px;
+    }
+}
+
+gtx-tabs {
+    height: 100%;
+
+    gtx-tab ::ng-deep .tab-content {
+        overflow-y: auto;
+        max-height: 480px;
+    }
+}
+
+.affected-objects-wrapper {
+    margin-top: 15px;
+    margin-bottom: 10px;
+
+    gtx-checkbox ::ng-deep label {
+        color: $gtx-color-off-black;
+    }
+
+    .affected-objects-row {
+        margin-top: 15px;
+        border-bottom: 1px dotted #efefef;
+
+        .dependency-row {
+            font-size: 12px;
+            margin-bottom: 8px;
+            margin-top: -8px;
+        }
+
+        .column {
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        gtx-checkbox {
+            display: inline-block;
+        }
+
+        .info-text {
+            color: $gtx-color-mid-gray;
+        }
+
+        .dep-text {
+            color: $gtx-color-mid-gray;
+            overflow: hidden;
+            padding-left: 35px;
+        }
+
+        .item-name {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .all-items-count {
+            text-transform: uppercase;
+            color: $gtx-color-mid-gray;
+            border-bottom: 1px dotted $gcms-color-highlight;
+            padding-bottom: 2px;
+        }
+    }
+}

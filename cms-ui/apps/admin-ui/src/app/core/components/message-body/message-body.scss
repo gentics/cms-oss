@@ -1,0 +1,17 @@
+:host {
+    display: block;
+}
+
+a {
+    cursor: pointer;
+}
+
+a, span {
+    white-space: pre-line;
+}
+
+:host(.single-line) {
+    a, span {
+        white-space: nowrap;
+    }
+}

@@ -1,0 +1,22 @@
+@import "variables";
+
+@mixin icon-color($base-color) {
+    .list-header ::ng-deep .item-icon {
+        color: $base-color;
+    }
+
+    &.empty .list-header ::ng-deep .item-icon {
+        color: lighten($base-color, 45%);
+    }
+
+    .list-body ::ng-deep .item-icon {
+        color: lighten(desaturate($base-color, 10%), 15%);
+    }
+}
+
+@mixin item-type-icon-colors {
+    &.folder { @include icon-color($gcms-color-folder); }
+    &.page { @include icon-color($gcms-color-page); }
+    &.file { @include icon-color($gcms-color-file); }
+    &.image { @include icon-color($gcms-color-image); }
+}

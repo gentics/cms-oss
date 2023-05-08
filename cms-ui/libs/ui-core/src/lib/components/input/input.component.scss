@@ -1,0 +1,29 @@
+@import '../../../styles/base-import';
+
+:host {
+    position: relative;
+    display: block;
+
+    @include input-label-styles('> label');
+
+    > input[type=text],
+    > input[type=number],
+    > input[type=password],
+    > input[type=email],
+    > input[type=tel],
+    > input[type=url] {
+        @include input-base;
+
+        &::-ms-clear {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+    }
+
+    &.ng-touched.ng-invalid {
+        > input {
+            border-color: $gtx-color-alert;
+        }
+    }
+}

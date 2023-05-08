@@ -1,0 +1,19 @@
+<ng-container *ngIf="tagProperty">
+    <div class="row column">
+        <gtx-select
+            [label]="tagPart | tagPropLabel"
+            [required]="tagPart?.mandatory"
+            [disabled]="readOnly"
+            [(ngModel)]="tagProperty.nodeId"
+            [placeholder]="placeholder"
+            clearable
+            (valueCahnge)="onNodeChange($event)"
+        >
+            <gtx-option
+                *ngFor="let item of nodes$ | async"
+                [value]="item.id"
+                [icon]="item.type == 'channel' ? 'input' : ''"
+            >{{ item.name }}</gtx-option>
+        </gtx-select>
+    </div>
+</ng-container>

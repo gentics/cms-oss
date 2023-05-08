@@ -1,0 +1,27 @@
+@import 'variables';
+
+.gtx-widget-title {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+p {
+    width: 100%;
+    margin: 5px 0;
+
+    icon {
+        font-size: 1.6em;
+        vertical-align: middle;
+        color: $gtx-color-very-dark-gray;
+    }
+}
+
+.warning {
+    font-weight: 400;
+    color: red;
+}
+
+.success {
+    font-weight: 400;
+    color: $gtx-color-success;
+}

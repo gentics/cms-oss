@@ -1,0 +1,19 @@
+:host {
+    display: block;
+    // width: 100%;
+    // position: absolute;
+    // top: 56px;
+    // bottom: 0;
+    // left: 0;
+    // right: 0;
+}
+
+::ng-deep iframe.embedded-tools-iframe {
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    &[hidden] {
+        display: none;
+    }
+}

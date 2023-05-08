@@ -1,0 +1,15 @@
+:host {
+    display: flex;
+    flex-direction: row;
+
+    .key-input {
+        flex: 0 1 auto;
+        width: 33%;
+        padding-right: 1rem;
+    }
+
+    .value-input {
+        flex: 1 1 auto;
+        width: 66%;
+    }
+}

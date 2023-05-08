@@ -1,0 +1,32 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'shared.assign_user_to_groups' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-user-table
+            [showSearch]="true"
+            [hideActions]="true"
+            [selectable]="true"
+            [(selected)]="userIds"
+        ></gtx-user-table>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            (click)="buttonAssignGroupToUsersClicked()"
+            gtxActionAllowed="group.userassignment"
+        >
+            {{ 'shared.assign_user_to_groups' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

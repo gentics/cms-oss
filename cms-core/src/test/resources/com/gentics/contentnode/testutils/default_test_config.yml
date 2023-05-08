@@ -1,0 +1,17 @@
+db:
+  settings:
+    pool_maxIdle: 2
+feature:
+  wastebin: false
+  publish_cache: false
+  liveedit_tag_perconstruct: false
+  multithreaded_publishing: false
+  hardlink_files: false
+  channelsync: false
+global:
+  config:
+    contentrepository_driverclass:
+      hsql: org.hsqldb.jdbcDriver
+quartz:
+  threadPool:
+    threadCount: 1

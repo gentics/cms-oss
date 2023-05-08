@@ -1,0 +1,38 @@
+<ng-template #tabContent let-tab="tab">
+    <icon
+        *ngIf="tab.icon"
+        left
+    >{{ tab.icon }}</icon>
+    {{ tab.label }}
+</ng-template>
+
+<gtx-grouped-tabs *ngIf="items?.length > 0" class="properties-tabs" pure [activeId]="selectedTab">
+    <ng-container *ngFor="let tab of items">
+        <ng-container *ngIf="!tab.isGroup; else tabGroup">
+            <gtx-tab-pane [id]="tab.id" (select)="selectTab(tab.id)">
+                <ng-template gtx-tab-label>
+                    <ng-container [ngTemplateOutlet]="tabContent" [ngTemplateOutletContext]="{ tab: tab }"></ng-container>
+                </ng-template>
+            </gtx-tab-pane>
+        </ng-container>
+
+        <ng-template #tabGroup>
+            <gtx-tab-group
+                [id]="tab.id"
+                [label]="tab.label"
+                [expanded]="tab.expanded"
+                (tabGroupToggle)="toggleGroup($event)"
+            >
+                <gtx-tab-pane *ngFor="let groupItem of tab.tabs" [id]="groupItem.id" (select)="selectTab(groupItem.id)">
+                    <ng-template gtx-tab-label>
+                        <ng-container
+                            [ngTemplateOutlet]="tabContent"
+                            [ngTemplateOutletContext]="{ tab: groupItem }"
+                        ></ng-container>
+                    </ng-template>
+                </gtx-tab-pane>
+            </gtx-tab-group>
+        </ng-template>
+    </ng-container>
+</gtx-grouped-tabs>
+

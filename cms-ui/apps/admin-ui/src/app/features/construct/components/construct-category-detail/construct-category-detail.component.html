@@ -1,0 +1,21 @@
+<div class="gtx-entity-detail">
+    <gtx-entity-detail-header
+        [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+        saveActionAllowedId="constructCategory.updateCategoryInstance"
+        [saveActionAllowedInstanceId]="currentEntity?.id"
+        [saveDisabled]="!fgProperties?.valid || fgProperties.pristine"
+        (saveClick)="btnSavePropertiesOnClick()"
+        (cancelClick)="detailsClose()"
+    ></gtx-entity-detail-header>
+
+    <div class="gtx-entity-details-tab-content-body">
+        <div class="flex-row row">
+            <gtx-construct-category-properties
+                class="properties small-12 medium-9"
+                [formControl]="fgProperties"
+                [supportedLanguages]="supportedLanguages$ | async"
+                [mode]="ConstructCategoryPropertiesMode.UPDATE"
+            ></gtx-construct-category-properties>
+        </div>
+    </div>
+</div>

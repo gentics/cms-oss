@@ -1,0 +1,45 @@
+<h1>Textarea</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Binding & Attributes">
+    <div class="demo-result">
+        <div class="row">
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="readonly" label="readonly"></gtx-checkbox>
+            </div>
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="disabled" label="disabled"></gtx-checkbox>
+            </div>
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="required" label="required"></gtx-checkbox>
+            </div>
+        </div>
+        <gtx-textarea
+            label="Message"
+            [readonly]="readonly"
+            [disabled]="disabled"
+            [required]="required"
+            [(ngModel)]="message"
+        ></gtx-textarea>
+        message: <code>{{ message | json }}</code>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-checkbox [(ngModel)]="readonly" label="readonly"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="disabled" label="disabled"></gtx-checkbox>
+            <gtx-checkbox [(ngModel)]="required" label="required"></gtx-checkbox>
+
+            <gtx-textarea
+                label="Message"
+                [readonly]="readonly"
+                [disabled]="disabled"
+                [required]="required"
+                [(ngModel)]="message"
+            ></gtx-textarea>
+            message: <code>(( message | json ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

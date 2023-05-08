@@ -1,0 +1,18 @@
+<label *ngIf="label">{{ label }}</label>
+
+<div class="input-container" [formGroup]="form">
+    <gtx-select
+        [label]="('construct.select_dataSource' | i18n) + '*'"
+        [multiple]="false"
+        [required]="true"
+        [value]="form.value.dataSourceId"
+        (valueChange)="loadEntries($event)"
+    >
+        <gtx-option *ngFor="let dsEntry of (dataSourceMap | entries)" [value]="dsEntry.value.id">{{ dsEntry.value.name }}</gtx-option>
+    </gtx-select>
+
+    <gtx-textarea
+        [label]="'construct.select_template' | i18n"
+        formControlName="template"
+    ></gtx-textarea>
+</div>

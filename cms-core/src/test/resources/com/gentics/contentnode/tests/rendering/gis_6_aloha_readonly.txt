@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<body>
+/GenticsImageStore/100/1000/cropandresize/smart/512/0/137/1376/rest/file/content/load/#IMAGEID#?sid=1&nodeId=#NODEID#&fingerprint=#IMAGEMD5#</body>

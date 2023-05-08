@@ -1,0 +1,84 @@
+<h1>Search Bar</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+
+<gtx-demo-block demoTitle="Events">
+    <div class="demo-result">
+        <p>
+            The <code>change</code> event will fire whenever the key is pressed, whereas <code>search</code>
+            if only fired when the button or the enter key is pressed.
+        </p>
+        <gtx-search-bar query="cats"
+                        (change)="changeCount = changeCount + 1"
+                        (search)="searchCount = searchCount + 1"
+                        (clear)="clearCount = clearCount + 1">
+        </gtx-search-bar>
+        <code>change</code> fired {{ changeCount }} times.<br>
+        <code>search</code> fired {{ searchCount }} times.<br>
+        <code>clear</code> fired {{ clearCount }} times.
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                 <gtx-search-bar query="cats"
+                                 (change)="changeCount = changeCount + 1"
+                                 (search)="searchCount = searchCount + 1"
+                                 (clear)="clearCount = clearCount + 1">
+                 </gtx-search-bar>
+                 <code>change</code> fired {{ changeCount }} times.<br>
+                 <code>search</code> fired {{ searchCount }} times.<br>
+                 <code>clear</code> fired {{ clearCount }} times.
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="NgModel and Clearing">
+    <div class="demo-result">
+        <gtx-checkbox [(ngModel)]="hideClearButton" label="Hide clear button"></gtx-checkbox>
+        <gtx-search-bar (clear)="term = ''"
+                        [(ngModel)]="term"
+                        [hideClearButton]="hideClearButton"></gtx-search-bar>
+        Model: <code>{{ term }}</code>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                  <gtx-checkbox [(ngModel)]="hideClearButton" label="Hide clear button"></gtx-checkbox>
+                  <gtx-search-bar (clear)="term = ``"
+                                  [(ngModel)]="term"
+                                  [hideClearButton]="hideClearButton"></gtx-search-bar>
+                  Model: <code>{{ term }}</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Content Projection">
+    <div class="demo-result">
+        <gtx-search-bar>
+            <div class="chip">Tag 1<i class="material-icons close">close</i></div>
+            <div class="chip">Tag 2<i class="material-icons close">close</i></div>
+        </gtx-search-bar>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                  <gtx-search-bar>
+                      <div class="chip">Tag 1<i class="material-icons">close</i></div>
+                      <div class="chip">Tag 2<i class="material-icons">close</i></div>
+                  </gtx-search-bar>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Custom Icons">
+        <div class="demo-result">
+            <gtx-search-bar submitIcon="filter_list" clearIcon="undo">
+            </gtx-search-bar>
+        </div>
+        <div class="demo-code">
+            <gtx-highlighted-code language="HTML" code='
+                <gtx-search-bar submitIcon="filter_list" clearIcon="undo">
+                </gtx-search-bar>
+            '></gtx-highlighted-code>
+        </div>
+    </gtx-demo-block>

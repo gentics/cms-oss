@@ -1,0 +1,102 @@
+{
+	"_source": {
+		"excludes": [
+			"content"
+		]
+	},
+	"properties": {
+		"id": {
+			"type": "integer",
+			"gtx_tagname": "file.id"
+		},
+		"nodeId": {
+			"type": "integer",
+			"gtx_tagname": "file.folder.node.id"
+		},
+		"online": {
+			"type": "integer"
+		},
+		"folderId": {
+			"type": "integer",
+			"gtx_tagname": "file.folder.id"
+		},
+		"name": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "file.name",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"filename": {
+			"type": "text",
+			"analyzer": "filename_analyzer",
+			"gtx_tagname": "file.name"
+		},
+		"description": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "file.description",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"niceUrl": {
+			"type": "text",
+			"analyzer": "filename_analyzer",
+			"gtx_tagname": "file.nice_url"
+		},
+		"content": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "binarycontent"
+		},
+		"created": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "file.createdate.timestamp"
+		},
+		"creatorId": {
+			"type": "integer",
+			"gtx_tagname": "file.creator.id"
+		},
+		"edited": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "file.editdate.timestamp"
+		},
+		"editorId": {
+			"type": "integer",
+			"gtx_tagname": "file.editor.id"
+		},
+		"mimetype": {
+			"type": "text",
+			"gtx_tagname": "file.type"
+		},
+		"systemCreationDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "file.createdate.timestamp"
+		},
+		"systemEditDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "file.editdate.timestamp"
+		},
+		"deleted": {
+			"type": "boolean"
+		},
+		"groupId": {
+			"type": "integer"
+		}
+	}
+}

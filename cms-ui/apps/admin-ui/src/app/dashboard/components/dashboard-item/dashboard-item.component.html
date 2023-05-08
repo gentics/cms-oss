@@ -1,0 +1,5 @@
+<div class="item" [class.disabled]="disabledItem" [class.ribbon]="ribbon">
+    <div *ngIf="ribbon" class="gtx-ribbon"><span>{{ ribbon }}</span></div>
+    <gtx-icon [name]="icon"></gtx-icon>
+    <div>{{ title }}</div> 
+</div>

@@ -1,0 +1,10 @@
+{
+	"description": "Extract attachment information",
+	"processors": [
+		{
+			"attachment": {
+				"field": "content"
+			}
+		}
+	]
+}

@@ -1,0 +1,7 @@
+<tr>
+  <td><? if ($error[<node name>]) echo $errPrefix; ?><node label><? if ($error[<node name>]) echo $errPostfix; ?>&nbsp;</td>
+  <td>&nbsp;<xnl if ("<node mandatory>" == 1)><input type="hidden" name="mandatory[<node name>]" value="true"><xnl end>
+<!--//
+<? if (!$_REQUEST['submitted']) { $fvalue = "<node value>"; } else { $fvalue = $_REQUEST['element'][<node name>]; } ?>
+//-->
+<input type="hidden" name="label[<node name>]" value="<node label>"><textarea name="element[<node name>]" cols="<node cols>" rows="<node rows>" class="form_textarea"><?=$fvalue?></textarea></td></tr>

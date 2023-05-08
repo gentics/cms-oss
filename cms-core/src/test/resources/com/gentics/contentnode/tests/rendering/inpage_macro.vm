@@ -1,0 +1,8 @@
+#macro(inpage $page)##
+$page.id,##
+#end##
+<node page.id>
+#foreach($page in $cms.folder.pages)##
+#inpage($page)##
+#hello($page)##
+#end##

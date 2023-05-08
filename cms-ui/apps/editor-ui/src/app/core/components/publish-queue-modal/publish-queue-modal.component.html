@@ -1,0 +1,52 @@
+<gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.publish_queue_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <ng-container *ngIf="(queue$ | async).length as requestsAmount">
+        <p *ngIf="requestsAmount === 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_singular' | i18n }}:</p>
+        <p *ngIf="requestsAmount > 1" class="modal-title-sub">{{ 'modal.publish_queue_title_sub_plural' | i18n:{ amount: requestsAmount } }}:</p>
+    </ng-container>
+
+    <ng-container *ngIf="!(loading$ | async)">
+        <div *ngIf="(queue$ | async).length > 0; else emptyMessage" class="queue-list">
+            <publish-queue-list
+                [pages]="queue$ | async"
+                (pageClick)="pageClicked($event)"
+                (selectionChange)="selectedPages = $event"
+            ></publish-queue-list>
+        </div>
+
+        <ng-template #emptyMessage>
+            <div class="empty-message">
+                {{ 'modal.publish_queue_empty' | i18n }}
+            </div>
+        </ng-template>
+    </ng-container>
+
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        flat
+        type="secondary"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        (click)="assign()"
+        [disabled]="selectedPages.length === 0"
+    >
+        <icon left>assignment_ind</icon> {{ 'modal.assign_to_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="success"
+        [disabled]="!approveBtnIsVisible()"
+        (click)="approve()"
+    >
+        <icon left>playlist_add_check</icon> {{ 'modal.publish_queue_btn_approve' | i18n }}
+    </gtx-button>
+</div>

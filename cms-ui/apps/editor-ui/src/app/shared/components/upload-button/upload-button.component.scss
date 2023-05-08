@@ -1,0 +1,9 @@
+gtx-dropdown-content gtx-dropdown-item {
+    min-height: auto;
+    padding: 0;
+
+    gtx-button, ::ng-deep gtx-button button {
+        width: 100%;
+        text-align: left;
+    }
+}

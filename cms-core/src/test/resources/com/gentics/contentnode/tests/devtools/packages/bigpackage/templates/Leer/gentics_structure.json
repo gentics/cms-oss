@@ -1,0 +1,12 @@
+{
+  "globalId" : "3D6C.7b8cab52-d649-11e6-8b5d-ea5d8efab9e8",
+  "name" : "Leer",
+  "description" : "ein super template ist das hier",
+  "type" : "HTML",
+  "objectTags" : [ {
+    "globalId" : "3D6C.62b05f7b-d8d2-11e6-8b5d-ea5d8efab9e8",
+    "name" : "object.lalala",
+    "active" : false,
+    "constructId" : "A547.58458"
+  } ]
+}

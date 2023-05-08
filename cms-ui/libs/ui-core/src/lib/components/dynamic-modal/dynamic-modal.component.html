@@ -1,0 +1,15 @@
+<div
+    class="gtx-modal-overlay"
+    [class.visible]="visible"
+    (click)="overlayClick()"
+></div>
+
+<div
+    class="gtx-modal-dialog"
+    [class.isIE11]="isIE11"
+    [class.visible]="visible"
+    [class.nopad]="options.padding === false"
+    [style.width]="options.width"
+>
+    <ng-template #portal></ng-template>
+</div>

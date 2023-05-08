@@ -1,0 +1,32 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'modal.manage_templates_assignments_to_nodes_title' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
+        <gtx-node-table
+            [showSearch]="true"
+            [hideActions]="true"
+            [selected]="selectedIds"
+            (selectedChange)="selectionChange($event)"
+        ></gtx-node-table>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            [disabled]="loading"
+            (click)="okButtonClicked()"
+        >{{ 'common.ok_button' | i18n }}</gtx-button>
+
+        <gtx-button
+            type="primary"
+            flat
+            (click)="closeFn()"
+        >
+            {{ 'common.close_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

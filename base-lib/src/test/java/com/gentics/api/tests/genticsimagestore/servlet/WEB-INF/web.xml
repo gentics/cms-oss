@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: web.xml,v 1.1.2.2 2012-04-30 09:49:18 norbert Exp $ -->
+<web-app  xmlns="http://java.sun.com/xml/ns/j2ee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+	version="2.4">
+	<icon></icon>
+	<display-name>Gentics® .Node® @@VERSION@@ build @@BUILDNUMBER@@</display-name>
+
+	<!-- GenticsImageStoreServlet without secret -->
+	<servlet>
+		<servlet-name>GenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+	</servlet>
+
+	<!-- GenticsImageStoreServlet with secret -->
+	<servlet>
+		<servlet-name>SecretGenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>secret</param-name>
+			<param-value>totallysecret</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+	</servlet>
+	
+	<!-- GenticsImageStoreServlet with empty decorator -->
+	<servlet>
+		<servlet-name>DecoratedGenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+		<init-param>
+			<param-name>requestDecorator</param-name>
+			<param-value>com.gentics.api.tests.genticsimagestore.servlet.GenticsImageStoreServletTest$EmptyDecorator</param-value>
+		</init-param>
+	</servlet>
+	
+	<!-- GenticsImageStoreServlet with modifying decorator -->
+	<servlet>
+		<servlet-name>ModifyingGenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+		<init-param>
+			<param-name>requestDecorator</param-name>
+			<param-value>com.gentics.api.tests.genticsimagestore.servlet.GenticsImageStoreServletTest$ModifyingDecorator</param-value>
+		</init-param>
+	</servlet>
+	
+	<!-- GenticsImageStoreServlet with invalid decorator -->
+	<servlet>
+		<servlet-name>InvalidGenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+		<init-param>
+			<param-name>requestDecorator</param-name>
+			<param-value>com.gentics.api.tests.genticsimagestore.servlet.GenticsImageStoreServletTest$DOESNOTEXIST</param-value>
+		</init-param>
+	</servlet>
+
+	<!-- GenticsImageStoreServlet with cacheKeyQueryParameters -->
+	<servlet>
+		<servlet-name>QueryParameterGenticsImageStoreServlet</servlet-name>
+		<servlet-class>com.gentics.api.imagestore.GenticsImageStoreServlet</servlet-class>
+		<init-param>
+			<param-name>jpegquality</param-name>
+			<param-value>0.9</param-value>
+		</init-param>
+		<init-param>
+			<param-name>cacheKeyQueryParameters</param-name>
+			<param-value>x,y</param-value>
+		</init-param>
+		<init-param>
+			<param-name>urlPrefix</param-name>
+			<param-value>http://localhost:7890</param-value>
+		</init-param>
+	</servlet>
+
+	<!-- Servlet mappings -->
+	<servlet-mapping>
+		<servlet-name>GenticsImageStoreServlet</servlet-name>
+		<url-pattern>/gis/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>SecretGenticsImageStoreServlet</servlet-name>
+		<url-pattern>/secretgis/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>DecoratedGenticsImageStoreServlet</servlet-name>
+		<url-pattern>/emptydecorator/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>ModifyingGenticsImageStoreServlet</servlet-name>
+		<url-pattern>/modifyingdecorator/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>InvalidGenticsImageStoreServlet</servlet-name>
+		<url-pattern>/invaliddecorator/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>QueryParameterGenticsImageStoreServlet</servlet-name>
+		<url-pattern>/queryparameters/*</url-pattern>
+	</servlet-mapping>
+
+	<error-page>
+		<error-code>500</error-code>
+		<location>/error.html</location>
+	</error-page>
+</web-app>

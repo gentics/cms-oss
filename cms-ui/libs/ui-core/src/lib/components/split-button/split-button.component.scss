@@ -1,0 +1,43 @@
+@import '../../../styles/base-import';
+
+.split-button-wrapper {
+    display: inline-flex;
+    line-height: 1;
+
+    gtx-button.has-secondary-actions::ng-deep button {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        border-right-style: none;
+        box-shadow: none;
+
+        // &.small {
+        //     line-height: 1;
+        // }
+    }
+
+    .primary-button {
+        icon[left],
+        i.left {
+            margin-right: 5px;
+            float: left;
+        }
+
+        icon[right],
+        i.right {
+            margin-left: 5px;
+            float: right;
+        }
+    }
+
+    .spacer-line {
+        border-left: 1px solid rgba($gtx-color-very-dark-gray, 0.8);
+    }
+
+    .more-trigger::ng-deep button {
+        padding: 0;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left-style: none;
+        box-shadow: none;
+    }
+}

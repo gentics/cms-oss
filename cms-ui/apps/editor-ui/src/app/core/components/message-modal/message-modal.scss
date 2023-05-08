@@ -1,0 +1,46 @@
+@import 'variables';
+
+:host {
+    display: block;
+    min-width: 30vw;
+    max-width: 80vw;
+}
+
+.modal-title {
+    padding: 0 10px;
+}
+
+.title-row {
+    display: flex;
+    flex-direction: row;
+    white-space: nowrap;
+
+    .author {
+        color: $gtx-color-very-dark-gray;
+    }
+
+    .date {
+        &::before {
+            content: ' ';
+            display: inline;
+            white-space: pre;
+        }
+
+        color: $gtx-color-mid-gray;
+    }
+}
+
+.body-row {
+    border-top: 1px solid $gtx-color-very-light-gray;
+    margin-top: 10px;
+    padding: 10px 0;
+}
+
+.message-textarea {
+    margin-top: 10px;
+}
+
+::ng-deep textarea.materialize-textarea {
+    min-height: 5em !important;
+}
+

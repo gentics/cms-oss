@@ -1,0 +1,28 @@
+@import "variables";
+
+:host {
+    display: flex;
+    align-items: center;
+
+    iframe {
+        display: none;
+    }
+
+    .line {
+        border-left: 3px solid #0096DC;
+        height: 15rem;
+        margin: 0 30px;
+    }
+
+    @media screen and (max-width: $tiny-screen) {
+        flex-direction: column;
+
+        .line {
+            border-left: none;
+            border-bottom: 3px solid #0096DC;
+            height: auto;
+            margin: 20px 0 20px;
+            width: 15rem;
+        }
+    }
+}

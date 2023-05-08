@@ -1,0 +1,21 @@
+<input type="text" name="<nodefieldname>" id="f_date_b" value="<nodevalue>"/>
+<button type="reset" id="f_trigger_b">...</button>
+<script type="text/javascript">
+var mytimeouthandler1;
+function detect_calendar_loaded1(){
+//this function is specially for IE ;-)
+mytimeouthandler1=window.setTimeout("detect_calendar_loaded1()",500);
+//if Calendar is null this causes an javascript error and the code below is not evaluated in this case.
+if (Calendar) {
+//if Calendar exists we clear the timeout (so the loop is stopped) and load the other Calendar
+Calendar.setup({
+inputField : "f_date_b", //*
+ifFormat : "%d.%m.%Y ",
+showsTime : false,
+button : "f_trigger_b", //*
+step : 1
+});
+}
+}
+detect_calendar_loaded1();
+</script> 

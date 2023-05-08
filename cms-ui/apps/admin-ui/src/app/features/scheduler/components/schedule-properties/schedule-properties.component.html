@@ -1,0 +1,66 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <div class="input-container small-12 columns">
+
+        <!-- Name -->
+        <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="('common.name' | i18n) + ' *'"
+            [required]="true"
+            formControlName="name"
+        ></gtx-input>
+
+        <!-- Description -->
+        <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="'common.description' | i18n"
+            formControlName="description"
+        ></gtx-input>
+
+        <!-- Task-ID -->
+        <gtx-select
+            [label]="('scheduler.task' | i18n) + ' *'"
+            [required]="true"
+            formControlName="taskId"
+        >
+            <gtx-option *ngFor="let task of tasks$ | async" [value]="task.id">{{ task.name }}</gtx-option>
+        </gtx-select>
+
+        <div class="flex-row">
+            <!-- Active -->
+            <gtx-checkbox
+                [label]="'scheduler.active' | i18n"
+                class="checkbox-middle small-6"
+                formControlName="active"
+            ></gtx-checkbox>
+
+            <!-- Parallel -->
+            <gtx-checkbox
+                [label]="'scheduler.parallel' | i18n"
+                class="checkbox-middle small-6"
+                formControlName="parallel"
+            ></gtx-checkbox>
+        </div>
+
+        <gtx-string-list
+            [label]="'scheduler.notificationEmail' | i18n"
+            [addLabel]="'shared.add' | i18n"
+            type="email"
+            formControlName="notificationEmail"
+        ></gtx-string-list>
+
+        <!-- Schedule Data -->
+        <gtx-schedule-data-properties
+            [label]="'scheduler.scheduleData' | i18n"
+            [required]="true"
+            [scheduleBlacklist]="scheduleBlacklist"
+            formControlName="scheduleData"
+        ></gtx-schedule-data-properties>
+
+    </div>
+</form>

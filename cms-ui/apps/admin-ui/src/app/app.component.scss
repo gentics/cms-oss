@@ -1,0 +1,123 @@
+@import "variables";
+
+a.branding {
+    position: absolute;
+    display: flex;
+    top: 19px;
+    left: 22px;
+
+    .app-title {
+        display: none;
+        white-space: nowrap;
+        color: $gtx-color-primary;
+        font-size: 14px;
+        text-transform: uppercase;
+        margin-left: 0.8em;
+
+        @media screen and (min-width: $medium-screen) {
+            display: block;
+        }
+    }
+
+    svg-icon {
+        height: 22px;
+
+        & > ::ng-deep svg {
+            height: 22px;
+            width: 19px;
+        }
+    }
+}
+
+:host {
+    gtx-breadcrumbs::ng-deep {
+        flex: 1 1 auto;
+        padding: 0;
+
+        > nav {
+            box-shadow: none;
+            background-color: transparent;
+
+            > .nav-wrapper a.breadcrumb {
+                font-size: 14px;
+                color: gray !important;
+
+                &::before {
+                    color: gray !important;
+                }
+            }
+        }
+    }
+}
+
+.corner-actions {
+    position: absolute;
+    top: 15px;
+    right: 74px;
+    user-select: none;
+
+    @media screen and (max-width: $small-screen) {
+        right: 66px;
+    }
+
+    gtx-button:not(:first-child) {
+        margin-left: 10px;
+    }
+
+    .corner-action {
+        @media screen and (max-width: $small-screen) {
+            display: none;
+        }
+        animation: AnimateMessageEnvelope 300ms ease both;
+        position: relative;
+
+        .counter {
+            position: absolute;
+            right: -2px;
+            bottom: -2px;
+            padding: 1px 3px;
+            font-size: 12px;
+            line-height: 12px;
+            background-color: $gtx-color-primary;
+            color: white;
+            border-radius: 3px;
+        }
+
+        &.animated ::ng-deep icon {
+            animation: spin 3s linear infinite;
+        }
+    }
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.main-content {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 60px);
+    flex: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@keyframes AnimateMessageEnvelope {
+    0% {
+        opacity: 0;
+        margin-left: 0;
+        width: 0;
+        transform: scale(0);
+    }
+
+    50% {
+        margin-left: 10px;
+        opacity: 0;
+        width: 26px;
+        transform: scale(0);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

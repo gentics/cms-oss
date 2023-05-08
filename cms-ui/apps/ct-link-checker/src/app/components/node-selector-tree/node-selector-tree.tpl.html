@@ -1,0 +1,17 @@
+<ng-template ngFor let-branch [ngForOf]="branches">
+    <gtx-dropdown-item [ngClass]="'depth-' + depth"
+                       (click)="nodeSelected.emit(branch.node)">
+        <a (click)="nodeSelected.emit(branch.node)">
+            <div *ngIf="0 < depth" class="inherited-icon">
+                <i class="material-icons">input</i>
+            </div>
+            {{ branch.node.name }}
+        <span *ngIf="(getStats(branch.node.id)?.invalid) as invalidCount" class="badge">{{ invalidCount }}</span>
+        </a>
+    </gtx-dropdown-item>
+    <gtxct-node-selector-tree [branches]="branch.children"
+                        [stats]="stats"
+                        [depth]="depth + 1"
+                        [useLinks]="useLinks"
+                        (nodeSelected)="nodeSelected.emit($event)"></gtxct-node-selector-tree>
+</ng-template>

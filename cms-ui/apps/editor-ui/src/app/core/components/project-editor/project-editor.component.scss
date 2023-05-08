@@ -1,0 +1,140 @@
+@import 'variables';
+
+.breadcrumbs-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+gtx-breadcrumbs::ng-deep {
+    flex: 1 1 50%;
+    min-width: 0;
+
+    > nav {
+        box-shadow: none;
+        background: transparent;
+
+        > .nav-wrapper > .breadcrumb:not([href]) {
+            cursor: pointer;
+        }
+    }
+
+    node-selector {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    node-selector + .breadcrumb::before {
+        display: none;
+    }
+
+    .breadcrumb:last-child {
+        cursor: default;
+    }
+}
+
+favourite-toggle {
+    flex: 0 0 auto;
+    width: 5%;
+    line-height: 4em;
+    padding-right: 0.9375rem;
+
+    :not(:hover) > & {
+        filter: grayscale(20%);
+        opacity: 0.35;
+    }
+}
+
+folder-context-menu {
+    :not(:hover) > & {
+        filter: grayscale(70%);
+        opacity: 0.1;
+    }
+}
+
+@mixin focusModeAnimation {
+    transition-delay: $gtx-animation-duration, 0s;
+    transition-timing-function: ease, step-start;
+    top: 0 !important;
+    z-index: 15;
+
+    & ::ng-deep .focus-switcher-left {
+        display: none;
+    }
+
+    & ::ng-deep .left-panel,
+    & ::ng-deep .right-panel {
+        min-width: 100% !important;
+        max-width: 100% !important;
+        transform: translateX(-100%);
+        transition-delay: 0s;
+    }
+}
+
+// On small screen widths or in focus mode, expand edit mode to the full screensize
+gtx-split-view-container.split-view-container::ng-deep {
+    background-color: white;
+    position: absolute;
+    top: $header-area-height;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transition: top $gtx-animation-duration ease,
+        z-index $gtx-animation-duration step-end;
+    will-change: top, z-index;
+    z-index: 0;
+
+    .left-panel,
+    .right-panel {
+        transition-duration: $gtx-animation-duration;
+        transition-delay: $gtx-animation-duration;
+    }
+
+    &.advanced-search-visible {
+        top: $header-area-height + $advanced-search-height;
+        transition: top $gtx-animation-duration;
+    }
+
+    @media screen and (max-width: $small-screen) {
+        &.rightPanelFocused {
+            @include focusModeAnimation;
+        }
+    }
+
+    &.focusMode.rightPanelFocused {
+        @include focusModeAnimation;
+
+        > .slideable {
+            width: 100%;
+
+            > .resizer {
+                transition: min-width $gtx-animation-duration ease,
+                    max-width $gtx-animation-duration ease;
+                min-width: 0;
+                max-width: 0;
+            }
+        }
+    }
+
+    > .slideable {
+        box-shadow: none !important;
+        border-top: none !important;
+
+        // Add some custom behaviour to the SplitViewContainer for not-quite-large screen widths
+        @media screen and (min-width: 1401px) and (max-width: $large-screen) {
+            width: 70%;
+
+            &.hasRightPanel {
+                width: 100%;
+            }
+        }
+
+        .left-panel {
+            position: relative;
+        }
+    }
+}
+
+.content-pane {
+    height: 100%;
+    overflow: hidden;
+}

@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.gentics</groupId>
+	<artifactId>cms-oss</artifactId>
+	<version>6.0.0-SNAPSHOT</version>
+	<name>Gentics CMS OSS - Project Root</name>
+	<packaging>pom</packaging>
+	<description>This is the project root</description>
+	<url>http://www.gentics.com/</url>
+
+	<licenses>
+		<license>
+			<name>Gentics Software GmbH - Commercial License</name>
+			<!-- TODO license -->
+			<url>http://www.gentics.com/licenses/LICENSE.txt</url>
+		</license>
+	</licenses>
+
+	<!-- TODO: do we need this?-->
+	<scm>
+		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
+		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
+		<url>http://git.gentics.com/psc/contentnode</url>
+	</scm>
+
+	<modules>
+		<module>cms-oss-bom</module>
+		<module>base-api</module>
+		<module>base-lib</module>
+		<module>cms-restapi</module>
+		<module>cms-api</module>
+		<module>cms-core</module>
+		<module>cms-js-lib</module>
+		<module>cms-aloha-plugins</module>
+		<module>cms-aloha-bundle</module>
+		<module>cms-ui</module>
+		<module>cms-cache</module>
+		<module>cms-oss-server</module>
+
+		<!--
+		<module>static</module>
+		-->
+
+		<!--module>contentnode-manual</module>
+		<module>contentnode-doc</module>
+		<module>contentnode-changelog</module -->
+
+	</modules>
+
+	<properties>
+		<!-- Dynamic third party dependencies -->
+		<alohaeditor.version>1.4.61</alohaeditor.version>
+
+		<!-- dd.MM.YYYY -->
+		<alohaeditor.date>16.09.2022</alohaeditor.date>
+		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
+		<mesh.version>1.10.0</mesh.version>
+		<mesh.forms.plugin.version>1.10.0</mesh.forms.plugin.version>
+
+		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
+		<jersey.version>2.39</jersey.version>
+		<jetty.version>9.4.49.v20220914</jetty.version>
+		<jackson.version>2.14.1</jackson.version>
+
+		<enunciate.version>2.14.0</enunciate.version>
+		<jjwt.version>0.11.0</jjwt.version>
+		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
+		<mockito.version>3.7.7</mockito.version>
+		<testcontainers.version>1.17.6</testcontainers.version>
+		<jsonpath.version>2.6.0</jsonpath.version>
+		<log4j.version>2.17.1</log4j.version>
+
+		<!-- TODO: integrate generic-testutils -->
+		<generic-testutils.version>1.15.7</generic-testutils.version>
+		<skip.integration.tests>false</skip.integration.tests>
+		<skip.unit.tests>false</skip.unit.tests>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+		<mavenRootBuildTimestamp>${maven.build.timestamp}</mavenRootBuildTimestamp>
+		<test.jvm.home>${env.JAVA_HOME}</test.jvm.home>
+		<assertj.version>3.4.1</assertj.version>
+
+		<surefire.forkcount>16</surefire.forkcount>
+		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
+		<!-- Since we have some glitch tests, we rerun failing tests once -->
+		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<goals>deploy -Dskip.unit.tests=true</goals>
+					<completionGoals>scm:checkin -Dmessage="Added generated changelog mapping" -Dbasedir=${project.basedir}/ -Dincludes=contentnode-changelog/src/changelog/mappings/**</completionGoals>
+				</configuration>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>2.9.1</version>
+					<configuration>
+						<enableRulesSummary>false</enableRulesSummary>
+						<configLocation>com/gentics/checkstyle/gentics_checks.xml</configLocation>
+						<encoding>UTF-8</encoding>
+						<failOnViolation>false</failOnViolation>
+						<skip>${skip.static.analysis}</skip>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+					<dependencies>
+						<dependency>
+							<groupId>com.gentics</groupId>
+							<artifactId>generic-testutils</artifactId>
+							<version>${generic-testutils.version}</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+				<plugin>
+					<groupId>com.github.spotbugs</groupId>
+					<artifactId>spotbugs-maven-plugin</artifactId>
+					<version>4.7.0.0</version>
+					<configuration>
+						<failOnError>false</failOnError>
+						<effort>Max</effort>
+						<threshold>Low</threshold>
+						<xmlOutput>true</xmlOutput>
+						<skip>${skip.static.analysis}</skip>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-pmd-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<format>xml</format>
+						<targetJdk>1.7</targetJdk>
+						<failOnViolation>false</failOnViolation>
+						<skip>${skip.static.analysis}</skip>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.gentics</groupId>
+					<artifactId>changelog-manager-plugin</artifactId>
+					<version>2.3.8</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>2.22.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.3.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>2.9.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.7</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.5.1</version>
+					<configuration>
+						<executable>${env.JAVA_HOME}/bin/javac</executable>
+						<verbose>true</verbose>
+						<fork>true</fork>
+						<compilerVersion>1.8</compilerVersion>
+						<source>11</source>
+						<target>11</target>
+						<maxmem>1024m</maxmem>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>2.7</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>3.1.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.3</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>cobertura-maven-plugin</artifactId>
+					<version>2.5.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>exec-maven-plugin</artifactId>
+					<version>1.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>2.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.enunciate</groupId>
+					<artifactId>maven-enunciate-plugin</artifactId>
+					<version>${enunciate.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
+				<plugin>
+					<groupId>ro.isdc.wro4j</groupId>
+					<artifactId>wro4j-maven-plugin</artifactId>
+					<version>1.4.1</version>
+				</plugin>
+				<plugin>
+					<groupId>nl.windgazer</groupId>
+					<artifactId>jsdoctk-plugin</artifactId>
+					<version>2.3.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.22.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>jslint-maven-plugin</artifactId>
+					<version>1.0.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5</version>
+				</plugin>
+				<plugin>
+					<groupId>com.sun.tools.jxc.maven2</groupId>
+					<artifactId>maven-jaxb-schemagen-plugin</artifactId>
+					<version>1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>1.5</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.6</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>versions-maven-plugin</artifactId>
+					<version>2.13.0</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<name>oss.sonatype.org</name>
+			<id>oss.sonatype.org</id>
+			<url>http://oss.sonatype.org/content/groups/public</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>jsdoctk2</id>
+			<name>Mulesoft</name>
+			<url>https://repository.mulesoft.org/nexus/content/groups/public</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>lan.internal</id>
+			<name>LAN Internal Repository</name>
+			<url>https://repo.apa-it.at/artifactory/gtx-maven-internal</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>maven-repository.dev.java.net</id>
+			<name>Java.net Maven 2 Repository</name>
+			<url>http://download.java.net/maven/2</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>maven2-repository</id>
+			<name>Maven 2 Repo</name>
+			<url>http://repo2.maven.org/maven2</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<repositories>
+		<repository>
+			<id>maven.gentics.com</id>
+			<name>Gentics Maven Repository</name>
+			<url>https://maven.gentics.com/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>jboss-repository</id>
+			<name>JBoss Repository</name>
+			<url>http://repository.jboss.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gtx-commercial</id>
+			<name>Gentics Maven Commercial Repository</name>
+			<url>https://maven.gentics.com/maven2-commercial</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>lan.releases.staging.gcn</id>
+			<name>Gentics Releases Repository</name>
+			<url>https://repo.apa-it.at/artifactory/gtx-maven-releases-staging-cms</url>
+		</repository>
+		<snapshotRepository>
+			<id>lan.snapshots</id>
+			<name>Gentics Snapshots Repository</name>
+			<url>https://repo.apa-it.at/artifactory/gtx-maven-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+</project>

@@ -1,0 +1,29 @@
+#if($portal.user.isloggedin)
+<script type="text/javascript">
+            $(document).ready(function(){                                                                   	 	                                                                                
+                $('#detail').edit();
+                $("#search").search({initSearchText:'Bitte Suche eingeben', draggable:true});
+                $("#list").list({entriesPerPage: 7});                                    
+            });                                                
+</script>
+#else
+<script type="text/javascript">
+            $(document).ready(function(){                                                                   	 	                                                                
+                $("#detail").detail();                                                                                                                
+                $("#search").search({initSearchText:'Bitte Suche eingeben', draggable:true});
+                $("#list").list({entriesPerPage: 7});                                    
+            });                                                
+</script>
+#end
+
+       <div id="wrapper">
+            <div id="desktop">                
+                <div id="headline"></div>
+                <div id="braintribe"></div>
+                <div id="copyright"></div>
+                
+                <div id="search"></div>        
+                <div id="list"></div>        
+                <div id="detail"></div>        
+            </div>
+        </div>       

@@ -1,0 +1,31 @@
+.gtx-entity-master {
+    margin-bottom: 8rem;
+}
+
+.gtx-sync-setter {
+    display: flex;
+    justify-content: space-between;
+
+    & > .input-container {
+        display: flex;
+        align-items: center;
+
+        & > * {
+            zoom: 85%;
+        }
+
+        &:first-child {
+            margin-right: 1rem;
+        }
+    }
+}
+
+gtx-tabs {
+    height: 100%;
+}
+
+.maintenance-tab-content {
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+}

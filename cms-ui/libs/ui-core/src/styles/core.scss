@@ -1,0 +1,79 @@
+@import './base-import';
+
+$roboto-font-path: '../fonts' !default;
+@import 'materialize';
+@import 'icons';
+@import 'grid';
+@import 'roboto-fontface-woff/css/roboto/sass/roboto-fontface';
+
+@import 'modals';
+@import 'rome';
+
+html {
+    font-weight: normal;
+    color: $off-black;
+    @include responsive-font-size($gtx-font-size-regular);
+}
+
+hr {
+    box-sizing: content-box;
+    height: 1px;
+    background-color: $gtx-color-mid-gray;
+    border: 0;
+    margin: 40px 0;
+}
+
+strong {
+    font-weight: 500;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: $gtx-heading-font-weight;
+    line-height: 1.1;
+    &.heading-light {
+        font-weight: 300;
+    }
+}
+
+.lead {
+    @include responsive-font-size($gtx-font-size-lead);
+}
+
+gtx-dropdown-trigger {
+    display: inline-block;
+}
+
+// What does this do??
+.gtx-declarative-modal {
+    display: none;
+}
+
+gtx-sortable-item {
+    display: block;
+
+    &.sortable-chosen {
+        opacity: 0.7;
+        background-color: $gtx-color-light-gray;
+    }
+
+    .gtx-drag-handle {
+        height: 32px;
+        cursor: ns-resize;
+        cursor: -webkit-grab;
+        cursor:    -moz-grab;
+        cursor:         grab;
+
+        > icon,
+        > i {
+            font-size: 32px;
+        }
+    }
+}
+
+@if ($gtx-split-view-container-global-resize-cursor) {
+    body.gtx-split-view-container-resizing {
+        &, & * {
+            cursor: ew-resize !important;
+        }
+    }
+}

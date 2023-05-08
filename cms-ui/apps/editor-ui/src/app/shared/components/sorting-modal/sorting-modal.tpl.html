@@ -1,0 +1,24 @@
+<div class="modal-title">
+    <h5>{{ 'modal.sorting_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <gtx-contents-list-item *ngFor="let field of availableFields"
+                            (click)="toggleSort(field)"
+                            class="no-select"
+                            [class.selected]="field === sortBy">
+        <div class="item-primary">
+            <div class="field">
+                {{ 'common.sort_' + field | i18n }}
+            </div>
+        </div>
+        <div class="sort-order" *ngIf="field === sortBy">
+            {{ 'common.sort_' + sortOrder | i18n }}
+            <i class="material-icons" [attr.translate]="'no'" *ngIf="sortOrder === 'asc'">arrow_upward</i>
+            <i class="material-icons" [attr.translate]="'no'" *ngIf="sortOrder === 'desc'">arrow_downward</i>
+        </div>
+    </gtx-contents-list-item>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button (click)="setSort()">{{ 'common.okay_button' | i18n }}</gtx-button>
+</div>

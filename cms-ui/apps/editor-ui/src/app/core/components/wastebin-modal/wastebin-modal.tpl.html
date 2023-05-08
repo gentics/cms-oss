@@ -1,0 +1,77 @@
+<div class="modal-title">
+    <gtx-progress-bar [active]="fetching$ | async"></gtx-progress-bar>
+    <h5>{{ 'modal.wastebin_title' | i18n }}</h5>
+    <div class="row">
+        <div class="small-12 medium-6 columns filter-wrapper" >
+            <gtx-input [placeholder]="'modal.filter_wastebin_label' | i18n" [(ngModel)]="filterTerm"></gtx-input>
+            <gtx-button size="small" type="secondary" (click)="selectSorting()" flat>
+                <icon class="right" *ngIf="sortOrder === 'asc'">arrow_upward</icon>
+                <icon class="right" *ngIf="sortOrder === 'desc'">arrow_downward</icon>
+                {{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + sortBy | i18n) } }}
+            </gtx-button>
+        </div>
+        <div class="small-12 medium-6 columns selected-actions" [class.disabled]="!itemsSelected()">
+            <span class="selection-count">{{ 'modal.selected_count' | i18n:{ count: selectionCount(), _type: 'object' } }}:</span>
+            <gtx-button (click)="restoreSelected()"
+                        [disabled]="!itemsSelected()"
+                        size="small">
+                <i class="material-icons left" [attr.translate]="'no'">restore_from_trash</i> {{ 'editor.restore_from_wastebin_label' | i18n }}
+            </gtx-button>
+            <gtx-button (click)="removeSelected()"
+                        [disabled]="!itemsSelected()"
+                        size="small"
+                        type="alert">
+                <i class="material-icons left" [attr.translate]="'no'">delete_forever</i> {{ 'editor.delete_from_wastebin_label' | i18n }}
+            </gtx-button>
+        </div>
+    </div>
+</div>
+<div class="modal-content">
+    <div class="empty-message" *ngIf="empty$ | async">
+        {{ 'modal.wastebin_empty' | i18n }}
+    </div>
+
+    <wastebin-list
+        type="folder"
+        [filter]="filterTerm"
+        [items]="folders$ | async"
+        [selectedItems]="selection['folder']"
+        (selectionChange)="selectionChanged('folder', $event)"
+    ></wastebin-list>
+
+    <wastebin-list
+        type="page"
+        [filter]="filterTerm"
+        [items]="pages$ | async"
+        [selectedItems]="selection['page']"
+        (selectionChange)="selectionChanged('page', $event)"
+    ></wastebin-list>
+
+    <wastebin-list
+        type="file"
+        [filter]="filterTerm"
+        [items]="files$ | async"
+        [selectedItems]="selection['file']"
+        (selectionChange)="selectionChanged('file', $event)"
+    ></wastebin-list>
+
+    <wastebin-list
+        type="image"
+        [filter]="filterTerm"
+        [items]="images$ | async"
+        [selectedItems]="selection['image']"
+        (selectionChange)="selectionChanged('image', $event)"
+    ></wastebin-list>
+
+    <wastebin-list
+        type="form"
+        [filter]="filterTerm"
+        [items]="forms$ | async"
+        [selectedItems]="selection['form']"
+        (selectionChange)="selectionChanged('form', $event)"
+    ></wastebin-list>
+
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="closeFn()">{{ 'common.close_button' | i18n }}</gtx-button>
+</div>

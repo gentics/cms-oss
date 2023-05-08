@@ -1,0 +1,29 @@
+@import "variables";
+
+.item-breadcrumbs {
+
+    .item-breadcrumb {
+        font-size: 14px;
+
+        &:not(:first-child) {
+            margin-left: -4px;
+        }
+    }
+
+    .item-breadcrumb:not(:last-child)::after {
+        content: '>';
+        color: #444;
+        font-size: 13px;
+        margin: 0 3px;
+    }
+
+    span.item-breadcrumb {
+        color: $gtx-color-mid-gray;
+    }
+
+    .item-name {
+        color: $gtx-color-mid-gray;
+        margin-left: -4px;
+        font-size: 14px;
+    }
+}

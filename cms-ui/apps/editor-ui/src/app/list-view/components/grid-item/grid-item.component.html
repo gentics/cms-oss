@@ -1,0 +1,91 @@
+﻿<div [class.deleted]="isDeleted()">
+    <image-thumbnail
+        [image]="item"
+        [nodeId]="nodeId"
+        [width]="280"
+        [minHeight]="200"
+    ></image-thumbnail>
+
+    <div class="thumbnail-overlay" [class.selected]="selected">
+        <div class="top-bar">
+            <icon-checkbox
+                [selected]="selected"
+                [icon]="icon"
+                (change)="toggleSelect()"
+            ></icon-checkbox>
+
+            <div class="image-info">
+                <span>{{ item.fileSize | filesize }}</span>
+                <span>{{ { width: item.sizeX, height: item.sizeY } | imagedimensions | i18n }}</span>
+            </div>
+            <favourite-toggle [item]="item" class="show-on-hover"></favourite-toggle>
+            <item-context-menu
+                class="show-on-hover"
+                [item]="item"
+                [activeNode]="activeNode"
+                [permissions]="item | permissions"
+                [isDeleted]="isDeleted()"
+                [uiMode]="uiMode"
+                [stagingMap]="stagingMap"
+            ></item-context-menu>
+        </div>
+
+        <div class="thumbnail-middle" [routerLink]="item | routerCommandsForItem">
+            <div class="display-fields">
+                <list-item-details
+                    [autoCompact]="false"
+                    [fields]="itemsInfo?.displayFields"
+                    [item]="item"
+                    [isDeleted]="isDeleted()"
+                    (usageClick)="showUsage($event)"
+                ></list-item-details>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <div
+                *ngIf="item.inherited"
+                class="inherited-icon"
+                [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }"
+            >
+                <icon>input</icon>
+            </div>
+            <div
+                *ngIf="item | itemIsLocalized"
+                class="localized-icon"
+                [title]="'editor.localized_tooltip' | i18n:{ master: item.masterNode }"
+            >
+                <icon>file_copy</icon>
+            </div>
+            <div
+                *ngIf="linkPaths"
+                class="item-name"
+                [title]="item | itemPath:activeNode?.name:true"
+            >
+                <a [routerLink]="['/editor', { outlets: { list: ['node', activeNode.id, 'folder', item.folderId] } }]">
+                    {{ item | itemPath:activeNode?.name:true | truncatePath:40 }}
+                </a>
+            </div>
+            <a
+                class="item-name"
+                [title]="item?.name"
+                [routerLink]="item | routerCommandsForItem"
+                [title]="item?.description"
+                [innerHTML]="item?.name | highlight:filterTerm"
+                (click)="itemClicked($event, item)"
+            ></a>
+            <a
+                *ngIf="item['liveUrl'] && item['liveUrl'] !== ''"
+                target="_blank"
+                class="liveurl-icon"
+                [href]="item['liveUrl']"
+                [title]="'editor.live_url_tooltip' | i18n"
+            >
+                <gtx-button icon size="small" type="secondary">
+                    <i class="material-icons" [attr.translate]="'no'">open_in_new</i>
+                </gtx-button>
+            </a>
+            <file-status-label *ngIf="uiMode === UIMode.EDIT" [item]="item"></file-status-label>
+        </div>
+    </div>
+</div>

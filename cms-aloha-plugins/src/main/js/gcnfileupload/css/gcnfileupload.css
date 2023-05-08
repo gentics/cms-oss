@@ -1,0 +1,197 @@
+/*!
+* Aloha Editor
+* Author & Copyright (c) 2010 Gentics Software GmbH
+* aloha-sales@gentics.com
+* Licensed unter the terms of http://www.aloha-editor.com/license.html
+*/
+button .aloha-button-gcnfileupload{ background: url(../img/button.png) no-repeat 0px 0px !important; }
+/*
+.wai-lang {
+	padding: 0 0 0 1.2em;
+	margin-left: 8px;
+	background-position: 0px 50%;
+	background-repeat: no-repeat no-repeat;
+}*/
+
+/**
+ *
+ * Modal
+ *
+ **********************************************************************/
+.aloha-gcnfileupload-overlay {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	z-index: 99999;
+	
+	background: rgba(0, 0, 0, 0.4);
+	filter: alpha(opacity=40);
+	
+	/*background-image: -webkit-radial-gradient(
+		rgba(127, 127, 127, 0.5) 0%,
+		rgba(127, 127, 127, 0.6) 40%,
+		rgba(0,   0,   0,   0.7) 100%
+	);
+	background-image: -moz-radial-gradient(
+		rgba(127, 127, 127, 0.5),
+		rgba(127, 127, 127, 0.6) 40%,
+		rgba(0,   0,   0,   0.7)
+	);*/
+}
+.aloha-gcnfileupload-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 99999;
+	width: 660px;
+	background: #eee;
+	font-size: 11px;
+	color: #000000;
+
+	opacity: 0;
+	filter: alpha(opacity=0);
+	/* Shadow */
+	box-shadow:			0 10px 25px rgba(0, 0, 0, .5);
+	-webkit-box-shadow:	0 10px 25px rgba(0, 0, 0, .5);
+	-moz-box-shadow:	0 10px 25px rgba(0, 0, 0, .5);
+	/* Transition */
+	-webkit-transition-property:		opacity;
+	-moz-transition-property:			opacity;
+	transition-property:				opacity;
+	-webkit-transition-duration:		1s;
+	-moz-transition-duration:			1s;
+	transition-duration:				1s;
+	-webkit-transition-timing-function:	ease-out;
+	-moz-transition-timing-function:	ease-out;
+	transition-timing-function:			ease-out;
+	
+	border-radius:			1px;
+	-moz-border-radius:		1px;
+	-webkit-border-radius:	1px;
+	
+	background-color: #eee;
+	background-image: -webkit-gradient(
+    	linear,
+    	center top,
+    	center bottom,
+    	color-stop(0.80, #eee),
+    	color-stop(0.99, #ccc),
+    	color-stop(1.00, #ddd)
+	);
+	background-image: -moz-linear-gradient(
+    	center top,
+    	#eee 90%,
+    	#ccc 96%,
+    	#bbb 99%,
+    	#ddd 100%
+	);
+	/*
+	filter: progid:DXImageTransform.Microsoft.Gradient(
+		startColorstr='#eeeee',
+		endColorstr='#dddddd',
+		gradientType='0'
+	);
+	*/	
+}
+
+.aloha-gcnfileupload-modal-header {
+	margin: 5px;
+	padding: 5px 8px;
+	border: 1px solid #454569;
+	color: #fff;
+	
+	background-color: rgb(61, 61, 61);
+	
+	/*background-image: -webkit-gradient(
+    	linear,
+    	center top,
+    	center bottom,
+    	color-stop(0.00, #69698d),
+    	color-stop(0.60, #4b4c78),
+    	color-stop(0.95, #4b4c78),
+    	color-stop(1.00, #8989ad)
+	);
+	background-image: -moz-linear-gradient(
+    	center top,
+		#69698d 0%,
+    	#4b4c78 60%,
+    	#4b4c78 95%,
+    	#8989ad 100%
+	);
+	filter: progid:DXImageTransform.Microsoft.Gradient(
+		startColorstr='#69698d',
+		endColorstr='#4b4c78',
+		gradientType='0'
+	);
+	
+	border-radius:			2px;
+	-moz-border-radius:		2px;
+	-webkit-border-radius:	2px;
+	
+	text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+	*/
+}
+
+
+.aloha-gcnfileupload-modal-left-block button {
+	float: right;
+}
+
+.aloha-gcnfileupload-modal-left-block {
+	float: left;
+	width: 35%;
+	font-weight: bold;
+	text-align: right;
+}
+.aloha-gcnfileupload-modal-right-block {
+	float: right;
+	width: 65%;
+}
+.aloha-gcnfileupload-clear {
+	float: none;
+	clear: both;
+}
+.aloha-gcnfileupload-modal-inner {
+	padding: 10px;
+}
+.aloha-gcnfileupload-modal button {
+	display: block;
+	width: 100px;
+	color: rgba(60, 52, 52, 0.84);
+	font-size: 11px;
+}
+.aloha-gcnfileupload-modal-inner input,
+.aloha-gcnfileupload-modal-inner textarea {
+	width: 230px;
+}
+.aloha-gcnfileupload-modal-inner textarea {
+	height: 130px;
+}
+.aloha-gcnfileupload-modal-divider {
+	border-bottom: 1px solid #fff;
+	border-top: 1px solid #aaa;
+	opacity: 0.4;
+	filter:alpha(opacity=40);
+}
+.aloha-gcnfileupload-modal-btns {
+	text-align: center;
+}
+.aloha-gcnfileupload-modal-btns button{
+	display: inline-block;
+	padding: 4px;
+	width: 200px;
+	margin: 0 5px;
+}
+
+.aloha-gcnfileupload-modal-half {
+	position: relative;
+	float: left;
+	width: 40%;
+	padding: 0 20px;
+	margin-bottom: 10px;
+}
+

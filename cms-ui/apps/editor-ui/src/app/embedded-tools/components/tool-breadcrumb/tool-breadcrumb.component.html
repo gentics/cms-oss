@@ -1,0 +1,21 @@
+<gtx-breadcrumbs [routerLinks]="routerLinks$ | async">
+    <node-selector
+        [nodes]="nodes$ | async"
+        [showName]="false"
+        [useLinks]="false"
+        (nodeSelected)="navigateToNodeFolder($event)"
+    >
+        <gtx-dropdown-item (click)="navigateToOverview()" class="tools">
+            <icon left>apps</icon> {{ 'common.tools' | i18n }}
+        </gtx-dropdown-item>
+    </node-selector>
+</gtx-breadcrumbs>
+
+<gtx-button
+    *ngIf="toolIsVisible$ | async"
+    icon
+    type="secondary"
+    (click)="closeTool()"
+>
+    <icon>close</icon>
+</gtx-button>

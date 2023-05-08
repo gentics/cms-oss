@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.69855",
+  "keyword" : "imagegallery",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "Bilder-Galerie",
+    "en" : "Image Gallery"
+  },
+  "description" : {
+    "de" : "Erzeugt einen Photostream von Bildern eines Ordners.",
+    "en" : "Image Gallery created out of images of one folder."
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.69861",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69866",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 20,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69871",
+    "name" : {
+      "de" : "Info",
+      "en" : "Info"
+    },
+    "keyword" : "info",
+    "editable" : false,
+    "typeId" : 37,
+    "order" : 30,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69876",
+    "name" : {
+      "de" : "Ordner",
+      "en" : "Folder"
+    },
+    "keyword" : "folder",
+    "editable" : true,
+    "typeId" : 39,
+    "order" : 40,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

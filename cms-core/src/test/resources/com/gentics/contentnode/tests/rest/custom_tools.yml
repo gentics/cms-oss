@@ -1,0 +1,15 @@
+global:
+  config:
+    custom_tools:
+    - id: 2
+      key: supertool
+      name: Supertool
+      newtab: false
+    - id: 1
+      key: formgenerator
+      toolUrl: http://www.orf.at/?sid=${SID}
+      iconUrl: http://workstation/DEV/ws/burrito.png
+      name:
+        de: Formulargenerator
+        en: Formgenerator
+      newtab: true

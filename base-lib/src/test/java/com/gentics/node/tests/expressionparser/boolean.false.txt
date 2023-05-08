@@ -1,0 +1,16 @@
+1 == 2
+1234567890123L < 1234567890123L
+filter(true, 'com.gentics.node.tests.expressionparser.FalsePostProcessor')
+filter(false, 'com.gentics.node.tests.expressionparser.FalsePostProcessor')
+filter(false, 'com.gentics.node.tests.expressionparser.TruePostProcessor')
+false && true
+null && true
+null && null
+true && false
+true && null
+null || false
+false || null
+null || null
+null
+!!null
+if(null, true, false)

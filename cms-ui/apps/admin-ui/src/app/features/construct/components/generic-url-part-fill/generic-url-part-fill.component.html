@@ -1,0 +1,10 @@
+<gtx-entity-picker
+    [label]="label"
+    [types]="[selectType]"
+    [required]="required"
+    [multiple]="false"
+    [disabled]="disabled"
+    [clearable]="clearable"
+    [value]="loadedEntity"
+    (valueChange)="entityPicked($event)"
+></gtx-entity-picker>

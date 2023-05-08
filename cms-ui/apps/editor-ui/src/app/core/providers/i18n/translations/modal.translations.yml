@@ -1,0 +1,923 @@
+advanced_search_help_booleans:
+    en: '<strong>Include/exclude search terms:</strong> Prefixing a term with <code>+</code> means that this term must be present; terms prefixed with <code>-</code> must not be present.'
+    de: '<strong>Wörter in der Suche miteinbeziehen/ausschliessen:</strong>: Mit <code>+</code> definieren Sie Begriffe, die sich in dem gesuchten Begriff wiederfinden müssen, mit <code>-</code> definieren Sie Begriffe, die sich in dem gesuchten Begriff nicht wiederfinden dürfen.'
+advanced_search_help_by_id:
+    en: '<strong>Search by page, file and folder id</strong> If you enter an ID, the system searches for objects with exactly this ID'
+    de: '<strong>Suche nach Seiten-, Datei- und Ordner-ID</strong><br> Bei Eingabe einer ID, wird nach Objekten mit genau dieser ID gesucht.'
+advanced_search_help_by_name:
+    en: '<strong>Search by name</strong><br> You can restrict the search to the names of pages, files and folders'
+    de: '<strong>Suche nach Name</strong><br> Sie können die Suche auf den Namen von Seiten, Dateien und Ordnern einschränken.'
+advanced_search_help_by_nice_url:
+    en: '<strong>Search by Nice URL</strong><br> You can restrict the search to the Nice URLs of pages.'
+    de: '<strong>Suche nach Nice URL</strong><br> Sie können die Suche auf die Nice URLs von Seiten einschränken.'
+advanced_search_help_direct_page:
+    en: '<strong>Direct page search:</strong><br> You can navigate directly to a page by entering either the page id or the live url of that page.'
+    de: '<strong>Direkte Seitensuche:</strong><br> Sie können direkt zu Seiten navigieren, indem Sie entweder die Online-Adresse (URL) oder die Seiten-ID in das Suchfeld eingeben.'
+advanced_search_help_further_info:
+    en: 'Further information and examples can be found in the Elastic documentation.'
+    de: 'Weitere Informationen und Beispiele finden Sie in der Elastic-Dokumentation.'
+advanced_search_help_full_text:
+    en: '<strong>Contentsearch</strong><br> You can restrict the search to the content of pages and files.'
+    de: '<strong>Inhaltssuche</strong><br> Sie können die Suche auf den Inhalt von Seiten und Dateien einschränken.'
+advanced_search_help_fuzzy:
+    en: '<strong>Search for similar terms:</strong> By adding a tilde (<code>~</code>) after a term, you can search for terms which are similar to, but not exactly matching, that term.'
+    de: '<strong>Suche nach ähnlichen Begriffen:</strong> Mit Tilde <code>~</code> können Sie nach Begriffen suchen, die dem eingegebenen Begriff ähnlich sind, aber diesem nicht genau entsprechen.'
+advanced_search_help_header_example:
+    en: 'Example'
+    de: 'Beispiel'
+advanced_search_help_header_feature:
+    en: 'Feature'
+    de: 'Beschreibung'
+advanced_search_help_label:
+    en: Advanced search help
+    de: Erweiterte Suche Info
+advanced_search_help_title:
+    en: 'Supported search features:'
+    de: 'Sonderfunktionen der Suche:'
+advanced_search_help_lead:
+    en: 'Typing in the search bar filters the items in the current view. Press "Enter" to run a full text search. In addition, you can use the following search operators:'
+    de: 'Durch Tippen im Suchfeld wird die aktuelle Ansicht gefiltert. Mit “Enter” führen Sie eine Volltextsuche aus. Zusätzlich können Sie die folgenden Suchoperatoren einsetzen:'
+advanced_search_help_wildcards:
+    en: '<strong>Wildcard search:</strong> A wildcard search uses placeholders to represent unspecified characters. Use <code>?</code> to replace a single character, and <code>*</code> to replace zero or more characters.'
+    de: '<strong>Wildcard-Suche:</strong> Die Wildcard-Suche hilft Ihnen dabei mit Platzhaltern zu suchen. Mit einem Fragezeichen <code>?</code>  kann ein einzelnes Zeichen ersetzt, mit einem Stern <code>*</code> können mehrere Zeichen ersetzt werden.'
+are_you_sure_modal_title:
+    en: Are you sure?
+    de: Sind Sie sicher?
+assign_for_revision_button:
+    en: Assign for revision
+    de: Zur Bearbeitung übergeben
+assign_page_title:
+    en: Assign for Revision
+    de: Zur Bearbeitung übergeben
+assign_page_select_users_title:
+    en: Select Users To Notify
+    de: Benutzer benachrichtigen
+assign_to_button:
+    en: Assign to
+    de: Übergeben
+cancel:
+    en: Cancel
+    de: Abbrechen
+cancel_language_change_button:
+    en: Cancel language change
+    de: Sprachänderung abbrechen
+change_password_title:
+    en: Change Password
+    de: Passwort ändern
+change_password_button:
+    en: Change password
+    de: Passwort ändern
+channel_dependencies_title:
+    en: Channel dependencies
+    de: Channel Beziehungen
+in:
+    en: in
+    de: in
+channel_id:
+    en: Channel Id
+    de: Channel Id
+confirm_navigation_title:
+    en: Discard changes?
+    de: Änderungen verwerfen?
+confirm_navigation_body:
+    en: Unsaved changes will be lost.
+    de: Ungespeicherte Änderungen gehen verloren.
+confirm_reload_title:
+    en: Reload the page?
+    de: Die Seite neuladen?
+confirm_reload_body:
+    en: Unsaved changes will be lost.
+    de: Ungespeicherte Änderungen gehen verloren.
+confirm_close_title:
+    en: Discard changes?
+    de: Änderungen verwerfen?
+confirm_close_body:
+    en: Unsaved changes will be lost.
+    de: Ungespeicherte Änderungen gehen verloren.
+confirm_password_label:
+    en: Confirm password
+    de: Passwort bestätigen
+confirm_objprop_apply_to_subitems_title:
+    en: Overwrite Object Properties?
+    de: Objekteigenschaften überschreiben?
+confirm_objprop_apply_to_subitems_body:
+    en: Are you sure that you want to overwrite the object property <b>{{ objPropName }}</b> on all {{ subitems }}?
+    de: Sind Sie sicher, dass Sie die Objekteigenschaft <b>{{ objPropName }}</b> auf allen {{ subitems }} überschreiben möchten?
+confirm_objprop_apply_to_subitems_folder:
+    en: subfolders
+    de: Unterordner
+confirm_objprop_apply_to_subitems_page:
+    en: language variants
+    de: Sprachversionen
+confirm_leave_content_staging_mode:
+    en: Leave Content Staging
+    de: Contentstaging verlassen
+ok:
+    en: Ok
+    de: Ok
+close:
+    en: Close
+    de: Schließen
+confirm:
+    en: Confirm
+    de: Bestätigen
+confirm_content_package_select:
+    en: Confirm
+    de: Bestätigen
+leave_content_staging_mode:
+    en: Leave Content Staging
+    de: Contentstaging verlassen
+leave_content_staging_mode_title:
+    en: Leave Content Staging
+    de: Contentstaging verlassen
+leave_content_staging_mode_body:
+    en: Are you sure that you want to leave the Content Staging mode?
+    de: Sind Sie sicher, dass Sie den Contentstaging Modus verlassen möchten?
+copy_item_title:
+    en: Choose Target Folder
+    de: Zielordner auswählen
+copy_item_submit:
+    en: Copy here
+    de: Hierher kopieren
+create_label:
+    en: Create
+    de: Neu erstellen
+create_all_label:
+    en: Create All
+    de: All Dateien neu erstellen
+create_files_button:
+    en: 'Create {{count}} {{type}}'
+    de: '{{count}} {{type}} neu erstellen'
+create_new_folder_title:
+    en: Create New Folder
+    de: Neuen Ordner erstellen
+create_new_form_title:
+    en: Create New Form
+    de: Neues Formular erstellen
+create_new_page_title:
+    en: Create New Page
+    de: Neue Seite erstellen
+create_page_variations_submit:
+    en: Create
+    de: Erstellen
+create_page_variation_submit:
+    en: Create here
+    de: Erstellen hier
+create_page_variation_title:
+    en: Create Page Variant
+    de: Seitenvariante erstellen
+create_page_variations_title:
+    en: Create Page Variants
+    de: Seitenvarianten erstellen
+confirmation_message_delete_title:
+    en: Delete messages
+    de: Nachrichten löschen
+confirmation_tag_delete_title:
+    en: Delete tags
+    de: Tags löschen
+datepicker_hours:
+    en: Hours
+    de: Stunde
+datepicker_minutes:
+    en: Minutes
+    de: Minute
+datepicker_months:
+    en:
+        - January
+        - February
+        - March
+        - April
+        - May
+        - June
+        - July
+        - August
+        - September
+        - October
+        - November
+        - December
+    de:
+        - Januar
+        - Februar
+        - März
+        - April
+        - Mai
+        - Juni
+        - Juli
+        - August
+        - September
+        - Oktober
+        - November
+        - Dezember
+datepicker_seconds:
+    en: Seconds
+    de: Sekunde
+datepicker_weekdays:
+    en:
+        - Sunday
+        - Monday
+        - Tuesday
+        - Wednesday
+        - Thursday
+        - Friday
+        - Saturday
+    de:
+        - Sonntag
+        - Montag
+        - Dienstag
+        - Mittwoch
+        - Donnerstag
+        - Freitag
+        - Samstag
+debug_tool_title:
+    en: Debug Tool
+    de: Analyse Tool
+debug_tool_introduction:
+    en: '<strong>Help us to improve Gentics CMS.</strong> This tool is for analysis purposes in case something unexpected happens in the Gentics CMS user interface.'
+    de: '<strong>Helfen Sie uns Gentics CMS zu verbessern.</strong> Dieses Tool dient Analyse-Zwecken, im Falle von fehlerhaftem Verhalten der Gentics CMS Oberfläche.'
+debug_tool_usage_title:
+    en: Usage
+    de: Verwendung
+debug_tool_usage_steps:
+    en:
+        - Create a report when a problem occurs. The report will be saved as a file on your device.
+        - Clear local data of the application on your browser. After logging in again, please check if the problem persists.
+        - Submit the report to support@gentics.com with a description of the problem.
+    de:
+        - Erstellen Sie einen Bericht, wenn ein Problem auftritt. Der Bericht wird als Datei auf Ihrem Gerät abgelegt.
+        - Löschen Sie lokale Daten der Anwendung auf Ihrem Browser. Nach erneutem Login prüfen Sie bitte, ob das Problem weiterhin auftritt.
+        - Senden Sie den Bericht an support@gentics.com mit einer Beschreibung des Problems.
+debug_tool_privacy_details:
+    en: 'The report contains information about the current state of the application, some of which is stored locally in your browser, and information about the browser & operating system used.<br>We do not intentionally collect your name, email, or any other form of personally identifiable information. However, the debug report may contain customer-specific information, which will not be used and will be treated confidentially.'
+    de: 'Der Bericht enthält Informationen zum aktuellen Zustand der Anwendung, die zum Teil lokal in Ihrem Browser gespeichert sind sowie Informationen zum verwendeten Browser & Betriebssystem.<br>Personenbezogene Daten, wie beispielsweise Ihr Name oder Ihre E-Mail Adresse, werden nicht vorsätzlich erfasst. Der Analyse Bericht kann jedoch kundenspezifische Informationen enthalten, die von uns nicht verwendet und in jedem Fall vertraulich behandelt werden.'
+debug_tool_screenshot_consent:
+    en: Include screenshot in report
+    de: Screenshot im Bericht inkludieren
+debug_tool_generate_button:
+    en: Create Report
+    de: Bericht erstellen
+debug_tool_clear_button:
+    en: Clear local data
+    de: Lokale Daten löschen
+debug_tool_clear_modal_title:
+    en: Are you sure?
+    de: Sind Sie sicher?
+debug_tool_clear_modal_body:
+    en: Clearing local data will log you out and any unsaved data will be lost!
+    de: Beim Löschen der lokalen Daten gehen nicht gesicherte Daten verloren und Sie werden aus dem System ausloggt.
+debug_tool_clear_modal_clear_button:
+    en: Clear
+    de: Löschen
+delete_page_title:
+    en: Delete Page
+    de: Seite löschen
+delete_pages_title:
+    en: Delete Pages
+    de: Seiten löschen
+delete_message_confirm_read:
+    en: Are you sure you want to delete {{count}} archived messages?
+    de: Sind Sie sicher, dass Sie {{count}} archivierte Nachrichten löschen möchten?
+delete_message_confirm_unread:
+    en: Are you sure you want to delete {{count}} unread messages?
+    de: Sind Sie sicher, dass Sie {{count}} ungelesene Nachrichten löschen möchten?
+delete_tag_confirm_plural:
+    en: Are you sure you want to delete {{count}} tags?
+    de: Sind Sie sicher, dass Sie {{count}} Tags löschen möchten?
+delete_tag_confirm_singular:
+    en: Are you sure you want to delete one tag?
+    de: Sind Sie sicher, dass Sie 1 Tag löschen möchten?
+dependencies:
+    en: Dependencies
+    de: Beziehungen
+discard_changes_button:
+    en: Discard changes
+    de: Änderungen verwerfen
+discard_and_reload_button:
+    en: Discard changes and reload the page
+    de: Änderungen verwerfen und die Seite neuladen
+disinherit_default_label:
+    en: Disinherit by default
+    de: Standardmäßig nicht vererben
+disinherited_from_label:
+    en: 'Disinherited from {{channel}}'
+    de: 'Vererbung von {{channel}} entfernt'
+display_field_selector_title:
+    en: Select details to display
+    de: Anzeigefelder auswählen
+edit_inherited_body:
+    en: '"{{name}}" is inherited from "{{master}}". You can either edit the original or create a localized version in "{{local}}" to edit.'
+    de: '"{{name}}" ist von "{{master}}"" vererbt. Sie können entweder das Original bearbeiten oder eine lokale Version in "{{local}}" erstellen.'
+edit_inherited_title:
+    en: '{{type}} is inherited'
+    de: '{{type}} ist vererbt'
+edit_original_button:
+    en: 'Edit Original'
+    de: 'Original bearbeiten'
+files:
+    en: Files
+    de: Dateien
+filter_users_label:
+    en: Filter users
+    de: Benutzer filtern
+filter_wastebin_label:
+    en: Filter wastebin
+    de: Papierkorb filtern
+general_inheritance_label:
+    en: General inheritance
+    de: Generelle Vererbung
+inheritance_channels_title:
+    en: Channels
+    de: Channels
+images:
+    en: Images
+    de: Bilder
+inheritance_title:
+    en: Inheritance Settings for
+    de: Vererbung für
+inherited_in_label:
+    en: 'Inherited in {{channel}}'
+    de: 'Vererbt in {{channel}}'
+local_label:
+    en: Local
+    de: Lokal
+localize_and_edit_button:
+    en: 'Localize & Edit'
+    de: 'Lokalisieren & Bearbeiten'
+localized_label:
+    en: Localized
+    de: Lokalisiert
+logged_out_by_backend_title:
+    en: 'Logged Out'
+    de: 'Automatisch abgemeldet'
+logged_out_by_backend_maintenance:
+    en: 'You were logged out by an active maintenance.'
+    de: 'Sie wurden aufgrund durch eine aktive Wartung ausgeloggt.'
+logged_out_by_backend_inactivity:
+    en: 'You were logged out due to inactivity.'
+    de: 'Sie wurden aufgrund von Inaktivität ausgeloggt.'
+message_time:
+    en: 'on {{date}} at {{time}}'
+    de: 'am {{date}} um {{time}}'
+message_title:
+    en: Message
+    de: Nachricht
+move_item_title:
+    en: Choose Target Folder
+    de: Zielordner auswählen
+move_item_submit:
+    en: Move here
+    de: Hierher verschieben
+multi_delete_confirm_button:
+    en: Delete {{count}} {{type}}
+    de: '{{count}} {{type}} löschen'
+multi_delete_form_reports_header_plural:
+    en: '{{count}} form reports will be deleted:'
+    de: '{{count}} Formularberichte werden gelöscht:'
+multi_delete_form_reports_header_singular:
+    en: 'One form report will be deleted:'
+    de: '1 Formularbericht wird gelöscht:'
+multi_delete_inherited_header_plural:
+    en: '{{count}} {{type}} are inherited and cannot be deleted:'
+    de: '{{count}} {{type}} sind vererbt und können nicht gelöscht werden:'
+multi_delete_inherited_header_singular:
+    en: 'One {{type}} is inherited and cannot be deleted:'
+    de: '1 {{type}} ist vererbt und kann nicht gelöscht werden:'
+multi_delete_keep_label:
+    en: Keep localized version
+    de: Lokalisierte Version behalten
+multi_delete_localized_header_plural:
+    en: '{{count}} {{type}} are localized and can be reset to the master node:'
+    de: '{{count}} {{type}} sind lokalisiert und können gelöscht und neu geerbt werden:'
+multi_delete_localized_header_singular:
+    en: 'One {{type}} is localized and can be deleted and reset to the master node:'
+    de: '1 {{type}} ist lokalisiert und kann gelöscht und neu geerbt werden:'
+multi_delete_localization_warning_label:
+    en: '{{count}} localized {{type}}'
+    de: '{{count}} lokalisierte {{type}}'
+multi_delete_localization_warning_body:
+    en: 'The following localized {{type}} will also be deleted:'
+    de: 'Die folgenden lokalisierten {{type}} werden auch gelöscht:'
+multi_delete_others_header_plural:
+    en: '{{count}} {{type}} will be deleted:'
+    de: '{{count}} {{type}} werden gelöscht:'
+multi_delete_others_header_singular:
+    en: 'One {{type}} will be deleted:'
+    de: '1 {{type}} wird gelöscht:'
+multi_delete_selected_languages:
+    en: Delete language variants
+    de: Sprachversionen löschen
+multi_delete_title:
+    en: 'Delete {{type}}'
+    de: '{{type}} löschen'
+multi_delete_unlocalize_label:
+    en: 'Delete and inherit from "{{master}}"'
+    de: 'Löschen und von "{{master}}" erben'
+multi_restore_confirm_button:
+    en: Restore {{count}}
+    de: '{{count}} wiederherstellen'
+multi_restore_inherited_header_plural:
+    en: '{{count}} {{type}} are inherited and cannot be restored:'
+    de: '{{count}} {{type}} sind vererbt und können nicht wiederhergestellt werden:'
+multi_restore_inherited_header_singular:
+    en: 'One {{type}} is inherited and cannot be restored:'
+    de: '1 {{type}} ist vererbt und kann nicht wiederhergestellt werden:'
+multi_restore_keep_label:
+    en: Keep localized version
+    de: Lokalisierte Version behalten
+multi_restore_localized_header_plural:
+    en: '{{count}} {{type}} are localized and can be reset to the master node:'
+    de: '{{count}} {{type}} sind lokalisiert und können wiederhergestellt und neu geerbt werden:'
+multi_restore_localized_header_singular:
+    en: 'One {{type}} is localized and can be restored and reset to the master node:'
+    de: '1 {{type}} ist lokalisiert und kann wiederhergestellt und neu geerbt werden:'
+multi_restore_localization_warning_label:
+    en: '{{count}} localized {{type}}'
+    de: '{{count}} lokalisierte {{type}}'
+multi_restore_localization_warning_body:
+    en: 'The following localized {{type}} will also be restored:'
+    de: 'Die folgenden lokalisierten {{type}} werden auch wiederhergestellt:'
+multi_restore_others_header_plural:
+    en: '{{count}} {{type}} will be restored:'
+    de: '{{count}} {{type}} werden wiederhergestellt:'
+multi_restore_others_header_singular:
+    en: 'One {{type}} will be restored:'
+    de: '1 {{type}} wird wiederhergestellt:'
+multi_restore_selected_languages:
+    en: Restore language variants
+    de: Sprachversionen wiederherstellen
+multi_restore_title:
+    en: 'Restore {{type}}'
+    de: '{{type}} wiederherstellen'
+multi_restore_unlocalize_label:
+    en: 'Restore and inherit from "{{master}}"'
+    de: 'Löschen und von "{{master}}" erben'
+multi_move_can_not_be_moved_header_plural:
+    en: '{{count}} {{type}} can not be moved:'
+    de: '{{count}} {{type}} können nicht verschoben werden:'
+multi_move_can_not_be_moved_header_singular:
+    en: 'One {{type}} can not be moved:'
+    de: '1 {{type}} kann nicht verschoben werden:'
+multi_move_confirm_button:
+    en: Move {{count}} {{type}}
+    de: '{{count}} {{type}} verschieben'
+multi_move_inherited:
+    en: inherited from "{{inheritedFrom}}"
+    de: vererbt von "{{inheritedFrom}}"
+multi_move_localized:
+    en: inherited from "{{inheritedFrom}}", localized in "{{channel}}"
+    de: vererbt von "{{inheritedFrom}}", lokalisiert in "{{channel}}"
+multi_move_title:
+    en: Moving Inherited {{type}}
+    de: Verschieben von vererbten {{type}}
+multi_move_will_be_moved_header_plural:
+    en: '{{count}} {{type}} can be moved to "{{channel}}/{{folder}}":'
+    de: '{{count}} {{type}} können nach "{{channel}}/{{folder}}" verschoben werden:'
+multi_move_will_be_moved_header_singular:
+    en: 'One {{type}} can be moved to "{{channel}}/{{folder}}":'
+    de: '1 {{type}} kann nach "{{channel}}/{{folder}}" verschoben werden:'
+multi_unlocalize_selected_languages:
+    en: Unlocalize language variants
+    de: Sprachversionen unlokalisieren
+link_templates_to_folder_modal_title:
+    en: 'Link templates to folder "{{folderName}}"'
+    de: 'Vorlagen mit Ordner "{{folderName}}" verknüpfen'
+link_templates_to_folder_modal_no_templates:
+    en: 'No templates linked to node "{{nodeName}}"'
+    de: 'Mit Node "{{nodeName}}" sind keine Vorlagen verknüpft'
+link_templates_to_folder_modal_checkbox_apply_recursively_label:
+    en: 'Apply to subfolders'
+    de: 'Auf Unterordner anwenden'
+new_password_label:
+    en: New password
+    de: Neues Passwort
+object_has_no_links:
+    en: 'This {{type}} does not link to any other objects'
+    de: '{{type}} verknüpft nicht auf andere Objekte'
+object_not_used:
+    en: 'This {{type}} is not used in any other objects'
+    de: '{{type}} wird in keinen anderen Objekten verwendet'
+object_usage_title:
+    en: 'Usage for {{type}} "{{name}}"'
+    de: 'Verwendungsübersicht für {{type}} "{{name}}"'
+object_links_label:
+    en: 'Links to other objects ({{count}})'
+    de: 'Links auf andere Objekte ({{count}})'
+object_usages_label:
+    en: 'Usage by other objects ({{count}})'
+    de: 'Verwendungen in andere Objekte ({{count}})'
+page_select_current_language:
+    en: 'Select current language variant ({{current}})'
+    de: 'Aktuelle Sprachvariante auswählen ({{current}})'
+page_select_no_language:
+    en: 'Deselect all language variants'
+    de: 'Alle Sprachvarianten abwählen'
+page_select_all_languages:
+    en: 'Select all language variants'
+    de: 'Alle Sprachvarianten auswählen'
+page_select_all_button_title:
+    en: Select all
+    de: Alles auswählen
+page_select_all_button:
+    en: All
+    de: Alle
+page_select_none_button:
+    en: None
+    de: Keine
+page_reset_selection_button:
+    en: Reset
+    de: Zurücksetzen
+page_versions_cancel_button:
+    en: 'Cancel'
+    de: 'Abbrechen'
+page_versions_close_button:
+    en: 'Close'
+    de: 'Schließen'
+page_versions_compare_button:
+    en: 'Compare'
+    de: 'Vergleichen'
+page_versions_current:
+    en: Current version
+    de: Aktuelle version
+page_versions_current_label:
+    en: 'current'
+    de: 'aktuell'
+page_versions_current_published:
+    en: 'Current, published version'
+    de: 'Aktuelle, veröffentlichte version'
+page_versions_date_label:
+    en: 'created on {{date}} at {{time}}'
+    de: 'erstellt am {{date}} um {{time}}'
+page_versions_editor_label:
+    en: 'by {{name}}'
+    de: 'von {{name}}'
+page_versions_empty_label:
+    en: No versions exist for this page.
+    de: Für diese Seite existieren keine Versionen.
+page_versions_item:
+    en: 'Version {{version}}'
+    de: 'Version {{version}}'
+page_versions_loading:
+    en: 'Loading ...'
+    de: 'Wird geladen ...'
+page_version_planned_offline_date:
+    en: 'PLANNED: Take Offline on {{date}}'
+    de: 'GEPLANT: Vom Server nehmen am {{date}}'
+page_version_planned_online_date:
+    en: 'PLANNED: Publish on {{date}}'
+    de: 'GEPLANT: Veröffentlichen am {{date}}'
+page_versions_published_label:
+    en: 'published'
+    de: 'veröffentlicht'
+page_versions_title_prefix:
+    en: 'Versions of "'
+    de: 'Versionen von "'
+page_versions_title_suffix:
+    en: '" in '
+    de: '" auf '
+page_versions_title_suffix_no_languages:
+    en: '":'
+    de: '":'
+page_versions_tooltip_already_current_version:
+    en: 'This is already the current version'
+    de: 'Das ist bereits die aktuelle Version'
+page_versions_tooltip_current_version:
+    en: 'This is the most recent version in {{language}}'
+    de: 'Die aktuelle Version auf {{language}}'
+page_versions_tooltip_planned_offline_version:
+    en: 'This page will be taken offline in {{language}}'
+    de: 'Diese Seite wird in der Sprache {{language}} vom Server genommen'
+page_versions_tooltip_planned_online_version:
+    en: 'This is the planned version to be published in {{language}}'
+    de: 'Die geplante Version zum Veröffentlichen auf {{language}}'
+page_versions_tooltip_preview:
+    en: 'Preview version {{version}}'
+    de: 'Version {{version}} anzeigen'
+page_versions_tooltip_published_version:
+    en: 'This is the published version in {{language}}'
+    de: 'Die veröffentlichte Version auf {{language}}'
+page_versions_preview_button:
+    en: Preview
+    de: Anzeigen
+page_versions_published:
+    en: Published version
+    de: Veröffentlichte version
+page_versions_restore_button:
+    en: Restore
+    de: Wiederherstellen
+pages:
+    en: Pages
+    de: Seiten
+publish_at:
+    en: Publish page at
+    de: Seite veröffentlichen am
+publish_at_date:
+    en: "'Publish at' date"
+    de: "'Veröffentlichen am' Datum"
+publish_at_change:
+    en: 'Change publish options for {{count}} pages'
+    de: 'Publizierungseinstellungen für {{count}} Seiten ändern'
+publish_form_at:
+    en: Publish form at
+    de: Formular veröffentlichen am
+publish_immediately:
+    en: Publish immediately
+    de: Gleich veröffentlichen
+publish_keep_at:
+    en: "Keep 'publish at' state"
+    de: "'Veröffentlichen am' Zustand behalten"
+publish_pages_header:
+    en: "{{some}} of {{all}} pages have a 'publish at' date set:"
+    de: "{{some}} von {{all}} Seiten haben ein 'veröffentlichen am' Datum:"
+publish_pages_button:
+    en: Publish
+    de: Veröffentlichen
+publish_selected_languages:
+    en: Language variants
+    de: Sprachvarianten
+publish_pages_title:
+    en: Publish pages
+    de: Seiten veröffentlichen
+publish_pages_select_title:
+    en: 'Select language variants:'
+    de: 'Sprachvarianten auswählen:'
+publish_pages_header_singular_variants:
+    en: 'One page will be published:'
+    de: '1 Seite wird veröffentlicht:'
+publish_pages_header_plural_variants:
+    en: '{{some}} pages will be published:'
+    de: '{{some}} Seiten werden veröffentlicht:'
+publish_pages_header_singular_without_language:
+    en: 'One of {{count}} pages will not be published in {{language}}:'
+    de: '1 von {{count}} Seiten wird nicht auf {{language}} veröffentlicht:'
+publish_pages_header_plural_without_language:
+    en: '{{some}} of {{count}} pages will not be published in {{language}}:'
+    de: '{{some}} von {{count}} Seiten wird nicht auf {{language}} veröffentlicht:'
+publish_pages_header_review_notice_without_language:
+    en: 'You have selected some pages which do not have a(n) {{language}} language variant to publish. You can choose from the available ones:'
+    de: 'Sie haben einige Seiten ausgewählt, die keine Sprachvariante auf {{language}} zum Veröffentlichen haben. Sie können diese in den verfügbare Sprachvarianten veröffentlichen:'
+publish_title:
+    en: Publish
+    de: Veröffentlichen
+publish_queue_empty:
+    en: Publish queue is empty
+    de: Warteschlange ist leer
+publish_queue_title:
+    en: Publish Queue
+    de: Warteschlange
+publish_queue_title_sub_singular:
+    en: 'One request is waiting for approval'
+    de: 'Ein Antrag wartet auf Freigabe'
+publish_queue_title_sub_plural:
+    en: '{{amount}} requests are waiting for approval'
+    de: '{{amount}} Anträge warten auf Freigabe'
+publish_queue_btn_approve:
+    en: 'Approve'
+    de: 'Freigeben'
+push_to_master_button:
+    en: Push to master
+    de: Auf Master übernehmen
+reload_button:
+    en: Reload the page
+    de: Die Seite neuladen
+replace_label:
+    en: Replace
+    de: Überschreiben
+replace_all_label:
+    en: Replace All
+    de: Alle Dateien überschreiben
+replace_files_body:
+    en: The following file names already exist in this folder. Select which files should be replaced
+    de: Die folgenden Dateien existieren schon in diesem Ordner
+replace_files_button:
+    en: 'Replace {{count}} {{type}}'
+    de: '{{count}} {{type}} überschreiben'
+replace_files_title:
+    en: Replace Existing Files?
+    de: Bestehende Dateien überschreiben?
+repository_browser_insufficient_permissions_title:
+    en: Not enough permissions
+    de: Nicht genügend Berechtigungen
+repository_browser_title_file_image_page:
+    en: 'Select a Page, File or Image'
+    de: 'Seite, Datei oder Bild auswählen'
+repository_browser_title_files_images_pages:
+    en: 'Select Pages, Files or Images'
+    de: 'Seiten, Dateien oder Bilder auswählen'
+repository_browser_title_single:
+    en: 'Select one {{type}}'
+    de: '{{type}} auswählen'
+repository_browser_title_multiple:
+    en: 'Select {{type}}'
+    de: '{{type}} auswählen'
+repository_browser_title_forms_email_template_single:
+    en: 'Select one E-mail template'
+    de: 'E-mail Vorlage auswählen'
+repository_browser_submit:
+    en: Select
+    de: Auswählen
+repository_browser_submit_link:
+    en: Link
+    de: Verknüpfen
+save_and_close_button:
+    en: Save and close
+    de: Speichern und schließen
+selected_count:
+    en: '{{count}} {{type}} selected'
+    de: '{{count}} {{type}} ausgewählt'
+show_all:
+    en: Show all
+    de: Alle anzeigen
+sorting_title:
+    en: Sort by...
+    de: Sortieren nach...
+sync_channel_title:
+    en: Synchronize Channel
+    de: Channel synchronisieren
+sync_error_no_node:
+    en: It seems you don't have enough permissions to view a fitting parent node to synchronize to.
+    de: Es scheint sie haben keine Berechtigungen, eine geeignete Parent-Node anzuzeigen.
+sync_from_label:
+    en: From
+    de: Von
+sync_to_label:
+    en: To
+    de: Nach
+take_form_offline_at:
+    en: Take form offline at
+    de: Formular vom Server nehmen am
+take_offline_at:
+    en: Take page offline at
+    de: Seite vom Server nehmen am
+take_offline_button:
+    en: Take offline
+    de: Vom Server nehmen
+take_offline_selected_languages:
+    en: Take language variants offline
+    de: Sprachversionen vom Server nehmen
+take_pages_offline_title:
+    en: Take pages offline
+    de: Seiten vom Server nehmen
+take_pages_offline_header_singular:
+    en: 'One page will be taken offline:'
+    de: '1 Seite wird vom Server genommen:'
+take_pages_offline_header_plural:
+    en: '{{count}} pages will be taken offline:'
+    de: '{{count}} Seiten werden vom Server genommen:'
+time_management_from:
+    en: Show from
+    de: Anzeigen von
+time_management_apply_languages:
+    en: Apply for languages
+    de: Auf Sprachen anwenden
+time_management_publish_at:
+    en: Publish at
+    de: Veröffentlichen am
+time_management_date_not_set:
+    en: Date not set
+    de: Datum nicht gesetzt
+time_management_date_clear:
+    en: Clear planned date
+    de: Geplantes Datum entfernen
+time_management_publish_keep_version:
+    en: Current version {{version}}
+    de: Aktuelle Version {{version}}
+time_management_keep_version_warning:
+    en: 'Note: By changing this setting, the current planned publishing of this page with the version {{version}} will be cancelled. Only the current version with the new "publish at"-date will be published.'
+    de: 'Hinweis: Mit dieser Änderung wird die bisher geplante Veröffentlichung der Seite in der Version {{version}} nicht durchgeführt. Nur die aktuelle Version wird mit dem neuen "Veröffentlichen am"-Datum veröffentlicht werden.'
+today:
+    en: Today
+    de: Heute
+save_changes:
+    en: Save changes
+    de: Änderungen speichern
+save_as_copy:
+    en: Save as copy
+    de: Speichern als Kopie
+send_message_title:
+    en: New message
+    de: Neue Nachricht
+send_message_recipient:
+    en: Recipient
+    de: Empfänger
+send_message_instant:
+    en: Instant message
+    de: Sofortnachricht
+send_message_message:
+    en: Message
+    de: Nachricht
+send_message_groups:
+    en: Groups
+    de: Gruppen
+send_message_users:
+    en: Users
+    de: Benutzer
+time_management_title:
+    en: Time Management for "{{itemName}}"
+    de: Zeitmanagement für "{{itemName}}"
+time_version_label:
+    en: Version {{version}}
+    de: Version {{version}}
+time_management_current_settings_label:
+    en: Current settings
+    de: Aktuelle Einstellungen
+time_management_override_label:
+    en: Change settings
+    de: Einstellungen ändern
+time_management_until:
+    en: until
+    de: bis
+tool_unsaved_title:
+    en: Unsaved changes
+    de: Ungespeicherte Änderungen
+tool_unsaved_body:
+    en: '"{{toolName}}" has unsaved changes.'
+    de: '"{{toolName}}" hat ungespeicherte Änderungen.'
+tool_unsaved_discard_button:
+    en: Discard changes
+    de: Änderungen verwerfen
+tool_unsaved_open_button:
+    en: Open tool
+    de: Öffnen
+translate_inherited_title:
+    en: Create Translation
+    de: Übersetzung erstellen
+translate_in_master_node_button:
+    en: Create in Master Node
+    de: Im Master erstellen
+translate_in_local_node_button:
+    en: Create Local Translation
+    de: Lokale Übersetzung erstellen
+translate_inherited_body:
+    en: 'This page inherits from {{master}}. Create the translation in <b>{{master}}</b> or create a localized translation in <b>{{local}}</b>?'
+    de: 'Diese Seite ist von {{master}} geerbt. Soll die Übersetzung in <b>{{master}}</b> oder eine lokale Übersetzung in <b>{{local}}</b> erstellt werden?'
+translate_page_button:
+    en: Translate
+    de: Übersetzen
+translate_and_edit_button:
+    en: Translate and edit
+    de: Übersetzen und bearbeiten
+translate_and_compare_button:
+    en: Translate and compare
+    de: Übersetzen und vergleichen
+translate_page_title:
+    en: 'Translate Page to {{language}}'
+    de: 'Seite nach {{language}} übersetzen'
+upload_title_single:
+    en: 'Upload one {{type}}'
+    de: '{{type}} hochladen'
+validation_password_characters:
+    en: 'Passwords may contain only letters, numbers and the characters _ - . @'
+    de: 'Nur Buchstaben oder Zahlen sowie die Zeichen _ - . @'
+validation_passwords_must_match:
+    en: Passwords must match
+    de: Passworteingaben stimmen nicht überein
+validation_password_too_long:
+    en: Passwords must contain no more than 20 characters
+    de: Maximal 20 Zeichen
+version_info_modal:
+    en: Software version information and compatibility
+    de: Software-Versionsinformation and Kompatibilität
+version_info_modal_node_tooltip:
+    en: Compatibility of dependencies of node {{nodeName}} are {{compatibility}}
+    de: Kompatibilität der Abhängigkeiten von Node {{nodeName}} sind {{compatibility}}
+version_info_modal_compatibility_not_supported:
+    en: not supported
+    de: nicht unterstützt
+version_info_modal_compatibility_supported:
+    en: supported
+    de: unterstützt
+version_info_modal_compatibility_unknown:
+    en: unknown
+    de: unbekannt
+validation_password_too_short:
+    en: Passwords must contain at least 4 characters
+    de: Mindestens 4 Zeichen
+wastebin_empty:
+    en: Wastebin is empty
+    de: Papierkorb ist leer
+wastebin_title:
+    en: Wastebin
+    de: Papierkorb
+wastebin_are_you_sure_body_singular:
+    en: 'One object will be permanently deleted!'
+    de: '1 Objekt wird aus dem Papierkorb entfernt!'
+wastebin_are_you_sure_body_plural:
+    en: '{{count}} objects will be permanently deleted!'
+    de: '{{count}} Objekte werden aus dem Papierkorb entfernt!'
+link_template_title:
+    en: 'Link template to Folder'
+link_template_body:
+    en: |
+        Please select how you want to apply the changes:<br>
+        <ul>
+            <li><b>{{labelAppend}}</b>: Link the selected Templates without additional changes</li>
+            <li><b>{{labelApply}}</b>: Apply the current selection and unlink not selected Templates</li>
+        </ul>
+    de: |
+        Bitte wählen Sie aus, wie die Vorlagen verknüpft werden sollen:<br>
+        <ul>
+            <li><b>{{labelAppend}}</b>: Verknüpft die ausgewählten Vorlagen ohne weitere Änderungen</li>
+            <li><b>{{labelApply}}</b>: Wendet die Auswahl auf den Ordner an und entfernt nicht ausgewählte Vorlagen</li>
+        </ul>
+select_content_package_title:
+    en: Select Content Package
+    de: Contentpaket auswählen

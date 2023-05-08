@@ -1,0 +1,194 @@
+<div class="gtx-entity-detail">
+    <!--
+        For some reason, a tab is not properly selected on gtx-tabs creation
+        in contrast to other modules.
+    -->
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="RoleDetailTabs.properties"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="role.updateRole"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                (saveClick)="btnSavePropertiesOnClick()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form
+                        *ngIf="fgProperties"
+                        [formGroup]="fgProperties"
+                        class="buttons-form small-12 medium-9 row"
+                    >
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                type="text"
+                                [required]="true"
+                                maxlength="50"
+                                [label]="('shared.role_name' | i18n) + ' *'"
+                                [placeholder]="'shared.role_name' | i18n"
+                                formControlName="name"
+                                gtxActionAllowed="role.updateRole"
+                                [aaInstanceId]="currentEntity?.id"
+                            >
+                            </gtx-input>
+                        </div>
+
+                        <div class="small-12 medium-6 columns"></div>
+
+                        <div class="input-container medium-12 columns">
+                            <gtx-textarea
+                                [required]="false"
+                                maxlength="255"
+                                [label]="'shared.description' | i18n"
+                                [placeholder]="'shared.description' | i18n"
+                                formControlName="description"
+                                gtxActionAllowed="role.updateRole"
+                                [aaInstanceId]="currentEntity?.id"
+                            >
+                            </gtx-textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+        <gtx-tab
+            [id]="RoleDetailTabs.pagePrivileges"
+            gtxDetailTabLink
+            [title]="'shared.title_page_privileges' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_page_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="role.updateRole"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgPagePrivilegesSaveDisabled$ | async"
+                (saveClick)="btnSavePrivilegesOnClick('page')"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form
+                        *ngIf="fgPagePrivileges"
+                        [formGroup]="fgPagePrivileges"
+                        class="gtx-entity-details-tab-content-body-form gtx-form small-12 medium-9 columns row"
+                    >
+                        <div [formGroupName]="'page'" class="input-container medium-12">
+                            <div class="gtx-form-section-title">{{ 'role.all_languages' | i18n }}</div>
+                            <gtx-checkbox
+                                [formControlName]="'viewpage'"
+                                [label]="'role.view_page' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'createpage'"
+                                [label]="'role.create_page' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'updatepage'"
+                                [label]="'role.update_page' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'deletepage'"
+                                [label]="'role.delete_page' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'publishpage'"
+                                [label]="'role.publish_page' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'translatepage'"
+                                [label]="'role.translate_page' | i18n"
+                            ></gtx-checkbox>
+                        </div>
+                        <ng-container [formGroupName]="'pageLanguages'">
+                            <div
+                                *ngFor="let controlIdAndName of pageLanguagesSortedAndRemainingChildControlNames; trackBy: childControlInformationTrackBy"
+                                [formGroupName]="controlIdAndName.id"
+                                class="input-container medium-12"
+                            >
+                                <div class="gtx-form-section-title">{{ controlIdAndName.name }}</div>
+                                <gtx-checkbox
+                                    [formControlName]="'viewpage'"
+                                    [label]="'role.view_page' | i18n"
+                                ></gtx-checkbox>
+                                <gtx-checkbox
+                                    [formControlName]="'createpage'"
+                                    [label]="'role.create_page' | i18n"
+                                ></gtx-checkbox>
+                                <gtx-checkbox
+                                    [formControlName]="'updatepage'"
+                                    [label]="'role.update_page' | i18n"
+                                ></gtx-checkbox>
+                                <gtx-checkbox
+                                    [formControlName]="'deletepage'"
+                                    [label]="'role.delete_page' | i18n"
+                                ></gtx-checkbox>
+                                <gtx-checkbox
+                                    [formControlName]="'publishpage'"
+                                    [label]="'role.publish_page' | i18n"
+                                ></gtx-checkbox>
+                                <gtx-checkbox
+                                    [formControlName]="'translatepage'"
+                                    [label]="'role.translate_page' | i18n"
+                                ></gtx-checkbox>
+                            </div>
+                        </ng-container>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="RoleDetailTabs.filePrivileges"
+            gtxDetailTabLink
+            [title]="'shared.title_file_privileges' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_file_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="role.updateRole"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgFilePrivilegesSaveDisabled$ | async"
+                (saveClick)="btnSavePrivilegesOnClick('file')"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form
+                        *ngIf="fgFilePrivileges"
+                        [formGroup]="fgFilePrivileges"
+                        class="gtx-entity-details-tab-content-body-form gtx-form small-12 medium-9 columns row"
+                    >
+                        <div [formGroupName]="'file'" class="input-container medium-12">
+                            <div class="gtx-form-section-title">{{ 'role.images_and_files' | i18n }}</div>
+                            <gtx-checkbox
+                                [formControlName]="'viewfile'"
+                                [label]="'role.view_file' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'createfile'"
+                                [label]="'role.create_file' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'updatefile'"
+                                [label]="'role.update_file' | i18n"
+                            ></gtx-checkbox>
+                            <gtx-checkbox
+                                [formControlName]="'deletefile'"
+                                [label]="'role.delete_file' | i18n"
+                            ></gtx-checkbox>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

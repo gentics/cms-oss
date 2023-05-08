@@ -1,0 +1,134 @@
+@import '../../../styles/base-import';
+
+:host {
+    width: 100%;
+    display: block;
+
+    &.vertical {
+        display: flex;
+    }
+
+    > .tab-links {
+        margin: 0;
+        list-style-type: none;
+        border-bottom: 1px solid $gtx-color-very-light-gray;
+        text-transform: uppercase;
+        display: flex;
+
+        &.wrap {
+            flex-wrap: wrap;
+        }
+
+        &.vertical {
+            display: block;
+            margin-right: 25px;
+            float: left;
+            width: 20%;
+            max-width: 200px;
+
+            > .tab-link {
+                width: 100%;
+                border-bottom: 1px dotted $gtx-color-very-light-gray;
+                padding: 19px 5px;
+                min-height: 63px;
+
+                > a {
+                    padding: 0;
+                    white-space: normal;
+                }
+
+                &:hover {
+                    background-color: $gtx-color-off-white;
+                }
+
+                &:active {
+                    background-color: $gtx-color-light-gray;
+                }
+
+                &.is-active {
+                    background-color: #fff;
+                    border-left: 3px solid $gtx-color-primary;
+                    border-bottom-color: $gtx-color-very-light-gray;
+                }
+            }
+        }
+
+        > .tab-link {
+            @include noselect;
+            display: inline-block;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: $gtx-color-dark-gray;
+            transition: border 0.3s, color 0.2s;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: top;
+
+            &:hover {
+                color: $gtx-color-off-black;
+            }
+
+            > a {
+                padding: 10px 20px;
+                white-space: nowrap;
+
+                &,
+                &:link,
+                &:visited {
+                    color: inherit;
+                }
+
+                span {
+                    display: inline-block;
+                    &.animatedTitle {
+                        animation: slide-in-blurred-left 0.3s
+                            cubic-bezier(0.43, 1, 0.52, 1) both;
+                    }
+                }
+            }
+
+            &.is-active {
+                border-bottom-color: $gtx-tabs-active-border-color;
+                color: $gtx-tabs-active-color;
+            }
+
+            &.disabled > a {
+                cursor: default;
+            }
+
+            icon {
+                font-size: 1.4285em;
+                margin-top: -2px;
+                vertical-align: middle;
+                transition: margin 0.2s cubic-bezier(0.43, 1, 0.52, 1);
+            }
+
+            &:not(.icon-only) icon {
+                margin-right: 0.5em;
+            }
+        }
+    }
+
+    &::ng-deep gtx-tab > .tab-content:not(.is-active) {
+        display: none;
+    }
+}
+
+@keyframes slide-in-blurred-left {
+    0% {
+        transform: translateX(-0.65em) scaleX(1.5) scaleY(0.8);
+        transform-origin: 100% 50%;
+        filter: blur(10px);
+        opacity: 0;
+    }
+    30% {
+        filter: blur(0);
+    }
+    100% {
+        transform: translateX(0) scaleY(1) scaleX(1);
+        transform-origin: 50% 50%;
+        filter: blur(0);
+        opacity: 1;
+    }
+}

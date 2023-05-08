@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+	<title>GCN JS API + Aloha Editor</title>
+
+	<link rel="stylesheet"
+	      href="/CNPortletapp/DEV/alohaeditor/css/aloha.css"
+		  id="aloha-style-include"
+		  type="text/css">
+
+	<script type="text/javascript">
+	var Aloha = {
+		settings: {
+			contentHandler: {
+				insertHtml: ['gcn-tagcopy', 'word', 'generic', 'block'],
+				getContents: ['blockelement', 'basic'],
+				initEditable: ['blockelement']
+			},
+			plugins: {
+				block: {
+					rootTags: ['div', 'span', 'a']
+				},
+				gcn: {
+					copy_tags: true,
+					buildRootTimestamp : 'DEV',
+					stag_prefix: '/.Node/'
+				}
+			}
+		}
+	};
+	</script>
+	<script src="/CNPortletapp/DEV/alohaeditor/lib/aloha.js"
+	        data-aloha-plugins="extra/ribbon,
+	                            common/ui,
+	                            common/format,
+	                            common/highlighteditables,
+	                            common/list,
+	                            common/link,
+	                            common/table,
+	                            common/paste,
+	                            common/contenthandler,
+	                            common/commands,
+	                            common/block,
+	                            gcn/gcn-linkbrowser,
+	                            gcn/gcn"></script>
+
+	<script src="tag-copying.js"></script>
+</head>
+<body style="padding: 100px">
+	<h1>My Demo Page</h1>
+	<div id="teasers">#teasers</div>
+	<div id="content">#content</div>
+</body>
+</html>

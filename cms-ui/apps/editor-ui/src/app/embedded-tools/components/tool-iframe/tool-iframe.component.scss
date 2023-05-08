@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    position: absolute;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+:host:not(.visible) {
+    visibility: hidden;
+}
+
+iframe {
+    border: 0;
+    height: 100%;
+    width: 100%;
+}
+
+// iframe:not(.visible) {
+//     display: none;
+// }

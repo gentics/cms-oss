@@ -1,0 +1,96 @@
+@import 'variables';
+
+@mixin item-width($width) {
+    flex: 1 0 $width;
+    max-width: $width;
+}
+
+:host {
+    box-sizing: border-box;
+    position: relative;
+    vertical-align: top;
+
+    @include item-width(25%);
+
+    @media screen and (min-width: $medium-screen) {
+        @include item-width(20%);
+    }
+
+    @media screen and (min-width: $large-screen) {
+        @include item-width(16.66%);
+    }
+}
+
+.item {
+    box-sizing: border-box;
+    padding: 1em;
+    text-align: center;
+    font-size: 0.8em;
+    cursor: pointer;
+    color: $gtx-color-very-dark-gray;
+    transition: all 0.1s;
+    overflow: hidden;
+    word-wrap: break-word;
+
+    ::ng-deep .gtx-icon {
+        .gtx-icon-primary {
+            transition: color 0.1s;
+        }
+
+        .gtx-icon-secondary {
+            transition: color 0.1s;
+        }
+    }
+
+
+    &:hover {
+        background: $gtx-color-primary;
+        color: white;
+
+
+        ::ng-deep .gtx-icon {
+            .gtx-icon-primary {
+                color: white;
+            }
+            .gtx-icon-secondary {
+                color: white;
+                &:after {
+                    background-color: $gtx-color-primary;
+                }
+            }
+        }
+    }
+
+    &.disabled {
+        cursor: not-allowed;
+        color: $gtx-color-mid-gray;
+
+        ::ng-deep .gtx-icon {
+            .gtx-icon-primary {
+                color: $gtx-color-mid-gray;
+            }
+            .gtx-icon-secondary {
+                color: $gtx-color-mid-gray;
+                &:after {
+                    background-color: white;
+                }
+            }
+        }
+
+        &:hover {
+            background: $gtx-color-very-light-gray;
+
+            ::ng-deep .gtx-icon {
+                .gtx-icon-primary {
+                    color: $gtx-color-dark-gray;
+                }
+                .gtx-icon-secondary {
+                    color: $gtx-color-dark-gray;
+                    &:after {
+                        background-color: $gtx-color-very-light-gray;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+<policyMap xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		   xsi:noNamespaceSchemaLocation="policy-map.xsd">
+	<!-- Some random values for testing -->
+	<inputChannels>
+		<contentAdmin>
+			<partTypes>
+				<partType typeId="1234" ref="PolicyGroup"/>
+				<default ref="PolicyGroup"/>
+			</partTypes>
+		</contentAdmin>
+		<nodes>
+			<default>
+				<default ref="passThrough"/>
+			</default>
+		</nodes>
+		<default ref="passThrough"/>
+	</inputChannels>
+    <policyGroups>
+    	<policyGroup id="PolicyGroup">
+    		<policy  ref="passThrough"/>
+			<default ref="passThrough"/>
+    	</policyGroup>
+    </policyGroups>
+	<policies>
+		<passThrough id="passThrough" uri="http://example.com/passThrough"/>
+    </policies>
+</policyMap>

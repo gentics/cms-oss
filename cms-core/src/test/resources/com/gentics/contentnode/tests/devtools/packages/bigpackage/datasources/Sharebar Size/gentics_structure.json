@@ -1,0 +1,18 @@
+{
+  "globalId" : "A547.75181",
+  "type" : "statical",
+  "name" : "Sharebar Size",
+  "values" : [ {
+    "globalId" : "3D6C.36e14824-c5f8-11e6-8b5d-ea5d8efab9e8",
+    "key" : "Small / Klein",
+    "value" : "small"
+  }, {
+    "globalId" : "3D6C.36e1640e-c5f8-11e6-8b5d-ea5d8efab9e8",
+    "key" : "Middle / Mittel",
+    "value" : "middle"
+  }, {
+    "globalId" : "3D6C.36e1807a-c5f8-11e6-8b5d-ea5d8efab9e8",
+    "key" : "Large / Groß",
+    "value" : "large"
+  } ]
+}

@@ -1,0 +1,41 @@
+id:					$cms.page.id
+url:				$cms.page.url
+template.id:		$cms.page.template.id
+name:				$cms.page.name
+filename:			$cms.page.filename
+description:		$cms.page.description
+priority:			$cms.page.priority
+publishtimestamp:	$cms.page.publishtimestamp
+publishdate:		$cms.page.publishdate
+creationtimestamp:	$cms.page.creationtimestamp
+creationdate:		$cms.page.creationdate
+edittimestamp:		$cms.page.edittimestamp
+editdate:			$cms.page.editdate
+folder:				$cms.page.folder.name
+folder.isfolder:	$cms.page.folder.isfolder
+creator:			$cms.page.creator
+editor:				$cms.page.editor
+publisher:			$cms.page.publisher
+language:			$cms.page.language.code
+languageset.id		$cms.page.languageset.id
+online:				$cms.page.online
+ispage:				$cms.page.ispage
+isfolder:			$cms.page.isfolder
+isfile:				$cms.page.isfile
+isimage:			$cms.page.isimage
+istag:				$cms.page.istag
+version.number:		$cms.page.version.number
+version.date:		$cms.page.version.date
+version.editor:		$cms.page.version.editor
+version.major:		$cms.page.version.major
+ismaster:			$cms.page.ismaster
+inherited:			$cms.page.inherited
+ttype:				$cms.page.ttype
+versions:
+#foreach($v in $cms.page.versions)
+	$v.number
+#end
+pagevariants:
+#foreach($v in $cms.page.pagevariants)
+	$v.id
+#end

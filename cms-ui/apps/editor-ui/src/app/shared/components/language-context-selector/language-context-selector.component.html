@@ -1,0 +1,11 @@
+<gtx-dropdown-list [disabled]="disabled">
+    <gtx-dropdown-trigger>
+        <gtx-button flat size="small" type="secondary">
+            <i class="material-icons left" [attr.translate]="'no'">language</i>{{ activeLanguage?.name }}</gtx-button>
+    </gtx-dropdown-trigger>
+    <gtx-dropdown-content>
+        <gtx-dropdown-item *ngFor="let language of availableLanguages" (click)="selectLanguage.emit(language)">
+            {{ language?.name }}
+        </gtx-dropdown-item>
+    </gtx-dropdown-content>
+</gtx-dropdown-list>

@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.69940",
+  "keyword" : "imageurl",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "[URL] Bild",
+    "en" : "[URL] Image"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.69946",
+    "name" : {
+      "de" : "Image",
+      "en" : "Image"
+    },
+    "keyword" : "img",
+    "editable" : true,
+    "typeId" : 6,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

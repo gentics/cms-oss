@@ -1,0 +1,58 @@
+{
+  "globalId" : "A547.70013",
+  "keyword" : "lastupdate",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "Zuletzt upgedatet",
+    "en" : "Last Updated"
+  },
+  "description" : {
+    "de" : "Includes a \"Last Updated by\" information as velocity macro for the portal",
+    "en" : "Includes a \"Last Updated by\" information as velocity macro for the portal"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.74137",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70024",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 10,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70029",
+    "name" : {
+      "de" : "Type",
+      "en" : "Type"
+    },
+    "keyword" : "type",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

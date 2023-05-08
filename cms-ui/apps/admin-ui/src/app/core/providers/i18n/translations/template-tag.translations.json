@@ -1,0 +1,90 @@
+{
+    "info_selected_tags": {
+        "en": "{{amountSelected}} of {{amountTotal}} Template Tags selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Vorlagen-Tags ausgewählt"
+    },
+    "name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "constructName": {
+        "en": "Tagname",
+        "de": "Tag name"
+    },
+    "inSync": {
+        "en": "Pages in Sync",
+        "de": "Seiten in Sync"
+    },
+    "incompatible": {
+        "en": "Incompatible Pages",
+        "de": "inkompatible Seiten"
+    },
+    "missing": {
+        "en": "Pages without this Tag",
+        "de": "Seiten ohne diesen Tag"
+    },
+    "outOfSync": {
+        "en": "Pages not in Sync",
+        "de": "Seiten nicht in Sync"
+    },
+    "active": {
+        "en": "Active",
+        "de": "Aktiv"
+    },
+    "tagType": {
+        "en": "Tag Type",
+        "de": "Tag-Typ"
+    },
+    "tag": {
+        "en": "Tag",
+        "de": "Tag"
+    },
+    "editableInPage": {
+        "en": "Editable in Page",
+        "de": "Bearbeitbar in Seite"
+    },
+    "mandatory": {
+        "en": "Mandatory",
+        "de": "Erforderlich"
+    },
+    "tag_save_error": {
+        "en": "An Error occured while saving Template Tag \"{{ name }}\"!",
+        "de": "Ein Fehler während den speichern vom Vorlagen-Tag „{{ name }}“ ist aufgetreten!"
+    },
+    "tag_saved": {
+        "en": "Template Tag \"{{ name }}\" successfully saved!",
+        "de": "Vorlagen-Tag „{{ name }}“ wurde erfolgreich gespeichert!"
+    },
+    "tag_created": {
+        "en": "Template Tag \"{{ name }}\" successfully created!",
+        "de": "Vorlagen-Tag „{{ name }}“ wurde erfolgreich erstellt!"
+    },
+    "deleted_singular": {
+        "en": "The Template Tag \"{{ name }}\" was successfully deleted!",
+        "de": "Der Vorlagen-Tag „{{ name }}“ wurde erfolgreich gelöscht!"
+    },
+    "deleted_plural": {
+        "en": "The Template Tags {{ names }} were successfully deleted!",
+        "de": "Die Vorlagen-Tags {{ names }} wurden erfolgreich gelöscht!"
+    },
+    "deleted_many": {
+        "en": "The {{ amount }} Template Tag were successfully deleted!",
+        "de": "Die {{ amount }} Vorlagen-Tags wurden erfolgreich gelöscht!"
+    },
+    "sync_success_singular": {
+        "en": "The Template Tag \"{{ name }}\" was successfully synchronized!",
+        "de": "Der Vorlagen-Tag „{{ name }}“ wurde erfolgreich abgeglichen!"
+    },
+    "sync_success_plural": {
+        "en": "The Template Tags {{ names }} have been successfully synchronized!",
+        "de": "Die Vorlagen Tags {{ names }} wurden erfolgreich abgeglichen!"
+    },
+    "sync_success_many": {
+        "en": "The {{ amount}} Template Tags have been successfully synchronized!",
+        "de": "Die {{ amount }} Vorlagen Tags wurden erfolgreich abgeglichen!"
+    },
+    "sync_error": {
+        "en": "There has been an Error while synchronizing the Template Tags!",
+        "de": "Ein fehler während dem Vorlagen-Tags abgleich ist aufgetreten!"
+    }
+}

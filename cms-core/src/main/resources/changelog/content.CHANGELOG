@@ -1,0 +1,788 @@
+# New changelog numbers must be generated via https://dev.gentics.com/numbercruncher/index.php?type=gcn_automatic_changelog
+################### start of CN3-STABLE CHANGELOG #################################
+2002-05-21  20020101    LH  COMMENT		## added *.node/dev.doc/CHANGELOG
+2002-05-21  20020101    LH  COMMENT 	## reused FEATURE["dhtml_editor"] for all CN text long, text/html parts
+2002-05-22  20020101    SH  COMMENT 	## added feature "new_img_resize" (resizing images by upload) feature      added feature "gallery" (new image gallery)
+2002-05-24  20020101    SH  COMMENT 	## reused feature "thumbnails" (preview images in lists and minibrowser)
+2002-05-26  20020101    SH  FEATURE		workflow=true ## new feature workflow
+2002-05-26  20020101    SH  COMMENT 	## changed feature new_img_resize to img_resize
+2002-06-12  20020101    LH  SQL			alter table objtranslatecache modify value_tags mediumtext not null;
+2002-06-12  20020101    LH  SQL			alter table page add time_pub int not null;
+2002-06-12  20020101    LH  COMMENT 	## publish time in pages timemanagement dialog
+2002-07-12  20020101    SH  COMMENT		## added values of 2 to editable for inline editable
+2002-08-22  20020101    LH  SQL     	alter table page add contentgroup_id int not null;
+2002-08-22  20020101    LH  SQL     	alter table page add contentset_id int not null;
+2002-08-22  20020101    LH  SQLCREATE	node.contentgroup ## create table contentgroup
+2002-08-22  20020101    LH  SQLCREATE	node.contentset ## create table contentset
+2002-08-22  20020101    LH  FEATURE		contentgroup=false ##  added $FEATURE["contentgroup"]; (language box in page_properties, and language menu for linking pages)
+2002-08-22  20020101    LH  COMMENT		## added $FEATURE["dsfallback"]; (use current language pages in ds in available)
+2002-08-26  20020101    SH  COMMENT		## added cnstat tables (ME: should be SQLCREATE, but is old enough to be obsolete)
+2002-08-28  20020101    SH  FEATURE		objprop_recursive=true ##  added feature objprop_recursive
+2002-09-03  20020101    LH  FEATURE		page_pubtime=true ## 
+2002-09-13  20020101    LH  FEATURE		symlink_files=true ## speedup writefs, warning add -L to lftp and rsync calls.
+2002-09-25  20020101    LH  SQL			alter table contenttag modify name char(127) not null;
+2002-10-30  20020101    LH  FEATURE		dirt2=true ##  new page dirting.
+2002-11-11  20020101    LH  FEATURE		dirt2_cache=true ## cache for new page dirting.
+2002-11-11  20020101    ME  COMMENT     ## LIVEEDIT_CUSTOM_MENU should be set in node.conf (contains specific commands for .Node Live-Edit, such as Format Block, ....
+2002-11-11  20020101    LH  FEATURE		keep_published_pages=true ## keep pages in publish table.
+2002-12-09  20021209    LH  SQL 		alter table value add index(static); optimize table value;
+2002-12-13  20021213w   LH  FEATURE 	ds_current_folder=true ## �bersichten �ber aktuellen ordner
+2003-01-14  20030114    SH  FEATURE 	no_pageedit_js=false ## switch off javascript in page_edit/page_prev, inline-editor will not work with this feature turned on
+2003-02-26  20030226    LH  FEATURE 	pidsync=true  ##  enable to sync publish processes via posix instead of time.
+2003-03-07  20030310    LH  SCRIPT:global  	add_lftp_config.sh  ## fixes lftp timeout problem
+2003-03-10  20030311    LH  SQL 		insert into contentgroup (id,name) VALUES (1,'Deutsch'); insert into contentgroup (id,name) VALUES (2,'English');   ##  added default languages for cn language support.
+2003-04-24  20030425    MS  FEATURE 	list_pagepreview=false  ## enables preview of pages in pagelist for ie55+. buggy(session-problem)
+2003-05-15  20030516a   LH  SQL 		alter table ds add index (contenttag_id);   ## added index for datasources.
+2003-05-19  20030620    LH  FEATURE 	template_fetch_2=true   ## wget binary is needed for this feature
+2003-05-19  20030620    LH  COMMENT:global 	## copy wget from package.office to remote server and check permissions (owner must be node)! scp /Node/bin/wget node@xyz.at:/Node/bin
+2003-06-20  20030620    LH  COMMENT 	## enable FEATURE pidsync manually.
+2003-09-03  20030903b   LH  SQL 		alter table value add index(part_id,templatetag_id,contenttag_id,objtag_id); ## added index for value table. BE PATIENT, could take some minutes.
+2003-10-30    V3-stable-20031030              RB      SQL alter table import_page add type char(5) not null;  ## add type field (is the entry a page/file/...)
+
+
+################### start of CN3.5-HEAD CHANGELOG #################################
+2003-03-28	V3.5-head-20031001d	HM	SQL			alter table part add ml_id int default 0;
+2003-04-01	V3.5-head-20031001d	LH	SQL			insert into type (id,name) values (29,'Select (single)');
+2003-04-01	V3.5-head-20031001d	LH	SQL			insert into type (id,name) values (30,'Select (multiple)');
+2003-04-01	V3.5-head-20031001d	LH	SQL			insert into type (id,name) values (31,'Checkbox');
+2003-04-01	V3.5-head-20031001d	LH	COMMENT		## added 3 new tagpart types.
+2003-04-01	V3.5-head-20031001d	LH	FEATURE		contenttopic=false	## added new feature for personalisation.
+2003-04-01	V3.5-head-20031001d	HM	FEATURE 	constr_ml_dep=true	##	added support for multiple tagparts per ml.
+2003-04-04	V3.5-head-20031001d	HM	SQLCREATE	node.cn_map	## Needed for Sitemap Support
+2003-04-04	V3.5-head-20031001d	HM	FEATURE		map=false	## Sitemap Support
+2003-04-28	V3.5-head-20031001d	ME	FEATURE 	magic_part_value=false ## use marked text as default-value in inline-editor/new tag
+2003-06-24	V3.5-head-20031001d	LH	SQL			alter table folder add startpage_id int not null default 0;
+2003-06-23	V3.5-head-20031001d	ME	SQL			insert into tree (itemorder, mother, name, type_id) values (5, 11, 'Datasources', 10024); ## insert Datasources under Content.Admin
+2003-06-25	V3.5-head-20031001d	ME	SQL			alter table part add info_int int not null default 0; alter table part add info_text text;
+2003-06-25	V3.5-head-20031001d	ME	SQL			insert into type (id,name) values (32,'Datasource');
+2003-06-30	V3.5-head-20031001d	LH	FEATURE		realeditor=true	## adds realeditor.
+2003-06-30	V3.5-head-20031001d	LH	FEATURE		contentversion2=true	## adds pagecontent versioning
+2003-06-30	V3.5-head-20031001d	LH	FEATURE		tuning_pagesave=true	## only mark pages as being edited after first change. 
+2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.value_nodeversion
+2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.contenttag_nodeversion
+2003-07-17	V3.5-head-20031001d	LH	SQLCREATE	node.ds_nodeversion
+2003-07-17	V3.5-head-20031001d	LH	SQLCREATE	node.ds_obj_nodeversion
+2003-07-17	V3.5-head-20031001d	LH	SQL			alter table ds_obj add id int not null primary key auto_increment; 
+2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.nodeversion
+2003-06-30	V3.5-head-20031001d	ME	SQLCREATE	node.node_contentgroup
+2003-07-04	V3.5-head-20031001d	SH	SQL 		alter table contentgroup add code char(5) not null;
+2003-07-08	V3.5-head-20031001d	ME	FEATURE 	usefirsttemplate=false	##	on new/page preselect the first template in the list
+2003-07-09	V3.5-head-20031001d	ME	FEATURE 	contentgroup3_pagefilename=false ## use cool apache-autoselect extensions
+2003-07-09	V3.5-head-20031001d	ME	FEATURE 	contentgroup3=true ## languages
+2003-07-09	V3.5-head-20031001d	ME	FEATURE 	@force: contentgroup=false ## disable contentgroup if contentgroup3 is activated 
+2003-07-21	V3.5-head-20031001d	ME	SQLCREATE 	node.datasource
+2003-07-21	V3.5-head-20031001d	ME	SQLCREATE 	node.datasource_value
+2003-07-21	V3.5-head-20031001d	ME	SQL			insert into tree (itemorder, mother, name, type_id) values (5, 11, 'Page Languages', 10023); ## insert Page-Languages under Content.Admin in Tree
+2003-07-21	V3.5-head-20031001d	LH	SQL			insert into tree (itemorder, mother, name, type_id) values (9,7,'SOAP',106); ## insert SOAP under Admin in tree.
+2003-07-22	V3.5-head-20031001d	ME	SQLCREATE 	node.cn_mapprop
+2003-08-08	V3.5-head-20031001d	KS	FEATURE 	get_filename_as_pagename=false ## creates filename out of pagename
+2003-08-13	V3.5-head-20031001d	ME	SQLCREATE 	node.cn_folder_map ## holds relation between vmaps and folders
+2003-09-15	V3.5-head-20031001d	SH	FEATURE 	switch_template=true ## action switch template for pages in pagelist
+2003-09-17	V3.5-head-20031001d	SH	SQL			alter table ml add contenttype varchar(63) not null;
+2004-04-08	V3.6-stable-20040511    ME      FEATURE         UTF8=false ## UTF8 content support. database must be converted, before activating this feature.
+# disabled install new package instead 2003-10-02       V3.5-head-20031002m     ME      SCRIPT:global   add_apache_public_conf.sh ## add apache-config + xnl-install-script + new nodectl
+#2003-10-02     V3.5-head-20031002m     ME      COMMENT:global  ## log into a shell as root user after update, and run cd /Node/tmp ; ./install-xnl.sh /Node/node /Node/.node
+2004-01-13	V3.6-stable-20040511   ME      SCRIPT link_xnl.sh ## create correct xnl-symlinks if not existent
+2003-10-08	V3.6-stable-20040511   ME      FEATURE ds_empty_cs=true        ## list pages with no language in all datasources
+2003-10-15	V3.5-test-20031016d	ME	COMMENT ## log into .Node as user system, set permissions on Content.Admin/Sprachen,Content.Admin/Datenquellen,SOAP
+2003-10-15	V3.5-test-20031016d	ME	COMMENT ## wenn kunde schon sprachen verwendet ( kundenberater befragen ), ansonsten diese zeile ignorieren.
+2003-10-15	V3.5-test-20031016d	ME	SQL	delete from contentgroup;
+2003-10-15	V3.5-test-20031016d	ME	SQL insert into contentgroup (id, name, code) values (1, 'Deutsch', 'at' );
+2003-10-15	V3.5-test-20031016d	ME	SQL insert into contentgroup (id, name, code) values (2, 'English', 'en' );
+2003-10-15	V3.5-test-20031016d	ME	SCRIPT add_language_icons.sh
+2003-11-10	V3.5-test-20031110	LH	SQLCREATE	node.tagmap
+2003-11-11	V3.5-test-20031112	ME	FEATURE	contentmap=false ## publish data for portal-connector, delete objtranslatecache if you enable it. //attention: if you activate this feature you have to execute "delete from objtranslatecache; update page set status=1 where status=2";
+2003-11-11	V3.5-test-20031112	ME	SQLCREATE	node.contentattribute
+2003-11-11	V3.5-test-20031112	ME	SQLCREATE	node.contentattributetype
+2003-11-11	V3.5-test-20031112	ME	SQLCREATE	node.contentmap
+2003-11-11	V3.5-test-20031112	ME	SQLCREATE	node.contentstatus
+2003-11-12	V3.5-test-20031112b	LH	FEATURE	inheritable_objtags=false	## new naming for objecttags to make them inerhitable from folder to pages. WARNING! not compatible! (no ordner. prefix anymore)G
+2003-11-17	V3.5-test-20031117	LH	COMMENT	new setup configuration for contentmap db: CN_MAP_DB_SETTINGS.
+2003-11-18	V3.5-test-20031119	LH	SQL	alter table contenttag_nodeversion add index(id);
+2003-11-18	V3.5-test-20031119	LH	SQL	alter table value_nodeversion add index(id);
+2003-11-18	V3.5-test-20031119	LH	SQL	alter table ds_obj_nodeversion add index(id);
+2003-11-18	V3.5-test-20031120	LH	SQL	alter table contentmap add motherid char(32) not null;
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds add objtag_id int not null default 0;
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds add index (objtag_id);
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds_obj add objtag_id int not null default 0;
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds_obj add index (objtag_id);
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds_nodeversion add objtag_id int not null default 0;
+2003-11-19	V3.6-test-20040116a	HM	SQL	alter table ds_obj_nodeversion add objtag_id int not null default 0;
+2003-11-19	V3.5-test-20031120a	HM	FEATURE	dsfile=true
+2003-11-20	V3.5-test-20031124	LH	SQL	delete from objtranslatecache; ## keep everything sane. yours truly, mr. proper
+2003-11-24	V3.5-test-20031127a	LH	COMMENT	update contentmap manually if located in other database!
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentmap add index(contentid);
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentmap add index(obj_type);
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentmap add index(obj_id);
+2003-11-24	V3.5-test-20031124	LH	SQL	optimize table contentmap;
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentattribute add index(contentid);
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentattribute add index(name);
+2003-11-24	V3.5-test-20031124	LH	SQL	optimize table contentattribute;
+2003-11-24	V3.5-test-20031124	LH	SQL	alter table contentattributetype add index(name);
+2003-11-24	V3.5-test-20031124	LH	SQL	optimize table contentattributetype;
+2003-11-27	V3.5-test-20031127a	LH	SQL	update page set status = 1 where status = 2;
+2003-11-27	V3.5-test-20031127b	LH	SQL	insert into type (id,name) values (25,'URL (folder)'); ## may fail, if it already exists.
+2003-11-27	V3.5-test-20031127d	LH	SQL	alter table contentattribute add index(contentid,name);
+2003-11-27	V3.5-test-20031127a	LH	SQL	alter table contentstatus modify name char(255) primary key;
+# temporary deactivated because of object. incompatibility
+# 2009-01-02	V3.6-stable-20040511    LH      PHP     update_tagmap.php ## updates default contentmap attributes. may fail on first update, do the update again if it failed.
+2003-12-04	V3.5-test-20040116a	LH	SQL	alter table tagmap add static int not null; ## may fail if exists.
+2004-01-12	V3.6-stable-20040116a	HM	SQL	alter table objtag add required int not null default 0;
+2004-01-12	V3.6-stable-20040116a	HM	SQL	alter table objtag add inpage int not null default 0;
+2004-01-12	V3.6-stable-20040116a     HM      PHP	convert_objpropnames.php ## converts objecttags
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	dssource=true;
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	template_objprop=true; ## inheritable objprops. $FEATURE["inheritable_objtags"] = false ## must be deactivated
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	@force: inheritable_objtags=false ## must be deactivated
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	deactivate_objpropedit=false
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	objtag_required=true; ## required objtags. $FEATURE["template_objprop"] ## must be activated 
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	@force: template_objprop=true ## must be activated
+##migrating datsources - START
+2004-01-16	V3.6-stable-20040116a	ME	SQLCREATE	node.param
+2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table datasource add param_id int; 
+2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table datasource_value add dsid int;
+2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table param add index(paramid, name);
+2004-01-16	V3.6-stable-20040116a	ME	SQL	update datasource_value set dsid=id;
+2004-01-16	V3.6-stable-20040116a	ME	PHP	convert_datasources.php ## converts datasource-values to new format
+##migrating datsources - END
+2004-01-29	V3.6-stable-20040203	HM	FEATURE objtag_preview=true ## activates preview of objecttags in objecttaglist
+2004-02-03	V3.6-stable-20040203	LH	SQL alter table tagmap add optimized int not null default 0;
+2004-02-03	V3.6-stable-20040203b	LH	SQL @contentmap: alter table contentattributetype add optimized int default 0 not null;
+2004-02-03	V3.6-stable-20040203b	LH	SQL @contentmap: alter table contentattributetype add quickname char(32);
+2004-02-04	V3.6-stable-20040218	HM	FEATURE objtag_perm=true ## activates permissions on objtags
+2004-02-16	V3.6-stable-20040218	RB	FEATURE ds_folder=false ## use folders (t_type) in datasources
+2004-02-16	V3.6-stable-20040218	RB	FEATURE ds_folder_perm=false ## link folders into overview
+2004-02-16	V3.6-stable-20040218	RB	FEATURE ds_folder_workflow=false ## do obj_translate stuff
+2004-01-16	V3.6-stable-20040218	RB	SQL	 alter table ds_obj add column adate int(11) not null; ## time, when ds_obj was authorized
+2004-01-16	V3.6-stable-20040218	RB	SQL	 alter table ds_obj add column auser int(11) not null; ## user who authorized ds_obj
+2004-01-16	V3.6-stable-20040218	RB	SQL	 alter table ds_obj_nodeversion add column adate int(11) not null; ## time, when ds_obj was authorized
+2004-01-16	V3.6-stable-20040218	RB	SQL	 alter table ds_obj_nodeversion add column auser int(11) not null; ## user who authorized ds_obj
+2004-01-16	V3.6-stable-20040218	RB	SQL	 update ds_obj set auser = 1 where auser = 0; ## existing datasources shall be displayed
+2004-01-16	V3.6-stable-20040218	RB	SQL	 update ds_obj_nodeversion set auser = 1 where auser = 0; ## existing datasources shall be displayed
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_image_clear=true ## this should be enabled at all systems 
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_page_clear=true ## this should be enabled at all systems 
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_file_clear=true ## this should be enabled at all systems 
+2004-01-24	V3.6-stable-20040226	RB	SQL	alter table contentfile add column sizex int(11) not null; ## x dimension (width) of an image
+2004-01-24	V3.6-stable-20040226	ME	COMMENT	go watch SELECT count(id) FROM contentfile WHERE filetype LIKE 'image%' AND sizex = 0; during the next changelog (may last quite a while)
+2004-01-24	V3.6-stable-20040226	RB	SQL	alter table contentfile add column sizey int(11) not null; ## y dimension (height) of an image
+2004-01-24	V3.6-stable-20040227	RB	PHP	update_images.php ## updates image properties: width (sizex) and height (sizey)          
+2004-01-24	V3.6-stable-20040226	RB	SQL	alter table node add publish_fs int not null; ## bool: publish into the filesystem
+2004-01-24	V3.6-stable-20040226	RB	SQL	alter table node add publish_contentmap int not null; ## bool: publish contentmap
+2004-01-24	V3.6-stable-20040226	RB	SQL	update node set publish_fs = 1, publish_contentmap = 1 where publish_contentmap = 0; ## update existing data
+2004-03-21	V3.6-stable-20040323	LH	SQL	alter table contentfile add md5 char(32) not null;
+2004-03-21	V3.6-stable-20040323	LH	PHP	calc_md5sums.php ## caclulates md5sum for all files, and stores it into database. be patient.
+2004-03-23	V3.6-stable-20040323	LH	SQL @contentmap: alter table contentattribute add value_blob longblob; ## may fail on non mysql databases. do it manually.
+2004-04-26	V3.6-stable-20040511	LH	FEATURE	webdav_files=true ## enables desktop integration
+#2004-04-26	V3.6-stable-20040511	LH	SCRIPT	apache_davconf.sh	## enables apache dav support
+#2004-04-26	V3.6-stable-20040511	LH	COMMENT	check httpd.conf for duplicate dav section (look for DavLockDB at the end of file)!
+#2004-04-26	V3.6-stable-20040511	LH	COMMENT	check httpd.conf for LoadModule dav_module. if not present, update binary package!
+#2004-04-26	V3.6-stable-20040511	LH	COMMENT	execute /Node/bin/nodectl restart as root to activate dav support!
+2004-05-04	V3.6-stable-20040511	LH	FEATURE	xnl_evalalways=false	## force eval xnl also in edit mode.
+2004-01-05	V3.6-stable-20040511	LH	COMMENT	recreate table tagmap where standard tagmap is used: drop table tagmap; paste create definition. mysql DATABASENAME < /Node/tmp/tagmap.sql
+2004-01-09	V3.6-stable-20040511	LH	SQL	alter table page add index (name);
+2004-01-09	V3.6-stable-20040511	LH	SQL	alter table page add index (contentset_id);
+2004-01-09	V3.6-stable-20040511	LH	SQL	alter table page add index (contentgroup_id);
+2004-01-13	V3.6-stable-20040511	LH	SQL	update tagmap set tagname = 'object.startpage.url.id', object=10002, objtype=10007,attributetype=2 where mapname = 'startpage' and static = 1;
+2004-01-13	V3.6-stable-20040511	LH	COMMAND:global	rm -f /Node/tmp/tagmap.sql ## cleanup
+2004-01-13	V3.6-stable-20040511	ME	SQL	delete from objtranslatecache; ## reset cache
+2004-02-12	V3.6-stable-20040511	LH	SQL	alter table tagmap add static int not null; ## may fail if it exists
+#2004-01-22	NEW	SH	SQL INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('seite.navhidden', 'navhidden', 10007, 0, 1, 0, 1);
+#2004-01-22	NEW	SH	SQL INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('ordner.navhidden', 'navhidden', 10002, 0, 1, 0, 1);
+2004-01-22	V3.5-stable-20040126	SH	COMMENT	for systems with sitemap: create new Tag: Name In Navigation ausblenden; keyword: navhidden; Part: Type Checkbox; Name: In Navigation ausblenden keyword hidden; editable; default not checked; create new objprop navhidden for pages and folders; type In Navigation Ausblenden
+2004-01-26	V3.5-stable-20040126	SH	SQL INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('ordner.navsort', 'navsort', 10002, 0, 1, 0, 1);
+2004-01-26	V3.5-stable-20040126	SH	COMMENT for systems with sitemap; create new Tag 'Navigation Sortierung', part1: HTML; nicht �nderbar; part2: Text(short) 'Sortieren nach', erkennung sortby, �nderbar, notwendig, versteckt; part3: checkbox, 'Aufsteigend sortieren'; erkennung sortorder, �nderbar, versteckt; HTML bef�llen: <node sortorder>;<node sortby>
+2004-01-26	V3.5-stable-20040126	SH	COMMENT for systems with sitemap; create new objprop for folders: navsort; Typ: Navigation Sortierung
+2004-02-04	V3.6-stable-20040511	LH	SQL	alter table tagmap add optimized int not null;
+2004-02-10	V3.6-stable-20040511	LH	SQL	@contentmap: alter table contentmap add index(motherid);
+2004-02-25	V3.6-stable-20040511	ME	SQL	delete from templatetag where name in('seitenname','seitenbeschreibung','veroeffentlichungsdatum','ordnername','ordnerbeschreibung', 'ersteller', 'veroeffentlicher', 'bearbeiter', 'url') and construct_id=1; ## remove tags that have been created accidently
+2004-02-25	V3.6-stable-20040511	ME	SQL	update page set status=1 where status=2;
+2004-02-25	V3.6-stable-20040511	ME	SQL	delete from objtranslatecache;
+2004-03-28	V3.6-stable-20040511	LH	SQL	alter table ds_obj_nodeversion drop primary key;	## fixed incorrect version table
+2004-04-08	V3.6-stable-20040511	LH	SQL	alter table node add utf8 int not null;
+2004-04-08	V3.6-stable-20040511	LH	COMMENT	update UTF8 feature comment in node.conf manually.
+#2004-04-26	V3.6-stable-20040511	SH	COMMENT	Feature republish_nodes now checks for xnl_functions in page to republish pages, the REPUBLISH_NODES variable is not used any longer. Please check if this feature is activated if xnl_navigation is in use on this server.
+2004-04-27	V3.5-stable-20040428	SH	FEATURE	republish_pages=true ## this feature replaces republish_nodes, which is by now depricated. You may disable this feature if you do not use xnl-navigations for performance gains. 
+2004-05-18    V3.5-stable-20040518b   LH  SQL delete from objtranslatecache;
+2004-07-18	V3.6-stable-20040825	ME  SQL alter table contentfile add (dpix int not null, dpiy int not null); ## updates image properties: dpi(x) and dpi(y)
+2004-07-18	V3.6-stable-20040825	ME  PHP update_images_dpi.php ## updates image properties: dpi(x) and dpi(y)
+
+2004-09-06	V3.6-stable-20040906a	LH	SQL	alter table folder add index(node_id);
+2004-09-13	V3.6-stable-20040913a	ME	SQL	@contentmap: alter table contentattributetype add (multivalue int not null default 0);
+2004-09-14	V3.6-stable-20040915	ME	SQL	@contentmap: alter table contentattributetype modify quickname varchar(255);  alter table contentattributetype modify name varchar(255) not null;
+2004-10-14	V3.6-stable-20041014a	SH	SQL	INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('seite.sprach_code', 'languagecode', 10007, 0, 1, 0, 1);
+2004-10-14	V3.6-stable-20041014a	SH	SQL	INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('object.name_de', 'name_de', 10002, 0, 1, 0, 1);
+2004-10-14	V3.6-stable-20041014a	SH	SQL	INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('object.name_en', 'name_en', 10002, 0, 1, 0, 1);
+2004-10-14	V3.6-stable-20041014a	SH	SQL	INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('object.name_it', 'name_it', 10002, 0, 1, 0, 1);
+2004-10-14	V3.6-stable-20041014a	SH	SQL	INSERT INTO tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static) VALUES ('object.name_fr', 'name_fr', 10002, 0, 1, 0, 1);
+2004-10-14	V3.6-stable-20041018	SH	SQL	insert into tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static, optimized) values ('seite.sprachen.de.id','contentid_de', 10007, 10007, 2, 0, 1, 0);
+2004-10-14	V3.6-stable-20041018	SH	SQL	insert into tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static, optimized) values ('seite.sprachen.en.id','contentid_en', 10007, 10007, 2, 0, 1, 0);
+2004-10-14	V3.6-stable-20041018	SH	SQL	insert into tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static, optimized) values ('seite.sprachen.fr.id','contentid_fr', 10007, 10007, 2, 0, 1, 0);
+2004-10-14	V3.6-stable-20041018	SH	SQL	insert into tagmap (tagname, mapname, object, objtype, attributetype, multivalue, static, optimized) values ('seite.sprachen.it.id','contentid_it', 10007, 10007, 2, 0, 1, 0);
+2004-11-04	V3.6-stable-20041104	HM	FEATURE	nodirectselection=true ## enables the selection of single pages in datasources (depending on the language) $FEATURE["contentgroup3"] must be enabled to get this working...
+2004-10-27	V3.6-stable-20041105	SH	FEATURE	contentmap_handles=false ## use list of handles for contentmap from $CN_MAP_DBS instead of CN_MAP_DB_SETTINGS; for each node using a contentmap the handle must be selected in the node-property-dialog.
+2004-10-27	V3.6-stable-20041105	SH	SQL	alter table node add contentmap_handle varchar(255) not null;
+2004-11-11	V3.6-stable-20041116	HM	FEATURE nofindtagerror=false ## disables automatic check for invalid inline editor tags.
+2004-12-17	V3.6-stable-20041217a	SH	SQL	insert into tree (itemorder, mother, name, type_id) select 98, id, 'Contentmap Browser', 10200 from tree where type_id = 7;
+2004-12-17	V3.6-stable-20041217b	SH	COMMENT	Check that dev.tools exists so that contentbrowser can be added.
+2005-01-08	V3.6-stable-20050108a	ME	FEATURE	dskeepselectvalues=false ## if enabled, values that have been selected in a multi-select-box and are not visible to the current user will be remembered and re-added to the values selected by the current user
+2005-01-25	V3.6-stable-20050125	LH	SQL	insert into ml (id,name,ext) values (14,'XHTML','xhtml');
+2005-02-11	V3.6-stable-20050211	LH	SQL	alter table objtag add index (intag);
+2005-02-11	V3.6-stable-20050211a	LH	FEATURE	contentmap_files=false ## disables publishing of binary data of files and images into contentmap. contentmap database will be much larger if enabled, publishing will usually not slow down.
+2005-03-09	V3.6-stable-20050309d		LH	SQL	@contentmap: create table contentobject (type int, name char(255));
+2005-03-09	V3.6-stable-20050309d		LH	SQL	@contentmap: alter table contentattributetype add (objecttype int not null, linkedobjecttype int not null,foreignlinkattribute char(255) not null);
+2005-04-11	V3.6-stable-20050411			BK	FEATURE	contentgroup3_pagefilename_no_apachefilename=false ## don't use apache autoselect-extension for page filename. Required FEATURE contentgroup3_pagefilename
+2005-04-11	V3.6-stable-20050411			BK	FEATURE contentgroup3_pagefilename_no_pagename=false ## disables generating of language-code specific pagename. Requires FEATURE contentgroup3_pagefilename
+2005-04-11	V3.6-stable-20050411			BK	FEATURE log_publish_page_filename=true ## enables logging of filenames of translated pages during publish
+2004-04-11	V3.6-stable-20050411			BK	FEATURE skip_writefs_filelog=true ## disables writing of names of written files during publish
+2005-05-10	V3.6-stable-20050510	BK	SQL	INSERT INTO nodesetup (name, intvalue, textvalue) VALUES ('publish_eta', 0, '');
+2005-05-20	V3.6-stable-20050520b	SH	FEATURE	republish_marked_only=true ## only publish pages with xnl in second pub-run
+2005-05-24	V3.6-stable-20050524c     BK      SQL     INSERT INTO nodesetup (name, intvalue, textvalue) VALUES ('publish_pages_lastdur', 0, '0.00');
+2005-05-24	V3.6-stable-20050524f	BK      SQL     INSERT INTO nodesetup (name, intvalue, textvalue) VALUES ('publish_writefs_lastdur', 0, '0.00\;0.00\;0.00'); ## execute this statement manually in case of an error
+2005-05-24	V3.6-stable-20050524f	BK	COMMENT	Execute above statement manually in case of an error
+2005-05-24	V3.6-stable-20050524f     BK      SQL     INSERT INTO nodesetup (name, intvalue, textvalue) VALUES ('publish_contentmap_lastdur', 0, '0.00\;0.00\;0.00-0.00\;0.00\;0.00-0.00\;0.00\;0.00'); ## exectute this statement manually in case of an error
+2005-05-24	V3.6-stable-20050524f     BK      COMMENT Execute above statement manually in case of an error
+2005-05-30	V3.6-stable-20050530	BK	COMMENT set rights for admin-group to see publish ETA
+2005-06-30	V3.6-stable-20050630a	BK	FEATURE cn_page_import_fill_editable_part=false ## fill first editable part instead of first visible when filling tags during page imports
+2005-06-15	V3.6-stable-20050708	SH	FEATURE	template_copy=true ## enable copy of templates
+2005-07-07	V3.6-stable-20050708	SH	SQL	alter table construct add autoenable int not null;
+2005-07-08	V3.6-stable-20050708	SH	FEATURE	construct_autoenable=true ## enable autoenable construct option
+2005-07-20	V3.6-stable-20050720	SH	FEATURE tagtype_copy=true ## enable tagtype copy feature
+2005-07-21	V3.6-stable-20050721	SH	SQL	alter table dicuser drop index value_2; ## may fail if index does not exist.
+## not yet finished
+## 2005-06-08	NEW	SH	SQL	alter table folder add pub_workflow int not null;
+## 2005-06-08	NEW	SH	SQLCREATE	node.folder_publisher
+## 2005-07-25	NEW	SH	FEATURE	clear_tablestyles=true ## enable 'clear values' checkbox for table styles
+2005-08-08	V3.6-stable-20050809	SH	SQL	delete from objtranslatecache;
+2005-09-12	V3.6-stable-20050912	LH	SQL	alter table objtag add index(name, obj_id, obj_type);
+2005-09-14	V3.6-stable-20050914b	HM	FEATURE	wikiedit=false ## enables direct edit mode for wiki functionality
+2005-09-15	V3.6-stable-20050916a	SH	SQL	alter table contenttag add unused tinyint not null;
+2005-09-15	V3.6-stable-20050916a	SH	SQL	alter table contenttag_nodeversion add unused tinyint not null;
+## 2005-10-18	NEW	SH	FEATURE	page_cleanup=true ## enables tag cleanup for pages
+2005-11-02	V3.6-stable-20051102	SH	FEATURE	template_release=true ## enables template save without dependency check
+2005-11-15	V3.6-stable-20051115a	SH	FEATURE	replace_live_spaces=true ## replace nbsp-spaces after tags in live-editor
+2005-12-09	V3.6-stable-20051223	CP  FEATURE live-br2nl=true ## replace breaks inserted by inline editor with nl's during edit via textbox
+2005-12-23	V3.6-stable-20051223b	CP	SQL alter table node add disable_publish tinyint(1) not null default 0;
+2006-01-12	V3.6-stable-20060223	LH	COMMENT give the serveradmin permissions to see the ETA on the startpage (Content.Admin permission bit)
+2006-02-27	V3.6-stable-20060227	CP	FEATURE dirt_walktree_threshold=false ## if this threshold is exceeded the output of dirt_walktree will be save in /Node/node/content/log/dirt_walktree.log for later reconstruction of long pubs 
+2006-02-27	V3.6-stable-20060227	CP	FEATURE edit_mimetype=false ## allows a user to edit a file's mimetype (plaintext)
+2006-03-30	V3.6-stable-20060330	NOP	SQL alter table tagmap add column foreignlinkattribute varchar(255) not null default ''; ## allows to enter foreignlink attributes (type 7) into tagmap
+2006-03-31	V3.6-stable-20060401	HP	SQL alter table contentattribute add value_clob mediumtext; ## May fail if value_clob already exists. (such error can be ignored)
+2006-05-02	V3.6-stable-20060502	KMS	COMMENT	Attention - we changed the xnl navigation fundamentally - please check at each customer!!!!
+2006-05-22	V3.6-stable-20060522	HP	COMMENT ## Make sure you see the XNL Navigation change log ;) .. here the text: XNL Navigation Update - When updating telekom, contact AP to update php navigation. (deactivate publication before updating!)
+2006-06-23	V3.6-stable-20060629	HP	SQL	insert into tree (itemorder,mother, name, type_id) values (6,11,'Wartung',10032); ## Add Wartung under Content.Admin
+2006-06-23	V3.6-stable-20060629	HP	COMMENT give the serveradmin permission to Maintenance tools (Content.Admin / Maintenance)
+2006-07-25	V3.6-stable-20060802	HP	SQL	alter table tagmap add id int not null auto_increment primary key;
+2006-08-01	V3.6-stable-20060802	HP	SQL	INSERT INTO tree (itemorder,mother,name,type_id) values (7, 11, 'Contentmap Browser', 10200), (8, 11, 'Tagmap Editor', 10202);
+2006-08-23	V3.6-stable-20060824	HP	COMMENT ## give the admin(istrator) group permission to ContentRepository Browser and Tagmap Editor (Content.Admin / ..)
+2006-08-30	V3.6-stable-20060906	HP	SQL	alter table page change content_id content_id int(11) default 0; ## Allow null values for content_id - preparation for SQL references (foreign keys)
+2006-10-04	V3.6-stable-20061004a	LH	SQL alter table ds_obj add index(contenttag_id); ## fix index for versioning
+2006-10-11	V3.6-stable-20061012	LH	FEATURE page_cleanup=true ## enable action to delete all tags within a page, which are currently not rendered.
+2006-10-18	V3.6-stable-20061031	HP	COMMENT ## give admin(istrator) group permission to give users permission to content repository browser / tagmap editor / maintenance
+#2006-10-24	V3.6-stable-20061031	CP	FEATURE	language_usability=false ## advanced language useability functions
+#2006-10-09	V3.6-stable-20061031			HP	FEATURE objprop_page_edit_assistant=true ## if activated displays object properties of most important category in assitant when editing/previewing a page.
+2006-11-21	V3.6-stable-20061122	HP	COMMENT ## give admin(istrator) group permission for Content.Admin -> Object Property Categories (show + assign permissions)
+#2006-11-21	V3.6-stable-20061122	HP	COMMENT ## give admin(istrator) group permission for Administration -> Roles (show + assign permissions)
+#2006-11-22	V3.6-stable-20061127	HP	FEATURE roles=false ## feature to activate roles (e.g. for language permissions) - if activating feature, give administrator permission for Administration -> Roles (show + assign permissions)
+2006-12-07	V3.6-stable-20061207	HP	COMMENT	## The following SQL statements add contenttypes to ml (used for live preview)
+2006-12-07	V3.6-stable-20061207	HP	SQL	update ml set contenttype = 'text/html' where id IN (1,2,3,4,5,6,7,14);
+2006-12-07	V3.6-stable-20061207	HP	SQL	update ml set contenttype = 'text/css' where id = 9;
+2006-12-07	V3.6-stable-20061207	HP	SQL	update ml set contenttype = 'text/js' where id = 10;
+2006-12-07	V3.6-stable-20061207	HP	SQL	update ml set contenttype = 'text/xml' where id IN (8,11,12);
+2006-12-07	V3.6-stable-20061207	HP	SQL	update ml set contenttype = 'text/plain' where id = 13;
+2006-12-14	V3.6-stable-20061219	HP	SQL	CREATE TABLE construct_category (id integer auto_increment not null primary key, name_id integer not null);
+2006-12-14	V3.6-stable-20061219	HP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (1, 9, 'Tagtyp Kategorien', 10203);
+2006-12-14	V3.6-stable-20061219	HP	SQL	ALTER TABLE construct ADD category_id integer references construct_category (id);
+2007-03-12	V3.6-stable-20070312a	CP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (2, 0, 'Todo Management', 110);
+2007-03-20	V3.6-stable-20070320	NOP	SQL alter table tagmap add column foreignlinkattributerule varchar(255) not null default ''; ## allows entering of rules that restrict foreign linked attributes (type 7)
+2007-03-20	V3.6-stable-20070321	NOP	COMMENT The "alter table" statement below may fail or lock the database. On critical systems, this update may only be done in a maintenance session!
+2007-03-20	V3.6-stable-20070321	NOP	SQL	@contentmap: ALTER TABLE contentattributetype ADD COLUMN foreignlinkattributerule mediumtext default NULL; ## may fail when column already exists (this is no problem for update) or db is not mysql. check error in every case.
+2007-03-20	V3.6-stable-20070321	NOP	COMMENT Make sure all contentrepositories that are filled by published data (via dbsync) match the newest cr structure and contain the column contentattributetype.foreignlinkattributerule. The newest cr structure can be found in "documentation/database" of the current Portal.Node release package. Inform server administrators before update.
+2007-01-04	V4.0-head-20070327	NOP	SQL alter table type add column (javaclass varchar(255) not null default '');
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.NormalTextPartType' where id = 1;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.HTMLTextPartType' where id = 2;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.HTMLPartType' where id = 3;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.PageURLPartType' where id = 4;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.ImageURLPartType' where id = 6;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.FileURLPartType' where id = 8;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.ShortTextPartType' where id = 9;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.LongHTMLTextPartType' where id = 10;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.PageTagPartType' where id = 11;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.OverviewPartType' where id = 13;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.EncodedFileURLPartType' where id = 14;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.ChangeableListPartType' where id = 15;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.UnorderedListPartType' where id = 16;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.OrderedListPartType' where id = 17;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.ImageHeightPartType' where id = 18;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.ImageWidthPartType' where id = 19;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.TemplateTagPartType' where id = 20;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.LongHTMLPartType' where id = 21;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.FilePartType' where id = 22;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.TablePartType' where id = 23;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.SelectClassPartType' where id = 24;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.FolderURLPartType' where id = 25;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.JavaEditorPartType' where id = 26;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.DHTMLPartType' where id = 27;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.SingleSelectPartType' where id = 29;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.MultiSelectPartType' where id = 30;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.CheckboxPartType' where id = 31;
+2007-01-04	V4.0-head-20070327	NOP	SQL update type set javaclass = 'com.gentics.contentnode.object.parttype.DatasourcePartType' where id = 32;
+2007-02-26	V4.0-head-20070327	NOP	SQL CREATE TABLE dependencymap2 (id int(10) unsigned NOT NULL auto_increment, mod_obj_type int(10) unsigned default NULL, mod_obj_id int(10) unsigned default NULL, mod_ele_type int(10) unsigned default NULL, mod_ele_id int(10) unsigned default NULL, mod_prop varchar(255) default NULL, dep_obj_type int(10) unsigned default NULL, dep_obj_id int(10) unsigned default NULL, dep_ele_type int(10) unsigned default NULL, dep_ele_id int(10) unsigned default NULL, eventmask int(10) unsigned NOT NULL default '0', PRIMARY KEY  (id), KEY mod_obj (mod_obj_type,mod_obj_id), KEY mod_ele (mod_ele_type,mod_ele_id), KEY dep_obj (dep_obj_type,dep_obj_id), KEY dep_ele (dep_ele_type,dep_ele_id)) ENGINE=InnoDB;
+2007-02-26	V4.0-head-20070327	NOP	SQL CREATE TABLE page_nodeversion (id int(11) NOT NULL default '0', name char(255) NOT NULL default '', description char(255) NOT NULL default '', filename char(64) NOT NULL default '', priority tinyint(4) NOT NULL default '1', content_id int(11) default '0', template_id int(11) NOT NULL default '0', folder_id int(11) NOT NULL default '0', creator int(11) NOT NULL default '0', cdate int(11) NOT NULL default '0', editor int(11) NOT NULL default '0', edate int(11) NOT NULL default '0', publisher int(11) NOT NULL default '0', contentgroup_id int(11) NOT NULL default '0', contentset_id int(11) NOT NULL default '0', nodeversiontimestamp int(11) NOT NULL default '0', nodeversion_user int(11) NOT NULL default '0', nodeversionlatest int(11) NOT NULL default '0', nodeversionremoved int(11) NOT NULL default '0', KEY id (id), KEY content_id (content_id), KEY folder_id (folder_id), KEY template_id (template_id), KEY name (name), KEY contentset_id (contentset_id), KEY contentgroup_id (contentgroup_id)) ENGINE=InnoDB;
+2007-04-06	V4.0-head-20070412	LH	FEATURE	xnlif_autocorrect_emptystring=true ## enable compatibilty mode for xnlifs with missing operands. should only be activated for existing installations. new installations should be more strict.
+2007-04-16	V4.0-head-20070418	AH	SQL insert into type (id,name,javaclass) values (33,'Velocity','com.gentics.contentnode.object.parttype.VelocityPartType');
+2007-04-16	V4.0-head-20070418	AH	SQL insert into type (id,name,javaclass) values (34,'Breadcrumb','com.gentics.contentnode.object.parttype.BreadcrumbPartType');
+2007-04-16	V4.0-head-20070418	AH	SQL insert into type (id,name,javaclass) values (35,'Navigation','com.gentics.contentnode.object.parttype.NavigationPartType');
+2007-05-04	V4.0-head-20070506	LH	SQL alter table dependencymap2 add index (dep_obj_type,dep_obj_id,dep_ele_type,dep_ele_id);
+2007-05-07	V4.0-head-20070507b	NOP	FEATURE javaparser=true ## Take care: Do binary update before and follow migration guide for incompatibilities.
+2007-05-07	V4.0-stable-20070521a     LH      SQL     delete from objtranslatecache; ## cleanup since deprecated.
+2007-05-15	V4.0-stable-20070515	HP	COMMENT	## Open consistency check and verify 'contentfile_dbfile' and 'contentfile_dbfile_invalidfilename'
+2007-05-07	V4.0-head-20070508	LH	COMMAND:global	mkdir -p /Node/node/java/lib ## place for custom java libraries, will be loaded by tomcat and java.sh automaticly.
+2007-05-07	V4.0-head-20070507b	NOP	COMMENT	## Modify the memory settings in the environment variable JAVA_OPTS in /Node/etc/env.sh (-Xmx and -Xms) to optimally suite the available server memory. minimum 500m, maximum 1500m.
+2007-05-07	V4.0-head-20070507b	LH	SQL create database nodecontentrepository; ## create database for todo tool.
+2007-05-07	V4.0-head-20070507b	LH	SCRIPT	add_nodecontentrepository_db.sh ## create todo tool tables.
+2007-05-07	V4.0-head-20070508	LH	FEATURE nodecopy=true ## enable copy option for nodes in nodelist.
+2007-05-08	V4.0-head-20070508	NOP	COMMENT ## Manually create scheduler task "nodecopy" based on template "Run Background Job" with command "node_copy", create a task event for this (run every 5 minutes) and activate it.
+2007-05-08	V4.0-head-20070508	NOP	COMMAND:global 	mkdir -p /Node/node/content/nodecopy ## create nodecopy dir
+2007-05-08	V4.0-stable-20070509	CP	FEATURE	htmlform_markrequired=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE objprop_page_edit_assistant=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE construct_categories=true
+2007-05-08	V4.0-stable-20070509	CP	COMMENT ## give admin groups permissions on tagtype categories
+2007-05-08	V4.0-stable-20070509	CP	FEATURE language_usability=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE translate=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE roles=true
+2007-05-08	V4.0-stable-20070509	CP	COMMENT ## give admin groups permissions on roles treenode
+2007-05-08	V4.0-stable-20070509	CP	FEATURE versiondiff=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE image_manipulation=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE search_contents=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE liveedit_stripwordpaste=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE minibrowser_search=true
+2007-05-08	V4.0-stable-20070509	CP	FEATURE 2dotool=true
+2007-05-09	V4.0-stable-20070509	CP	COMMENT	## activate Portal.Node, set permissions for TodoTool, and edit any user and klick ok to execute sync
+2007-05-11	V4.0-stable-20070511	HP	FEATURE image_gallery_showdescription=true
+2007-05-14	V4.0-stable-20070515a	NOP	COMMENT	## check whether xnl functions work. If all xnl functions are reported to be ambigous, check setting of $XNL_FUNCTIONS in node.conf. $XNL_FUNCTIONS is set by default and must be reset before set to another server url.
+2007-05-16	V4.0-stable-20070516	NOP	SQL	CREATE TABLE dirtqueue (id int(10) unsigned NOT NULL auto_increment, timestamp int(10) unsigned NOT NULL default '0', obj_type int(10) unsigned default NULL, obj_id int(10) unsigned default NULL, events int(10) unsigned default NULL, property mediumtext, PRIMARY KEY  (id), KEY timestamp (timestamp)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	COMMENT ## these are the SQL statements which have been migrated from sql-scripts. although everything should work fine the whole thing got a somewhat experimental feel to me, so keep an eye for sql errors. uhm... good luck.
+2007-05-07	V4.0-head-20070507b	CP	COMMENT ## now all tables for database nodecontentrepository will be created
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentattribute ( `id` int(11) NOT NULL auto_increment, `contentid` varchar(32) NOT NULL default '', `name` varchar(255) NOT NULL default '', `value_text` mediumtext, `value_bin` mediumblob, `value_int` int(11) default NULL, `sortorder` int(11) default NULL, `value_blob` longblob, `value_clob` mediumtext, `value_long` bigint(20) default NULL, `value_double` double default NULL, `value_date` datetime default NULL, PRIMARY KEY  (`id`), KEY `contentid` (`contentid`), KEY `name` (`name`), KEY `contentid_2` (`contentid`,`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentattribute_nodeversion (  `id` int(11) NOT NULL default '0',  `contentid` varchar(32) NOT NULL default '',  `name` varchar(255) NOT NULL default '',  `value_text` mediumtext,  `value_bin` mediumblob,  `value_int` int(11) default NULL,  `sortorder` int(11) default NULL,  `value_blob` longblob,  `nodeversiontimestamp` int(11) default NULL,  `nodeversion_user` varchar(100) default NULL,  `nodeversionlatest` int(11) default NULL,  `nodeversionremoved` int(11) default NULL,  `nodeversion_autoupdate` tinyint(4) NOT NULL default '0',  `value_clob` mediumtext,  `value_long` bigint(20) default NULL,  `value_double` double default NULL,  `value_date` datetime default NULL,  KEY `id_2` (`id`,`nodeversiontimestamp`),  KEY `contentid_2` (`contentid`,`name`),  KEY `sortorder` (`sortorder`),  KEY `contentid_3` (`contentid`,`name`(100),`value_text`(100)),  KEY `contentid` (`contentid`),  KEY `id` (`id`),  KEY `name` (`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentattributetype (  `name` varchar(32) default NULL,  `attributetype` int(11) default NULL,  `optimized` int(11) default NULL,  `quickname` varchar(255) default NULL,  `multivalue` int(11) NOT NULL default '0',  `objecttype` int(11) NOT NULL default '0',  `linkedobjecttype` int(11) NOT NULL default '0',  `foreignlinkattribute` varchar(255) NOT NULL default '',  `foreignlinkattributerule` mediumtext,  `exclude_versioning` int(11) NOT NULL default '0') ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentmap (  `id` int(11) NOT NULL auto_increment,  `contentid` varchar(32) NOT NULL default '',  `obj_id` int(11) NOT NULL default '0',  `obj_type` int(11) NOT NULL default '0',  `mother_obj_id` int(11) NOT NULL default '0',  `mother_obj_type` int(11) NOT NULL default '0',  `updatetimestamp` int(11) NOT NULL default '0',  `motherid` varchar(32) NOT NULL default '',  PRIMARY KEY  (`id`),  KEY `obj_id` (`obj_id`),  KEY `obj_type` (`obj_type`),  KEY `motherid` (`motherid`,`contentid`),  KEY `contentid` (`contentid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentmap_nodeversion (  `id` int(11) NOT NULL default '0',  `contentid` varchar(32) NOT NULL default '',  `obj_id` int(11) NOT NULL default '0',  `obj_type` int(11) NOT NULL default '0',  `motherid` varchar(32) NOT NULL default '',  `mother_obj_id` int(11) NOT NULL default '0',  `mother_obj_type` int(11) NOT NULL default '0',  `updatetimestamp` int(11) NOT NULL default '0',  `nodeversiontimestamp` int(11) default NULL,  `nodeversion_user` varchar(100) default NULL,  `nodeversionlatest` int(11) default NULL,  `nodeversionremoved` int(11) default NULL,  `nodeversion_autoupdate` tinyint(4) NOT NULL default '0',  KEY `obj_id` (`obj_id`),  KEY `id` (`id`),  KEY `obj_type` (`obj_type`),  KEY `motherid_2` (`motherid`),  KEY `contentid` (`contentid`),  KEY `motherid` (`motherid`,`contentid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentobject (  `name` varchar(32) default NULL,  `type` int(11) NOT NULL default '0',  `id_counter` int(11) NOT NULL default '0',  `exclude_versioning` int(11) NOT NULL default '0',  PRIMARY KEY  (`type`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07	V4.0-head-20070507b	CP	SQL CREATE TABLE nodecontentrepository.contentstatus (  `name` char(255) NOT NULL default '',  `intvalue` int(11) default NULL,  PRIMARY KEY  (`name`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2007-05-07      V4.0-head-20070507b     CP      COMMENT ## insert TodoTool Contentrepository data
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype VALUES ('creator',2,0,NULL,0,1006,1001,'','',0),('commentString',1,0,NULL,0,1006,0,'','',0),('todo',2,0,NULL,0,1006,1005,'','',0),('commentDate',10,0,NULL,0,1006,0,'','',0),('created',10,0,NULL,0,1005,0,'','',0),('subject',1,0,NULL,0,1005,0,'','',0),('description',5,0,NULL,0,1005,0,'','',0),('type',1,0,NULL,0,1005,0,'','',0),('references',5,0,NULL,0,1005,0,'','',0),('extended_info',5,0,NULL,0,1005,0,'','',0),('receiver',2,0,NULL,1,1005,1001,'','',0),('creator',2,0,NULL,0,1005,1001,'','',0),('deadline',10,0,NULL,0,1005,0,'','',0),('history',7,0,NULL,0,1005,1011,'todo','',0),('status',1,0,NULL,0,1005,0,'','',0),('pageid',1,0,NULL,0,1005,0,'','',0),('comments',7,0,NULL,0,1005,1006,'todo','',0),('file',7,0,NULL,0,1005,1010,'todo','',0),('new',3,0,NULL,0,1005,0,'','',0),('date',10,0,NULL,0,1011,0,'','',0),('status',1,0,NULL,0,1011,0,'','',0),('filesize',8,0,NULL,0,1010,0,'','',0),('todo',2,0,NULL,0,1010,1005,'','',0),('content',6,0,NULL,0,1010,0,'','',0),('filename',1,0,NULL,0,1010,0,'','',0),('contenttype',1,0,NULL,0,1010,0,'','',0),('usergroupid',1,0,NULL,0,1009,0,'','',0),('name',1,0,NULL,0,1009,0,'','',0),('description',5,0,NULL,0,1009,0,'','',0),('parent',2,0,NULL,0,1009,1009,'','',0),('users',7,0,NULL,0,1009,1001,'groups','',0),('children',7,0,NULL,0,1009,1009,'parent','',0),('groups',2,0,NULL,1,1001,1009,'','',0),('pwd',1,0,NULL,0,1001,0,'','',0),('login',1,0,NULL,0,1001,0,'','',0),('name',1,0,NULL,0,1001,0,'','',0),('userid',1,0,NULL,0,1001,0,'','',0),('email',1,0,NULL,0,1001,0,'','',0),('nodeid',1,0,NULL,0,1012,0,'','',0),('contentgroups',2,0,NULL,1,1012,1013,'','',0),('name',1,0,NULL,0,1013,0,'','',0),('code',1,0,NULL,0,1013,0,'','',0),('contentgroupid',1,0,NULL,0,1013,0,'','',0),('node',7,0,NULL,0,1013,1012,'contentgroups','',0),('creatorname',1,0,NULL,0,1005,0,'',NULL,0),('active','1',0,null,0,1001,0,0,null,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (name, attributetype, objecttype) values ('extlink', 1, 1005);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentobject VALUES ('todo_comment',1006,43,0),('todo',1005,51,0),('todo_history',1011,55,0),('todo_file',1010,3,0),('usergroup',1009,10,0),('user',1001,11,0),('node',1012,5,0),('contentgroup',1013,6,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('extended_info',5,NULL,NULL,0,1015,0,'',NULL,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('name',1,NULL,NULL,0,1014,0,'',NULL,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('items',7,0,NULL,0,1014,1015,'translationlistid','',0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('userid',1,NULL,NULL,0,1014,0,'',NULL,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('receiver',2,NULL,NULL,1,1015,1001,'',NULL,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('translationlistid',2,0,NULL,0,1015,1014,'','',0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentobject (`name`,`type`,`id_counter`,`exclude_versioning`) VALUES ('translationlist',1014,54,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentobject (`name`,`type`,`id_counter`,`exclude_versioning`) VALUES ('translationlistitem',1015,51,0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('contentgroup_id',2,0,NULL,0,1005,1013,'','',0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('contentgroup_id',2,0,NULL,0,1015,1013,'','',0);
+2007-05-07	V4.0-head-20070507b	CP	SQL INSERT INTO nodecontentrepository.contentattributetype (`name`,`attributetype`,`optimized`,`quickname`,`multivalue`,`objecttype`,`linkedobjecttype`,`foreignlinkattribute`,`foreignlinkattributerule`,`exclude_versioning`) VALUES ('user_id',2,0,NULL,0,1011,1001,'','',0);
+2007-06-11	V4.0-stable-20070611	HP	FEATURE pagevar_all_contentgroups=true ## If enabled, page variants created will have all contentgroups of the original page.
+2007-06-04	V4.0.1-stable-20070622	HP	SQL alter table construct_category add sortorder int not null default 0; ## Add sortorder to construct categories.
+2007-06-04	V4.0.1-stable-20070622	HP	SQL update construct_category set sortorder = id; ## set default sortorder ...
+2007-06-18	V4.0.1-stable-20070622	NOP	FEATURE object_usageinfo=true ## enable display of usageinfo for files and images
+2007-06-22	V4.0.1-stable-20070625	LH	COMMENT	just testing :)
+2007-07-05	V4.0.1-stable-20070704a	LH	COMMENT	WARNING, the following changes will lock the cms for hours!
+2007-07-05	V4.0.1-stable-20070704a     LH      SQL     alter table publish add index (active); ## WARNING, long table locks!
+2007-07-05	V4.0.1-stable-20070704a     LH      SQL     alter table logcmd add index (timestamp, cmd_desc_id, o_type); ## WARNING, long table locks!
+2007-07-05	V4.0.1-stable-20070704a     LH      SQL     alter table logcmd add index (cmd_desc_id); ## WARNING, long table locks!
+2007-07-06	V4.0.1-stable-20070712	LH	COMMENT	testing again.
+2007-07-12	V4.0.1-stable-20070712a	LH	COMMENT test 3.
+2007-07-12	V4.0.1-stable-20070712a	AH	COMMENT Adding scheduler task template for new CRSync. New scheduler task has to be created manually.
+2007-07-12	V4.0.1-stable-20070712a	AH	SQL INSERT INTO tasktemplate (name, description, command, creator, cdate, editor, edate) VALUES ('CRSync', 'Synchronisiert das beim Publizieren geschriebene Gentics ContentRepository mit einem anderen.', '/Node/bin/java.sh com.gentics.api.portalnode.connector.CRSync -source_driverClass %sourceDriverClass% -source_username %sourceUserName% -source_passwd %sourcePassWord% -source_url %sourceUrl% -target_driverClass %targetDriverClass% -target_username %targetUserName% -target_passwd %targetPassWord% -target_url %targetUrl% -transaction %transaction% %additionalOptions% 2>&1', 1, UNIX_TIMESTAMP(), 1, UNIX_TIMESTAMP()); SET @template_id = LAST_INSERT_ID(); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'sourceDriverClass'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'sourceUserName'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'sourcePassWord'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'sourceUrl'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'targetDriverClass'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'targetUserName'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'targetPassWord'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'targetUrl'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'transaction'); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES(@template_id, 3, 'additionalOptions');
+2007-08-20	V4.0.1-stable-20070820d	HP	SCRIPT create_node_utils_jni_symlink.sh ## create symlink in /Node/lib
+2007-08-23	V4.0.1-stable-20070824	LH	SQL	INSERT INTO type (id,name,javaclass) VALUES (36,'HTML (custom form)','com.gentics.contentnode.object.parttype.HTMLPartType');
+2007-08-23	V4.0.1-stable-20070824	LH	SQL	INSERT INTO type (id,name,javaclass) VALUES (37,'Text (custom form)','com.gentics.contentnode.object.parttype.NormalTextPartType');
+2007-09-03	V4.0.1-stable-20070903a	HP	FEATURE	hardlink_files=false ## Write files during publishing as hard links instead of copying the dbfiles. (This has the same characteristics of copying files, but with the performance benefit of symlink_files.)
+# change 9600, http://portal.office/ChangelogManager/manager.php?timestamp=1188820963&author=laurin
+2007-09-05	V4.0.1-stable-20070905	AH	SCRIPT update_java_sh.sh ## update java.sh, pass parameters with spaces correctly
+2007-09-20	V4.0.1-stable-20070925b	NOP	SQL	ALTER TABLE page ADD COLUMN (delay_publish int not null default 0); ## add column for delaying publishing for pages (in admin/maintenance)
+2007-10-04	V4.0.1-stable-20071004b	NOP	COMMENT	added the SortImp
+2007-10-25	V4.0.1-stable-20071025	LH	SCRIPT	countxnlconfs.sh	## look for xml files other than config.xml in /Node/node/xnl. with this release only config.xml are loaded. in earlier releases all .xml files where loaded and merged. if this scripts fails, xml files other than config.xml was found in ONE xml package (/Node/node/xnl/[package]). STOP PUBLISHING IMMEDIATELY and merge them into config.xml. otherwise xnl functions might not work anymore.
+2007-12-03	V4.0.1-stable-20071203	HP	FEATURE tag_image_resizer=true ## enable the GenticsImageStore
+2007-12-13	V4.0.1-stable-20080110	HP	SQL	alter table construct add hopedithook mediumtext;
+2008-01-09	V4.0.1-stable-20080116	HP	SQL	UPDATE dependencymap2 SET mod_obj_type = 10008 WHERE mod_obj_type = 10011 ; UPDATE dependencymap2 SET mod_ele_type = 10008 WHERE mod_ele_type = 10011 ; UPDATE dependencymap2 SET dep_obj_type = 10008 WHERE dep_obj_type = 10011 ; UPDATE dependencymap2 SET dep_ele_type = 10008 WHERE dep_ele_type = 10011
+2008-01-09	V4.0.1-stable-20080116	HP	FEATURE	workflow_event_onpagedelete_all_lang=true ## Adds a new event 'On page delete (All Languages)'=======
+2008-01-09	V4.0.1-stable-20080116	HP	SQL	ALTER TABLE page ADD COLUMN (delay_publish int not null default 0); ## add column for delaying publishing for pages (in admin/maintenance), WILL FAIL ON AWO (prod), since it already contains this column, ignore it.
+2008-01-09	V4.0.1-stable-20080116	HP	FEATURE	clear_templatecache_on_contentdirt=true ## Always clear cache of templates if a content object is dirted.
+2008-02-26	V4.1-head-20080305     JZ      SQL     CREATE TABLE `contentfiledata` (`id` int(11) NOT NULL auto_increment,`contentfile_id` int(11) NOT NULL,`binarycontent` longblob,PRIMARY KEY  (`id`),KEY `contentfile_id` (`contentfile_id`))
+2008-04-16	V4.1-stable-20080416d	HP	FEATURE	nodecopy_files=true ## enable nodecopy support for files.
+2008-06-19	V4.1-stable-20080619	HP	FEATURE	publish_node_resolve_direct=true ## directly use node_id in publish table during writefs instead of using folder_id.
+2008-07-03	V4.1-stable-20080703	NOP	PHP	make_velocimacros_local.php ## make velocimacros local
+2008-07-18	V4.1-stable-20080718a	NOP	SQL	update type set javaclass = 'com.gentics.contentnode.object.parttype.OldTablePartType' where id = 12; ## add javaclass entry for old table part type (if exists)
+2008-09-15	V4.1-stable-20080917	JZ	FEATURE	url_folder_clear=true ## enable the white clear button for url(folder) parttype - just like url(page)
+2008-09-22	V4.1-stable-20080922	NOP	COMMENT	perform conistency check 'contentset3' and repair if necessary. Otherwise node copy might not work as expected!
+2008-10-02	V4.1-stable-20081003	JZ	FEATURE	grow_selectbox_in_ie=false ## a workaround fox selectbox in IE - the width will be expanded automaticaly to fit the content, just like ff does
+2008-11-13	V4.1-stable-20081113a	CP	FEATURE disablepreviewurlappendfilename=false ## if enabled file name will not be appended to preview urls anymore
+2008-11-13	V4.1-stable-20081113a	CP	COMMENT	!!! IMPORTANT CHANGE !!! when updating BRZ enable feature disablepreviewurlappendfilename
+2009-02-13	V4.1-stable-20090302	CP	FEATURE pageusage=true ## show page usage column in page list
+2009-02-13	V4.1-stable-20090302	CP	COMMENT	!!! DISABLE !!! feature pageusage on all swarovski servers till feb 2k10
+2009-02-20	V4.1-stable-20090302	CP	FEATURE	quickrecursivetranslations=false  ## offer an action in page list to create language variants of pages
+2009-04-06	V4.1-stable-20090408	CP	FEATURE pageusage_variants=false ##a more steamlined version of pageusage, which will only display page variants
+2009-04-06	V4.1-stable-20090408	CP	FEATURE	autocomplete_folder_path=false ##when changing folder name it's path will be adapted accordingly. WARNING! this may cause long pubs as the whole folder structure is aeffected
+2009-04-07	V4.1-stable-20090408	CP	FEATURE	set_folder_start_page=true ##enable users to set a folder's start page via page_list. also marks the current startpage within the list
+2009-05-05	V4.1-stable-20090511	CP	SQL ALTER TABLE bundleimportconflict ADD COLUMN `conflict_behaviour` varchar(255) default NULL; ## add object specific conflict behaviour
+2009-05-12	V4.1-stable-20090512	HP	SQL	alter table contentfile change filetype filetype varchar(255); ## allow longer filetypes
+2009-07-07	V4.1-stable-20090708	NOP	COMMENT	Manually run the script /Node/.node/CHANGELOG/scripts/content/recreate_dependencymap2.sh after the update. This will recreate the dependencymap2 table. Also check the public changelog about the change of the dependencymap2
+2009-07-28	V4.1-stable-20090730	LH	SQL	alter table ds add index(contenttag_id); ## fixed missing index.
+2009-07-28	V4.1-stable-20090730	LH	SQL	alter table folder add index(startpage_id); ### fixed missing index on deprecated column. might still have data and is therefore heavily used in import export.
+2009-09-18	V4.1-stable-20090919	CP	FEATURE	advanced_word_paste=true ## advanced word copy & paste functionality; cleans word formatting
+2009-09-22	V4.1-stable-20090923	NOP	SQL	UPDATE page SET status = 6 WHERE time_pub > unix_timestamp(); ## pages that shall be published in the future due to set time_pub shall have status 6
+2009-09-28	V4.1-stable-20090929	CP	SQL	INSERT INTO dependencymap2 (mod_obj_type, mod_obj_id, mod_prop, dep_obj_type, dep_obj_id, eventmask) SELECT mod_obj_type, mod_obj_id, 'firstname', dep_obj_type, dep_obj_id, eventmask FROM dependencymap2 WHERE mod_obj_type = 10 AND mod_prop = 'email'; ## fixing dependencies for ticket #32909
+2009-09-28	V4.1-stable-20090929	CP	SQL	INSERT INTO dependencymap2 (mod_obj_type, mod_obj_id, mod_prop, dep_obj_type, dep_obj_id, eventmask) SELECT mod_obj_type, mod_obj_id, 'lastname', dep_obj_type, dep_obj_id, eventmask FROM dependencymap2 WHERE mod_obj_type = 10 AND mod_prop = 'email'; ## fixing dependencies for ticket #32909
+2009-10-08	V4.1-stable-20091009	LH	SQL	insert into ml (id,name,ext,contenttype) values (15,'ASP.NET','aspx','text/html');
+2009-10-08	V4.1-stable-20091009	LH	COMMAND:global	rm -Rf /Node/apache/htdocs/cft ## removed unsecured script.
+2009-10-27	V4.1-stable-20091028 CP  SQL CREATE INDEX folder_id ON publish (folder_id); ## add index on publish table
+2009-09-25	V4.1-stable-20091111	NOP	SQL	CREATE TABLE contentrepository ( id int(11) NOT NULL auto_increment, name varchar(255) NOT NULL, dbtype varchar(255) NOT NULL default '', username varchar(255) NOT NULL default '', password varchar(255) NOT NULL default '', url varchar(255) NOT NULL default '', checkdate int(11) NOT NULL default '0', checkstatus int(11) NOT NULL default '-1', checkresult text default NULL, statusdate int(11) NOT NULL default '0', PRIMARY KEY  (id)); ## add table for contentrepositories
+2009-09-28	V4.1-stable-20091111	CP	SQL	ALTER TABLE tagmap ADD COLUMN contentrepository_id INT; ## add CR id to tagmap entries
+2009-10-05	V4.1-stable-20091111	CP	SQL	ALTER TABLE node ADD COLUMN contentrepository_id INT; ## add CR id to node
+2009-10-20	V4.1-stable-20091111 CP  PHP migrate_cr.php ## migrate old cr/tagmap/node-cr settings to new structure
+2009-11-04	V4.1-stable-20091111	NOP	SQL	alter table tagmap add column category varchar(255) not null default ''; ## add categories to tagmap entries
+2009-12-14	V4.1-stable-20091215d CP  FEATURE popupcheck=true ##added popup checker at login
+2010-01-14	V4.1-stable-20100114c  CP  PHP recreate_dependencymap2.php ## this will replace the dependencymap2 table with a faster data model
+2009-12-21	V4.1-stable-20100115a	FG	FEATURE del_single_transaction=false ## if a delete should be performed in one single transaction (more performant but could infect users working)
+2010-01-15	V4.1-stable-20100115b CP  FEATURE history=true ## remember a short history of your last actions
+2010-01-18	V4.1-stable-20100119	NOP	SQL CREATE TABLE cr_publish_handler (id int(11) NOT NULL auto_increment, name varchar(255) NOT NULL default '', contentrepository_id int(11) NOT NULL, javaclass varchar(255) NOT NULL default '', properties mediumtext, PRIMARY KEY  (id)); ## add table for the contentrepository publish handlers
+2010-01-22	V4.1-stable-20100123	NOP	PHP backup_nodeversions.php ## backup nodeversion data of nodeversionremoved records
+2010-01-22	V4.1-stable-20100123	NOP	SQL UPDATE contenttag_nodeversion SET nodeversionremoved = 0; UPDATE ds_nodeversion SET nodeversionremoved = 0; UPDATE ds_obj_nodeversion SET nodeversionremoved = 0; UPDATE page_nodeversion SET nodeversionremoved = 0; UPDATE value_nodeversion SET nodeversionremoved = 0; ## remove the nodeversionremoved timestamps, because restoring of formerly removed records had a bug
+2010-01-26	V4.1-stable-20100126f	NOP	PHP	revive_versions.php ## create eventually missing versioned records (which were removed due to a bug in purgeversions)
+2010-06-02	CH-71	LH	SQL	alter table node add editorversion tinyint not null default 0;
+2010-08-18	CH-72	NOP	SQL alter table contentrepository add column instant_publishing tinyint not null default 0; ## add column for instant publishing into a cr
+2010-09-15	CH-73 JS SQL insert into type (id,name,description,auto,javaclass) values (38, 'File (Upload)', '', 0, 'com.gentics.contentnode.object.parttype.FileURLPartType'), (39, 'Folder (Upload)', '', 0, 'com.gentics.contentnode.object.parttype.FolderURLPartType');
+2010-09-23	CH-74	NOP	SQL ALTER TABLE contentrepository ADD COLUMN language_information TINYINT NOT NULL DEFAULT 0; ## add column for automatically adding language information into a cr
+2010-02-15	V4.1-stable-20100217	NOP	SQL	ALTER TABLE page ADD COLUMN ddate INT NOT NULL DEFAULT 0; ## added column ddate, which is the timestamp, a page was last dirted (status set to 1)
+2010-03-04	V4.1-stable-20100306	CP	COMMAND:global	ln -s /Node/.node/lib/js/node_tinymce_3.3rc1 /Node/var/httpd/htdocs/.Node/node_tinymce_3.3rc1 ## add tinymce symlink for paster=======
+2010-03-04	V4.1-stable-20100305	CP	FEATURE liveedit_p_nodeids=false ## enter comma separated list of node ids, which should generate p-tags instead of brs in live editor. example: 1,7,5,13. use wildcard * for all nodes
+2010-03-17	V4.1-stable-20100318a	CP	SQL	UPDATE perm SET perm = CONCAT(SUBSTR(perm, 1,2), 1, SUBSTR(perm, 4,30)) WHERE o_type = 10032 AND perm LIKE '1%'; ## maintenance permission migration
+2010-03-17	V4.1-stable-20100318a	CP	SQL	UPDATE perm SET perm = CONCAT(SUBSTR(perm, 1,2), 1, SUBSTR(perm, 4,30)) WHERE o_type = 10003 AND perm LIKE '1%'; ## tagtypes permission migration
+2010-05-07	V4.1-stable-20100507a	NOP	FEATURE log_dirt_events=true ## activate the feature for the dirt analysis tool
+2010-05-07	V4.1-stable-20100507a	NOP	PHP activate_dirt_analysis.php ## activate the dirt analysis tool
+2010-05-10	V4.1-stable-20100511	NOP	SQL	alter table construct add liveeditortagname varchar(255) default NULL; ## added column for configuration of the liveeditor tagname to be used for tags of specific constructs
+2010-06-17	V4.1-stable-20100715	FG	SQL	ALTER TABLE logcmd ADD (insert_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP); ## added column for more precise time to avoid the problem that the publisher "forgets" some files or folders
+2010-06-17	V4.1-stable-20100715	FG	SQL	UPDATE logcmd SET insert_timestamp = from_unixtime(timestamp); ## initialise the above column
+2010-09-29	CH-75	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN permission_information TINYINT NOT NULL DEFAULT 0; ## add column for automatically adding permission information into cr 
+2010-10-20	CH-76	CP	SQL	 ALTER TABLE `node`  CHANGE COLUMN `editorversion` `editorversion` TINYINT(4) NULL DEFAULT '0' AFTER `contentrepository_id`; ## fixing import error
+2010-10-08	V4.1-stable-20101009	NOP	SQL	insert into ml (id,name,ext,contenttype) values (16,'HTM','htm','text/html');
+2010-11-04	V4.1-stable-20101105a	CP	SQL ALTER TABLE bundleimportobject ADD INDEX bundleimport_id (bundleimport_id);
+2010-11-04	V4.1-stable-20101105a	CP	SQL ALTER TABLE bundleimportconflict ADD INDEX bundleimportobject_id (bundleimportobject_id);
+2011-04-04     CH-108  TS      COMMAND:global echo resizable_itemlist_columns=true ## DISABLED enables the improved itemlist (improved style and resizability)
+2011-02-02	CH-91	NOP	SQL	insert into ml (id,name,ext,contenttype) values (18,'INC','inc','text/plain');
+2011-01-27	CH-86	NOP	SQL	ALTER TABLE folder ADD COLUMN master_id INT NOT NULL DEFAULT 0; ## add column for letting channels link to their master
+2011-01-31	CH-87	NOP	SQL	ALTER TABLE page ADD COLUMN channelset_id INT NOT NULL DEFAULT 0; ALTER TABLE page ADD COLUMN channel_id INT NOT NULL DEFAULT 0; ## add columns for defining channelsets for pages (which group local copies and their master objects together)
+2011-01-31	CH-88	NOP	SQL	ALTER TABLE template ADD COLUMN channelset_id INT NOT NULL DEFAULT 0; ALTER TABLE template ADD COLUMN channel_id INT NOT NULL DEFAULT 0; ## add columns for defining channelsets for pages (which group local copies and their master objects together)
+2011-01-31	CH-89	NOP	SQL	ALTER TABLE contentfile ADD COLUMN channelset_id INT NOT NULL DEFAULT 0; ALTER TABLE contentfile ADD COLUMN channel_id INT NOT NULL DEFAULT 0; ## add columns for defining channelsets for pages (which group local copies and their master objects together)
+2011-01-31	CH-90	NOP	SQL	CREATE TABLE channelset (id INT NOT NULL auto_increment, PRIMARY KEY  (id)); ## create the table for channelset id generation
+2011-02-04	CH-92	NOP	SQL	ALTER TABLE dependencymap2 ADD column dep_channel_id INT default NULL; ## add column to make dependencies channel specific
+2011-03-14	CH-101	NOP	SQL	CREATE TABLE publishworkflow (id INT NOT NULL AUTO_INCREMENT, page_id INT NOT NULL, currentstep_id INT NULL DEFAULT NULL, creator INT NOT NULL DEFAULT 0, cdate INT NOT NULL DEFAULT 0, editor INT NOT NULL DEFAULT 0, edate INT NOT NULL DEFAULT 0, PRIMARY KEY (id), UNIQUE page_id(page_id), CONSTRAINT page_id FOREIGN KEY (page_id) REFERENCES page(id) ON DELETE CASCADE ON UPDATE CASCADE); ## added table for multilayer publish workflows
+2011-03-14	CH-102	NOP	SQL	CREATE TABLE publishworkflow_step (id INT NOT NULL AUTO_INCREMENT, publishworkflow_id INT NOT NULL, sortorder SMALLINT NOT NULL DEFAULT 1, modified TINYINT NOT NULL DEFAULT 0, message TEXT NOT NULL, creator INT NOT NULL DEFAULT 0, cdate INT NOT NULL DEFAULT 0, editor INT NOT NULL DEFAULT 0, edate INT NOT NULL DEFAULT 0, PRIMARY KEY (id), INDEX publishworkflow_id(publishworkflow_id), INDEX creator(creator), CONSTRAINT publishworkflow_id FOREIGN KEY (publishworkflow_id) REFERENCES publishworkflow(id) ON DELETE CASCADE ON UPDATE CASCADE); ## added table for the steps of the publish workflow
+2011-03-14	CH-103	NOP	SQL	CREATE TABLE publishworkflowstep_group (publishworkflowstep_id INT NOT NULL, group_id INT NOT NULL, INDEX group_id(group_id), INDEX publishworkflowstep_id(publishworkflowstep_id), CONSTRAINT group_id FOREIGN KEY (group_id) REFERENCES usergroup(id) ON DELETE CASCADE ON UPDATE CASCADE, CONSTRAINT publishworkflowstep_id FOREIGN KEY (publishworkflowstep_id) REFERENCES publishworkflow_step(id) ON DELETE CASCADE ON UPDATE CASCADE); ## added table for groups assigned to a certain step in the publish workflow
+2011-03-14	CH-104	NOP	SQL	ALTER TABLE publishworkflow ADD INDEX currentstep_id(currentstep_id); ## add another index
+2011-03-14	CH-105	NOP	SQL	ALTER TABLE publishworkflow ADD CONSTRAINT currentstep_id FOREIGN KEY (currentstep_id) REFERENCES publishworkflow_step(id) ON DELETE CASCADE ON UPDATE CASCADE; ## add another foreign key constraint
+2011-04-12	CH-1207	NOP	SQL	ALTER TABLE page ADD COLUMN sync_page_id INT NOT NULL DEFAULT 0; ALTER TABLE page ADD COLUMN sync_timestamp INT NOT NULL DEFAULT 0; ## add columns for synchronizing a page with another language variant
+2011-04-29	CH-1211	NOP	SQL	ALTER TABLE nodeversion ADD COLUMN published TINYINT NOT NULL DEFAULT 0; ## add column to mark published version of an object
+2011-04-29	CH-1212	NOP	SQL	ALTER TABLE nodeversion MODIFY COLUMN id INT NOT NULL auto_increment primary key; ## make the id column usable
+2011-04-29	CH-1213	NOP	SQL	ALTER TABLE nodeversion MODIFY COLUMN nodeversion VARCHAR(10) DEFAULT NULL; UPDATE nodeversion SET nodeversion = NULL; ## change the type of the nodeversion column
+2011-05-02	CH-1214	NOP	SQL	INSERT INTO nodesetup (name) VALUES ('fixpageversions'); ## added entry to run the background job to fix page version numbers
+2011-05-17	CH-1215	NOP	SQL	ALTER TABLE page ADD COLUMN is_master TINYINT NOT NULL DEFAULT 1; UPDATE page SET is_master = 0 WHERE channel_id != 0; ## add column to mark master pages and update current localized objects
+2011-05-17	CH-1216 NOP	SQL	ALTER TABLE contentfile ADD COLUMN is_master TINYINT NOT NULL DEFAULT 1; UPDATE contentfile SET is_master = 0 WHERE channel_id != 0; ## add column to mark master files and update current localized objects
+2011-05-17	CH-1217	NOP	SQL	ALTER TABLE template ADD COLUMN is_master TINYINT NOT NULL DEFAULT 1; UPDATE template SET is_master = 0 WHERE channel_id != 0; ## add column to mark master templates and update current localized objects
+2011-09-07	CH-1221 TS	SQL	insert into ml (id,name,ext,contenttype) values (19,'JSON','json','application/json');
+2011-09-11	CH-1226	HM	FEATURE node_ftp=false ## Removed ftp configuration option from node
+2011-11-30  CH-1224 TS  SQL DELETE value FROM value LEFT JOIN part ON value.part_id = part.id WHERE value.part_id <> 0 AND value.part_id IS NOT NULL AND part.id IS NULL; ## delete all values associated with a non-existing part
+2011-11-30  CH-1225 TS  SQL DELETE value FROM value_nodeversion value LEFT JOIN part ON value.part_id = part.id WHERE value.part_id <> 0 AND value.part_id IS NOT NULL AND part.id IS NULL; ## the same as the previous statement, except for value_nodeversion
+2011-10-03	CH-1222	NOP	SQL	ALTER TABLE folder ADD COLUMN channelset_id INT NOT NULL DEFAULT 0; ALTER TABLE folder ADD COLUMN channel_id INT NOT NULL DEFAULT 0; ## add columns for defining channelsets for folders (which group local copies and their master objects together)
+2011-10-03	CH-1223	NOP	SQL	ALTER TABLE folder ADD COLUMN is_master TINYINT NOT NULL DEFAULT 1; UPDATE folder SET is_master = 0 WHERE channel_id != 0; ## add column to mark master pages and update current localized objects
+2012-01-03	CH-1230 BK	SQL TRUNCATE systemsession; ## Reset all user sessions (Black Panther UI changes)
+2012-01-04	CH-1231	BK	FEATURE windowmode=false ## Remove window mode selection option by default in the login
+2012-03-02  CH-1234 TS  SQL ALTER TABLE value_nodeversion ADD INDEX part_id (part_id); ## creates index for part_id otherwise import hangs at 30%
+2012-03-08  CH-1236 TS  SQL ALTER TABLE page_nodeversion DROP COLUMN folder_id; ## The folder_id of versioned pages has been excluded from versioning
+2012-03-30	CH-1237 BK  SQL UPDATE ml SET contenttype = 'text/javascript' WHERE name='JavaScript';
+2012-04-18	CH-1238 JS  SQL UPDATE ml SET contenttype = 'text/js' WHERE name='JavaScript';
+2012-04-19	CH-1239	NOP	SQL	update folder f left join folder m on f.mother = m.id set f.mother = m.master_id where m.is_master = 0; ## correct invalid mother of folders (which were created due to a bug in the channel synchronization)
+2012-04-24	CH-1240	BK  SQL	DELETE FROM mappedglobalid WHERE globalprefix='A547' AND localid = 0;
+2012-04-24	CH-1241	BK  SQL	DELETE FROM mappedglobalid WHERE globalprefix='A547' AND globalid='74284' AND tablename='construct_node';
+2012-04-24	CH-1242	BK  SQL	DELETE FROM mappedglobalid WHERE globalprefix='A547' AND globalid='74285' AND tablename='construct_node';
+2012-05-31	CH-1243	NOP	SQL	UPDATE page LEFT JOIN node on page.channel_id = node.id LEFT JOIN folder ON node.folder_id = folder.id SET page.channel_id = 0 WHERE folder.type_id = 10001 AND page.channel_id != 0; ## fix wrong set channel_id (channel_id must never point to a non-channel node)
+2012-06-05	CH-1244 BK	FEATURE force_javaparser_post=true ## Always force PHP-requests to the javaparser to be sent as POST
+2012-06-11	CH-1245	NOP	SQL	DELETE construct_node FROM construct_node LEFT JOIN node ON construct_node.node_id = node.id LEFT JOIN folder ON node.folder_id = folder.id WHERE folder.type_id = 10033; ## remove incorrect assignments of constructs to channels
+2012-06-14	CH-1246 BK	SQL	UPDATE contentfile LEFT JOIN node on contentfile.channel_id = node.id LEFT JOIN folder ON node.folder_id = folder.id SET contentfile.channel_id = 0 WHERE folder.type_id = 10001 AND contentfile.channel_id != 0; ## fix wrong set channel_id (channel_id must never point to a non-channel node)
+2012-06-14	CH-1247 BK	SQL	UPDATE template LEFT JOIN node on template.channel_id = node.id LEFT JOIN folder ON node.folder_id = folder.id SET template.channel_id = 0 WHERE folder.type_id = 10001 AND template.channel_id != 0; ## fix wrong set channel_id (channel_id must never point to a non-channel node)
+2012-06-20	CH-1248	NOP	FEATURE redirect_check_referer=true ## Requests to /CNPortletapp/latest/alohaeditor... will check the Referer of the request to determine the host and protocol of the redirect request.
+2012-06-21	CH-1249	NOP	SQL	INSERT INTO nodesetup (name) VALUES ('fixpageversions'); ## added entry to run the background job to fix page version numbers
+2012-06-25	CH-1250	NOP	SQL	update folder f left join node n on f.node_id = n.id left join folder crf on crf.id = n.folder_id left join folder m on crf.channelset_id = m.channelset_id and crf.channelset_id != 0 and m.is_master = 1 set f.node_id = m.node_id where f.type_id = 10002 and crf.type_id = 10033; ## fix incorrect node_id of channel local or localized folders.
+2012-06-26	CH-1251	NOP	SQL	alter table contentrepository add column datastatus tinyint not null default -1; alter table contentrepository add column datacheckresult text; ## add columns for data checks
+2012-07-06	CH-1252	NOP	SQL	create table liveeditorsavelog(id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, tagname VARCHAR(255), page_id INT NOT NULL DEFAULT 0, part_id INT NOT NULL DEFAULT 0, value_posted TEXT, value_parsed TEXT, value_ieparsed TEXT, value_pretidy TEXT, value_tidy TEXT, value_posttidy TEXT, value_tosave TEXT, user_id INT NOT NULL DEFAULT 0, timestamp INT NOT NULL DEFAULT 0, oldlength INT NOT NULL DEFAULT 0, newlength INT NOT NULL DEFAULT 0); ## add log table for logging possible data loss while saving from the live editor
+2012-07-18	CH-1253	NOP	SQL	update page left join contenttag on page.content_id = contenttag.content_id left join value on contenttag.id = value.contenttag_id left join part on value.part_id = part.id left join ds on ds.contenttag_id = contenttag.id set status = 1 where page.status = 2 and part.type_id = 13 and ds.is_folder != 2; ## automatically republish all overview pages, that might miss necessary dependencies due to a bug in the Overview implementation
+2012-09-26	CH-1255	NOP	SQL	UPDATE dependencymap2 dm2 LEFT JOIN folder f ON mod_obj_id = f.id LEFT JOIN folder m ON f.channelset_id = m.channelset_id AND m.is_master = 1 SET dm2.mod_obj_id = m.id	WHERE dm2.mod_obj_type = 10002 AND dm2.mod_prop IN ('folders', 'templates', 'pages', 'files', 'images', 'filesandimages', 'children') AND f.is_master = 0 AND f.channelset_id != 0 AND m.id IS NOT NULL; ## fix dependencies on 'children' properties from localized copies to their master folders.
+2012-09-27	CH-1256	NOP	SQL	update perm set o_type = 10211 where o_type = 10203; update tree set type_id = 10211 where type_id = 10203; ## Update permission and tree entrie from T_CONSTRUCT_CATEGORY to T_CONSTRUCT_CATEGORIES
+2012-09-28	CH-1258	NOP	SQL	insert into perm (usergroup_id, o_id, o_type, perm) select usergroup.id, construct_category.id, 10203, '10000000000000000000000000000000' from usergroup, construct_category; ## add initial permissions to construct categories (for all groups)
+2012-10-09	CH-1259	NOP	SQL	ALTER TABLE node ADD COLUMN default_file_folder_id INT NOT NULL default 0; ALTER TABLE node ADD COLUMN default_image_folder_id INT NOT NULL default 0; ## add columns for default upload folders
+2012-11-02	CH-1261	TP	FEATURE disableversiondiffchoice=false ## Disables the selection of a version when creating new language translations of a Page and automatically selects the most recent version to be shown in the split view for translation.
+2012-11-12	CH-1263	TP	SQL	ALTER TABLE tagmap ADD COLUMN filesystem int(11) NOT NULL DEFAULT 0 AFTER optimized; ## Add filesystem flag to the tagmap table, used to mark if the attribute should be written to the file system
+2012-11-13	CH-1264	TP	SQL	ALTER TABLE contentrepository ADD COLUMN basepath varchar(255) NOT NULL DEFAULT ""; ## Add base path entry to the contentrepository table, used to store the base path where filesystem attributes are stored
+2012-11-22	CH-1265 BK	SQL	DELETE ot_this FROM objtag ot_this LEFT JOIN objtag ot_other ON ot_other.obj_type=ot_this.obj_type AND ot_other.obj_id=ot_this.obj_id AND ot_other.id > ot_this.id AND ot_other.name=ot_this.name WHERE ot_other.obj_id IS NOT NULL; ## Delete duplicate objtags (RT#52297)
+2012-11-22	CH-1266 BK	SQL	DELETE v FROM value v LEFT JOIN objtag ot ON v.objtag_id=ot.id WHERE v.objtag_id > 0 AND ot.id IS NULL; ## Delete values with invalid objtag_id (RT#52297)
+2012-11-26	CH-1267	NOP	SQL	ALTER TABLE node ADD COLUMN pdate INT NOT NULL DEFAULT '0'; ## Add column to store last publish timestamp for node
+2012-11-26	CH-1268	NOP	SQL UPDATE node SET pdate = (SELECT max(timestamp) FROM logcmd WHERE o_type = 10001 and cmd_desc_id = 342 AND o_id = node.id) where id in (select distinct o_id from logcmd where o_type = 10001 and cmd_desc_id = 342); ## set the pdate's for all nodes
+2013-01-11	CH-1273	NOP	FEATURE	contentfile_auto_offline=false ## Enable the check for dependencies on files and images during the publish process. If files/images are not used by other objects (pages/folders), they will not be published.
+2013-01-11	CH-1276	NOP	SQL	CREATE TABLE contentfile_online (contentfile_id INT NOT NULL, node_id INT NOT NULL, UNIQUE INDEX (node_id ASC, contentfile_id ASC), INDEX (contentfile_id ASC), INDEX (node_id ASC), CONSTRAINT FOREIGN KEY (contentfile_id) REFERENCES contentfile (id) ON DELETE CASCADE ON UPDATE NO ACTION, CONSTRAINT FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION); ## create table to store which contentfiles are online
+2013-01-11	CH-1277	NOP	SQL	ALTER TABLE contentfile ADD COLUMN force_online TINYINT NOT NULL DEFAULT 0; ## add column to force publishing of files, even if nothing depends on it
+2013-01-17	CH-1278	NOP	SQL	INSERT INTO contentfile_online (contentfile_id, node_id) SELECT contentfile.id, folder.node_id FROM contentfile LEFT JOIN folder ON contentfile.folder_id = folder.id WHERE contentfile.is_master = 1; ## add all contentfiles to be online in their nodes
+2013-01-17	CH-1279	NOP	SQL	INSERT INTO contentfile_online (contentfile_id, node_id) SELECT contentfile.id, channelroot.node_id FROM contentfile LEFT JOIN folder ON contentfile.folder_id = folder.id LEFT JOIN folder root ON folder.node_id = root.node_id AND root.mother = 0 LEFT JOIN folder channelroot ON channelroot.channelset_id = root.channelset_id AND channelroot.id != root.id WHERE contentfile.is_master = 1 AND root.channelset_id != 0 AND channelroot.node_id IS NOT NULL; ## add all contentfiles to be online in all channels, which inherit them
+2013-01-17	CH-1280	NOP	SQL	CREATE TABLE node_feature (node_id INT NOT NULL, feature VARCHAR(255) NOT NULL, UNIQUE INDEX (node_id, feature), INDEX (node_id), CONSTRAINT FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION); ## create table to store activated features
+2013-01-22	CH-1281	BK	SQL	ALTER TABLE templatetag ADD COLUMN mandatory TINYINT NOT NULL DEFAULT '0'; ## add a new boolean column for mandatory template tags
+2013-01-25	CH-1282	NOP	SQL	ALTER TABLE node ADD COLUMN pub_dir_bin VARCHAR(255) NOT NULL default '' AFTER pub_dir; UPDATE node SET pub_dir_bin = pub_dir; ## add column for optional binary publish directory
+2013-01-28	CH-1283	NOP	SQL	INSERT INTO dependencymap2 (mod_obj_type, mod_obj_id, mod_ele_type, mod_ele_id, mod_prop, dep_obj_type, dep_obj_id, eventmask, dep_channel_id) SELECT mod_obj_type, mod_obj_id, mod_ele_type, mod_ele_id, 'pub_dir_bin', dep_obj_type, dep_obj_id, eventmask, dep_channel_id FROM dependencymap2 WHERE mod_obj_type = 10001 AND mod_prop = 'pub_dir'; ## add dependencies on node's pub_dir_bin, for each dependency no node's pub_dir
+2013-01-29	CH-1284	BK	SQL	ALTER TABLE node ADD COLUMN https TINYINT NOT NULL DEFAULT '0' AFTER host; ## add a new boolean column for https in the node table (RM#6737)
+2013-03-22	CH-1347	TP	SQL	UPDATE node SET ftpsync = 0; ## Reset any old FTP node settings that have been leftover from pre-GCN 5.4.0 systems
+2013-04-08	CH-1353	TP	SQL	ALTER TABLE folder ADD INDEX (channelset_id, is_master); ## Add indexes on the folder table for channelset_id and is_master to increase performance for multichanneling-enabled systems when looking up tree permissions
+2013-04-25	CH-1362	TP	SQL	CREATE TABLE migrationjob (id int(11) NOT NULL auto_increment, job_id int(11) NOT NULL, job_type tinyint(4), job_status tinyint(4) NOT NULL, start_timestamp int(11) NOT NULL, job_config mediumtext NOT NULL, log_name CHAR(255), PRIMARY KEY  (id)); # create table for migration jobs
+2013-04-25	CH-1363	TP	SQL	CREATE TABLE migrationjob_item (id int(11) NOT NULL auto_increment, job_id int(11) NOT NULL, obj_id int(11) NOT NULL, obj_type int(11) NOT NULL, status tinyint(4) NOT NULL, PRIMARY KEY  (id)); # create table migration jobs items
+2013-04-25	CH-1357	NOP	SQL	ALTER TABLE contenttag_nodeversion ADD COLUMN auto_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST; ## add primary key
+2013-04-25	CH-1358	NOP	SQL	ALTER TABLE ds_nodeversion ADD COLUMN auto_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST; ## add primary key
+2013-04-25	CH-1359	NOP	SQL	ALTER TABLE ds_obj_nodeversion ADD COLUMN auto_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST; ## add primary key
+2013-04-25	CH-1360	NOP	SQL	ALTER TABLE page_nodeversion ADD COLUMN auto_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST; ## add primary key
+2013-04-25	CH-1361	NOP	SQL	ALTER TABLE value_nodeversion ADD COLUMN auto_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST; ## add primary key
+2013-02-12	CH-1343	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN multichannelling int(11) NOT NULL DEFAULT 0; ## Add column to flag multichannelling aware contentrepositories
+2013-03-21	CH-1345	NOP	SQL	ALTER TABLE dependencymap2 ADD COLUMN dep_prop VARCHAR(2000) DEFAULT NULL; ## Add column to store dependent properties
+2013-03-22	CH-1346	NOP	SQL	CREATE TABLE publishqueue (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, obj_type INT NOT NULL DEFAULT 0, obj_id INT NOT NULL DEFAULT 0, action VARCHAR(10) NOT NULL DEFAULT '', channel_id INT NOT NULL DEFAULT 0, publish_flag TINYINT NOT NULL DEFAULT 0, timestamp INT NOT NULL DEFAULT 0); ## Add table publishqueue
+2013-03-25	CH-1348	NOP	SQL	ALTER TABLE publishqueue ADD INDEX (obj_type, obj_id, action, channel_id); ## Add index on publishqueue table
+2013-03-26	CH-1349	NOP	SQL	ALTER TABLE publishqueue ADD COLUMN delay TINYINT NOT NULL DEFAULT 0 AFTER publish_flag; ## Add column to delay publishing of objects
+2013-03-28	CH-1350	NOP	SQL	ALTER TABLE page ADD COLUMN online TINYINT NOT NULL DEFAULT 0 AFTER status; ## Add column to mark online pages
+2013-03-28	CH-1351	NOP	SQL	UPDATE page SET online = 1 WHERE status IN (1, 2); ## Mark pages with status 1 or 2 as online	
+2013-03-28	CH-1352	NOP	SQL	UPDATE page SET online = 1 WHERE status IN (0, 4, 6) and online = 0 AND id IN (SELECT DISTINCT page_id FROM publish WHERE active = 1); ## Mark pages online, if they have status 0 (being edited) or 4 (queue) or 6 (publishat) and have an active entry in the publish table
+2012-04-12	CH-1355	NOP	SQL	INSERT INTO dirtqueue (timestamp, events) VALUES (unix_timestamp(), 524288); ## Add maintenance action to migrate dirted objects to publishqueue
+2013-05-22	CH-1364	NOP	SQL	CREATE FUNCTION createChannelsetId () RETURNS int BEGIN INSERT INTO channelset (id) VALUES (null)\; RETURN LAST_INSERT_ID()\; END; update page set channelset_id = createChannelsetId() where channelset_id = 0; update template set channelset_id = createChannelsetId() where channelset_id = 0; update contentfile set channelset_id = createChannelsetId() where channelset_id = 0; update folder set channelset_id = createChannelsetId() where channelset_id = 0; DROP FUNCTION createChannelsetId; ## create channelset_id values for all tables
+2013-05-22	CH-1365	NOP	SQL	DELETE publishqueue FROM publishqueue LEFT JOIN node ON publishqueue.channel_id = node.id WHERE node.id IS NULL; ## remove objects that are dirted for channels, that no longer exist
+2013-05-22	CH-1366	NOP	SQL	ALTER TABLE publishqueue ADD CONSTRAINT FOREIGN KEY (channel_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION; ## add constraint that will automatically remove dirted objects when a node/channel is removed
+2013-06-28	CH-1371 MSC	SQL	DELETE FROM perm WHERE o_type = 10202 AND o_id <> (SELECT id FROM tree WHERE type_id = 10202); ## clean up invalid entries in the permission table for the tagmap editor (RT#55475)
+2013-07-03	CH-1372	NOP	SQL	CREATE TABLE node_pdate (node_id INT NOT NULL PRIMARY KEY, pdate INT NOT NULL DEFAULT 0, CONSTRAINT FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION); ## Add table to store node pdate
+2013-07-03	CH-1373	NOP	SQL	INSERT INTO node_pdate (node_id, pdate) SELECT id, pdate FROM node; ## move pdates from node table to node_pdate table
+2013-07-03	CH-1374	NOP	SQL	ALTER TABLE node DROP COLUMN pdate; ## remove pdate column from table node
+2013-07-10	CH-1375	NOP	SQL	ALTER TABLE contentrepository MODIFY COLUMN datacheckresult LONGTEXT; 
+2013-07-10	CH-1376	NOP	SQL	ALTER TABLE contentrepository MODIFY COLUMN checkresult LONGTEXT;
+2013-07-19	CH-1377	NOP	SQL	ALTER TABLE page ADD INDEX (channelset_id, is_master); ## add index on page.channelset_id
+2013-07-19	CH-1378	NOP	SQL	ALTER TABLE template ADD INDEX (channelset_id, is_master); ## add index on template.channelset_id
+2013-07-19	CH-1380	NOP	SQL	ALTER TABLE contentfile ADD INDEX (channelset_id, is_master); ## add index on contentfile.channelset_id
+2013-07-23	CH-1381	NOP	SQL	ALTER TABLE dirtqueue ADD COLUMN failed TINYINT NOT NULL DEFAULT 0; ## add column to mark failed dirtqueue entries
+2013-07-23	CH-1382	NOP	SQL	ALTER TABLE dirtqueue ADD COLUMN failreason MEDIUMTEXT DEFAULT NULL; ## add column to store reason of failure
+2013-08-13	CH-1383	MSC	SQL	ALTER TABLE dependencymap2 MODIFY COLUMN dep_prop VARCHAR(5000); ## increase maximum column length to account for complex dependencies
+2013-09-23	CH-1386	BK	SQL	INSERT INTO type (id, name, javaclass) SELECT * FROM (SELECT 24, 'Select (class)', 'com.gentics.contentnode.object.parttype.SelectClassPartType') AS tmp WHERE NOT EXISTS (SELECT name FROM type WHERE id = 24) LIMIT 1; # This type is missing in the contentnode-package, that's why we re-insert it here.
+2013-09-26	CH-1387	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN diffdelete TINYINT NOT NULL DEFAULT 1; ## Add column to configure differential delete.
+2013-10-30	CH-1389 NOP	SQL	ALTER TABLE dependencymap2 MODIFY COLUMN dep_channel_id VARCHAR(5000); ## Modify dep_channel_id to be a text column
+2013-11-13	CH-1394	WI	SQL	ALTER TABLE publish CHANGE COLUMN path path VARCHAR(1024) NOT NULL; ## add space to accommodate for full length hostname, page directory & folder
+2013-12-04	CH-1395	NOP	SQL	create temporary table gtx_pagestatus (select page.id id from page join dirtqueue on dirtqueue.events = 524288); update page set status = 1 where status = 2 and id not in (select id from gtx_pagestatus); drop table gtx_pagestatus; ## page status 2 does no longer exist
+2014-01-28	CH-1396	WI	SQL	update page set time_mon = 1, time_tue = 1, time_wed = 1, time_thu = 1, time_fri = 1, time_sat = 1, time_sun = 1  where not(time_mon or time_tue or time_wed or time_thu or time_fri or time_sat or time_sun); ## correct weekday settings once
+2014-01-28	CH-1397	WI	SQL	alter table page change column time_mon time_mon tinyint not null default 1; alter table page change column time_tue time_tue tinyint not null default 1; alter table page change column time_wed time_wed tinyint not null default 1; alter table page change column time_thu time_thu tinyint not null default 1; alter table page change column time_fri time_fri tinyint not null default 1; alter table page change column time_sat time_sat tinyint not null default 1;alter table page change column time_sun time_sun tinyint not null default 1; ## correct weekday settings by default
+2014-02-06	CH-1398	WI	SQL	alter table mappedglobalid change globalprefix globalprefix varchar(255) not null; ## don't allow globalprefix to be null
+2014-02-06	CH-1399	WI	SQL	alter table mappedglobalid add unique globalprefix2 (globalprefix, globalid); alter table mappedglobalid drop key globalprefix; ## add unique constraint to GlobalIDs
+2014-04-16	CH-1405	NCC	SQL	update regex set regex = "^(?:http(?:s)?:)?\/\/.+$" where name_id = (select output_id from dicuser where value = "Web adresse"); ## Update regular expression for Web Adresse so it accepts 'https' URLs and network-path reference URLs ('//').
+2014-04-22	CH-1406	NOP	SQL	alter table publish add index (node_id, active); ## add an index to publish table
+2014-05-20	CH-1410	JS	SQL	DELETE FROM mappedglobalid where localid2 = -1; ## Delete bogus mappedglobalid records. This may take a while. See RT58140
+2014-06-03	CH-1411	NOP	SQL	CREATE TABLE datasource_nodeversion (auto_id int(11) NOT NULL auto_increment, id int(11) NOT NULL default '0', source_type int(11) NOT NULL default '0', name varchar(255) default NULL, param_id int(11) default NULL, nodeversiontimestamp int(11) NOT NULL default '0', nodeversion_user int(11) NOT NULL default '0', nodeversionlatest int(11) NOT NULL default '0', nodeversionremoved int(11) NOT NULL default '0', PRIMARY KEY  (auto_id), KEY id (id)); ## create versioning table for datasources
+2014-06-03	CH-1412	NOP	SQL	CREATE TABLE datasource_value_nodeversion (auto_id int(11) NOT NULL auto_increment, id int(11) NOT NULL default '0', datasource_id int(11) NOT NULL default '0', sorder int(11) default NULL, dskey varchar(255) default NULL, value text, dsid int(11) default NULL, nodeversiontimestamp int(11) NOT NULL default '0', nodeversion_user int(11) NOT NULL default '0', nodeversionlatest int(11) NOT NULL default '0', nodeversionremoved int(11) NOT NULL default '0', PRIMARY KEY  (auto_id), KEY id (id)); ## create versioning table for datasource values
+2014-06-18	CH-1413	NOP	SQL	UPDATE datasource SET name = null WHERE id IN (SELECT value_ref FROM value, part WHERE value.part_id = part.id AND part.type_id = 32); ## remove bogus names for internal datasource instances
+2014-06-18	CH-1414	NOP	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:fixdatasources', 10000); ## add init job to fix datasources
+2014-07-03	CH-1416	NOP	SQL	UPDATE page, folder SET page.channel_id = 0 WHERE page.folder_id = folder.id AND page.channel_id != 0 AND page.channel_id = folder.node_id; ## Fix pages, that have channel_id set to a master node.
+2014-07-03	CH-1419	NOP	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:syncvariantversions', 10000); ## add init job to synchronize page variant versions
+2014-08-20	CH-1424	BK	PHP	secure-tomcat-users.php ## Disable insecure tomcat profiler user setting
+2014-06-18	CH-1425	BK	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:fixinconsistenttags', 10000); ## Add init job to delete tags with deleted construct
+2014-10-07	CH-1426	WI	SQL	ALTER TABLE page ADD mc_exclude BOOLEAN NOT NULL DEFAULT 0; ## add multichanneling exclusion
+2014-10-07	CH-1427	WI	SQL	ALTER TABLE folder ADD mc_exclude BOOLEAN NOT NULL DEFAULT 0; ## add multichanneling exclusion
+2014-10-07	CH-1428	WI	SQL	ALTER TABLE contentfile ADD mc_exclude BOOLEAN NOT NULL DEFAULT 0; ## add multichanneling exclusion
+2014-10-07	CH-1429	WI	SQL	CREATE TABLE page_disinherit (page_id INTEGER NOT NULL, channel_id INTEGER NOT NULL, FOREIGN KEY page_index(page_id) REFERENCES page(id) ON DELETE CASCADE, FOREIGN KEY (channel_id) REFERENCES node(id) ON DELETE CASCADE, PRIMARY KEY(page_id, channel_id));
+2014-10-07	CH-1430	WI	SQL	CREATE TABLE folder_disinherit (folder_id INTEGER NOT NULL, channel_id INTEGER NOT NULL, FOREIGN KEY folder_index(folder_id) REFERENCES folder(id) ON DELETE CASCADE, FOREIGN KEY (channel_id) REFERENCES node(id) ON DELETE CASCADE, PRIMARY KEY(folder_id, channel_id));
+2014-10-07	CH-1431	WI	SQL	CREATE TABLE contentfile_disinherit (contentfile_id INTEGER NOT NULL, channel_id INTEGER NOT NULL, FOREIGN KEY contentfile_index(contentfile_id) REFERENCES contentfile(id) ON DELETE CASCADE, FOREIGN KEY (channel_id) REFERENCES node(id) ON DELETE CASCADE, PRIMARY KEY(contentfile_id, channel_id));
+2014-12-09	CH-1433	BK	SQL	UPDATE contentfile SET filetype=substring_index(filetype, '\;', 1) WHERE filetype LIKE 'image%\;%'; # Fix wrong mimetypes for files uploaded with WebDAV.
+2015-02-14	CH-1441	NOP	SQL	UPDATE template SET channel_id = 0 WHERE is_master = 1 AND channel_id IN (SELECT node.id FROM node, folder WHERE node.folder_id = folder.id AND folder.type_id = 10001); ## fix templates, that are incorrectly bound to non-channels
+2015-02-18	CH-1439	NOP	SQL	UPDATE perm SET perm = CONCAT(SUBSTR(perm, 1, 29), 1, SUBSTR(perm, 31, 2)) WHERE o_type = 10001 AND perm LIKE '1%'; # Add permission for inheritance to all groups that can see nodes
+2015-02-18	CH-1440	NOP	SQL	UPDATE perm SET perm = CONCAT(SUBSTR(perm, 1, 29), 1, SUBSTR(perm, 31, 2)) WHERE o_type = 10002 AND o_id IN (SELECT id FROM folder WHERE mother = 0) AND perm LIKE '1%'; # Add permission for inheritance to all groups that can see nodes
+2015-04-15	CH-1442	WI	SQL	CREATE TABLE imagestoreimage (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, contentfile_id INT, transform VARCHAR(255) NOT NULL, edate INT, hash CHAR(40), UNIQUE KEY taskdesc(contentfile_id, transform), FOREIGN KEY (contentfile_id) REFERENCES contentfile(id) ON UPDATE CASCADE ON DELETE CASCADE) # Describes an image produced by the GenticsImageStore during publishing as well as its up-to-dateness
+2015-04-15	CH-1443	WI	SQL	CREATE TABLE imagestoretarget (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, imagestoreimage_id INT NOT NULL, node_id INT, UNIQUE KEY targetdesc (imagestoreimage_id, node_id), FOREIGN KEY (imagestoreimage_id) REFERENCES imagestoreimage(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (node_id) REFERENCES node(id) ON UPDATE CASCADE ON DELETE CASCADE) # Describes actual target files requested form the GenticsImageStore
+2015-04-15	CH-1444 WI	SQL	CREATE TABLE publish_imagestoretarget (publish_id INT NOT NULL, imagestoretarget_id INT NOT NULL, PRIMARY KEY(publish_id, imagestoretarget_id), FOREIGN KEY (publish_id) REFERENCES publish(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (imagestoretarget_id) REFERENCES imagestoretarget(id) ON UPDATE CASCADE ON DELETE CASCADE) # connects requested GenticsImageStore files to publish entries
+2015-04-17	CH-1445	WI	SQL	ALTER TABLE publish ADD COLUMN updateimagestore BOOLEAN NOT NULL DEFAULT TRUE; ## Record whether an imagestore update is needed
+2015-04-23	CH-1447	WI	SQL	ALTER TABLE publish ADD INDEX updateimagestore_idx(updateimagestore); ## Index for updateimagestore
+2015-01-09	CH-1435	NOP	SQL	ALTER TABLE page ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
+2015-01-09	CH-1436	NOP	SQL	ALTER TABLE folder ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
+2015-01-09	CH-1437	NOP	SQL	ALTER TABLE contentfile ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
+2015-06-17	CH-1451	NOP	SQL	UPDATE publish SET updateimagestore = TRUE; ## recheck all published pages for GenticsImageStore images 
+2015-06-26	CH-1452	PK	SQL	ALTER TABLE page ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
+2015-06-26	CH-1453	PK	SQL	ALTER TABLE folder ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
+2015-06-26	CH-1454	PK	SQL	ALTER TABLE contentfile ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
+2015-09-29	CH-1463	BK	SQL	ALTER TABLE objtag DROP COLUMN inpage; # Remove the inpage column
+2015-10-13	CH-1464	BK	SQL	ALTER TABLE node ADD COLUMN publish_fs_pages TINYINT (1) DEFAULT 1 AFTER publish_fs;
+2015-10-13	CH-1465	BK	SQL	ALTER TABLE node ADD COLUMN publish_fs_files TINYINT (1) DEFAULT 1 AFTER publish_fs_pages;
+2015-10-13	CH-1466	BK	SQL	ALTER TABLE node ADD COLUMN publish_contentmap_pages TINYINT (1) DEFAULT 1 AFTER publish_contentmap;
+2015-10-13	CH-1467	BK	SQL	ALTER TABLE node ADD COLUMN publish_contentmap_files TINYINT (1) DEFAULT 1 AFTER publish_contentmap_pages;
+2015-10-13	CH-1468	BK	SQL	ALTER TABLE node ADD COLUMN publish_contentmap_folders TINYINT (1) DEFAULT 1 AFTER publish_contentmap_files;
+2015-10-13	CH-1469	BK	SQL	ALTER TABLE node ADD COLUMN urlrenderway_pages TINYINT (2) DEFAULT 0 AFTER default_image_folder_id;
+2015-10-13	CH-1470	BK	SQL	ALTER TABLE node ADD COLUMN urlrenderway_files TINYINT (2) DEFAULT 0 AFTER urlrenderway_pages;
+2015-10-27	CH-1472	BK	SQL	UPDATE node SET publish_fs_pages = 0, publish_fs_files = 0 WHERE publish_fs = 0;
+2015-10-27	CH-1473	BK	SQL	UPDATE node SET publish_contentmap_pages = 0, publish_contentmap_files = 0, publish_contentmap_folders = 0 WHERE publish_contentmap = 0;
+2015-10-30	CH-1475	NOP	SQL	UPDATE tagmap SET static = 0 WHERE mapname IN ('createtimestamp', 'creator', 'creatoremail', 'editor', 'editoremail', 'edittimestamp', 'priority', 'publisher', 'publishermail', 'publishtimestamp'); ## Make some unnecessary tagmap entries not reserved
+2015-09-22	CH-1462	NOP	SQL	CREATE TABLE page_task (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, page_id INT NOT NULL, task_id VARCHAR(255) NOT NULL, complete VARCHAR(255) NOT NULL DEFAULT '', handle TINYINT NOT NULL default 0, FOREIGN KEY page_index(page_id) REFERENCES page(id) ON DELETE CASCADE);
+2015-12-15	CH-1477	PK	SQL	CREATE TABLE contentfile_processes (id INTEGER NOT NULL AUTO_INCREMENT, contentfile_id INTEGER NULL, process_key VARCHAR(100) NOT NULL, data TEXT, state ENUM('NEW', 'GENERIC_ERROR', 'INVALID_JSON','INVALID_PROCESS_KEY') NOT NULL DEFAULT 'NEW', timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), FOREIGN KEY (contentfile_id) REFERENCES contentfile(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2015-12-15	CH-1478	PK	SQL	CREATE TABLE folder_processes (id INTEGER NOT NULL AUTO_INCREMENT, folder_id INTEGER NULL, process_key VARCHAR(100) NOT NULL, data TEXT, state ENUM('NEW', 'GENERIC_ERROR', 'INVALID_JSON','INVALID_PROCESS_KEY') NOT NULL DEFAULT 'NEW', timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), FOREIGN KEY (folder_id) REFERENCES folder(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2015-12-15	CH-1479	PK	SQL	CREATE TABLE page_processes (id INTEGER NOT NULL AUTO_INCREMENT, page_id INTEGER NULL, process_key VARCHAR(100) NOT NULL, data TEXT, state ENUM('NEW', 'GENERIC_ERROR', 'INVALID_JSON','INVALID_PROCESS_KEY') NOT NULL DEFAULT 'NEW', timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), FOREIGN KEY (page_id) REFERENCES page(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2015-12-15	CH-1480 PK	SQL	CREATE TABLE template_processes (id INTEGER NOT NULL AUTO_INCREMENT, template_id INTEGER NULL, process_key VARCHAR(100) NOT NULL, data TEXT, state ENUM('NEW', 'GENERIC_ERROR', 'INVALID_JSON','INVALID_PROCESS_KEY') NOT NULL DEFAULT 'NEW', timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), FOREIGN KEY (template_id) REFERENCES template(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2016-01-21	CH-1481	PK	SQL	ALTER TABLE imagestoreimage ADD COLUMN hash_orig CHAR(40); ## Add hash of original image to check whether an image has to be resized again.
+2016-01-21	CH-1482	PK	SQL	UPDATE imagestoreimage ii INNER JOIN contentfile cf ON ii.contentfile_id = cf.id AND ii.edate = cf.edate SET ii.hash_orig = cf.md5; ## Copy the hashes of the original images from contentfile to imagestoreimage where the edate is still the same.
+2016-01-25	CH-1483	PK	SQL	INSERT INTO type VALUES (40, 'Node', 'Select a single node', 0, 'com.gentics.contentnode.object.parttype.NodePartType'); ## Add new part type to select a node.
+2016-05-23	CH-1487	BK	SQL	INSERT INTO tasktemplate (name, description, command, creator, cdate, editor, edate) VALUES ("Activiti process", "Starts an Activiti process", ". /Node/bin/env.sh\; /Node/.node/sh.php do=827 cmd=activititask activitiname=%activiti_definitionkey% activitivariables=\"%activiti_variables%\" CONFIGFILE=/Node/etc/node.conf 2>&1", 3, UNIX_TIMESTAMP(), 3, UNIX_TIMESTAMP());
+2016-05-23	CH-1488	BK	SQL	INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES ((SELECT id FROM tasktemplate WHERE name='Activiti process'), 3, "activiti_definitionkey");
+2016-05-23	CH-1489	BK	SQL	INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES ((SELECT id FROM tasktemplate WHERE name='Activiti process'), 3, "activiti_variables");
+2016-05-23	CH-1490	NOP	SQL	CREATE TABLE publishqueue_attribute (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, publishqueue_id INT NOT NULL, name VARCHAR(255) NOT NULL DEFAULT '', KEY publishqueue_id (publishqueue_id), CONSTRAINT publishqueue_id_fk FOREIGN KEY (publishqueue_id) REFERENCES publishqueue(id) ON DELETE CASCADE ON UPDATE NO ACTION); ## create table for attribute specific dirting
+2016-06-20	CH-1492	NOP	SQL	ALTER TABLE contenttag ADD COLUMN template TINYINT NOT NULL DEFAULT 0; ## add column to mark contenttags coming from template
+2016-06-20	CH-1493	NOP	SQL	ALTER TABLE contenttag_nodeversion ADD COLUMN template TINYINT NOT NULL DEFAULT 0;
+2016-06-20	CH-1494	NOP	SQL	UPDATE contenttag JOIN page ON contenttag.content_id = page.content_id JOIN templatetag ON templatetag.template_id = page.template_id SET contenttag.template = 1 WHERE contenttag.name = templatetag.name;
+2016-06-20	CH-1495	NOP	SQL	UPDATE contenttag_nodeversion JOIN contenttag ON contenttag_nodeversion.id = contenttag.id AND contenttag_nodeversion.name = contenttag.name AND contenttag_nodeversion.content_id = contenttag.content_id SET contenttag_nodeversion.template = contenttag.template WHERE contenttag.template = 1;
+2016-08-16	CH-1502	NOP	SQL	ALTER TABLE ds_obj ADD COLUMN node_id INT NOT NULL DEFAULT 0 AFTER o_id; ## Add column to store channel from where object was picked
+2016-08-16	CH-1503	NOP	SQL	ALTER TABLE ds_obj_nodeversion ADD COLUMN node_id INT NOT NULL DEFAULT 0 AFTER o_id; ## Add column to store channel from where object was picked
+2016-09-21	CH-1504	NOP	SQL	ALTER TABLE folder ADD INDEX (master_id);
+2016-10-20	CH-1506	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Number (natural)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1001;
+2016-10-20	CH-1507	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Natural number with 9 digits maximum.\nExample: 65536' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1001;
+2016-10-20	CH-1508	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'E-mail address' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1004;
+2016-10-20	CH-1509	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'E-mail address\nExample: Q&A@cnn.com' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1004;
+2016-10-20	CH-1510	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Not empty' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1005;
+2016-10-20	CH-1511	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Must not be empty.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1005;
+2016-10-20	CH-1512	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Text (short)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1008;
+2016-10-20	CH-1513	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Arbitrary text with 255 characters maximum.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1008;
+2016-10-20	CH-1514	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Text (long)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1009;
+2016-10-20	CH-1515	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Arbitrary text with arbitrary length.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1009;
+2016-10-20	CH-1516	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Number (real)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1010;
+2016-10-20	CH-1517	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Real number, maximum of 9 digits before comma and 2 digits after comma.\nEnglish notation ("dot" as comma)\nExample: 128.56' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1010;
+2016-10-20	CH-1518	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Text (simple)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1011;
+2016-10-20	CH-1519	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Text with maximum of 50 characters containing the following special characters:\nUmlauts, ß, space, hyphen, dot.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1011;
+2016-10-20	CH-1520	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Number (integer)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1012;
+2016-10-20	CH-1521	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Integer with maximum of 9 digits.\nExample: -256' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1012;
+2016-10-20	CH-1522	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Text (username, password)' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1013;
+2016-10-20	CH-1523	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Only characters or numbers and the following:\n _ - . @\nBetween 4 and 20 characters.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1013;
+2016-10-20	CH-1524	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Web address' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1015;
+2016-10-20	CH-1525	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'A web (http) address.\nExample: http://www.gentics.com' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1015;
+2016-10-20	CH-1526	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Folder name' WHERE dicuser.language_id = 2 and dicuser.value = 'Ordnername' and regex.id = 1017;
+2016-10-20	CH-1527	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Text with maximum of 255 characters containing the following special characters:\nUmlauts, ß, space, hyphen, dot.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1017;
+2016-10-20	CH-1528	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Filename' WHERE dicuser.language_id = 2 and dicuser.value = 'Dateiname' and regex.id = 1018;
+2016-10-20	CH-1529	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Filename without umlauts or special characters with exception of digits, dot, hyphen and underscore.\nSpaces are not allowed.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1018;
+2016-10-20	CH-1530	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Date (fix)' WHERE dicuser.language_id = 2 and dicuser.value = 'Datum (fix)' and regex.id = 1019;
+2016-10-20	CH-1531	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Date in the format dd.mm.yyyy or dd.mm.yy with delimiters .,_/- and space.' WHERE dicuser.language_id = 2 and dicuser.value = 'Datum im Format dd.mm.yyyy oder dd.mm.yy mit den Trennzeichen .,_/- und Leerzeichen.' and regex.id = 1019;
+2016-10-20	CH-1532	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Time (fix)' WHERE dicuser.language_id = 2 and dicuser.value = 'Uhrzeit (fix)' and regex.id = 1020;
+2016-10-20	CH-1533	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Time, in the format hh:mm' WHERE dicuser.language_id = 2 and dicuser.value = 'Uhrzeit, im Format hh:mm oder hh' and regex.id = 1020;
+2016-10-20	CH-1534	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Time (alternative)' WHERE dicuser.language_id = 2 and dicuser.value = 'Uhrzeit (alternativ)' and regex.id = 1021;
+2016-10-20	CH-1535	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Time, in the format hh:mm or hh' WHERE dicuser.language_id = 2 and dicuser.value = 'Uhrzeit im Format hh:mm oder hh' and regex.id = 1021;
+2016-10-20	CH-1536	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Number (natural, small)' WHERE dicuser.language_id = 2 and dicuser.value = _utf8'Zahl (natürlich, klein)' and regex.id = 1022;
+2016-10-20	CH-1537	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Natural number smaller 60.\nExample: 42' WHERE dicuser.language_id = 2 and dicuser.value = _utf8'Natürliche Zahl kleiner 60.\r\nBeispiel: 42' and regex.id = 1022;
+2016-10-20	CH-1538	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Date (alternative)' WHERE dicuser.language_id = 2 and dicuser.value = 'Datum (alternativ)' and regex.id = 1023;
+2016-10-20	CH-1539	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Date in the format DD.MM.YYYY or DD.MM.YY.' WHERE dicuser.language_id = 2 and dicuser.value = 'Datum im Format TT.MM.JJJJ oder TT.MM.JJ.' and regex.id = 1023;
+2016-10-20	CH-1540	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Unix path' WHERE dicuser.language_id = 2 and dicuser.value = 'Unix Pfad' and regex.id = 1024;
+2016-10-20	CH-1541	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Unix path with delimiter "/".' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1024;
+2016-10-20	CH-1542	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Domain name or IP address.\nExample: www.gentics.com' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1025;
+2016-10-20	CH-1543	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Text (unique)' WHERE dicuser.language_id = 2 and dicuser.value = 'Text (eindeutig)' and regex.id = 1026;
+2016-10-20	CH-1544	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Only lowercase characters (no special characters) and digits. Minimum of 3 characters.' WHERE dicuser.language_id = 2 and dicuser.value = 'Nur Kleinbuchstaben (ohne Sonderzeichen) und Zahlen. Mindestens 3 Zeichen.' and regex.id = 1026;
+2016-10-20	CH-1545	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Postal code' WHERE dicuser.language_id = 2 and dicuser.value = 'Telefonnummer/Faxnummer' and regex.id = 1027;
+2016-10-20	CH-1546	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Phone/faxnumber' WHERE dicuser.language_id = 2 and dicuser.value = 'Telefon/Faxnummer' and regex.id = 1028;
+2016-10-20	CH-1547	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Phone/faxnumber:\n4-25 digits and special characters' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1028;
+2016-10-20	CH-1548	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.name_id SET dicuser.value = 'Price (SN)' WHERE dicuser.language_id = 2 and dicuser.value = 'Preis (SN)' and regex.id = 1029;
+2016-10-20	CH-1549	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Price: maximum of 12 digits before and 2 digits after comma.' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1029;
+2016-10-20	CH-1550	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Fileshare path. Example: \\\\servername\\dir\\file.txt' WHERE dicuser.language_id = 2 and dicuser.value = '' and regex.id = 1030;
+2016-10-20	CH-1551	NOP	SQL	UPDATE dicuser INNER JOIN regex ON dicuser.output_id = regex.desc_id SET dicuser.value = 'Only characters, hyphen and underscore. Between 3 and 255 characters.' WHERE dicuser.language_id = 2 and dicuser.value = 'Nur Buchstaben, Bindestrich und Unterstrich. 3 bis 255 Zeichen.' and regex.id = 1031;
+2016-06-23	CH-1496	NOP	SQL	CREATE TABLE node_package (id INTEGER NOT NULL AUTO_INCREMENT, node_id INTEGER NOT NULL, package VARCHAR(255) NOT NULL, PRIMARY KEY (id), FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE, UNIQUE KEY (node_id, package)); ## add table for assigning devmode packages to nodes
+2016-06-29	CH-1497	NOP	SQL	CREATE TABLE template_node (id INTEGER NOT NULL AUTO_INCREMENT, template_id INTEGER NOT NULL, node_id INTEGER NOT NULL, PRIMARY KEY (id), FOREIGN KEY (node_id) REFERENCES node(id) ON DELETE CASCADE, FOREIGN KEY (template_id) REFERENCES template(id) ON DELETE CASCADE, UNIQUE KEY (template_id, node_id)); ## add table for assignment of templates to nodes
+2016-06-29	CH-1498	NOP	SQL	INSERT INTO template_node (template_id, node_id) SELECT DISTINCT template_id, node_id FROM template_folder, folder WHERE template_folder.folder_id = folder.id; ## Create template_node assignments
+2016-12-16	CH-1553	NOP	SQL	SET @conadmin_id = (SELECT id FROM tree WHERE type_id = 10010); SET @itemorder = (SELECT MAX(itemorder) + 1 FROM tree WHERE mother = @conadmin_id); INSERT INTO tree (itemorder, mother, name, type_id) values (@itemorder, @conadmin_id, 'Packages', 12000); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 12000, LAST_INSERT_ID(), '11000000000000000000000000000000' ); ## add menu entry for packages
+2016-12-01	CH-1552	NOP	SQL	CREATE TABLE systemuser_data (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, systemuser_id INT NOT NULL, name VARCHAR(255) NOT NULL, json MEDIUMTEXT, UNIQUE id_name (systemuser_id, name), CONSTRAINT systemuser_id FOREIGN KEY (systemuser_id) REFERENCES systemuser(id) ON DELETE CASCADE ON UPDATE CASCADE);
+2017-05-04	CH-1558	NOP	SQL	ALTER TABLE page ADD COLUMN nice_url VARCHAR(255) AFTER name;
+2017-05-04	CH-1559	NOP	SQL	ALTER TABLE page ADD INDEX (nice_url);
+2017-05-04	CH-1560	NOP	SQL	ALTER TABLE page_nodeversion ADD COLUMN nice_url VARCHAR(255) AFTER name;
+2017-07-12	CH-1561	NOP	SQL	ALTER TABLE publish ADD COLUMN nice_url VARCHAR(255) AFTER filename;
+2017-11-27	CH-1577	NOP	SQL	DELETE FROM tree WHERE type_id = 106; ## Remove SOAP entry from tree
+2017-11-27	CH-1576	NOP	SQL	DELETE FROM tree WHERE type_id = 10017; ## remove Statistics from tree
+2017-07-27	CH-1562	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN crtype VARCHAR(255) NOT NULL DEFAULT '' AFTER name; ## add column for cr type
+2017-07-27	CH-1563	NOP	SQL	UPDATE contentrepository SET crtype = 'cr' WHERE multichannelling = 0; UPDATE contentrepository SET crtype = 'mccr' WHERE multichannelling = 1; ALTER TABLE contentrepository DROP COLUMN multichannelling; ## migrate types
+2017-08-08	CH-1567	NOP	SQL	ALTER TABLE tagmap ADD COLUMN displayfield INT DEFAULT '0'; ALTER TABLE tagmap ADD COLUMN segmentfield INT DEFAULT '0'; ## add columns for displayfield and segment field (for Mesh CRs)
+2017-09-26	CH-1570	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN permission_property VARCHAR(255) NOT NULL DEFAULT '' AFTER permission_information; ## add column for permission property of Mesh CRs
+2017-10-04	CH-1571	NOP	SQL	ALTER TABLE node ADD COLUMN pub_dir_segment INT DEFAULT 0 AFTER pub_dir_bin; ## add column for feature pub_dir_segment
+2017-10-09	CH-1572	NOP	SQL	ALTER TABLE node ADD COLUMN mesh_preview_url VARCHAR(255) NOT NULL DEFAULT '' AFTER urlrenderway_files; ## add column for mesh previews
+2017-11-09	CH-1573	NOP	SQL	ALTER TABLE tagmap ADD COLUMN urlfield INT DEFAULT '0';
+2017-11-13	CH-1574	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN elasticsearch MEDIUMTEXT AFTER diffdelete; ## add column for elasticsearch config in mesh CR
+2017-11-13	CH-1575	NOP	SQL	ALTER TABLE tagmap ADD COLUMN elasticsearch MEDIUMTEXT; ## add column for elasticsearch config in mesh CR
+2018-01-25	CH-1580	NOP	SQL	UPDATE template_folder tf LEFT JOIN folder f ON tf.folder_id = f.id LEFT JOIN folder m ON f.channelset_id = m.channelset_id AND m.is_master = 1 SET tf.folder_id = m.id WHERE f.id != m.id; ## fix incorrect assignments of templates to localized folders
+2018-02-05	CH-1585	JS	SQL	ALTER TABLE contentfile ADD COLUMN fpx FLOAT(5,4) NOT NULL DEFAULT '0.5' AFTER dpiy; ALTER TABLE contentfile ADD COLUMN fpy FLOAT(5,4) NOT NULL DEFAULT '0.5' AFTER fpx; ## add focalpoint columns for images
+2018-03-19	CH-1589	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN project_per_node TINYINT NOT NULL DEFAULT 0 AFTER elasticsearch;
+2018-04-23	CH-1591	NOP	SQL	CREATE TABLE cr_fragment (id int NOT NULL AUTO_INCREMENT, name varchar(255) NOT NULL, uuid varchar(41) NOT NULL DEFAULT '', udate int DEFAULT 0, PRIMARY KEY (id), UNIQUE KEY uuid (uuid));
+2018-04-23	CH-1592	NOP	SQL	CREATE TABLE cr_fragment_entry (id int NOT NULL AUTO_INCREMENT, tagname varchar(255) NOT NULL DEFAULT '', mapname varchar(255) NOT NULL DEFAULT '', obj_type int NOT NULL DEFAULT 0, target_type int NOT NULL DEFAULT 0, attribute_type int NOT NULL DEFAULT 0, multivalue tinyint NOT NULL DEFAULT 0, optimized tinyint NOT NULL DEFAULT 0, filesystem tinyint NOT NULL DEFAULT 0, displayfield tinyint DEFAULT 0, segmentfield tinyint DEFAULT 0, urlfield tinyint DEFAULT 0, foreignlink_attribute varchar(255) NOT NULL DEFAULT '', foreignlink_attribute_rule varchar(255) NOT NULL DEFAULT '', category varchar(255) NOT NULL DEFAULT '', elasticsearch mediumtext, cr_fragment_id int DEFAULT NULL, uuid varchar(41) NOT NULL DEFAULT '', udate int DEFAULT 0, PRIMARY KEY (id), UNIQUE KEY uuid (uuid), CONSTRAINT FOREIGN KEY (cr_fragment_id) REFERENCES cr_fragment(id) ON DELETE CASCADE ON UPDATE CASCADE);
+2018-04-23	CH-1593	NOP	SQL	CREATE TABLE contentrepository_cr_fragment (contentrepository_id int NOT NULL DEFAULT 0, cr_fragment_id int NOT NULL DEFAULT 0, uuid varchar(41) NOT NULL DEFAULT '', UNIQUE KEY uuid (uuid), CONSTRAINT FOREIGN KEY (contentrepository_id) REFERENCES contentrepository(id) ON DELETE CASCADE, CONSTRAINT FOREIGN KEY (cr_fragment_id) REFERENCES cr_fragment(id) ON DELETE CASCADE);
+2018-04-25	CH-1594	NOP	SQL	SET @conadmin_id = (SELECT id FROM tree WHERE type_id = 10010); SET @itemorder = (SELECT MAX(itemorder) + 1 FROM tree WHERE mother = @conadmin_id); INSERT INTO tree (itemorder, mother, name, type_id) values (@itemorder, @conadmin_id, 'ContentRepository Fragments', 10300); INSERT INTO perm (usergroup_id, o_type, o_id, perm) SELECT usergroup_id, 10300, LAST_INSERT_ID(), perm FROM perm WHERE o_type = 10207;
+2018-09-21	CH-1599	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN version varchar(255) NOT NULL DEFAULT '' AFTER project_per_node;
+2018-08-07	CH-1595	NOP	SQL	ALTER TABLE construct ADD COLUMN external_editor_url VARCHAR(255) NOT NULL DEFAULT '' AFTER liveeditortagname;
+2018-08-07	CH-1596	NOP	SQL	ALTER TABLE construct ADD COLUMN new_editor TINYINT NOT NULL DEFAULT 1 AFTER liveeditortagname;
+2018-08-07	CH-1597	NOP	SQL	ALTER TABLE part ADD COLUMN hide_in_editor TINYINT NOT NULL DEFAULT 0 AFTER policy;
+2018-08-07	CH-1598	NOP	SQL	ALTER TABLE part ADD COLUMN external_editor_url VARCHAR(255) NOT NULL DEFAULT '' AFTER hide_in_editor;
+2018-12-14	CH-1600	NOP	SQL	ALTER TABLE tagmap ADD COLUMN micronode_filter MEDIUMTEXT AFTER elasticsearch;
+2018-12-14	CH-1601	NOP	SQL	ALTER TABLE cr_fragment_entry ADD COLUMN micronode_filter MEDIUMTEXT AFTER elasticsearch;
+2018-12-19	CH-1602	PK	SQL	UPDATE page SET online = 2 WHERE online = 0 AND status = 5;
+2019-02-27	CH-1603	NOP	SQL	ALTER TABLE page ADD COLUMN modified TINYINT NOT NULL DEFAULT 0 AFTER ONLINE, ADD COLUMN pub_queue INT NOT NULL DEFAULT 0 AFTER publisher, ADD COLUMN off_queue INT NOT NULL DEFAULT 0 AFTER pub_queue, ADD COLUMN time_pub_version INT DEFAULT NULL AFTER time_pub, ADD COLUMN time_pub_queue INT NOT NULL DEFAULT 0 AFTER time_pub_version, ADD COLUMN time_pub_version_queue INT DEFAULT NULL AFTER time_pub_queue, ADD COLUMN time_off INT NOT NULL DEFAULT 0 AFTER time_pub_version_queue, ADD COLUMN time_off_queue INT NOT NULL DEFAULT 0 AFTER time_off, ADD FOREIGN KEY (time_pub_version_queue) REFERENCES nodeversion(id) ON DELETE RESTRICT, ADD FOREIGN KEY (time_pub_version) REFERENCES nodeversion(id) ON DELETE RESTRICT; ## Add column for publishAt version
+2019-02-27	CH-1605	NOP	SQL UPDATE page SET modified = 1 WHERE status = 0;
+2019-02-27	CH-1604	NOP	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:migratetimemanagement', 10000); ## Add init job to migrate time management
+2019-03-21	CH-1606	NOP	SQL	ALTER TABLE page ADD COLUMN custom_cdate INT NOT NULL DEFAULT 0 AFTER cdate, ADD COLUMN custom_edate INT NOT NULL DEFAULT 0 AFTER edate;
+2019-03-21	CH-1607	NOP	SQL	ALTER TABLE page_nodeversion ADD COLUMN custom_cdate INT NOT NULL DEFAULT 0 AFTER cdate, ADD COLUMN custom_edate INT NOT NULL DEFAULT 0 AFTER edate;
+2019-05-13	CH-1611	NOP	SQL	DELETE cn1 FROM construct_node cn1 INNER JOIN construct_node cn2 WHERE cn1.construct_id = cn2.construct_id AND cn1.node_id = cn2.node_id AND cn1.uuid < cn2.uuid; ## Remove duplicate rows
+2019-05-13	CH-1612	NOP	SQL	ALTER TABLE construct_node ADD UNIQUE key (construct_id, node_id); ## Add unique key constraint to avoid duplicates
+2019-06-06	CH-1613	NOP	SQL	INSERT IGNORE INTO ml (id, name, ext, contenttype) VALUES (20, 'Generic', '', 'text/plain'); ## Add generic ML
+2019-08-01	CH-1617	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN default_permission VARCHAR(255) NOT NULL DEFAULT '' AFTER permission_property;
+2019-09-20	CH-1620	NOP	SQL	SET @admin_id = (SELECT id FROM tree WHERE type_id = 1); SET @itemorder = (SELECT MAX(itemorder) + 1 FROM tree WHERE mother = @admin_id); INSERT INTO tree (itemorder, mother, name, type_id) values (@itemorder, @admin_id, 'Usersnap', 90100); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 90100, LAST_INSERT_ID(), '11000000000000000000000000000000' );
+2019-07-18	CH-1614	NOP	SQL	CREATE TABLE external_link_content (content_id INT NOT NULL, PRIMARY KEY (content_id), CONSTRAINT elc_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE NO ACTION);
+2019-07-18	CH-1615	NOP	SQL	CREATE TABLE external_link (id INT NOT NULL AUTO_INCREMENT, content_id INT NOT NULL, contenttag_id INT NOT NULL, value_id INT NOT NULL, url TEXT DEFAULT NULL, text TEXT DEFAULT NULL, last_check_timestamp INT NOT NULL DEFAULT 0, last_status TINYINT NOT NULL DEFAULT 0, processed TINYINT NOT NULL DEFAULT 0, PRIMARY KEY (id), CONSTRAINT el_content_id_fk FOREIGN KEY (content_id) REFERENCES content (id) ON DELETE CASCADE ON UPDATE NO ACTION, INDEX el_contenttag_id_key (contenttag_id), INDEX el_value_id_key (value_id));
+2019-07-18	CH-1616	NOP	SQL	CREATE TABLE external_link_status_history (id INT NOT NULL AUTO_INCREMENT, external_link_id INT NOT NULL, timestamp INT NOT NULL DEFAULT 0, status TINYINT NOT NULL DEFAULT 0, PRIMARY KEY (id), CONSTRAINT external_link_id_fk FOREIGN KEY (external_link_id) REFERENCES external_link (id) ON DELETE CASCADE ON UPDATE NO ACTION);
+2019-08-26	CH-1618	NOP	SQL	ALTER TABLE external_link ADD COLUMN last_reason VARCHAR(255) AFTER last_status;
+2019-08-26	CH-1619	NOP	SQL	ALTER TABLE external_link_status_history ADD COLUMN reason VARCHAR(255) AFTER status;
+2020-02-03	CH-1621	NOP	SQL	SET @conadmin_id = (SELECT id FROM tree WHERE type_id = 10010); SET @itemorder = (SELECT MAX(itemorder) + 1 FROM tree WHERE mother = @conadmin_id); INSERT INTO tree (itemorder, mother, name, type_id) values (@itemorder, @conadmin_id, 'Search Index Admin', 10400); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 10400, LAST_INSERT_ID(), '11000000000000000000000000000000' ); ## add menu entry for search index admin
+2020-04-24	CH-1623	NOP	SQL	INSERT INTO type VALUES (41, 'Form', 'Select a form from the Form Generator Custom Tool', 0, 'com.gentics.contentnode.object.parttype.FormPartType'); ## Add new part type to select a form.
+2020-05-05	CH-1624	NOP	SQL	ALTER TABLE objprop ADD COLUMN sync_contentset TINYINT(1) NOT NULL DEFAULT 0 AFTER category_id;
+2020-05-06	CH-1625	NOP	SQL	ALTER TABLE objprop ADD COLUMN sync_channelset TINYINT(1) NOT NULL DEFAULT 0 AFTER sync_contentset;
+2020-05-06	CH-1626	NOP	SQL	ALTER TABLE objprop ADD COLUMN sync_variants TINYINT(1) NOT NULL DEFAULT 0 AFTER sync_channelset;
+2020-05-11	CH-1627	NOP	SQL	ALTER TABLE objtag ADD COLUMN in_sync TINYINT(1) NOT NULL DEFAULT 0 AFTER required;
+2020-09-08	CH-1628	PK	SQL	ALTER TABLE node ADD COLUMN insecure_preview_url BOOLEAN NOT NULL DEFAULT 0 AFTER mesh_preview_url;
+2020-11-30	CH-1638	NOP	SQL	ALTER TABLE page_nodeversion ADD INDEX (nice_url);
+2021-01-21	CH-1639	DR	SQL	ALTER TABLE contentrepository MODIFY COLUMN url VARCHAR(1024); ## Increase url column size to allow longer contentrepository connection strings
+2020-09-15	CH-1631	NOP	SQL	CREATE TABLE form (id int NOT NULL AUTO_INCREMENT, uuid varchar(41) NOT NULL DEFAULT '', name varchar(255) NOT NULL, description varchar(255) NOT NULL DEFAULT '', folder_id INT NOT NULL, languages VARCHAR(255) NOT NULL DEFAULT '', data MEDIUMTEXT NOT NULL DEFAULT '', online BOOLEAN NOT NULL DEFAULT 0, modified BOOLEAN NOT NULL DEFAULT 0, creator INT NOT NULL DEFAULT 0, cdate INT NOT NULL DEFAULT 0, editor INT NOT NULL DEFAULT 0, edate INT NOT NULL DEFAULT 0, publisher INT NOT NULL DEFAULT 0, pdate INT NOT NULL DEFAULT 0, deleted INT NOT NULL DEFAULT 0, deletedby INT NOT NULL DEFAULT 0, locked INT NOT NULL DEFAULT 0, lockedby INT NOT NULL DEFAULT 0, udate INT NOT NULL DEFAULT 0, PRIMARY KEY (id), UNIQUE KEY uuid (uuid), KEY folder_id (folder_id));
+2020-09-15	CH-1632	NOP	SQL	CREATE TABLE form_nodeversion (auto_id INT NOT NULL AUTO_INCREMENT, id int NOT NULL, uuid varchar(41) NOT NULL, name varchar(255) NOT NULL, description varchar(255) NOT NULL, languages VARCHAR(255) NOT NULL DEFAULT '', data MEDIUMTEXT NOT NULL DEFAULT '', nodeversiontimestamp INT NOT NULL DEFAULT 0, nodeversion_user INT NOT NULL DEFAULT 0, nodeversionlatest INT NOT NULL DEFAULT 0, nodeversionremoved INT NOT NULL default 0, PRIMARY KEY (auto_id), KEY id (id));
+2020-09-21	CH-1633	NOP	SQL	UPDATE perm SET perm = CONCAT(SUBSTR(perm, 1, 2), SUBSTR(perm, 12, 4), SUBSTR(perm, 20, 1), SUBSTR(perm, 8)) WHERE o_type IN (10001, 10002, 10033); ## Copy page permissions over to form permissions (bits 11-14 -> 2-5, 19 -> 6)
+2020-10-07	CH-1634	NOP	SQL	ALTER TABLE form ADD COLUMN time_pub INT NOT NULL DEFAULT 0 AFTER modified, ADD COLUMN time_pub_version INT DEFAULT NULL AFTER time_pub, ADD COLUMN time_off INT NOT NULL DEFAULT 0 AFTER time_pub_version, ADD FOREIGN KEY (time_pub_version) REFERENCES nodeversion(id) ON DELETE RESTRICT; ## Add columns for time management
+2021-03-23  CH-1641 NOP SQL INSERT INTO type VALUES (42, 'CMS Form', 'Select a form from the CMS', 0, 'com.gentics.contentnode.object.parttype.CmsFormPartType'); ## Add new part type to select an internal form
+2021-03-30	CH-1642	NOP	SQL	CREATE TABLE form_processes (id INTEGER NOT NULL AUTO_INCREMENT, form_id INTEGER NULL, process_key VARCHAR(100) NOT NULL, data TEXT, state ENUM('NEW', 'GENERIC_ERROR', 'INVALID_JSON','INVALID_PROCESS_KEY') NOT NULL DEFAULT 'NEW', timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), FOREIGN KEY (form_id) REFERENCES form(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+2020-10-08	CH-1635	PK	SQL	ALTER TABLE node ADD COLUMN omit_page_extension TINYINT(1) NOT NULL DEFAULT 0;
+2020-10-08	CH-1636	PK	SQL	ALTER TABLE node ADD COLUMN page_language_code ENUM('FILENAME', 'PATH', 'NONE') NOT NULL DEFAULT 'FILENAME';
+2021-02-12	CH-1640	NOP	SQL	CREATE TABLE folder_i18n (folder_id INT NOT NULL, contentgroup_id INT NOT NULL, name VARCHAR(255) DEFAULT NULL, description VARCHAR(255) DEFAULT NULL, pub_dir VARCHAR(255) DEFAULT NULL, PRIMARY KEY (folder_id, contentgroup_id), CONSTRAINT folder_i18n_ibfk_1 FOREIGN KEY (folder_id) REFERENCES folder (id) ON UPDATE RESTRICT ON DELETE CASCADE, CONSTRAINT folder_i18n_ibfk_2 FOREIGN KEY (contentgroup_id) REFERENCES contentgroup (id) ON UPDATE RESTRICT ON DELETE CASCADE);
+2021-04-28  CH-1650 NOP SQL ALTER TABLE form ADD column success_page_id INT NOT NULL DEFAULT 0 AFTER folder_id;
+2021-04-28  CH-1651 NOP SQL ALTER TABLE form_nodeversion ADD column success_page_id INT NOT NULL DEFAULT 0 AFTER description;
+2021-05-18  CH-1652 NOP SQL ALTER TABLE form ADD column success_node_id INT NOT NULL DEFAULT 0 AFTER success_page_id;
+2021-05-18  CH-1653 NOP SQL ALTER TABLE form_nodeversion ADD column success_node_id INT NOT NULL DEFAULT 0 AFTER success_page_id;
+2021-07-26	CH-1654	NOP	SQL	CREATE TABLE indexerqueue (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, timestamp INT UNSIGNED NOT NULL default '0', index_type ENUM ('file', 'image', 'folder', 'page') NOT NULL, index_language VARCHAR(5) DEFAULT NULL, obj_id INT NOT NULL DEFAULT 0, action ENUM('put','delete') NOT NULL, replay TINYINT NOT NULL DEFAULT 0);
+2021-07-27	CH-1655	NOP	SQL	ALTER TABLE indexerqueue MODIFY COLUMN index_type ENUM ('file', 'image', 'folder', 'page', 'form') NOT NULL;
+2021-08-09	CH-1656	NOP	SQL	CREATE TABLE contentfile_alt_url (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, contentfile_id INT NOT NULL, url VARCHAR(255) NOT NULL, FOREIGN KEY contentfile_index(contentfile_id) REFERENCES contentfile(id) ON DELETE CASCADE);
+2021-08-09	CH-1657	NOP	SQL	CREATE TABLE page_alt_url (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, page_id INT NOT NULL, url VARCHAR(255) NOT NULL, FOREIGN KEY page_index(page_id) REFERENCES page(id) ON DELETE CASCADE);
+2021-08-09	CH-1658	NOP	SQL	CREATE TABLE page_alt_url_nodeversion (auto_id INT NOT NULL AUTO_INCREMENT, id int NOT NULL, page_id INT NOT NULL, url VARCHAR(255) NOT NULL, nodeversiontimestamp INT NOT NULL DEFAULT 0, nodeversion_user INT NOT NULL DEFAULT 0, nodeversionlatest INT NOT NULL DEFAULT 0, nodeversionremoved INT NOT NULL default 0, PRIMARY KEY (auto_id), KEY id (id));
+2021-08-11	CH-1659	NOP	SQL	ALTER TABLE contentfile ADD COLUMN nice_url VARCHAR(255) AFTER name;
+2021-08-11	CH-1660	NOP	SQL	CREATE TABLE publish_alt_url (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, publish_id INT NOT NULL, url VARCHAR(255) NOT NULL, FOREIGN KEY publish_index(publish_id) REFERENCES publish(id) ON DELETE CASCADE);
+2021-08-20	CH-1661	NOP	SQL	ALTER TABLE page_alt_url ADD INDEX (url);
+2021-08-20	CH-1662	NOP	SQL	ALTER TABLE page_alt_url_nodeversion ADD INDEX (url);
+2021-08-20	CH-1663	NOP	SQL	ALTER TABLE contentfile_alt_url ADD INDEX (url);
+2021-08-20	CH-1664	NOP	SQL	ALTER TABLE publish_alt_url ADD INDEX (url);
+2022-09-13  CH-1672 NOP SQL ALTER TABLE ml ADD COLUMN feature VARCHAR(255) DEFAULT NULL AFTER contenttype, ADD COLUMN exclude_from_publishing BOOLEAN NOT NULL DEFAULT 0 AFTER feature; ## Add new columns to ml
+2022-09-13  CH-1673 NOP SQL INSERT IGNORE INTO ml (id, name, ext, contenttype, feature, exclude_from_publishing) VALUES (21, 'Forms e-mail template', 'hbs', 'text/x-handlebars', 'forms', true); ## Add forms e-mail template ML
+2022-09-19	CH-1666	SP	SQL	INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 10401, 0, '11110000100100000000000000000000'); ## add initial permissions to content staging
+2021-09-21  CH-1665 BR SQL	UPDATE type SET name = 'Form (deprecated)' WHERE id = 41; ## Add deprecation notice to old form tagparttype
+2022-11-02	CH-1678	SP	SQL UPDATE contentgroup SET name = 'dansk (Danish)' WHERE code = 'da'; ## Set correct danish language description
+2023-03-30  CH-1691 NOP SQL DROP TABLE IF EXISTS contentfile_processes;
+2023-03-30  CH-1692 NOP SQL DROP TABLE IF EXISTS folder_processes;
+2023-03-30  CH-1693 NOP SQL DROP TABLE IF EXISTS form_processes;
+2023-03-30  CH-1694 NOP SQL DROP TABLE IF EXISTS page_processes;
+2023-03-30  CH-1695 NOP SQL DROP TABLE IF EXISTS page_task;
+2023-03-30  CH-1696 NOP SQL DROP TABLE IF EXISTS template_processes;

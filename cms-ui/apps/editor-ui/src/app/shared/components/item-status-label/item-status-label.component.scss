@@ -1,0 +1,68 @@
+@import "variables";
+
+.status-label,
+.recency-label {
+    display: inline-flex;
+    text-transform: uppercase;
+    font-size: 10px;
+    line-height: 13px;
+    padding: 1px 4px;
+    margin: 0 5px;
+    border-radius: 3px;
+    border: 1px solid transparentize($gtx-color-alert, 0.7);
+    color: $gtx-color-alert;
+    opacity: 0.9;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+
+    &:hover {
+        background-color: $gtx-color-alert;
+        color: white;
+
+        icon.success,
+        icon.info,
+        icon.alert { color: white; }
+    }
+
+    &.included,
+    &.online,
+    &.recent {
+        border-color: transparentize($gtx-color-success, 0.8);
+        color: $gtx-color-success;
+
+        &:hover {
+            background-color: $gtx-color-success;
+            color: white;
+        }
+    }
+
+    &.old {
+        border-color: transparentize($color: $gtx-color-warning, $amount: 0.8);
+        color: $gtx-color-warning;
+
+        &:hover {
+            background-color: $gtx-color-warning;
+            color: white;
+        }
+    }
+
+    icon {
+        font-size: 12px;
+        margin: 0 2px;
+        transition: color 0.15s ease-in-out;
+
+        &.success { color: $gtx-color-success; }
+        &.info { color: $gtx-color-dark-gray; }
+        &.alert { color: $gtx-color-alert; }
+    }
+
+    .icon-modified {
+        color: #444;
+    }
+
+    span {
+        white-space: nowrap;
+    }
+}
+

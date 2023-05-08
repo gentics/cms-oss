@@ -1,0 +1,83 @@
+<table class="full-status">
+    <!-- PAGE TITLE -->
+    <tr class="title">
+        <td colspan="2"><b>{{ (item$ | async)?.name }}</b></td>
+    </tr>
+    <!-- STATUS DELETED -->
+    <tr *ngIf="(stateDeleted$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info stateDeletedColor" [attr.translate]="'no'">delete</i></td>
+        <td>{{ 'editor.item_page_status_deleted_label' | i18n:{
+            name: (getUserById$( (item$ | async)?.deleted?.by?.id ) | async)?.firstName + ' ' + (getUserById$( (item$ | async)?.deleted?.by?.id ) | async)?.lastName,
+            date: ((item$ | async)?.deleted?.at | i18nDate),
+            time: ((item$ | async)?.deleted?.at | i18nDate:'time')
+        } }}</td>
+    </tr>
+    <!-- STATUS PUBLISHED -->
+    <tr *ngIf="(statePublished$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info statePublishedColor" [attr.translate]="'no'">cloud_upload</i></td>
+        <td>{{ 'editor.published_label' | i18n:{
+            publisher: (getUserById$( (item$ | async)?.publisher ) | async)?.firstName + ' ' + (getUserById$( (item$ | async)?.publisher ) | async)?.lastName,
+            date: ((item$ | async)?.pdate | i18nDate),
+            time: ((item$ | async)?.pdate | i18nDate:'time')
+        } }}</td>
+    </tr>
+    <tr *ngIf="!(statePublished$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info stateUnpublishedColor" [attr.translate]="'no'">cloud_off</i></td>
+        <td>{{ 'editor.not_published_label' | i18n }}</td>
+    </tr>
+    <!-- STATUS EDITED -->
+    <tr *ngIf="(stateModified$( (displayLanguage$ | async)?.code ) | async)">
+        <td><span class="stateModifiedColor">*</span></td>
+        <td>{{ 'editor.item_page_status_edited_label' | i18n:{
+            name: (getUserById$( (item$ | async)?.editor ) | async)?.firstName + ' ' + (getUserById$( (item$ | async)?.editor ) | async)?.lastName,
+            date: ((item$ | async)?.edate | i18nDate),
+            time: ((item$ | async)?.edate | i18nDate:'time')
+        } }}</td>
+    </tr>
+    <!-- STATUS QUEUED -->
+    <tr *ngIf="(stateInQueue$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info stateInQueueColor" [attr.translate]="'no'">cached</i></td>
+        <td *ngIf="item$ | async as page">
+            <span *ngIf="getFormattedTimeMgmtValue$(page, 'queuedPublish') | async">
+                {{ 'editor.publish_queue_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue$(page, 'queuedPublish') | async }}
+            <br></span>
+            <span *ngIf="getFormattedTimeMgmtValue$(page, 'queuedOffline') | async">
+                {{ 'editor.publish_queue_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue$(page, 'queuedOffline') | async }}
+            </span>
+        </td>
+    </tr>
+    <!-- STATUS TIMEMANAGEMENT -->
+    <tr *ngIf="(statePlanned$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info statePlannedColor" [attr.translate]="'no'">access_time</i></td>
+        <td *ngIf="item$ | async as page">
+            <span *ngIf="getFormattedTimeMgmtValue$(page, 'at') | async">
+                {{ 'editor.publish_planned_publish_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue$(page, 'at') | async }}
+            <br></span>
+            <span *ngIf="getFormattedTimeMgmtValue$(page, 'offlineAt') | async">
+                {{ 'editor.publish_planned_take_offline_at_date_label' | i18n }}: {{ getFormattedTimeMgmtValue$(page, 'offlineAt') | async }}
+            </span>
+        </td>
+    </tr>
+    <!-- STATUS INHERITED -->
+    <tr *ngIf="(stateInherited$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info stateInheritedColor" [attr.translate]="'no'">input</i></td>
+        <td>{{ 'editor.item_page_status_inherited_label' | i18n:{ master: (item$ | async)?.inheritedFrom } }}</td>
+    </tr>
+    <!-- STATUS LOCALIZED -->
+    <tr *ngIf="(stateLocalized$( (displayLanguage$ | async)?.code ) | async)">
+        <td><i class="material-icons info stateLocalizedColor" [attr.translate]="'no'">file_copy</i></td>
+        <td>{{ 'editor.item_page_status_localized_label' | i18n:{ master: (item$ | async)?.inheritedFrom } }}</td>
+    </tr>
+
+    <tr *ngIf="!(item$ | async)?.locked">
+        <td><i class="material-icons success" [attr.translate]="'no'">lock_open</i></td>
+        <td>{{ 'editor.unlocked_label' | i18n }}</td>
+    </tr>
+    <tr *ngIf="(item$ | async)?.locked">
+        <td><i class="material-icons alert" [attr.translate]="'no'">lock</i></td>
+        <td>{{ 'editor.locked_by_label' | i18n:{
+        timeAgo: timeAgo((item$ | async)?.lockedSince),
+        name: (getUserById$( (item$ | async)?.lockedBy ) | async)?.firstName + ' ' + (getUserById$( (item$ | async)?.lockedBy ) | async)?.lastName
+        } }}</td>
+    </tr>
+</table>

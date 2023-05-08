@@ -1,0 +1,85 @@
+@import 'variables';
+
+.title {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    margin: 0.65rem 0 0.2rem 0;
+}
+
+.contentmaintenance-toolbar {
+
+    & > .columns {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.gtx-contentmaintenance-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gtx-button {
+        margin-left: 1rem;
+    }
+}
+
+.gtx-table-publishqueue-container {
+    margin-bottom: 1rem;
+}
+
+.gtx-table-publishqueue {
+    display: block;
+    background-color: #f1f1f1;
+    padding: 0.4rem 0.5rem;
+
+    tr {
+        border-bottom: none;
+    };
+
+    th, td {
+        vertical-align: top;
+        padding: 0;
+    }
+
+    .gtx-data-row td {
+        padding-top: 0.5rem;
+    }
+
+    .gtx-data-row-cell-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .gtx-cell-value-inner {
+        display: flex;
+        justify-content: flex-end;
+
+        &.percentage {
+            color: #999;
+        }
+    }
+}
+
+.disable-publish-true {
+    font-style: italic;
+}
+
+.disable-publish-true-hint {
+    cursor: help;
+    font-size: 1rem;
+}
+
+.gtx-loading-bar-row {
+    position: relative;
+}
+
+.loading-bar {
+    background-color: $gtx-color-primary;
+    height: 3px;
+    width: 0;
+    transition: width 0.2s;
+}

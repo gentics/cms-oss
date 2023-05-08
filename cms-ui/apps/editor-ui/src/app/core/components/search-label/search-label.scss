@@ -1,0 +1,40 @@
+@import "variables";
+
+:host {
+    @media screen and (min-width: $small-screen-up) {
+        margin-right: 10px;
+    }
+}
+
+.label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: $gtx-color-dark-gray;
+    font-size: 14px;
+}
+
+.selected-label, .default-label {
+    display: flex;
+    align-items: center;
+}
+
+.selected-label {
+    color: $gtx-color-primary;
+    cursor: default;
+
+    icon {
+        font-size: 16px;
+        cursor: pointer;
+    }
+}
+
+.default-label {
+    icon {
+        font-size: 18px;
+    }
+}
+
+icon {
+    color: $gtx-color-dark-gray;
+}

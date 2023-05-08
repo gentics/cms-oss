@@ -1,0 +1,14 @@
+<gtx-select
+    [label]="label"
+    [required]="required"
+    [disabled]="disabled"
+    [multiple]="false"
+    [clearable]="true"
+    [value]="value?.nodeId"
+    (valueChange)="nodeSelected($event)"
+>
+    <gtx-option
+        *ngFor="let node of nodes$ | async"
+        [value]="node.id"
+    >{{ node.name }}</gtx-option>
+</gtx-select>

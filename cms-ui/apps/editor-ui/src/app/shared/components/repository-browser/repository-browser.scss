@@ -1,0 +1,76 @@
+@import 'search-bar-styles';
+@import 'flex-modal';
+@include flex-modal;
+@import 'variables';
+
+:host {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    max-width: 96vw;
+    max-height: 96vh;
+}
+
+repository-browser-list + repository-browser-list {
+    margin-top: 1.5em;
+}
+
+.modal-title {
+    @include search-bar-styles;
+
+    gtx-search-bar {
+        border: 1px solid $gtx-color-light-gray;
+        box-shadow: none;
+        margin-top: 0;
+    }
+
+    @media screen and (min-width: $small-screen) {
+        display: flex;
+        flex-wrap: wrap;
+
+        h5 {
+            width: 50%;
+        }
+
+        gtx-search-bar {
+            width: 50%;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+    }
+}
+
+.modal-content {
+    @media screen and (max-width: $small-screen) {
+        max-height: calc(85vh - 170px);
+    }
+}
+
+icon.lock {
+    margin-left: -1rem;
+    margin-right: 0;
+    opacity: 0;
+    overflow: visible;
+    transition: opacity 100ms;
+    width: 1rem;
+
+    & + span {
+        left: 0;
+        position: relative;
+        transition: left 100ms;
+    }
+}
+
+.no-permissions {
+    gtx-button[type=primary] {
+        cursor: help;
+    }
+
+    icon.lock {
+        opacity: 1;
+    }
+
+    icon.lock + span {
+        left: 0.65rem;
+    }
+}

@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.14602",
+  "keyword" : "htmlcustomform",
+  "icon" : "textit.gif",
+  "name" : {
+    "de" : "HTML Customform Example",
+    "en" : "HTML Customform Example"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : true,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14230",
+    "name" : {
+      "de" : "Custom HTML Field",
+      "en" : "Custom HTML Field"
+    },
+    "keyword" : "field",
+    "editable" : true,
+    "typeId" : 36,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

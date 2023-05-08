@@ -1,0 +1,15 @@
+.gtx-delete-nodes-modal-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.gtx-delete-nodes-modal-header-action {
+    background-color: transparent;
+    box-shadow: none;
+    ::ng-deep i {
+        font-size: 18px;
+    }
+}

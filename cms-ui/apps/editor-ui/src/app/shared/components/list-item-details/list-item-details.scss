@@ -1,0 +1,118 @@
+@import "variables";
+
+:host {
+    display: block;
+    position: relative;
+    overflow: hidden;
+
+    &.compact {
+        transition: max-height 0.2s;
+
+        &:hover {
+            &:after {
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.4s 0.1s, visibility 0s 0.5s;
+            }
+        }
+        &:after {
+            content: '...';
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            color: $gtx-color-dark-gray;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, white 60%);
+            font-size: 20px;
+        }
+    }
+
+}
+
+.inheritance-icon {
+    &-inherited::before {
+        content: 'check_circle';
+        display: inline-block;
+    }
+
+    &-disinherited::before {
+        content: 'check_circle_outline';
+        display: inline-block;
+    }
+
+    &-excluded::before {
+        content: 'add_circle';
+        transform: rotate(45deg);
+        display: inline-block;
+    }
+
+    &-excluded_by_parent::before {
+        content: 'add_circle_outline';
+        transform: rotate(45deg);
+        display: inline-block;
+    }
+}
+
+$highlighted-item-bg: desaturate(lighten($gtx-color-primary, 52%), 35%);
+
+:host-context(.item-in-editor) {
+    @media screen and (min-width: $large-screen) {
+        &:after {
+            background: linear-gradient(to bottom, rgba($highlighted-item-bg, 0.4) 0%, $highlighted-item-bg 60%);
+        }
+    }
+}
+
+.fields-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    detail-chip {
+        margin: 2px 2px;
+
+        icon, .material-icons {
+            font-size: 16px;
+            margin-right: 2px;
+        }
+
+        &.usage {
+            display: inline-flex;
+            color: desaturate(lighten($gtx-color-primary, 20%), 20%) !important;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            &:hover {
+                background-color: lighten($gtx-color-secondary, 10%);
+            }
+
+            i.usage-spinner {
+                font-size: $gtx-font-size-small;
+                color: $gtx-color-primary;
+                margin: 0;
+                animation: hourglass-rotate 5s infinite;
+            }
+
+            .usage-count {
+                width: 12px;
+                text-align: center;
+            }
+        }
+
+        &.deleted {
+            color: $gtx-color-alert;
+        }
+    }
+}
+
+:host-context(.item-row:hover) .fields-wrapper detail-chip.usage {
+    color: $gtx-color-primary !important;
+}
+
+@keyframes hourglass-rotate {
+    0% { transform: rotateZ(0deg); }
+    40% { transform: rotateZ(0deg); }
+    50% { transform: rotateZ(180deg); }
+    90% { transform: rotateZ(180deg); }
+    100% { transform: rotateZ(360deg); }
+}

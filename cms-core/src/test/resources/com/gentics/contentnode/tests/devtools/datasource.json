@@ -1,0 +1,14 @@
+{
+  "globalId" : "8371.d9a4a0c1-43fa-11e9-a383-0a58ac1002e6",
+  "type" : "statical",
+  "name" : "Test Datasource",
+  "values" : [ {
+    "globalId" : "8371.d9a7241e-43fa-11e9-a383-0a58ac1002e6",
+    "key" : "one",
+    "value" : "one"
+  }, {
+    "globalId" : "8371.d9a99f5b-43fa-11e9-a383-0a58ac1002e6",
+    "key" : "two",
+    "value" : "two"
+  } ]
+}

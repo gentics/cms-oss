@@ -1,0 +1,21 @@
+.modal-title {
+    padding: 0 24px;
+}
+
+.modal-footer {
+    padding: 0 24px;
+
+    gtx-button:last-child {
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 800px) {
+    .modal-title {
+        padding: 0 12px;
+    }
+
+    .modal-footer {
+        padding: 0 12px;
+    }
+}

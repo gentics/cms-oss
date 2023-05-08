@@ -1,0 +1,75 @@
+<ng-template #defaultButton>
+    <gtx-file-picker
+        flat
+        [size]="btnSize"
+        [type]="btnType"
+        [multiple]="multiple"
+        [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
+        [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
+        [accept]="acceptUploads"
+        (fileSelect)="uploadFiles($event)"
+        (fileSelectReject)="uploadFiles($event)"
+    >
+        <icon left>add</icon> {{ (btnLabel || itemType) | i18n }}
+    </gtx-file-picker>
+</ng-template>
+
+<ng-container *ngIf="(featureAssetManagementIsActive$ | async); else defaultButton">
+    <ng-container *ngTemplateOutlet="configs.length > 1 ? multiple : single; context: { data: configs.length > 1 ? configs : configs[0] }">
+    </ng-container>
+
+    <ng-template #single let-data="data">
+        <gtx-file-picker
+            *ngIf="isDefaultConfig(data) && data.default"
+            flat
+            size="medium"
+            type="secondary"
+            [multiple]="multiple"
+            [disabled]="disabled"
+            [overrideSlot]="itemType === 'file' ? 'newFileButton' : 'newImageButton'"
+            [overrideParams]="{ FOLDERID: targetFolderId, NODEID: targetNodeId }"
+            [accept]="acceptUploads"
+            (fileSelect)="uploadFiles($event)"
+            (fileSelectReject)="uploadFiles($event)"
+        >
+            <icon left>add</icon> {{ 'editor.upload_from_harddrive' | i18n }}
+        </gtx-file-picker>
+
+        <gtx-button
+            *ngIf="!isDefaultConfig(data)"
+            flat
+            size="medium"
+            type="secondary"
+            (click)="customUpload(data)"
+        >
+            <icon *ngIf="data" left>add</icon>{{ getI18nLabel(data) }}
+        </gtx-button>
+
+        <div *ngIf="!data">
+            <icon left>report_problem</icon> Malformed configuration for Asset Management
+        </div>
+    </ng-template>
+
+    <ng-template #multiple let-data="data">
+        <gtx-dropdown-list>
+            <gtx-dropdown-trigger>
+                <gtx-button
+                    flat
+                    [size]="btnSize"
+                    [type]="btnType"
+                >
+                    <icon left>add</icon>{{ (btnLabel || itemType) | i18n }}
+                </gtx-button>
+            </gtx-dropdown-trigger>
+
+            <gtx-dropdown-content>
+                <gtx-dropdown-item *ngFor="let config of data">
+                    <ng-container *ngTemplateOutlet="single; context: { data: config }">
+                    </ng-container>
+                </gtx-dropdown-item>
+            </gtx-dropdown-content>
+
+        </gtx-dropdown-list>
+    </ng-template>
+
+</ng-container>

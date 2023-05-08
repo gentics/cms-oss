@@ -1,0 +1,105 @@
+@import "variables";
+
+:host {
+    display: block;
+    margin-bottom: 40px;
+}
+
+.list-header {
+    padding: 10px 7px;
+    border-bottom: 1px dotted $gcms-color-highlight;
+    display: flex;
+
+    .select-all {
+        text-transform: uppercase;
+        flex-grow: 1;
+        display: flex;
+        icon-checkbox {
+            margin-right: 10px;
+        }
+    }
+}
+
+.folder icon-checkbox { color: $gcms-color-folder; }
+.page icon-checkbox { color: $gcms-color-page; }
+.file icon-checkbox { color: $gcms-color-file; }
+.image icon-checkbox { color: $gcms-color-image; }
+.template icon-checkbox { color: $gcms-color-template; }
+
+.item-name {
+    color: $gtx-color-primary;
+}
+
+.languages {
+    display: inline-block;
+    > div {
+        display: inline-block;
+        text-transform: uppercase;
+        color: $gcms-color-highlight;
+        font-size: $gtx-font-size-small;
+        margin-right: 2px;
+        padding: 1px 4px;
+        border-radius: 2px;
+        border: 1px solid transparent;
+    }
+}
+
+.filename {
+    width: 100%;
+    color: $gtx-color-dark-gray;
+    font-size: $gtx-font-size-small;
+}
+
+.page {
+    gtx-contents-list-item {
+        border-bottom: none;
+    }
+}
+
+.language-variants {
+    padding-left: 44px;
+    margin-top: 5px;
+    overflow: hidden;
+    max-height: 0;
+    border-bottom: 1px solid #e0e0e0;
+
+    &.expanded {
+        max-height: none;
+    }
+
+    .variant {
+        display: flex;
+        .language {
+            color: $gcms-color-highlight;
+            margin-right: 5px;
+        }
+    }
+}
+
+.right-details {
+    display: inline-flex;
+    @media screen and (max-width: $small-screen) {
+        display: none;
+    }
+    detail-chip {
+        margin: 0 5px;
+
+        icon, .material-icons {
+            font-size: 16px;
+            margin-right: 2px;
+        }
+    }
+    .path {
+        color: $gtx-color-dark-gray;
+    }
+}
+
+.action-buttons {
+    text-align: right;
+    gtx-button {
+        margin: 3px 0;
+    }
+    @media screen and (max-width: $small-screen) {
+        display: none;
+    }
+}

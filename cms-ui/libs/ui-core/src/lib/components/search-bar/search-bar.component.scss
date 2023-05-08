@@ -1,0 +1,41 @@
+@import '../../../styles/base-import';
+
+:host {
+    @include z-depth-1;
+    display: flex;
+    margin: 10px 0;
+
+    > .input {
+        flex-grow: 1;
+
+        &::ng-deep input[type="text"] {
+            border: none;
+            height: 35px;
+            padding-left: 15px;
+            margin: 0;
+
+            &:focus {
+                border: none;
+            }
+        }
+    }
+
+    > .contents {
+        align-self: center;
+    }
+
+    > .clear-button {
+        align-self: center;
+        padding-bottom: 2px;
+        opacity: 0.6;
+    }
+
+    > .submit-button {
+        align-self: center;
+
+        ::ng-deep button.btn {
+            border-radius: 0;
+            border: none;
+        }
+    }
+}

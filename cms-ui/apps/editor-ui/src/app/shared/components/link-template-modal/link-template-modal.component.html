@@ -1,0 +1,53 @@
+<div class="modal-title">
+    <h5>{{ 'modal.link_templates_to_folder_modal_title' | i18n: { folderName: (folder$ | async)?.name } }}</h5>
+
+    <gtx-search-bar
+        [ngModel]="searchTerm"
+        [placeholder]="'common.search_placeholder' | i18n"
+        (ngModelChange)="searchTerm = $event"
+        (clear)="searchTerm = ''"
+        (search)="searchTerm = $event"
+    >
+    </gtx-search-bar>
+</div>
+
+<div
+    class="modal-content"
+    [class.overlay-in-progress]="(isInProgressInternal$ | async) || (isInProgressExternal$ | async)"
+>
+    <link-template
+        [node]="node$ | async"
+        [folder]="folder$ | async"
+        [searchBarHidden]="true"
+        [isInProgress]="isInProgressInternal$ | async"
+        (isInProgressChange)="isInProgressExternal$.next($event)"
+        (templatesLinked)="newFolderTemplates = $event"
+        [searchTerm]="searchTerm"
+    ></link-template>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat (click)="cancelFn()"
+        [disabled]="(isInProgressInternal$ | async) || (isInProgressExternal$ | async)"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="primary"
+        (click)="okBtnPressed(false)"
+        [disabled]="(isInProgressInternal$ | async) || (isInProgressExternal$ | async)"
+    >
+        {{ 'common.okay_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="primary"
+        (click)="okBtnPressed(true)"
+        [disabled]="(isInProgressInternal$ | async) || (isInProgressExternal$ | async)"
+    >
+        {{ 'modal.link_templates_to_folder_modal_checkbox_apply_recursively_label' | i18n }}
+    </gtx-button>
+</div>

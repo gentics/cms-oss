@@ -1,0 +1,48 @@
+#foreach($page in $cms.tag.parts.ds.items)##
+id:							$page.id
+url:						$page.url
+template.id:				$page.template.id
+name:						$page.name
+filename:					$page.filename
+description:				$page.description
+priority:					$page.priority
+publishtimestamp:			$page.publishtimestamp
+publishdate:				$page.publishdate
+creationtimestamp:			$page.creationtimestamp
+creationdate:				$page.creationdate
+edittimestamp:				$page.edittimestamp
+editdate:					$page.editdate
+folder:						$page.folder.name
+folder.isfolder:			$page.folder.isfolder
+creator:					$page.creator
+editor:						$page.editor
+publisher:					$page.publisher
+language:					$page.language.code
+languageset.id				$page.languageset.id
+online:						$page.online
+ispage:						$page.ispage
+isfolder:					$page.isfolder
+isfile:						$page.isfile
+isimage:					$page.isimage
+istag:						$page.istag
+version.number:				$page.version.number
+version.date:				$page.version.date
+version.editor:				$page.version.editor
+version.major:				$page.version.major
+ismaster:					$page.ismaster
+inherited:					$page.inherited
+template.id:				$page.template.id
+template.name:				$page.template.name
+template.ml.name:			$page.template.ml.name
+template.ml.extension:		$page.template.ml.extension
+template.ml.contenttype:	$page.template.ml.contenttype
+ttype:						$page.ttype
+versions:
+#foreach($v in $page.versions)##
+	$v.number
+#end##
+pagevariants:
+#foreach($v in $page.pagevariants)##
+	$v.id
+#end##
+#end##

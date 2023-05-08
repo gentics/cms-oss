@@ -1,0 +1,12 @@
+<div class="tooltip-wrapper">
+    <div #trigger (mouseover)="mouseOver()" class="trigger">
+        <ng-content></ng-content>
+    </div>
+    <div #tooltip class="tooltip">
+        <image-thumbnail [image]="image" [nodeId]="nodeId" [width]="280" [maxHeight]="280"></image-thumbnail>
+        <div class="image-info">
+            <span>{{ image.fileSize | filesize }}</span>
+            <span>{{ { width: image.sizeX, height: image.sizeY } | imagedimensions | i18n }}</span>
+        </div>
+    </div>
+</div>

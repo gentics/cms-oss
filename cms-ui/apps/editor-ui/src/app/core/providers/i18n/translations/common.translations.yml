@@ -1,0 +1,552 @@
+advanced_search:
+    en: Advanced Search
+    de: Erweiterte Suche
+apply_button:
+    en: Apply
+    de: Übernehmen
+apply_recursively_label:
+    en: Apply recursively
+    de: Rekursiv übernehmen
+apply_recursively_button:
+    en: Apply recursively
+    de: Rekursiv übernehmen
+back_button:
+    en: Back
+    de: Zurück
+broken_links_overall:
+    en: Broken links overall
+    de: Fehlerhafte Links gesamt
+cancel_button:
+    en: Cancel
+    de: Abbrechen
+close_button:
+    en: Close
+    de: Schließen
+created_on_label:
+    en: Created on
+    de: Erstellt am
+created_since_label:
+    en: Created since
+    de: Erstellt seit
+creator_label:
+    en: Creator
+    de: Erstellt von
+copy:
+    en: Copy
+    de: Kopie
+date_created_label:
+    en: System creation date
+    de: Systemerstelldatum
+date_custom_created_label:
+    en: Creation date
+    de: Erstelldatum
+date_custom_edited_label:
+    en: Edit date
+    de: Bearbeitungsdatum
+date_edited_label:
+    en: System edit date
+    de: Systembearbeitungsdatum
+date_published_label:
+    en: Date published
+    de: Veröffentlicht am
+delete_button:
+    en: Delete
+    de: Löschen
+edited_on_label:
+    en: Edited on
+    de: Bearbeitet am
+edited_since_label:
+    en: Edited since
+    de: Bearbeitet seit
+editor_label:
+    en: Editor
+    de: Bearbeitet von
+external_links_title:
+    en: External Links
+    de: Externe Links
+file_size_label:
+    en: File size
+    de: Dateigröße
+file_type_label:
+    en: File type
+    de: Dateityp
+history:
+    en: History
+    de: Verlauf
+id_label:
+    en: ID
+    de: ID
+image_scalable:
+    en: scalable
+    de: skalierbar
+inheritance_label_inherited:
+    en: Inherited
+    de: Vererbt
+inheritance_label_disinherited:
+    en: Partially inherited
+    de: Teilweise vererbt
+inheritance_label_excluded:
+    en: Not inherited
+    de: Nicht vererbt
+inheritance_label_excluded_by_parent:
+    en: Not inherited in higher channel
+    de: In einem übergeordnetem Channel nicht vererbt
+next_button:
+    en: Next
+    de: Weiter
+no_label:
+    en: 'No'
+    de: 'Nein'
+not_set_label:
+    en: Not set
+    de: Nicht gesetzt
+user_manual:
+    en: User Manual
+    de: Benutzerhandbuch
+okay_button:
+    en: Okay
+    de: OK
+on_date:
+    en: 'on'
+    de: am
+open_link_checker_button:
+    en: Open Link Checker
+    de: Link Checker Öffnen
+path_label:
+    en: Path
+    de: Pfad
+publish_button:
+    en: Publish
+    de: Veröffentlichen
+publish_tooltip:
+    en: Publish
+    de: Veröffentlichen
+published_by_label:
+    en: Publisher
+    de: Veröffentlicht von
+published_on_label:
+    en: Published on
+    de: Veröffentlicht am
+published_since_label:
+    en: Published since
+    de: Veröffentlicht seit
+priority_label:
+    en: Priority
+    de: Priorität
+retry_button:
+    en: Retry
+    de: Erneut versuchen
+reply_button:
+    en: Reply
+    de: Antworten
+send_button:
+    en: Send
+    de: Senden
+search_placeholder:
+    en: Search
+    de: Suche
+search_found_object_with_id:
+    en: 'Open object with ID: {{ id }}'
+    de: 'Öffne Objekt mit ID: {{ id }}'
+searching:
+    en: 'Searching:'
+    de: 'Suche:'
+select_all_label:
+    en: Select all
+    de: Alle auswählen
+select_channel:
+    en: Select channel
+    de: Channel auswählen
+select_node:
+    en: Select node
+    de: Node auswählen
+select_placeholder:
+    en: Select...
+    de: Auswählen...
+since_date:
+    en: since
+    de: seit
+sort_asc:
+    en: ASC
+    de: aufsteigend
+sort_desc:
+    en: DESC
+    de: absteigend
+sort_cdate:
+    en: System creation date
+    de: Systemerstelldatum
+sort_customordefaultcdate:
+    en: Creation date
+    de: Erstelldatum
+sort_deletedat:
+    en: Date deleted
+    de: Gelöscht am
+sort_edate:
+    en: System edit date
+    de: Systembearbeitungsdatum
+sort_customordefaultedate:
+    en: Edit date
+    de: Bearbeitungsdatum
+sort_filename:
+    en: File name
+    de: Dateiname
+sort_filesize:
+    en: File size
+    de: Dateigröße
+sort_name:
+    en: Name
+    de: Name
+sort_pdate:
+    en: Date published
+    de: Publiziert am
+sort_priority:
+    en: Priority
+    de: Priorität
+sort_template:
+    en: Template
+    de: Vorlage
+sort_type:
+    en: File type
+    de: Dateityp
+status_edited:
+    en: Edited
+    de: Bearbeitet
+status_deleted:
+    en: Deleted
+    de: Gelöscht
+status_published:
+    en: Published
+    de: Veröffentlicht
+status_publish_at:
+    en: "Planned: Publish"
+    de: "Geplant: Veröffentlichen"
+status_inherited:
+    en: Inherited
+    de: Vererbt
+status_localized:
+    en: Localized
+    de: Lokalisiert
+status_offline:
+    en: Offline
+    de: Unveröffentlicht
+status_offline_at:
+    en: "Planned: Take offline"
+    de: "Geplant: Vom Server nehmen"
+status_queue:
+    en: Queued
+    de: In Warteschlange
+status_timeframe:
+    en: Not in time frame
+    de: Außerhalb Zeitrahmen
+template_label:
+    en: Template
+    de: Vorlage
+time_a_moment_ago:
+    en: a moment ago
+    de: vor kurzem
+time_seconds_ago:
+    en: '{{count}} seconds ago'
+    de: vor {{count}} Sekunden
+time_one_minute_ago:
+    en: one minute ago
+    de: vor einer Minute
+time_minutes_ago:
+    en: '{{count}} minutes ago'
+    de: vor {{count}} Minuten
+time_one_hour_ago:
+    en: 'one hour ago'
+    de: vor einer Stunde
+time_hours_ago:
+    en: '{{count}} minutes ago'
+    de: vor {{count}} Minuten
+time_one_day_ago:
+    en: yesterday
+    de: gestern
+time_two_days_ago:
+    en: 2 days ago
+    de: vorgestern
+time_days_ago:
+    en: '{{count}} days ago'
+    de: vor {{count}} Tagen
+time_one_month_ago:
+    en: one month ago
+    de: vor einem Monat
+time_months_ago:
+    en: '{{count}} months ago'
+    de: vor {{count}} Monaten
+time_one_year_ago:
+    en: one year ago
+    de: vor einem Jahr
+time_years_ago:
+    en: '{{count}} years ago'
+    de: vor {{count}} Jahren
+time_in_a_moment:
+    en: in a moment
+    de: in diesem Moment
+time_in_seconds:
+    en: 'in {{count}} seconds'
+    de: in {{count}} Sekunden
+time_in_one_minute:
+    en: in one minute
+    de: in einer Minute
+time_in_minutes:
+    en: in {{count}} minutes
+    de: in {{count}} Minuten
+time_in_one_hour:
+    en: in one hour
+    de: in einer Stunde
+time_in_hours:
+    en: in {{count}} hours
+    de: in {{count}} Stunden
+time_in_one_day:
+    en: tomorrow
+    de: morgen
+time_in_two_days:
+    en: in 2 days
+    de: übermorgen
+time_in_days:
+    en: in {{count}} days
+    de: in {{count}} Tagen
+time_in_one_month:
+    en: in one month
+    de: in einem Monat
+time_in_months:
+    en: in {{count}} months
+    de: in {{count}} Monaten
+time_in_one_year:
+    en: in one year
+    de: in einem Jahr
+time_in_years:
+    en: in {{count}} years
+    de: in {{count}} Jahren
+tool:
+    en: Tool
+    de: Werkzeug
+tools:
+    en: Tools
+    de: Werkzeuge
+tool_opens_in_new_tab:
+    en: Opens in new tab
+    de: Öffnet in einem neuen Tab
+type_contenttag:
+    en: Content tag
+    de: Seitentag
+type_contenttag_article:
+    en: The Content tag
+    de: Der Seitentag
+type_contenttags:
+    en: Content tags
+    de: Seitentags
+type_contenttags_article:
+    en: The Content tags
+    de: Die Seitentags
+type_contenttags_dative:
+    en: Content tags
+    de: Seitentags
+type_folder:
+    en: Folder
+    de: Ordner
+type_folder_article:
+    en: The Folder
+    de: Der Ordner
+type_folders:
+    en: Folders
+    de: Ordner
+type_folders_article:
+    en: The Folders
+    de: Die Ordner
+type_folders_dative:
+    en: Folders
+    de: Ordnern
+type_page:
+    en: Page
+    de: Seite
+type_page_article:
+    en: The Page
+    de: Die Seite
+type_pages:
+    en: Pages
+    de: Seiten
+type_pages_article:
+    en: The Pages
+    de: Die Seiten
+type_pages_dative:
+    en: Pages
+    de: Seiten
+type_linkedPage:
+    en: Linked page
+    de: Verlinkte Seite
+type_linkedPages:
+    en: Linked pages
+    de: Verlinkte Seiten
+type_linkedPages_dative:
+    en: Linked pages
+    de: Verlinkten Seiten
+type_linkedFile:
+    en: Linked file
+    de: Verlinkte Datei
+type_linkedFiles:
+    en: Linked files
+    de: Verlinkte Dateien
+type_linkedFiles_dative:
+    en: Linked files
+    de: Verlinkten Dateien
+type_linkedImage:
+    en: Linked image
+    de: Verlinktes Bild
+type_linkedImages:
+    en: Linked images
+    de: Verlinkte Bilder
+type_linkedImages_dative:
+    en: Linked images
+    de: Verlinkten Bildern
+type_file:
+    en: File
+    de: Datei
+type_file_article:
+    en: The File
+    de: Die Datei
+type_files:
+    en: Files
+    de: Dateien
+type_files_article:
+    en: The Files
+    de: Die Dateien
+type_files_dative:
+    en: Files
+    de: Dateien
+type_image:
+    en: Image
+    de: Bild
+type_image_article:
+    en: The Image
+    de: Das Bild
+type_images:
+    en: Images
+    de: Bilder
+type_images_article:
+    en: The Images
+    de: Die Bilder
+type_images_dative:
+    en: Images
+    de: Bildern
+type_form:
+    en: Form
+    de: Formular
+type_form_article:
+    en: The Form
+    de: Das Formular
+type_forms:
+    en: Forms
+    de: Formulare
+type_forms_article:
+    en: The Forms
+    de: Die Formulare
+type_forms_dative:
+    en: Forms
+    de: Formularen
+type_object:
+    en: Object
+    de: Objekt
+type_object_article:
+    en: The Object
+    de: Das Objekt
+type_objects:
+    en: Objects
+    de: Objekte
+type_objects_article:
+    en: The Objects
+    de: Die Objekte
+type_objects_dative:
+    en: Objects
+    de: Objekten
+type_tag:
+    en: Tag
+    de: Tag
+type_tags:
+    en: Tags
+    de: Tags
+type_tags_dative:
+    en: Tags
+    de: Tags
+type_template:
+    en: Template
+    de: Vorlage
+type_template_article:
+    en: The Template
+    de: Die Vorlage
+type_templates:
+    en: Templates
+    de: Vorlagen
+type_templates_article:
+    en: The Templates
+    de: Die Vorlagen
+type_templates_dative:
+    en: Templates
+    de: Vorlagen
+type_templateTag:
+    en: Template tag
+    de: Vorlagentag
+type_templateTags:
+    en: Template tags
+    de: Vorlagentags
+type_templateTags_dative:
+    en: Template tags
+    de: Vorlagentags
+type_variant:
+    en: Variant
+    de: Variante
+type_variant_article:
+    en: The Variant
+    de: Die Variante
+type_variants:
+    en: Variants
+    de: Varianten
+type_variants_article:
+    en: The Variants
+    de: Die Varianten
+type_variants_dative:
+    en: Variants
+    de: Varianten
+type_node:
+    en: Node
+    de: Node
+type_node_article:
+    en: The Node
+    de: Der Node
+type_nodes:
+    en: Nodes
+    de: Nodes
+type_nodes_article:
+    en: The Nodes
+    de: Die Nodes
+type_nodes_dative:
+    en: Nodes
+    de: Nodes
+undo_button:
+    en: Undo
+    de: Rückgängig
+usage_label:
+    en: Usage
+    de: Verwendung
+yes_label:
+    en: 'Yes'
+    de: 'Ja'
+deleted_page_label:
+    en: Deleted Page
+    de: Gelöschte Seite
+no_matching_options:
+    en: No results
+    de: Keine Ergebnisse
+staging_status_excluded:
+    en: Not Included
+    de: Nicht beinhaltet
+staging_status_included:
+    en: Included
+    de: Beinhaltet
+staging_recency_recent:
+    en: Up to Date
+    de: Aktuell
+staging_recency_old:
+    en: Older Version
+    de: Veraltet

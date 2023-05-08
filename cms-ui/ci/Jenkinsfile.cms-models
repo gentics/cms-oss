@@ -1,0 +1,170 @@
+@Library('jenkins-pipeline-library') import com.gentics.*
+JobContext.set(this)
+
+String stageSuffix = '@gentics/cms-models'
+String tag = 'latest'
+String version
+
+pipeline {
+	agent {
+		kubernetes {
+			label env.BUILD_TAG
+			defaultContainer 'build'
+			yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  nodeSelector:
+    jenkins_worker: true
+
+  volumes:
+  - name: cache
+    hostPath:
+      path: /opt/kubernetes/cache
+
+  containers:
+  - name: build
+    image: """ + buildEnvironmentDockerImage("contentnode-ui/ci/Dockerfile.build") + """
+    imagePullPolicy: Always
+    command:
+      - cat
+    tty: true
+    resources:
+      requests:
+        cpu: 2
+        memory: 1Gi
+    volumeMounts:
+      - mountPath: /home/jenkins/.npm/_cacache
+        name: cache
+        subPath: npm/_cacache
+    env:
+    - name: DOCKER_HOST
+      value: tcp://127.0.0.1:2375
+  - name: docker
+    image: docker:18-dind
+    imagePullPolicy: Always
+    args: [\"--storage-driver=overlay2\"]
+    securityContext:
+      privileged: true
+    tty: true
+
+  imagePullSecrets:
+  - name: docker-jenkinsbuilds-apa-it
+"""
+		}
+	}
+
+	parameters {
+		booleanParam(name: 'release', defaultValue: false, description: "Publish package to Artifactory")
+		string(name: 'forceVersion', defaultValue: "", description: "If empty, the release will be done using the POM version")
+		string(name: 'forceTag', defaultValue: "", description: "If not empty, the specified tag will be used as npm dist-tag")
+	}
+
+	options {
+		gitLabConnection('git.gentics.com')
+		gitlabBuilds(builds: [ 'Build ' + stageSuffix, 'Release ' + stageSuffix ])
+		timestamps()
+		timeout(time: 1, unit: 'HOURS')
+		ansiColor('xterm')
+	}
+
+	environment {
+		GITLAB_WEBHOOK_SECRETTOKEN      = credentials('gitlab-webhook-secrettoken')
+		VERSION_CONSTRAINT              = /(\d+)\.(\d+).(\d+)(-\w+)?/
+	}
+
+	triggers {
+		gitlab(
+			triggerOnPush: true,
+			triggerOnMergeRequest: true,
+			triggerOpenMergeRequestOnPush: 'source',
+			triggerOnNoteRequest: true,
+			noteRegex: 'Jenkins please retry a build',
+			ciSkip: true,
+			skipWorkInProgressMergeRequest: false,
+			addNoteOnMergeRequest: true,
+			setBuildDescription: true,
+			branchFilterType: 'All',
+			secretToken: env.GITLAB_WEBHOOK_SECRETTOKEN
+		)
+	}
+
+	stages {
+		stage("Test & Build") {
+			steps {
+				updateGitlabCommitStatus name: 'Build ' + stageSuffix, state: "running"
+
+				script {
+					currentBuild.description = env.GIT_COMMIT + "\n" + GitHelper.getLastCommitMessage().readLines()[0]
+				}
+				
+				// Add private repository credentials and scopes
+				sh "echo @gentics:registry=https://repo.apa-it.at/api/npm/gtx-npm/ > ~/.npmrc"
+				withCredentials([string(credentialsId: 'artifactory-npm', variable: 'NPM_TOKEN')]) {
+					sh "echo //repo.apa-it.at/api/npm/gtx-npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+				}
+				
+				dir('contentnode-ui') {
+					sh 'npm set progress=false'
+					sh 'npm config set depth 0'
+					sh 'npm ci'
+					sh 'npm run test cms-models --watch=false --browsers=ChromeDocker --reporters=junit'
+					sh 'npm run build cms-models'
+				}
+			}
+
+			post {
+				always {
+					junit  "contentnode-ui/libs/cms-models/.reports/**/*.xml"
+					updateGitlabCommitCurrentBuildStatus name: 'Build ' + stageSuffix
+				}
+			}
+		}
+
+		stage("Release") {
+			steps {
+				updateGitlabCommitStatus name: 'Release ' + stageSuffix, state: "running"
+
+				script {
+					def pomVersion = MavenHelper.getVersion().toString()
+					def versionBase = (pomVersion =~ /^(\d+)\.(\d+)\.(\d+)/)[0][0].toString()
+
+					if (params.release) {
+						if (params.forceVersion.trim() =~ env.VERSION_CONSTRAINT) {
+							version = params.forceVersion
+						} else {
+							version = versionBase
+						}
+						currentBuild.description = version + "\n" + currentBuild.description
+					} else {
+						tag = 'dev-' + env.GIT_BRANCH
+						version = versionBase + "-" + tag + "." + env.BUILD_NUMBER
+					}
+
+					if (params.forceTag) {
+						tag = params.forceTag.trim()
+					}
+				}
+
+				dir('contentnode-ui/dist/libs/cms-models') {
+					sh 'git reset --hard'
+					sh 'npm version ' + version
+
+					sh 'npm publish --tag ' + tag
+				}
+			}
+
+			post {
+				always {
+					updateGitlabCommitCurrentBuildStatus name: 'Release ' + stageSuffix
+				}
+			}
+		}
+	}
+
+	post {
+		always {
+			notifyMattermostUsers()
+		}
+	}
+}

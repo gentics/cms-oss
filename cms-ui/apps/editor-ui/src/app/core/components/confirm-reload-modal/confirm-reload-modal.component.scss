@@ -1,0 +1,17 @@
+@import "variables";
+
+.item-title {
+    display: flex;
+
+    span {
+        color: $gtx-color-warning;
+    }
+}
+icon {
+    margin-right: 5px;
+    &.folder { color: $gcms-color-folder; }
+    &.page { color: $gcms-color-page; }
+    &.file { color: $gcms-color-file; }
+    &.image { color: $gcms-color-image; }
+    &.template { color: $gcms-color-template; }
+}

@@ -1,0 +1,79 @@
+@import "variables";
+@import "list-styles";
+
+:host {
+
+    .template-list-header {
+        position: absolute;
+        z-index: 1;
+        background-color: #fafafa;
+        left: 24px;
+        right: 24px;
+        border-bottom: 1px dotted #ffb84f;
+
+        @media screen and (max-width: $small-screen) {
+            left: 12px;
+            right: 12px;
+        }
+
+        .template-list-progress-bar-container {
+            position: relative !important;
+            overflow: hidden;
+            height: 3px;
+        }
+
+        .template-list-header-inner {
+            padding-top: 0.5rem;
+        }
+
+        .template-list-header-bulk {
+            &.list-empty {
+                icon-checkbox {
+                    color: lighten($gcms-color-page, 45%);
+                }
+            }
+        }
+
+        gtx-search-bar {
+            margin-bottom: 3rem;
+        }
+
+        icon-checkbox {
+            color: $gcms-color-page;
+        }
+    }
+
+    .list-body {
+        position: relative !important;
+        padding-top: 3rem;
+
+        &.overlay-in-progress {
+
+            &:after {
+                content: '';
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                top: 0;
+                background-color: rgba( 255, 255, 255, 0.75 );
+            }
+        }
+
+        icon-checkbox {
+            color: lighten(desaturate($gcms-color-page, 10%), 15%);
+        }
+
+    }
+
+    gtx-contents-list-item {
+        align-items: end;
+        padding: 10px 0;
+
+        ::ng-deep .hl-pipe {
+            background-color: rgba(255, 236, 10, 0.18);
+            border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+        }
+    }
+
+}

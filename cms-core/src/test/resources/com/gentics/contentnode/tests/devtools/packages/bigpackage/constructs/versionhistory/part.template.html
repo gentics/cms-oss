@@ -1,0 +1,6 @@
+<ul>
+#set($macro = '#pageversion')##
+#foreach ($version in $cms.page.versions)
+  <li>${macro}("$version.number" "$version.date.timestamp" "$version.editor.firstname" "$version.editor.lastname")</li>
+#end
+</ul>

@@ -1,0 +1,22 @@
+@import "variables";
+
+:host {
+    display: inline-block;
+}
+
+gtx-select ::ng-deep  {
+    input.select-dropdown[readonly] {
+        margin: 1px 0 0 0;
+        height: 24px;
+        border: 1px solid $gtx-color-very-light-gray;
+        border-color: transparentize($gcms-color-highlight, 0.5);
+    }
+
+    .select-wrapper {
+        padding-top: 0;
+    }
+
+    .select-wrapper span.caret {
+        top: 5px;
+    }
+}

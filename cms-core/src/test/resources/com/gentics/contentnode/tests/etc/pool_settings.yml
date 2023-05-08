@@ -1,0 +1,5 @@
+db:
+  settings:
+    pool_whenExhaustedAction: BLOCK
+    pool_size_max: 5
+    pool_maxWait: 10000

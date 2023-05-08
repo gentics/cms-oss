@@ -1,0 +1,28 @@
+<tr>
+  <td><? if ($error[<node name>]) echo $errPrefix; ?><node label><? if ($error[<node name>]) echo $errPostfix; ?>&nbsp;</td><td>&nbsp;<xnl if ("<node mandatory>" == 1)><input type="hidden" name="mandatory[<node name>]" value="true"><xnl end>
+
+<input type="hidden" name="label[<node name>]" value="<node label>">
+
+<select name="element[<node name>]" size="<node size>" class="form_select">
+<!--//
+<?
+    $options = "<node options>";
+    $options = str_replace("\r", "", $options);
+    $entries = explode("\n", $options);
+    $outaput = "";
+
+    foreach ($entries as $e) {
+        unset($selected);
+        if (!$_REQUEST['submitted'] && $e == "<node selected>") {
+            $selected = " selected";
+        } else if (htmlentities($e) == htmlentities($_REQUEST['element'][<node name>])) {
+            $selected = " selected";
+        }
+        $outaput .= "<option".$selected.">".trim($e)."</option>";
+    }
+?>
+//-->
+<?=$outaput?>
+</select>
+  </td>
+</tr>

@@ -1,0 +1,14 @@
+@import 'variables';
+
+h5 {
+    color: $gtx-color-dark-gray;
+    border-bottom: 1px solid $gtx-tabs-active-border-color;
+    font-size: 0.8em;
+    padding: 4px 0;
+    text-transform: uppercase;
+}
+
+.items {
+    display: flex;
+    flex-wrap: wrap;
+}

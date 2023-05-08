@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.72048",
+  "keyword" : "blogposts",
+  "icon" : "textit.gif",
+  "name" : {
+    "de" : "Blogübersicht",
+    "en" : "Blogpost Overview"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.72054",
+    "name" : {
+      "de" : "Übersicht",
+      "en" : "Übersicht"
+    },
+    "keyword" : "overview",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.72060",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.72066",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "velocity",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

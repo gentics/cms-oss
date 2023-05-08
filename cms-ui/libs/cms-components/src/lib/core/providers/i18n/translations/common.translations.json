@@ -1,0 +1,10 @@
+{
+    "hello_world": {
+        "en": "Hello World!",
+        "de": "Hallo Welt!"
+    },
+    "language": {
+        "en": "Language",
+        "de": "Sprache"
+    }
+}

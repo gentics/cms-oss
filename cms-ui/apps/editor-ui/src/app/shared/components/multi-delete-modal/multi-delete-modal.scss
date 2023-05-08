@@ -1,0 +1,121 @@
+@import "variables";
+@import "list-styles";
+@import "flex-modal";
+
+@include flex-modal;
+
+$color-delete: $gtx-color-alert;
+
+:host {
+    max-width: 96vw;
+}
+
+.modal-content {
+    min-height: 100px;
+    max-height: calc(85vh - 100px);
+}
+
+.list-header {
+    padding: 10px 7px;
+    border-bottom: 1px dotted $gcms-color-highlight;
+    display: flex;
+    justify-content: flex-end;
+}
+
+gtx-contents-list-item {
+    &.folder .item-icon { color: $gcms-color-folder; }
+    &.page .item-icon { color: $gcms-color-page; }
+    &.file .item-icon { color: $gcms-color-file; }
+    &.image .item-icon { color: $gcms-color-image; }
+
+    .item-icon {
+        height: 25px;
+    }
+
+    .inherited-icon, .localized-icon {
+        display: inline-block;
+        cursor: help;
+
+        icon {
+            color: $gcms-color-icon-inheritance;
+            font-size: $gtx-font-size-small;
+        }
+    }
+    .inherited-icon icon {
+        color: $gcms-color-icon-inheritance;
+    }
+    .localized-icon icon {
+        color: $gcms-color-icon-localized;
+    }
+
+    gtx-radio-button:first-of-type {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    &.unlocalize .item-name {
+        color: $color-delete;
+    }
+
+    .item-name {
+        white-space: pre;
+    }
+
+    .localized-warning-trigger {
+        color: $gtx-color-alert;
+        @media screen and (max-width: $small-screen) {
+            span {
+                display: none;
+            }
+        }
+    }
+}
+
+.other, .localized {
+    gtx-contents-list-item:not(.none-selected) .item-name {
+        color: $color-delete;
+    }
+}
+
+.localized {
+    .inheritance-info {
+        color: $gtx-color-dark-gray;
+    }
+}
+
+.inherited gtx-contents-list-item {
+    .item-icon {
+        opacity: 0.8;
+    }
+
+    .item-text {
+        color: $gtx-color-mid-gray;
+    }
+}
+
+::ng-deep .localized-warning-body {
+    padding: 5px 10px;
+    p {
+        max-width: 200px;
+        font-size: $gtx-font-size-small;
+    }
+    li {
+        detail-chip {
+            text-transform: uppercase;
+        }
+    }
+}
+
+.label-select-common {
+    display: flex;
+    justify-content: flex-end;
+
+    span {
+        width: 252px;
+        font-size: 12px;
+
+        @media screen and (max-width: $small-screen) {
+            width: 155px;
+        }
+    }
+}

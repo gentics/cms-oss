@@ -1,0 +1,27 @@
+custom_proxy:
+  myresource:
+    baseUrl: UNDEFINED
+    permission:
+      type: 90001
+      id: 1
+    headers:
+      Header-Name: "Header Value"
+    methods:
+    - GET
+    - POST
+    parameters:
+      param:
+        default: defaultValue
+        values:
+        - firstValue
+        - validValue
+        - defaultValue
+  myresource_jwt:
+    baseUrl: UNDEFINED
+    jwt:
+      enabled: true
+  myresource_jwt_prefix:
+    baseUrl: UNDEFINED
+    jwt:
+      enabled: true
+      prefix: prefix_

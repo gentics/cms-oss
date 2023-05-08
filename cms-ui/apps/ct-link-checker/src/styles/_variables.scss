@@ -1,0 +1,34 @@
+//
+// App-wide variables go here. Since this file also imports the GUIC variables file, any component needing to access
+// GUIC variables (e.g. $gtx-color-mid-gray) should import this file, rather than referencing the GUIC file directly.
+//
+@import "ui-core-overrides";
+@import "ui-core/src/styles/variables";
+@import "ui-core/src/styles/mixins";
+
+$gcms-color-folder: #c58e23;
+$gcms-color-page: #336E7B;
+$gcms-color-file: #b65d3f;
+$gcms-color-image: #9E5428;
+$gcms-color-template: #1BA39C;
+$gcms-color-highlight: #ffb84f;
+$gcms-color-favourite: #ffd704;
+$gcms-color-icon-inheritance: #3f3d6f;
+$gcms-color-icon-localized: #3f3d6f;
+$gcms-color-message: #4aa5cb;
+
+// General size setting
+$gcms-icon-size: 14px;
+// language status icons
+$gcms-icon-font-size: calc( #{$gcms-icon-size} - #{$gcms-icon-size} * 0.15 );
+
+// ui-core component-specific overrides
+$gtx-breadcrumbs-background-color: white;
+$gtx-breadcrumbs-active-color: #444444;
+$gtx-breadcrumbs-inactive-color: gray;
+
+$gtx-tabs-active-color: $gtx-color-very-dark-gray;
+$gtx-tabs-active-border-color: $gcms-color-highlight;
+
+$header-area-height: 75px;
+$advanced-search-height: 60px;

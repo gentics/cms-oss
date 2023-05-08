@@ -1,0 +1,470 @@
+{
+    "assign_user_node_restrictions": {
+        "en": "Assign node restrictions to user in group",
+        "de": "Dem Benutzer in Gruppe Node-Einschränkungen zuweisen"
+    },
+    "assign_objectProperty_to_nodes": {
+        "en": "Assign objectProperty to Nodes",
+        "de": "Objekteigenschaft zu Nodes zuweisen"
+    },
+    "assign_user_to_group": {
+        "en": "You do not have permission to assign users to groups",
+        "de": "Sie haben nicht die Berechtigung Benutzer zu Gruppen zuzuweisen"
+    },
+    "assign_user_to_role": {
+        "en": "You do not have permission to assign users to roles",
+        "de": "Sie haben nicht die Berechtigung Benutzer zu Rollen zuzuweisen"
+    },
+    "cancel_button": {
+        "en": "Cancel",
+        "de": "Abbrechen"
+    },
+    "close_button": {
+        "en": "Close",
+        "de": "Schließen"
+    },
+    "create_dataSource_entry_permission_required": {
+        "en": "You do not have permission to create dataSource entries",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen-Einträge zu erstellen"
+    },
+    "create_dataSource_permission_required": {
+        "en": "You do not have permission to create dataSources",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen zu erstellen"
+    },
+    "create_language_permission_required": {
+        "en": "You do not have permission to create languages",
+        "de": "Sie haben nicht die Berechtigung um Sprache zu erstellen"
+    },
+    "create_role_permission_required": {
+        "en": "You do not have permission to create roles",
+        "de": "Sie haben nicht die Berechtigung um Rollen zu erstellen"
+    },
+    "create_user_permission_required": {
+        "en": "You do not have permission to create users",
+        "de": "Sie haben nicht die Berechtigung um Benutzer zu erstellen"
+    },
+    "delete_dataSource_entry_permission_required": {
+        "en": "You do not have permission to delete dataSource entries",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen-Einträge zu löschen"
+    },
+    "delete_dataSource_permission_required": {
+        "en": "You do not have permission to delete dataSources",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen zu löschen"
+    },
+    "delete_language_permission_required": {
+        "en": "You do not have permission to delete languages",
+        "de": "Sie haben nicht die Berechtigung um Sprache zu löschen"
+    },
+    "delete_role_permission_required": {
+        "en": "You do not have permission to delete roles",
+        "de": "Sie haben nicht die Berechtigung um Rollen zu löschen"
+    },
+    "delete_user_permission_required": {
+        "en": "You do not have permission to delete users",
+        "de": "Sie haben nicht die Berechtigung um Benutzer zu löschen"
+    },
+    "create_group_permission_required": {
+        "en": "You do not have permission to create groups",
+        "de": "Sie haben nicht die Berechtigung um Gruppen zu erstellen"
+    },
+    "delete_button": {
+        "en": "Delete",
+        "de": "Löschen"
+    },
+    "update_group_permission_required": {
+        "en": "You do not have permission to change groups",
+        "de": "Sie haben nicht die Berechtigung um Gruppen zu ändern"
+    },
+    "delete_group_permission_required": {
+        "en": "You do not have permission to move groups",
+        "de": "Sie haben nicht die Berechtigung um Gruppen zu löschen"
+    },
+    "move_group_permission_required": {
+        "en": "You do not have permission to create groups",
+        "de": "Sie haben nicht die Berechtigung um Gruppen zu verschieben"
+    },
+    "remove_user_from_group_permission_required": {
+        "en": "You do not have permission to remove users from groups",
+        "de": "Sie haben nicht die Berechtigung um Benutzer von Gruppen zu entfernen"
+    },
+    "copy_group_permission_required": {
+        "en": "You do not have permission to copy groups",
+        "de": "Sie haben nicht die Berechtigung um Gruppen zu kopieren"
+    },
+    "edit": {
+        "en": "Edit",
+        "de": "bearbeiten"
+    },
+    "editperm_permission_required": {
+        "en": "You do not have permission to edit permissions",
+        "de": "Sie haben nicht die Berechtigung um Berechtigungen zu editieren"
+    },
+    "setperm_permission_required": {
+        "en": "You do not have permission to set permissions",
+        "de": "Sie haben nicht die Berechtigung um Berechtigungen zu setzen"
+    },
+    "contentRepositoryFragment_singular": {
+        "en": "CR Fragment",
+        "de": "CR-Fragment"
+    },
+    "contentRepositoryFragment_plural": {
+        "en": "CR Fragments",
+        "de": "CR-Fragmente"
+    },
+    "dataSourceEntry_plural": {
+        "en": "entries",
+        "de": "Einträge"
+    },
+    "dataSourceEntry_singular": {
+        "en": "entry",
+        "de": "Eintrag"
+    },
+    "dataSource_plural": {
+        "en": "dataSources",
+        "de": "Datenquellen"
+    },
+    "dataSource_singular": {
+        "en": "dataSource",
+        "de": "Datenquelle"
+    },
+    "file_plural": {
+        "en": "files",
+        "de": "Dateien"
+    },
+    "file_singular": {
+        "en": "file",
+        "de": "Datei"
+    },
+    "folder_plural": {
+        "en": "folders",
+        "de": "Ordner"
+    },
+    "folder_singular": {
+        "en": "folder",
+        "de": "Ordner"
+    },
+    "form_plural": {
+        "en": "forms",
+        "de": "Formulare"
+    },
+    "group_plural": {
+        "en": "groups",
+        "de": "Gruppen"
+    },
+    "group_singular": {
+        "en": "group",
+        "de": "Gruppe"
+    },
+    "image_singular": {
+        "en": "image",
+        "de": "Bild"
+    },
+    "image_plural": {
+        "en": "images",
+        "de": "Bilder"
+    },
+    "form_singular": {
+        "en": "form",
+        "de": "Formular"
+    },
+    "formplural": {
+        "en": "forms",
+        "de": "Formulare"
+    },
+    "language_plural": {
+        "en": "languages",
+        "de": "Sprachen"
+    },
+    "language_singular": {
+        "en": "language",
+        "de": "Sprache"
+    },
+    "objectProperty_singular": {
+        "en": "Objectproperty",
+        "de": "Objekteigenschaft"
+    },
+    "objectProperty_plural": {
+        "en": "Objectproperties",
+        "de": "Objekteigenschaften"
+    },
+    "objectPropertyCategory_singular": {
+        "en": "Objectproperty Category",
+        "de": "Objekteigenschaftskategorie"
+    },
+    "objectPropertyCategory_plural": {
+        "en": "Objectproperty Categories",
+        "de": "Objekteigenschaftskategorien"
+    },
+    "login_sso_button_label": {
+        "en": "Single Sign On",
+        "de": "Single Sign On"
+    },
+    "message_plural": {
+        "en": "messages",
+        "de": "Nachrichten"
+    },
+    "message_singular": {
+        "en": "message",
+        "de": "Nachricht"
+    },
+    "workflow_singular": {
+        "en": "workflow",
+        "de": "Workflow"
+    },
+    "workflow_plural": {
+        "en": "workflows",
+        "de": "Workflows"
+    },
+    "construct_singular": {
+        "en": "Construct",
+        "de": "Tagtyp"
+    },
+    "construct_plural": {
+        "en": "Constructs",
+        "de": "Tagtypen"
+    },
+    "constructCategory_singular": {
+        "en": "Construct Category",
+        "de": "Tagtyp Kategorie"
+    },
+    "constructCategory_plural": {
+        "en": "Construct Categories",
+        "de": "Tagtyp Kategorien"
+    },
+    "category_singular": {
+        "en": "Category",
+        "de": "Kategorie"
+    },
+    "category_plural": {
+        "en": "Categories",
+        "de": "Kategorien"
+    },
+    "contentPackage_singular": {
+        "en": "Content Package",
+        "de": "Contentpaket"
+    },
+    "contentPackage_plural": {
+        "en": "Content Packages",
+        "de": "Contentpakete"
+    },
+    "no": {
+        "en": "No",
+        "de": "Nein"
+    },
+    "no_permissions_for_module": {
+        "en": "You don't have enough permissions to access this module.",
+        "de": "Sie haben nicht genügend Berechtigungen um dieses Modul anzuzeigen."
+    },
+    "node_plural": {
+        "en": "nodes",
+        "de": "Nodes"
+    },
+    "node_singular": {
+        "en": "node",
+        "de": "Node"
+    },
+    "role_plural": {
+        "en": "roles",
+        "de": "Rollen"
+    },
+    "role_singular": {
+        "en": "role",
+        "de": "Rolle"
+    },
+    "not_enough_permissions_tooltip": {
+        "en": "You don't have enough permissions for this action.",
+        "de": "Sie haben nicht genügend Berechtigungen um diese Aktion durchzuführen."
+    },
+    "ok_button": {
+        "en": "Okay",
+        "de": "OK"
+    },
+    "create_button": {
+        "en": "Create",
+        "de": "Erstellen"
+    },
+    "upload_button": {
+        "en": "Upload",
+        "de": "Hochladen"
+    },
+    "package_singular": {
+        "en": "package",
+        "de": "Paket"
+    },
+    "page_plural": {
+        "en": "pages",
+        "de": "Seiten"
+    },
+    "page_singular": {
+        "en": "page",
+        "de": "Seite"
+    },
+    "reply_button": {
+        "en": "Reply",
+        "de": "Antworten"
+    },
+    "save_button": {
+        "en": "Save",
+        "de": "Speichern"
+    },
+    "send_button": {
+        "en": "Send",
+        "de": "Senden"
+    },
+    "set_new_password_button": {
+        "en": "Set new password",
+        "de": "Neues Passwort setzen"
+    },
+    "tagmapEntry_plural": {
+        "en": "tagmapentries",
+        "de": "Tagmap-Einträge"
+    },
+    "template_plural": {
+        "en": "templates",
+        "de": "Vorlagen"
+    },
+    "templateTag_plural": {
+        "en": "Template Tags",
+        "de": "Vorlagen-Tags"
+    },
+    "tagmapEntry_singular": {
+        "en": "tagmap entry",
+        "de": "Tagmap-Eintrag"
+    },
+    "template_singular": {
+        "en": "template",
+        "de": "Vorlage"
+    },
+    "templateTag_singular": {
+        "en": "Template Tag",
+        "de": "Vorlagen-Tag"
+    },
+    "contentRepository_singular": {
+        "en": "ContentRepository",
+        "de": "ContentRepository"
+    },
+    "contentRepository_plural": {
+        "en": "Contentrepositories",
+        "de": "Contentrepositories"
+    },
+    "copy_plural": {
+        "en": "copies",
+        "de": "Kopien"
+    },
+    "copy_singular": {
+        "en": "copy",
+        "de": "Kopie"
+    },
+    "schedule_singular": {
+        "en": "Schedule",
+        "de": "Termin"
+    },
+    "schedule_plural": {
+        "en": "Schedules",
+        "de": "Termine"
+    },
+    "scheduleTask_singular": {
+        "en": "Task",
+        "de": "Task"
+    },
+    "scheduleTask_plural": {
+        "en": "Task",
+        "de": "Task"
+    },
+    "update_dataSource_entry_permission_required": {
+        "en": "You do not have permission to update dataSource entries",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen-Einträge zu editieren"
+    },
+    "update_dataSource_permission_required": {
+        "en": "You do not have permission to update dataSources",
+        "de": "Sie haben nicht die Berechtigung um Datenquellen zu editieren"
+    },
+    "update_language_permission_required": {
+        "en": "You do not have permission to update languages",
+        "de": "Sie haben nicht die Berechtigung um Sprache zu editieren"
+    },
+    "update_role_permission_required": {
+        "en": "You do not have permission to update roles",
+        "de": "Sie haben nicht die Berechtigung um Rollen zu editieren"
+    },
+    "update_user_permission_required": {
+        "en": "You do not have permission to update users",
+        "de": "Sie haben nicht die Berechtigung um Benutzer zu editieren"
+    },
+    "user_manual": {
+        "en": "User Manual",
+        "de": "Benutzerhandbuch"
+    },
+    "user_plural": {
+        "en": "users",
+        "de": "Benutzer"
+    },
+    "user_singular": {
+        "en": "user",
+        "de": "Benutzer"
+    },
+    "yes": {
+        "en": "Yes",
+        "de": "Ja"
+    },
+    "name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "description": {
+        "en": "Description",
+        "de": "Beschreibung"
+    },
+    "id": {
+        "en": "ID",
+        "de": "ID"
+    },
+    "globalId": {
+        "en": "Global-ID",
+        "de": "Globale ID"
+    },
+    "creator": {
+        "en": "Creator",
+        "de": "Ersteller"
+    },
+    "cdate": {
+        "en": "Creation Date",
+        "de": "Erstelldatum"
+    },
+    "editor": {
+        "en": "Editor",
+        "de": "Editor"
+    },
+    "edate": {
+        "en": "Edit Date",
+        "de": "Bearbeitungsdatum"
+    },
+    "general_permission_required": {
+        "en": "Insufficient permissions",
+        "de": "Fehlende Berechtigung"
+    },
+    "app_permission_required": {
+        "en": "You do not have permission to use this application. Request access permissions for CMS administrational permissions from your system administrator.",
+        "de": "Sie haben keine ausreichende Berechtigung um diese Anwendung zu nutzen. Fordern Sie Zugangsberechtigung für die CMS-Administration bei Ihrem Systemadministrator an."
+    },
+    "select_recursive": {
+        "en": "Select Recursive",
+        "de": "Unterelemente einbeziehen"
+    },
+    "loading_error": {
+        "en": "An error while loading Data has occurred!",
+        "de": "Es ist ein Fehler während dem Laden aufgetreten!"
+    },
+    "selected": {
+        "en": "Selected",
+        "de": "Ausgewählt"
+    },
+    "copy_suffix": {
+        "en": "(Copy)",
+        "de": "(Kopie)"
+    },
+    "general": {
+        "en": "General",
+        "de": "Allgemein"
+    }
+}

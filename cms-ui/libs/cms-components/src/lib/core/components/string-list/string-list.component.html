@@ -1,0 +1,69 @@
+<label *ngIf="label?.trim().length > 0">{{ label }}</label>
+
+<ng-container *ngIf="form.controls.length > 0">
+    <gtx-sortable-list
+        #dragList
+        *ngIf="sortable"
+        class="list drag-list"
+        [disabled]="disabled"
+        (dragEnd)="sortList($event)"
+    >
+        <gtx-sortable-item *ngFor="let control of form.controls; let index = index">
+            <gtx-contents-list-item class="drag-item">
+                <gtx-input
+                    class="item-primary input"
+                    [draggable]="true"
+                    [formControl]="control"
+                    (blur)="triggerTouch()"
+                ></gtx-input>
+
+                <gtx-button
+                    flat="true"
+                    size="small"
+                    type="alert"
+                    class="delete-button"
+                    [disabled]="disabled"
+                    (click)="removeItem(index)"
+                >
+                    <icon>delete</icon>
+                </gtx-button>
+
+                <gtx-drag-handle></gtx-drag-handle>
+            </gtx-contents-list-item>
+        </gtx-sortable-item>
+    </gtx-sortable-list>
+
+    <div #regularList *ngIf="!sortable" class="list regular-list">
+        <gtx-contents-list-item *ngFor="let control of form.controls; let index = index" class="regular-item">
+            <gtx-input
+                class="item-primary input"
+                [class.error]="errors?.errors[index] != null"
+                [formControl]="control"
+                (blur)="triggerTouch()"
+            ></gtx-input>
+
+            <gtx-button
+                flat="true"
+                size="small"
+                type="alert"
+                class="delete-button"
+                [disabled]="disabled"
+                (click)="removeItem(index)"
+            >
+                <icon>delete</icon>
+            </gtx-button>
+        </gtx-contents-list-item>
+    </div>
+</ng-container>
+
+<div class="button-wrapper">
+    <gtx-button
+        flat="true"
+        size="small"
+        class="add-button"
+        [disabled]="disabled"
+        (click)="addItem()"
+    >
+        {{ addLabel }}<icon right>add</icon>
+    </gtx-button>
+</div>

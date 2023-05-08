@@ -1,0 +1,30 @@
+{
+    "info_selected_logs": {
+        "en": "{{amountSelected}} of {{amountTotal}} Logs selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Logs ausgewählt"
+    },
+    "log_date": {
+        "en": "Date",
+        "de": "Datum"
+    },
+    "log_action": {
+        "en": "Action",
+        "de": "Aktion"
+    },
+    "log_user": {
+        "en": "User",
+        "de": "Benutzer"
+    },
+    "log_object": {
+        "en": "Object",
+        "de": "Objekt"
+    },
+    "log_id": {
+        "en": "ID",
+        "de": "ID"
+    },
+    "log_info": {
+        "en": "Info",
+        "de": "Info"
+    }
+}

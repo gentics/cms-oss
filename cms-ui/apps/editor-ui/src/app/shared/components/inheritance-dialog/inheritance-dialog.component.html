@@ -1,0 +1,20 @@
+<div class="modal-title">
+    <h5>{{ 'modal.inheritance_title' | i18n }} {{ item.type | i18n | capitalize }} "{{ item.name }}"</h5>
+</div>
+<div class="modal-content">
+    <gtx-checkbox [label]="'modal.general_inheritance_label' | i18n" [(ngModel)]="generalInheritance" (change)="changeGeneralInheritance($event)"></gtx-checkbox>
+    <div *ngIf="0 < item.inheritable.length">
+        <h6>{{ 'modal.inheritance_channels_title' | i18n }}</h6>
+        <div *ngFor="let nodeId of item.inheritable">
+            <gtx-checkbox [disabled]="generalInheritance" [label]="getChannelLabel(nodeId) | i18n:{ channel: nodes[nodeId]?.name }"
+                          [(ngModel)]="inheritedChannels[nodeId]"></gtx-checkbox>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="default" (click)="saveSettings()">{{ 'common.apply_button' | i18n }}</gtx-button>
+    <gtx-button *ngIf="item.type === 'folder'" type="default" (click)="saveSettings(true)">
+        {{ 'common.apply_recursively_button' | i18n }}
+    </gtx-button>
+</div>

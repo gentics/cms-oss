@@ -1,0 +1,6 @@
+#foreach($item in $cms.imps.sorter.sort($cms.page.languageset.pages, "language.code:asc"))##
+id: $item.id
+	name: $item.name
+	language: $item.language.code
+	online: $item.online
+#end##

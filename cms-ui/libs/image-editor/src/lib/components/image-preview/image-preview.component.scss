@@ -1,0 +1,10 @@
+@import "ui-core/src/styles/variables";
+
+:host {
+  display: block;
+  max-width: 100%;
+}
+
+.image-preview {
+  overflow: hidden;
+}

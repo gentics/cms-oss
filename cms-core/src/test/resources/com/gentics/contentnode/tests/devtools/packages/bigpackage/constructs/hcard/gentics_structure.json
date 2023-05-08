@@ -1,0 +1,143 @@
+{
+  "globalId" : "A547.58479",
+  "keyword" : "hcard",
+  "icon" : "undef.gif",
+  "name" : {
+    "de" : "Kontaktdaten einfügen (hCard)",
+    "en" : "Contact"
+  },
+  "description" : {
+    "de" : "Erzeugt eine hCard.",
+    "en" : "creates a hcard"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.58271",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58313",
+    "name" : {
+      "de" : "Vorname",
+      "en" : "Firstname"
+    },
+    "keyword" : "firstname",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58345",
+    "name" : {
+      "de" : "Nachname",
+      "en" : "Lastname"
+    },
+    "keyword" : "lastname",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58366",
+    "name" : {
+      "de" : "Organisation",
+      "en" : "Organisation"
+    },
+    "keyword" : "organisation",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58384",
+    "name" : {
+      "de" : "E-Mail",
+      "en" : "E-Mail"
+    },
+    "keyword" : "email",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58398",
+    "name" : {
+      "de" : "Strasse, Nr.",
+      "en" : "Street, number"
+    },
+    "keyword" : "street",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58405",
+    "name" : {
+      "de" : "Stadt",
+      "en" : "City"
+    },
+    "keyword" : "city",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58415",
+    "name" : {
+      "de" : "PLZ",
+      "en" : "ZIP"
+    },
+    "keyword" : "postalcode",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58422",
+    "name" : {
+      "de" : "Telephone",
+      "en" : "Telephone"
+    },
+    "keyword" : "tel",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

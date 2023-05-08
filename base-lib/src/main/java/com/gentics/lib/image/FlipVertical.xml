@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<filterchain name="com.gentics.lib.image.FlipHorizontal">
+    <filter name="com.gentics.lib.image.TransposeFilter">
+        <property name="TYPE" value="FLIP_VERTICAL"/>
+    </filter>
+</filterchain>

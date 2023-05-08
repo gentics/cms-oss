@@ -1,0 +1,35 @@
+@import 'variables';
+
+icon.feature-info {
+    transform: rotate(180deg);
+    color: $gtx-color-primary;
+    margin-left: 10px;
+    font-size: 1rem;
+    margin-top: -2px;
+    cursor: help;
+}
+
+.node-feature {
+    gtx-tooltip::ng-deep .tooltip-trigger {
+        display: block;
+    }
+}
+
+.feature-description {
+    text-transform: none;
+    font-size: 14px;
+
+    * {
+        text-align: left;
+    }
+
+    h2 {
+        font-size: 1rem;
+        text-transform: uppercase;
+        margin-top: 0;
+    }
+
+    icon {
+        font-size: 1rem;
+    }
+}

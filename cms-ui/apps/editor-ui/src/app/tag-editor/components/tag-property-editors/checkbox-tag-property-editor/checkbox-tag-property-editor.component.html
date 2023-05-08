@@ -1,0 +1,11 @@
+<ng-container *ngIf="tagProperty">
+    <div class="row column">
+        <gtx-checkbox
+            [label]="tagPart | tagPropLabel"
+            [required]="tagPart?.mandatory"
+            [disabled]="readOnly"
+            [(ngModel)]="isChecked"
+            (change)="onCheckboxChange()">
+        </gtx-checkbox>
+    </div>
+</ng-container>

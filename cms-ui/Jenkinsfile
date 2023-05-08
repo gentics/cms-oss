@@ -1,0 +1,120 @@
+// The GIT repository for this pipeline lib is defined in the global Jenkins setting
+@Library('jenkins-pipeline-library') import com.gentics.*
+
+// Make the helpers aware of this jobs environment
+JobContext.set(this)
+
+
+
+final def changelogArchivePath     = 'build/changelog.tar.gz'
+final def mavenRepositoryId        = 'lan.releases'
+final def mavenGroupId             = 'com.gentics'
+final def mavenArtifactId          = 'gentics-cms-ui'
+final def mavenArtifactIdChangelog = mavenArtifactId + '-changelog'
+final def mavenRepositoryUrl       = 'https://repo.apa-it.at/artifactory/gtx-maven-releases'
+final def mattermostChannel        = "#gcms-ui-testing"
+final def mattermostChannelReleases = "#gcms-ui"
+
+
+
+String version = null
+
+pipeline {
+    agent {
+        label 'jenkins-slave'
+    }
+
+    parameters {
+        booleanParam(name: 'release',   defaultValue: false,  description: "Whether to perform a release")
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                sh "rm -rf *"
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    def packageJson = GenericHelper.parseJson(readFile("package.json"))
+                    version = packageJson["version"]
+
+                    currentBuild.description = version
+                }
+
+                sshagent(["git"]) {
+                    sh 'npm install'
+                    sh 'node ./node_modules/gulp/bin/gulp.js release'
+                    sh 'cd build && zip -r gentics-cms-ui-' + version + '.zip * && cd ..'
+                }
+
+                script {
+                    if (!Boolean.valueOf(params.release)) {
+                        currentBuild.result = 'SUCCESS'
+                    }
+                }
+            }
+        }
+
+        stage('Release') {
+            when {
+                expression {
+                    return Boolean.valueOf(params.release)
+                }
+            }
+
+            steps {
+                echo 'Releasing version ' + version
+
+                script {
+                    currentBuild.description = 'Release ' + version
+
+                    sh 'rm -f ' + changelogArchivePath + ' && tar -zcvf ' + changelogArchivePath + ' changelog'
+
+                    // Deploy to the repository
+                    String zipPath = sh(script: 'find build -type f -name "' + mavenArtifactId + '-*.zip"', returnStdout: true).trim()
+                    MavenHelper.deployFile(zipPath, mavenRepositoryId, mavenGroupId, mavenArtifactId,
+                        mavenRepositoryUrl, version)
+                    MavenHelper.deployFile(changelogArchivePath, mavenRepositoryId, mavenGroupId,
+                        mavenArtifactIdChangelog, mavenRepositoryUrl, version, [packaging: 'tar.gz'])
+
+                    // GIT push
+                    sshagent(["git"]) {
+                        def gitTagName = 'v' + version
+                        GitHelper.addTag(gitTagName, 'Release version ' + version)
+                        GitHelper.pushTag(gitTagName)
+                    }
+
+                    currentBuild.result = 'SUCCESS'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Cleanup
+            step([$class: 'WsCleanup'])
+
+            script {
+                String customMessage = null
+
+                if (currentBuild.result == 'SUCCESS') {
+                    if (Boolean.valueOf(params.release)) {
+                        customMessage = 'Released version ' + version + "\n" +
+                            'Download: ' + mavenRepositoryUrl + '/com/gentics/' + mavenArtifactId + '/' + version + '/gentics-cms-ui-' + version + '.zip'
+                    } else {
+                        customMessage = 'Built version ' + version
+                    }
+                }
+
+
+                // Notify
+                MattermostHelper.sendStatusNotificationMessage(Boolean.valueOf(params.release) ? mattermostChannelReleases : mattermostChannel, customMessage)
+            }
+        }
+    }
+}

@@ -1,0 +1,129 @@
+{
+  "globalId" : "A547.14598",
+  "keyword" : "navigation",
+  "icon" : "olist.gif",
+  "name" : {
+    "de" : "[CMS] Navigation",
+    "en" : "[CMS] Navigation"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14226",
+    "name" : {
+      "de" : "nav",
+      "en" : "nav"
+    },
+    "keyword" : "nav",
+    "editable" : false,
+    "typeId" : 35,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14295",
+    "name" : {
+      "de" : "Template",
+      "en" : "template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14340",
+    "name" : {
+      "de" : "Geben Sie einen Startordner an",
+      "en" : "startfolder"
+    },
+    "keyword" : "startfolder",
+    "editable" : true,
+    "typeId" : 25,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14378",
+    "name" : {
+      "de" : "oder geben sie \"folder\" ein, wenn sie die Seiten des aktuelle Bereichs listen wollen",
+      "en" : "or add \"folder\", if you want to list all pages of the current folder"
+    },
+    "keyword" : "startfolderproperty",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14401",
+    "name" : {
+      "de" : "Objekte",
+      "en" : "objects"
+    },
+    "keyword" : "objects",
+    "editable" : true,
+    "typeId" : 30,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14422",
+    "name" : {
+      "de" : "Sortieren nach Eigenschaft",
+      "en" : "sortby"
+    },
+    "keyword" : "sortby",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14439",
+    "name" : {
+      "de" : "Reihenfolge",
+      "en" : "sortorder"
+    },
+    "keyword" : "sortorder",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14448",
+    "name" : {
+      "de" : "Sitemap (aufgeflappt)",
+      "en" : "sitemap"
+    },
+    "keyword" : "sitemap",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

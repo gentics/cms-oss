@@ -1,0 +1,13 @@
+<ul class="teaser">
+#foreach( $item in $cms.tag.parts.overview.items )
+<li>
+<h2><a href="${item.url}">${item.name}</a></h2>
+<br class="clear" />
+${item.creationdate} ${item.creator}
+<br />
+$!{item.tags.teaser}
+<br class="clear" />
+<a href="{item.url}">Read more</a>
+</li>
+#end##
+</ul>

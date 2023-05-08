@@ -1,0 +1,109 @@
+//
+// Style rules which apply app-wide go here.
+//
+
+html {
+    height: 100%;
+}
+
+body {
+    background-color: white;
+    height: 100%;
+    overflow: hidden;
+
+    // Fixes IE 11 behaviour where the body can be click-dragged and will "scroll" over the
+    // off-canvas user menu. See https://stackoverflow.com/a/22092343/772859
+    -ms-scroll-limit-x-max: 0;
+}
+
+gtx-toast > .gtx-toast {
+    z-index: 1000;
+}
+
+.input-range-wrapper {
+    align-items: center;
+}
+
+.no-select {
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */
+}
+
+// allow styling of dropdown items text
+gtx-dropdown-content {
+    .alert:not(button) {
+        color: $gtx-color-alert !important;
+    }
+
+    .warning:not(button) {
+        color: $gtx-color-warning !important;
+    }
+
+    .success:not(button) {
+        color: $gtx-color-success !important;
+    }
+}
+
+// Hides elements globally per the customer configuration (ui-overrides.json)
+// For details. see OverrideSlotDirective
+.hidden-via-ui-override {
+    display: none !important;
+}
+
+// TODO: this can be removed once https://jira.gentics.com/browse/GUIC-93 is fixed in core
+.gtx-modal-dialog {
+    overflow-y: hidden;
+    // Sometimes IE11 will still "scroll" content without showing scrollbars, so the content of
+    // the modal will be only partially displayed, the rest cut off by the edge of the modal.
+    // TODO: incorporate this into refactoring of Modal in GUIC-95
+    -ms-scroll-limit: 0 0 0 0;
+}
+
+// TODO: This can be removed once https://jira.gentics.com/browse/GUIC-95 is fixed in core
+.gtx-modal-dialog gtx-date-time-picker-modal {
+    display: flex;
+    flex-direction: column;
+
+    @media screen and (min-width: $small-screen + 1px) {
+
+        & {
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-height: calc(70vh - 197px);
+        }
+    }
+}
+
+.gtx-input-with-validation {
+    margin-bottom: 1rem;
+}
+
+.gtx-input-validation-msgs {
+    position: absolute;
+    margin-top: -2rem;
+
+    p {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+        color: $gtx-color-alert;
+    
+        &.invalid {
+            color: $gtx-color-alert;
+        }
+        &.warning {
+            color: $gtx-color-warning;
+        }
+    }
+}
+
+// Jumping screen after clicking on a checkbox fix
+gtx-checkbox > div {
+    transform: translateZ(0);
+}

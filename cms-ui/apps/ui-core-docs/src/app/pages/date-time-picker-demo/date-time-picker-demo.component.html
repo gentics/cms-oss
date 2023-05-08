@@ -1,0 +1,137 @@
+<h1>DateTimePicker</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<div class="row">
+
+</div>
+
+<gtx-demo-block demoTitle="Date And Time">
+    <div class="demo-result">
+        <gtx-date-time-picker [(ngModel)]="timestamp" label="Pick a time"></gtx-date-time-picker>
+        timestamp: <code>{{ timestamp }}</code>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-date-time-picker
+                label="Pick a date"
+                [(ngModel)]="timestamp"
+            ></gtx-date-time-picker>
+            timestamp: <code>(( timestamp ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Date And Time with Clear Option">
+    <div class="demo-result">
+        <gtx-date-time-picker
+            clearable
+            label="Pick a time"
+            [(ngModel)]="timestamp"
+        ></gtx-date-time-picker>
+        timestamp: <code>{{ timestamp | json }}</code>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-date-time-picker
+                    clearable
+                    label="Pick a date"
+                    [(ngModel)]="timestamp"
+                ></gtx-date-time-picker>
+                timestamp: <code>(( timestamp | json ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Date Only">
+    <div class="demo-result">
+        <gtx-date-time-picker
+            label="Pick a date"
+            displayTime="false"
+            [(ngModel)]="timestamp"
+        ></gtx-date-time-picker>
+        timestamp: <code>{{ timestamp }}</code>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-date-time-picker
+                    label="Pick a date"
+                    displayTime="false"
+                    [(ngModel)]="timestamp"
+                ></gtx-date-time-picker>
+                timestamp: <code>(( timestamp ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Selecting a Year">
+    <div class="demo-result">
+        <gtx-date-time-picker
+            label="Pick a date"
+            displayTime="false"
+            selectYear="true"
+            [(ngModel)]="timestamp"
+        ></gtx-date-time-picker>
+        timestamp: <code>{{ timestamp }}</code>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-date-time-picker
+                label="Pick a date"
+                displayTime="false"
+                selectYear="true"
+                [(ngModel)]="timestamp"
+            ></gtx-date-time-picker>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Custom Format">
+    <div class="demo-result">
+        <gtx-date-time-picker [value]="timestamp" format="Do MMM YY @ h:mm a"></gtx-date-time-picker>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-date-time-picker
+                format="Do MMM YY @ h:mm a"
+                [value]="timestamp"
+            ></gtx-date-time-picker>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+
+<h2>Internationalization</h2>
+
+<p>To use different texts in the DateTimePicker, provide a <code>DateTimePickerFormatProvider</code>:</p>
+
+<gtx-highlighted-code language="TypeScript" code="
+    @Injectable()
+    class DateTimePickerFormatProvider {
+        strings: DateTimePickerStrings;
+        changed$: Observable<any>;
+        format(moment: moment.MomentInstance, showTime: boolean, showSeconds: boolean): string;
+    }
+"></gtx-highlighted-code>
+
+<gtx-highlighted-code language="TypeScript" [code]="stringsInterfaceSource"></gtx-highlighted-code>
+
+<gtx-demo-block demoTitle="Localized Date Picker">
+    <div class="demo-result">
+        <gtx-date-time-picker demo-format [value]="timestamp"></gtx-date-time-picker>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code language="TypeScript" [code]="demoProviderSource"></gtx-highlighted-code>
+
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-date-time-picker demo-format [value]="timestamp"></gtx-date-time-picker>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

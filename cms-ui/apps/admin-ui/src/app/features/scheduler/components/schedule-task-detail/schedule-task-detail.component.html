@@ -1,0 +1,31 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="ScheduleTaskDetailTabs.PROPERTIES"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    saveActionAllowedId="scheduler.updateTask"
+                    [saveActionAllowedInstanceId]="currentEntity?.id"
+                    [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                    (saveClick)="saveProperties()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div class="gtx-entity-details-tab-content-body">
+                    <div class="flex-row row">
+                        <gtx-schedule-task-properties
+                            class="properties small-12 medium-9"
+                            [formControl]="fgProperties"
+                            [mode]="ScheduleTaskPropertiesMode.UPDATE"
+                            [pure]="true"
+                        ></gtx-schedule-task-properties>
+                    </div>
+                </div>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

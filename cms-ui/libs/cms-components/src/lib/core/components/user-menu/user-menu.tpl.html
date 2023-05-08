@@ -1,0 +1,65 @@
+<gtx-side-menu
+    position="right"
+    width="400px"
+    (toggle)="toggle.emit($event)"
+    [opened]="opened"
+>
+    <gtx-side-menu-toggle>
+        <gtx-user-menu-toggle [active]="opened"></gtx-user-menu-toggle>
+    </gtx-side-menu-toggle>
+
+    <div class="language-toggle">
+        <gtx-dropdown-list>
+            <gtx-dropdown-trigger>
+                <gtx-button icon type="secondary" size="small">
+                    <i class="material-icons right" [attr.translate]="'no'">language</i> {{ currentlanguage | uppercase }}
+                </gtx-button>
+            </gtx-dropdown-trigger>
+            <gtx-dropdown-content>
+                <gtx-dropdown-item
+                    *ngFor="let language of supportedLanguages"
+                    (click)="setLanguageClicked(language.code)"
+                    class="language-option"
+                    [class.deselected]="currentlanguage !== language.code"
+                >
+                    <i class="material-icons" [attr.translate]="'no'">check</i> {{ language.name }}
+                </gtx-dropdown-item>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+    </div>
+
+    <div class="user-menu-contents">
+        <div class="user-details">
+            <div class="user-name">
+                <div>
+                    <span [innerHTML]="'user.logged_in_as' | i18n:{ name: getUserName() }"></span>
+                    <gtx-dropdown-list>
+                        <gtx-dropdown-trigger>
+                            <a>
+                                <gtx-button icon type="secondary" size="small">
+                                    <i class="material-icons" [attr.translate]="'no'">more_vert</i>
+                                </gtx-button>
+                            </a>
+                        </gtx-dropdown-trigger>
+                        <gtx-dropdown-content>
+                            <gtx-dropdown-item overrideSlot="changePasswordOption" (click)="showPasswordModalClicked()">
+                                {{ 'user.change_password_label' | i18n }}
+                            </gtx-dropdown-item>
+                        </gtx-dropdown-content>
+                    </gtx-dropdown-list>
+                </div>
+                <div *ngIf="user" class="description">{{ user?.description }}</div>
+            </div>
+            <gtx-button (click)="logout.emit()" flat size="small" type="secondary">
+                {{ 'user.log_out' | i18n }}
+            </gtx-button>
+        </div>
+        <div class="top">
+            <ng-content select="[top]"></ng-content>
+        </div>
+        <div class="bottom">
+            <ng-content select="[bottom]"></ng-content>
+        </div>
+    </div>
+
+</gtx-side-menu>

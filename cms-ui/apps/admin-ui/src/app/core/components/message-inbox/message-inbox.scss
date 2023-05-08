@@ -1,0 +1,199 @@
+@import 'variables';
+
+:host {
+    display: block;
+    // Flexbox fix for y-scrollable children https://stackoverflow.com/a/28639686/772859
+    // min-height: 0;
+    // TODO: have to check again in IE
+
+    ::ng-deep icon-checkbox {
+        margin-top: 4px;
+    }
+}
+
+gtx-icon-checkbox {
+    transition: opacity 100ms;
+    opacity: 1;
+}
+
+gtx-icon-checkbox.hidecheckbox {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+
+    /* minus icon-checkbox margin-top */
+    padding-top: calc(1rem - 4px);
+
+    h3 {
+        display: flex;
+        flex: 1 1;
+        justify-content: space-around;
+
+        .show-warning {
+            margin-top: 7px;
+            margin-bottom: 6px;
+        }
+    }
+
+
+    gtx-icon-checkbox ::ng-deep .item-icon {
+        color: $gcms-color-message  !important;
+    }
+
+    gtx-icon-checkbox:hover ::ng-deep .item-icon {
+        color: lighten($gcms-color-message, 20%) !important;
+    }
+}
+
+
+.show-warning {
+    color: $gtx-color-alert;
+}
+
+.title {
+    font-size: 16px;
+    text-align: center;
+    font-weight: normal;
+    margin: 0;
+    position: relative;
+}
+
+.new-message-button {
+    margin-right: 0.8rem;
+}
+
+.content {
+    display: flex;
+    font-size: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 25px;
+    // required for scrollbars to be displayed correctly in IE11
+    // max-height: 200px;
+    // TODO: find a better fix for IE
+}
+
+.unread-messages {
+    min-height: fit-content;
+}
+
+.message-actions {
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 100ms;
+
+    &.showactions {
+        visibility: visible;
+        opacity: 1;
+        animation: AnimateMessageActions 300ms ease both;
+    }
+
+    .material-icons {
+        color: $gtx-color-dark-gray;
+        cursor: pointer;
+
+        &:hover {
+            color: lighten($gtx-color-dark-gray, 20%);
+        }
+    }
+}
+
+.read-messages-title {
+    width: 100%;
+    display: flex;
+    cursor: pointer;
+    margin-top: 5px;
+    padding-top: 5px;
+    transition: color 300ms;
+
+    gtx-icon-checkbox {
+        margin-top: 0;
+    }
+
+    icon-checkbox ::ng-deep .item-icon {
+        color: desaturate($gcms-color-message, 80%)  !important;
+    }
+
+    gtx-icon-checkbox:hover ::ng-deep .item-icon {
+        color: lighten(desaturate($gcms-color-message, 80%), 20%)  !important;
+    }
+
+    span {
+        flex: 1 1;
+        text-align: center;
+    }
+
+    &:hover {
+        span {
+            opacity: 0.8;
+        }
+    }
+
+    &.shown {
+        color: inherit;
+        margin-bottom: 10px;
+        margin-top: 20px;
+        border-top: 1px dotted #e5e5e5;
+        padding-top: 10px;
+    }
+
+
+    .show-warning {
+        transition: none;
+        margin-bottom: 6px;
+    }
+}
+
+.read-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    overflow: hidden;
+    max-height: fit-content;
+    transition: height 300ms, min-height 300ms, opacity 300ms;
+    width: 100%;
+    will-change: opacity, height;
+
+    &:not(.visible) {
+        height: 0 !important;
+        min-height: 0 !important;
+        opacity: 0;
+    }
+
+    > gtx-message-list {
+        justify-content: flex-end;
+    }
+}
+
+.empty-placeholder,
+.read-messages-title {
+    color: $gtx-color-mid-gray;
+    align-self: center;
+}
+
+@keyframes AnimateMessageActions {
+    0% {
+        opacity: 0;
+        margin-left: 0;
+        width: 0;
+        transform: scale(0);
+    }
+
+    50% {
+        margin-left: 10px;
+        opacity: 0;
+        width: 26px;
+        transform: scale(0);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

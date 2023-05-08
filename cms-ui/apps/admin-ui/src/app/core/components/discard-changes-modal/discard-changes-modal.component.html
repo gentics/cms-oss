@@ -1,0 +1,30 @@
+<div class="modal-title">
+    <h5>{{ 'modal.discard_changes_title' | i18n }}</h5>
+</div>
+<div class="modal-content row">
+    <p>{{ 'modal.discard_changes_message' | i18n }}</p>
+</div>
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="onCancelClick()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="alert"
+        (click)="onDiscardChangesClick()"
+    >
+        {{ 'modal.discard_changes_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="changesValid"
+        type="primary"
+        (click)="onSaveClick()"
+    >
+        {{ 'common.save_button' | i18n }}
+    </gtx-button>
+</div>

@@ -1,0 +1,17 @@
+<div id="AJAX_Container"></div>
+<script type="text/javascript">
+   $(document).ready(function(){
+    $("#<node id>").click(function() {
+	  	jQuery.ajax({type: "GET", url: "<node url>", data: "contentid=<node target.id>&attributes=content&linkPrefix=<node url>", dataType: "xml",
+	  		success: function(xml) {
+	  			$('Contentrepository',xml).each(function(){
+	  				$('Object',xml).each(function(){
+	  					var content = $(this).find('content').text();
+	  					$("#AJAX_Container").html(content);
+	  				});
+	  			});
+	  		}
+	  	});
+	});
+  });
+</script>

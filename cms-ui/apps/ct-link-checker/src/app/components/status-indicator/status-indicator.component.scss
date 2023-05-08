@@ -1,0 +1,20 @@
+@import "variables";
+
+.status {
+    display: flex;
+
+    i {
+        font-size: 14px;
+        margin: 0 2px;
+        transition: color 0.15s ease-in-out;
+        opacity: 0.6;
+
+        &.success { color: $gtx-color-success; }
+        &.info { color: $gtx-color-dark-gray; }
+        &.alert { color: $gtx-color-alert; }
+    }
+
+    span {
+        font-size: 11px;
+    }
+}

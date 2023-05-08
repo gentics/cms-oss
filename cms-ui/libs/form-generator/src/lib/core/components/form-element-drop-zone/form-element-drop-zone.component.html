@@ -1,0 +1,13 @@
+<div
+    class="form-element-drop-zone"
+    [class.hidden]="hidden"
+    [class.targeted]="dragEnterDepth > 0"
+    [class.illegal]="isIllegal"
+    (dragenter)="onDragEnter($event)"
+    (drop)="onDrop($event)"
+    (dragleave)="onDragLeave($event)"
+    [@slideAnim]
+>
+    <icon> block </icon>
+    <span>{{ 'gtxFormGenerator.error_invalid_element_type' | i18n }}</span>
+</div>

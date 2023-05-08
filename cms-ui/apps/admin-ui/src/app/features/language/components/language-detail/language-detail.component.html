@@ -1,0 +1,52 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs>
+        <gtx-tab
+            [id]="LanguageDetailTabs.properties"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="currentEntity?.code"
+                saveActionAllowedId="language.updateLanguageInstance"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="!fgProperties?.dirty || fgProperties?.invalid"
+                (saveClick)="btnSavePropertiesOnClick()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form *ngIf="fgProperties" [formGroup]="fgProperties" class="gtx-entity-details-tab-content-body-form small-12 medium-9 row">
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                type="text"
+                                [required]="true"
+                                maxlength="50"
+                                [label]="('shared.language_name' | i18n) + ' *'"
+                                [placeholder]="'shared.language_name' | i18n"
+                                formControlName="name"
+                                gtxActionAllowed="language.updateLanguageInstance"
+                                [aaInstanceId]="currentEntity?.id"
+                            >
+                            </gtx-input>
+                        </div>
+
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                [required]="true"
+                                maxlength="5"
+                                [label]="('shared.language_code' | i18n) + ' *'"
+                                [placeholder]="'shared.language_code' | i18n"
+                                formControlName="code"
+                                gtxActionAllowed="language.updateLanguageInstance"
+                                [aaInstanceId]="currentEntity?.id"
+                            >
+                            </gtx-input>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

@@ -1,0 +1,298 @@
+# New changelog numbers must be generated via https://dev.gentics.com/numbercruncher
+################### start of CN3-STABLE CHANGELOG #################################
+2002-05-21  20020101    LH  COMMENT		##added *.node/dev.doc/CHANGELOG
+2002-05-22  20020101    SH  SQLCREATE	node.imgresizecache ## new table imgresizecache for imgresize class, new workflow tables
+2002-05-25  20020101    LH  COMMENT		## add  CN_TEXT*_* variables in global/setup to define sizes of tag textboxes
+2002-07-10  20020101    SH  SQLCREATE	node.eventpropeditable
+2002-07-10  20020101    SH  SQLCREATE	node.reactionpropeditable
+2002-07-10  20020101    SH  SQL			alter table eventprop add mapkey varchar(255) not null; alter table reactionprop add mapkey varchar(255) not null;
+2002-07-16  20020101    SH  SQL			alter table workflow add description text not null;
+2002-08-13  20020101    SH  COMMENT		## feature product_preview added
+2002-08-22  20020101    SH  SQL			alter table logcmd modify info varchar(255) not null;
+2002-08-28  20020101    LH  SQL			alter table logcmd add index(user_id); alter table logcmd add index(o_type); alter table logcmd add index(user_id,o_type); optimize table logcmd;
+2002-08-28  20020101    LH  SQL			alter table systemsession modify val mediumtext not null;
+2002-09-02  20020101    SH  SQL			alter table systemuser add isldapuser int not null;
+2002-09-03  20020101    SH  FEATURE		ldap=false ##  added ldap and ldap_login features
+2002-09-03  20020101    SH  FEATURE		ldap_login=false ##  added ldap and ldap_login features
+2002-10-14  20020101    SH  FEATURE		infobox_actions=true ## added feature infobox_actions
+2002-12-06  20021206    LH  SQL 		alter table logcmd add index(o_id);optimize table logcmd;
+2003-02-03  20030204	ME  SQLCREATE   node.tasktemplate
+2003-02-03  20030204    ME  SQLCREATE   node.tasktemplateparam
+2003-02-03  20030204    ME  SQLCREATE   node.task
+2003-02-03  20030204    ME  SQLCREATE   node.taskparam
+2003-02-03  20030204    ME  SQLCREATE   node.job
+2003-02-03  20030204    ME  SQLCREATE   node.jobrun
+2003-02-03  20030204    ME  SQL			insert into tree (itemorder, mother, name, type_id) values ( 3, 7, 'Scheduler', 36 );
+2003-02-03  20030204    ME  COMMENT     added global parameter MAX_SCHEDULE_RUNTIME
+2003-02-06  20030206b   LH  SQL     	alter table perm add index (o_type, usergroup_id);
+2003-02-12  20030212d   ME  SCRIPT		add_schedule_templates.sh ## adds pubs/ftp-sync/rsync
+2003-02-12  20030212d   ME  COMMAND:global 	/Node/bin/nodectl flush ## flushes the .Node cache (for testing COMMAND)
+2003-02-20  20030220h	ME  COMMAND:global 	mkdir -p /Node/node/system/log ## create system log dir
+2003-02-20  20030220k   ME  SQLCREATE 	node.jobdependency
+2003-03-31  20030331b   LH  SQL 		alter table imgresizecache add index(filename);
+
+################### start of CN3.5-HEAD CHANGELOG #################################
+2003-03-21	V3.5-head-20031001d	SH	SQL			alter table language add active int not null default 1;
+2003-03-21	V3.5-head-20031001d	SH	SQL			update language set active = 0 where id in (3,4);
+2003-04-01	V3.5-head-20031001d	ME	SQLCREATE	node.dependencymap
+2003-04-28	V3.5-head-20031001d	SH	SQLCREATE	node.nodecache
+2003-04-28	V3.5-head-20031001d	SH	SQLCREATE	node.nodecache_event
+2003-04-28	V3.5-head-20031001d	SH	SQLCREATE	node.nodecache_object
+2003-05-19	V3.5-head-20031001d	ME	SQL			alter table taskparam add name varchar(50);
+2003-05-19	V3.5-head-20031001d	ME	PHP 		scheduler_convert.php ## converts part of node_serialize in scheduler to cleaner form; still work to do on this
+2003-07-08	V3.5-head-20031001d	ME	FEATURE		error_autopopup=false	##	enable automatic popup of .node errors normally only indicated in stream
+2004-03-08	V3.6-test-20040309	AK	SQL	ALTER TABLE objtag ADD COLUMN (inheritable int not null default 0); ## implement inheriable flag
+2004-03-08	V3.6-test-20040309	AK	SQL	UPDATE objtag SET inheritable = 1 WHERE obj_id = 0; ## set default to inheritable
+2004-03-29	V3.6-test-20040413	ME	COMMENT	run "/Node/.node/sh.php do=826 cmd=reindex CONFIGFILE=/Node/etc/node.conf" as user node; ATTENTION: CMS will be unavailable (duration between 10 and 30 min.)
+2004-04-13	V3.6-test-20040413a	LH	SQL	alter table jobrun add output text;
+2004-05-04	V3.6-stable-20040511	LH	SQL	alter table dependencymap add index (mod_type,mod_id);
+2004-05-04	V3.6-stable-20040511	LH	SQL	alter table dependencymap add index (dep_type,dep_id);
+2004-05-04	V3.6-stable-20040511	LH	SQLCREATE	node.loginfo
+2004-05-04	V3.6-stable-20040511	LH	SQL	alter table loginfo add index(logevent_id);
+2004-05-10	V3.6-stable-20040511	SH	SQL alter table dependencymap add index (mod_id, mod_type, dep_id, dep_type);
+2004-05-10	V3.6-stable-20040511	SH	SQL	alter table dicuser add index (value(64));
+#2004-08-25	V3.6-stable-20040825	SH	FEATURE	user_debug=false ## enable user-mode debugging for systemuser or if debug[echo]
+2004-09-17	V3.6-stable-20040928a	LH	SQL	alter table nodecache_event add index(nodecache_id,o_id,o_type,eventtype);
+2004-10-14	V3.6-stable-20041014	SH	COMMAND:global	mv /Node/var/httpd_public/htdocs/soap /Node/var/httpd/htdocs/.Node/
+2004-10-14	V3.6-stable-20041014	SH	COMMAND:global	rm -Rf /Node/var/httpd/htdocs/.Node/soap/soap
+2004-11-09	V3.6-stable-20041116	LH	SQL	alter table jobrun add index(job_id,valid);
+2004-11-29	V3.6-stable-20041129a	LH	SQL	alter table perm add index(usergroup_id,o_type,o_id);
+2004-11-29	V3.6-stable-20041129a	LH	SQL	alter table user_group add index(usergroup_id,user_id);
+2006-02-06	V3.6-stable-20060207 CP  FEATURE logout_page=false ## redirect user to logout page on logout if true. default false
+2006-07-11	V3.6-stable-20060717a	HP	SQL	 alter table job add parallel tinyint(1) not null default 0;
+2006-08-03	V3.6-stable-20060810	CP	FEATURE	log_jserrors=false ## log JavaScript errors to database if set to true. Errors will NOT be visible in the browser window anymore
+2006-09-01	V3.6-stable-20060906	HP	SQL	ALTER TABLE job ADD failedemails VARCHAR(255) NOT NULL default '';
+2006-09-15	V3.6-stable-20060920	NOP	SQL	ALTER TABLE language add short char(2) default '';
+2006-09-15	V3.6-stable-20060920	NOP	SQL	UPDATE language set short = 'de' where id = 1;
+2006-09-15	V3.6-stable-20060920	NOP	SQL	UPDATE language set short = 'en' where id = 2;
+2006-10-04	V3.6-stable-20061031			HP	SQL	CREATE TABLE objprop_category (id integer auto_increment not null primary key, name_id integer not null, sortorder integer not null default 0) TYPE=InnoDB;
+2006-10-04	V3.6-stable-20061031			HP	SQL	ALTER TABLE objprop change name name_id integer;
+2006-10-04	V3.6-stable-20061031			HP	SQL	ALTER TABLE objprop change description description_id integer;
+2006-10-04	V3.6-stable-20061031			HP	SQL	ALTER TABLE objprop add objtag_id int not null references objtag (id);
+2006-10-04	V3.6-stable-20061031			HP	SQL	ALTER TABLE objprop add unique (objtag_id);
+2006-10-04	V3.6-stable-20061031			HP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (2, 11, 'Objekt Eigenschaften Kategorien', 108);
+2006-10-04	V3.6-stable-20061031			HP	SQL	ALTER TABLE objprop ADD category_id INTEGER NOT NULL REFERENCES objprop_category (id);
+2006-10-04	V3.6-stable-20061031			HP	SQL	CREATE table objprop_node (objprop_id INTEGER NOT NULL, node_id INTEGER NOT NULL, PRIMARY KEY (objprop_id, node_id), INDEX (objprop_id), INDEX(node_id), FOREIGN KEY (objprop_id) REFERENCES objprop (id), FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ) TYPE=InnoDB;
+2006-11-10	V3.6-stable-20061110a	LH	SCRIPT	remove_log_symlink.sh ## remove log weblink
+2006-10-05	V3.6-stable-20061122			HP	SQL	CREATE TABLE role (id integer not null auto_increment primary key, name_id integer, description_id integer) TYPE=InnoDB;
+2006-10-05	V3.6-stable-20061122			HP	SQL	CREATE TABLE roleperm (id integer not null auto_increment primary key, role_id integer not null, INDEX( role_id ), foreign key (role_id) references role (id), perm char(32)) TYPE=InnoDB;
+2006-10-05	V3.6-stable-20061122			HP	SQL	CREATE TABLE roleperm_obj (id integer not null auto_increment primary key, roleperm_id integer not null, obj_type integer not null, obj_id integer, INDEX( roleperm_id ), FOREIGN KEY( roleperm_id) REFERENCES roleperm (id));
+2006-10-05	V3.6-stable-20061122			HP	SQL	CREATE TABLE role_usergroup (id integer not null auto_increment primary key, role_id integer not null, usergroup_id integer not null references usergroup (id), INDEX( role_id ));
+2006-10-05	V3.6-stable-20061122			HP	SQL	CREATE TABLE role_usergroup_assignment (id integer not null auto_increment primary key, role_usergroup_id integer not null, obj_id integer, obj_type integer not null, INDEX( role_usergroup_id ), FOREIGN KEY ( role_usergroup_id ) references role_usergroup (id) );
+2006-10-05	V3.6-stable-20061122			HP	SQL	UPDATE tree SET itemorder = itemorder + 1 WHERE mother = 7 AND itemorder > 2;
+#2006-10-18	V3.6-stable-20061122			HP	FEATURE	roles=false ## by default deactivate roles.
+2006-10-18	V3.6-stable-20061122			HP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (3, 7, 'Rollen', 109);
+# disabled for now.
+#2006-12-01	new	NOP	COMMENT	Set $CN_LOCAL_SERVER (normally to "http://localhost") and $CN_LOCAL_PATH (normally to "/.Node/") in node.conf
+2006-12-28	V3.6-stable-20061228	HP	FEATURE custom_streams=false ## Allows custom streams to be configured for one Gentics .Node installation. The constant $CUSTOM_STREAM_DIRECTORY must point to a directory containing (only) the custom streams. By default "/Node/node/system/custom_streams" is used.
+#2007-01-05	V3.6-stable-20070105	HP	SQL	INSERT INTO tasktemplate (name, description, command, creator, cdate, editor, edate) VALUES ( 'Run Background Job', '', 'source /Node/bin/env.sh; /Node/.node/sh.php do=827 cmd=%command% CONFIGFILE=/Node/etc/node.conf', 1, UNIX_TIMESTAMP(), 1, UNIX_TIMESTAMP() ); SET @template_id = LAST_INSERT_ID(); INSERT INTO tasktemplateparam (tasktemplate_id, paramtype, name) VALUES (@template_id, 3, 'command'); ## Create a new template to run a background job. - You should make sure after update that it did not already exist.
+2007-01-05	V3.6-stable-20070105	HP	SCRIPT	create_purgelogs_task.sh ## Create a new template to run a background job. - You should make sure after update that it did not already exist.
+2007-01-05	V3.6-stable-20070105	HP	COMMENT ## Contact customer/serveradmin (Email template see rt#9561) to verify activation of deleting of old versions, logs (logcmd,logerror) and inbox messages - Create 3 Tasks and Task Jobs which run once a month (activate as soon as customer/serveradmin confirmed): based on the background job task with the following commands: 1.) purgeversions ("Purge old Versions"): deletes all old versions of all pages which are older than 12 months 2.) purgelogs ("Purge old Logs"): deletes all log entries from logcmd and logerror which are older than 12 months. WARNING: Statistics are generated based on logcmd. so statistics older than 12 months are lost. 3.) purgemessages ("Purge old Messages"): inbox messages of all users which are older than 12 months are deleted.
+2007-05-07	V4.0-head-20070507b	NOP	COMMENT ## Manually create a new task based on the task template "Run Background Job", set the "command" to "publish". Replace the old publish task events with the new task. Take care about dependent task events. Finally activate the new publish task event.
+2007-05-08	V4.0-head-20070508	NOP	SQL UPDATE tasktemplate SET command = 'source /Node/bin/env.sh; /Node/.node/sh.php do=827 cmd=%command% CONFIGFILE=/Node/etc/node.conf 2&>1' WHERE command = 'source /Node/bin/env.sh; /Node/.node/sh.php do=827 cmd=%command% CONFIGFILE=/Node/etc/node.conf'; ## Modify the task template for "Run background job" to route stderr to stdout. Make sure that the task template now really ends with "2>&1".
+2007-05-08	V4.0-stable-20070508c	HP	SCRIPT update_tasktemplate_forbackground.sh ## Modify the task template for "Run background job" to route stderr to stdout.
+2007-05-08	V4.0-stable-20070509	LH	COMMENT Make sure that the background job task template now really ends with "2>&1".
+2007-05-14	V4.0-stable-20070514b	HP	SQL	ALTER TABLE jobrun ADD INDEX (job_id, valid, endtime); ## Add a new index to jobrun - This may take some time.
+2007-05-14	V4.0-stable-20070514b	LH	SQL	ALTER TABLE jobrun ADD INDEX (job_id, valid, starttime); ## Add a new index to jobrun - This may take some time.
+2007-05-16	V3.6-stable-20070521	HP	SQL	ALTER TABLE nodesetup ADD INDEX (name); ## Add index over nodesetup table
+2007-05-31	V4.0-stable-20070531f	HP	FEATURE	javaparser_eta_statistics=true ## A statistic graphic showing the deviation of the ETA.
+2007-06-12	V4.0.1-stable-20070622	HP	FEATURE home_gentics_news=true ## Enable displaying of gentics news on start page.
+2007-06-19	V4.0.1-stable-20070622	LH	FEATURE personalloginstream=true ## enable presentation of personal stream on login page through cookies. can be disabled in personal settings by each user.
+2007-06-22	V4.0.1-stable-20070622	NOP	COMMENT ## make sure that in file default.portal.xml the <parameter id="p.sid" mapped="sid"/> is present for all bookmarks (if not, add it)
+2007-06-22	V4.0.1-stable-20070625	NOP	COMMENT	## manually update /Node/tomcat/conf/gentics/cn.portaltemplate.xml
+2008-01-10	V4.0.1-stable-20080116	HP	FEATURE itemlist_configurepagesize=true ## Lets the user configure the default page size for lists. use $DEFAULT_MAXLISTITEMS to set the default value.
+2008-01-09	V4.0.1-stable-20080116	HP	SQL	ALTER TABLE systemuser ADD inboxtoemail INTEGER; ## add new column for 'inboxtoemail' feature.
+2008-01-09	V4.0.1-stable-20080116	HP	SQL	 insert into tree (itemorder, mother, name, type_id) values (99, 16, 'Munin output', 111); ## add the 'munin' st
+2008-01-24	V4.1-head-20080305	HP	COMMENT	## Creating tables for import/export
+2008-01-24	V4.1-head-20080305	HP	SQL	create table bundle (id integer auto_increment primary key, globalprefix varchar(255), globalid integer not null, name varchar(255) not null, description mediumtext not null, password varchar(255) not null, isimported integer not null default 0, keepoldbuilds integer not null default 0, enabledownload integer not null default 0, creator integer, editor integer, edate integer, cdate integer);create table bundlecontainedobject (id integer auto_increment primary key, bundle_id integer not null references bundle(id), obj_type integer not null, obj_id integer not null, referrer_object_id integer references bundlecontainedobject (id) );create table bundlebuild (id integer auto_increment primary key, bundle_id integer not null references bundle (id), changelog mediumtext not null, date integer not null, filename varchar(255) null, statuscode integer not null default -1);create table bundleimport (id integer auto_increment primary key, user_id integer not null, date integer null, bundlebuild_id integer not null references bundlebuild (id));create table bundleimportobject (id integer auto_increment primary key, bundleimport_id integer not null references bundleimport (id), obj_type integer not null, obj_id integer, action varchar(255), udate integer);create table bundleimportconflicts (id integer auto_increment primary key, bundleimportobject_id integer not null references bundleimportobject (id), name varchar(255), local_obj_id integer);create table mappedglobalidgenerator (id integer auto_increment primary key);create table mappedglobalid (id integer auto_increment primary key, globalprefix varchar(255), globalid integer, localid integer, localid2 integer, tablename varchar(255));
+2008-01-30	V4.1-head-20080305	HP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (999, 7, 'Bundle Management', 130), (10, 82, 'Export', 131), (30,82,'Import', 132) ## Add bundle management into tree.
+2008-01-30	V4.1-head-20080305	HP	SQL	alter table bundlecontainedobject add accepted integer not null default 0;
+2008-01-30	V4.1-head-20080305	HP	SQL	alter table bundlecontainedobject change referrer_object_id referrer_obj_id integer;alter table bundlecontainedobject add referrer_obj_type integer;
+2008-02-07	V4.1-head-20080305	HP	SQL	alter table bundleimportobject drop obj_id;alter table bundleimportobject add globalprefix varchar(255);alter table bundleimportobject add globalid integer;alter table bundleimportconflicts drop local_obj_id;alter table bundleimportconflicts add reason_obj_type integer;alter table bundleimportconflicts add reason_obj_id integer;alter table bundleimportconflicts add reason varchar(255);alter table bundleimportconflicts rename to bundleimportconflict;
+2008-02-12	V4.1-head-20080305	HP	SQL	CREATE TABLE invokerqueue (id integer auto_increment primary key, type varchar(20) not null, idparam varchar(200) not null, additionalparams varchar(255) not null, date integer not null, UNIQUE (type, idparam)); ALTER TABLE invokerqueue ADD INDEX (date);
+2008-02-14	V4.1-head-20080305	HP	SQL	ALTER TABLE bundleimport MODIFY date integer NOT NULL;ALTER TABLE bundleimportobject MODIFY udate integer NOT NULL;ALTER TABLE bundlecontainedobject MODIFY referrer_obj_id integer NOT NULL;ALTER TABLE bundlecontainedobject MODIFY referrer_obj_type integer NOT NULL;
+2008-02-14	V4.1-head-20080305	NOP	SQL	CREATE TABLE missingreference (id int(10) unsigned NOT NULL auto_increment, source_tablename varchar(50) NOT NULL, source_id int(10) unsigned NOT NULL, reference_name varchar(255) NOT NULL, target_globalprefix varchar(255) NOT NULL, target_globalid int(10) unsigned NOT NULL, PRIMARY KEY  (id), KEY source (source_tablename,source_id), KEY reference (source_tablename, source_id, reference_name), KEY target (target_globalprefix,target_globalid));
+2008-02-19	V4.1-head-20080305	HP	SQL	ALTER TABLE bundle ADD importfolder_id INTEGER;
+2008-02-19	V4.1-head-20080305	AH	SQL	ALTER TABLE bundle ADD updateurl varchar(255);
+2008-02-25	V4.1-head-20080305	HP	SQL	alter table bundlecontainedobject add autoadded integer not null default 0;
+2008-02-25	V4.1-head-20080305	HP	SQL	ALTER TABLE objprop drop key objtag_id; ALTER TABLE objprop add key (objtag_id);
+2008-02-28	V4.1-head-20080305	HP	SQL	alter table bundleimportobject add copy_id integer not null default 0;
+2008-03-02	V4.1-head-20080305	HP	SQL	alter table bundle add source varchar(255);
+2008-03-07	V4.1-stable-20080307	HP	SQL	UPDATE tree SET itemorder = itemorder + 1 WHERE mother = 7 AND itemorder > 6 ; UPDATE tree SET itemorder = 7 WHERE mother = 7 AND type_id = 130;
+2008-03-07	V4.1-stable-20080307	HP	COMMENT	## Give administrator groups all permission on Import/Export (Bundle Management)
+2008-03-07	V4.1-stable-20080311	LH	COMMENT inform server admin about new major changes (see GIP changelog) and short downtime during update. do this BEFORE UPDATING!
+2008-03-07	V4.1-stable-20080307	SH	COMMENT update to php5: scp make2.office:/usr/src/package/dist/php-update-xx.run server:/Node/tmp/, run php-update-xx.run as root; node-package will be restarted
+2008-03-07	V4.1-stable-20080311	LH	COMMENT update mysql: scp make2.office:/usr/src/package/dist/mysql-5.0.51a.tar.gz server:/Node/tmp/, /Node/bin/nodectl stop; rm -f /Node/mysql; mv /Node/mysql-* /Node/backup; cd /Node; tar xzf /Node/tmp/mysql-5.0.51a.tar.gz; ln -s /Node/mysql-5.0.51a /Node/mysql; /Node/bin/nodectl start
+2008-03-11	V4.1-stable-20080311	HP	SQL	alter table mappedglobalid ADD INDEX (tablename, localid, localid2);
+2008-03-11	V4.1-stable-20080311	HP	COMMENT make a request to http://*server name*/CNPortletapp/JavaParserInvoker - this will create new stored procedures, triggers, globalids, etc.
+2008-03-12	V4.1-stable-20080313	AH	SQL	alter table bundlecontainedobject add cause_obj_type int, add cause_obj_id int;
+2008-03-12	V4.1-stable-20080313	HP	SQL	alter table mappedglobalid add index (globalprefix, globalid);
+2008-03-18	V4.1-stable-20080320	HP	SQL	alter table dicuser add id integer not null auto_increment primary key;update mappedglobalid, dicuser set mappedglobalid.localid = dicuser.id, mappedglobalid.localid2 = null where mappedglobalid.tablename = 'dicuser' and mappedglobalid.localid = dicuser.output_id and mappedglobalid.localid2 = dicuser.language_id;
+2008-03-21	V4.1-stable-20080321	HP	COMMENT	modify /Node/tomcat/conf/gentics/default.portal.xml and change the velocity-parameter named "runtime.log.logsystem.class" to: com.gentics.contentnode.logger.VelocityLogSystem
+2008-03-25	V4.1-stable-20080325	JZ	COMMAND:global	mkdir -p /Node/node/system/bundles ##create bundles directory (if not there yet)
+2008-03-31	V4.1-stable-20080331	HP	SQL	create table mappedglobalidsequence (id INT NOT NULL); INSERT INTO mappedglobalidgenerator (id) VALUES (NULL); INSERT INTO mappedglobalidsequence VALUES (LAST_INSERT_ID()); alter table mappedglobalid drop id; drop table mappedglobalidgenerator;
+2008-04-17	V4.1-stable-20080421	NOP	SQL	alter table mappedglobalid add column id integer not null auto_increment primary key;
+2008-04-30	V4.1-stable-20080430	HP	COMMAND:global	sed -i "s/\(<Connector port=.42889. protocol=.AJP.1.3.\)/\1 URIEncoding=\"UTF-8\"/" /Node/tomcat/conf/server.xml ## add a URIEncoding to the connector for the todo tool.
+2008-05-28	V4.1-stable-20080528	LH	COMMENT	manual change required! AFTER UPDATING (!) edit /Node/.ssh/authorized_keys and /Node/.ssh/authorized_keys2 and remove ALL GENTICS keys, except the new ones added by the following script. the new gentics keys contain gentics@v2. leave keys which where added by customers untouched. unfortunately the old gentics keys have no unique naming, so better look twice and ask for help if unsure. Examples for such keys are: node_dist@dev, gentics@dev42.office
+2008-05-28	V4.1-stable-20080528	LH	COMMENT	this change is IMPORTANT due to security issues! you must not leave a SINGLE OLD GENTICS key on customer systems!
+2008-05-28	V4.1-stable-20080528	LH	SCRIPT	update_keys.sh ## adds new ssh keys to /Node/.ssh/authorized_keys and authorized_keys2
+2008-06-10	V4.1-stable-20080610b	CP	SCRIPT	libpngsymlinks.sh ## adds missing library symlink. ATTENTION - may fail if system has already been fixed
+2008-07-09	V4.1-stable-20080709a	HP	SQL	alter table job add last_valid_jobrun_id integer; update job set last_valid_jobrun_id = (select jr.id from jobrun jr where job_id = job.id and jr.valid = 1 order by starttime desc limit 1); ## We are now storing the latest jobrun id to the job for faster queries.
+# 2008-03-07	NEW	SH	COMMENT update to apache 2.2.9: scp make2.office:/usr/src/package/dist/apache-update-2.2.9.run server:/Node/tmp/, run apache-update-2.2.9.run as root; node-package will be restarted
+2008-09-26	V4.1-stable-20080926a	HP	SQL	alter table job add jobruncount integer not null default 0;alter table job add jobrunaverage integer not null default 0;update job set jobruncount = (select count(*) from jobrun where job_id = job.id and starttime > 0 and endtime > 0 and  valid = 1);update job set jobrunaverage = (select round(avg(endtime-starttime)) from jobrun where job_id = job.id and starttime > 0 and endtime > 0 and  valid = 1); ## further improve performance of scheduler overview by caching averages ...
+2008-01-28	V4.1-stable-20090128a	CP	SQL	ALTER TABLE msg ADD COLUMN instanttime INT(255) DEFAULT 0;
+2009-03-05	V4.1-stable-20090305a	NOP	SQL	create table dirtanalysis (id int not null auto_increment primary key, sid varchar(15) not null, finished tinyint not null default 0, timestamp int not null, analysis text, jstree_analysis text, dirted int not null default 0, obj_type int not null default 0, obj_id int not null default 0, action varchar(255) default null);
+2009-03-05	V4.1-stable-20090305a	NOP	SQL	alter table dirtqueue add column simulation tinyint default 0;
+2009-03-05	V4.1-stable-20090305g	NOP	SQL	alter table dirtqueue add column sid varchar(15) default null;
+2009-03-10	V4.1-stable-20090310a	CP	FEATURE quickjump=true ## quick jump to pages
+2009-03-11	V4.1-stable-20090311	CP	FEATURE disableIE7StandardsMode=false ## disable the IE8 compatibility mode
+2009-03-20	V4.1-stable-20090511	NOP	SQL	alter table bundlecontainedobject add column excluded int not null default 0; ## added exclusion column
+2009-04-01	V4.1-stable-20090511	NOP	SQL	alter table bundlecontainedobject add column bundlebuild_id int default null; update bundlecontainedobject set bundlebuild_id = (select max(bundlebuild.id) from bundlebuild where bundlebuild.bundle_id = bundlecontainedobject.bundle_id); ## added column for bundlebuild
+2009-05-05	V4.1-stable-20090511	NOP	SQL	alter table bundleimportconflict add recoverable int not null default 1; ## added column recoverable
+2009-05-08	V4.1-stable-20090511	NOP	SQL	alter table bundleimport add group_id int not null default -1; ## added column for importing as group
+2009-05-13	V4.1-stable-20090513a    LH      SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2009-06-04	V4.1-stable-20090629	NOP	SQL	alter table dirtanalysis modify column analysis mediumtext; alter table dirtanalysis modify column jstree_analysis mediumtext; ## columns for analysis data were too small.
+2009-06-04	V4.1-stable-20090629	CP	FEATURE	maintenance_mode=true ## enable capability to activate the system's maintenance mode
+2009-06-16	V4.1-stable-20090629 CP	FEATURE suspend_scheduler=true ## the scheduler can be suspended with a button click if this feature is enabled
+2009-06-18	V4.1-stable-20090629	NOP	SQL	update tree set itemorder = itemorder + 1 where mother = 11 and itemorder >= 2 and type_id != 108; insert into tree (itemorder, mother, name, type_id) values (3, 11, 'Objekt Eigenschaften Wartung', 140); ## add object maintenance into tree
+2009-07-09	V4.1-stable-20090709	CP SQL CREATE TABLE `autoupdatelog` ( `id` int(10) unsigned NOT NULL auto_increment, `date` datetime NOT NULL, `updatefile` varchar(255) NOT NULL, `status` varchar(45) NOT NULL, PRIMARY KEY  (`id`));
+2009-07-17	V4.1-stable-20090723	CP	SQL ALTER TABLE autoupdatelog ADD COLUMN user_id int;
+2009-07-22	V4.1-stable-20090724b CP	PHP create_autoupdate_job.php ## create task template, task and job for autoupdate
+2009-07-22	V4.1-stable-20090724b CP	PHP optimize_todotool_db.php ## optimize the todo tool database by adding quick columns
+2009-07-27	V4.1-stable-20090727a	CP	FEATURE instantmessages=true ## instant messages
+2009-07-27	V4.1-stable-20090727a	CP	SQL DELETE FROM tree WHERE type_id IN (141, 1042); ## delete old system maintenance and autoupdate tree entries
+2009-07-27	V4.1-stable-20090727a	CP	SQL DELETE FROM perm WHERE o_type IN (141, 1042); ## delete old system maintenance and autoupdate permissions
+2009-07-27	V4.1-stable-20090727a	CP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values (4, 7, 'Systemwartung', 1042); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 1042, LAST_INSERT_ID(), '11000000000000000000000000000000' ); ## added menu entry for system maintenance
+2009-07-27	V4.1-stable-20090727a	CP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) values ( 4, 7, 'AutoUpdate', 141 ); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 141, LAST_INSERT_ID(), '00000000000000000000000000000000' ); ## added menu entry for auto update
+2009-07-27	V4.1-stable-20090727a	CP	SQL UPDATE perm SET perm = CONCAT(LEFT(perm, 2), '1', RIGHT(perm, 29)) WHERE o_type = 36 AND usergroup_id = 2; ## add suspend scheduler entry to node group
+2009-07-27	V4.1-stable-20090727c	CP	SQL UPDATE perm SET perm = CONCAT(LEFT(perm, 2), '1', RIGHT(perm, 29)) WHERE o_type = 17 AND usergroup_id = 2; ## add inbox instant messages
+2009-07-27	V4.1-stable-20090727c	CP	FEATURE	autoupdate_policy=false ## enables you to select an autoupdate policy in the update dialog
+2009-07-27	V4.1-stable-20090727c	CP	SQL	DELETE FROM tree WHERE type_id IN (131, 132); ## delete old import and export tree nodes
+2009-08-04	V4.1-stable-20090805	NOP	SQL	alter table bundleimportobject add column maxudate int not null default -1; alter table bundleimportobject add column numobjects int not null default 0; ## add new columns to bundleimportobject for modification detection
+2009-08-26	V4.1-stable-20090828	CP	SQL	UPDATE perm SET perm = CONCAT('11', SUBSTR(perm, 2,30)) WHERE usergroup_id = 2 AND o_type = 141; ## enable super admin group to use AutoUpdate
+2009-09-09	V4.1-stable-20090909a	JS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2009-10-15	V4.1-stable-20091015a	JS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2009-10-30	V4.1-stable-20091031 CP  FEATURE instantmessages_customtime=false ## enables you to define an instant message's display time
+2009-11-12	V4.1-stable-20091112b	JS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2009-12-03	V4.1-stable-20091204 CP  FEATURE checkall_perm=true ##displays an "(un)check all"-checkbox in the permission dialog
+2009-12-11	V4.1-stable-20091212	FG	COMMENT	The following tables are needed for quartz scheduler jobs
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE backgroundjob (id INTEGER PRIMARY KEY AUTO_INCREMENT, nada tinyint(4) NOT NULL DEFAULT 0);
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_JOB_DETAILS (JOB_NAME  VARCHAR(80) NOT NULL, JOB_GROUP VARCHAR(80) NOT NULL, DESCRIPTION VARCHAR(120) NULL, JOB_CLASS_NAME   VARCHAR(128) NOT NULL, IS_DURABLE VARCHAR(1) NOT NULL, IS_VOLATILE VARCHAR(1) NOT NULL, IS_STATEFUL VARCHAR(1) NOT NULL, REQUESTS_RECOVERY VARCHAR(1) NOT NULL, JOB_DATA BLOB NULL, PRIMARY KEY (JOB_NAME,JOB_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_JOB_LISTENERS (JOB_NAME  VARCHAR(80) NOT NULL, JOB_GROUP VARCHAR(80) NOT NULL, JOB_LISTENER VARCHAR(80) NOT NULL, PRIMARY KEY (JOB_NAME,JOB_GROUP,JOB_LISTENER), FOREIGN KEY (JOB_NAME,JOB_GROUP) REFERENCES QRTZ_JOB_DETAILS(JOB_NAME,JOB_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_TRIGGERS (TRIGGER_NAME VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, JOB_NAME  VARCHAR(80) NOT NULL, JOB_GROUP VARCHAR(80) NOT NULL, IS_VOLATILE VARCHAR(1) NOT NULL, DESCRIPTION VARCHAR(120) NULL, NEXT_FIRE_TIME BIGINT(13) NULL, PREV_FIRE_TIME BIGINT(13) NULL, TRIGGER_STATE VARCHAR(16) NOT NULL, TRIGGER_TYPE VARCHAR(8) NOT NULL, START_TIME BIGINT(13) NOT NULL, END_TIME BIGINT(13) NULL, CALENDAR_NAME VARCHAR(80) NULL, MISFIRE_INSTR SMALLINT(2) NULL, JOB_DATA BLOB NULL, PRIMARY KEY (TRIGGER_NAME,TRIGGER_GROUP), FOREIGN KEY (JOB_NAME,JOB_GROUP) REFERENCES QRTZ_JOB_DETAILS(JOB_NAME,JOB_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_SIMPLE_TRIGGERS (TRIGGER_NAME VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, REPEAT_COUNT BIGINT(7) NOT NULL, REPEAT_INTERVAL BIGINT(12) NOT NULL, TIMES_TRIGGERED BIGINT(7) NOT NULL, PRIMARY KEY (TRIGGER_NAME,TRIGGER_GROUP), FOREIGN KEY (TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QRTZ_TRIGGERS(TRIGGER_NAME,TRIGGER_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_CRON_TRIGGERS (TRIGGER_NAME VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, CRON_EXPRESSION VARCHAR(80) NOT NULL, TIME_ZONE_ID VARCHAR(80), PRIMARY KEY (TRIGGER_NAME,TRIGGER_GROUP), FOREIGN KEY (TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QRTZ_TRIGGERS(TRIGGER_NAME,TRIGGER_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_BLOB_TRIGGERS (TRIGGER_NAME VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, BLOB_DATA BLOB NULL, PRIMARY KEY (TRIGGER_NAME,TRIGGER_GROUP), FOREIGN KEY (TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QRTZ_TRIGGERS(TRIGGER_NAME,TRIGGER_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_TRIGGER_LISTENERS (TRIGGER_NAME  VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, TRIGGER_LISTENER VARCHAR(80) NOT NULL, PRIMARY KEY (TRIGGER_NAME,TRIGGER_GROUP,TRIGGER_LISTENER), FOREIGN KEY (TRIGGER_NAME,TRIGGER_GROUP) REFERENCES QRTZ_TRIGGERS(TRIGGER_NAME,TRIGGER_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_CALENDARS (CALENDAR_NAME  VARCHAR(80) NOT NULL, CALENDAR BLOB NOT NULL, PRIMARY KEY (CALENDAR_NAME));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_PAUSED_TRIGGER_GRPS (TRIGGER_GROUP  VARCHAR(80) NOT NULL, PRIMARY KEY (TRIGGER_GROUP));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_FIRED_TRIGGERS (ENTRY_ID VARCHAR(95) NOT NULL, TRIGGER_NAME VARCHAR(80) NOT NULL, TRIGGER_GROUP VARCHAR(80) NOT NULL, IS_VOLATILE VARCHAR(1) NOT NULL, INSTANCE_NAME VARCHAR(80) NOT NULL, FIRED_TIME BIGINT(13) NOT NULL, STATE VARCHAR(16) NOT NULL, JOB_NAME VARCHAR(80) NULL, JOB_GROUP VARCHAR(80) NULL, IS_STATEFUL VARCHAR(1) NULL, REQUESTS_RECOVERY VARCHAR(1) NULL, PRIMARY KEY (ENTRY_ID));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_SCHEDULER_STATE (INSTANCE_NAME VARCHAR(80) NOT NULL, LAST_CHECKIN_TIME BIGINT(13) NOT NULL, CHECKIN_INTERVAL BIGINT(13) NOT NULL, RECOVERER VARCHAR(80) NULL, PRIMARY KEY (INSTANCE_NAME));
+2009-12-11	V4.1-stable-20091212	FG	SQL CREATE TABLE QRTZ_LOCKS (LOCK_NAME  VARCHAR(40) NOT NULL, PRIMARY KEY (LOCK_NAME));
+2009-12-11	V4.1-stable-20091212	FG	SQL INSERT INTO QRTZ_LOCKS values('TRIGGER_ACCESS'); INSERT INTO QRTZ_LOCKS values('JOB_ACCESS'); INSERT INTO QRTZ_LOCKS values('CALENDAR_ACCESS'); INSERT INTO QRTZ_LOCKS values('STATE_ACCESS'); INSERT INTO QRTZ_LOCKS values('MISFIRE_ACCESS');
+2010-01-15	V4.1-stable-20100115a	FG	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2010-01-21	V4.1-stable-20100122		JS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2010-05-07	CH-70	NOP	SCRIPT updateenvsh.sh ## update env.sh to latest version
+2010-05-04	V4.1-stable-20100504b		TS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2010-08-10	V4.1-stable-20100812	NOP	SQL	alter table bundle add column importgroup_id int(11) NOT NULL default '-1'; ## create importgroup column for bundle
+2010-08-10	V4.1-stable-20100812	NOP	SQL	update bundle b set importgroup_id = (select group_id from bundleimport bi left join bundlebuild bb on bi.bundlebuild_id = bb.id where bb.bundle_id = b.id order by bi.date desc limit 1) where isimported = 1; ## update importgroup column for import bundles
+2010-09-14	V4.1-stable-20100915	TS	PHP create_index_bundlecontainedobject.php ## conditionally create an index for bundlecontainedobject
+2010-12-14	CH-80		TS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2011-01-24	CH-84	NOP	SQL	DELETE FROM tree WHERE type_id = 110; ## remove the todotool from the tree
+2011-01-24	CH-85	NOP	SQL	DELETE FROM perm WHERE o_type = 110; ## also remove the permission entries
+2011-02-10	CH-93     TS  SQL ALTER TABLE part ADD COLUMN (policy VARCHAR(255) default ''); ## new column that specifies the policy to use for input validation of parts
+2011-02-10	CH-94     TS  SQL ALTER TABLE systemsession CHANGE COLUMN sid secret VARCHAR(15) NOT NULL DEFAULT ''; ## rename sid column - there may now be multiple identical and non-empty values in the "secret" column.
+2011-02-10	CH-95     TS  FEATURE use_php_streaming_api=true ## use the PHP built in wrapper API for streams instead of instantiating new curl processes
+2011-02-16	CH-96     TS  SQL ALTER TABLE dirtqueue CHANGE COLUMN sid sid VARCHAR(26) DEFAULT NULL; ## enlarge the sid column to session-secret-length (15) + max-int-length (10) + 1 (just to be sure).
+2011-02-16	CH-97     TS  SQL ALTER TABLE dirtanalysis CHANGE COLUMN sid sid VARCHAR(26) DEFAULT NULL; ## enlarge the sid column to session-secret-length (15) + max-int-length (10) + 1 (just to be sure).
+2010-01-21	CH-99		JS	SCRIPT  remove_portalnode.sh ## removes portalnode webapp and configuration from contentnode
+2010-01-21	CH-100		JS	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2011-03-28	CH-106		TS	SCRIPT	add_apc_module.sh ## adds the apc module to php (needs to be enabled in php.ini)
+2011-04-04	CH-107	TS	PHP create_indices.php ## corrects indices that were missing on some installations
+2010-11-29	CH-77	TS	PHP create_ml_rss.php ## conditionally insert markup language for RSS
+2010-12-07	CH-78	CP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) VALUES (3, 7, 'Berechtigungen anzeigen', 510); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 510, LAST_INSERT_ID(), '10000000000000000000000000000000');## insert new view_perms node
+2010-12-07	CH-79	CP	FEATURE	view_perms=false ##new view_perms feature is NOT activated by default
+2010-12-21	CH-83	TS	SQL DELETE FROM mappedglobalid WHERE tablename = 'perm'; ## triggers for the perm table are not generated any more, so we don't need the entries in mappedglobalid either
+2010-09-02  CH-1220 TS  SQL ALTER TABLE nodeversion ADD INDEX (o_id, o_type); ## this index will optimize publishing performance
+2011-12-07	CH-1227	TS	FEATURE	webdav_use_web_folders=true ## True if WebDAV folders should be opened with MS Web Folder API
+2011-12-07	CH-1228	TS	FEATURE	webdav_use_file_url=true ## True if WebDAV folders should be opened with file:// URLs
+2012-02-13	CH-1232	NOP	SQL	ALTER TABLE bundlecontainedobject ADD COLUMN channel_id INT DEFAULT NULL AFTER obj_id;
+2012-02-21	CH-1233	NOP	SQL	UPDATE bundlecontainedobject SET channel_id = 0 WHERE channel_id IS NULL; ALTER TABLE bundlecontainedobject MODIFY COLUMN channel_id INT NOT NULL DEFAULT 0;
+2012-09-07	CH-1254	NOP	SQL	ALTER TABLE mappedglobalidsequence ENGINE=MyISAM; ## modify the table mappedglobalidsequence to be MyISAM to avoid locks
+2012-10-22	CH-1260	NOP	SQL	INSERT INTO tree (itemorder, mother, name, type_id) VALUES (2, 0, 'Task Management', 110); INSERT INTO perm (usergroup_id, o_type, o_id, perm) VALUES (2, 110, LAST_INSERT_ID(), '11000000000000000000000000000000'); ## insert the Task Management (aka TodoTool) into the tree
+2012-11-05	CH-1262	NOP	FEATURE	advanced_parallel=true ## make sure that tasks may not run if any following tasks (even if they may run parallel) are still running
+2013-09-11	CH-1368	NOP	SQL	ALTER TABLE user_group ADD id INT AUTO_INCREMENT NOT NULL PRIMARY KEY FIRST; ## Add primary key to table user_group
+2013-09-11	CH-1384	NOP	SQL	CREATE TABLE user_group_node (id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, user_group_id INT NOT NULL DEFAULT 0, node_id INT NOT NULL DEFAULT 0, CONSTRAINT FOREIGN KEY (user_group_id) REFERENCES user_group (id) ON DELETE CASCADE ON UPDATE NO ACTION, CONSTRAINT FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION); ## add table to restrict user to group assignment to nodes
+2013-10-16	CH-1388	NOP	SQL	DELETE FROM perm WHERE perm = '00000000000000000000000000000000'; ## delete perm table entries with no bit set
+2012-11-05	CH-1262	NOP	FEATURE	advanced_parallel=true ## make sure that tasks may not run if any following tasks (even if they may run parallel) are still running
+2013-11-07	CH-1390	NOP	SQL	CREATE TABLE globalprefix (id INT NULL DEFAULT 1 PRIMARY KEY, globalprefix VARCHAR(4) NOT NULL DEFAULT ''); ## add table that holds the globalprefix
+2013-11-07	CH-1391	NOP	SQL	INSERT INTO globalprefix (id, globalprefix) SELECT 1, textvalue FROM nodesetup WHERE name ='globalprefix'; ## Insert global prefix into its table
+2013-11-07	CH-1392	NOP	SQL	DELETE FROM nodesetup WHERE name = 'globalprefix'; ## Delete globalprefix from nodesetup table
+2013-11-08	CH-1393	NOP	SQL	CREATE TABLE nodesetup_new (name char(255) NOT NULL default '', intvalue int(11) NOT NULL default '0', textvalue char(255) NOT NULL default '', PRIMARY KEY (name)); INSERT INTO nodesetup_new SELECT DISTINCT * FROM nodesetup; DROP TABLE nodesetup; RENAME TABLE nodesetup_new TO nodesetup; ## recreate table nodesetup with a primary key
+2014-03-05	CH-1404	JS	SCRIPT	updateenvsh.sh ## Update env.sh script
+2014-07-04	CH-1417	BK	SQL	ALTER TABLE systemuser MODIFY COLUMN password CHAR(64); ## For bcrypt only 60 characters are needed + 4 for the leg- prefix
+2014-07-04	CH-1418	BK	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:bcryptpasswords', 10000); ## Hash all passwords with bcrypt after next tomcat start
+2014-07-10	CH-1420 JS	SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2014-04-14	CH-1421	BK	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:securesystemgenticslogins', 10000); ## Generate new random passwords for the system and gentics users on next tomcat start
+2014-08-14	CH-1423	JS	SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2014-12-15	CH-1434	NOP	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:migrateglobalids', 10000); ## Add init job to migrate the global ids
+2015-04-21	CH-1446	JS	SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2015-04-27	CH-1448	BK	SQL	ALTER TABLE bundlebuild ADD statusmessage TEXT; # New field for error messages
+2015-04-27	CH-1449	BK	SQL	ALTER TABLE bundle ADD conflictbehavior VARCHAR(16); # New field to remember the conflict behavior of the last build
+2015-06-16	CH-1450	NOP	SQL	alter table dirtanalysis modify column analysis longtext; alter table dirtanalysis modify column jstree_analysis longtext; ## columns for analysis data were too small.
+2015-07-08	CH-1459 BK	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2015-07-21	CH-1460	BK	SCRIPT	updateenvsh.sh ## Update env.sh script
+2015-08-05	CH-1455	JS	COMMENT	OMMITTED ALTER TABLE mappedglobalid MODIFY COLUMN globalid VARCHAR(36);
+2015-08-05	CH-1456	JS	COMMENT	OMMITTED ALTER TABLE bundle MODIFY COLUMN globalid VARCHAR(36);
+2015-08-05	CH-1457	JS	COMMENT	OMMITTED ALTER TABLE bundleimportobject MODIFY COLUMN globalid VARCHAR(36);
+2015-08-05	CH-1458	JS	COMMENT	OMMITTED ALTER TABLE missingreference MODIFY COLUMN target_globalid VARCHAR(36);
+2015-10-21	CH-1471	BK	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2015-10-29	CH-1474	NOP	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2016-02-02	CH-1484	BK	SQL	UPDATE systemuser su LEFT JOIN systemsession ss ON ss.user_id = su.id SET active = 0 WHERE ss.id IS NULL AND su.email = 'nowhere@gentics.com' AND su.id > 3; # Delete unused users
+2016-03-29	CH-1485 BK SCRIPT update_tomcat.sh ## update tomcat to latest version
+2016-05-19	CH-1486	NOP	SQL	DELETE FROM user_group WHERE user_id IN (SELECT id FROM systemuser WHERE active = 0); ## remove deactivated users from groups
+2016-07-06	CH-1499 BK SCRIPT update_tomcat.sh ## update tomcat to latest version
+2016-07-15	CH-1500	NOP	SQL	CREATE INDEX bundle2 ON bundlecontainedobject (bundle_id, bundlebuild_id, accepted, referrer_obj_id); ## add index to speed up count of warnings
+2016-07-29	CH-1501 DR	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2016-10-19	CH-1505	NOP	SCRIPT	updatenodectl.sh ## update nodectl script to latest version
+2017-01-03	CH-1554	BK	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2017-05-02	CH-1555	BK	SQL	ALTER TABLE logerror ADD stacktrace TEXT;
+2017-05-03	CH-1557	BK	SQL	ALTER TABLE systemsession MODIFY ip VARCHAR(45); ## Expand the ip column to 45 chars (IPv6)
+2017-08-03	CH-1566	BK	SCRIPT  updatenodectl.sh ## update nodectl script to latest version
+2017-08-29	CH-1568	BK	SQL	ALTER TABLE systemsession MODIFY COLUMN agent TEXT NULL;
+2017-12-19	CH-1578	BK	SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2018-01-04	CH-1579	NOP	SQL	INSERT INTO nodesetup (name, intvalue) VALUES ('job:migrateschedulersuspend', 10000); ## Add init job to migrate scheduler suspend file
+2018-02-07	CH-1586	NOP	SCRIPT	updateenvsh.sh ## Update env.sh script
+2018-02-14	CH-1587	NOP	SQL	SET @admin_id = (SELECT id FROM tree WHERE type_id = 1); SET @itemorder = (SELECT MAX(itemorder) + 1 FROM tree WHERE mother = @admin_id); INSERT INTO tree (itemorder, mother, name, type_id) values (@itemorder, @admin_id, 'Tools', 90000); INSERT INTO perm (usergroup_id, o_type, o_id, perm) values (2, 90000, LAST_INSERT_ID(), '11000000000000000000000000000000' ); ## add menu entry for Custom Tools
+2018-03-13	CH-1588	NOP	SCRIPT	updatenodectl.sh ## update nodectl script to latest version
+2019-04-16	CH-1610	NOP	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2020-03-04	CH-1622	DR	SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2020-09-09	CH-1629	NOP	SCRIPT	prepare_server_xml_tomcat_9.sh ## prepare server.xml for Update to Tomcat 9
+2020-09-09	CH-1630	NOP	SCRIPT	update_tomcat.sh ## update tomcat to latest version
+2021-04-23  CH-1643 NOP SQL ALTER TABLE language ADD country VARCHAR(3) DEFAULT null;
+2021-04-23  CH-1644 NOP SQL UPDATE language SET country = 'DE' WHERE short = 'de';
+2021-04-23  CH-1645 NOP SQL UPDATE language SET country = 'EN' WHERE short = 'en';
+2021-04-23  CH-1646 NOP SQL UPDATE language SET name = 'Desc' WHERE id = 3;
+2021-04-23  CH-1647 NOP SQL INSERT INTO language (id, name, active) VALUES (4, 'Meta', 0);
+2021-04-23  CH-1648 NOP SQL INSERT INTO language (id, name, short, active) VALUES (5, 'Français', 'fr', 0);
+2021-04-23  CH-1649 NOP SQL INSERT INTO language (id, name, short, active) VALUES (6, 'Italiano', 'it', 0);
+2022-03-02  CH-1666 NOP SCRIPT  update_tomcat.sh ## update tomcat to latest version
+2022-07-26  CH-1667 NOP SQL CREATE TABLE scheduler_task (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, description TEXT NOT NULL DEFAULT '', command TEXT NOT NULL, internal BOOLEAN NOT NULL DEFAULT false, creator INT NOT NULL DEFAULT 0, cdate INT NOT NULL DEFAULT 0, editor INT NOT NULL DEFAULT 0, edate INT NOT NULL DEFAULT 0);
+2022-07-26  CH-1668 NOP SQL CREATE TABLE scheduler_schedule (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, name VARCHAR(255) NOT NULL, description TEXT NOT NULL DEFAULT '', scheduler_task_id INT NOT NULL, schedule_json TEXT NOT NULL, parallel BOOLEAN NOT NULL DEFAULT false, active BOOLEAN NOT NULL DEFAULT false, notification_email_json TEXT DEFAULT NULL, creator INT NOT NULL DEFAULT 0, cdate INT NOT NULL DEFAULT 0, editor INT NOT NULL DEFAULT 0, edate INT NOT NULL DEFAULT 0, runs INT NOT NULL DEFAULT 0, average_time INT NOT NULL DEFAULT 0, scheduler_execution_id INT DEFAULT NULL, CONSTRAINT scheduler_task_id_fk FOREIGN KEY (scheduler_task_id) REFERENCES scheduler_task (id) ON UPDATE RESTRICT ON DELETE CASCADE);
+2022-07-26  CH-1669 NOP SQL CREATE TABLE scheduler_execution (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, scheduler_schedule_id INT NOT NULL, starttime INT NOT NULL DEFAULT 0, endtime INT NOT NULL DEFAULT 0, duration INT NOT NULL DEFAULT 0, result TINYINT UNSIGNED DEFAULT NULL, log MEDIUMTEXT, CONSTRAINT scheduler_schedule_id_fk FOREIGN KEY (scheduler_schedule_id) REFERENCES scheduler_schedule (id) ON UPDATE RESTRICT ON DELETE CASCADE);
+2022-07-26  CH-1670 NOP SQL ALTER TABLE scheduler_schedule ADD CONSTRAINT scheduler_execution_id_fk FOREIGN KEY (scheduler_execution_id) REFERENCES scheduler_execution (id) ON UPDATE RESTRICT ON DELETE SET NULL;
+2022-08-17  CH-1671 NOP SQL INSERT INTO nodesetup (name, intvalue) VALUES ('job:migratescheduler', 10000);
+2022-09-20  CH-1674 PK SQL ALTER TABLE task ADD COLUMN migrated BOOLEAN NOT NULL DEFAULT false AFTER edate;
+2022-09-20  CH-1675 PK SQL ALTER TABLE job ADD COLUMN migrated BOOLEAN NOT NULL DEFAULT false AFTER jobrunaverage;
+2022-09-20  CH-1676 PK SQL ALTER TABLE jobrun ADD COLUMN migrated BOOLEAN NOT NULL DEFAULT false AFTER output;
+2023-02-15  CH-1679 NOP SQL ALTER TABLE scheduler_execution ADD INDEX (starttime);
+2023-02-15  CH-1680 NOP SQL ALTER TABLE scheduler_execution ADD INDEX (endtime);
+2023-02-15  CH-1681 NOP SQL ALTER TABLE scheduler_execution ADD INDEX (duration);
+2023-02-15  CH-1682 NOP SQL ALTER TABLE scheduler_execution ADD INDEX (result);
+2023-03-21  CH-1684 NOP SQL DELETE FROM perm WHERE o_type IN (130, 137, 138); ## Remove permissions for import/export
+2023-03-21  CH-1685 NOP SQL DROP TABLE IF EXISTS bundle;
+2023-03-21  CH-1686 NOP SQL DROP TABLE IF EXISTS bundlebuild;
+2023-03-21  CH-1687 NOP SQL DROP TABLE IF EXISTS bundlecontainedobject;
+2023-03-21  CH-1688 NOP SQL DROP TABLE IF EXISTS bundleimport;
+2023-03-21  CH-1689 NOP SQL DROP TABLE IF EXISTS bundleimportconflict;
+2023-03-21  CH-1690 NOP SQL DROP TABLE IF EXISTS bundleimportobject;

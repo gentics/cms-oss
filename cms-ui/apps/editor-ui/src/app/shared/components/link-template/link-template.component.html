@@ -1,0 +1,93 @@
+<div class="template-list-header left-items">
+    <gtx-progress-bar [active]="(isInProgressExternal$ | async) || (isInProgressInternal$ | async)"></gtx-progress-bar>
+
+    <div
+        [hidden]="isInProgressInternal$ | async"
+        class="template-list-header-inner"
+    >
+        <gtx-search-bar
+            *ngIf="!searchBarHidden"
+            [ngModel]="searchTerm$ | async"
+            [placeholder]="'common.search_placeholder' | i18n"
+            (ngModelChange)="searchTerm$.next($event)"
+            (clear)="searchTerm$.next('')"
+            (search)="searchTerm$.next($event)"
+        >
+        </gtx-search-bar>
+
+        <div class="template-list-header-bulk" [class.list-empty]="(nodeTemplates$ | async)?.length === 0">
+            <icon-checkbox
+                class="left"
+                icon="dashboard"
+                [selected]="nodeTemplates | allItemsSelected:folderTemplates"
+                [disabled]="(isInProgressExternal$ | async) || (isInProgressInternal$ | async)"
+                (change)="toggleSelectAll($event)"
+            ></icon-checkbox>
+
+            <span class="type">
+                <ng-template [ngIf]="0 < folderTemplates?.length" [ngIfElse]="noneSelected">
+                    <span class="count-full">
+                        <span *ngIf="(searchTerm$ | async) === ''">
+                            {{ 'editor.item_count_header_selected' | i18n: { selected: folderTemplates?.length, count: nodeTemplates?.length, _items: itemType } }}
+                        </span>
+                        <span *ngIf="(searchTerm$ | async) !== ''">
+                            {{ 'editor.item_count_header_selected_matching' | i18n: { selected: folderTemplates?.length, count: nodeTemplates?.length, _items: itemType } }}
+                        </span>
+                    </span>
+                </ng-template>
+                <ng-template #noneSelected>
+                    <span class="count-full">
+                        <span *ngIf="(searchTerm$ | async) !== ''">
+                            {{ 'editor.item_count_header_matching' | i18n: { count: nodeTemplates?.length, _items: itemType } }}
+                        </span>
+                    </span>
+                    <span class="count-part" *ngIf="(searchTerm$ | async) === ''">
+                        {{ 'editor.item_count_header_simple' | i18n: { count: nodeTemplates?.length, _items: itemType } }}
+                    </span>
+                </ng-template>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div
+    class="template-list-placeholder"
+    [hidden]="!(isInProgressInternal$ | async)"
+>
+    <p>{{ 'editor.templates_loading_status' | i18n }}</p>
+</div>
+
+<div
+    class="list-body"
+    [class.overlay-in-progress]="(isInProgressExternal$ | async) || (isInProgressInternal$ | async)"
+    [hidden]="isInProgressInternal$ | async"
+>
+    <ng-template [ngIf]="!(noTemplatesLinked$ | async)">
+        <ng-container *ngFor="let nodeTemplate of (nodeTemplates$ | async)">
+            <gtx-contents-list-item
+                class="item-row icon-checkbox-trigger"
+                [class.selected]="templateIsLinked(nodeTemplate.id)"
+            >
+                <icon-checkbox
+                    #checkbox
+                    [selected]="templateIsLinked(nodeTemplate.id)"
+                    (change)="toggleSelect($event, nodeTemplate.id)"
+                    icon="dashboard"
+                ></icon-checkbox>
+
+                <div class="item-primary">
+                    <div class="item-name">
+                        <span
+                            class="item-name-only"
+                            [title]="nodeTemplate?.description"
+                            (click)="toggleSelect(!checkbox.selected, nodeTemplate.id)"
+                            [innerHTML]="nodeTemplate?.name | highlight:(searchTerm$ | async)"
+                        >
+                        </span>
+                    </div>
+                </div>
+
+            </gtx-contents-list-item>
+        </ng-container>
+    </ng-template>
+</div>

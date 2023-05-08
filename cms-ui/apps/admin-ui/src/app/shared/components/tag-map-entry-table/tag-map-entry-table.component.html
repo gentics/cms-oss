@@ -1,0 +1,81 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<div *ngIf="!hideActions" class="entity-table-actions-bar">
+    <gtx-button
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || !canEditCR"
+        (click)="handleCreateButton()"
+    >
+        <icon left>add</icon> {{ 'shared.create_new_tagmapEntry_button' | i18n }}
+    </gtx-button>
+</div>
+
+<div class="entity-table-selection">
+    {{ 'tagmapEntry.info_selected_tagmapEntry' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+</div>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    [renderers]="{
+        reserved: boolIconRenderer,
+        optimized: boolIconRenderer,
+        filesystem: boolIconRenderer,
+        object: objectTypeRenderer,
+        attributeType: attributeRenderer,
+        targetType: objectTypeRenderer
+    }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        class="gtx-entity-grid-cell-icon"
+        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
+</ng-template>
+
+<ng-template #objectTypeRenderer let-value="value">
+    <ng-container *ngIf="TagmapEntryPropertiesObjectType[value] as objectType">
+        {{ 'common.' + (objectType | lowercase) + '_singular' | i18n | titlecase }}
+    </ng-container>
+</ng-template>
+
+<ng-template #attributeRenderer let-value="value">
+    {{ TAGMAP_ENTRY_ATTRIBUTES_MAP[value] | i18n }}
+</ng-template>

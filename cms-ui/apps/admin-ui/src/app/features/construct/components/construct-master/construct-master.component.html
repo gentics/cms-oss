@@ -1,0 +1,11 @@
+<div class="gtx-entity-master gtx-entity-master-with-common-actions">
+    <gtx-construct-table
+        class="entity-table"
+        [showSearch]="true"
+        [activeEntity]="activeEntity"
+        [(selected)]="selection"
+        (rowClick)="handleRowClick($event)"
+        (actionClick)="handleAction($event)"
+        (createClick)="handleCreate()"
+    ></gtx-construct-table>
+</div>

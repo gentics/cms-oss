@@ -1,0 +1,39 @@
+<div class="row">
+    <h2 class="title">{{ 'widget.task_queue_title' | i18n }}</h2>
+
+    <table>
+        <tr>
+            <th>{{ ('widget.task_queue_failed_title' | i18n) + ':' }}</th>
+            <td>
+                <ng-container *ngIf="dirtQueueItemsFailedAmount$ | async as amount; else noFailedTasks">
+                    <b [style.color]="'red'">{{ amount | json }}</b>
+                </ng-container>
+                <ng-template #noFailedTasks>{{ 'widget.task_queue_failed_none' | i18n }}</ng-template>
+            </td>
+        </tr>
+    </table>
+
+    <ng-container *ngIf="summary$ | async as summary; else loading">
+        <table>
+            <ng-container *ngIf="summary.items.length > 0; else noWaitingTasks">
+                <tr>
+                    <th colspan="2">{{ ('widget.task_queue_waiting_title' | i18n) + ':' }}</th>
+                </tr>
+                <tr *ngFor="let item of summary.items">
+                    <td>{{ item.count }}</td>
+                    <td>{{ item.label }}</td>
+                </tr>
+            </ng-container>
+
+            <ng-template #noWaitingTasks>
+                <tr>    
+                    <th>{{ ('widget.task_queue_waiting_title' | i18n) + ':' }}</th>
+                    <td>{{ 'widget.task_queue_waiting_none' | i18n }}</td>
+                </tr>
+            </ng-template>
+        </table>
+    </ng-container>
+    <ng-template #loading>
+        {{ 'shared.loading' | i18n }}
+    </ng-template>
+</div>

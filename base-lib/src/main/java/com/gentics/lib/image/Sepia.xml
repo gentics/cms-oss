@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<filterchain name="com.gentics.lib.image.Sepia">
+    <filter name="org.jmage.filter.spatial.GaussianBlurFilter"/>
+
+    <filter name="org.jmage.filter.color.RGB2GreyScaleConverterFilter"/>
+
+    <filter name="org.jmage.filter.color.ColorizeFilter">
+        <property name="COLOR" value="C0B38D"/>
+    </filter>
+
+    <filter name="org.jmage.filter.color.BrightenFilter">
+        <property name="ADJUST" value="5"/>
+    </filter>
+</filterchain>

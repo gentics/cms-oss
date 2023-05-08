@@ -1,0 +1,14 @@
+<gtx-date-time-picker-controls
+    [displayTime]="displayTime"
+    [displaySeconds]="displaySeconds"
+    [formatProvider]="formatProvider"
+    [min]="min"
+    [max]="max"
+    [selectYear]="selectYear"
+    [(ngModel)]="timestamp"
+></gtx-date-time-picker-controls>
+
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ formatProvider.strings.cancel }}</gtx-button>
+    <gtx-button (click)="okayClicked()">{{ formatProvider.strings.okay }}</gtx-button>
+</div>

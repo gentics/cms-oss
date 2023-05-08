@@ -1,0 +1,87 @@
+{
+  "globalId" : "A547.74146",
+  "keyword" : "gtxalohaimage",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "Bild (bearbeitbar)",
+    "en" : "Image (editable)"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.74152",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "tpl",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74157",
+    "name" : {
+      "de" : "Bild URL",
+      "en" : "Bild URL"
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 6,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74162",
+    "name" : {
+      "de" : "Alternativ Text",
+      "en" : "Alternativ Text"
+    },
+    "keyword" : "alt",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.74167",
+    "name" : {
+      "de" : "Ausrichtung",
+      "en" : "Ausrichtung"
+    },
+    "keyword" : "align",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75604",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "gisprefix",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

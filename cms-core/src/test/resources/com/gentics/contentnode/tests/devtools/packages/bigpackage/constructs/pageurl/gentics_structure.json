@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.69527",
+  "keyword" : "pageurl",
+  "icon" : "url.gif",
+  "name" : {
+    "de" : "[URL] Seite",
+    "en" : "[URL] Page"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.69533",
+    "name" : {
+      "de" : "Seiten-URL",
+      "en" : "Page-URL"
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

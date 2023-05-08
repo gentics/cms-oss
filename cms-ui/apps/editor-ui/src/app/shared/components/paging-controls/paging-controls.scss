@@ -1,0 +1,82 @@
+@import "variables";
+
+ul {
+    display: flex;
+    justify-content: center;
+    @media screen and (max-width: $small-screen) {
+        justify-content: space-around;
+    }
+    font-size: $gtx-font-size-lead;
+    &.hidden {
+        display: none;
+    }
+
+    li {
+        user-select: none;
+        margin-right: 0.0625rem;
+        border-radius: 0;
+        display: inline-block;
+        cursor: pointer;
+        color: $gtx-color-very-dark-gray;
+
+        &:hover {
+            background-color: $gtx-color-very-light-gray;
+        }
+        > * {
+            padding: 0 10px;
+            display: block;
+            border-bottom: 3px solid transparent;
+        }
+        &.disabled {
+            color: #cacaca;
+            cursor: default;
+            &:hover {
+                background: transparent;
+            }
+        }
+        &.current {
+            cursor: default;
+            > * {
+                @media screen and (min-width: $small-screen-up) {
+                    border-bottom-color: $gcms-color-highlight;
+                }
+            }
+        }
+        &.mobile-pages {
+            color: $gtx-color-dark-gray;
+            &:hover {
+                background-color: transparent;
+            }
+        }
+
+        @media screen and (max-width: $small-screen) {
+            &:not(.pagination-next):not(.pagination-previous):not(.mobile-pages) {
+                display: none;
+            }
+        }
+        @media screen and (min-width: $small-screen-up) {
+            &.mobile-pages {
+                display: none;
+            }
+        }
+    }
+
+    .pagination-next,
+    .pagination-previous {
+        @media screen and (max-width: $small-screen) {
+            border: 1px solid $gtx-color-very-light-gray;
+            border-radius: 3px;
+        }
+        > a, > span {
+            display: flex;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+        }
+        i {
+            @media screen and (min-width: $small-screen-up) {
+                font-size: $gtx-font-size-regular;
+            }
+        }
+    }
+}

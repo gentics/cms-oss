@@ -1,0 +1,50 @@
+:host {
+  .trigger-wrapper {
+    display: flex;
+    flex-flow: row wrap;
+    width: 100%;
+    position: relative;
+
+    &.toggleable {
+      cursor: pointer;
+    }
+
+    .trigger-text {
+      display: inline-block;
+      flex: 1 1 auto;
+    }
+
+    .accordion-trigger {
+      background: none;
+      border: none;
+      outline: 0;
+      font-size: 1.1rem;
+      position: absolute;
+      display: inline-block;
+      flex: 0 0 auto;
+      right: 0;
+      top: 50%;
+      margin-top: -12px;
+      width: 24px;
+      height: 24px;
+      text-align: left;
+      cursor: pointer;
+
+      > icon {
+        position: absolute;
+        right: 0;
+        top: 0;
+        transition: 250ms;
+        transform: rotateZ(0deg);
+      }
+
+      &.open > icon {
+        transform: rotateZ(180deg);
+      }
+    }
+  }
+
+  .accordion-content {
+    overflow: auto;
+  }
+}

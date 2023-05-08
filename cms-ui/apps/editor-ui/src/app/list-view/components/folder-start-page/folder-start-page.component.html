@@ -1,0 +1,62 @@
+<div class="item-primary start-page-item" *ngIf="(startPage$ | async) as startPage">
+    <gtx-dropdown-list>
+        <gtx-dropdown-trigger>
+            <ng-container *ngIf="getStartPageType === 'deleted'">
+                <start-page-icon disabled></start-page-icon>
+                <span class="start-page-deleted">{{ 'common.deleted_page_label' | i18n }}</span>
+            </ng-container>
+
+            <ng-container *ngIf="(getStartPageType === 'internal' && getStartPageId()) || getStartPageType === 'external'">
+                <start-page-icon></start-page-icon>
+                <span>{{ getStartPageType === 'internal' ? startPage.name : startPage }}</span>
+            </ng-container>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <ng-container *ngIf="uiMode === UIMode.EDIT">
+                <gtx-dropdown-item (click)="previewPage(startPage)" *ngIf="getStartPageType === 'internal'">
+                    <icon left>pageview</icon>
+                    {{ 'editor.preview_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item (click)="editPage(startPage)" *ngIf="getStartPageType === 'internal' && !(startPage | pageIsLocked)">
+                    <icon left>edit</icon>
+                    {{ 'editor.edit_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item class="disabled" *ngIf="getStartPageType === 'internal' && (startPage | pageIsLocked)">
+                    <icon left>lock</icon>
+                    {{ 'editor.edit_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item (click)="openInNewTab(startPage)" *ngIf="getStartPageType === 'external'">
+                    <icon left>open_in_new</icon>
+                    {{ 'editor.open_in_new_tab_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item (click)="reassignStartPage(folder)">
+                    <icon left>home</icon>
+                    {{ 'editor.reassign_start_page_label' | i18n }}
+                </gtx-dropdown-item>
+            </ng-container>
+
+            <ng-container *ngIf="uiMode === UIMode.STAGING">
+                <gtx-dropdown-item (click)="stagePage(startPage, false)">
+                    <icon left>{{ (stagingMap?.[startPage.globalId]?.included ? 'remove' : 'inventory') }}</icon>
+                    {{ 'editor.' + (stagingMap?.[startPage.globalId]?.included ? 'un' : '') + 'stage_item_label' | i18n:{
+                        itemType: ('common.type_page' | i18n),
+                        itemTypePlural: ('common.type_pages' | i18n)
+                    } }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item (click)="stagePage(startPage, true)">
+                    <icon left>{{ (stagingMap?.[startPage.globalId]?.included ? 'block' : 'language') }}</icon>
+                    {{ 'editor.' + (stagingMap?.[startPage.globalId]?.included ? 'un' : '') + 'stage_item_all_languages_label' | i18n:{
+                        itemType: ('common.type_page' | i18n),
+                        itemTypePlural: ('common.type_pages' | i18n)
+                    } }}
+                </gtx-dropdown-item>
+            </ng-container>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+</div>

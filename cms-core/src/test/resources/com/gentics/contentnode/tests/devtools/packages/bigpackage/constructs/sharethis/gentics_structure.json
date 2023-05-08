@@ -1,0 +1,45 @@
+{
+  "globalId" : "A547.21185",
+  "keyword" : "sharethis",
+  "icon" : "undef.gif",
+  "name" : {
+    "de" : "ShareThis (Account notwendig)",
+    "en" : "ShareThis Button (account)"
+  },
+  "description" : {
+    "de" : "Mit diesem Tagtypen kann man einen Button über JavaScript hinzufügen, der ein Hinzufügen zu den bekannten Tagging- und Bookmarkingplattformen ermöglicht.",
+    "en" : "This tag adds bookmarking-features to your website (only available if you are online)\r\n"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.21192",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.21198",
+    "name" : {
+      "de" : "Publisher-Username",
+      "en" : "Publisher-Username"
+    },
+    "keyword" : "publisher",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

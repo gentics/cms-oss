@@ -1,0 +1,152 @@
+{
+  "globalId" : "A547.69449",
+  "name" : "Contentpage",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId" : "A547.70990",
+    "name" : "pre",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71002",
+    "name" : "portalcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71000",
+    "name" : "960css",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71004",
+    "name" : "autoSuggestcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75346",
+    "name" : "lightboxjs",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70996",
+    "name" : "resetcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70998",
+    "name" : "textcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.69576",
+    "name" : "content",
+    "active" : true,
+    "constructId" : "A547.69568",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75286",
+    "name" : "velocity_for_newsdate",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75383",
+    "name" : "imagedeps",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70198",
+    "name" : "statusinfo",
+    "active" : true,
+    "constructId" : "A547.70190",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75352",
+    "name" : "lightboxcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75264",
+    "name" : "velocity_for_teaser",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70992",
+    "name" : "post",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75185",
+    "name" : "genticssharebar",
+    "active" : true,
+    "constructId" : "A547.74971",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71237",
+    "name" : "imagegallerydeps",
+    "active" : true,
+    "constructId" : "A547.69809",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75282",
+    "name" : "velocity_for_footer",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.74791",
+    "name" : "teasers",
+    "active" : true,
+    "constructId" : "A547.75403",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70036",
+    "name" : "lastupdate",
+    "active" : true,
+    "constructId" : "A547.70013",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.74808",
+    "name" : "sharebar",
+    "active" : true,
+    "constructId" : "A547.21185",
+    "editableInPage" : false,
+    "mandatory" : false
+  } ],
+  "objectTags" : [ {
+    "globalId" : "3D6C.a2ba43c0-d80d-11e6-8b5d-ea5d8efab9e8",
+    "name" : "object.lalala",
+    "active" : false,
+    "constructId" : "A547.58458"
+  } ]
+}

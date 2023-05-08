@@ -1,0 +1,65 @@
+@import "../../../../styles/variables";
+
+:host {
+    display: inline-block;
+}
+
+.icon-wrapper {
+    position: relative;
+    width: 36px;
+    height: 43px;
+    perspective: 1000px;
+}
+.toggle-icon {
+    cursor: pointer;
+    color: $gtx-color-dark-gray;
+    position: absolute;
+    top: 5px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+        font-size: 2rem;
+    }
+    opacity: 0;
+    // transform: rotateY(90deg);
+    // transition: opacity 0s 0.15s, transform 0.15s 0s;
+
+    &.user {
+        background-color: $gtx-color-primary;
+        &:hover {
+            background-color: lighten($gtx-color-primary, 15%);
+        }
+
+        color: $gtx-color-off-white;
+        transform: scale(0.2);
+        opacity: 0;
+        transition: transform 0.3s, opacity 0.3s, background 0.3s;
+        &.visible {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    &.close {
+        color: $gtx-color-dark-gray;
+        &:hover {
+            color: lighten($gtx-color-dark-gray, 15%);
+        }
+        opacity: 0;
+        transition: opacity 0.3s, color 0.3s;
+        &.visible {
+            opacity: 1;
+        }
+    }
+
+    &.visible {
+        opacity: 1;
+        // transform: rotateY(0deg);
+        // transition: transform 0.15s 0.15s, opacity 0s 0.15s, background 0.3s;
+    }
+}

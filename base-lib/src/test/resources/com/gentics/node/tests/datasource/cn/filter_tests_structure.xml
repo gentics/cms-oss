@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definition>
+    <objecttype excludeversioning="false" id="1" name="nodeobject">
+        <attributetype attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="name" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="10" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="creationdate" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="age" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="7" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="subnodes" optimized="false">
+            <foreignlinkattribute>parentnode</foreignlinkattribute>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="parentnode" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="7" excludeVersioning="false" filesystem="false" linkedobjecttype="2" multivalue="false" name="leafs" optimized="false">
+            <foreignlinkattribute>parentnode</foreignlinkattribute>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="shortname" optimized="true">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+            <quickname>quick_shortname</quickname>
+        </attributetype>
+        <attributetype attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="quickparentnode" optimized="true">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+            <quickname>quick_quickparentnode</quickname>
+        </attributetype>
+        <attributetype attributetype="7" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="quicksubnodes" optimized="false">
+            <foreignlinkattribute>quickparentnode</foreignlinkattribute>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="7" excludeVersioning="false" filesystem="false" linkedobjecttype="2" multivalue="false" name="quickleafs" optimized="false">
+            <foreignlinkattribute>quickparentnode</foreignlinkattribute>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="5" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="longname" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+    </objecttype>
+    <objecttype excludeversioning="false" id="2" name="leafobject">
+        <attributetype attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="name" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="10" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="creationdate" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="age" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="parentnode" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" name="aliases" optimized="false">
+            <foreignlinkattribute/>
+        </attributetype>
+        <attributetype attributetype="6" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="binarydata" optimized="false">
+            <foreignlinkattribute/>
+        </attributetype>
+        <attributetype attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1" multivalue="false" name="quickparentnode" optimized="true">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+            <quickname>quick_quickparentnode</quickname>
+        </attributetype>
+        <attributetype attributetype="5" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="longname" optimized="false">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+        </attributetype>
+        <attributetype attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" name="optimizedint" optimized="true">
+            <foreignlinkattribute/>
+            <foreignlinkattributerule/>
+            <quickname>quick_optimizedint</quickname>
+        </attributetype>
+    </objecttype>
+</definition>

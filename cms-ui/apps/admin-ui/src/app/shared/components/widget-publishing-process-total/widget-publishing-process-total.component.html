@@ -1,0 +1,30 @@
+<h2 class="title">{{ 'widget.widget_publishing_process_total_title' | i18n }}</h2>
+
+<ng-container *ngIf="infoStatsTotal$ | async as infoStatsTotal; else templateTableIsLoading">
+    <table
+        *ngFor="let entityKey of widgetPublishingProcessEntityKeys"
+        class="gtx-table-publishqueue-total"
+    >
+        <tr
+            class="gtx-row-nested-table"
+        >
+            <th colspan="2">
+                <span class="entity-name">{{ 'common.' + entityKey + '_plural' | i18n }}</span>
+                <div
+                    class="loading-bar"
+                    [style.width]="publishState[entityKey].publishedPercentage + '%'"
+                    [class.progressing]="publishState[entityKey].isProgressing"
+                ></div>
+            </th>
+        </tr>
+
+        <tr *ngFor="let statusKey of widgetPublishingProcessStatusKeys">
+            <td>{{ ('shared.' + statusKey | i18n) + ':' }}</td>
+            <td>
+                {{ infoStatsTotal[entityKey + 's']?.[statusKey] }}
+            </td>
+        </tr>
+    </table>
+</ng-container>
+
+<ng-template #templateTableIsLoading>{{ 'shared.loading' | i18n }}</ng-template>

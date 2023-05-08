@@ -1,0 +1,156 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="NodeDetailTabs.properties"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [saveDisabled]="!allowedToUpdate || (fgPropertiesSaveDisabled$ | async)"
+                    (saveClick)="btnSavePropertiesOnClick()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
+                    <div class="flex-row row">
+                        <form
+                            *ngIf="fgProperties"
+                            [formGroup]="fgProperties"
+                            class="gtx-entity-details-tab-content-body-form small-12 medium-9 columns"
+                        >
+                            <gtx-node-properties
+                                formControlName="data"
+                                class="properties"
+                                [pubDirSegmentActivated]="currentEntity?.pubDirSegment"
+                            ></gtx-node-properties>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="NodeDetailTabs.publishing"
+            gtxDetailTabLink
+            [title]="'node.title_publishing' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'node.title_publishing_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [saveDisabled]="!allowedToUpdate || (fgPublishingSaveDisabled$ | async)"
+                    (saveClick)="btnSavePublishingOnClick()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
+                    <div class="flex-row row">
+                        <form
+                            *ngIf="fgPublishing"
+                            [formGroup]="fgPublishing"
+                            class="gtx-entity-details-tab-content-body-form small-12 medium-9 columns"
+                        >
+                            <gtx-node-publishing-properties
+                                formControlName="data"
+                                class="properties"
+                            ></gtx-node-publishing-properties>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="NodeDetailTabs.nodeFeatures"
+            gtxDetailTabLink
+            [title]="'node.title_node_features' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'node.title_node_features_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [saveDisabled]="!allowedToUpdate || (fgNodeFeaturesSaveDisabled$ | async)"
+                    (saveClick)="btnSaveNodeFeaturesOnClick()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div [hidden]="isLoading" class="gtx-entity-details-tab-content-body">
+                    <div class="flex-row row">
+                        <form
+                            *ngIf="(nodeFeatures$ | async) as features"
+                            [formGroup]="fgNodeFeatures"
+                            class="gtx-entity-details-tab-content-body-form gtx-form small-12 medium-9 columns"
+                        >
+                            <gtx-node-features
+                                class="properties"
+                                [availableFeatures]="nodeFeatures$ | async"
+                                formControlName="data"
+                            ></gtx-node-features>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            #langTab
+            [id]="NodeDetailTabs.languages"
+            [class.disabledArea]="isChildNode"
+            gtxDetailTabLink
+            [title]="'shared.title_languages' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_languages_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    saveActionAllowedId="node.updateNodeInstance"
+                    [saveActionAllowedInstanceId]="currentEntity?.folderId"
+                    [saveDisabled]="!isLanguagesChanged"
+                    (saveClick)="btnSaveLanguagesOnClick()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-language-table
+                        *ngIf="langTab.active"
+                        [rows]="languageRows"
+                        [sorting]="true"
+                        [nodeId]="currentNodeId"
+                        [selectable]="false"
+                        (assignToNode)="assignLanguagesToNode()"
+                        (loadEnd)="languagesLoaded($event)"
+                        (sort)="sortLanguages($event)"
+                    ></gtx-language-table>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [hidden]="!(featureDevtoolsIsEnabled$ | async)"
+            [id]="NodeDetailTabs.packages"
+            gtxDetailTabLink
+            [title]="'node.title_node_packages' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'node.title_node_packages_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div *ngIf="!isLoading" class="gtx-entity-details-tab-content-body">
+                    <div class="flex-row row">
+                        <gtx-dev-tool-package-table
+                            [nodeId]="currentEntity.id"
+                            [showSearch]="true"
+                        ></gtx-dev-tool-package-table>
+                    </div>
+                </div>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

@@ -1,0 +1,43 @@
+{
+  "globalId" : "3D6C.baac05dc-517a-11ea-88f1-00155df03856",
+  "keyword" : "testconstruct",
+  "icon" : "stop.gif",
+  "name" : {
+    "de" : "Testconstruct",
+    "en" : "Testconstruct"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "3D6C.cca4d6bc-517a-11ea-88f1-00155df03856",
+    "name" : {
+      "de" : "Eins",
+      "en" : "One"
+    },
+    "keyword" : "one",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "3D6C.d6e6b388-517a-11ea-88f1-00155df03856",
+    "name" : {
+      "de" : "Zwei",
+      "en" : "Two"
+    },
+    "keyword" : "two",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "regexId" : 0
+  } ]
+}

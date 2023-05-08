@@ -1,0 +1,10 @@
+@import "../../../../styles/variables";
+
+
+.form-editor-element-container-inner {
+    position: relative;
+
+    gtx-form-editor-element {
+        display: block;
+    }
+}

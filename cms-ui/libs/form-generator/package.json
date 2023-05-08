@@ -1,0 +1,20 @@
+
+{
+    "name": "@gentics/form-generator",
+    "version": "6.0.0-beta.0",
+    "dependencies": {},
+    "peerDependencies": {
+        "@angular/animations": ">=14.0.7",
+        "@angular/common": ">=14.0.7",
+        "@angular/core": ">=14.2.12",
+        "@angular/forms": ">=14.0.7",
+        "@gentics/cms-components": "^6.0.0",
+        "@gentics/cms-models": "^6.0.0",
+        "lodash-es": "^4.17.15",
+        "rxjs": "^6.6.3",
+        "uuidv4": "~5.0.1"
+    },
+    "publishConfig": {
+        "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    }
+}

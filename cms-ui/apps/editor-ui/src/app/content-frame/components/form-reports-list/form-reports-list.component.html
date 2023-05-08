@@ -1,0 +1,114 @@
+<div class="wrapper">
+    <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
+
+    <div class="download-buttons">
+        <div [class.disabled]="isDisabledDownloadBinariesButton">
+            <a [class.disabled]="isDisabledDownloadBinariesButton" [href]="pathForBinaries" download>
+                <gtx-button
+                    class="primary-action"
+                    size="small"
+                    flat>
+                    {{ 'editor.form_reports_download_binaries_button' | i18n }}
+                </gtx-button>
+            </a>
+        </div>
+        <div [class.disabled]="isDisabledDownloadCsvButton">
+            <a [class.disabled]="isDisabledDownloadCsvButton" [href]="pathForCSV" download>
+                <gtx-button
+                    class="primary-action"
+                    size="small"
+                    flat>
+                    {{ 'editor.form_reports_download_csv_button' | i18n }}
+                </gtx-button>
+            </a>
+        </div>
+    </div>
+
+    <div
+        *ngIf="loading$ | async"
+        [@fadeAnim]
+        class="loading-info"
+    >
+        <span>{{ 'editor.reports_loading_status_loading' | i18n }}</span>
+    </div>
+
+    <div
+        *ngIf="result?.entries.length === 0"
+        [@fadeAnim]
+        class="loading-info"
+    >
+        <span>{{ 'editor.reports_loading_status_empty' | i18n }}</span>
+    </div>
+
+    <div
+        *ngIf="loadingError$ | async"
+        [@fadeAnim]
+        class="loading-info"
+    >
+        <i class="material-icons invalid">warning</i>
+        <span>{{ errorMessage }}</span>
+    </div>
+
+    <div
+        *ngIf="!(loading$ | async) && !(loadingError$ | async) && result?.entries.length > 0"
+        [@fadeAnim]
+        class="table-wrapper-outer"
+    >
+        <div class="table-wrapper-inner">
+
+            <table
+                *ngIf="(formElementLabelPropertyI18nValues$ | async) as formElementLabelPropertyI18nValues"
+                class="data-table flex-table"
+            >
+                <tbody>
+                    <tr>
+                        <th class="icon-checkbox fixed left">
+                            <icon-checkbox
+                                [selected]="allSelected"
+                                (change)="toggleAllSelect()"
+                                [icon]="icon"
+                            ></icon-checkbox>
+                        </th>
+
+                        <ng-container *ngFor="let key of entryKeys">
+                            <th
+                                *ngIf="key !== 'errors' && ((formElementLabelPropertyI18nValues[key] | i18nfg$:'content':'_ui' | async) || key) as entryLabel"
+                                [title]="entryLabel"
+                            >
+                                <span>{{ entryLabel }}</span>
+                            </th>
+                        </ng-container>
+
+                        <th class="delete-icon fixed right">
+                            <i [class.disabled]="isNothingSelected()" (click)="deleteMultipleReports()" class="material-icons invalid">delete</i>
+                        </th>
+                    </tr>
+
+                    <tr *ngFor="let result of result?.entries | paginate: paginationConfig; trackBy: identify; let i = index">
+                        <th class="icon-checkbox fixed left">
+                            <icon-checkbox
+                                [selected]="selected[i] === null ? false : true"
+                                (change)="changeSelection(i)"
+                                [icon]="icon"
+                            ></icon-checkbox>
+                        </th>
+                        <td *ngFor="let key of entryKeys; let j = index">
+                            <ng-container *ngIf="entryValues[i]">
+                                <a *ngIf="isFile(entryValues[i][j])" [href]="getFileHref(entryValues[i][j], result)" download>
+                                    <span>{{ getEntryValue(entryValues[i][j]) }}</span>
+                                </a>
+                                <span *ngIf="!isFile(entryValues[i][j])">{{ getEntryValue(entryValues[i][j]) }}</span>
+                            </ng-container>
+                        </td>
+                        <td class="delete-icon fixed right"><i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="paginate-wrapper">
+        <paging-controls (pageChange)="pageChanged($event)"></paging-controls>
+    </div>
+
+</div>

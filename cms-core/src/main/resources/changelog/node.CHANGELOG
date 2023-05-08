@@ -1,0 +1,58 @@
+# New changelog numbers must be generated via http://jenkins.office/changelog_numbers/
+If you see this, CHANGELOG is working. :o)
+
+################### start of CN3-STABLE CHANGELOG #################################
+2002-05-21  20020101    LH  COMMENT     ## added *.node/dev.doc/CHANGELOG
+2002-05-25  20020101    SH  COMMENT     ## added TOOLPATH to global config
+2002-05-31  20020101    LH  COMMENT     ## added $HTML_HEAD to add core specific html head code
+2002-05-31  20020101    LH  COMMENT     ## set $INFOPORTAL_URL = "" or $FEATURE["force_node2"] to disable infoportal integration
+2002-06-05  20020101    LH  COMMENT     ## removed $PATH
+2002-09-26  20020101    SH  COMMENT     ## added feature http_auth_login, should be set to false in all config files where not needed!
+2002-11-11  20020101    SH  COMMENT     ## added feature menu_actions
+2002-11-22  20020101    LH  COMMENT     ## added .node/BUILD with build number.
+2002-12-02  20021202    LH  COMMENT     ## added automated update process (nodedist@dev.office).
+2002-12-05  20021205    ME  COMMENT     ## add a line to node.conf: // ##AUTO-FEATURES## - do not remove this line
+2002-12-13  20021213g   ME  COMMENT     ## added new feature for changelog. use NEW
+2002-02-04  20030204    ME  COMMENT     ## copy /Node/bin/schedule.sh from package to /Node/bin. dont forget "chown node schedule.sh"
+2002-02-04  20030204    ME  COMMENT     ## add the following line to crontab: * * * * *   node    /Node/bin/schedule.sh >> /Node/node/log/schedule.log 2>&1
+2003-02-14  20030214e   SH  FEATURE     usergroup_popup=false ## allow popup window for usergroup dialog
+2003-02-14  20030214e   SH  COMMENT     ## added new USERGROUP_POPUP config variables, not needed for most installations
+2003-02-27  20030228	LH  COMMENT     ## added log/halt.log for database errors.
+2003-04-09  20030411    SH  COMMENT 	checking for perms for ptree elements added (only if perms are set on elements)
+2003-05-21  20030522    SH  FEATURE		ldap_utf8decode=true ## enable utf8 decode of ldap and httplogin variables
+2003-06-20  20030620b   LH  SCRIPT:global  	log.sh  ##  adds central http://server/.Node/log/ path for all logfiles.
+2003-08-12  20030822    ME  SCRIPT:global  	mysql_command.sh ## adds /Node/bin/mysql.sh script for accessing mysql without dump source /Node/bin/env.sh and stuff
+#2003-09-24  20030924    LH  SCRIPT  	addmemcron.sh   ## adds cronjob to reset apache processes every hour.
+
+################### start of CN3.5-HEAD CHANGELOG #################################
+#2003-08-06	SH:	(do not merge this comment to test/stable) merged NODE-2-stable,SYSTEMNODE-2-stable,CONTENTNODE-3-stable,TRACKINGNODE-3-stable,BUSINESSNODE-3-stable,SCHEDULENODE-3-stable into HEAD.
+2002-11-28	V3.5-head-20031001d	HM 	COMMENT:global  set filesystem tools path like (LS_PATH, RM_PATH, ....)
+2003-01-22	V3.5-head-20031001d	SH	COMMENT:global	added config variables XNL_FUNCTION 
+2003-02-14	V3.5-head-20031001d	SH	FEATURE	usergroup_popup=false ## allow popup window for usergroup dialog
+2003-02-14	V3.5-head-20031001d	SH	COMMENT	added new USERGROUP_POPUP config variables, not needed for most installations
+2003-04-30	V3.5-head-20031001b	SH	FEATURE	nodecache=true ## use cache for xnl functions
+2003-05-22	V3.5-head-20031001b	SH	FEATURE	streamclock=true ## show clock in menu stream
+2003-05-23	V3.5-head-20031001b	SH	FEATURE	progressbar=true ## show some progressbars
+2003-09-30	V3.5-head-20031001b	ME	SCRIPT	create_skeleton_links.sh ## creates a directory for the new skeleton-system+creates all symlinks
+#2003-10-15	ME: merged NODE-2-stable(different files since 2003-08-06) -> NODE-5-test
+#2003-10-16 ME: merged CONTENTNODE-3-stable(diff since 2003-08-06) -> CONTENTNODE-6-test
+#2003-10-16 ME: merged SYSTEMNODE-3-stable(diff since 2003-08-06) -> SYSTEMNODE-5-test
+#2003-10-16 ME: merged PORTALNODE-HEAD -> PORTALNODE-1-test
+2004-05-04	V3.6-stable-20040511	LH	FEATURE	win_halt=true	## enable wingame on halt
+2004-06-23	V3.6-stable-20040726	ME  FEATURE norevalidate=false ## disable must-revalidate header (speeds up response time + lightens server-load)
+2004-09-09	V3.6-stable-20040909m	LH	SQL	 alter table ds_obj_nodeversion modify id int not null; ## fixes db for indexing. must be before reindex db changelog.
+#2004-09-09	V3.6-stable-20040920	LH	COMMENT	WARNING, reindex database will freeze cms for a while (10-30min)!G
+#2004-09-09	V3.6-stable-20040920	LH	SQL	delete from objtranslatecache;
+#2004-09-09	V3.6-stable-20040920	LH	PHP	reindexdb.php ## WARNING will freeze cms for 10-30min!
+2004-11-20	V3.6-stable-20041121	SH	SQL	alter table nodecache_event add ignoreevent int not null;
+2004-11-20	V3.6-stable-20041121	SH	SQL	alter table dependencymap add ignore_events int not null;
+2006-02-27	V3.6-stable-20060227b	CP	FEATURE	ldapv3=true ## use LDAP Version 3 when connecting to ldap service. WARNING: test right after update!
+2006-02-27	V3.6-stable-20060227b CP	COMMENT	## this feature has to be tested with all installations that use ldap
+2006-09-05	V3.6-stable-20060906	SH	SQL	alter table ptree change sql sqlstmt varchar(255) not null;
+2007-02-20	V3.6-stable-20070222	HP	SCRIPT	touchnodectlconf.sh
+2007-05-31	V4.0.1-stable-20070622	HP	FEATURE	autoresize_popups=true ## Enable automatically resizing of popups to have no scrollbars. (as long as the window size is sufficient)
+2008-01-15	V4.0.1-stable-20080116	HP	FEATURE item_list_simple_contextmenus=true ## Enable "Simple" context menus - which will only include the js context menu once for the whole list. (Useful for page list)
+2008-02-22	V4.0.1-stable-20080222b	LH	SCRIPT	replaceapacheconf.sh ## replace etc/httpd/extra/httpd-mpm.conf with a memory efficient version. customer changes in this file will get lost.
+2010-11-09	V4.1-head-20101110	CP	SQL	SELECT * FROM node ## just testing 1
+2010-11-09	V4.1-head-20101110	CP	SQL	SELECT * FROM node ## just testing 2
+2010-11-09	V4.1-head-20101110	CP	SQL	SELECT * FROM node ## just testing 3 

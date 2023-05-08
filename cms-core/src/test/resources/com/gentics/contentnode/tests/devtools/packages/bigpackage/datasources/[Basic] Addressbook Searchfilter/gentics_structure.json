@@ -1,0 +1,18 @@
+{
+  "globalId" : "A547.14674",
+  "type" : "statical",
+  "name" : "[Basic] Addressbook Searchfilter",
+  "values" : [ {
+    "globalId" : "A547.75178",
+    "key" : "Search by category",
+    "value" : "(businessCategory=<node ldap_searchterm>)"
+  }, {
+    "globalId" : "A547.75179",
+    "key" : "Search by email address",
+    "value" : "(mail=<node ldap_searchterm>)"
+  }, {
+    "globalId" : "A547.75180",
+    "key" : "Search by lastname",
+    "value" : "(sn=<node ldap_searchterm>)"
+  } ]
+}

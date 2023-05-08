@@ -1,0 +1,15 @@
+:host {
+    
+    .arrow-icon {
+        line-height: 1rem;
+    }
+    
+    a:not(.disabled) {
+        cursor: pointer;
+    }
+    
+    ::ng-deep gtx-dropdown-list {
+        height: 1.4rem;
+        padding-top: 0.3rem;
+    }
+}

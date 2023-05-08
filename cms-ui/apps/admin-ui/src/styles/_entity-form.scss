@@ -1,0 +1,49 @@
+// This contains common styles used by various forms.
+
+.gtx-form {
+
+    .gtx-form-section-title {
+        margin-top: 10px;
+        border-bottom: 1px solid $gtx-color-mid-gray;
+        margin-bottom: 5px;
+        padding-bottom: 5px;
+        display: flex;
+        align-items: center;
+        text-transform: uppercase;
+    }
+
+    .gtx-two-col-options {
+        display: flex;
+        flex-direction: row;
+        flex-flow: row wrap;
+
+        gtx-checkbox {
+            flex: 1 0 50%;
+            padding: 0 2px;
+
+            @media screen and (max-width: $medium-screen) {
+                flex: 1 0 100%;
+                padding: 0;
+            }
+
+            ::ng-deep > div {
+                display: flex;
+                vertical-align: text-top;
+
+                label {
+                    height: auto;
+                }
+            }
+        }
+    }
+
+    gtx-checkbox {
+        line-height: 36px;
+    }
+
+}
+
+.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+}

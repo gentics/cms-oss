@@ -1,0 +1,69 @@
+@import "content-frame-variables";
+@import "tag-fill";
+@import "object-properties";
+@import "language-compare";
+@import "image-editor";
+@import "aloha-toolbar";
+
+.aloha.aloha-ribbon {
+    display: none !important;
+}
+.aloha-sidebar-bar.aloha-sidebar-right {
+    border: none !important;
+}
+.aloha-sidebar-bar, .aloha-sidebar-handle {
+    box-shadow: none !important;
+}
+
+.aloha.aloha-dialog {
+    padding: 10px;
+    border: transparent;
+    background: white;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    color: #555;
+    font-size: 12px;
+    text-align: left;
+    border-radius: 0;
+
+    .ui-dialog-buttonpane button {
+        background-image: none;
+        @include secondary-button;
+        @include custom-button-small;
+        &:first-child {
+            @include primary-button;
+            @include custom-button-small;
+        }
+    }
+
+    // hide the "x" button since it duplicates the function of the
+    // "cancel" button and is superfluous.
+    .ui-dialog-titlebar-close {
+        display: none;
+    }
+}
+
+// hover tooltips
+.tipsy {
+    opacity: 1 !important;
+    .tipsy-arrow {
+        display: none !important;
+    }
+    .tipsy-inner {
+        margin-top: -10px !important;
+        background-color: white !important;
+        color: $gtx-color-off-black !important;
+        font-size: $gtx-font-size-small !important;
+        padding: 14px !important;
+        box-shadow: $box-shadow !important;
+        border-radius: 0 !important;
+    }
+}
+
+// left-click context menu
+#nodecontextmenu.gentics_submenu {
+    @include context-menu;
+    .gentics_menu_highlight {
+        background: $gtx-color-very-light-gray none;
+        color: $gtx-color-primary !important;
+    }
+}

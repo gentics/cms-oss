@@ -1,0 +1,101 @@
+{
+  "globalId" : "A547.71048",
+  "keyword" : "image",
+  "icon" : "img.gif",
+  "name" : {
+    "de" : "Bild",
+    "en" : "Image"
+  },
+  "description" : {
+    "de" : "Ein einfacher Bild-Tag.",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.71059",
+    "name" : {
+      "de" : "Bild-URL",
+      "en" : "Image-URL"
+    },
+    "keyword" : "src",
+    "editable" : true,
+    "typeId" : 6,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.71064",
+    "name" : {
+      "de" : "Alternativtext",
+      "en" : "Alternative text"
+    },
+    "keyword" : "alt",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.71263",
+    "name" : {
+      "de" : "Größe",
+      "en" : "Size"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.71923",
+    "name" : {
+      "de" : "Ausrichtung",
+      "en" : "Ausrichtung"
+    },
+    "keyword" : "align",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.71054",
+    "name" : {
+      "de" : "Template",
+      "en" : "tpl"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.75378",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "vtl",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 11,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

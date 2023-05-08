@@ -1,0 +1,23 @@
+<div id="repository" class="breadcrumbs-container" [class.multilineExpanded]="multilineExpanded$ | async">
+    <node-selector *ngIf="canChangeNode"
+        [nodes]="nodes"
+        [showName]="false"
+        [useLinks]="false"
+        (nodeSelected)="changeNode.emit($event)">
+        <gtx-dropdown-item *ngIf="hasFavourites" (click)="changeNode.emit('favourites')" class="favourites">
+        <icon left>star</icon> {{ 'editor.favourites_label' | i18n }}
+        </gtx-dropdown-item>
+    </node-selector>
+
+    <gtx-breadcrumbs
+        *ngIf="(breadcrumbs$ | async) as breadcrumbLinks"
+        [links]="breadcrumbLinks"
+        (linkClick)="changeParent.emit($event.item)"
+        [multiline]="true"
+        [class.isInherited]="breadcrumbLinks[0].item.type === 'channel'"
+        [class.notInherited]="breadcrumbLinks[0].item.type !== 'channel'"
+        [multilineExpanded]="multilineExpanded$ | async"
+        (multilineExpandedChange)="expandedChanged($event)">
+        <icon *ngIf="breadcrumbLinks[0].item.type === 'channel'" class="iconChannel">input</icon>
+    </gtx-breadcrumbs>
+</div>

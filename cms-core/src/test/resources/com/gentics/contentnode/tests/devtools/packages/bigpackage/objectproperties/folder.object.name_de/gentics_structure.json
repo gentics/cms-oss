@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.70067",
+  "type" : "folder",
+  "keyword" : "object.name_de",
+  "name" : {
+    "de" : "Name Deutsch",
+    "en" : "German name"
+  },
+  "description" : {
+    "de" : "Deutscher Name des Ordners in der Navigation",
+    "en" : "German name of navigation entry"
+  },
+  "constructId" : "A547.69478"
+}

@@ -1,0 +1,50 @@
+@import "variables";
+@import "flex-modal";
+
+@include flex-modal;
+
+.empty-message {
+    text-align: center;
+    font-size: $gtx-font-size-lead;
+    color: $gtx-color-mid-gray;
+    margin-top: 50px;
+}
+
+.selected-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    .selection-count {
+        @media screen and (max-width: $small-screen) {
+            display: none;
+        }
+    }
+    > * {
+        margin-left: 5px;
+    }
+    &.disabled {
+        color: $gtx-color-mid-gray;
+    }
+}
+
+.modal-content {
+    min-height: 100px;
+    max-height: calc(82vh - 200px);
+    @media screen and (min-width: $small-screen-up) {
+        max-height: calc(72vh - 200px);
+    }
+}
+
+.filter-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    gtx-button {
+        margin-left: 5px;
+
+        i {
+            font-size: 1.1rem;
+        }
+    }
+}

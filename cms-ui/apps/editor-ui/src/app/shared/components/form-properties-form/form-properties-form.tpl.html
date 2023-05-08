@@ -1,0 +1,245 @@
+<ng-container *ngIf="formPropertiesConfiguration$ | async as formPropertiesConfiguration else errorNoFormData">
+    <form [formGroup]="formGroup" novalidate>
+        <gtx-input
+            [label]="('editor.item_name_label' | i18n) + '*'"
+            formControlName="name"
+            [gtxDisabled]="disabled"
+            required
+            [autofocus]="mode === 'create'"
+        ></gtx-input>
+
+        <gtx-select
+            [label]="('editor.item_type_label' | i18n) + '*'"
+            formControlName="type"
+            [gtxDisabled]="disabled"
+            required
+            [multiple]="false"
+        >
+            <gtx-option
+                *ngFor="let formType of formTypes"
+                [value]="formType"
+            >
+                {{ 'gtxFormGenerator.form_type_' + (formType | lowercase) | i18n }}
+            </gtx-option>
+        </gtx-select>
+
+        <gtx-input
+            [label]="'editor.item_description_label' | i18n"
+            formControlName="description"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
+            <gtx-select
+                [label]="'editor.item_template_context_label' | i18n"
+                formControlName="templateContext"
+                [gtxDisabled]="disabled"
+                [multiple]="false"
+            >
+                <gtx-option
+                    *ngFor="let option of formPropertiesConfiguration.template_context_options"
+                    [value]="option.key"
+                >
+                    {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
+                </gtx-option>
+            </gtx-select>
+        </ng-container>
+
+        <ng-template #noTemplateContextOptions>
+            <gtx-input
+                [label]="'editor.item_template_context_label' | i18n"
+                formControlName="templateContext"
+                [gtxDisabled]="disabled"
+            ></gtx-input>
+        </ng-template>
+
+        <gtx-input
+            [label]="'editor.item_email_label' | i18n"
+            formControlName="email"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <gtx-input
+            class="hidden-input"
+            type="number"
+            formControlName="successPageId"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <gtx-input
+            class="hidden-input"
+            type="number"
+            formControlName="successNodeId"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <gtx-input
+            class="hidden-input"
+            type="number"
+            formControlName="mailsource_pageid"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <gtx-input
+            class="hidden-input"
+            type="number"
+            formControlName="mailsource_nodeid"
+            [gtxDisabled]="disabled"
+        ></gtx-input>
+
+        <gtx-select
+            *ngIf="isMultiLang"
+            [label]="('editor.item_language_label' | i18n) + '*'"
+            formControlName="languages"
+            [gtxDisabled]="disabled || disableLanguageSelect"
+            required
+            [multiple]="true"
+        >
+            <gtx-option
+                *ngFor="let language of languages"
+                [value]="language.code"
+            >
+                {{ language.name }}
+            </gtx-option>
+        </gtx-select>
+
+        <ng-container *ngIf="showDetailProperties">
+
+            <h3 class="localized-properties-header">{{ 'editor.item_localized_form_properties' | i18n }}</h3>
+
+            <gtx-i18n-input
+                [label]="'editor.item_localized_mail_subject' | i18n"
+                formControlName="mailsubject_i18n"
+                [gtxDisabled]="disabled"
+                [language]="activeFormLanguageCode$ | async"
+                [availableLanguages]="properties.languages"
+            ></gtx-i18n-input>
+
+            <ng-container *ngIf="formPropertiesConfiguration.admin_mail_options; else noAdminMailOptions">
+                <ng-container gtx-radio-group formControlName="useEmailPageTemplate">
+                    <gtx-radio-button
+                        [label]="'editor.item_localized_mail_custom' | i18n"
+                        [disabled]="disabled"
+                        [value]="true"
+                        (change)="setRadioState('useEmailPageTemplate', true)">
+                    </gtx-radio-button>
+
+                    <div
+                        class="confirmation-page-setting"
+                            [ngClass]="{
+                            'confirmation-page-setting--active': !!useEmailPageTemplate,
+                            'confirmation-page-setting--inactive': !useEmailPageTemplate
+                        }"
+                    >
+                        <browse-box
+                            [label]="'editor.item_mail_custom_description' | i18n"
+                            [displayValue]="emailTemplatePageDisplayValue$ | async"
+                            [disabled]="disabled || !useEmailPageTemplate"
+                            (clear)="setEmailTemplatePage(null)"
+                            (browse)="browseForEmailTemplatePage()">
+                        </browse-box>
+
+                        <div class="browse-box__breadcrumbs" *ngIf="breadcrumbs.emailTemplatePage">
+                            {{ 'tag_editor.selected_folder' | i18n }}: {{ breadcrumbs.emailTemplatePage }}
+                        </div>
+                    </div>
+
+                    <gtx-radio-button
+                        [label]="'editor.item_localized_mail_temp' | i18n"
+                        [disabled]="disabled"
+                        [value]="false"
+                        (change)="setRadioState('useEmailPageTemplate', false)">
+                    </gtx-radio-button>
+
+                    <div
+                        class="confirmation-page-setting"
+                        [ngClass]="{
+                            'confirmation-page-setting--active': !useEmailPageTemplate,
+                            'confirmation-page-setting--inactive': !!useEmailPageTemplate
+                        }"
+                    >
+                        <gtx-i18n-select
+                            [language]="activeFormLanguageCode$ | async"
+                            [availableLanguages]="properties.languages"
+                            [disabled]="disabled || !!useEmailPageTemplate"
+                        >
+                            <gtx-option
+                                *ngFor="let option of formPropertiesConfiguration.admin_mail_options"
+                                [value]="option.key"
+                            >
+                                {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
+                            </gtx-option>
+                        </gtx-i18n-select>
+                    </div>
+                </ng-container>
+            </ng-container>
+
+            <ng-template #noAdminMailOptions>
+                <gtx-i18n-input
+                    [label]="'editor.item_localized_mail_temp' | i18n"
+                    formControlName="mailtemp_i18n"
+                    [gtxDisabled]="disabled"
+                    [language]="activeFormLanguageCode$ | async"
+                    [availableLanguages]="properties.languages"
+                ></gtx-i18n-input>
+            </ng-template>
+        </ng-container>
+
+        <ng-container gtx-radio-group formControlName="useInternalSuccessPage">
+            <gtx-radio-button
+                [label]="'editor.internal_page' | i18n"
+                [disabled]="disabled"
+                [value]="true"
+                (change)="setRadioState('useInternalSuccessPage', true)">
+            </gtx-radio-button>
+
+            <div
+                class="confirmation-page-setting"
+                [ngClass]="{
+                    'confirmation-page-setting--active': !!useInternalSuccessPage,
+                    'confirmation-page-setting--inactive': !useInternalSuccessPage
+                }"
+            >
+                <browse-box
+                    [label]="'editor.item_success_page' | i18n"
+                    [displayValue]="successPageDisplayValue$ | async"
+                    [disabled]="disabled || !useInternalSuccessPage"
+                    (clear)="setSuccessPage(null)"
+                    (browse)="browseForPage()">
+                </browse-box>
+
+                <div class="browse-box__breadcrumbs" *ngIf="breadcrumbs.internalSuccessPage">
+                    {{ 'tag_editor.selected_folder' | i18n }}: {{ breadcrumbs.internalSuccessPage }}
+                </div>
+            </div>
+
+            <gtx-radio-button
+                [label]="'editor.external_url' | i18n"
+                [disabled]="disabled"
+                [value]="false"
+                (change)="setRadioState('useInternalSuccessPage', false)">
+            </gtx-radio-button>
+
+            <div
+                class="confirmation-page-setting"
+                [ngClass]="{
+                    'confirmation-page-setting--active': !useInternalSuccessPage,
+                    'confirmation-page-setting--inactive': !!useInternalSuccessPage
+                }"
+            >
+                <gtx-i18n-input
+                    [label]="'editor.item_success_url' | i18n"
+                    formControlName="successurl_i18n"
+                    [gtxDisabled]="disabled || !!useInternalSuccessPage"
+                    [language]="activeFormLanguageCode$ | async"
+                    [availableLanguages]="properties.languages"
+                    ngDefaultControl
+                ></gtx-i18n-input>
+            </div>
+        </ng-container>
+    </form>
+</ng-container>
+
+<ng-template #errorNoFormData>
+    <p class="form-editor-error">{{ 'gtxFormGenerator.error_no_or_invalid_formdata' | i18n }}</p>
+</ng-template>

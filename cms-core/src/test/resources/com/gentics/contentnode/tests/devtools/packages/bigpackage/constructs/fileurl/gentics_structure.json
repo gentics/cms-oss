@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.14546",
+  "keyword" : "fileurl",
+  "icon" : "url.gif",
+  "name" : {
+    "de" : "[URL] Datei",
+    "en" : "[URL] File"
+  },
+  "description" : {
+    "de" : "Tagtype mit der Source (URI) einer Datei",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14173",
+    "name" : {
+      "de" : "Datei URL",
+      "en" : "Datei URL"
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 8,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,13 @@
+{
+  "globalId" : "A547.69893",
+  "name" : "[CSS]",
+  "type" : "CSS",
+  "templateTags" : [ {
+    "globalId" : "A547.69895",
+    "name" : "htmllang",
+    "active" : false,
+    "constructId" : "A547.69568",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ]
+}

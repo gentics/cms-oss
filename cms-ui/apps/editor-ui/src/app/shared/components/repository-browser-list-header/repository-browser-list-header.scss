@@ -1,0 +1,41 @@
+@import "variables";
+
+:host {
+    border-bottom: 1px dotted $gcms-color-highlight;
+    display: flex;
+    padding: 10px;
+}
+
+.left-items {
+    flex-grow: 1;
+
+    .item-icon {
+        cursor: default;
+        display: inline-flex;
+        vertical-align: bottom;
+    }
+
+    .type {
+        margin-left: 10px;
+        text-transform: uppercase;
+        user-select: none;
+    }
+}
+
+.right-items {
+    display: inline-flex;
+}
+
+.sort-mode icon {
+    font-size: $gtx-font-size-small;
+}
+
+.collapse-icon {
+    display: inline-block;
+    transition: transform 0.2s;
+    will-change: transform;
+
+    &.collapsed {
+        transform: rotateZ(-90deg);
+    }
+}

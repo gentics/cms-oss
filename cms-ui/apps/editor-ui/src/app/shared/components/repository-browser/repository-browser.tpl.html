@@ -1,0 +1,64 @@
+<div class="modal-title">
+    <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
+
+    <h5>{{ titleKey | i18n:titleParams }}</h5>
+
+    <gtx-search-bar [ngModel]="filter$ | async"
+                    (ngModelChange)="setFilter($event)"
+                    [placeholder]="'common.search_placeholder' | i18n"
+                    (clear)="setFilter('')"
+                    (search)="setSearch($event)">
+        <div class="search-chip" *ngIf="search$ | async">
+            <span class="chip-contents">
+                <span class="searching">{{ 'common.searching' | i18n }} </span>"{{ search$ | async }}"</span>
+            <i class="remove-button material-icons" [attr.translate]="'no'" (click)="setSearch('')">close</i>
+        </div>
+    </gtx-search-bar>
+</div>
+
+<repository-browser-breadcrumb
+    [nodes]="nodes$ | async"
+    [parents]="parentItems$ | async"
+    [hasFavourites]="showFavourites$ | async"
+    [canChangeNode]="!options.onlyInCurrentNode"
+    (changeNode)="changeNode($event)"
+    (changeParent)="changeParent($event)">
+</repository-browser-breadcrumb>
+
+<div class="modal-content">
+
+    <ng-container *ngFor="let type of itemTypesToDisplay$ | async">
+
+        <repository-browser-list
+            *ngIf="(observableForType[type] | async)?.length || ((noItemsOfAnyType$ | async) && allowed[type])"
+            [itemType]="type"
+            [contents]="observableForType[type] | async"
+            [currentNodeId]="currentNodeId$ | async"
+            [currentNode]="currentNode$ | async"
+            [displayFields]="displayFieldsForType[type] | async"
+            [pageShowPath]="pageShowPath$ | async"
+            [displayNodeName]="(nodes$ | async)?.length > 1 && (isDisplayingFavouritesFolder$ | async)"
+            [startPageId]="startPageId$ | async"
+            [filtering]="!!(filter$ | async)"
+            [searching]="!!(search$ | async)"
+            [canBeSelected]="allowed[type] && (type !== 'folder' || !isPickingFolder)"
+            [selected]="selected$ | async"
+            (select)="selectItem($event)"
+            (deselect)="deselectItem($event)"
+            (itemClick)="itemClicked($event)"
+            (updateDisplayFields)="updateDisplayFields(type, $event)"
+            (pageLanguageIconClick)="onPageLanguageIconClicked($event)"
+            (formLanguageIconClick)="onFormLanguageIconClicked($event)"
+        >
+        </repository-browser-list>
+
+    </ng-container>
+
+</div>
+<div class="modal-footer" [class.no-permissions]="(hasPermissions$ | async) === false">
+    <gtx-button (click)="cancelFn()" flat type="secondary">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button (click)="submitClicked()" type="primary" [disabled]="!(canSubmit$ | async) || !(hasPermissions$ | async)"
+                [title]="(hasPermissions$ | async) === false ? ('modal.repository_browser_insufficient_permissions_title' | i18n) : ''">
+        <icon left class="lock">lock</icon><span>{{ submitLabelKey | i18n }}</span>
+    </gtx-button>
+</div>

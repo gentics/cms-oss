@@ -1,0 +1,117 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.CONSTRUCTS"
+            [title]="'construct.construct_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.constructs_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-construct-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-construct-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="PackageDetailTabs.CONTENT_REPOSITORIES"
+            gtxDetailTabLink
+            [title]="'contentRepository.contentRepository_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.contentrepositories_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-content-repository-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-content-repository-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.CR_FRAGMENTS"
+            [title]="'contentRepositoryFragment.contentRepositoryFragment_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.contentRepositoryFragments_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-cr-fragment-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-cr-fragment-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.DATA_SOURCES"
+            [title]="'dataSource.dataSource_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.dataSources_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-data-source-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-data-source-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.OBJECT_PROPERTIES"
+            [title]="'common.objectProperty_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.objectproperties_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-object-property-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-object-property-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.TEMPLATES"
+            [title]="'template.template_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.templates_of_package' | i18n: { packageName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-template-table
+                    [showSearch]="true"
+                    [packageName]="currentEntity.id"
+                ></gtx-template-table>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

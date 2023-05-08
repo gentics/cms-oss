@@ -1,0 +1,86 @@
+@import "variables";
+
+$background-color: $gtx-color-off-white;
+$spinner-color: $gtx-color-primary;
+
+.logging-in-overlay {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 1;
+    background-color: $background-color;
+
+    &:not(.visible) {
+        transition: opacity 1s 1s, visibility 0s 2s;
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.logging-in-overlay[hidden] > .loader {
+    animation: none;
+}
+
+/**
+ * Taken from http://projects.lukehaas.me/css-loaders/
+ */
+
+.loader {
+    color: $spinner-color;
+    font-size: 11px;
+    text-indent: -99999em;
+    margin: 55px auto;
+    position: relative;
+    width: 10em;
+    height: 10em;
+    box-shadow: inset 0 0 0 1em;
+    transform: translateZ(0);
+    will-change: transform;
+
+    &,
+    &:before,
+    &:after {
+        border-radius: 50%;
+        will-change: transform;
+    }
+
+    &:before,
+    &:after {
+        position: absolute;
+        content: '';
+        width: 5.2em;
+        height: 10.2em;
+        background: $background-color;
+        top: -0.1em;
+    }
+
+    &:before {
+        border-radius: 10.2em 0 0 10.2em;
+        left: -0.1em;
+        transform-origin: 5.2em 5.1em;
+        animation: loginSpinnerAnimation 2s infinite ease 1.5s;
+    }
+
+    &:after {
+        border-radius: 0 10.2em 10.2em 0;
+        left: 5.1em;
+        transform-origin: 0px 5.1em;
+        animation: loginSpinnerAnimation 2s infinite ease;
+    }
+}
+
+@keyframes loginSpinnerAnimation {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

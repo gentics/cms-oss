@@ -1,0 +1,4 @@
+# Methods that are known to be API inconsistent
+public com.gentics.portalnode.module.ModuleParameter com.gentics.api.portalnode.portlet.GenticsPortletContext.getModuleParameter(java.lang.String)
+public com.gentics.portalnode.formatter.FormatterManager com.gentics.api.portalnode.portlet.GenticsPortletContext.getFormatterManager()
+public com.gentics.portalnode.auth.AuthenticationSystem com.gentics.api.portalnode.portlet.GenticsPortletContext.getAuthenticationSystem()

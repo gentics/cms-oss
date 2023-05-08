@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.70879",
+  "keyword" : "teaser",
+  "icon" : "textit.gif",
+  "name" : {
+    "de" : "Artikelübersicht",
+    "en" : "Article Overview"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.70885",
+    "name" : {
+      "de" : "Übersicht",
+      "en" : "Übersicht"
+    },
+    "keyword" : "overview",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70891",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.70897",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "velocity",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

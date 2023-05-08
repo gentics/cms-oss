@@ -1,0 +1,17 @@
+.column.text-box {
+    padding-left: 0;
+    padding-right: 0;
+
+    ::ng-deep {
+        gtx-input input, gtx-textarea textarea {
+            // The margin between the rows is provided by the GenticsTagEditor.
+            margin-bottom: 0;
+        }
+
+        gtx-textarea textarea {
+            min-height: 7em;
+            max-height: 20em;
+            overflow-y: auto !important;
+        }
+    }
+}

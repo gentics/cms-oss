@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.gentics</groupId>
+		<artifactId>cms-oss</artifactId>
+		<version>6.0.0-SNAPSHOT</version>
+	</parent>
+
+	<groupId>com.gentics.cms</groupId>
+	<artifactId>cms-api</artifactId>
+	<organization>
+		<name>Gentics Software GmbH</name>
+		<url>http://www.gentics.com/</url>
+	</organization>
+
+	<description>Contains Model classes for the Gentics CMS API</description>
+	<name>Gentics CMS - API Library</name>
+	<url>http://www.gentics.com</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<verbose>true</verbose>
+					<fork>true</fork>
+					<compilerVersion>1.8</compilerVersion>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<!--  <failOnError>false</failOnError> -->
+							<includeDependencySources>true</includeDependencySources>
+							<dependencySourceIncludes>
+								<!-- include ONLY dependencies I control -->
+								<dependencySourceInclude>com.gentics:*</dependencySourceInclude>
+							</dependencySourceIncludes>
+							<dependencySourceExcludes>
+								<dependencySourceExclude>com.gentics:portalnode-jaxb</dependencySourceExclude>
+							</dependencySourceExcludes>
+							<subpackages>com.gentics.api.contentnode</subpackages>
+							<includeTransitiveDependencySources>true</includeTransitiveDependencySources>
+							<excludePackageNames>com.gentics.contentnode,com.gentics.lib,com.gentics.portalnode</excludePackageNames>
+							<maxmemory>500M</maxmemory>
+							<additionalparam>-Xdoclint:none</additionalparam>
+							<detectJavaApiLink>false</detectJavaApiLink>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<excludePomFiles>true</excludePomFiles>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<mainClass>com.gentics.contentnode.api.version.Main</mainClass>
+						</manifest>
+						<manifestEntries>
+							<url>${project.url}</url>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<!-- Test dependencies -->
+		<dependency>
+			<artifactId>junit</artifactId>
+			<groupId>junit</groupId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-restapi</artifactId>
+		</dependency>
+		
+		<!-- The base lib still contains some api code -->
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>base-lib</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>base-api</artifactId>
+		</dependency>
+	</dependencies>
+
+</project>

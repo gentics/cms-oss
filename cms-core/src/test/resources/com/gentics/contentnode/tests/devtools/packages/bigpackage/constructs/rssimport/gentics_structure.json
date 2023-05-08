@@ -1,0 +1,115 @@
+{
+  "globalId" : "A547.58469",
+  "keyword" : "rssimport",
+  "icon" : "undef.gif",
+  "name" : {
+    "de" : "RSS-Import",
+    "en" : "RSS-Import"
+  },
+  "description" : {
+    "de" : "RSS-Feed in Artikel integrieren",
+    "en" : "Import contents from RSS-Feeds"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58259",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58303",
+    "name" : {
+      "de" : "Quelle für RSS-Import",
+      "en" : "Datasource of RSS"
+    },
+    "keyword" : "source",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58337",
+    "name" : {
+      "de" : "Maximale Anzahl dargestellten RSS-Einträgen",
+      "en" : "Maximum entries of RSS entries"
+    },
+    "keyword" : "max_entries",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58359",
+    "name" : {
+      "de" : "Template für Darstellung",
+      "en" : "Template of article-entry"
+    },
+    "keyword" : "template",
+    "editable" : true,
+    "typeId" : 3,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58379",
+    "name" : {
+      "de" : "User HTTP-Authenfizierung (optional)",
+      "en" : "User HTTP-Authentification (optional)"
+    },
+    "keyword" : "authuser",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58392",
+    "name" : {
+      "de" : "Password HTTP-Authenfizierung (optional)",
+      "en" : "Password HTTP-Authentification (optional)"
+    },
+    "keyword" : "authpassword",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.64321",
+    "name" : {
+      "de" : "Ergebnisse kürzen (Anzahl Buchstaben)",
+      "en" : "Truncate results (how many characters?)"
+    },
+    "keyword" : "shortentitle",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

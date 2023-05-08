@@ -1,0 +1,82 @@
+{
+    "objectProperty_plural": {
+        "en": "Object Properties",
+        "de": "Objekteigenschaften"
+    },
+    "objectPropertyCategory_singular": {
+        "en": "Object Property Category",
+        "de": "Objekteigenschaftskategorie"
+    },
+    "objectPropertyCategory_plural": {
+        "en": "Object Property Category",
+        "de": "Objekteigenschaftskategorien"
+    },
+    "objectProperty_successfully_added_to_package": {
+        "en": "Object Property {{name}} successfully added to package",
+        "de": "Objekteigenschaft {{name}} erfolgreich zu Paket hinzugefügt"
+    },
+    "objectProperty_successfully_removed_from_package": {
+        "en": "Object Property {{name}} successfully removed from package",
+        "de": "Objekteigenschaft {{name}} erfolgreich von Paket entfernt"
+    },
+    "info_selected_objectproperties": {
+        "en": "{{amountSelected}} of {{amountTotal}} Object Properties selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Objekteigenschaften ausgewählt"
+    },
+    "info_selected_objectPropertycategories": {
+        "en": "{{amountSelected}} of {{amountTotal}} Object Property Categories selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Objekteigenschaftskategorien ausgewählt"
+    },
+    "globalId": {
+        "en": "Global Id",
+        "de": "Globale Id"
+    },
+    "name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "description": {
+        "en": "Description",
+        "de": "Beschreibung"
+    },
+    "keyword": {
+        "en": "Keyword",
+        "de": "Keyword"
+    },
+    "type": {
+        "en": "Type",
+        "de": "Typ"
+    },
+    "constructId": {
+        "en": "Construct Id",
+        "de": "Tagtyp Id"
+    },
+    "construct": {
+        "en": "Construct",
+        "de": "Tagtyp"
+    },
+    "required": {
+        "en": "Required",
+        "de": "Benötigt"
+    },
+    "inheritable": {
+        "en": "Inheritable",
+        "de": "Vererbbar"
+    },
+    "syncContentset": {
+        "en": "SyncContentset",
+        "de": "Sync Contentset"
+    },
+    "syncChannelset": {
+        "en": "SyncChannelset",
+        "de": "Sync Channelset"
+    },
+    "syncVariants": {
+        "en": "SyncVariants",
+        "de": "Sync-Varianten"
+    },
+    "operation_linked_to_nodes_successful": {
+        "en": "Nodes-links updated successfully",
+        "de": "Node-Verknüpungen erfolgreich geändert"
+    }
+}

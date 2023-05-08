@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.75740",
+  "type" : "folder",
+  "keyword" : "object.navhidden",
+  "name" : {
+    "de" : "Hide this entry in navigation",
+    "en" : "Hide this entry in navigation"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "constructId" : "A547.69744"
+}

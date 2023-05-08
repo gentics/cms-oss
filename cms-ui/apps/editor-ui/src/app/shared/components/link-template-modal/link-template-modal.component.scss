@@ -1,0 +1,41 @@
+@import "variables";
+@import "search-bar-styles";
+@import "flex-modal";
+
+@include flex-modal;
+
+.modal-title {
+    @include search-bar-styles;
+    padding-bottom: 1rem;
+
+    gtx-search-bar {
+        border: 1px solid $gtx-color-light-gray;
+        box-shadow: none;
+        margin-top: 0;
+    }
+
+    @media screen and (min-width: $small-screen) {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+
+        h5 {
+            width: 50%;
+        }
+
+        gtx-search-bar {
+            width: 50%;
+            margin-top: 10px;
+        }
+    }
+}
+
+.modal-content {
+    ::ng-deep link-template .template-list-header {
+        width: calc(100% - 48px);
+
+        @media screen and (max-width: $small-screen) {
+            width: calc(100% - 24px);
+        }
+    }
+}

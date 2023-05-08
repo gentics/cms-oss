@@ -1,0 +1,8 @@
+{
+  "datasourceId" : "A547.14669",
+  "options" : [ {
+    "id" : 0,
+    "key" : "Persons with names and addresses",
+    "value" : "<li><ldap_cn> (<a href=\"mailto:<ldap_mail>\"><ldap_mail></a>)</li>"
+  } ]
+}

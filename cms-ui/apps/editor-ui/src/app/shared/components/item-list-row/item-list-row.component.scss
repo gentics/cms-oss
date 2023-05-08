@@ -1,0 +1,142 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+$item-list-min-height: 63px;
+
+.liveurl-icon {
+    align-self: baseline;
+}
+
+gtx-contents-list-item {
+    align-items: flex-start;
+    border-bottom: 1px dotted $gtx-color-very-light-gray;
+    min-height: $item-list-min-height;
+
+    ::ng-deep .item-name {
+        align-items: baseline;
+    }
+
+    &.deleted {
+        opacity: 0.5;
+    }
+
+    &.item-in-editor {
+        ::ng-deep .language-icon > div::after {
+            background-color: #ebf6fb !important;
+        }
+    }
+
+    .show-on-hover {
+        filter: grayscale(20%);
+        opacity: 0.35;
+    }
+    &:hover {
+        .show-on-hover {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+    }
+
+    &.item-in-editor {
+        background-color: desaturate(lighten($gtx-color-primary, 52%), 35%);
+    }
+
+    ::ng-deep icon-checkbox {
+        align-self: start;
+    }
+
+    ::ng-deep page-language-indicator-current .language-icon {
+        padding-bottom: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    &::shadow {
+        @media only screen and (max-width: $small-screen) {
+            .item-primary {
+                width: 49%;
+            }
+        }
+
+        @media only screen and (max-width: $small-screen + 15px) and (orientation: landscape) {
+            .item-primary {
+                width: 30%;
+            }
+        }
+
+        .item-primary {
+            max-width: calc(100% - 77px);
+            width: 40%;
+        }
+
+        .item-name {
+            display: inline-flex;
+            align-items: baseline;
+            overflow: hidden;
+            max-width: 100%;
+
+            > .item-name-only {
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                color: $gtx-color-primary;
+            }
+
+            ::ng-deep .hl-pipe {
+                background-color: rgba(255, 236, 10, 0.18);
+                border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+            }
+        }
+
+        .file-name {
+            color: $gtx-color-mid-gray;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            font-size: 14px;
+
+            ::ng-deep .hl-pipe {
+                background-color: rgba(255, 236, 10, 0.1);
+                border-bottom: 2px solid transparentize($gcms-color-highlight, 0.6);
+            }
+
+            a {
+                color: desaturate(lighten($gtx-color-primary, 20%), 45%);
+                &:hover {
+                    color: desaturate(lighten($gtx-color-primary, 10%), 10%);
+                }
+            }
+        }
+
+        @media screen and (max-width: $small-screen) {
+            .file-name {
+                font-size: 12px;
+            }
+        }
+
+        .display-fields {
+            max-width: 50vw;
+            max-width: fit-content;
+            flex: 1;
+            padding-top: 7px;
+            padding-bottom: 7px;
+        }
+
+        @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+            .item-primary {
+                flex: 1;
+            }
+
+            .display-fields {
+                flex: 0.5;
+            }
+        }
+
+        .show-on-hover {
+            white-space: nowrap;
+            padding-top: 7px;
+            padding-bottom: 7px;
+        }
+    }
+
+}

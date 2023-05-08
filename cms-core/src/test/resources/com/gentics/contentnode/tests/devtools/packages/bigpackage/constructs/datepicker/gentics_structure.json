@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.20593",
+  "keyword" : "datepicker",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Date Picker",
+    "en" : "[Form] -- Datepicker"
+  },
+  "description" : {
+    "de" : "Ermöglicht dem Redakteur die Auswahl eines Datums aus einem Kalender",
+    "en" : "Add a calendar to your form"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.20602",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.20607",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "custom",
+    "editable" : true,
+    "typeId" : 36,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.20612",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "date",
+    "editable" : true,
+    "typeId" : 36,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

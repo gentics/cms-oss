@@ -1,0 +1,55 @@
+<h1>Icons</h1>
+
+<p>
+    The UI Core uses the <a href="https://material.io/tools/icons">Material Icons</a> set. To use them, add an
+    <code>icon</code> element name the desired icon inside the tag:
+</p>
+
+<gtx-highlighted-code code='<icon>add</icon>' language="html"></gtx-highlighted-code>
+
+<p>Often we need the icon to align to the left or the right of some text or other content. In this case the
+<code>left</code> or <code>right</code> attribute should be added to the <code>icon</code> element.</p>
+
+<h2>Demos</h2>
+
+
+<gtx-demo-block demoTitle="Combining Icons With Components">
+    <div class="demo-result">
+        <p>Icons can be used in conjunction with other components. Here are some examples:</p>
+        <gtx-button type="alert"><icon left>delete</icon> Delete</gtx-button>
+        <gtx-button flat type="success"><icon left>done</icon> Mark as Done</gtx-button>
+        <gtx-button>Send <icon right>send</icon></gtx-button>
+
+        <br>
+        <br>
+
+        <gtx-dropdown-list>
+            <gtx-dropdown-trigger>
+                <gtx-button>Pick a mode of transport</gtx-button>
+            </gtx-dropdown-trigger>
+            <gtx-dropdown-content>
+                <gtx-dropdown-item><icon left>directions_car</icon> Car</gtx-dropdown-item>
+                <gtx-dropdown-item><icon left>directions_boat</icon> Boat</gtx-dropdown-item>
+                <gtx-dropdown-item><icon left>airplanemode_active</icon> Plane</gtx-dropdown-item>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-button type="alert"><icon left>delete</icon> Delete</gtx-button>
+                <gtx-button flat type="success"><icon left>done</icon> Mark as Done</gtx-button>
+                <gtx-button>Send <icon right>send</icon></gtx-button>
+
+                <gtx-dropdown-list>
+                    <gtx-dropdown-trigger>
+                        <gtx-button>Pick a mode of transport</gtx-button>
+                    </gtx-dropdown-trigger>
+                    <gtx-dropdown-content>
+                        <gtx-dropdown-item><icon left>directions_car</icon> Car</gtx-dropdown-item>
+                        <gtx-dropdown-item><icon left>directions_boat</icon> Boat</gtx-dropdown-item>
+                        <gtx-dropdown-item><icon left>airplanemode_active</icon> Plane</gtx-dropdown-item>
+                    </gtx-dropdown-content>
+                </gtx-dropdown-list>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

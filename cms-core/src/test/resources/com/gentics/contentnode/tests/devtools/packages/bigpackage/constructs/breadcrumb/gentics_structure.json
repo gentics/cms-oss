@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.14599",
+  "keyword" : "breadcrumb",
+  "icon" : "olist.gif",
+  "name" : {
+    "de" : "[CMS] Breadcrumb",
+    "en" : "[CMS] Breadcrumb"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14227",
+    "name" : {
+      "de" : "bc",
+      "en" : "bc"
+    },
+    "keyword" : "bc",
+    "editable" : false,
+    "typeId" : 34,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14296",
+    "name" : {
+      "de" : "startfolder",
+      "en" : "startfolder"
+    },
+    "keyword" : "startfolder",
+    "editable" : true,
+    "typeId" : 25,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14341",
+    "name" : {
+      "de" : "template",
+      "en" : "template"
+    },
+    "keyword" : "template",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14377",
+    "name" : {
+      "de" : "disable_activepage",
+      "en" : "disable_activepage"
+    },
+    "keyword" : "disable_activepage",
+    "editable" : true,
+    "typeId" : 31,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

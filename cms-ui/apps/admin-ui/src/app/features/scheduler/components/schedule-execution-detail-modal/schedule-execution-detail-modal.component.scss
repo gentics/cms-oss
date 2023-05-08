@@ -1,0 +1,34 @@
+@import 'variables';
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+
+    .log-wrapper {
+        margin-top: 1rem;
+
+        .log-label {
+            font-size: 0.8rem;
+            display: block;
+            color: $gtx-color-dark-gray;
+            transition: color 0.2s;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .log-output {
+            display: block;
+            flex: 1 1 auto;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            white-space: break-spaces;
+            border: 1px solid $gtx-color-dark-gray;
+            padding: 1rem;
+        }
+    }
+}

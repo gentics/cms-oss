@@ -1,0 +1,39 @@
+@import "variables";
+
+.popover_title {
+    font-weight: bold;
+
+    p {
+        font-weight: 400;
+    }
+}
+
+table {
+    max-width: 500px;
+}
+
+@media screen and (max-width: $tiny-screen) {
+    table {
+        max-width: 350px;
+    }
+}
+
+table.full-description {
+    padding: 5px;
+    margin: 0;
+
+    tr {
+        &:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            padding: 0.4rem 0 0.4rem 1rem;
+            vertical-align: top;
+
+            &:last-child {
+                padding-right: 1rem;
+            }
+        }
+    }
+}

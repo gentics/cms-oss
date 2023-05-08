@@ -1,0 +1,22 @@
+{
+  "type" : "folder",
+  "keyword" : "object.second",
+  "name" : {
+    "de" : "Zweite Eigenschaft",
+    "en" : "Second Property"
+  },
+  "description" : {
+    "de" : "Beschreibung der zweiten Eigenschaft",
+    "en" : "Description of the second property"
+  },
+  "constructId" : "1111.d625ab5c-bd23-11ea-a785-482ae36fb1c5",
+  "required" : false,
+  "inheritable" : true,
+  "category" : {
+    "name" : {
+      "de" : "Kategorie",
+      "en" : "Category"
+    },
+    "sortOrder" : 1
+  }
+}

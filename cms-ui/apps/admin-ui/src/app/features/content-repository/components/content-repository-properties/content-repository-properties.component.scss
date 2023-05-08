@@ -1,0 +1,23 @@
+@import 'variables';
+
+.gtx-password-box {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    box-shadow: 0 1px 0 0 $gtx-color-primary;
+    box-shadow: 0 -1px 0 0 $gtx-color-primary;
+    box-shadow: -1px 0 0 0 $gtx-color-primary;
+    box-shadow: 1px 0 0 0 $gtx-color-primary;
+    box-shadow: 0 0 0 1px $gtx-color-primary;
+}
+
+[formcontrolname="elasticsearch"] {
+
+    ::ng-deep textarea {
+        margin-bottom: 0;
+    }
+}
+
+.container-validator-errors {
+    color: $gtx-color-alert;
+}

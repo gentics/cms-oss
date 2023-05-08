@@ -1,0 +1,270 @@
+{
+    "id": {
+        "en": "ID",
+        "de": "ID"
+    },
+    "info_selected_schedules": {
+        "en": "{{amountSelected}} of {{amountTotal}} Schedules selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Terminen ausgewählt"
+    },
+    "info_selected_tasks": {
+        "en": "{{amountSelected}} of {{amountTotal}} Tasks selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Tasks ausgewählt"
+    },
+    "delete_schedule": {
+        "en": "Delete Schedule",
+        "de": "Termin löschen"
+    },
+    "delete_task": {
+        "en": "Delete Task",
+        "de": "Task löschen"
+    },
+    "schedule_delete_error": {
+        "en": "An error occurred while deleting the Schedule \"{{ scheduleName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler beim löschen des Termins „{{ scheduleName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "task_delete_error": {
+        "en": "An error occurred while deleting the Task \"{{ taskName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler beim löschen des Tasks „{{ taskName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "create_schedule_error": {
+        "en": "An error occurred while creating a new Schedule!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim erstellen des Termins aufgetreten!\n{{errorMessage}}"
+    },
+    "create_schedule_task_error": {
+        "en": "An error occurred while creating a new Task!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim erstellen des Tasks aufgetreten!\n{{errorMessage}}"
+    },
+    "title_executions_of_schedule": {
+        "en": "Executions of \"{{ scheduleName }}\"",
+        "de": "Durchläufe von „{{ scheduleName }}“"
+    },
+    "schedules_tab": {
+        "en": "Schedules",
+        "de": "Termine"
+    },
+    "title_executions": {
+        "en": "Executions",
+        "de": "Durchläufe"
+    },
+    "tasks_tab": {
+        "en": "Tasks",
+        "de": "Tasks"
+    },
+    "task": {
+        "en": "Task",
+        "de": "Task"
+    },
+    "active": {
+        "en": "Active",
+        "de": "Aktiv"
+    },
+    "parallel": {
+        "en": "Run in parallel",
+        "de": "Parallel ausführen"
+    },
+    "notificationEmail": {
+        "en": "Emails in case of failure",
+        "de": "Emails bei Fehlerfall"
+    },
+    "scheduleType": {
+        "en": "Schedule Type",
+        "de": "Zeitplan"
+    },
+    "scheduleType_interval": {
+        "en": "Interval",
+        "de": "Intervall"
+    },
+    "scheduleType_once": {
+        "en": "Once",
+        "de": "Einmalig"
+    },
+    "scheduleType_followup": {
+        "en": "After another Schedule",
+        "de": "Nach anderen Termin"
+    },
+    "scheduleType_manual": {
+        "en": "Manual",
+        "de": "Manuell"
+    },
+    "startTimestamp": {
+        "en": "Start Date",
+        "de": "Startdatum"
+    },
+    "endTimestamp": {
+        "en": "End Date",
+        "de": "Enddatum"
+    },
+    "followUp_schedule": {
+        "en": "Execute after Schedule",
+        "de": "Ausführen nach Termin"
+    },
+    "followUp_onlyAfterSuccess": {
+        "en": "Only after successful Schedule",
+        "de": "Nur nach erfolgreichen Termin"
+    },
+    "interval_value": {
+        "en": "Interval Value",
+        "de": "Intervall Wert"
+    },
+    "interval_unit": {
+        "en": "Interval Unit",
+        "de": "Intervall Einheit"
+    },
+    "interval_unitType_minute": {
+        "en": "Minute",
+        "de": "Minute"
+    },
+    "interval_unitType_hour": {
+        "en": "Hour",
+        "de": "Stunde"
+    },
+    "interval_unitType_day": {
+        "en": "Day",
+        "de": "Tag"
+    },
+    "interval_unitType_week": {
+        "en": "Week",
+        "de": "Woche"
+    },
+    "interval_unitType_month": {
+        "en": "Month",
+        "de": "Monat"
+    },
+    "command": {
+        "en": "Command",
+        "de": "Befehl"
+    },
+    "internal": {
+        "en": "Internal",
+        "de": "Intern"
+    },
+    "execution_result": {
+        "en": "Last Execution",
+        "de": "Letzter Durchlauf"
+    },
+    "execution_result_true": {
+        "en": "Success",
+        "de": "Erfolgreich"
+    },
+    "execution_result_false": {
+        "en": "Failure",
+        "de": "Fehlgeschlagen"
+    },
+    "execution_startTime": {
+        "en": "Started at",
+        "de": "Gestartet am"
+    },
+    "execution_endTime": {
+        "en": "Ended at",
+        "de": "Beendet am"
+    },
+    "execution_duration": {
+        "en": "Duration",
+        "de": "Durchlaufzeit"
+    },
+    "execution_log": {
+        "en": "Log Output",
+        "de": "Log Ausgabe"
+    },
+    "delete_schedule_permission_required": {
+        "en": "You do not have permission to delete the Schedule \"{{ scheduleName }}\"",
+        "de": "Sie haben nicht die Berechtigung den Termin „{{ scheduleName }}“ zu löschen"
+    },
+    "delete_schedule_task_permission_required": {
+        "en": "You do not have permission to delete the Task \"{{ taskName }}\"",
+        "de": "Sie haben nicht die Berechtigung den Task „{{ taskName }}“ zu löschen"
+    },
+    "delete_internal_schedule_task_not_possible": {
+        "en": "You can not delete the internal Task \"{{ taskName }}\"",
+        "de": "Sie können den internen Task „{{ taskName }}“ nicht löschen"
+    },
+    "resume_scheduler": {
+        "en": "Resume Scheduler",
+        "de": "Scheduler fortsetzen"
+    },
+    "suspend_scheduler": {
+        "en": "Pause Scheduler",
+        "de": "Scheduler anhalten"
+    },
+    "status_running": {
+        "en": "Running",
+        "de": "Läuft"
+    },
+    "status_suspending": {
+        "en": "Suspending",
+        "de": "Aufhaltend"
+    },
+    "status_suspended": {
+        "en": "Suspended",
+        "de": "Angehalten"
+    },
+    "status": {
+        "en": "Status",
+        "de": "Status"
+    },
+    "schedule_status_IDLE": {
+        "en": "Idle",
+        "de": "Wartet"
+    },
+    "schedule_status_DUE": {
+        "en": "Due",
+        "de": "Überfällig"
+    },
+    "schedule_status_RUNNING": {
+        "en": "Running",
+        "de": "Läuft"
+    },
+    "suspend_success": {
+        "en": "The Scheduler has been suspended",
+        "de": "Der Scheudler wurde angehalten"
+    },
+    "resume_success": {
+        "en": "The Scheduler has been resumed",
+        "de": "Der Scheduler wurde fortgesetzt"
+    },
+    "execute_schedule_success": {
+        "en": "The Schedule \"{{ scheduleName }}\" has been started",
+        "de": "Der Termin „{{ scheduleName }}“ wurde gestartet"
+    },
+    "activate_schedule_success": {
+        "en": "The Schedule \"{{ scheduleName }}\" has been activated",
+        "de": "Der Termin „{{ scheduleName }}“ wurde aktiviert"
+    },
+    "activate_schedules_success": {
+        "en": "The Schedules have been activated",
+        "de": "Die Termine wurden aktiviert"
+    },
+    "deactivate_schedule_success": {
+        "en": "The Schedule \"{{ scheduleName }}\" has been deactivated",
+        "de": "Der Termin „{{ scheduleName }}“ wurde deaktiviert"
+    },
+    "deactivate_schedules_success": {
+        "en": "The Schedules have been deactivated",
+        "de": "Die Termine wurden deaktiviert"
+    },
+    "run_schedule": {
+        "en": "Execute Schedule",
+        "de": "Termin ausführen"
+    },
+    "run_schedules": {
+        "en": "Execute Schedules",
+        "de": "Termine ausführen"
+    },
+    "activate_schedule": {
+        "en": "Activate Schedule",
+        "de": "Termin aktivieren"
+    },
+    "activate_schedules": {
+        "en": "Activate Schedules",
+        "de": "Termine aktivieren"
+    },
+    "deactivate_schedule": {
+        "en": "Deactivate Schedule",
+        "de": "Termin deaktiveren"
+    },
+    "deactivate_schedules": {
+        "en": "Deactivate Schedules",
+        "de": "Termine deaktivieren"
+    }
+}

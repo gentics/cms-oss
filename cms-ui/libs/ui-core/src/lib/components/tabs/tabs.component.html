@@ -1,0 +1,33 @@
+<ul class="tab-links" [class.vertical]="verticalTabs" [class.wrap]="tabsShouldWrap">
+    <li
+        *ngFor="let tab of tabs"
+        class="tab-link"
+        role="presentation"
+        [title]="tab.title"
+        [class.disabled]="!!tab?.disabled"
+        [class.is-active]="!!tab?.active"
+        [class.has-icon]="!!tab.icon"
+        [class.icon-only]="shouldHideTitle && !tab?.active || (tab?.icon && !tab?.title)"
+        (click)="selectTab(tab)"
+    >
+        <a *ngIf="tab.routerLink && !tab.disabled; else regularTab" [routerLink]="tab.routerLink" role="tab">
+            <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
+        </a>
+
+        <ng-template #regularTab>
+            <a role="tab">
+                <ng-container [ngTemplateOutlet]="tabContent"></ng-container>
+            </a>
+        </ng-template>
+
+        <ng-template #tabContent>
+            <icon *ngIf="tab.icon">{{tab.icon}}</icon>
+            <span
+                *ngIf="!shouldHideTitle || tab.active || (!tab.active && !tab.icon)"
+                [class.animatedTitle]="shouldHideTitle"
+            >{{ tab.title }}</span>
+        </ng-template>
+    </li>
+</ul>
+
+<ng-content></ng-content>

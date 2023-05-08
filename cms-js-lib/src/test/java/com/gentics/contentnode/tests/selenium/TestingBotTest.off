@@ -1,0 +1,61 @@
+package com.gentics.contentnode.tests.selenium;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+import com.gentics.contentnode.tests.rest.AbstractRestSandboxTest;
+import com.gentics.testutils.ssh.ScpTransfer;
+
+public class TestingBotTest extends AbstractRestSandboxTest {
+
+	private WebDriver driver;
+
+	@BeforeClass
+	public static void setupOnce() {
+		System.setProperty("webdriver.chrome.driver", "/opt/selenium/chromedriver_linux64_23.0.1240.0");
+	}
+
+	@Before
+	public void setUp() throws Exception {
+
+		File projectSourceDirectory = new File(System.getProperty("user.dir"), "src");
+		assertTrue(projectSourceDirectory.exists());
+
+		// DesiredCapabilities capabillities = DesiredCapabilities.chrome();
+		// capabillities.setCapability("version", "11");
+		// capabillities.setCapability("platform", Platform.WINDOWS);
+		// capabillities.setCapability("name", "Testing Selenium 2 Tunneling");
+
+		// this.driver = new RemoteWebDriver(new
+		// URL("http://d75ceab57b459e241c4f7de5d69f653e:67d6659ade40bafc797ead89d331f765@localhost:4445/wd/hub"), capabillities);
+		// driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+
+
+
+		ScpTransfer scp = new ScpTransfer("root", sandbox.getHostname());
+		scp.setPassword("finger");
+		scp.disableStrictHostKeyChecking();
+
+		scp.transfer(projectSourceDirectory, "/Node/var/httpd/htdocs/DEV");
+
+	}
+
+	@Test
+	public void testSimple() throws Exception {
+		this.driver.get("http://" + sandbox.getHostname() + "/DEV/test/js/folder-tests.html");
+		Thread.sleep(10000);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		this.driver.quit();
+	}
+}

@@ -1,0 +1,23 @@
+@import "variables";
+@import "flex-modal";
+
+@include flex-modal;
+
+.gtx-drag-handle {
+    color: $gtx-color-dark-gray;
+}
+
+// TODO: these overrides can be removed once https://jira.gentics.com/browse/GUIC-68 is implemented.
+.input-field {
+    margin-top: 0;
+
+    label {
+        top: 0;
+    }
+}
+
+.modal-content {
+    @media screen and (max-width: $small-screen) {
+        max-height: calc(85vh - 150px);
+    }
+}

@@ -1,0 +1,107 @@
+{
+	"properties": {
+		"id": {
+			"type": "integer",
+			"gtx_tagname": "form.id"
+		},
+		"nodeId": {
+			"type": "integer",
+			"gtx_tagname": "form.folder.node.id"
+		},
+		"folderId": {
+			"type": "integer",
+			"gtx_tagname": "form.folder.id"
+		},
+		"name": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "form.name",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"description": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "form.description",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"content": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "content"
+		},
+		"created": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "form.cdate"
+		},
+		"creatorId": {
+			"type": "integer",
+			"gtx_tagname": "form.creator.id"
+		},
+		"edited": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "form.edate"
+		},
+		"editorId": {
+			"type": "integer",
+			"gtx_tagname": "form.editor.id"
+		},
+		"published": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "form.pdate"
+		},
+		"publisherId": {
+			"type": "integer",
+			"gtx_tagname": "form.publisher.id"
+		},
+		"languageCode": {
+			"type": "keyword",
+			"gtx_tagname": "form.language.code"
+		},
+		"online": {
+			"type": "integer"
+		},
+		"modified": {
+			"type": "boolean"
+		},
+		"planned": {
+			"type": "boolean"
+		},
+		"publishAt": {
+			"type": "date",
+			"format": "epoch_second"
+		},
+		"offlineAt": {
+			"type": "date",
+			"format": "epoch_second"
+		},
+		"systemCreationDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "form.cdate"
+		},
+		"systemEditDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "form.edate"
+		},
+		"groupId": {
+			"type": "integer"
+		}
+	}
+}

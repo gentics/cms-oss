@@ -1,0 +1,164 @@
+<div
+    class="form-element-container-outer"
+    [class.read-only]="state.readOnly"
+    [class.is-interactive]="state.isInteractive"
+    [class.properties-editor-open]="state.propertiesEditorOpen"
+    [class.is-inactive]="!element.active"
+    [class.is-dragged]="state.isBeingDragged"
+    [draggable]="state.isInteractive"
+    (dragstart)="onDragStart($event)"
+    (dragend)="onDragEnd()"
+>
+    <icon
+        *ngIf="propertiesContainError; else isUntranslatedIcon"
+        class="form-element-flag has-property-error"
+        [attr.title]="'gtxFormGenerator.element_status_property_error' | i18n"
+        [@fadeAnim]
+        >
+            error_outline
+    </icon>
+    <ng-template #isUntranslatedIcon>
+        <icon
+            *ngIf="state.isUntranslated"
+            class="form-element-flag is-untranslated"
+            [attr.title]="'gtxFormGenerator.element_status_missing_translation' | i18n"
+            [@fadeAnim]
+        >
+            translate
+        </icon>
+    </ng-template>
+
+    <div
+        class="form-element-container-inner"
+        [class.is-interactive-in-editor]="state.isInteractive && state.isInEditor"
+        [class.form-element-untranslated]="state.isUntranslated"
+    >
+        <div
+            class="form-element-container-header"
+            (click)="containerClicked($event)"
+        >
+            <div
+                *ngIf="element?.properties?.length > 0 || !state.isInEditor"
+                class="form-element-type"
+                [ngClass]="{ 'form-element-type--used-as-title': !state.isInEditor }"
+            >
+                {{ element?.type_label_i18n_ui | i18nfg$:'ui' | async }}
+            </div>
+            <icon
+                *ngIf="!state.readOnly && element.properties && element.properties.length > 0"
+                class="form-element-btn-properties-editor-toggle"
+                [class.active]="state.propertiesEditorOpen"
+                [attr.title]="'gtxFormGenerator.element_button_properties_menu_toggle' | i18n"
+                [@fadeAnim]
+            >
+                keyboard_arrow_down
+            </icon>
+        </div>
+
+        <div
+            *ngIf="state.isInEditor"
+            class="form-element-preview-container"
+        >
+            <gtx-form-element-preview
+                [element]="element"
+                [isPreview]="isPreview"
+            >
+            </gtx-form-element-preview>
+        </div>
+
+        <div
+            *ngIf="state.isInEditor && element.properties && element.properties.length > 0; else placeholderElement"
+            class="form-element-properties-editor-container"
+            [class.form-element-properties-editor-container--opened]="state.propertiesEditorOpen"
+            [draggable]="true"
+            (dragstart)="disableDragEvent($event)"
+        >
+            <gtx-form-element-properties-editor
+                [style.display]="state.propertiesEditorOpen ? 'block' : 'none'"
+                [properties]="element.properties"
+                (propertiesChange)="onPropertiesChange($event)"
+                (translationErrorStatus)="onTranslationErrorChange($event)"
+                (requiredOrValidationErrorStatus)="onRequiredOrValidationErrorStatus($event)"
+            >
+            </gtx-form-element-properties-editor>
+            <div class="form-element-name"
+                [style.display]="state.propertiesEditorOpen ? 'block' : 'none'"
+            >
+                {{ element?.name }}
+            </div>
+        </div>
+        <ng-template #placeholderElement>
+            <div>
+                <!-- placeholder element to keep the flexbox layout similar to other elements that do have a property editor -->
+            </div>
+        </ng-template>
+
+        <div
+            *ngIf="element.isContainer"
+            class="form-element-nested-container"
+            [class.read-only]="state.readOnly"
+            [draggable]="true"
+            (dragstart)="disableDragEvent($event)"
+        >
+            <!-- <div
+                class="form-element-nested-container-overlay"
+                [class.properties-editor-open]="state.propertiesEditorOpen"
+            >
+            </div> -->
+            <div class="form-element-container">
+                <gtx-form-editor-element-list
+                        [containerId]="element.globalId"
+                        [elements]="element.elements"
+                        (elementsChange)="onElementsChange($event)"
+                        [formEditMode]="_formEditMode"
+                        [activeUiLanguageCode]="activeUiLanguageCode"
+                        [activeContentLanguageCode]="activeContentLanguageCode"
+                        [hideDropZones]="hideDropZones || state.isBeingDragged"
+                        [cannotReceive]="element.cannotContain && element.isContainer ? element.cannotContain : []"
+                        (beforeFormElementInsert)="onFormElementInsert($event)"
+                        (propertiesErrorChange)="onPropertiesErrorChange($event)"
+                    >
+                    </gtx-form-editor-element-list>
+            </div>
+        <!-- </div> -->
+        </div>
+    </div>
+
+
+    <div
+        *ngIf="!state.readOnly; else readOnlyIcons"
+        class="form-element-buttons-container"
+        [draggable]="true"
+        (dragstart)="disableDragEvent($event)"
+    >
+        <icon
+            id="form-element-active-button"
+            class="form-element-button"
+            [class.form-element-button--highlight]="element.active"
+            (click)="toggleActiveClicked($event)"
+        >{{ element.active ? 'visibility' : 'visibility_off' }}</icon>
+        <icon
+            class="form-element-button form-element-button--danger"
+            (click)="removeElementClicked($event)"
+        >delete</icon>
+    </div>
+
+    <ng-template #readOnlyIcons>
+        <div
+            *ngIf="state.isInEditor"
+            class="form-element-buttons-container"
+            [draggable]="true"
+            (dragstart)="disableDragEvent($event)"
+        >
+            <icon
+                id="form-element-active-button"
+                class="form-element-button"
+                [class.form-element-button--highlight]="element.active"
+            >{{ element.active ? 'visibility' : 'visibility_off' }}</icon>
+        </div>
+    </ng-template>
+
+
+    <!-- *ngIf="!formEditorIsReadOnly() && !elementBeingDragged && (formElementHoverIndex === i || btnAdderHoverIndex === i)" -->
+    <!-- is being dragged is the wrong state property, should ask whether anything is being dragged -->
+</div>

@@ -1,0 +1,4 @@
+#set($hash = $cms.imps.velocitytools.esc.hash)
+#if( $cms.rendermode.frontend ) 
+${hash}statusinfo("<node page.status>")
+#end

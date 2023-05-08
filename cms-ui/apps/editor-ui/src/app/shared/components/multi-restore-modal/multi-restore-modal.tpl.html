@@ -1,0 +1,43 @@
+<div class="modal-title">
+    <h5>{{ 'modal.multi_restore_title' | i18n: { type: (selectionType() | i18n) } }}</h5>
+</div>
+<div class="modal-content">
+    <wastebin-list
+        type="folder"
+        [filter]="filterTerm"
+        [items]="folders"
+        [selectedItems]="selection['folder']"
+        (selectionChange)="selectionChanged('folder', $event)"
+    >
+    </wastebin-list>
+    <wastebin-list
+        type="page"
+        [filter]="filterTerm"
+        [items]="pages"
+        [selectedItems]="selection['page']"
+        (selectionChange)="selectionChanged('page', $event)"
+    >
+    </wastebin-list>
+    <wastebin-list
+        type="file"
+        [filter]="filterTerm"
+        [items]="files"
+        [selectedItems]="selection['file']"
+        (selectionChange)="selectionChanged('file', $event)"
+    >
+    </wastebin-list>
+    <wastebin-list
+        type="image"
+        [filter]="filterTerm"
+        [items]="images"
+        [selectedItems]="selection['image']"
+        (selectionChange)="selectionChanged('image', $event)"
+    >
+    </wastebin-list>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="alert" (click)="restoreSelected()" class="confirm-button" [disabled]="selectionCount() === 0">
+        {{ 'modal.multi_restore_confirm_button' | i18n:{ count: selectionCount() } }}
+    </gtx-button>
+</div>

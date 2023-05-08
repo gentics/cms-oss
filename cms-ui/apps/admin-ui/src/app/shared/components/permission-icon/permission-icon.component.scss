@@ -1,0 +1,13 @@
+@import "variables";
+
+:host {
+
+    gtx-icon ::ng-deep .gtx-icon icon {
+        font-size: $gtx-action-icon-font-size;
+    }
+
+    .gtx-perm-denied gtx-icon ::ng-deep .gtx-icon icon {
+        color: $gtx-color-mid-gray;
+    }
+
+}

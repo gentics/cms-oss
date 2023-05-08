@@ -1,0 +1,101 @@
+{
+  "globalId" : "A547.69809",
+  "keyword" : "imgdeps",
+  "icon" : "ds.gif",
+  "name" : {
+    "de" : "Bilder-Galerie Abhängigkeiten",
+    "en" : "Image Gallery Dependencies"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.69815",
+    "name" : {
+      "de" : "html",
+      "en" : "html"
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69820",
+    "name" : {
+      "de" : "js-jquery",
+      "en" : "js-jquery"
+    },
+    "keyword" : "js-jquery",
+    "editable" : false,
+    "typeId" : 8,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69825",
+    "name" : {
+      "de" : "js-colorbox",
+      "en" : "js-colorbox"
+    },
+    "keyword" : "js-colorbox",
+    "editable" : false,
+    "typeId" : 8,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69830",
+    "name" : {
+      "de" : "css-colorbox",
+      "en" : "css-colorbox"
+    },
+    "keyword" : "css-colorbox",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69835",
+    "name" : {
+      "de" : "css-infinitecarousel",
+      "en" : "css-infinitecarousel"
+    },
+    "keyword" : "css-infinitecarousel",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69840",
+    "name" : {
+      "de" : "js-infinitecarousel",
+      "en" : "js-infinitecarousel"
+    },
+    "keyword" : "js-infinitecarousel",
+    "editable" : false,
+    "typeId" : 8,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<definition>
+    <objecttype excludeversioning="false" id="1000" name="TestObject">
+    	<!-- single value, non optimized -->
+		<attributetype name="text" attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="link" attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1000" multivalue="false" optimized="false"/>
+		<attributetype name="int" attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="bin" attributetype="4" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="longtext" attributetype="5" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="blob" attributetype="6" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="foreignlink" attributetype="7" excludeVersioning="false" filesystem="false" linkedobjecttype="1000" multivalue="false" optimized="false">
+            <foreignlinkattribute>link</foreignlinkattribute>
+		</attributetype>
+		<attributetype name="long" attributetype="8" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="double" attributetype="9" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+		<attributetype name="date" attributetype="10" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="false"/>
+
+    	<!-- single value, optimized -->
+		<attributetype name="text_opt" attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="true">
+            <quickname>quick_text_opt</quickname>
+		</attributetype>
+		<attributetype name="link_opt" attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1000" multivalue="false" optimized="true">
+            <quickname>quick_link_opt</quickname>
+		</attributetype>
+		<attributetype name="int_opt" attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="true">
+            <quickname>quick_int_opt</quickname>
+		</attributetype>
+		<attributetype name="long_opt" attributetype="8" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="true">
+            <quickname>quick_long_opt</quickname>
+		</attributetype>
+		<attributetype name="double_opt" attributetype="9" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="true">
+            <quickname>quick_double_opt</quickname>
+		</attributetype>
+		<attributetype name="date_opt" attributetype="10" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="false" optimized="true">
+            <quickname>quick_date_opt</quickname>
+		</attributetype>
+
+		<!-- multi value -->
+		<attributetype name="text_multi" attributetype="1" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="link_multi" attributetype="2" excludeVersioning="false" filesystem="false" linkedobjecttype="1000" multivalue="true" optimized="false"/>
+		<attributetype name="int_multi" attributetype="3" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="bin_multi" attributetype="4" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="longtext_multi" attributetype="5" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="blob_multi" attributetype="6" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="long_multi" attributetype="8" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="double_multi" attributetype="9" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+		<attributetype name="date_multi" attributetype="10" excludeVersioning="false" filesystem="false" linkedobjecttype="0" multivalue="true" optimized="false"/>
+	</objecttype>
+</definition>

@@ -1,0 +1,36 @@
+0: Node Name	0/0 (0) true: 7
+1: Folder 1	1/7 (1) true: 6
+2: Folder 1.1	1/6 (2) true: 4
+3: image1_2.jpg	1/4 (3) false
+3: image2_2.jpg	2/4 (4) false
+3: Page 1	3/4 (5) false
+3: Page 2	4/4 (6) false
+2: Folder 1.2	2/6 (7) true: 4
+3: image1_3.jpg	1/4 (8) false
+3: image2_3.jpg	2/4 (9) false
+3: Page 1	3/4 (10) false
+3: Page 2	4/4 (11) false
+2: image1_1.jpg	3/6 (12) false
+2: image2_1.jpg	4/6 (13) false
+2: Page 1	5/6 (14) false
+2: Page 2	6/6 (15) false
+1: Folder 2	2/7 (16) true: 6
+2: Folder 2.1	1/6 (17) true: 4
+3: image1_5.jpg	1/4 (18) false
+3: image2_5.jpg	2/4 (19) false
+3: Page 1	3/4 (20) false
+3: Page 2	4/4 (21) false
+2: Folder 2.2	2/6 (22) true: 4
+3: image1_6.jpg	1/4 (23) false
+3: image2_6.jpg	2/4 (24) false
+3: Page 1	3/4 (25) false
+3: Page 2	4/4 (26) false
+2: image1_4.jpg	3/6 (27) false
+2: image2_4.jpg	4/6 (28) false
+2: Page 1	5/6 (29) false
+2: Page 2	6/6 (30) false
+1: image1.jpg	3/7 (31) false
+1: image2.jpg	4/7 (32) false
+1: NavPage	5/7 (33) true
+1: Page 1	6/7 (34) false
+1: Page 2	7/7 (35) false

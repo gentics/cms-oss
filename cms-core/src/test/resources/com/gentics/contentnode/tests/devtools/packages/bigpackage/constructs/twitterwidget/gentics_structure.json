@@ -1,0 +1,59 @@
+{
+  "globalId" : "B230.78337",
+  "keyword" : "twitterwidget",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "Twitter Widget",
+    "en" : "Twitter Widget"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.74807",
+    "name" : {
+      "de" : "Velocity",
+      "en" : ""
+    },
+    "keyword" : "vlt",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "B230.78343",
+    "name" : {
+      "de" : "Template",
+      "en" : ""
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "B230.78348",
+    "name" : {
+      "de" : "Twitter-Name",
+      "en" : "Twitter-Name"
+    },
+    "keyword" : "twittername",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

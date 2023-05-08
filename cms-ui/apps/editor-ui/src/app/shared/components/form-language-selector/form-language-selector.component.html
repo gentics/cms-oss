@@ -1,0 +1,32 @@
+<div class="language-select" *ngIf="1 < variants.length; else one_language_text">
+    <gtx-select
+        [value]="selected"
+        (change)="onSelectChange($event)"
+        multiple="true"
+    >
+        <gtx-option
+            *ngFor="let languageCode of variants"
+            [value]="languageCode"
+        >{{ 'lang.' + languageCode | i18n }}</gtx-option>
+    </gtx-select>
+
+    <gtx-button
+        flat
+        size="small"
+        class="show-on-hover"
+        type="secondary"
+        [title]="toggleTitle | i18n: { current: ('lang.' + (activeFolderLanguage$ | async)?.code | i18n) }"
+        (click)="toggleLanguageVariantSelection()"
+    >
+        <icon left>{{ allVariantsSelected() && canSelectNone() ? 'not_interested' : 'check' }}</icon>
+        <span *ngIf="allVariantsSelected() && !canSelectNone()">{{ (activeFolderLanguage$ | async)?.code }}</span>
+        <span *ngIf="allVariantsSelected() && canSelectNone()">{{ 'modal.page_select_none_button' | i18n }}</span>
+        <span *ngIf="!allVariantsSelected()">{{ 'modal.page_select_all_button' | i18n }}</span>
+    </gtx-button>
+</div>
+
+<ng-template #one_language_text>
+    <div class="one_language_text">
+        <span>{{ (activeFolderLanguage$ | async)?.name }}</span>
+    </div>
+</ng-template>

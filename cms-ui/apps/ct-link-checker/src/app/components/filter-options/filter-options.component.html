@@ -1,0 +1,68 @@
+<div class="nodeSelector">
+    <gtxct-node-selector
+        [currentNodeId]="(options$ | async)?.nodeId"
+        [nodes]="nodes$ | async"
+        [stats]="stats$"
+        [showName]="true"
+        (nodeSelected)="selectNode($event)"
+    ></gtxct-node-selector>
+</div>
+
+<div class="brokenLinks">
+    <gtxct-status-indicator
+        [iconName]="(nodeStats$ | async)?.invalid > 0 ? 'warning' : 'check_box'"
+        [alert]="(nodeStats$ | async)?.invalid > 0"
+        [success]="(nodeStats$ | async)?.invalid == 0"
+    >
+        <div
+            [class.loading]="statsLoading$ | async"
+            [innerHTML]="'common.status_broken_node' | translate:{ number: ((nodeStats$ | async)?.invalid || 0) }"
+        ></div>
+    </gtxct-status-indicator>
+</div>
+
+<div class="searchBar">
+    <gtx-search-bar
+        #searchBar
+        [query]="(options$ | async)?.searchTerm"
+        [hideClearButton]="true"
+        [placeholder]="'common.search_placeholder' | translate"
+        (search)="search($event)"
+    ></gtx-search-bar>
+</div>
+
+<div class="filterPage">
+    <gtxct-filter-by-editor (editorSelected)='selectEditor($event)'></gtxct-filter-by-editor>
+    <gtxct-filter-translation
+        [hidden]="(nodeLanguages$ | async)?.length < 2"
+        [activeLanguages]="(options$ | async)?.languages"
+        (translationSelected)='toggleLanguage($event)'
+        [languages]="nodeLanguages$ | async"
+    ></gtxct-filter-translation>
+
+    <!-- Not used currently -->
+    <!--<gtxct-filter-editable
+        [editable]="(options$ | async)?.editable"
+        (changed)="toggleEditable()"
+    ></gtxct-filter-editable>!-->
+
+    <div class="gtxct-page-status-filter">
+        <span class="gtxct-page-status-filter-title">{{ 'common.page_status_label' | translate }}</span>
+        <gtx-select [value]="pageStatusFilter" (valueChange)="setPageStatusFilter($event)">
+            <gtx-option
+                *ngFor="let option of pageStatusOptions"
+                [value]="option.value"
+            >{{ option.label | translate }}</gtx-option>
+        </gtx-select>
+    </div>
+
+    <div class="gtxct-link-filter">
+        <span class="gtxct-link-filter-title">{{ 'common.link_filter_label' | translate }}</span>
+        <gtx-select [value]="linkFilter" (valueChange)="setLinkFilter($event)">
+            <gtx-option
+                *ngFor="let option of filterOptions"
+                [value]="option.value"
+            >{{ option.label | translate }}</gtx-option>
+        </gtx-select>
+    </div>
+</div>

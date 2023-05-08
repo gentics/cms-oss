@@ -1,0 +1,88 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<div *ngIf="!hideActions" class="entity-table-actions-bar">
+    <gtx-button
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'node.createNode'"
+        (click)="handleCreateButton()"
+    >
+        <icon left>add</icon> {{ 'node.create_node' | i18n }}
+    </gtx-button>
+</div>
+
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'shared.info_selected_nodes' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+</div>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    [renderers]="{
+        publishToFs: boolIconRenderer,
+        publishToCr: boolIconRenderer,
+        contentRepository: crRenderer,
+        derivedFrom: masterRenderer
+    }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        class="gtx-entity-grid-cell-icon"
+        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
+</ng-template>
+
+<ng-template #crRenderer let-value="value" let-row="row">
+    <a
+        *ngIf="value > 0"
+        [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:value"
+        (click)="cancelEvent($event)"
+    >{{ row.item?.contentRepositoryName || value }}</a>
+</ng-template>
+
+<ng-template #masterRenderer let-value="value" let-row="row">
+    <a
+        *ngIf="value > 0 && value !== row.item.id"
+        [routerLink]="'node' | gtxEntityDetailRouterLink:value"
+        (click)="cancelEvent($event)"
+    >{{ row.item?.masterName || value }}</a>
+</ng-template>

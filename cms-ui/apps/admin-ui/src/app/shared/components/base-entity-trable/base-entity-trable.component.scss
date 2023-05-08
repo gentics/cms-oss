@@ -1,0 +1,11 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+
+.entity-trable {
+    flex: 0 1 auto;
+    min-height: 1px;
+}

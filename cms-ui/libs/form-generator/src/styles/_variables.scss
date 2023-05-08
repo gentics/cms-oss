@@ -1,0 +1,137 @@
+//
+// App-wide variables go here. Since this file also imports the GUIC variables file, any component needing to access
+// GUIC variables (e.g. $gtx-color-mid-gray) should import this file, rather than referencing the GUIC file directly.
+//
+// @import "ui-core-overrides";
+@import "ui-core/src/styles/variables";
+// @import "ui-core/src/styles/mixins";
+
+$gcms-color-folder: #c58e23;
+$gcms-color-page: #336E7B;
+$gcms-color-file: #b65d3f;
+$gcms-color-image: #9E5428;
+$gcms-color-template: #1BA39C;
+$gcms-color-highlight: #ffb84f;
+$gcms-color-favourite: #ffd704;
+$gcms-color-icon-inheritance: #3f3d6f;
+$gcms-color-icon-localized: #3f3d6f;
+$gcms-color-message: #4aa5cb;
+
+// General size setting
+$gcms-icon-size: 14px;
+// language status icons
+$gcms-icon-font-size: calc( #{$gcms-icon-size} - #{$gcms-icon-size} * 0.15 );
+
+// ui-core component-specific overrides
+$gtx-breadcrumbs-background-color: white;
+$gtx-breadcrumbs-active-color: #444444;
+$gtx-breadcrumbs-inactive-color: gray;
+
+$gtx-tabs-active-color: $gtx-color-very-dark-gray;
+$gtx-tabs-active-border-color: $gcms-color-highlight;
+
+$header-area-height: 75px;
+$advanced-search-height: 60px;
+
+// editor-specific
+$gcms-color-editor-background: #f2f2f2;
+$gcms-color-page-background: #ffffff;
+$gcms-color-page-background-hover: #dcf0fa;
+
+$gcms-form-editor-transition-duration: 0.15s;
+
+@mixin gcmsEditorBoxShadowForm {
+    box-shadow: #cfcfcf 5px 5px 10px;
+}
+@mixin gcmsEditorBoxShadowFormElement {
+    box-shadow: rgba( 0, 0, 0, 0.3 ) 0 0 14px -2px;
+}
+
+$gcms-editor-primary-color: #ffd493;
+
+$gcms-color-editor-element-background-default: #fff;
+
+$gcms-color-editor-element-buttons-background-default: #ffff;
+$gcms-color-editor-element-buttons-background-hover: $gtx-color-primary;
+
+$gcms-color-editor-element-buttons-color-default: $gtx-color-dark-gray;
+$gcms-color-editor-element-buttons-color-hover: #fff;
+
+@mixin gtxSmall {
+    * {
+        // font-size: 90%;
+        ::ng-deep input, select, button {
+            height: 1.8rem !important;
+        }
+    }
+
+    ::ng-deep label {
+        font-size: 0.8rem;
+    }
+
+    ::ng-deep gtx-select {
+        font-size: 90%;
+
+        .view-value {
+            height: 1.8rem;
+            padding-top: 0;
+            padding-bottom: 0;
+
+            > div {
+                padding-top: 2px;
+            }
+        }
+    }
+
+    ::ng-deep gtx-key-i18n-value-list-input .list {
+        margin-top: 4px;
+    }
+
+    ::ng-deep gtx-checkbox [type=checkbox] + label:before {
+        margin-top: 4px;
+    }
+
+    ::ng-deep gtx-radio-button [type=radio] + label:before {
+        margin: 6px 4px;
+    }
+
+    ::ng-deep {
+        gtx-input input:not([type]),
+        gtx-input input[type=text],
+        gtx-input input[type=password],
+        gtx-input input[type=email],
+        gtx-input input[type=url],
+        gtx-input input[type=time],
+        gtx-input input[type=date],
+        gtx-input input[type=datetime],
+        gtx-input input[type=datetime-local],
+        gtx-input input[type=tel],
+        gtx-input input[type=number],
+        gtx-input input[type=search],
+        gtx-input textarea.materialize-textarea,
+        gtx-select,
+        gtx-textarea input:not([type]),
+        gtx-textarea input[type=text],
+        gtx-textarea input[type=password],
+        gtx-textarea input[type=email],
+        gtx-textarea input[type=url],
+        gtx-textarea input[type=time],
+        gtx-textarea input[type=date],
+        gtx-textarea input[type=datetime],
+        gtx-textarea input[type=datetime-local],
+        gtx-textarea input[type=tel],
+        gtx-textarea input[type=number],
+        gtx-textarea input[type=search],
+        gtx-textarea textarea.materialize-textarea {
+            margin-bottom: 0;
+        }
+    }
+
+    ::ng-deep {
+        gtx-i18n-checkbox, gtx-i18n-input, gtx-i18n-select {
+            .translation-suggestions {
+                top: 0px;
+            }
+        }
+    }
+}

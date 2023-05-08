@@ -1,0 +1,23 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'modal.manage_templates_assignments_to_folders_title' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <gtx-template-folder-link-trable
+            [selection]="selectedIds | values"
+            (link)="onLinkEvent($event)"
+            (unlink)="onUnlinkEvent($event)"
+        ></gtx-template-folder-link-trable>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            flat
+            (click)="closeFn()"
+        >
+            {{ 'common.close_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

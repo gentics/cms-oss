@@ -1,0 +1,20 @@
+{
+  "globalId" : "A547.74284",
+  "type" : "image",
+  "keyword" : "object.copyright",
+  "name" : {
+    "de" : "Copyright",
+    "en" : "Copyright"
+  },
+  "constructId" : "A547.69478",
+  "required" : false,
+  "syncChannelset" : false,
+  "category" : {
+    "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

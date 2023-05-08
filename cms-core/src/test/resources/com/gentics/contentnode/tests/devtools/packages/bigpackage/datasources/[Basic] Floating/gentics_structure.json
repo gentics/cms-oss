@@ -1,0 +1,18 @@
+{
+  "globalId" : "CA9B.74723",
+  "type" : "statical",
+  "name" : "[Basic] Floating",
+  "values" : [ {
+    "globalId" : "A547.75173",
+    "key" : "Left / Links",
+    "value" : "left"
+  }, {
+    "globalId" : "A547.75174",
+    "key" : "Right / Rechts",
+    "value" : "right"
+  }, {
+    "globalId" : "3D6C.38978bc7-d976-11e6-8b5d-ea5d8efab9e8",
+    "key" : "Front / Vorne",
+    "value" : "front"
+  } ]
+}

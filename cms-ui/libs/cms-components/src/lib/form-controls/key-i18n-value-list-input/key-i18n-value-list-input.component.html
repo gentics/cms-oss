@@ -1,0 +1,53 @@
+<div class="label">{{ label }}</div>
+
+<div
+    class="list"
+    [ngClass]="{ untranslated: !isTranslated, duplicateKeys: duplicateKeys.length > 0 }"
+    (dragstart)="stopPropagation($event)"
+    (dragenter)="stopPropagation($event)"
+    (dragover)="stopPropagation($event)"
+    (dragleave)="stopPropagation($event)"
+    (dragend)="stopPropagation($event)"
+>
+    <div class="flex-container">
+        <div class="list-entry-names">
+            <div class="list-entry-names-header">{{ keyLabel ? keyLabel : ('gtxFormGenerator.key' | i18n) }}</div>
+            <div class="list-entry-names-header">{{ valueLabel ? valueLabel : ('gtxFormGenerator.value' | i18n) }}</div>
+        </div>
+        <div class="placeholder">
+            <icon class="remove-row-button">delete</icon>
+            <gtx-drag-handle></gtx-drag-handle>
+        </div>
+    </div>
+
+    <gtx-sortable-list (dragEnd)="sortList($event)">
+        <gtx-sortable-item *ngFor="let control of i18nArray.controls; let index = index; trackBy: identify">
+            <gtx-contents-list-item>
+                <div class="list-entry-inputs" [formGroup]="control">
+                    <gtx-input
+                        [formControlName]="'key'"
+                        [required]="true"
+                        [class.duplicateKey]="duplicateKeys.includes(control.value?.key)"
+                        (blur)="_onTouched()"
+                    ></gtx-input>
+
+                    <gtx-i18n-input
+                        [formControlName]="'value_i18n'"
+                        [required]="true"
+                        [language]="language"
+                        [availableLanguages]="availableLanguages"
+                        (blur)="_onTouched()"
+                    ></gtx-i18n-input>
+                </div>
+
+                <div class="list-entry-actions">
+                    <icon class="remove-row-button" (click)="removeRow(index)">delete</icon>
+                </div>
+
+                <gtx-drag-handle></gtx-drag-handle>
+            </gtx-contents-list-item>
+        </gtx-sortable-item>
+    </gtx-sortable-list>
+
+    <icon class="add-button" (click)="add()">add</icon>
+</div>

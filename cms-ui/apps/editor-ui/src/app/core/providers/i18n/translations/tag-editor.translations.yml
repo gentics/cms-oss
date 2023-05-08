@@ -1,0 +1,174 @@
+browse:
+    en: Browse
+    de: Durchsuchen
+browse_for_tag:
+    en: Browse for Tag
+    de: Tag auswählen
+clear_selection:
+    en: Clear Selection
+    de: Auwahl aufheben
+create_subfolder:
+    en: Create Subfolder
+    de: Unterordner erstellen
+create_subfolder_tooltip:
+    en: Create Subfolder in {{parent}}
+    de: Unterordner in {{parent}} erstellen
+dataSource_add_option:
+    en: Add Option
+    de: Option hinzufügen
+dataSource_no_options_defined:
+    en: No options defined
+    de: Keine Optionen definiert
+dataSource_option_key:
+    en: Name
+    de: Name
+dataSource_option_value:
+    en: Value
+    de: Wert
+destination_folder:
+    en: Destination Folder
+    de: Zielordner
+different_file:
+    en: Choose a different File
+    de: Wählen Sie eine andere Datei aus
+different_image:
+    en: Choose a different Image
+    de: Wählen Sie ein anderes Bild aus
+drop_file_here_or:
+    en: Drag & drop a file here or
+    de: Ziehen Sie eine Datei in diesen Bereich oder
+drop_image_here_or:
+    en: Drag & drop an image here or
+    de: Ziehen Sie ein Bild in diesen Bereich oder
+external:
+    en: External
+    de: Extern
+external_url:
+    en: External URL
+    de: Externe URL
+file_size:
+    en: File size
+    de: Dateigröße
+image_manipulation:
+    en: Edit image
+    de: Bild bearbeiten
+images_not_allowed:
+    en: Images are not allowed here
+    de: Bilder sind hier nicht erlaubt
+internal:
+    en: Internal
+    de: Intern
+internal_page:
+    en: Internal Page
+    de: Interne Seite
+list:
+    en: List
+    de: Liste
+list_type_file:
+    en: Files
+    de: Dateien
+list_type_folder:
+    en: Folders
+    de: Ordner
+list_type_image:
+    en: Images
+    de: Bilder
+list_type_form:
+    en: Forms
+    de: Formulare
+list_type_numbered:
+    en: Numbered List
+    de: Nummerierte Liste
+list_type_page:
+    en: Pages
+    de: Seiten
+list_type_selector:
+    en: Displayed Elements
+    de: Angezeigte Elemente
+name:
+    en: Name
+    de: Name
+not_allowed:
+    en: Not Allowed
+    de: Nicht Erlaubt
+okay_button:
+    en: Okay
+    de: OK
+order_by_type_alphabetically:
+    en: Alphabetically
+    de: Alphabetisch
+order_by_type_cdate:
+    en: Date (created)
+    de: Datum (Erstellung)
+order_by_type_edate:
+    en: Date (edited)
+    de: Datum (Bearbeitung)
+order_by_type_filesize:
+    en: File size
+    de: Dateigröße
+order_by_type_pdate:
+    en: Date (published)
+    de: Datum (Veröffentlichung)
+order_by_type_priority:
+    en: Priority
+    de: Priorität
+order_by_type_selector:
+    en: Order by
+    de: Sortierart
+order_by_type_self:
+    en: User defined
+    de: Selbst definieren
+order_direction_asc:
+    en: Ascending
+    de: Aufsteigend
+order_direction_desc:
+    en: Descending
+    de: Absteigend
+order_direction_selector:
+    en: Order
+    de: Sortierung
+overview_add_items:
+    en: Add Items
+    de: Elemente hinzufügen
+overview_max_items:
+    en: Maximum number of items
+    de: Maximale Anzahl an Objekten
+overview_no_items_selected:
+    en: No Items Selected
+    de: Keine Elemente ausgewählt
+overview_recursive:
+    en: Include subfolders
+    de: Unterordner miteinbeziehen
+pick_file:
+    en: Choose a File
+    de: Wählen Sie eine Datei aus
+pick_image:
+    en: Choose an Image
+    de: Wählen Sie ein Bild aus
+remove_element:
+    en: Remove element
+    de: Element entfernen
+selected_folder:
+    en: Selected Folder
+    de: Ausgewählter Ordner
+select_type_auto:
+    en: Automatically from current folder
+    de: Automatisch aus aktuellem Order
+select_type_folder:
+    en: Folder
+    de: Ordner
+select_type_manual:
+    en: Individually
+    de: Einzeln
+select_type_selector:
+    en: Select Type
+    de: Auswahlart
+upload:
+    en: Upload
+    de: Hochladen
+upload_new_file_button:
+    en: Upload new file
+    de: Neue Datei hochladen
+upload_new_image_button:
+    en: Upload new image
+    de: Neues Bild hochladen

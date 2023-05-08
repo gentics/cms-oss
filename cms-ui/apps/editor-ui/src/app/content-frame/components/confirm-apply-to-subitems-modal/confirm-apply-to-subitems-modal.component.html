@@ -1,0 +1,18 @@
+<div class="modal-title">
+    <h5>{{ 'modal.confirm_objprop_apply_to_subitems_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <div class="item-title">
+        <icon [class]="item.type || ''">{{ iconForItemType(item.type) }}</icon>
+        <span>{{ item.name }}</span>
+    </div>
+    <p class="lead"
+        [innerHTML]="'modal.confirm_objprop_apply_to_subitems_body' | i18n:{
+            'objPropName': objPropName, 'subitems': ('modal.confirm_objprop_apply_to_subitems_' + item.type | i18n)
+        }">
+    </p>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="warning" (click)="closeFn(true)">{{ 'common.okay_button' | i18n }}</gtx-button>
+</div>

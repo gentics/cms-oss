@@ -1,0 +1,35 @@
+<label *ngIf="label">{{ label }}</label>
+
+<div class="options-wrapper" *ngIf="form?.controls">
+    <gtx-sortable-list [disabled]="disabled" (dragEnd)="sortOptions($event)">
+        <gtx-sortable-item *ngFor="let control of form.controls; let index = index">
+            <gtx-contents-list-item class="list-item">
+                <div class="item-primary">
+                    <gtx-select-option-input
+                        [formControl]="control"
+                    ></gtx-select-option-input>
+                </div>
+                <gtx-button
+                    class="delete-button"
+                    icon
+                    type="alert"
+                    (click)="removeOption(index)"
+                >
+                    <icon>delete</icon>
+                </gtx-button>
+                <gtx-drag-handle></gtx-drag-handle>
+            </gtx-contents-list-item>
+        </gtx-sortable-item>
+    </gtx-sortable-list>
+</div>
+
+<gtx-button
+    size="small"
+    type="primary"
+    class="add-button"
+    flat="true"
+    [disabled]="disabled"
+    (click)="addOption()"
+>
+    <icon left>add</icon>{{ 'shared.add' | i18n }}
+</gtx-button>

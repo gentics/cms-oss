@@ -1,0 +1,18 @@
+<div>
+    <input
+        type="radio"
+        [attr.id]="id || UNIQUE_ID"
+        [attr.name]="name"
+        [checked]="checked"
+        [disabled]="disabled"
+        [required]="required"
+        [class.tabbed]="tabbedFocus"
+        tabindex="0"
+
+        (blur)="onBlur()"
+        (focus)="onFocus()"
+        (change)="onInputChecked($event, input)"
+        #input
+    />
+    <label [attr.for]="id" (click)="input.click()">{{ label }}</label>
+</div>

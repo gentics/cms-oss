@@ -1,0 +1,36 @@
+<gtx-trable
+    class="entity-trable"
+
+    [selectable]="selectable"
+    [multiple]="multiple"
+    [hideActions]="hideActions"
+    [inlineExpansion]="inlineExpansion"
+    [inlineSelection]="inlineSelection"
+
+    [columns]="columns"
+    [rows]="rows"
+    [active]="activeEntity"
+    [selected]="selection"
+    [actions]="actions"
+
+    [renderers]="{ name: nameRenderer }"
+
+    (loadRow)="loadRow($event)"
+    (rowClick)="handleRowClick($event)"
+    (rowExpand)="updateRowExpansion($event)"
+    (actionClick)="handleActionClick($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+></gtx-trable>
+
+<ng-template #nameRenderer let-value="value" let-row="row">
+    <div
+        class="name-wrapper"
+        [class.indent-name]="!inlineExpansion && !inlineSelection"
+        [style]="'--indent-level: ' + row.level"
+    >
+        <gtx-icon class="gtx-type-icon type-icon" [name]="row.item.type"></gtx-icon>
+        <span class="name">{{ value }}</span>
+    </div>
+</ng-template>

@@ -1,0 +1,45 @@
+@import "variables";
+
+::ng-deep i.invalidIcon {
+    font-size: 16px;
+    margin: 3px 2px;
+    transition: color 0.15s ease-in-out;
+    position: relative;
+    top: 2px;
+
+    &.alert { color: $gtx-color-alert; }
+    &.primary {
+        color: $gtx-color-primary;
+        animation: spin 2s linear infinite;
+    }
+    &.success { color: $gtx-color-success; }
+}
+
+.warning {
+   color: $gtx-color-alert;
+}
+
+span.current-url {
+    font-size: 0.8em;
+    color: #797979;
+}
+
+div.scope {
+    margin-bottom: 20px;
+}
+
+div.url-result {
+    position: relative;
+    display: flex;
+
+    i.invalidIcon {
+        margin: auto;
+        top: 0;
+    }
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(-360deg);
+    }
+}

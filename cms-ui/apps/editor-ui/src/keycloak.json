@@ -1,0 +1,7 @@
+{
+  "realm": "gcmsui",
+  "auth-server-url" : "http://gtxwstwdev01.apa.at:6060/auth",
+  "ssl-required" : "external",
+  "resource" : "gcmsui-client",
+  "public-client" : true
+}

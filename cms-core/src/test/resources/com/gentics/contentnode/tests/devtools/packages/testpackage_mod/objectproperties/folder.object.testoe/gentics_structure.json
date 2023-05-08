@@ -1,0 +1,14 @@
+{
+  "globalId" : "ABCD.6b0cd376-dbc1-11e6-8b5d-ea5d8efab9e8",
+  "type" : "folder",
+  "keyword" : "object.testoe",
+  "name" : {
+    "de" : "Test Objekteigenschaft (neuer Name)",
+    "en" : "Test Objectproperty (new name)"
+  },
+  "description" : {
+    "de" : "Beschreibung der Test Objekteigenschaft",
+    "en" : "Description of the Test Objectproperty"
+  },
+  "constructId" : "8371.71123"
+}

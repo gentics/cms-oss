@@ -1,0 +1,34 @@
+<div class="modal-title">
+    <gtx-progress-bar [active]="loading$ | async"></gtx-progress-bar>
+    <h5>{{ 'modal.assign_page_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <publish-queue-list [pages]="pages" [readOnly]="true"></publish-queue-list>
+
+    <div class="row">
+        <div class="column">
+            <h6>{{ 'modal.assign_page_select_users_title' | i18n }}</h6>
+
+            <gtx-input [placeholder]="'modal.filter_users_label' | i18n" [formControl]="filterTerm"></gtx-input>
+
+            <users-list
+                [users]="users$ | async"
+                maxHeight="300px"
+                [selected]="selected"
+                (selectionChange)="selected = $event"
+            ></users-list>
+        </div>
+
+        <div class="column">
+            <h6>{{ 'modal.message_title' | i18n }}</h6>
+            <gtx-textarea [(ngModel)]="message"></gtx-textarea>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button (click)="assign()" [disabled]="selected.length === 0">{{ 'modal.assign_for_revision_button' | i18n }}</gtx-button>
+</div>

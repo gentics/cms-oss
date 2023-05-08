@@ -1,0 +1,67 @@
+@import "variables";
+
+@mixin item-icon-color($type, $base-color) {
+    .item-icon.#{$type} {
+        color: $base-color;
+    }
+    :hover > .item-icon.#{$type} {
+        color: lighten($base-color, 20%);
+    }
+}
+
+:host {
+
+    .column {
+        padding: 0;
+    }
+
+    .row .row {
+        margin-left: 0;
+    }
+
+    @include input-label-styles('.tag-prop-label');
+
+    .tag-prop-label {
+        position: static;
+        font-size: 0.8rem;
+    }
+
+    .overview-property {
+        margin: 10px;
+    }
+
+    .checkbox-cell, .browse-button-cell {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .no-items-label {
+        text-align: center;
+        color: $gtx-color-light-gray;
+        font-size: 2rem;
+    }
+
+    .item-icon {
+        cursor: default;
+        position: relative;
+        top: 5px;
+    }
+
+    sortable-array-list ::ng-deep {
+        @include item-icon-color(folder, $gcms-color-folder);
+        @include item-icon-color(page, $gcms-color-page);
+        @include item-icon-color(file, $gcms-color-file);
+        @include item-icon-color(image, $gcms-color-image);
+        @include item-icon-color(template, $gcms-color-template);
+
+        .item-primary {
+            padding-left: 10px;
+            flex-grow: 1;
+            align-self: baseline;
+            align-items: baseline;
+            white-space: nowrap;
+        }
+    }
+
+}

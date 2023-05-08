@@ -1,0 +1,36 @@
+@import "variables";
+
+.language-select {
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+    gtx-button {
+        flex-shrink: 1;
+        margin-left: 5px;
+    }
+    gtx-select {
+        margin: 0;
+        min-width: 180px;
+        max-width: 250px;
+        @media screen and (max-width: $small-screen) {
+            min-width: 80px;
+        }
+
+        gtx-dropdown-list gtx-dropdown-trigger {
+            margin-top: 0px;
+        }
+    }
+}
+
+.one_language_text {
+    width: 240px;
+    margin-left: 22px;
+
+    @media screen and (max-width: $small-screen) {
+        width: 145px;
+    }
+}
+
+.show-on-hover {
+    opacity: 0.5;
+}

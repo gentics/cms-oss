@@ -1,0 +1,226 @@
+@import '../../../styles/base-import';
+
+:host {
+    box-sizing: border-box;
+    display: block;
+
+    > .slideable {
+        @include z-depth-1;
+        display: flex;
+        height: 100%;
+        margin: 0 auto;
+        padding: 0;
+        overflow-x: hidden;
+        position: relative;
+        width: 95%;
+        max-width: 5000px;
+        transition: width $gtx-split-view-container-animation-duration ease-in-out,
+            max-width $gtx-split-view-container-animation-duration ease-in-out;
+        -webkit-user-select: text;
+        -ms-user-select: text;
+        -moz-user-select: text;
+
+        > .left-panel,
+        > .right-panel {
+            flex: auto;
+            height: 100%;
+            transition: opacity $gtx-split-view-container-animation-duration,
+                        transform $gtx-split-view-container-animation-duration,
+                        min-width $gtx-split-view-container-animation-duration,
+                        max-width $gtx-split-view-container-animation-duration;
+            white-space: normal;
+            overflow-y: auto;
+        }
+
+        & > .resizer,
+        & > .visible-resizer {
+            display: none;
+        }
+    }
+
+    > .resizing {
+        cursor: ew-resize;
+
+        > .visible-resizer {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: $gtx-split-view-container-resize-handle-width;
+            background-color: $gtx-split-view-container-resize-drag-color;
+            z-index: 901;
+            @include noselect;
+        }
+
+        // Fix hover events above iframes
+        > .resizing-overlay {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+            background-color: rgba(0,0,0,0.00001);
+        }
+    }
+
+    // Definitions for "small" and "medium", sliding breakpoint
+    @media only screen and (max-width : $large-screen) {
+        & > .hasRightPanel > .right-panel {
+            transform: translateX(1%);
+        }
+
+        & > .focusedRight > .left-panel {
+            transform: translateX(-90%);
+        }
+
+        & > .focusedRight > .right-panel {
+            transform: translateX(-89%);
+        }
+
+        & > .slideable {
+            width: 100%;
+        }
+
+        & > .hasNoRightPanel > .right-panel {
+            opacity: $gtx-split-view-container-opacity-hidden;
+        }
+
+        & > .hasRightPanel > .right-panel,
+        & > .focusedRight > .left-panel {
+            opacity: $gtx-split-view-container-opacity-inactive;
+        }
+
+        & > .focusedRight > .right-panel {
+            opacity: $gtx-split-view-container-opacity-focused;
+        }
+
+        // !important to overwrite inline styles - is there a better way?
+        & > .slideable > .left-panel,
+        & > .slideable > .right-panel {
+            min-width: 90% !important;
+            max-width: 90% !important;
+        }
+
+        & > .hasNoRightPanel > .left-panel {
+            min-width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        // The focus switcher which appears on small/medium breakpoints
+        // and "slides" the active panel on click
+        & > * > .focus-switcher-left,
+        & > * > .focus-switcher-right {
+            background: $gtx-split-view-container-focus-switcher-background-color;
+            bottom: 0;
+            cursor: pointer;
+            display: none;
+            position: absolute;
+            top: 0;
+            width: 9%;
+            z-index: 1;
+
+            &:hover {
+                background: $gtx-split-view-container-focus-switcher-background-hover-color;
+            }
+
+        }
+
+        & > .focusedRight > .focus-switcher-left {
+            display: block;
+            left: 0;
+        }
+
+        & > .focusedLeft.hasRightPanel > .focus-switcher-right {
+            display: block;
+            right: 0;
+        }
+
+        @if ($gtx-split-view-container-focus-switcher-icon) {
+            & > * > .focus-switcher-left::before,
+            & > * > .focus-switcher-right::before {
+                color: $gtx-split-view-container-focus-switcher-icon-color;
+                content: $gtx-split-view-container-focus-switcher-icon;
+                display: block;
+                font-family: 'Material Icons';
+                font-size: 4rem;
+                height: 70px;
+                position: absolute;
+                text-align: center;
+                top: calc(50% - 35px);
+                width: 100%;
+                overflow: hidden;
+            }
+
+            & > * > .focus-switcher-right::before {
+                transform: scaleX(-1);
+            }
+
+            & > * > .focus-switcher-left:hover::before,
+            & > * > .focus-switcher-right:hover::before {
+                color: $gtx-split-view-container-focus-switcher-icon-hover-color
+            }
+        }
+    }
+
+    // Definitions for "large", non-sliding breakpoint
+    @media only screen and (min-width : $large-screen-up) {
+        & > .slideable.hasNoRightPanel {
+            width: 70%;
+            max-width: 1280px;
+        }
+
+        // !important to overwrite inline styles - is there a better way?
+        & > .hasNoRightPanel {
+            > .left-panel {
+                min-width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            > .right-panel {
+                min-width: 100% !important;
+                max-width: 100% !important;
+                transform: translateX(100%);
+                visibility: hidden;
+                opacity: 0;
+                transition: visibility 0s $gtx-split-view-container-animation-duration,
+                    opacity 0.2s;
+            }
+        }
+
+        & > .hasRightPanel {
+            & > .left-panel {
+                min-width: 50%;
+                max-width: 50%;
+            }
+
+            & > .right-panel {
+                visibility: visible;
+                opacity: 1;
+                transition: visibility 0s $gtx-split-view-container-animation-duration,
+                    opacity 0.2s $gtx-split-view-container-animation-duration;
+            }
+
+            & > .resizer {
+                min-width: $gtx-split-view-container-resize-handle-width;
+                max-width: $gtx-split-view-container-resize-handle-width;
+                cursor: ew-resize;
+                display: flex;
+                background-color: $gtx-color-off-white;
+
+                icon,
+                i {
+                    margin-left: -7px;
+                    color: lightgray;
+                    align-self: center;
+                }
+            }
+        }
+
+        & > .focus-switcher-left,
+        & > .focus-switcher-right {
+            display: none;
+        }
+    }
+}

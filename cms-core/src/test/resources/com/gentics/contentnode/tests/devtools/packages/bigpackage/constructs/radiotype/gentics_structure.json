@@ -1,0 +1,101 @@
+{
+  "globalId" : "A547.14564",
+  "keyword" : "radiotype",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Radiobutton",
+    "en" : "[Form] -- Radiobutton"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14191",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14278",
+    "name" : {
+      "de" : "Text, der als Beschreibung des Radiobuttonelements dienen soll<br />z.B.: \"In welcher Altersgruppe befinden Sie sich:\"",
+      "en" : "Text, der als Beschreibung des Radiobuttonelements dienen soll<br />z.B.: \"In welcher Altersgruppe befinden Sie sich:\""
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14326",
+    "name" : {
+      "de" : "Name des Radiobuttonelements intern<br />z.B.: altersgruppe",
+      "en" : "Name des Radiobuttonelements intern<br />z.B.: altersgruppe"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14368",
+    "name" : {
+      "de" : "Radiobutton, welcher bereits vorselektiert ist, die Vorselektion ezieht sich auf die Zeilennummer, der unten verwendeten Radiobuttons",
+      "en" : "Radiobutton, welcher bereits vorselektiert ist, die Vorselektion ezieht sich auf die Zeilennummer, der unten verwendeten Radiobuttons"
+    },
+    "keyword" : "checked",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14395",
+    "name" : {
+      "de" : "Fügen Sie hier alle Radiobuttons des Checkboxelements ein<br />Jede neue Zeile stellt einen neuen Radiobutton dar",
+      "en" : "Fügen Sie hier alle Radiobuttons des Checkboxelements ein<br />Jede neue Zeile stellt einen neuen Radiobutton dar"
+    },
+    "keyword" : "options",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14417",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

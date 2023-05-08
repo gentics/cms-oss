@@ -1,0 +1,22 @@
+<ng-container *ngIf="tagProperty">
+    <div *ngIf="tagProperty.type === tagPropertyTypeEnum.LIST" class="row column">
+        <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
+        <gtx-checkbox
+            [label]="'tag_editor.list_type_numbered' | i18n"
+            [disabled]="readOnly"
+            [(ngModel)]="isNumberedListUserSelection"
+            (change)="onUserChange()">
+        </gtx-checkbox>
+    </div>
+    <div class="row column">
+        <gtx-textarea
+            [class.no-label]="tagProperty.type === tagPropertyTypeEnum.LIST"
+            [label]="tagProperty.type !== tagPropertyTypeEnum.LIST ? (tagPart | tagPropLabel) : ''"
+            [required]="tagPart.mandatory"
+            [readonly]="readOnly"
+            [(ngModel)]="stringifiedList"
+            (valueChange)="listChange.next()"
+            (touch)="listBlur.next()">
+        </gtx-textarea>
+    </div>
+</ng-container>

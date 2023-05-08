@@ -1,0 +1,70 @@
+{
+    "info_selected_content_packages": {
+        "en": "{{amountSelected}} of {{amountTotal}} Content Packages selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Contentpakete ausgewählt"
+    },
+    "create_content_package": {
+        "en": "Create Content Package",
+        "de": "Contentpaket erstellen"
+    },
+    "delete_content_package": {
+        "en": "Delete Content Package",
+        "de": "Contentpaket löschen"
+    },
+    "delete_content_package_error": {
+        "en": "An error occurred while deleting the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim löschen des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    },
+    "import_content_package": {
+        "en": "Import Content Package from File-System",
+        "de": "Contentpaket von Dateisystem importieren"
+    },
+    "export_content_package": {
+        "en": "Export Content Package to File-System",
+        "de": "Contentpaket ins Dateisystem exportieren"
+    },
+    "download_content_package": {
+        "en": "Download Content Package",
+        "de": "Contentpaket herunterladen"
+    },
+    "upload_content_package": {
+        "en": "Upload Content Package",
+        "de": "Contentpaket hochladen"
+    },
+    "upload_area": {
+        "en": "Select Content Package archive",
+        "de": "Contentpaket archiv auswählen"
+    },
+    "selected_upload_file": {
+        "en": "Selected Archive",
+        "de": "Ausgewähltes Archiv"
+    },
+    "download_from_content_package_failed": {
+        "en": "An error occurred while downloading the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim herunterladen des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    },
+    "upload_to_content_package_finished": {
+        "en": "The Upload to the Content Package \"{{packageName}}\" has finished",
+        "de": "Der Upload zum Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+    },
+    "upload_to_content_package_failed": {
+        "en": "An error occurred while uploading the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim hochladen zum Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    },
+    "export_content_package_finished": {
+        "en": "The export of the Content Package \"{{packageName}}\" has finished",
+        "de": "Der export des Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+    },
+    "export_content_package_failed": {
+        "en": "An error occurred while exporting the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim exportieren des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    },
+    "import_content_package_finished": {
+        "en": "The import of the Content Package \"{{packageName}}\" has finished",
+        "de": "Der import des Inhalt Pakets „{{packageName}}“ ist abgeschlossen"
+    },
+    "import_content_package_failed": {
+        "en": "An error occurred while importing the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
+        "de": "Es ist ein Fehler beim importieren des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    }
+}

@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.58458",
+  "keyword" : "wikipedia",
+  "icon" : "link.gif",
+  "name" : {
+    "de" : "Begriff mit Wikipedia erklären",
+    "en" : "Explain term with Wikipedia"
+  },
+  "description" : {
+    "de" : "Mit diesem Element können Sie auf Wikipediabegriffe verlinken",
+    "en" : "Link terms in Wikipedia.org\r\n"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.58249",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58292",
+    "name" : {
+      "de" : "Wikipedia-Begriff",
+      "en" : "Wikipedia-term"
+    },
+    "keyword" : "term",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58330",
+    "name" : {
+      "de" : "Linktext",
+      "en" : "linktext"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58355",
+    "name" : {
+      "de" : "Sprachwahl",
+      "en" : "language selection"
+    },
+    "keyword" : "language",
+    "editable" : true,
+    "typeId" : 29,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TODO: configure for the non-main tables, which reference to follow to find the main parent object -->
+<tables roottable="node">
+	<!-- if idcol is not given, it defaults to "id" -->
+	<table name="node">
+		<restrict>id = "${node}" || "${export}" = "yes"</restrict>
+		<!-- static reference to copy -->
+		<references>
+			<ref target="foldernode" col="folder_id" foreigndeepcopy="false"/>
+			<ref target="contentrepository" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="folder" col="default_file_folder_id" deepcopy="false" foreigndeepcopy="false"/>
+			<ref target="foldernode" col="default_file_folder_id" deepcopy="false" foreigndeepcopy="false"/>
+			<ref target="folder" col="default_image_folder_id" deepcopy="false" foreigndeepcopy="false"/>
+			<ref target="foldernode" col="default_image_folder_id" deepcopy="false" foreigndeepcopy="false"/>
+		</references>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.DeactivatePublishForNode</modificator>
+		</modificators>
+		<properties>
+			<property id="roottable">yes</property>
+			<property id="pathtoparent">folder_id</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			
+			<property id="unique1column">host</property>
+			<property id="unique1sql">
+				SELECT n2.id, n1.host FROM node AS n1
+				INNER JOIN node AS n2 ON n1.id != n2.id
+				WHERE n1.id = ? AND n1.host = n2.host
+			</property>
+
+			<!-- add default values for columns, that are not present on all systems -->
+			<property id="default_file_folder_id_default">0</property>
+			<property id="default_image_folder_id_default">0</property>
+			<property id="pub_dir_bin_default"></property>
+			<property id="https_default">0</property>
+
+			<!-- omit some columns -->
+			<property id="omitcolumns">pdate</property>
+		</properties>
+	</table>
+	<table name="folder" id="foldernode">
+		<restrict>type_id = 10001</restrict>
+		<references>
+			<ref target="node" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="page" col="startpage_id" />
+			<!-- this should always bei 0 -->
+			<ref target="folder" col="mother" deepcopy="false"/>
+		</references>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.NodeNameModificator</modificator>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+		<properties>
+			<property id="ttype">10001</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT f2.id, f1.name FROM folder AS f1 
+				INNER JOIN folder AS f2 ON f1.mother = f2.mother 
+				WHERE f1.id = ? AND f1.name = f2.name
+			</property>
+			<property id="omitcolumns">is_master,master_id,channel_id,channelset_id</property>
+			<property id="startpage_id_default">0</property>
+		</properties>
+	</table>
+	<table name="folder">
+		<restrict>type_id = 10002 AND channel_id = 0 AND deleted = 0</restrict>
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="false"/>
+			<ref target="folder" col="mother" deepcopy="false"/>
+			<ref target="foldernode" col="mother" deepcopy="false"/>
+			<ref target="page" col="startpage_id" />
+		</references>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+		<properties>
+			<property id="ttype">10002</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT f2.id, f1.name FROM folder AS f1 
+				INNER JOIN folder AS f2 ON f1.mother = f2.mother 
+				WHERE f1.id = ? AND f1.name = f2.name
+			</property>
+			<property id="omitcolumns">is_master,master_id,channel_id,channelset_id</property>
+			<property id="startpage_id_default">0</property>
+		</properties>
+	</table>
+	<table name="folder_i18n" type="cross" idcol="folder_id,contentgroup_id">
+		<references>
+			<ref target="folder" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="contentgroup" deepcopy="false" foreigndeepcopy="false"/>
+		</references>
+	</table>
+	<table name="page">
+		<restrict>("${copypage}" = "yes" || "${export}" = "yes") AND channel_id = 0 AND deleted = 0</restrict>
+		<references>
+			<ref target="content" foreigndeepcopy="false"/>
+			<ref target="folder" deepcopy="false"/>
+			<ref target="foldernode" col="folder_id" deepcopy="false"/>
+			<ref target="contentset" />
+			<ref target="template" deepcopy="true" foreigndeepcopy="false" />
+			<ref target="contentgroup" deepcopy="ask" foreigndeepcopy="false"/>
+		</references>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+		<properties>
+			<property id="ttype">10007</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			<property id="publishercolumns">publisher</property>
+			
+			<property id="unique1column">filename</property>
+			<property id="unique1regex">^(.*?)([0-9]+)?(\..+)?$</property>
+			<property id="unique1maxlength">64</property>
+			<property id="unique1sql">
+				SELECT p2.id, p1.filename FROM page AS p1
+				INNER JOIN folder AS f1 ON p1.folder_id = f1.id
+				INNER JOIN folder AS f2 ON f1.pub_dir = f2.pub_dir
+				INNER JOIN page AS p2 ON p2.folder_id = f2.id
+				INNER JOIN node AS n1 ON f1.node_id = n1.id
+				INNER JOIN node AS n2 ON f2.node_id = n2.id
+				WHERE p1.id = ? AND p1.filename = p2.filename
+				AND n1.host = n2.host AND n1.pub_dir = n2.pub_dir
+			</property>
+			<property id="unique2column">name</property>
+			<property id="unique2sql">
+				SELECT p2.id, p1.name FROM page AS p1 
+				INNER JOIN page AS p2 ON p1.folder_id = p2.folder_id 
+				WHERE p1.id = ? AND p1.name = p2.name
+				AND p1.contentset_id != p2.contentset_id
+			</property>
+			<property id="nondatacolumns">status,pdate,publisher,delay_publish</property>
+			<property id="omitcolumns">ddate,is_master,channelset_id,channel_id,sync_page_id,sync_timestamp</property>
+		</properties>
+	</table>
+	<table name="page_alt_url" type="cross" idcol="page_id,url">
+		<references>
+			<ref target="page" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="omitcolumns">id</property>
+		</properties>
+	</table>
+	<table name="content">
+		<restrict>"${copypage}" = "yes" || "${export}" = "yes"</restrict>
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="false" />
+		</references>
+		<properties>
+			<property id="pathtoparent">page.content_id</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			<property id="resetidcolumns">locked_by,locked</property>
+			<property id="nondatacolumns">locked_by,locked</property>
+		</properties>
+	</table>
+	<table name="contentset">
+		<restrict>"${copypage}" = "yes" || "${export}" = "yes"</restrict>
+		<properties>
+			<property id="pathtoparent">page.contentset_id</property>
+		</properties>
+	</table>
+	<table name="perm" type="cross" idcol="usergroup_id,o_type,o_id" exportable="false">
+		<restrict>"${copyperm}" = "yes"</restrict>
+		<references>
+			<ref class="com.gentics.contentnode.nodecopy.PermObjectMapper" deepcopy="false" />
+		</references>
+	</table>
+	<table name="construct_node" type="cross" idcol="node_id,construct_id">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="construct" deepcopy="true" foreigndeepcopy="true"/>
+		</references>
+	</table>
+	<table name="node_contentgroup" type="cross" idcol="node_id,contentgroup_id">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="contentgroup" deepcopy="true" foreigndeepcopy="true"/>
+		</references>
+	</table>
+	<table name="node_feature" type="cross" idcol="node_id,feature">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+	</table>
+	<table name="node_package" type="cross" idcol="node_id,package">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="omitcolumns">id</property>
+		</properties>
+	</table>
+	<table name="template_folder" type="cross" idcol="template_id,folder_id">
+		<references>
+			<ref target="folder" deepcopy="false" />
+			<ref target="foldernode" col="folder_id" deepcopy="false" />
+			<ref class="com.gentics.contentnode.nodecopy.TemplateFolderReference" target="template" foreigndeepcopy="true"/>
+		</references>
+	</table>
+	<table name="contentfile">
+		<restrict><![CDATA[("${copyfile}" = "yes" || "${export}" = "yes") && filetype NOT LIKE "image%" && channel_id = 0 AND deleted = 0]]></restrict>
+		<references>
+			<ref target="folder" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="foldernode" col="folder_id" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="ttype">10008</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			
+			<property id="unique1column">name</property>
+			<property id="unique1regex">^(.*?)([0-9]+)?(\..+)?$</property>
+			<!-- property id="unique1regex">^(.*?)([0-9]+)?(\.\w+)$</property -->
+			<property id="unique1sql">
+				SELECT c2.id, c1.name FROM contentfile AS c1 
+				INNER JOIN folder AS f1 ON c1.folder_id = f1.id 
+				INNER JOIN folder AS f2 ON f1.pub_dir = f2.pub_dir 
+				INNER JOIN contentfile AS c2   ON c2.folder_id = f2.id 
+				INNER JOIN node AS n1 ON f1.node_id = n1.id INNER JOIN node AS n2 ON f2.node_id = n2.id
+				WHERE c1.id = ? AND c1.name = c2.name AND n1.host = n2.host
+			</property>
+			<property id="omitcolumns">is_master,channelset_id,channel_id</property>
+			<property id="force_online_default">0</property>
+		</properties>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+	</table>
+	<table name="contentfile" id="contentimagefile">
+		<restrict><![CDATA[("${copyfile}" = "yes" || "${export}" = "yes") && filetype LIKE "image%" && channel_id = 0 AND deleted = 0]]></restrict>
+		<references>
+			<ref target="folder" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="foldernode" col="folder_id" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="ttype">10011</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1regex">^(.*?)([0-9]+)?(\..+)?$</property>
+			<property id="unique1sql">
+				SELECT c2.id, c1.name FROM contentfile AS c1 
+				INNER JOIN folder AS f1 ON c1.folder_id = f1.id 
+				INNER JOIN folder AS f2 ON f1.pub_dir = f2.pub_dir 
+				INNER JOIN contentfile AS c2   ON c2.folder_id = f2.id 
+				INNER JOIN node AS n1 ON f1.node_id = n1.id INNER JOIN node AS n2 ON f2.node_id = n2.id
+				WHERE c1.id = ? AND c1.name = c2.name AND n1.host = n2.host
+			</property>
+			<property id="omitcolumns">is_master,channelset_id,channel_id</property>
+			<property id="force_online_default">0</property>
+		</properties>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+	</table>
+	<table name="contentfile_alt_url" type="cross" idcol="contentfile_id,url">
+		<references>
+			<ref target="contentfile" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="omitcolumns">id</property>
+		</properties>
+	</table>
+	<table name="contentfile_alt_url" id="contentimagefile_alt_url" type="cross" idcol="contentfile_id,url">
+		<references>
+			<ref target="contentimagefile" col="contentfile_id" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="omitcolumns">id</property>
+		</properties>
+	</table>
+	<table name="objtag">
+		<references>
+			<ref class="com.gentics.contentnode.nodecopy.ObjectMapper" deepcopy="false">
+				<parameter id="idcol">obj_id</parameter>
+				<parameter id="typecol">obj_type</parameter>
+			</ref>
+			<!-- ref class="com.gentics.contentnode.nodecopy.ObjTagDefMapper" deepcopy="true" foreigndeepcopy="false" / -->
+			<ref target="construct" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">obj_id</property>
+			<property id="namecolumn">name</property>
+			<property id="reason">10113</property>
+		</properties>
+	</table>
+	<!-- the following definition is for the  -->
+	<table name="objtag" id="objtagdef">
+		<restrict>obj_id = 0 AND "${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">40</property>
+			<property id="checkexcluded">true</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT o2.id, o1.name FROM objtag AS o1
+				INNER JOIN objtag AS o2 ON o1.id != o2.id AND o1.obj_type = o2.obj_type
+				AND o2.obj_id = 0
+				WHERE o1.id = ? AND o1.name = o2.name
+			</property>
+		</properties>
+		<references>
+			<ref target="construct" deepcopy="true" foreigndeepcopy="false" />
+		</references>
+	</table>
+	<table name="ds_obj">
+		<references>
+			<ref target="ds" deepcopy="false" />
+			<ref target="contenttag" deepcopy="false" />
+			<ref target="objtag" deepcopy="false" />
+			<ref target="templatetag" deepcopy="false" />
+			<ref class="com.gentics.contentnode.nodecopy.DatasourceObjMapper" deepcopy="ask"
+				foreigndeepcopy="false" />
+		</references>
+		<properties>
+			<property id="pathtoparent">ds_id</property>
+			<property id="creatoridcolumns">creator,auser</property>
+			<property id="editoridcolumns">editor</property>
+		</properties>
+	</table>
+	<table name="ds">
+		<references>
+			<ref target="contenttag" deepcopy="false" />
+			<ref target="templatetag" deepcopy="false" />
+			<ref target="objtag" deepcopy="false" />
+		</references>
+		<properties>
+			<property id="pathtoparent">contenttag_id,templatetag_id,objtag_id</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+		</properties>
+	</table>
+	<table name="contenttag">
+		<references>
+			<ref target="content" />
+			<ref target="construct" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">content_id</property>
+			<property id="reason">10111</property>
+		</properties>
+	</table>
+	<table name="value">
+		<references>
+			<ref target="templatetag" />
+			<ref target="contenttag" />
+			<ref target="objtag" />
+			<ref class="com.gentics.contentnode.nodecopy.ValueMapper" deepcopy="ask"
+				foreigndeepcopy="false" />
+			<ref
+				class="com.gentics.contentnode.nodecopy.ValueInfoMapper"
+				deepcopy="ask" foreigndeepcopy="false" />
+			<ref class="com.gentics.contentnode.nodecopy.ValueDatasourceMapper" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="part" deepcopy="false" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">templatetag_id,contenttag_id,objtag_id</property>
+		</properties>
+	</table>
+	<table name="value" id="defaultvalue">
+		<restrict>templatetag_id = 0 AND contenttag_id = 0 AND objtag_id = 0 AND globaltag_id = 0</restrict>
+		<references>
+			<ref class="com.gentics.contentnode.nodecopy.ValueMapper" deepcopy="ask"
+				foreigndeepcopy="false" />
+			<ref
+				class="com.gentics.contentnode.nodecopy.ValueInfoMapper"
+				deepcopy="ask" foreigndeepcopy="false" />
+			<ref class="com.gentics.contentnode.nodecopy.ValueDatasourceMapper" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="part" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">part_id</property>
+		</properties>
+	</table>
+	<table name="template">
+		<restrict>("${copytemplate}" = "yes" || "${export}" = "yes") AND channel_id = 0</restrict>
+		<references>
+			<ref target="folder" deepcopy="false" foreigndeepcopy="false" />
+			<ref target="foldernode" col="folder_id" deepcopy="false" foreigndeepcopy="false" />
+			<ref target="templategroup" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="ttype">10006</property>
+			<property id="namecolumn">name</property>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			<property id="resetidcolumns">locked_by,locked</property>
+
+
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT t2.id, t1.name FROM template AS t1
+				INNER JOIN template_folder AS tf1 ON tf1.template_id = t1.id
+				INNER JOIN template_folder AS tf2 ON tf2.folder_id = tf1.folder_id
+				INNER JOIN template AS t2 ON t2.id = tf2.template_id
+				WHERE t1.id = ? AND t1.name = t2.name
+			</property>
+			<property id="checkexcluded">true</property>
+			<property id="nondatacolumns">locked_by,locked</property>
+			<property id="omitcolumns">is_master,channelset_id,channel_id</property>
+		</properties>
+		<modificators>
+			<modificator>com.gentics.contentnode.nodecopy.ChannelsetIdGenerator</modificator>
+		</modificators>
+	</table>
+	<table name="templategroup">
+		<restrict>"${copytemplate}" = "yes" || "${export}" = "yes"</restrict>
+	</table>
+	<table name="templatetag">
+		<restrict>"${copytemplate}" = "yes" || "${export}" = "yes"</restrict>
+		<references>
+			<ref target="templategroup" />
+			<ref target="template" />
+			<ref target="construct" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">template_id</property>
+			<property id="reason">10112</property>
+			<property id="mandatory_default">0</property>
+		</properties>
+	</table>
+	<table name="workflowlink" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref class="com.gentics.contentnode.nodecopy.ObjectMapper" deepcopy="false" />
+		</references>
+		<properties>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+		</properties>
+	</table>
+	<table name="triggerevent" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref target="workflowlink" />
+		</references>
+	</table>
+	<table name="eventprop" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref target="workflowlink" />
+			<ref target="triggerevent" deepcopy="false" foreigndeepcopy="false"/>
+			<ref class="com.gentics.contentnode.nodecopy.WorkflowPropReference" deepcopy="ask"
+				foreigndeepcopy="false">
+				<parameter id="page_id">page</parameter>
+				<parameter id="new_page_id">page</parameter>
+				<parameter id="folder_id">folder</parameter>
+				<parameter id="to_folder_id">folder</parameter>
+				<parameter id="new_folder_id">folder</parameter>
+			</ref>
+		</references>
+	</table>
+	<table name="eventpropeditable" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref target="eventprop" />
+		</references>
+	</table>
+	<!-- table name="reaction">
+		<restrict>"${export}" = "yes"</restrict>
+	</table -->
+	<table name="reactionprop" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref target="workflowlink"/>
+			<ref class="com.gentics.contentnode.nodecopy.WorkflowPropReference" deepcopy="false"
+				foreigndeepcopy="false">
+				<parameter id="page_id">page</parameter>
+				<parameter id="new_page_id">page</parameter>
+				<parameter id="folder_id">folder</parameter>
+				<parameter id="to_folder_id">folder</parameter>
+				<parameter id="new_folder_id">folder</parameter>
+			</ref>
+		</references>
+	</table>
+	<table name="reactionpropeditable" exportable="false">
+		<restrict>"${copyworkflow}" = "yes"</restrict>
+		<references>
+			<ref target="reactionprop"/>
+		</references>
+	</table>
+	<table name="part">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="construct" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="outputuser" col="name_id" deepcopy="true" foreigndeepcopy="false"/>
+			<ref class="com.gentics.contentnode.nodecopy.PartDatasourceMapper" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">construct_id</property>
+		</properties>
+	</table>
+	<table name="construct">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="outputuser" col="name_id" foreigndeepcopy="false"/>
+			<ref target="outputuser" col="description_id" foreigndeepcopy="false"/>
+			<ref target="construct_category" col="category_id" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="ttype">10004</property>
+ 			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			<property id="resetidcolumns">locked_by,locked</property>
+			<property id="namereference">name_id</property>
+			
+			<property id="unique1column">keyword</property>
+			<property id="unique1sql">
+				SELECT t2.id, t1.keyword FROM construct AS t1
+				INNER JOIN construct AS t2 ON t1.id != t2.id
+				WHERE t1.id = ? AND t1.keyword = t2.keyword
+			</property>
+			<property id="checkexcluded">true</property>
+			<property id="nondatacolumns">locked_by,locked</property>
+		</properties>
+	</table>
+	<table name="construct_category">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="outputuser" col="name_id"  foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="ttype">10203</property>
+			<property id="namereference">name_id</property>
+		</properties>
+	</table>
+	<table name="contentgroup">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10023</property>
+			<property id="namecolumn">name</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT t2.id, t1.name FROM contentgroup AS t1
+				INNER JOIN contentgroup AS t2 ON t1.id != t2.id
+				WHERE t1.id = ? AND t1.name = t2.name
+			</property>
+			<property id="unique2maxlength">5</property>
+			<property id="unique2column">code</property>
+			<property id="unique2sql">
+				SELECT t2.id, t1.code FROM contentgroup AS t1
+				INNER JOIN contentgroup AS t2 ON t1.id != t2.id
+				WHERE t1.id = ? AND t1.code = t2.code
+			</property>
+		</properties>
+	</table>
+	<table name="datasource">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10024</property>
+			<property id="namecolumn">name</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT t2.id, t1.name FROM datasource AS t1
+				INNER JOIN datasource AS t2 ON t1.id != t2.id
+				WHERE t1.id = ? AND t1.name = t2.name
+			</property>
+			<property id="checkexcluded">true</property>
+		</properties>
+		<references>
+			<!-- TODO: check param reference -->
+			<!-- ref target="param"/ -->
+		</references>
+	</table>
+	<!-- table name="param">
+	</table -->
+	<table name="datasource_value">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="datasource" foreigndeepcopy="true" deepcopy="false"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">datasource_id</property>
+		</properties>
+	</table>
+	<table name="dicuser">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="outputuser" col="output_id" deepcopy="true" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">output_id</property>
+
+			<property id="unique1column">value</property>
+			<property id="unique1sql">
+				SELECT d2.id, d1.value FROM dicuser AS d1
+				INNER JOIN objprop AS op1 ON op1.name_id = d1.output_id
+				INNER JOIN objtag AS ot1 ON op1.objtag_id = ot1.id
+				INNER JOIN objprop AS op2 ON op1.id != op2.id
+				INNER JOIN objtag AS ot2 ON op2.objtag_id = ot2.id
+				INNER JOIN dicuser AS d2 ON op2.name_id = d2.output_id AND d2.language_id = d1.language_id
+				WHERE d1.id = ? AND d1.value = d2.value AND ot1.obj_type = ot2.obj_type
+			</property>
+			<property id="unique2column">value</property>
+			<property id="unique2sql">
+				SELECT d2.id, d1.value FROM dicuser AS d1
+				INNER JOIN construct AS c1 ON c1.name_id = d1.output_id
+				INNER JOIN construct AS c2 ON c1.id != c2.id
+				INNER JOIN dicuser AS d2 ON c2.name_id = d2.output_id AND d2.language_id = d1.language_id
+				WHERE d1.id = ? AND d1.value = d2.value
+			</property>
+			<property id="unique3column">value</property>
+			<property id="unique3sql">
+				SELECT d2.id, d1.value FROM dicuser AS d1
+				INNER JOIN objprop_category AS cmp1 ON cmp1.name_id = d1.output_id
+				INNER JOIN objprop_category AS cmp2 ON cmp1.id != cmp2.id
+				INNER JOIN dicuser AS d2 ON cmp2.name_id = d2.output_id AND d2.language_id = d1.language_id
+				WHERE d1.id = ? AND d1.value = d2.value
+			</property>
+			<property id="unique4column">value</property>
+			<property id="unique4sql">
+				SELECT d2.id, d1.value FROM dicuser AS d1
+				INNER JOIN construct_category AS cmp1 ON cmp1.name_id = d1.output_id
+				INNER JOIN construct_category AS cmp2 ON cmp1.id != cmp2.id
+				INNER JOIN dicuser AS d2 ON cmp2.name_id = d2.output_id AND d2.language_id = d1.language_id
+				WHERE d1.id = ? AND d1.value = d2.value
+			</property>
+		</properties>
+	</table>
+	<table name="outputuser">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="pathtoparent">part.name_id,construct.name_id,construct.description_id,construct_category.name_id,objprop.name_id,objprop.description_id,objprop_category.name_id</property>
+		</properties>
+	</table>
+
+	<!-- scheduler tasks, etc. -->
+	<!-- table name="job">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">39</property>
+		</properties>
+		<references>
+			<ref target="task"/>
+		</references>
+	</table>
+	<table name="task">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">37</property>
+		</properties>
+		<references>
+			<ref target="tasktemplate" deepcopy="ask" foreigndeepcopy="false"/>
+		</references>
+	</table>
+	<table name="taskparam">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="task"/>
+			<ref target="tasktemplateparam" col="templateparam_id" deepcopy="false" foreigndeepcopy="false"/>
+		</references>
+	</table>
+	<table name="tasktemplate">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">38</property>
+		</properties>
+	</table>
+	<table name="tasktemplateparam">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="tasktemplate"/>
+		</references>
+	</table -->
+	<!-- TODO what's this? -->
+	<!-- table name="jobdependency">
+		<restrict>"${export}" = "yes"</restrict>
+	</table -->
+
+	<!-- object properties -->
+	<table name="objprop">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="outputuser" col="name_id" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="outputuser" col="description_id" deepcopy="true" foreigndeepcopy="false"/>
+			<ref target="objtagdef" col="objtag_id" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="objprop_category" col="category_id" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="creatoridcolumns">creator</property>
+			<property id="editoridcolumns">editor</property>
+			<property id="namereference">name_id</property>
+			<property id="pathtoparent">objtag_id</property>
+		</properties>
+	</table>
+	<table name="objprop_category">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="outputuser" col="name_id" deepcopy="true" foreigndeepcopy="false"/>
+		</references>
+		<properties>
+			<property id="namereference">name_id</property>
+		</properties>
+	</table>
+	<table name="objprop_node" type="cross" idcol="objprop_id,node_id">
+		<references>
+			<ref target="node" deepcopy="false" foreigndeepcopy="true"/>
+			<ref target="objprop" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+	</table>
+
+	<!-- contentrepository/tagmap -->
+	<table name="contentrepository">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10208</property>
+			<property id="namecolumn">name</property>
+			<property id="omitcolumns">username,password,checkdate,checkstatus,checkresult,dbtype,statusdate,url,datastatus,datacheckresult,basepath</property>
+
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT cr2.id, cr1.name FROM contentrepository AS cr1
+				INNER JOIN contentrepository AS cr2 ON cr1.id != cr2.id
+				WHERE cr1.id = ? AND cr1.name = cr2.name
+			</property>
+
+			<!-- add default values for columns, that are not present on all systems -->
+			<property id="instant_publishing_default">0</property>
+			<property id="language_information_default">0</property>
+			<property id="permission_information_default">0</property>
+			<property id="multichannelling_default">0</property>
+			<property id="nondatacolumns">checkdate,checkstatus,checkresult,statusdate,datastatus,datacheckresult</property>
+		</properties>
+	</table>
+	<table name="tagmap">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="contentrepository" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">contentrepository_id</property>
+
+			<!-- add default values for columns that are not present on all systems -->
+			<property id="filesystem_default">0</property>
+		</properties>
+	</table>
+	<table name="cr_fragment">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10301</property>
+			<property id="namecolumn">name</property>
+			<property id="unique1column">name</property>
+			<property id="unique1sql">
+				SELECT crf2.id, crf1.name FROM cr_fragment AS crf1
+				INNER JOIN cr_fragment AS crf2 ON crf1.id != crf2.id
+				WHERE crf1.id = ? AND crf1.name = crf2.name
+			</property>
+		</properties>
+	</table>
+	<table name="cr_fragment_entry">
+		<restrict>"${export}" = "yes"</restrict>
+		<references>
+			<ref target="cr_fragment" deepcopy="false" foreigndeepcopy="true"/>
+		</references>
+		<properties>
+			<property id="pathtoparent">cr_fragment_id</property>
+		</properties>
+	</table>
+	<table name="contentrepository_cr_fragment" type="cross"
+		idcol="contentrepository_id,cr_fragment_id">
+		<references>
+			<ref target="contentrepository" deepcopy="false" foreigndeepcopy="true" />
+			<ref target="cr_fragment" deepcopy="false" foreigndeepcopy="true" />
+		</references>
+	</table>
+	<table name="form">
+		<restrict>"${export}" = "yes"</restrict>
+		<properties>
+			<property id="ttype">10050</property>
+			<property id="namecolumn">name</property>
+			<property id="unique1column">name</property>
+		</properties>
+	</table>
+</tables>

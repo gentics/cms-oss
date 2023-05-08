@@ -1,0 +1,21 @@
+@import 'variables';
+
+.readonly-visual {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .readonly-visual-label {
+        margin-right: 0.5rem;
+    }
+
+    .readonly-visual-value {
+        &.value-false {
+            color: $gtx-color-alert;
+        }
+
+        &.value-true {
+            color: $gtx-color-success;
+        }
+    }
+}

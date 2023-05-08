@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<body>
+/GenticsImageStore/100/auto/prop/rest/file/content/load/#IMAGEID#?sid=1&nodeId=#NODEID#&fingerprint=#IMAGEMD5#</body>

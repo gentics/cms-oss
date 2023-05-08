@@ -1,0 +1,15 @@
+{
+  "name": "@gentics/cms-models",
+  "version": "6.0.0-beta.0",
+  "dependencies": {},
+  "peerDependencies": {
+    "rxjs": "^6.3.3",
+    "elastic-types": "^0.1.5"
+  },
+  "optionalDependencies": {
+    "normalizr": "^3.4.0"
+  },
+  "publishConfig": {
+    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+  }
+}

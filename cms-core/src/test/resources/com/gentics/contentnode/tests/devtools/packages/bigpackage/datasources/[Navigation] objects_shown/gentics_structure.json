@@ -1,0 +1,22 @@
+{
+  "globalId" : "A547.14662",
+  "type" : "statical",
+  "name" : "[Navigation] objects_shown",
+  "values" : [ {
+    "globalId" : "A547.75160",
+    "key" : "Pages / Seiten",
+    "value" : "pages"
+  }, {
+    "globalId" : "A547.75161",
+    "key" : "Folder / Ordner",
+    "value" : "folders"
+  }, {
+    "globalId" : "A547.75162",
+    "key" : "Files / Dateien",
+    "value" : "files"
+  }, {
+    "globalId" : "A547.75163",
+    "key" : "Images / Bilder",
+    "value" : "images"
+  } ]
+}

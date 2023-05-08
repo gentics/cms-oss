@@ -1,0 +1,25 @@
+$material-design-icons-font-directory-path: '../dist/fonts/';
+
+@import 'material-design-icons-iconfont/src/material-design-icons';
+
+icon {
+    @extend .material-icons;
+    user-select: none;
+}
+
+icon[left] {
+    float: left;
+    margin-right: 15px;
+}
+
+icon[right] {
+    float: right;
+    margin-left: 15px;
+}
+
+.btn, .btn-large, .btn-floating, .btn-large, .btn-flat {
+    icon {
+        font-size: 1.3rem;
+        line-height: inherit;
+    }
+}

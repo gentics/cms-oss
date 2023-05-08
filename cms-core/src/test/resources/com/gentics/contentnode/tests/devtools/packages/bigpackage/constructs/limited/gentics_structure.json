@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.20655",
+  "keyword" : "limited",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- limitierte Eingabe",
+    "en" : "[Form] -- limited textfield"
+  },
+  "description" : {
+    "de" : "Formularfeld, welches nur eine limitierte Anzahl an Zeichen akzeptiert",
+    "en" : "form-field with limited size"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.20664",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 37,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

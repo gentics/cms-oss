@@ -1,0 +1,73 @@
+{
+  "globalId" : "A547.14609",
+  "keyword" : "rest",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "REST-Connector Abfrage [AJAX]",
+    "en" : "REST Example"
+  },
+  "description" : {
+    "de" : "Über AJAX wird der Gentics REST-Connector abgefragt, funktioniert nur bei laufendem REST-Connector",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14237",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14303",
+    "name" : {
+      "de" : "OnClick Id",
+      "en" : "OnClick Id"
+    },
+    "keyword" : "id",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14347",
+    "name" : {
+      "de" : "Ziel ContentId",
+      "en" : "Ziel ContentId"
+    },
+    "keyword" : "target",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14381",
+    "name" : {
+      "de" : "REST URL",
+      "en" : "REST Url"
+    },
+    "keyword" : "url",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

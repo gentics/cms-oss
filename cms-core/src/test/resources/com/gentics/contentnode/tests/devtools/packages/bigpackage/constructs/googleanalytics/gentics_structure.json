@@ -1,0 +1,45 @@
+{
+  "globalId" : "A547.58457",
+  "keyword" : "googleanalytics",
+  "icon" : "stop.gif",
+  "name" : {
+    "de" : "GoogleAnalytics einbetten (Account notwendig)",
+    "en" : "GoogleAnalytics (account)"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58248",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58291",
+    "name" : {
+      "de" : "Ihr Google-Code (UA-xxxx)",
+      "en" : "Your Google-Code (UA-xxxx)"
+    },
+    "keyword" : "googlecode",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

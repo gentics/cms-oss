@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.58468",
+  "keyword" : "rssfeed",
+  "icon" : "uliste.gif",
+  "name" : {
+    "de" : "RSS-Feed erzeugen",
+    "en" : "RSS-Feed"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58258",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "vtl",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58302",
+    "name" : {
+      "de" : "Template",
+      "en" : ""
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58336",
+    "name" : {
+      "de" : "RSS-Übersicht",
+      "en" : "RSS-Übersicht"
+    },
+    "keyword" : "ds",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

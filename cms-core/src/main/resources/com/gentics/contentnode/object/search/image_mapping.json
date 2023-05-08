@@ -1,0 +1,91 @@
+{
+	"properties": {
+		"id": {
+			"type": "integer",
+			"gtx_tagname": "image.id"
+		},
+		"nodeId": {
+			"type": "integer",
+			"gtx_tagname": "image.folder.node.id"
+		},
+		"online": {
+			"type": "integer"
+		},
+		"folderId": {
+			"type": "integer",
+			"gtx_tagname": "image.folder.id"
+		},
+		"name": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "image.name",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"filename": {
+			"type": "text",
+			"analyzer": "filename_analyzer",
+			"gtx_tagname": "image.name"
+		},
+		"description": {
+			"type": "text",
+			"analyzer": "content_analyzer",
+			"search_analyzer": "search_analyzer",
+			"gtx_tagname": "image.description",
+			"fields": {
+				"raw": {
+					"type": "text",
+					"analyzer": "filename_analyzer",
+				}
+			}
+		},
+		"niceUrl": {
+			"type": "text",
+			"analyzer": "filename_analyzer",
+			"gtx_tagname": "image.nice_url"
+		},
+		"created": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "image.createdate.timestamp"
+		},
+		"creatorId": {
+			"type": "integer",
+			"gtx_tagname": "image.creator.id"
+		},
+		"edited": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "image.editdate.timestamp"
+		},
+		"editorId": {
+			"type": "integer",
+			"gtx_tagname": "image.editor.id"
+		},
+		"mimetype": {
+			"type": "text",
+			"gtx_tagname": "image.type"
+		},
+		"systemCreationDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "image.createdate.timestamp"
+		},
+		"systemEditDate": {
+			"type": "date",
+			"format": "epoch_second",
+			"gtx_tagname": "image.editdate.timestamp"
+		},
+		"deleted": {
+			"type": "boolean"
+		},
+		"groupId": {
+			"type": "integer"
+		}
+	}
+}

@@ -1,0 +1,135 @@
+a.aloha-gcnlinkchecker-invalid-url {
+    background-color: #f5c1bc;
+    position: relative;
+}
+
+.aloha-gcnlinkchecker-invalid-url > span.aloha-block-handle {
+    padding-right: 24px;
+}
+
+a.aloha-gcnlinkchecker-invalid-url::after {
+    content: "";
+    background: url('../img/icon-report_problem-red.svg');
+    background-size: 14px 14px;
+    width: 14px;
+    height: 14px;
+    display: block;
+    position: absolute;
+    right: -14px;
+    top: -4px;
+}
+
+.aloha-gcnlinkchecker-invalid-url > span.aloha-block-handle::before {
+    content: "";
+    background: -moz-linear-gradient(center bottom , white 0%, #BFBFBF 100%) repeat scroll 0 0 transparent;
+	background: -webkit-gradient(linear,left bottom,left top,color-stop(0, white),color-stop(1, #BFBFBF));
+	background: progid:DXImageTransform.Microsoft.Gradient (startColorstr='#bfbfbf', endColorstr='#ffffff', gradientType='0');
+    width: 20px;
+    height: 22px;
+    display: block;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    border-radius: 0px 4px 4px 0px;
+    border: 2px solid #8c8c8c;
+}
+
+.aloha-gcnlinkchecker-invalid-url > span.aloha-block-handle::after {
+    content: "";
+    background: url('../img/icon-report_problem-red.svg');
+    background-size: 14px 14px;
+    width: 14px;
+    height: 14px;
+    display: block;
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+#aloha-gcnlinkchecker-panel .aloha-sidebar-panel-content-inner {
+    color: #444;
+}
+
+#aloha-gcnlinkchecker-panel ul {
+    padding-left: 2px;
+    padding-right: 5px;
+}
+
+#aloha-gcnlinkchecker-panel ul > li {
+    padding: 2px 0 5px 15px;
+    background-image: url('../img/icon-report_problem-gray.svg');
+    background-repeat: no-repeat;
+    background-size: 14px;
+    background-position: 0px 26px;
+    word-break: break-all;
+    margin-bottom: 8px;
+    cursor: pointer;
+    width: auto;
+    border-bottom: 1px solid threedface;
+}
+
+#aloha-gcnlinkchecker-panel ul > li:last-child {
+    border-bottom: none;
+}
+
+#aloha-gcnlinkchecker-panel ul > li:hover {
+    outline: 5px threedface dashed;
+}
+
+#aloha-gcnlinkchecker-panel ul > li:active {
+    outline: 5px #0096dc dashed;
+}
+
+#aloha-gcnlinkchecker-panel ul > li > h1 {
+    font-size: 110%;
+    margin: 0 0 10px -10px;
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#aloha-gcnlinkchecker-panel ul > li > h2 {
+    font-weight: bold;
+    font-size: 100%;
+    margin-bottom: 0px;
+}
+
+.aloha .gcn-link-uri-success span.gcn-link-warning-icon {
+    display: inline-block;
+    background: #449d44;
+    color: white;
+    border: 2px solid #398539
+
+}
+
+.aloha-gcnlinkchecker-statustimestamp {
+    margin-top: 0px;
+}
+
+.aloha-sidebar-inner {
+    overflow-y: scroll;
+}
+
+.aloha-gcnlinkchecker-opentagfill,
+.aloha-gcnlinkchecker-deleteTag {
+    padding: 5px;
+    text-align: left;
+    margin-right: 5px;
+    margin-top: 5px;
+    border: 1px solid #1B1B1B;
+    color: #444;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.aloha-gcnlinkchecker-opentagfill:hover,
+.aloha-gcnlinkchecker-deleteTag:hover {
+    background: #8c8c8c80;
+}
+
+.aloha-gcnlinkchecker-opentagfill:active,
+.aloha-gcnlinkchecker-deleteTag:active {
+    background: #8c8c8c;
+}

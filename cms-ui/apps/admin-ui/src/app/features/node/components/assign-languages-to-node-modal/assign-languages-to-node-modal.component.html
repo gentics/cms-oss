@@ -1,0 +1,31 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'shared.assign_languages_to_node_title' | i18n:{ entityName: nodeName } }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <div class="gtx-modal-datagrid-container">
+            <gtx-language-table
+                [showSearch]="true"
+                [hideActions]="true"
+                [(selected)]="selectedLanguages"
+            ></gtx-language-table>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            (click)="updateLanguages()"
+        >{{ 'shared.assign' | i18n }}</gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>
+

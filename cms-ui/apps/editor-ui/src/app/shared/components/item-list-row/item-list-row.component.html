@@ -1,0 +1,168 @@
+<gtx-contents-list-item
+    class="item-row icon-checkbox-trigger"
+    [class.selected]="selected"
+    [class.deleted]="isDeleted(item)"
+    [class.item-in-editor]="item === itemInEditor"
+>
+    <icon-checkbox
+        *ngIf="itemType !== 'image'; else imageCheckbox"
+        [disabled]="!canBeSelected"
+        [selected]="selected"
+        (change)="toggleSelect()" [icon]="icon"
+    ></icon-checkbox>
+
+    <ng-template #imageCheckbox>
+        <icon-checkbox
+            [selected]="selected"
+            (change)="toggleSelect()"
+            [image]="item"
+            [nodeId]="nodeId"
+        ></icon-checkbox>
+    </ng-template>
+
+    <page-language-indicator-current
+        *ngIf="item && itemType === 'page' && (singleLanguageIndicatorCurrentIsVisible$ | async)"
+        [expandByDefault]="expandByDefault"
+        [nodeLanguages]="nodeLanguages"
+        [item]="item"
+    ></page-language-indicator-current>
+
+    <form-language-indicator-current
+        *ngIf="item && itemType === 'form' && (singleLanguageIndicatorCurrentIsVisible$ | async)"
+        [expandByDefault]="expandByDefault"
+        [nodeLanguages]="nodeLanguages"
+        [item]="item"
+    ></form-language-indicator-current>
+
+    <div
+        #itemPrimary
+        class="item-primary"
+    >
+        <ng-template #itemName>
+            <div class="item-name">
+                <inherited-localized-icon [item]="item"></inherited-localized-icon>
+
+                <ng-container *ngIf="(isModeSelect() || isDeleted(item) || isModeStaging()) && item.type !== 'folder'; else itemLinkTemplate">
+                    <span
+                        class="item-name-only"
+                        [innerHTML]="item?.name | highlight:filterTerm"
+                    ></span>
+                </ng-container>
+
+                <ng-template #itemLinkTemplate>
+                    <a
+                        href=""
+                        class="item-name-only item-name-router-link"
+                        [routerLink]="item | routerCommandsForItem"
+                        [title]="item?.description"
+                        [innerHTML]="item?.name | highlight:filterTerm"
+                        (click)="itemClicked($event, item)"
+                    ></a>
+                </ng-template>
+
+                <item-status-label
+                    [item]="item"
+                    [nodeLanguages]="nodeLanguages"
+                    [activeNodeId]="activeNode?.id"
+                    [uiMode]="uiMode"
+                    [stagingMap]="stagingMap"
+                ></item-status-label>
+
+                <file-status-label *ngIf="uiMode === UIMode.EDIT" [item]="item"></file-status-label>
+                <start-page-icon *ngIf="(item | isStartPage: startPageId)"></start-page-icon>
+            </div>
+        </ng-template>
+
+        <image-thumbnail-tooltip
+            *ngIf="itemType === 'image'; else itemName"
+            [image]="item"
+            [nodeId]="nodeId"
+            [parent]="itemPrimary"
+        >
+            <ng-content *ngTemplateOutlet="itemName"></ng-content>
+        </image-thumbnail-tooltip>
+
+        <a
+            *ngIf="(!isDeleted(item) && (itemType === 'page' || itemType === 'file' || itemType === 'image') && item['liveUrl'] && item['liveUrl'] !== '')"
+            [href]="item['liveUrl']"
+            target="_blank"
+            class="liveurl-icon"
+            [title]="'editor.live_url_tooltip' | i18n"
+        >
+            <gtx-button icon size="small" type="secondary">
+                <i class="material-icons" [attr.translate]="'no'">open_in_new</i>
+            </gtx-button>
+        </a>
+
+        <ng-container *ngIf="(searchTerm$ | async) || (elasticSearchQueryActive$ | async)">
+            <item-breadcrumbs
+                [item]="item"
+                [linkPaths]="!isModeSelect()"
+            ></item-breadcrumbs>
+        </ng-container>
+
+        <ng-container *ngIf="getItemDetailsShowPaths() && itemType !== 'folder'">
+            <div
+                class="file-name"
+                [title]="item | itemPath:activeNode?.name"
+                [innerHTML]="item | itemPath:activeNode?.name | highlight:filterTerm"
+            ></div>
+        </ng-container>
+
+        <div
+            *ngIf="item && (item.type === 'page' || item.type === 'form') && nodeLanguages && nodeLanguages.length > 1"
+            class="language-indicator"
+        >
+            <page-language-indicator
+                *ngIf="item.type === 'page'"
+                [expandByDefault]="expandByDefault"
+                [nodeLanguages]="nodeLanguages"
+                [item]="item"
+                [mode]="mode"
+                [uiMode]="uiMode"
+                [stagingMap]="stagingMap"
+                [displayStatusInfos]="uiMode === UIMode.STAGING"
+                (languageClick)="pageLanguageClicked($event)"
+                (pageLanguageIconClick)="onPageLanguageIconClicked($event)"
+            ></page-language-indicator>
+
+            <form-language-indicator
+                *ngIf="item.type === 'form'"
+                [expandByDefault]="expandByDefault"
+                [nodeLanguages]="nodeLanguages"
+                [item]="item"
+                [mode]="mode"
+                [uiMode]="uiMode"
+                [stagingMap]="stagingMap"
+                [displayStatusInfos]="uiMode === UIMode.STAGING"
+                (languageClick)="formLanguageClicked($event)"
+                (formLanguageIconClick)="onFormLanguageIconClicked($event)"
+            ></form-language-indicator>
+        </div>
+    </div>
+
+    <div class="display-fields">
+        <list-item-details
+            [fields]="getItemDetailsDisplayFields()"
+            [item]="item"
+            [isDeleted]="isDeleted(item)"
+            (usageClick)="showUsage($event)"
+        ></list-item-details>
+    </div>
+
+    <div class="show-on-hover">
+        <favourite-toggle [item]="item"></favourite-toggle>
+
+        <item-context-menu
+            *ngIf="!isModeSelect()"
+            [item]="item"
+            [activeNode]="activeNode"
+            [isFolderStartPage]="itemType === 'page' && item.id === startPageId"
+            [isLocked]="itemType === 'page' && item | pageIsLocked"
+            [isDeleted]="isDeleted(item)"
+            [permissions]="item | permissions"
+            [uiMode]="uiMode"
+            [stagingMap]="stagingMap"
+        ></item-context-menu>
+    </div>
+</gtx-contents-list-item>

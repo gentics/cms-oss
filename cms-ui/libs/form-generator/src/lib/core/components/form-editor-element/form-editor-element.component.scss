@@ -1,0 +1,295 @@
+@import "../../../../styles/variables";
+
+:host {
+    position: relative;
+}
+
+.form-element-flag {
+    position: absolute;
+    left: -1.5rem;
+    padding: 0.25rem;
+    font-size: 1rem;
+    top: 0;
+    background-color: $gcms-color-editor-element-background-default;
+    box-shadow: rgba(0, 0, 0, 0.4) 0 0 14px 0;
+
+    &:hover {
+        cursor: help;
+    }
+
+    &.has-property-error {
+        color: $gtx-color-alert;
+    }
+
+    &.is-untranslated {
+        color: darken($gcms-color-highlight, 10%);
+    }
+}
+
+.form-element-flag {
+    position: absolute;
+    left: -1.5rem;
+    padding: 0.25rem;
+    font-size: 1rem;
+    top: 0;
+    background-color: $gcms-color-editor-element-background-default;
+    color: $gtx-color-alert;
+    box-shadow: rgba(0, 0, 0, 0.4) 0 0 14px 0;
+
+    &:hover {
+        cursor: help;
+    }
+}
+
+.form-element-container-outer {
+    position: relative;
+    display: flex;
+    background-color: $gcms-color-editor-element-background-default;
+    border: 1px solid #eee;
+    transition: border-color $gcms-form-editor-transition-duration ease-in-out,
+        max-height $gcms-form-editor-transition-duration ease-in-out,
+        opacity $gcms-form-editor-transition-duration ease-in-out,
+        box-shadow $gcms-form-editor-transition-duration ease-in-out;
+    box-shadow: transparent 5px 5px 10px;
+    opacity: 1;
+
+    &:before {
+        content: '';
+        position: absolute;
+        display: inline-block;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        opacity: 0;
+        background-color: $gtx-color-primary;
+        transition: opacity $gcms-form-editor-transition-duration ease-in-out;
+        z-index: 0;
+    }
+
+    &.is-interactive:hover, &.properties-editor-open {
+        @include gcmsEditorBoxShadowFormElement;
+        border: 1px solid transparent;
+
+        &:before {
+            opacity: 1;
+        }
+    }
+
+    &.read-only.is-inactive {
+        opacity: 0.5;
+    }
+
+    &.is-dragged {
+        opacity: 0.5;
+    }
+}
+
+.form-element-container-inner {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
+    background-color: $gcms-color-editor-element-background-default;
+    width: calc(100% - 2rem);
+    transition: box-shadow $gcms-form-editor-transition-duration ease-in-out;
+    box-shadow: transparent 5px 5px 10px;
+
+    transition: width $gcms-form-editor-transition-duration ease-in-out,
+        box-shadow $gcms-form-editor-transition-duration ease-in-out;
+
+    &.is-interactive-in-editor {
+        box-shadow: rgba(0, 0, 0, 0.3) 8px 0 7px -6px;
+    }
+}
+
+.is-interactive .form-element-container-header {
+    cursor: move;
+}
+
+.form-element-container-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 24px; /* keep height consistent even if properties editor toggle is hidden */
+}
+
+.form-element-type {
+    font-size: 0.9rem;
+    color: #666;
+    padding: 0 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.form-element-name {
+    user-select: text;
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.form-element-type--used-as-title {
+    color: black;
+}
+
+.form-element-btn-properties-editor-toggle {
+    color: $gcms-color-editor-element-buttons-color-default;
+    transform: rotate(90deg);
+    transition: all $gcms-form-editor-transition-duration ease-in-out;
+    cursor: pointer;
+
+    &:hover, &.active {
+        color: $gtx-color-primary;
+    }
+
+    &.active {
+        transform: rotate(0deg);
+    }
+}
+
+.form-element-preview-container {
+    padding: 0.1rem 0.5rem 0;
+}
+
+.is-interactive .form-element-preview-container {
+    cursor: move;
+}
+
+.form-element-container {
+    padding: 0.5rem;
+}
+
+.form-element-nested-container {
+    padding: 0.4rem 0.2rem 0.4rem;
+    background-color: $gcms-color-page-background;
+    @include gcmsEditorBoxShadowForm;
+    transition: background-color $gcms-form-editor-transition-duration ease-in-out;
+
+    &:not(.read-only) {
+        &:hover {
+            background-color: $gcms-color-page-background-hover;
+        }
+    }
+}
+
+.form-element-buttons-container {
+    // display: flex;
+    // z-index: 1;
+    // flex-direction: column;
+    // align-items: center;
+    // position: absolute;
+    // right: 0;
+    // top: 0;
+    width: 2rem;
+    // height: 100%;
+}
+
+.form-element-button {
+    background-color: transparent;
+    color: $gcms-color-editor-element-buttons-color-default;
+    padding: 0.5rem;
+    font-size: 1rem;
+    transition: background-color $gcms-form-editor-transition-duration ease-in-out;
+}
+
+.form-element-button--highlight {
+    color: $gtx-color-primary;
+}
+
+:host-context(.is-inactive) :not(.is-inactive) #form-element-active-button.form-element-button--highlight {
+    color: $gcms-color-highlight;
+}
+
+
+.is-interactive {
+    .form-element-button {
+        &:hover {
+            background-color: $gcms-color-editor-element-buttons-background-hover;
+            color: $gcms-color-editor-element-buttons-color-hover;
+            cursor: pointer;
+        }
+    }
+
+    .form-element-button--danger {
+        &:hover {
+            background-color: $gtx-color-alert;
+        }
+    }
+}
+
+:host-context(.is-inactive) .is-interactive #form-element-active-button {
+    &:hover {
+        color: $gcms-color-editor-element-buttons-color-hover;
+        background-color: $gcms-color-highlight;
+    }
+}
+
+.form-element-label {
+    display: inline;
+}
+
+.form-element-untranslated {
+    background:
+        linear-gradient(to right, $gcms-color-highlight 70%, rgba(255, 255, 255, 0) 0%),
+        linear-gradient($gcms-color-highlight 70%, rgba(255, 255, 255, 0) 0%),
+        linear-gradient(to right, $gcms-color-highlight 70%, rgba(255, 255, 255, 0) 0%),
+        linear-gradient($gcms-color-highlight 70%, rgba(255, 255, 255, 0) 0%);
+    background-position: top, right, bottom, left;
+    background-repeat: repeat-x, repeat-y;
+    background-size: 10px 2px, 2px 10px;
+    background-color: $gcms-color-editor-element-background-default;
+}
+
+.form-element-properties-editor-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-height: 0;
+    min-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+        border-top 0.2s ease-in-out,
+        opacity 0.2s ease-in-out,
+        min-height 0.2s ease-out,
+        max-height 0.2s ease-in;
+}
+
+.form-element-properties-editor-container--opened {
+    max-height: 99rem;
+    min-height: 2rem;
+    border-top: 1px solid #ddd;
+    opacity: 1;
+}
+
+.form-element-container-outer {
+    &:hover > .form-element-buttons-adder {
+        display: flex;
+        cursor: pointer;
+    }
+}
+
+.form-element-buttons-adder {
+    position: absolute;
+    display: none;
+    right: calc(-2rem - 1px);
+    bottom: -1px;
+    height: 2rem;
+    width: 2rem;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+    background-color: $gcms-color-editor-element-buttons-background-default;
+    color: $gtx-color-primary;
+    box-shadow: rgba( 0, 0, 0, 0.3 ) 5px 5px 10px;
+    transition: background-color $gcms-form-editor-transition-duration ease-in-out;
+
+    &:hover, &.menu-visible {
+        cursor: pointer;
+        display: flex;
+        background-color: $gcms-color-editor-element-buttons-background-hover;
+        color: $gcms-color-editor-element-buttons-color-hover;
+        opacity: 1;
+    }
+}

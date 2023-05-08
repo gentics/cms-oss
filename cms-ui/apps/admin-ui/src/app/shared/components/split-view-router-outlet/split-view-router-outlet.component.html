@@ -1,0 +1,34 @@
+<gtx-split-view-container
+    [initialSplit]="25"
+    [rightPanelVisible]="detailOutlet.isActivated"
+    [class.focusMode]="focusMode$ | async"
+    [class.rightPanelFocused]="editorIsFocused$ | async"
+    [rightPanelVisible]="editorIsOpen$ | async"
+    [focusedPanel]="(editorIsFocused$ | async) ? 'right' : 'left'"
+    (focusedPanelChange)="setSplitFocus($event)"
+    noswipe
+>
+    <div class="master" left>
+        <gtx-loading-overlay
+            [visible]="loadingMasterDelayed$ | async"
+            [maxHeight]="true"
+            [message]="loadingMasterMessage$ | async"
+        ></gtx-loading-overlay>
+
+        <div class="master-route-wrapper" [hidden]="loadingMasterDelayed$ | async">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+
+    <div class="detail" right>
+        <gtx-loading-overlay
+            [visible]="loadingDetailDelayed$ | async"
+            [maxHeight]="true"
+            [message]="loadingDetailMessage$ | async"
+        ></gtx-loading-overlay>
+
+        <div class="detail-route-wrapper" [hidden]="loadingDetailDelayed$ | async">
+            <router-outlet name="detail" #detailOutlet="outlet"></router-outlet>
+        </div>
+    </div>
+</gtx-split-view-container>

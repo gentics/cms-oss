@@ -1,0 +1,67 @@
+import { ObjectPropertyOperations } from '@admin-ui/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { UntypedFormControl } from '@angular/forms';
+import { ObjectPropertyBO, ObjectPropertyCreateRequest } from '@gentics/cms-models';
+import { IModalDialog } from '@gentics/ui-core';
+import { ObjectpropertyPropertiesMode } from '../object-property-properties/object-property-properties.component';
+
+@Component({
+    selector: 'gtx-create-object-property-modal',
+    templateUrl: './create-object-property-modal.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit {
+
+    public readonly ObjectpropertyPropertiesMode = ObjectpropertyPropertiesMode;
+
+    /** form instance */
+    form: UntypedFormControl;
+
+    constructor(
+        private objectPropertyOperations: ObjectPropertyOperations,
+    ) { }
+
+    ngOnInit(): void {
+        const payload: ObjectPropertyCreateRequest = {
+            nameI18n: null,
+            descriptionI18n: null,
+            keyword: '',
+            type: null,
+            constructId: null,
+            categoryId: null,
+            required: false,
+            inheritable: false,
+            syncContentset: false,
+            syncChannelset: false,
+            syncVariants: false,
+        };
+        // instantiate form
+        this.form = new UntypedFormControl(payload);
+    }
+
+    closeFn = (entityCreated: ObjectPropertyBO) => {};
+    cancelFn = () => {};
+
+    registerCloseFn(close: (val?: any) => void): void {
+        this.closeFn = (entityCreated: ObjectPropertyBO) => {
+            close(entityCreated);
+        };
+    }
+
+    registerCancelFn(cancel: (val?: any) => void): void {
+        this.cancelFn = cancel;
+    }
+
+    /**
+     * If user clicks to create a new objectProperty
+     */
+    buttonCreateEntityClicked(): void {
+        this.createEntity()
+            .then(objectPropertyCreated => this.closeFn(objectPropertyCreated));
+    }
+
+    private createEntity(): Promise<ObjectPropertyBO> {
+        return this.objectPropertyOperations.create(this.form.value).toPromise();
+    }
+
+}

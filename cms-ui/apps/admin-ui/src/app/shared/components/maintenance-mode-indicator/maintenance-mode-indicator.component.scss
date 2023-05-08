@@ -1,0 +1,19 @@
+@import "variables";
+
+.banner {
+    background-color: white;
+    background-color: $gtx-color-warning;
+    color: white;
+    padding: 0 1rem;
+ 
+    &.maintenance-is-active {
+        background-color: $gtx-color-alert;
+    }
+}
+
+.maintenance-is-active-note,
+.banner-is-active-note,
+.banner-message-title
+{
+    font-weight: bold;
+}

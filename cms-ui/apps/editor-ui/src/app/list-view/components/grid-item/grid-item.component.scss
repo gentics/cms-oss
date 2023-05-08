@@ -1,0 +1,18 @@
+.localized-icon {
+    display: inline;
+    cursor: help;
+    margin-right: 5px;
+
+    icon {
+        color: #3f3d6f;
+        font-size: 12px;
+    }
+}
+
+.deleted {
+    opacity: 0.5;
+}
+
+list-item-details ::ng-deep .fields-wrapper detail-chip {
+    margin: 0;
+}

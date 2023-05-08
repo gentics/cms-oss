@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.14521",
+  "keyword" : "pagetag",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "Bestehende Inhalte einbetten (Seitentag)",
+    "en" : "Reference content (pagetag)"
+  },
+  "description" : {
+    "de" : "Tagtype zum Inkludieren eines Tagtypes aus einer Seite",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14148",
+    "name" : {
+      "de" : "Seitentag",
+      "en" : "Seitentag"
+    },
+    "keyword" : "pagetag",
+    "editable" : true,
+    "typeId" : 11,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

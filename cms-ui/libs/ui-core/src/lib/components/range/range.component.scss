@@ -1,0 +1,74 @@
+@import '../../../styles/base-import';
+
+:host {
+    display: block;
+    position: relative;
+
+    > label {
+        position: absolute;
+        top: -20px;
+        display: block;
+        color: $gtx-color-dark-gray;
+        transition: color 0.2s;
+    }
+
+    > .range-field {
+        margin: 20px 0;
+    }
+
+    // remove the value label in IE11
+    input[type=range]::-ms-tooltip {
+        display: none;
+    }
+
+    &[readonly], &[disabled] {
+        > .range-field {
+            user-select: none;
+
+            .thumb {
+                display: none;
+            }
+        }
+
+        input {
+            cursor: default;
+        }
+
+        input::-webkit-slider-thumb,
+        input::-webkit-slider-runnable-track {
+            cursor: default;
+        }
+    }
+
+    &[disabled] input::-webkit-slider-thumb {
+        background-color: gray;
+    }
+
+    &.ng-touched.ng-invalid {
+        input::-webkit-slider-thumb {
+            background-color: $gtx-color-alert;
+        }
+
+        label {
+            color: $gtx-color-alert;
+        }
+    }
+
+    input[type=range] + .thumb {
+        transition: transform 200ms cubic-bezier(1, 0, 0, 1);
+        will-change: transform, left;
+        height: 30px;
+        width: 30px;
+        top: -23px;
+        margin-left: -15px;
+        transform: scale(0, 0) rotate(-45deg);
+
+        &.active {
+            transform: scale(1, 1) rotate(-45deg);
+        }
+
+        &.hidden {
+            display: none;
+        }
+    }
+}

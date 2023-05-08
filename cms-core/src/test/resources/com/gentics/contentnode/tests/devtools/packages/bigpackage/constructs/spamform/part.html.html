@@ -1,0 +1,131 @@
+<!--//
+<?
+    function generate_random_pw()
+    {
+      if (is_int(<node laenge>))
+        $length = <node laenge>;
+      else
+        $length = 4;
+      $random_case = true;
+
+      $i = 0;
+      $result = '';
+
+      $letters = Array(
+                  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+                  'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+                  '1', '2', '3', '4', '5', '6', '7', '8', '9'
+                  );
+
+
+      while($length > $i)
+      {
+          $letter = rand(0, sizeof($letters)-1);
+          $letter = $letters[$letter];
+
+          if($random_case && !is_integer($letter))
+          {
+              $case = rand(0, 1);
+
+              if($case)
+              {
+                  $letter = strtoupper($letter);
+              }
+          }
+
+          $result .= $letter;
+
+          ++$i;
+      }
+        return $result;
+    }
+
+    if ($_REQUEST['submitted']) {
+        if ("<node spam>" == 1) {
+          if (md5(base64_encode(base64_encode($_REQUEST['check_rand2']))) != $_REQUEST['check_rand']) {
+            $error["spam"] = true;
+          }
+        }
+        foreach ($_REQUEST['mandatory'] as $k => $v) {
+            if ($v && !$_REQUEST['element'][$k]) {
+                $error[$k] = true;
+            }
+        }
+    }
+?>
+//-->
+<?
+    if (!$_REQUEST['submitted'] || $error) {
+?>
+
+<form action="<? echo $PHP_SELF; ?>" method="post">
+<input type="hidden" name="submitted" value="true">
+<table border="0" cellpadding="0" cellspacing="0">
+<!--//
+<?
+    if ($error) {
+        $errPrefix = <<<EOF
+<node errPrefix>
+EOF;
+        $errPostfix = <<<EOF
+<node errPostfix>
+EOF;
+        $output_error = '<tr><td colspan="2">' . $errPrefix . '<node errMsg>' . $errPostfix . '<br><br></td></tr>';
+
+    }
+?>
+//-->
+<?=$output_error?>
+<node container>
+<xnl if ("<node spam>" == "1") evalalways=true>
+  <tr>
+    <td colspan=2 align=center><br>
+      <?
+      //
+      $random_pw = generate_random_pw();
+      $random_pw = base64_encode($random_pw);
+      $random_pw = base64_encode($random_pw);
+      ?>
+      <img border="1" src="/resizer/random.php?rand=<?=$random_pw?>&id=<?=uniqid(rand());?>">
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <? if ($error["spam"]) echo $errPrefix; ?><node spamlabel><? if ($error["spam"]) echo $errPostfix; ?><br/>
+      <input type="hidden" name="label[spam]" value="<node spamlabel>">
+    </td>
+    <td>
+      <input type="text" name="check_rand2" value="<?=$_GET['check_rand2']?>">
+      <input type="hidden" name="check_rand" value="<?=md5($random_pw);?>">
+    </td>
+  </tr>
+<xnl end>
+<tr>
+  <td colspan="2"><br><input type="submit" value="<node submit>" class="form_button"><xnl if ( "<node reset>" != "" )> <input type="reset" value="<node reset>" class="form_button"><xnl end></td></tr>
+</table>
+</form>
+
+<? } else { ?>
+        <node submitted>
+<!--//
+<?
+        foreach ($_REQUEST['label'] as $lkey => $lval) {
+            if (is_array($_REQUEST['element'][$lkey])) {
+                foreach ($element[$lkey] as $eval) {
+                    $values.= $eval."\n";
+                }
+                $message.= "$lval\n$values\n\n";
+            } else {
+                if ($lkey != 'spam') $message.= "$lval\n".$_REQUEST['element'][$lkey]."\n\n";
+           }
+        }
+        mail( "<node recipient>", "<node subject>", $message, "From: <node from>");
+/*
+        $do = 700;
+        $action = "insert";
+        $form_uid = "<node unique_tag_id>";
+        include($DOCUMENT_ROOT . "/portalnode/index.php");
+*/
+?>
+//-->
+<?  }  ?>

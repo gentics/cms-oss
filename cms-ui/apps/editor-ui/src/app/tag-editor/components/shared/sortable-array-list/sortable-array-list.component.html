@@ -1,0 +1,24 @@
+<gtx-sortable-list (dragEnd)="onDragEnd($event)">
+
+    <!-- This hidden drag handle is necessary because gtx-sortable-list only
+        enables drag handles if at least one is present during onContentInit(). -->
+    <gtx-drag-handle *ngIf="showWorkaroundHandle" class="workaround-handle"></gtx-drag-handle>
+
+    <gtx-sortable-item *ngFor="let item of items; let i = index">
+        <gtx-contents-list-item>
+            <div class="item-primary">
+                <ng-container *ngTemplateOutlet="itemTemplate;context:{item: item, index: i}"></ng-container>
+            </div>
+            <div class="show-on-hover">
+                <gtx-button *ngIf="allowRemoval"
+                    icon size="small"
+                    type="secondary"
+                    (click)="onRemoveClick(i)"
+                    [title]="'tag_editor.remove_element' | i18n">
+                    <icon>remove_circle_outline</icon>
+                </gtx-button>
+            </div>
+            <gtx-drag-handle *ngIf="allowDrag"></gtx-drag-handle>
+        </gtx-contents-list-item>
+    </gtx-sortable-item>
+</gtx-sortable-list>

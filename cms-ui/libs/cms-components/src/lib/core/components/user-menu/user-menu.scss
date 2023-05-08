@@ -1,0 +1,65 @@
+@import "../../../../styles/variables";
+
+.language-toggle {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    
+    ::ng-deep button.btn {
+        height: 24px !important;
+        text-transform: uppercase;
+    }
+}
+
+.user-menu-contents {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding: 40px 10px 10px 10px;
+    height: 100%;
+    
+    .user-details {
+        padding: 10px 10px 20px;
+        text-align: center;
+        
+        .user-name {
+            margin-bottom: 10px;
+        }
+        .description {
+            color: $gtx-color-dark-gray;
+        }
+    }
+}
+
+.language-option {
+    display: flex !important;
+    i {
+        margin-right: 5px;
+    }
+    &.deselected {
+        color: $gtx-color-dark-gray;
+        i {
+            visibility: hidden;
+        }
+    }
+}
+
+.top,
+.bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+}
+
+.top {
+    flex: 1;
+    overflow-y: scroll;
+}
+
+.bottom {
+
+    & > ::ng-deep * {
+        width: 100%;
+        border-top: 1px solid $gtx-color-very-light-gray;
+    }
+}

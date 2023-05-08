@@ -1,0 +1,20 @@
+{
+  "globalId" : "3D6C.e54c5e50-c5ed-11e6-8b5d-ea5d8efab9e8",
+  "name" : "Template for Blog",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId" : "3D6C.c912a159-c5ef-11e6-8b5d-ea5d8efab9e8",
+    "name" : "b-la-la",
+    "active" : true,
+    "constructId" : "A547.69478",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "3D6C.c91175d9-c5ef-11e6-8b5d-ea5d8efab9e8",
+    "name" : "content",
+    "active" : true,
+    "constructId" : "A547.14584",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ]
+}

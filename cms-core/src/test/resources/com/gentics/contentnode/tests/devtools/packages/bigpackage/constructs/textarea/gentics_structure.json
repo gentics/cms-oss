@@ -1,0 +1,115 @@
+{
+  "globalId" : "A547.14563",
+  "keyword" : "textarea",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Mehrzeiliger Eingabebereich",
+    "en" : "[Form] -- Multiline textfield"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14190",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14277",
+    "name" : {
+      "de" : "Text, der als Beschreibung vor dem Mehrzeiligen Eingabebereich stehen soll<br />z.B.: Geben Sie hier Ihren Kommentar ein:",
+      "en" : "Text, der als Beschreibung vor dem Mehrzeiligen Eingabebereich stehen soll<br />z.B.: Geben Sie hier Ihren Kommentar ein:"
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14325",
+    "name" : {
+      "de" : "Name des Eingabeberichs intern<br />z.B.: kommentar",
+      "en" : "Name des Eingabeberichs intern<br />z.B.: kommentar"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14367",
+    "name" : {
+      "de" : "Text, welcher bereits als Inhalt/Vorbelegung für den Eingabebereich vorhanden sein soll",
+      "en" : "Text, welcher bereits als Inhalt/Vorbelegung für den Eingabebereich vorhanden sein soll"
+    },
+    "keyword" : "value",
+    "editable" : true,
+    "typeId" : 1,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14394",
+    "name" : {
+      "de" : "Länge des Eingabebereichs im Formular<br />z.B.: 25",
+      "en" : "Länge des Eingabebereichs im Formular<br />z.B.: 25"
+    },
+    "keyword" : "cols",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14416",
+    "name" : {
+      "de" : "Höhe/Anzahl der Zeilen des Eingabebereichs im Formular<br />z.B.: 5",
+      "en" : "Höhe/Anzahl der Zeilen des Eingabebereichs im Formular<br />z.B.: 5"
+    },
+    "keyword" : "rows",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14434",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

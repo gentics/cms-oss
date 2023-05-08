@@ -1,0 +1,70 @@
+<div class="modal-title">
+    <h5>{{ 'modal.channel_dependencies_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <gtx-tabs pure [activeId]="activeTab">
+        <gtx-tab
+            *ngFor="let itemType of typesToDisplay"
+            [icon]="iconForItemType(itemType.slice(0, -1))"
+            [id]="itemType"
+            title="{{ 'modal.' + itemType | i18n }}"
+            [class.active]="activeTab === itemType"
+            (select)="selectTab($event)">
+            <div *ngIf="syncableItems" class="affected-objects-wrapper">
+                <div class="affected-objects-row">
+                    <div class="row all-items-count">
+                        <div class="column">
+                                <gtx-checkbox
+                                    class="left"
+                                    [checked]="areAllSelected(itemType)"
+                                    (change)="$event ? selectAllItems(itemType) : deselectAllItems(itemType)"></gtx-checkbox>
+                                <div *ngIf="selectedItems[itemType].length">
+                                    {{ 'editor.item_count_header_selected' | i18n: { selected: selectedItems[itemType].length, count: syncableItems[itemType].length, _items: itemType.slice(0, -1) } }}
+                                </div>
+                                <div *ngIf="!selectedItems[itemType].length">
+                                    {{ 'editor.item_count_header_simple' | i18n: { count: syncableItems[itemType].length, _items: itemType.slice(0, -1) } }}
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="affected-objects-row" *ngFor="let item of syncableItems[itemType]">
+                        <div class="row">
+                            <div class="column">
+                                <gtx-checkbox
+                                    class="left"
+                                    [checked]="isSelected(itemType, item.id)"
+                                    (change)="$event ? selectItem(itemType, item.id) : deselectItem(itemType, item.id)">
+                                </gtx-checkbox>
+                                <div class="item-name">{{ item.name }}
+                                    <span class="localization-label localized info-text" *ngIf="getChannelName(item.channelId)">
+                                        {{ 'modal.in' | i18n }} {{ getChannelName(item.channelId) }}
+                                    </span>
+                                    <span class="localization-label localized info-text" *ngIf="!getChannelName(item.channelId)">
+                                        {{ 'modal.in' | i18n }} {{ 'modal.channel_id' | i18n }}: {{ item.channelId }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row dependency-row" *ngIf="syncableItems.dependencies[itemType.slice(0, -1)] && syncableItems.dependencies[itemType.slice(0, -1)][item.id]">
+                            <div class="column">
+                                <div class="dep-text">{{ 'modal.dependencies' | i18n }}:
+                                    <span class="info-text">
+                                        {{ syncableItems.dependencies[itemType.slice(0, -1)][item.id] | dependenciesCount }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="cancelFn()">
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="default" (click)="confirmSettings()">
+        {{ 'modal.push_to_master_button' | i18n }}
+    </gtx-button>
+</div>

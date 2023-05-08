@@ -1,0 +1,21 @@
+.filter {
+    display: flex;
+    align-items: flex-start;
+
+    .languages {
+        display: flex;
+        flex-wrap: wrap;
+        margin-left: 25px;
+        margin-top: -10px;
+
+        a {
+            color: #b5b5b5;
+            cursor: pointer;
+            margin: 10px;
+        }
+    }
+
+    .languages > a.active {
+        color: #ffb84f;
+    }
+}

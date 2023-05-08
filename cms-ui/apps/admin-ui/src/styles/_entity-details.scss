@@ -1,0 +1,145 @@
+@import "variables";
+
+.gtx-entity-detail {
+    position: relative;
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    & > gtx-tabs {
+        height: 100%;
+
+        .tab-content {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 28px);
+            flex-wrap: nowrap;
+            flex-direction: column;
+        }
+    }
+}
+
+.gtx-entity-details-tab-content-header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+// .gtx-entity-details-tab-content-header-title {
+//     font-size: $gtx-font-size-lead;
+// }
+
+.gtx-entity-details-tab-content-body {
+    display: block;
+    height: 100%;
+    width: 100%;
+    flex: 1 1 auto;
+    overflow: auto;
+    // padding-right: 0.5rem;
+}
+
+.detail-tab-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
+    width: 100%;
+
+    > * {
+        flex: 0 1 auto;
+        width: 100%;
+        min-height: 1px;
+    }
+
+    .properties {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.gtx-validation-hints {
+    color: $gtx-color-alert;
+    margin-top: -1rem;
+}
+
+.gtx-entity-grid-headerbar {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.gtx-entity-grid-selected-info {
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 400;
+    height: 19px;
+    line-height: normal;
+    text-size-adjust: 100%;
+    white-space: normal;
+    color: $gtx-color-dark-gray;
+}
+
+.gtx-dx-toolbar {
+
+    .dx-button, .dx-menu {
+        box-shadow: none;
+        border: none;
+        background-color: transparent;
+        padding: 0.2rem 0;
+
+        &:hover {
+            .material-icons, .dx-icon {
+                color: $gtx-color-very-dark-gray;
+            }
+        }
+
+        .dx-button-content {
+            padding: 0.5rem 0 0.5rem 0.25rem;
+        }
+
+        .dx-menu-item-wrapper > .dx-menu-item.dx-state-hover, .dx-menu-item-expaned.dx-state-hover {
+            background-color: inherit;
+        }
+
+        .dx-menu-item-content {
+            padding: 0.5rem 0 0.5rem 0.75rem;
+            height: 2rem;
+        }
+
+        .material-icons, .dx-icon {
+            color: $gtx-color-dark-gray;
+            transition: color 0.3s ease-in-out;
+        }
+    }
+}
+
+.gtx-btn-password {
+    margin-top: 1.23rem;
+    @media screen and (max-width: $small-screen) {
+        margin-top: 0;
+        margin-bottom: 2rem;
+    }
+}
+
+.gtx-entity-grid-cell-icon {
+    font-size: 1.2em;
+}
+
+.gtx-entity-grid-cell-icon-true {
+    color: $gtx-color-success;
+}
+
+.gtx-entity-grid-cell-icon-false {
+    color: $gtx-color-alert;
+}
+
+.gtx-entity-grid-cell-text-long {
+    white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+    white-space: -webkit-pre-wrap;          /* Chrome & Safari */
+    white-space: -pre-wrap;                 /* Opera 4-6 */
+    white-space: -o-pre-wrap;               /* Opera 7 */
+    white-space: pre-wrap;                  /* CSS3 */
+    word-wrap: break-word;                  /* Internet Explorer 5.5+ */
+    white-space: normal;
+}

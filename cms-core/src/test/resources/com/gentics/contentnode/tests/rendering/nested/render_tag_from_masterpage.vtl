@@ -1,0 +1,8 @@
+Tag ID: $cms.tag.id
+Tag name: $cms.tag.name
+editmode: $cms.rendermode.edit
+#gtx_channel($cms.page.node.master.id)##
+    #set($masterPage = $!{cms.imps.loader.getPage($cms.page.id)})##
+    #set($tag = $masterPage.tags.get("inner_tag"))##
+#end##
+[#gtx_render($tag)]##

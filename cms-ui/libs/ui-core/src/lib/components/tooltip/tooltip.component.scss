@@ -1,0 +1,9 @@
+@import '../../../styles/base-import';
+
+:host {
+    display: block;
+}
+
+.tooltip-trigger {
+    display: inline-block;
+}

@@ -1,0 +1,39 @@
+{
+  "keyword" : "third",
+  "icon" : "img.gif",
+  "name" : {
+    "de" : "Tagtyp",
+    "en" : "Construct"
+  },
+  "description" : {
+    "de" : "Ein neuer Tagtyp",
+    "en" : "A new construct"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "newEditor" : true,
+  "parts" : [ {
+    "name" : {
+      "de" : "Text Teil",
+      "en" : "Text part"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  } ],
+  "category" : {
+    "name" : {
+      "de" : "Kategorie",
+      "en" : "Category"
+    },
+    "sortOrder" : 0
+  }
+}

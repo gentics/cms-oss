@@ -1,0 +1,13 @@
+<div class="button-event-wrapper" (click)="preventDisabledClick($event)">
+    <button
+        class="btn"
+        [ngClass]="[size || '', type || '']"
+        [class.btn-flat]="!!flat || !!icon"
+        [class.btn-icon]="!!icon"
+        [type]="buttonType"
+        [disabled]="disabled"
+        (click)="preventDisabledClick($event)"
+    >
+        <ng-content></ng-content>
+    </button>
+</div>

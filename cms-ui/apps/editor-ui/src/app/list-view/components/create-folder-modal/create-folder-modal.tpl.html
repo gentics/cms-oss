@@ -1,0 +1,21 @@
+<gtx-progress-bar [active]="creating$ | async"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.create_new_folder_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <folder-properties-form
+        mode="create"
+        [properties]="folderProperties"
+        [disabled]="creating$ | async"
+        (submit)="form.valid && saveChanges()"
+    ></folder-properties-form>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="creating$ | async">
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="primary" (click)="saveChanges()" [disabled]="(creating$ | async) || !form?.valid">
+        {{ 'common.okay_button' | i18n }}
+    </gtx-button>
+</div>

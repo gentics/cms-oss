@@ -1,0 +1,32 @@
+{
+  "globalId" : "ABCD.4a743f43-d98b-11e6-8b5d-ea5d8efab9e8",
+  "keyword" : "testconstruct",
+  "icon" : "text.gif",
+  "name" : {
+    "de" : "Test Tagtyp",
+    "en" : "Test Tagtype"
+  },
+  "description" : {
+    "de" : "Das ist der Test Tagtyp",
+    "en" : "This is the Test Tagtype"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : true,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "ABCD.6b5a5aa5-d98b-11e6-8b5d-ea5d8efab9e8",
+    "name" : {
+      "de" : "HTML Inhalt",
+      "en" : "HTML Content"
+    },
+    "keyword" : "html",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : true,
+    "regexId" : 1005
+  } ]
+}

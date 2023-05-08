@@ -1,0 +1,21 @@
+@import "variables";
+
+.status-label {
+    cursor: default;
+    display: inline-flex;
+    text-transform: uppercase;
+    font-size: 10px;
+    line-height: 13px;
+    padding: 0 3px;
+    margin: 0 5px;
+    border-radius: 3px;
+    border: 1px solid transparentize($gtx-color-alert, 0.8);
+    color: $gtx-color-alert;
+    opacity: 0.9;
+    vertical-align: middle;
+
+    &.online {
+        border-color: transparentize($gtx-color-success, 0.8);
+        color: $gtx-color-success;
+    }
+}

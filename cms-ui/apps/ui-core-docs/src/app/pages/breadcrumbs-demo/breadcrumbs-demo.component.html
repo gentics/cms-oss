@@ -1,0 +1,149 @@
+<h1>Breadcrumbs</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Simple breadcrumbs navigation">
+    <div class="demo-result">
+        <p>
+            An example breadcrumbs navigation
+        </p>
+        <gtx-breadcrumbs [links]='[
+            { href: "#", text: "Gentics UI Core" },
+            { href: "#", text: "Components" },
+            { href: "#/breadcrumbs", text: "Breadcrumbs" }
+        ]'></gtx-breadcrumbs>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-breadcrumbs [links]=&#39;[
+                { href: "#", text: "Gentics UI Core" },
+                { href: "#", text: "Components" },
+                { href: "#/breadcrumbs", text: "Breadcrumbs" }
+            ]&#39;></gtx-breadcrumbs>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Disabled breadcrumbs bar">
+    <div class="demo-result">
+        <p>
+            To disable a breadcrumb bar, add the <code>active</code> attribute.
+            Setting a value like <code>active="active"</code> is optional.
+        </p>
+        <gtx-breadcrumbs [collapsedColor]="collapsedDisabledColor" [links]='[
+            { href: "#", text: "Gentics UI Core" },
+            { href: "#", text: "Components" },
+            { href: "#/breadcrumbs", text: "Breadcrumbs" }
+        ]' disabled></gtx-breadcrumbs>
+        <p>
+            The <code>active</code> attribute can also be bound to a boolean property.
+        </p>
+        <div class="row expanded small-collapse">
+            <div class="columns small-12 large-9">
+                <gtx-breadcrumbs
+                    [collapsedColor]="collapsedDisabledColor"
+                    [links]='[
+                        { text: "Demo" },
+                        { text: "Hardware" },
+                        { text: "Components" },
+                        { text: "Monitors" },
+                        { text: "24 inch and up" }
+                    ]'
+                    [disabled]="isDisabled">
+                </gtx-breadcrumbs>
+            </div>
+            <div class="columns small-12 large-2 large-push-1">
+                <gtx-checkbox [(ngModel)]="isDisabled" label="Disabled"></gtx-checkbox>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-breadcrumbs [links]=&#39;[
+                { href: "#", text: "Gentics UI Core" },
+                { href: "#", text: "Components" },
+                { href: "#/breadcrumbs", text: "Breadcrumbs" }
+            ]&#39; disabled></gtx-breadcrumbs>
+
+            <gtx-breadcrumbs [links]=&#39;[
+                { text: "Demo" },
+                { text: "Hardware" },
+                { text: "Components" },
+                { text: "Monitors" },
+                { text: "24 inch and up" }
+            ]&#39; [disabled]="isDisabled"></gtx-breadcrumbs>
+            <gtx-checkbox [(ngModel)]="isDisabled" label="Disabled"></gtx-checkbox>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Router links as breadcrumbs">
+    <div class="demo-result">
+        <p>
+            To use the <a target="_blank" href="https://angular.io/docs/ts/latest/guide/router.html">Angular Router</a>
+            for breadcrumb navigation links, bind values to the <code>routerLinks</code> property.
+        </p>
+        <gtx-breadcrumbs [routerLinks]='[
+            { route: ["/"], text: "Index" },
+            { route: ["./"], text: "Breadcrumbs navigation" }
+        ]'></gtx-breadcrumbs>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-breadcrumbs [routerLinks]=&#39;[
+                { route: ["/"], text: "Index" },
+                { route: ["./"], text: "Breadcrumbs navigation" }
+            ]&#39;></gtx-breadcrumbs>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Tooltip Usage">
+    <div class="demo-result">
+        <gtx-breadcrumbs [routerLinks]='[
+            { route: ["/"], text: "Index", tooltip: "Navigate to Index" },
+            { route: ["./"], text: "Breadcrumbs navigation", tooltip: "Navigate to Breadcrumbs navigation" }
+        ]'></gtx-breadcrumbs>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+            <gtx-breadcrumbs [routerLinks]=&#39;[
+                { route: ["/"], text: "Index", tooltip: "Navigate to Index" },
+                { route: ["./"], text: "Breadcrumbs navigation", tooltip: "Navigate to Breadcrumbs navigation" }
+            ]&#39;></gtx-breadcrumbs>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Multiline Breadcrumbs">
+        <div class="demo-result">
+            <div class="row expanded small-collapse">
+                    <div class="columns small-8 large-8">
+                        <gtx-breadcrumbs [collapsedColor]="collapsedEnabledColor" [multiline]="multiline" [multilineExpanded]="multilineExpanded" [routerLinks]='[
+                            { text: "Index" },
+                            { text: "Demo" },
+                            { text: "Hardware" },
+                            { text: "Folder with a long name" },
+                            { text: "Software" }
+                        ]'></gtx-breadcrumbs>
+                    </div>
+                    <div class="columns small-2 small-push-2 large-2 large-push-1">
+                        <gtx-checkbox [(ngModel)]="multiline" label="multiline"></gtx-checkbox>
+                    </div>
+            </div>
+        </div>
+        <div class="demo-code">
+            <gtx-highlighted-code language="HTML" code='
+                <gtx-breadcrumbs [collapsedColor]="collapsedEnabledColor" [multiline]="multiline" [multilineExpanded]="multilineExpanded" [routerLinks]=&#39;[
+                    { text: "Index" },
+                    { text: "Demo" },
+                    { text: "Hardware" },
+                    { text: "Folder with a long name" },
+                    { text: "Software" }
+                ]&#39;></gtx-breadcrumbs>
+                <gtx-checkbox [(ngModel)]="multiline" label="multiline"></gtx-checkbox>
+            '></gtx-highlighted-code>
+        </div>
+    </gtx-demo-block>

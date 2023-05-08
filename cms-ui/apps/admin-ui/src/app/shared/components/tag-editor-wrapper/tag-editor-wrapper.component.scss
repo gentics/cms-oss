@@ -1,0 +1,9 @@
+.tag-editor-iframe {
+    display: none;
+    height: 100%;
+    width: 100%;
+
+    &.visible {
+        display: block;
+    }
+}

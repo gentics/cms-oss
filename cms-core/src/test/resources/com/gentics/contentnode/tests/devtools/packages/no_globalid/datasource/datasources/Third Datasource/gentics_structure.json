@@ -1,0 +1,9 @@
+{
+  "type" : "statical",
+  "name" : "Third Datasource",
+  "values" : [ {
+    "key" : "Entry Key",
+    "value" : "Entry Value",
+    "dsId" : 0
+  } ]
+}

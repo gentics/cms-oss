@@ -1,0 +1,114 @@
+{
+    "cms_status_title": {
+        "en": "CMS Status",
+        "de": "CMS-Status"
+    },
+    "cms_status_version_information": {
+        "en": "Version information:",
+        "de": "Versionsinformation:"
+    },
+    "cms_status_updates_available": {
+        "en": "Updates available:",
+        "de": "Updates verfügbar:"
+    },
+    "cms_status_latest_hotfix": {
+        "en": "Latest Hotfix:",
+        "de": "Neueste Hotfix:"
+    },
+    "cms_status_latest_release": {
+        "en": "Latest Feature:",
+        "de": "Neueste Feature:"
+    },
+    "cms_status_documentation_title": {
+        "en": "Documentation:",
+        "de": "Dokumentation:"
+    },
+    "cms_status_version": {
+        "en": "Version:",
+        "de": "Version:"
+    },
+    "cms_status_latest_version": {
+        "en": "Latest Version",
+        "de": "Neueste Version"
+    },
+    "select_all_nodes": {
+        "en": "Select all Nodes",
+        "de": "Alle Nodes auswählen"
+    },
+    "task_publishing_process_title": {
+        "en": "Publish Status",
+        "de": "Publish Status"
+    },
+    "task_queue_title": {
+        "en": "Task Queue",
+        "de": "Task Queue"
+    },
+    "task_queue_waiting_title": {
+        "en": "Waiting tasks",
+        "de": "Wartende Aufgaben"
+    },
+    "task_queue_failed_title": {
+        "en": "Failed tasks",
+        "de": "Fehlgeschlagenen Aufgaben"
+    },
+    "task_queue_waiting_none": {
+        "en": "None",
+        "de": "Keine"
+    },
+    "task_queue_failed_none": {
+        "en": "None",
+        "de": "Keine"
+    },
+    "total_amount": {
+        "en": "Total amount",
+        "de": "Gesamtanzahl"
+    },
+    "publishing_process_title": {
+        "en": "Publishing process",
+        "de": "Veröffentlichungsprozess"
+    },
+    "publishing_process_publish_status": {
+      "en": "Publish status:",
+      "de": "Status der Publizierung:"
+    },
+    "publishing_process_to_be_published": {
+        "en": "to be published:",
+        "de": "veröffentlicht werden:"
+    },
+    "publishing_process_published": {
+        "en": "published {{ count }} of {{ total }}",
+        "de": "veröffentlicht {{ count }} von {{ total }}"
+    },
+    "publishing_process_estimated_publish_duration": {
+        "en": "Estimated publish duration:",
+        "de": "Geschätzte Publizierungsdauer:"
+    },
+    "publishing_process_current_status": {
+        "en": "Current status of scheduler tasks:",
+        "de": "Aktueller Status der Scheduler Tasks:"
+    },
+    "publishing_process_last_status": {
+        "en": "Last status of scheduler tasks:",
+        "de": "Letzter Status der Scheduler Tasks:"
+    },
+    "publishing_process_status_failed": {
+        "en": "Failed",
+        "de": "Fehlgeschlagen"
+    },
+    "publishing_process_status_healthy": {
+        "en": "OK",
+        "de": "OK"
+    },
+    "publishing_process_see_logs": {
+        "en": "See logs",
+        "de": "Logs ansehen"
+    },
+    "widget_publishing_process_per_node_title": {
+        "en": "Publishing processess per Node",
+        "de": "Veröffentlichungsprozesse pro Node"
+    },
+    "widget_publishing_process_total_title": {
+        "en": "Content Stats",
+        "de": "Inhaltsübersicht"
+    }
+}

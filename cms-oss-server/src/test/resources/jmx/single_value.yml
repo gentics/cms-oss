@@ -1,0 +1,14 @@
+config:
+  accesscontrol:
+    default:
+      secured: true
+      allowedfrom: "127.0.0.1, ::1"
+global:
+  config:
+    jmx:
+      java.lang:type=Memory: "HeapMemoryUsage"
+      java.lang:type=Threading: "*"
+      java.lang:type=OperatingSystem: "*"
+      com.gentics.contentnode.mbeans:type=Publish,name=PublisherInfo: "*"
+      com.gentics.contentnode.mbeans:type=System,name=SessionInfo: "*"
+      com.gentics.contentnode.mbeans:type=System,name=TrxInfo: "*"

@@ -1,0 +1,46 @@
+<h3 class="title">{{ 'editor.favourites_title' | i18n }}</h3>
+
+<div class="empty-placeholder" *ngIf="(favourites$ | async)?.length === 0">
+    {{ 'editor.no_favourites_label' | i18n }}
+</div>
+
+<gtx-sortable-list (dragEnd)="reorder($event)">
+    <gtx-sortable-item *ngFor="let fav of (favourites$ | async)">
+        <div class="item-icon" [ngClass]="fav.type || ''">
+            <i class="material-icons" [attr.translate]="'no'">{{ iconForItemType(fav.type) }}</i>
+        </div>
+
+        <div
+            class="item-primary"
+            [title]="fav.breadcrumbs.join(' › ') + ': ' + fav.name"
+            (click)="favouriteClicked(fav)"
+        >
+            <a
+                *ngIf="fav.type === 'folder'; else textOnly"
+                [href]="'/editor/' + fav.nodeId + '/folder/' + fav.id"
+                (click)="$event.preventDefault()"
+            >{{ fav.name }}</a>
+
+            <ng-template #textOnly>
+                <a>{{ fav.name }}</a>
+            </ng-template>
+
+            <ul class="breadcrumbs">
+                <li *ngFor="let breadcrumb of fav.breadcrumbs">{{ breadcrumb }}</li>
+            </ul>
+        </div>
+
+        <div class="remove-button">
+            <gtx-button
+                icon size="small"
+                type="secondary"
+                [title]="'editor.favourites_remove_label' | i18n"
+                (click)="remove(fav)"
+            >
+                <icon>remove_circle_outline</icon>
+            </gtx-button>
+        </div>
+
+        <gtx-drag-handle [title]="'editor.favourites_reorder_label' | i18n"></gtx-drag-handle>
+    </gtx-sortable-item>
+</gtx-sortable-list>

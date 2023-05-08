@@ -1,0 +1,156 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <div class="input-container small-12 columns" [class.medium-6]="supportedLanguages">
+
+        <!-- keyword -->
+        <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="('construct.keyword' | i18n) + ' *'"
+            [required]="true"
+            formControlName="keyword"
+        ></gtx-input>
+
+        <gtx-select
+            *ngIf="form.get('nodeIds').enabled"
+            [label]="('construct.nodes' | i18n) + ' *'"
+            [required]="true"
+            [multiple]="true"
+            formControlName="nodeIds"
+        >
+            <gtx-option
+                *ngFor="let node of nodes$ | async"
+                [value]="node.id"
+            >{{ node.name }}</gtx-option>
+        </gtx-select>
+
+        <!-- icon -->
+        <gtx-select
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            [label]="('construct.icon' | i18n) + ' *'"
+            [required]="true"
+            formControlName="icon"
+        >
+            <gtx-option *ngFor="let iconEntry of CONSTRUCT_ICONS | entries" [value]="iconEntry.value">
+                {{ iconEntry.value }}
+            </gtx-option>
+        </gtx-select>
+
+        <!-- externalEditorUrl -->
+        <gtx-input
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            type="text"
+            maxlength="255"
+            [label]="'construct.externalEditorUrl' | i18n"
+            formControlName="externalEditorUrl"
+        ></gtx-input>
+
+        <!-- category -->
+        <gtx-select
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            [label]="'construct.category' | i18n"
+            formControlName="categoryId"
+            [clearable]="true"
+        >
+            <gtx-option
+                *ngFor="let item of constructCategories$ | async"
+                [value]="item.id"
+            >{{ item.nameI18n?.[activeTabI18nLanguage?.code] ?? item.name }}</gtx-option>
+        </gtx-select>
+
+        <!-- categorySortorder -->
+        <gtx-input
+            *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('categorySortorder').enabled"
+            type="number"
+            [label]="'construct.categorySortorder' | i18n"
+            formControlName="categorySortorder"
+        ></gtx-input>
+
+        <!-- newEditor -->
+        <gtx-checkbox
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            formControlName="newEditor"
+            [label]="'construct.newEditor' | i18n"
+        ></gtx-checkbox>
+
+        <!-- mayBeSubtag -->
+        <gtx-checkbox
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            formControlName="mayBeSubtag"
+            [label]="'construct.mayBeSubtag' | i18n"
+        ></gtx-checkbox>
+
+        <!-- mayContainSubtags -->
+        <gtx-checkbox
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            formControlName="mayContainSubtags"
+            [label]="'construct.mayContainSubtags' | i18n"
+        ></gtx-checkbox>
+
+        <!-- autoEnable -->
+        <gtx-checkbox
+            *ngIf="mode !== ConstructPropertiesMode.COPY"
+            formControlName="autoEnable"
+            [label]="'construct.autoEnable' | i18n"
+        ></gtx-checkbox>
+
+    </div>
+
+    <div *ngIf="supportedLanguages" class="input-container small-12 medium-6 columns">
+
+        <h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
+
+        <div class="properties-editor-i18n">
+            <gtx-grouped-tabs
+                class="properties-tabs"
+                pure
+                wrap
+                statusIcons
+                [activeId]="activeTabI18nLanguage?.id"
+            >
+                <gtx-tab-pane
+                    *ngFor="let language of supportedLanguages"
+                    [id]="language?.id"
+                    (select)="setActiveI18nTab($event)"
+                    [readonly]="disabled"
+                    [inactive]="!activeI18nTabValueExists(language?.code)"
+                >
+                    <ng-template gtx-tab-label>
+                        <div
+                            class="language-pane-label"
+                            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+                        >{{ language?.name }}</div>
+                    </ng-template>
+                </gtx-tab-pane>
+            </gtx-grouped-tabs>
+
+            <div
+                *ngIf="activeTabI18nLanguage?.code as activeLanguage"
+                class="tab-content"
+            >
+                <h3>{{ activeTabI18nLanguage?.name }}</h3>
+
+                <gtx-i18n-input
+                    *ngIf="form.get('nameI18n')"
+                    [label]="('common.name' | i18n) + ' *'"
+                    formControlName="nameI18n"
+                    [requiredInCurrentLanguage]="true"
+                    [language]="activeLanguage"
+                    [availableLanguages]="languages"
+                ></gtx-i18n-input>
+
+                <gtx-i18n-input
+                    *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('descriptionI18n')"
+                    [label]="'common.description' | i18n"
+                    formControlName="descriptionI18n"
+                    [language]="activeLanguage"
+                    [availableLanguages]="languages"
+                ></gtx-i18n-input>
+            </div>
+        </div>
+    </div>
+
+</form>

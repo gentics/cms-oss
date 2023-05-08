@@ -1,0 +1,59 @@
+@import 'variables';
+
+:host, :host-context(gtx-top-bar > .content) {
+    display: flex;
+    flex-direction: row;
+    height: 4em;
+    max-width: 100%;
+}
+
+:host {
+    @media only screen and (max-width: $medium-screen) {
+        padding-left: 2%;
+        padding-right: 20px;
+    }
+
+    @media only screen and (max-width: $small-screen) {
+        padding-left: 4%;
+        padding-right: 30px;
+    }
+}
+
+gtx-breadcrumbs {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+gtx-breadcrumbs ::ng-deep nav {
+    background: transparent;
+    box-shadow: none;
+    padding-left: 0;
+}
+
+gtx-button {
+    flex-grow: 0;
+    flex-shrink: 0;
+    line-height: 4em;
+}
+
+node-selector {
+    @media only screen and (min-width: $large-screen + 1px) {
+        margin-right: 5px;
+    }
+
+    @media only screen and (max-width: $small-screen) {
+        margin-right: -10px;
+    }
+}
+
+gtx-dropdown-item.tools {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+    color: $gtx-color-dark-gray;
+    display: flex;
+    align-items: center;
+
+    icon {
+        color: $gtx-color-dark-gray;
+        margin-right: 5px;
+    }
+}

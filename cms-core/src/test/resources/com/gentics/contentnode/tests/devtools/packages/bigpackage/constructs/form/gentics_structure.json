@@ -1,0 +1,171 @@
+{
+  "globalId" : "A547.14558",
+  "keyword" : "form",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : " [Formular] ohne Spamschutz",
+    "en" : " [Form] without spamprotection"
+  },
+  "description" : {
+    "de" : "Basistagtype für den Formulargenerator",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : true,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14185",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14272",
+    "name" : {
+      "de" : "Text des Buttons zum Absenden eines Formulars",
+      "en" : "Text des Buttons zum Absenden eines Formulars"
+    },
+    "keyword" : "submit",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14320",
+    "name" : {
+      "de" : "Text des Buttons zum Abbrechen im Formular",
+      "en" : "Text des Buttons zum Abbrechen im Formular"
+    },
+    "keyword" : "reset",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14362",
+    "name" : {
+      "de" : "HTML-Code welcher bei einem Fehler vor den Text gesetzt werden soll<br /> z:B.:  &lt;font style=\"color.red\"&gt;",
+      "en" : "HTML-Code welcher bei einem Fehler vor den Text gesetzt werden soll<br /> z:B.:  &lt;font style=\"color.red\"&gt;"
+    },
+    "keyword" : "errPrefix",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14389",
+    "name" : {
+      "de" : "HTML-Code welcher bei einem Fehler hinter den Text gesetzt werden soll<br />z.B.: &lt;font&gt;",
+      "en" : "HTML-Code welcher bei einem Fehler hinter den Text gesetzt werden soll<br />z.B.: &lt;font&gt;"
+    },
+    "keyword" : "errPostfix",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14411",
+    "name" : {
+      "de" : "Fehlermeldung, welche beim Falschausfüllen dem Benutzer mitgeteilt wird",
+      "en" : "Fehlermeldung, welche beim Falschausfüllen dem Benutzer mitgeteilt wird"
+    },
+    "keyword" : "errMsg",
+    "editable" : true,
+    "typeId" : 1,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14430",
+    "name" : {
+      "de" : "Dankestext für das erfolgreiche Ausfüllen des Formulars",
+      "en" : "Dankestext für das erfolgreiche Ausfüllen des Formulars"
+    },
+    "keyword" : "submitted",
+    "editable" : true,
+    "typeId" : 3,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14443",
+    "name" : {
+      "de" : "E-Mail-Adresse des Empfängers an dem erfolgreich ausgefüllte Formularinhalte gesendet werden",
+      "en" : "E-Mail-Adresse des Empfängers an dem erfolgreich ausgefüllte Formularinhalte gesendet werden"
+    },
+    "keyword" : "recipient",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14452",
+    "name" : {
+      "de" : "E-Mail-Betreff der Mail, die nach dem erfolgreichen Ausfüllen eines Formulars versendet wird",
+      "en" : "E-Mail-Betreff der Mail, die nach dem erfolgreichen Ausfüllen eines Formulars versendet wird"
+    },
+    "keyword" : "subject",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14457",
+    "name" : {
+      "de" : "E-Mail-Adresse des Absenders der Mail, die nach dem erfolgreichen Ausfüllen des Formulars versendet wird",
+      "en" : "E-Mail-Adresse des Absenders der Mail, die nach dem erfolgreichen Ausfüllen des Formulars versendet wird"
+    },
+    "keyword" : "from",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14472",
+    "name" : {
+      "de" : "Hier können nun alle benötigten Formularelemente platziert werden",
+      "en" : "Hier können nun alle benötigten Formularelemente platziert werden"
+    },
+    "keyword" : "container",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 11,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

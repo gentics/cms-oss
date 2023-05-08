@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<!--
+ Buildfile for generation of jaxb-files
+-->
+
+<project basedir="." default="compile" name="Generate JAXB Classes">
+	<!-- set default properties -->
+	<property name="build.dir" value="out" />
+
+	<taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask" />
+
+
+	<target name="twostepxsd">
+		<property name="mainfile" value="${file}.xsd" />
+		<property name="tempfile" value="${build.dir}/${file}Prime.xsd" />
+		<echo message="${file}" />
+		<echo message="transforming ${mainfile} into ${tempfile}" />
+		<xslt in="${mainfile}" out="${tempfile}" style="stripImplClass.xsl" />
+		<echo message="generating classes step 1" />
+		<xjc schema="${tempfile}" target="${build.dir}" package="${package}" extension="true" source="1.0" />
+		<echo message="generating classes step 2" />
+		<xjc schema="${mainfile}" target="${build.dir}" package="${package}" extension="true" source="1.0" />
+	</target>
+
+	<!-- compile Java source files -->
+	<target name="compile">
+
+		<delete dir="${build.dir}"/>
+		<mkdir dir="${build.dir}"/>
+		<!-- generate the Java content classes from the schema -->
+		<echo message="Compiling the schema..." />
+		<!-- JAXB 1.0 FCS WORKAROUND: 
+                         beta generated an implementation class even
+                         if class customization provided an implClass,
+                         FCS 1.0 does not. 
+
+                         Strip any implClass customizations out and 
+                         compile the schema.  In this step, the 
+                         interface and implementation classes will
+                         be generated.
+ 
+                         In this case, the implClass customization is
+                         written in-line in the schema, so we process
+                         the xsd file to filter it out.
+         -->
+		<antcall target="twostepxsd">
+			<param name="file" value="objecttypes" />
+			<param name="package" value="com.gentics.lib.datasource.object.jaxb" />
+		</antcall>
+		<antcall target="twostepxsd">
+			<param name="file" value="xnl_result" />
+			<param name="package" value="com.gentics.lib.xnl.result.jaxb" />
+		</antcall>
+		<antcall target="twostepxsd">
+			<param name="file" value="date-format" />
+			<param name="package" value="com.gentics.lib.formatter.dateformatter" />
+		</antcall>
+	</target>
+</project>

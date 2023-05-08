@@ -1,0 +1,25 @@
+.gtx-perm-category-block {
+    padding: 10px 0;
+
+    h6 {
+        font-weight: bold;
+        text-align: start;
+        text-decoration: underline;
+    }
+}
+
+.modal-content {
+    .flex-container {
+        justify-content: unset;
+        margin-bottom: 0;
+
+        gtx-checkbox:not(:first-child) {
+            margin-left: 20px;
+        }
+    }
+
+    .row {
+        justify-content: flex-start;
+    }
+}
+

@@ -1,0 +1,45 @@
+{
+  "globalId" : "A547.14589",
+  "keyword" : "pndsoverview",
+  "icon" : "ds.gif",
+  "name" : {
+    "de" : "Download mehrere Dateien (Übersicht)",
+    "en" : "List of downloads"
+  },
+  "description" : {
+    "de" : "",
+    "en" : "List files as downloadlist"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14216",
+    "name" : {
+      "de" : "Übersicht",
+      "en" : "File Overview"
+    },
+    "keyword" : "ds",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14290",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

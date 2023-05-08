@@ -1,0 +1,21 @@
+{
+  "globalId" : "A547.69486",
+  "type" : "folder",
+  "keyword" : "object.navsortorder",
+  "name" : {
+    "de" : "Sortierung in der Navigation",
+    "en" : "Sorting in the Navigation"
+  },
+  "constructId" : "A547.69478",
+  "required" : false,
+  "inheritable" : true,
+  "syncChannelset" : false,
+  "category" : {
+    "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

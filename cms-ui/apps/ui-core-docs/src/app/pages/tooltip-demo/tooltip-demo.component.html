@@ -1,0 +1,90 @@
+<h1>Tooltip</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Binding & Attributes">
+    <div class="demo-result">
+        <gtx-tooltip type="primary" position="top">
+            <gtx-button>
+                Button with a simple text tooltip!
+            </gtx-button>
+            <span gtx-tooltip-content>
+                Hello World!
+            </span>
+        </gtx-tooltip>
+    </div>
+
+    <div class="demo-code">
+        <gtx-highlighted-code lang="HTML" code='
+            <gtx-tooltip type="primary" position="top">
+                <gtx-button>
+                    Button with a simple text tooltip!
+                </gtx-button>
+                <span gtx-tooltip-content>
+                    Hello World!
+                </span>
+            </gtx-tooltip>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+The position and the color-style can simply be changed with the <code>position</code>, <code>align</code>, and <code>type</code> inputs:<br/><br/>
+
+<div class="row">
+    <div class="columns medium-4">
+        <b>Color Theme</b>:
+        <gtx-radio-button [(ngModel)]="type" value="light" label="light"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="dark" label="dark"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="primary" label="primary"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="secondary" label="secondary"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="success" label="success"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="warning" label="warning"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="type" value="alert" label="alert"></gtx-radio-button>
+    </div>
+
+    <div class="columns medium-4">
+        <b>Position</b>:
+        <gtx-radio-button [(ngModel)]="position" value="top" label="top"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="position" value="right" label="right"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="position" value="bottom" label="bottom"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="position" value="left" label="left"></gtx-radio-button>
+    </div>
+
+    <div class="columns medium-4">
+        <b>Alignment</b>:
+        <gtx-radio-button [(ngModel)]="align" value="top" label="top"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="align" value="right" label="right"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="align" value="bottom" label="bottom"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="align" value="left" label="left"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="align" value="center" label="center"></gtx-radio-button>
+        <gtx-radio-button [(ngModel)]="align" value="none" label="none"></gtx-radio-button>
+    </div>
+</div>
+
+<div style="margin-top: 1.5rem">
+    Additionally, the delay can be changed to make the tooltip appear earlier or later.
+    It's controled by the <code>delay</code> input and may be set to any positive millisecond count.
+
+    <div class="row" style="margin-top: 1rem">
+        <div class="columns medium-12">
+            <gtx-range [(ngModel)]="delay" label="Delay in milli-seconds" step="100" min="0" max="5000"></gtx-range>
+        </div>
+    </div>
+</div>
+
+<hr/>
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br/>
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.<br/>
+Duis aute irure dolor in reprehenderit <gtx-tooltip [type]="type" [position]="position" [align]="align" [delay]="delay" style="display: inline-block">
+    <gtx-button>
+        Button with a simple text tooltip!
+    </gtx-button>
+    <span gtx-tooltip-content>
+        Hello World!
+    </span>
+</gtx-tooltip>
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur.<br/>
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.

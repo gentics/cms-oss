@@ -1,0 +1,47 @@
+@import "content-frame-variables";
+
+iframe[name="node_diff_frame"] {
+    position: absolute;
+    top: 0;
+    height: 50%;
+    width: 100%;
+    border-bottom: none !important;
+    box-sizing: border-box;
+}
+
+iframe[name="node_edit_frame"] {
+    position: absolute;
+    top: 50%;
+    height: 50%;
+    width: 100%;
+    box-sizing: border-box;
+    border-top: 1px solid $gtx-color-mid-gray;
+}
+
+.gcms-hide-syncscroll {
+    color: transparent;
+    input, img {
+        display: none;
+    }
+}
+
+.gcms-language-indicator {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 6px;
+    color: $gcms-color-highlight;
+    text-transform: uppercase;
+    font-family: "Roboto", sans-serif;
+    font-size: $gtx-font-size-regular;
+    background-color: rgba(255, 255, 255, 1);
+    border: 1px solid $gtx-color-very-light-gray;
+    border-top: none;
+    border-right: none;
+    opacity: 0.4;
+    transition: opacity 0.1s;
+    -webkit-backface-visibility: hidden;
+    html:hover & {
+        opacity: 1;
+    }
+}

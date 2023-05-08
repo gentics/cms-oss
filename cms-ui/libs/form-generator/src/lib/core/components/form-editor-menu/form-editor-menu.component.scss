@@ -1,0 +1,72 @@
+@import "../../../../styles/variables";
+
+:host {
+    position: sticky;
+    top: 5vh;
+    height: 65vh;
+    z-index: 9;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    width: 14rem;
+    max-height: 42rem;
+    background-color: white;
+    box-shadow: rgba( 0, 0, 0, 0.3) 1px 1px 15px 2px;
+}
+
+.form-editor-menu-filter-container {
+    z-index: 3;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: row;
+    background-color: #fff;
+    align-items: center;
+    border-bottom: 1px #e6e6e6 solid;
+    padding: 0.2rem 0.5rem;
+    box-shadow: rgba( 0, 0, 0, 0.1) 0px 2px 5px 0px;
+}
+
+.form-editor-menu-filter {
+    background-color: transparent;
+    width: 100%;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-radius: none;
+    padding: 0.5rem;
+
+    &:focus {
+        outline: 0;
+    }
+}
+
+.form-editor-menu-filter-btn-reset {
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.form-editor-menu-element {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+
+    & + & {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+    }
+
+    &:first-child {
+        padding-top: 0.5rem;
+    }
+
+    &:last-child {
+        padding-bottom: 1rem;
+    }
+}
+
+.form-editor-menu-element-label {
+    font-size: 0.8rem;
+    color: #999;;
+}

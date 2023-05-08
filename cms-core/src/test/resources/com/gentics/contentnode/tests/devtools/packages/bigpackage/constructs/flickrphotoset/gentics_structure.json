@@ -1,0 +1,171 @@
+{
+  "globalId" : "A547.58474",
+  "keyword" : "flickrphotoset",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "Flickr Photoset",
+    "en" : "Flickr Photoset"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58266",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58308",
+    "name" : {
+      "de" : "Ihr Flickr API-Key",
+      "en" : "Your Flickr API-Key"
+    },
+    "keyword" : "apikey",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58341",
+    "name" : {
+      "de" : "Ihr Flickr Secure-Key",
+      "en" : "Your Flickr Secure-Key"
+    },
+    "keyword" : "securekey",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58363",
+    "name" : {
+      "de" : "Flickr Suchtyp",
+      "en" : "Flickr Searchtype"
+    },
+    "keyword" : "type",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58413",
+    "name" : {
+      "de" : "Suchbegriffe mit Beistrich getrennt (deprecated)",
+      "en" : "Searchterms separated by commata"
+    },
+    "keyword" : "tags",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 8,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58421",
+    "name" : {
+      "de" : "Max. Anzahl Bilder",
+      "en" : "Max. number of images"
+    },
+    "keyword" : "perpage",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 9,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58426",
+    "name" : {
+      "de" : "Bilder pro Zeile",
+      "en" : "Images per row"
+    },
+    "keyword" : "perrow",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58435",
+    "name" : {
+      "de" : "Bilderbreite (in Pixel)",
+      "en" : "Image width (in Pixel)"
+    },
+    "keyword" : "width",
+    "editable" : false,
+    "typeId" : 9,
+    "order" : 11,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58440",
+    "name" : {
+      "de" : "Template pro Bildereintrag",
+      "en" : "Template for each image displayed"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 12,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58381",
+    "name" : {
+      "de" : "Ihr Flickr Username",
+      "en" : "Longitude (for geographical limit)"
+    },
+    "keyword" : "username",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 13,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58395",
+    "name" : {
+      "de" : "Ihre Photoset ID, die angezeigt werden soll<br/>Nehmen Sie die letzte Zahl aus dem URL Ihres Photosets<br/>http://www.flickr.com/photos/12334951@N00/sets/72157608560407934/detail/",
+      "en" : "Latitude (for geographical limit)"
+    },
+    "keyword" : "photosetid",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 14,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

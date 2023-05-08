@@ -1,0 +1,20 @@
+{
+  "name" : "First CR",
+  "crType" : "cr",
+  "dbType" : "mysql",
+  "instantPublishing" : true,
+  "languageInformation" : true,
+  "permissionInformation" : true,
+  "diffDelete" : true,
+  "entries" : [ {
+    "tagname" : "file.description",
+    "mapname" : "description",
+    "object" : 10008,
+    "attributeType" : 1,
+    "targetType" : 0,
+    "multivalue" : false,
+    "optimized" : false,
+    "reserved" : true,
+    "filesystem" : false
+  } ]
+}

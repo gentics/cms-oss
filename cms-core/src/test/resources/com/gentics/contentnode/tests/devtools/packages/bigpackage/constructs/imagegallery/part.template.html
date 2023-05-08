@@ -1,0 +1,32 @@
+<div id="infiniteCarousel_$cms.tag.id" class="infiniteCarousel"> 
+      <div class="wrapper"> 
+        <ul> 
+#foreach($image in $cms.tag.parts.folder.images)
+          <li><a rel="gallery_$cms.tag.id" href="/GenticsImageStore/800/600/smart/${image.url}" title="$image.name" data-fullimage="$image.url"><img src="/GenticsImageStore/85/85/smart/${image.url}" border="0" /></a></li>
+#end
+        </ul>        
+    </div> 
+</div> 
+
+
+<script type="text/javascript">
+$(document).ready(function(){
+
+$('#infiniteCarousel_$cms.tag.id').infiniteCarousel();
+
+
+// if( $('#infiniteCarousel_$cms.tag.id').parents().filter('.content').parent().hasClass('grid_9') ) {
+//   $('.wrapper').css('width','515px');
+//   $('.forward').css('right','-210px');
+// }
+
+$("li[class!='cloned'] > a[rel='gallery_$cms.tag.id']").colorbox(
+{
+transition:"fade",title: function() {
+    var title = $(this).attr('title');
+    return title;
+}}
+);
+
+});
+</script>

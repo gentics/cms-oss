@@ -1,0 +1,16 @@
+@import 'flex-modal';
+
+@include flex-modal;
+:host {
+    width: 820px;
+}
+
+.modal-content {
+    padding-top: 1rem;
+    height: 80vh;
+}
+
+.properties::ng-deep .tag-editor {
+    display: block;
+    height: 50vh;
+}

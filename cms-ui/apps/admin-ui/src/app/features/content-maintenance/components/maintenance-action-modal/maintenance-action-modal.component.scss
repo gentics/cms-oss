@@ -1,0 +1,42 @@
+@import 'variables';
+
+.gtx-limit-to-date-range {
+    padding: 1rem;
+    box-shadow: none;
+    transition: all 0.15s ease-in-out;
+
+    &.active {
+        box-shadow: 0 1px 0 0 $gtx-color-primary;
+        box-shadow: 0 -1px 0 0 $gtx-color-primary;
+        box-shadow: -1px 0 0 0 $gtx-color-primary;
+        box-shadow: 1px 0 0 0 $gtx-color-primary;
+        box-shadow: 0 0 0 1px $gtx-color-primary;
+    }
+}
+
+.padding-wrapper {
+    padding: 1rem;
+}
+
+.modal-content {
+    min-height: 300px;
+
+    >.row {
+        width: 100%;
+    }
+}
+
+.label-select-contentrepositories,
+.label-select-types {
+    display: block;
+    margin-bottom: 0.5rem;
+
+    &+gtx-checkbox {
+        zoom: 0.8;
+    }
+}
+
+.clear-publish-cache {
+    display: block;
+    margin-bottom: 1.5rem;
+}

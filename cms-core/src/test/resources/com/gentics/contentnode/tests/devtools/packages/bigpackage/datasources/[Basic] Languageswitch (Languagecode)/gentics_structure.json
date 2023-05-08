@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.58500",
+  "type" : "statical",
+  "name" : "[Basic] Languageswitch (Languagecode)",
+  "values" : [ {
+    "globalId" : "A547.75171",
+    "key" : "German / Deutsch",
+    "value" : "de"
+  }, {
+    "globalId" : "A547.75172",
+    "key" : "English / Englisch",
+    "value" : "en"
+  } ]
+}

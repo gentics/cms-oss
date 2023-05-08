@@ -1,0 +1,25 @@
+<label *ngIf="label" [class.invalid]="required && !value">{{ label }}</label>
+
+<div class="input-wrapper" [class.disabled]="disabled" [class.required]="required" [class.invalid]="required && !value">
+    <div class="content-name">{{ displayValue | entityName:{filter: true} }}</div>
+
+    <gtx-button
+        class="suffix-button select-button"
+        icon
+        [disabled]="disabled"
+        (click)="openPickerModal()"
+    >
+        <icon>edit</icon>
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="clearable && !required"
+        class="suffix-button clear-button"
+        icon
+        type="alert"
+        [disabled]="disabled"
+        (click)="clearValue()"
+    >
+        <icon>close</icon>
+    </gtx-button>
+</div>

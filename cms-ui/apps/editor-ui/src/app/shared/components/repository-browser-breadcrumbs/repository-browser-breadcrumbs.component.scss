@@ -1,0 +1,189 @@
+@import 'variables';
+
+:host {
+    display: block;
+    max-width: 100%;
+    padding: 0 10px;
+}
+
+:host ::ng-deep gtx-dropdown-list {
+    display: inline-block;
+    vertical-align: top;
+
+    ::ng-deep .arrow-icon {
+        height: inherit !important;
+        line-height: inherit !important;
+    }
+}
+
+@media screen and (-ms-high-contrast:active), all and (-ms-high-contrast:none) {
+    :not(.multilineExpanded) node-selector {
+        top: 72px;
+    }
+}
+
+.breadcrumbs-container {
+    display: flex;
+    justify-content: space-between;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    top: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+
+    node-selector {
+        position: absolute;
+        margin-left: 1.5rem;
+    }
+
+}
+
+#repository {
+    gtx-breadcrumbs {
+        margin-left: 3.8rem;
+    }
+}
+
+@media screen and (-ms-high-contrast:active), all and (-ms-high-contrast:none) {
+    #repository.breadcrumbs-container {
+        display: block !important;
+    }
+    #repository ::ng-deep gtx-breadcrumbs .multiline > .nav-wrapper > .inner-wrapper {
+        line-height: 38px !important;
+    }
+    #repository ::ng-deep gtx-breadcrumbs .multiline > .nav-wrapper.multilineExpanded > .inner-wrapper {
+        line-height: 36px !important;
+    }
+}
+
+@supports (-ms-ime-align:auto) {
+    #repository ::ng-deep gtx-breadcrumbs div:not(.multilineExpanded).multiline a:nth-child(3).breadcrumb::after {
+        margin-left: 3.5px !important;
+    }
+}
+
+#repository ::ng-deep gtx-breadcrumbs :not(.disabled) .is-overflowing .lastPart:before {
+    background: linear-gradient(to right, #fafafa 30%, rgba(255, 255, 255, 0));
+}
+
+gtx-breadcrumbs ::ng-deep nav {
+    background: transparent !important;
+    box-shadow: none;
+    padding-left: 0;
+
+    .multiline > .inner-wrapper {
+        line-height: 29px;
+    }
+
+    > .nav-wrapper {
+
+        .breadcrumb {
+            cursor: pointer;
+            color: $gtx-color-very-dark-gray !important;
+            font-size: 1rem;
+
+            &::before {
+                color: $gtx-color-dark-gray;
+            }
+        }
+
+        .breadcrumb:last-child {
+            cursor: default;
+        }
+
+        > gtx-dropdown-list::shadow .dropdown-trigger {
+            height: 18px;
+            line-height: 16px;
+        }
+
+        > gtx-dropdown-list + .breadcrumb {
+            margin-left: -2px;
+
+            &::before {
+                display: none;
+            }
+        }
+
+        > .breadcrumb:first-child {
+            margin-left: 24px;
+        }
+    }
+}
+
+#repository ::ng-deep gtx-breadcrumbs {
+    margin-left: 12px;
+
+    .multiline > .inner-wrapper {
+        line-height: 36px !important;
+    }
+
+    &.isInherited {
+        .multiline {
+            > .inner-wrapper {
+                line-height: 34px;
+            }
+            .other-content {
+                margin-top: 2px;
+            }
+        }
+    }
+    .multiline.multilineExpanded {
+        > .inner-wrapper {
+            display: block;
+            line-height: 34px;
+        }
+        .other-content {
+            margin-top: -1px;
+        }
+    }
+}
+
+@media only screen and (min-width: 320px) and (max-width: 480px) {
+    #repository ::ng-deep gtx-breadcrumbs {
+        &.isInherited {
+            .multiline {
+                .other-content {
+                    margin-top: 7px;
+                }
+            }
+            .multiline.multilineExpanded {
+                .iconChannel {
+                    margin-right: 3px;
+                }
+                .other-content {
+                    margin-top: -2px;
+                }
+            }
+        }
+    }
+}
+
+@media only screen and (min-width : 768px) and (max-width : 1024px) and (orientation : landscape) {
+    #repository ::ng-deep gtx-breadcrumbs {
+        .ellipsis {
+            margin-right: 5px;
+        }
+        &.isInherited {
+            .multiline.multilineExpanded {
+                .other-content {
+                    margin-top: 0;
+                }
+                .iconChannel {
+                    margin-top: -2px;
+                }
+            }
+        }
+    }
+}
+
+gtx-dropdown-item.favourites {
+    border-bottom: 1px solid $gtx-color-very-light-gray;
+    display: flex;
+    align-items: center;
+
+    icon {
+        color: $gcms-color-favourite;
+        margin-right: 5px;
+    }
+}

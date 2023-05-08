@@ -1,0 +1,11 @@
+.filter-input {
+    margin-top: 6px;
+    padding: 5px;
+    ::ng-deep input {
+        margin: 12px 0 0 0;
+    }
+}
+
+::ng-deep .filter-hidden {
+    display: none !important;
+}

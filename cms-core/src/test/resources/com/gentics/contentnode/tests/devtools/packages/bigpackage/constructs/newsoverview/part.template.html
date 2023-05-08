@@ -1,0 +1,14 @@
+<ul class="teaser">
+#foreach( $item in $cms.tag.parts.overview.items )
+<li>
+#if ( "$!item.image" != "" )##
+<div style="background-image: url('/GenticsImageStore/50/50/smart/$item.image')"></div>
+#end##
+<h2><a href="${item.url}">${item.creationdate} - ${item.name}</a></h2>
+<br class="clear" />
+#if(( "$!item.tags.teasers" != "" ))##
+$item.tags.teasers
+#end##
+</li>
+#end##
+</ul>

@@ -1,0 +1,16 @@
+query($uuid: String) {
+  node(uuid: $uuid) {
+    languages {
+      version
+      language
+      parent {
+        uuid
+      }
+      fields {
+        ... on %s {
+          cms_id
+        }
+      }
+    }
+  }
+}

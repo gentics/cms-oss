@@ -1,0 +1,45 @@
+@import "variables";
+@import "../page-language-indicator/page-language-indicator.component";
+
+:host {
+
+    table.full-status {
+        padding: 10px;
+        margin: 0;
+
+        tr {
+            color: $gtx-color-very-dark-gray;
+            font-size: $gtx-font-size-small;
+        }
+
+        tr.title {
+            border-bottom: 1px solid $gtx-color-light-gray;
+
+            td {
+                padding: 0.4rem 1rem;
+            }
+        }
+
+        tr:not(.title) {
+            i {
+                font-size: $gtx-font-size-regular;
+            }
+
+            td {
+                padding: 0.4rem 0 0.4rem 1rem;
+                vertical-align: top;
+
+                &:last-child {
+                    padding: 0.4rem 1rem 0.4rem 0.2rem;
+                }
+            }
+        }
+
+        .stateModifiedColor {
+            font-size: 1.8rem;
+            height: 1rem;
+            position: absolute;
+            margin-top: -0.4rem;
+        }
+    }
+}

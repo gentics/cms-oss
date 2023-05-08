@@ -1,0 +1,232 @@
+<html>
+<head>
+<title>Page Render Performance Analysis Tool</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+function render(baseurl, tag) {
+	var url = baseurl + '/page/render/' + $('#pageId').val() + '?sid=' + $('#sid').val();
+	var timeId = '#render_page';
+	if (tag) {
+		url += '&template=<node%20' + tag + '>';
+		timeId = '#render_tag_' + tag.replace(/\./g, '_');
+	}
+	$.ajax({
+		accepts: {
+			text: "application/json"
+		},
+		url: url,
+		contentType: 'application/json; charset=utf-8',
+		type: 'GET',
+		success: function(data) {
+			var duration = data.time;
+			$(timeId).text(duration + ' ms');
+			if (duration > $('#red').val()) {
+				$(timeId).parent().addClass('red');
+			} else if (duration > $('#yellow').val()) {
+				$(timeId).parent().addClass('yellow');
+			} else {
+				$(timeId).parent().addClass('green');
+			}
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			$(timeId).text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+		}
+	});
+}
+
+function renderTemplateTags(baseurl, templateId) {
+	$.ajax({
+		accepts: {
+			text: "application/json"
+		},
+		url: baseurl + '/template/load/' + templateId + '?sid=' + $('#sid').val(),
+		contentType: 'application/json; charset=utf-8',
+		type: 'GET',
+		success: function(data) {
+			if (data.template) {
+				for (tag in data.template.templateTags) {
+					if (data.template.templateTags.hasOwnProperty(tag)) {
+						if (!data.template.templateTags[tag].editableInPage) {
+							$('#result').append('<tr><td>T</td><td>' + tag + '</td><td class="time" id="render_tag_' + tag.replace(/\./g, '_') + '"></td></tr>');
+							render(baseurl, tag);
+						}
+					}
+				}
+			}
+		}
+	});
+}
+
+$(document).ready(function() {
+	var baseurl = '/rest';
+	$('#execute').click(function() {
+		// load the page
+		$('#result').empty();
+		$.ajax({
+			accepts: {
+				text: "application/json"
+			},
+			url: baseurl + '/page/load/' + $('#pageId').val() + '?sid=' + $('#sid').val(),
+			contentType: 'application/json; charset=utf-8',
+			type: 'GET',
+			success: function(data) {
+				if (data.page) {
+					$('#result').append('<tr><td></td><td>Total</td><td class="time" id="render_page"></td></tr>');
+					renderTemplateTags(baseurl, data.page.templateId);
+					for (tag in data.page.tags) {
+						if (data.page.tags.hasOwnProperty(tag)) {
+							$('#result').append('<tr><td>C</td><td>' + tag + '</td><td class="time" id="render_tag_' + tag.replace(/\./g, '_') + '"></td></tr>');
+							render(baseurl, tag);
+						}
+					}
+					render(baseurl);
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#response').text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+			}
+		});
+	});
+	$('#dologin').click(function() {
+		$.ajax({
+			url: baseurl + '/auth/login.json',
+			data: '{"login":"'+$('#login').val()+'", "password": "'+$('#password').val()+'"}',
+			dataType: 'json',
+			contentType: 'application/json; charset=utf-8',
+			type: 'POST',
+			success: function(data) {
+				if (data.responseInfo.responseCode == 'OK') {
+					$('#sid').val(data.sid);
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#response').text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+			}
+		});
+	});
+	$('#ssologin').click(function() {
+		// SSO login works with an iframe
+		var $iframe = $("<iframe></iframe>");
+		$iframe.hide();
+		$("body").append($iframe);
+
+		// add an onload handler
+		$iframe.load(function() {
+			var response = $iframe.contents().text();
+			switch(response) {
+			case 'NOTFOUND':
+				break;
+			case 'FAILURE':
+				break;
+			default:
+				$('#sid').val(response);
+			}
+			$iframe.remove();
+		});
+
+		// set the source
+		$iframe.attr("src", baseurl + '/auth/ssologin?ts=' + (new Date()).getTime());
+	});
+	$('#dologout').click(function() {
+		$.ajax({
+			accepts: {
+				text: "application/json"
+			},
+			url: baseurl + '/auth/logout/' + $('#sid').val(),
+			dataType: 'json',
+			contentType: 'application/json; charset=utf-8',
+			type: 'POST',
+			success: function(data) {
+				if (data.responseInfo.responseCode == 'OK') {
+					$('#login').val('');
+					$('#password').val('');
+					$('#sid').val('');
+				}
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#response').text("STATUS: " + textStatus + "\n\nResponseCode: " + jqXHR.status + "\n\n" + jqXHR.responseText);
+			}
+		});
+	});
+});
+</script>
+<style type="text/css">
+body * {
+	font-family: Sans;
+	font-size: 14px;
+}
+label {
+	display: inline-block;
+	width: 100px;
+}
+input, textarea {
+	width: 500px;
+}
+button {
+	margin-top: 10px;
+	margin-left: 105px;
+}
+input, textarea, select {
+	border: 2px solid #bfbfbf;
+	background-color: #efefef;
+	box-shadow: inset 2px 2px 4px #999;
+	-webkit-box-shadow: inset 2px 2px 4px #999;
+	-moz-box-shadow: inset 2px 2px 4px #999;
+}
+fieldset {
+	border: 2px solid #afafaf;
+}
+div.container {
+	overflow: auto;
+	width: 100%;
+}
+div.box {
+	float: left;
+	width: 50%;
+}
+td.time {
+	text-align: right;
+}
+.red {
+	color: red;
+}
+.yellow {
+	color: orange;
+}
+.green {
+	color: green;
+}
+table, td {
+	border: 1px solid;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="box">
+<fieldset id="form">
+<legend>Test Data</legend>
+<label for="sid">SID</label> <input type="text" id="sid"/><br/>
+<label for="pageId">Page ID</label> <input type="text" id="pageId"/><br/>
+<label for="red">Red for &gt;=</label> <input type="text" id="red" value="5000"/> ms<br/>
+<label for="yellow">Yellow for &gt;=</label> <input type="text" id="yellow" value="1000"/> ms<br/>
+<button id="execute">Render</button><br/>
+</fieldset>
+</div>
+<div class="box">
+<fieldset>
+<legend>Login</legend>
+<label for="login">Login</label> <input type="text" id="login"/><br/>
+<label for="password">Password</label> <input type="password" id="password"/><br/>
+<button id="dologin">Login</button><button id="ssologin">SSO Login</button><button id="dologout">Logout</button>
+</fieldset>
+</div>
+</div>
+<fieldset>
+<legend>Render Times</legend>
+<table id="result">
+</table>
+</fieldset>
+</body>
+</html>

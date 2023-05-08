@@ -1,0 +1,115 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
+    <gtx-button
+        *ngIf="!hideActions && !packageName"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'contentRepository.createContentRepository'"
+        (click)="handleCreateButton()"
+    >
+        <icon left>add</icon> {{ 'shared.create_new_contentRepository_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="packageName"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'contentadmin.updateContent'"
+        (click)="handleAssignToPackageButton()"
+    >
+        <icon left>link</icon> {{ 'shared.assign_entity_to_package_button' | i18n }}
+    </gtx-button>
+</div>
+
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'contentRepository.info_selected_contentrepositories' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+</div>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    [renderers]="{
+        instantPublishing: boolIconRenderer,
+        checkStatus: structureStatusRenderer,
+        dataStatus: dataStatusRenderer
+    }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        class="gtx-entity-grid-cell-icon"
+        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
+</ng-template>
+
+<ng-template #detailLink let-label="label" let-date="date" let-tab="tab" let-item="item">
+    <a
+        *ngIf="linkDetails; else textRenderer"
+        [title]="date > 0 ? (date | i18nDate:'dateTime') : ''"
+        (click)="openDetailTab($event, item, tab)"
+    >{{ label }}</a>
+
+<ng-template #textRenderer>
+        <span [title]="date > 0 ? (date | i18nDate:'dateTime') : ''">{{ label }}</span>
+    </ng-template>
+</ng-template>
+
+<ng-template #structureStatusRenderer let-value="value" let-row="row">
+    <ng-container *ngTemplateOutlet="detailLink; context: {
+        date: row.item.checkDate,
+        label: ('contentRepository.checkStatus_' + value) | i18n,
+        item: row.item,
+        tab: ContentRepositoryDetailTabs.STURCTURE_CHECK_RESULT
+    }"></ng-container>
+</ng-template>
+
+<ng-template #dataStatusRenderer let-value="value" let-row="row">
+    <ng-container *ngTemplateOutlet="detailLink; context: {
+        date: row.item.statusDate,
+        label: ('contentRepository.checkStatus_' + value) | i18n,
+        item: row.item,
+        tab: ContentRepositoryDetailTabs.DATA_CHECK_RESULT
+    }"></ng-container>
+</ng-template>

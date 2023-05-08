@@ -1,0 +1,1 @@
+<?php $this->widget('genticsimagestore.widgets.GenticsImageStoreWidget', array('id' => #IMAGEID#, 'publishPath' => "/nowhere/bla/#IMAGENAME#", 'resizeOptions' => array('width' => 100, 'height' => "auto", 'mode' => "prop"))); ?>

@@ -1,0 +1,29 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_objectPropertyCategory_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-object-property-category-properties
+        *ngIf="form"
+        [formControl]="form"
+        [mode]="ObjectPropertyCategoryPropertiesMode.CREATE"
+    ></gtx-object-property-category-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form || !form.valid || form.pristine"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ 'modal.create_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

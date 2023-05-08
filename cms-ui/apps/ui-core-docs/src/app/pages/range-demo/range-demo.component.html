@@ -1,0 +1,71 @@
+<h1>Range</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+
+<gtx-demo-block demoTitle="Min, Max, Step">
+    <div class="demo-result">
+        <p>
+            The range input can have <code>min, max, step</code> attributes. In the example below,
+            min="-180"; max="180"; step="5".
+        </p>
+        <div class="row">
+            <div class="column small-8">
+                <gtx-range [(ngModel)]="rangeVal" step="5" min="-180" max="180"></gtx-range>
+            </div>
+            <div class="column small-4">
+                Value: <code>{{ rangeVal | json }}</code>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-range [(ngModel)]="rangeVal" step="5" min="-180" max="180"></gtx-range>
+                Value: <code>(( rangeVal | json ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Thumb Label">
+    <div class="demo-result">
+        <div class="row">
+            <div class="column small-8">
+                <gtx-range [thumbLabel]="showThumb"></gtx-range>
+            </div>
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb label"></gtx-checkbox>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-range [thumbLabel]="showThumb"></gtx-range>
+                <gtx-checkbox [(ngModel)]="showThumb" label="show thumb label"></gtx-checkbox>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Setting Value Programmatically">
+    <div class="demo-result">
+        <p>
+            A disabled range input will not be draggable, but the value can be set dynamically.
+        </p>
+        <div class="row">
+            <div class="column small-12 medium-8">
+                <gtx-range [(ngModel)]="rangeValDynamic" disabled="true" label="This range is disabled..."></gtx-range>
+            </div>
+            <div class="column small-12 medium-4">
+                <gtx-input [(ngModel)]="rangeValDynamic" type="number" label="...but can be changed here." min="0" max="100" step="1"></gtx-input>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-range [(ngModel)]="rangeValDynamic" disabled="true"></gtx-range>
+                <gtx-input [(ngModel)]="rangeValDynamic" type="number" min="0" max="100" step="1"></gtx-input>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+

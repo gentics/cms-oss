@@ -1,0 +1,10 @@
+<iframe
+    #iframe
+    class="tag-editor-iframe"
+    frameborder="0"
+    fetchpriority="high"
+    sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
+    [src]="tagEditorUrl | safe"
+    [class.visible]="!!tagEditorUrl"
+    (load)="iframeLoaded(iframe)"
+></iframe>

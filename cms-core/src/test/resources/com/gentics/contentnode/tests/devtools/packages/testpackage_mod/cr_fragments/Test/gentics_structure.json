@@ -1,0 +1,21 @@
+{
+  "globalId" : "3D6C.ee9084bf-959e-11e8-918d-00155df038f9",
+  "name" : "Test",
+  "entries" : [ {
+    "globalId" : "3D6C.6be4b9f7-959f-11e8-918d-00155df038f9",
+    "tagname" : "bla",
+    "mapname" : "bla",
+    "objType" : 10002,
+    "attributeType" : 1,
+    "multivalue" : false,
+    "optimized" : true,
+    "filesystem" : false,
+    "targetType" : -9999,
+    "displayfield" : false,
+    "segmentfield" : false,
+    "urlfield" : false,
+    "elasticsearch" : {
+      "bla" : true
+    }
+  } ]
+}

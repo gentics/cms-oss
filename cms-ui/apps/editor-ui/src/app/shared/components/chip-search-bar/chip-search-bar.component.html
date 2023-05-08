@@ -1,0 +1,227 @@
+<form
+    *ngIf="formGroupMain"
+    #formGroupMainElement
+    class="gtx-chipsearchbar"
+    [class.gtx-chipsearchbar-loading]="loading$ | async"
+    [formGroup]="formGroupMain"
+    (keydown.enter)="onSearchTriggered()"
+>
+    <div
+        *ngIf="getChips().controls as chips"
+        class="gtx-chipsearchbar-chip-container"
+    >
+        <ng-container *ngIf="!showRecent">
+
+            <!-- Chip elements START -->
+            <ng-container
+                *ngFor="let chip of chips; let i = index"
+                #chipElements
+            >
+                <form
+                    class="gtx-chip"
+                    [formGroup]="chip"
+                    [class.gtx-chip-invalid]="chip.invalid"
+                >
+                    <!-- Chip PROPERTY -->
+                    <span class="gtx-chip-property">
+                        <gtx-input-select
+                            formControlName="chipProperty"
+                            [options]="chipSearchBarConfig.searchableProperties"
+                            [noInput]="true"
+                            [style.width]="getChipValue(chip)?.length < 4 ? '4ch' : getChipValue(chip).length + 1 + 'ch'"
+                        >
+                        </gtx-input-select>
+                    </span>
+
+                    <!-- Chip OPERATOR -->
+                    <span
+                        *ngIf="getPropertyOptionsByIdentifier(chip)?.context?.relationOperators as chipOperatorOptions"
+                        class="gtx-chip-operator"
+                    >
+                        <gtx-input-select
+                            formControlName="chipOperator"
+                            [disabled]="chipOperatorOptions.length === 1"
+                            [options]="chipOperatorOptions"
+                            [defaultValue]="chipOperatorOptions[0]?.value"
+                        >
+                        </gtx-input-select>
+                    </span>
+
+                    <!-- Chip VALUE -->
+                    <span
+                        class="gtx-chip-input-value"
+                        [class.gtx-chip-input-value-invalid]="chip.invalid"
+                        [class.gtx-chip-input-value-boolean]="getPropertyOptionsByIdentifier(chip)?.type === 'boolean'"
+                    >
+                        <!-- if user shall input directly -->
+                        <ng-container
+                            *ngIf="getPropertyOptionsByIdentifier(chip)?.type as propertyDataType"
+                            [ngSwitch]="propertyDataType"
+                        >
+
+                            <!-- TYPE `boolean` -->
+                            <ng-container *ngSwitchCase="'boolean'">
+                                <gtx-checkbox
+                                    type="checkbox"
+                                    class="gtx-chip-input-value-inner gtx-chip-input-value-inner-checkbox"
+                                    formControlName="chipValue"
+                                ></gtx-checkbox>
+                            </ng-container>
+
+                            <!-- TYPE `number` -->
+                            <ng-container *ngSwitchCase="'number'">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="999"
+                                    step="1"
+                                    pattern="[0-9]"
+                                    class="gtx-chip-input-value-inner gtx-chip-input-value-inner-number"
+                                    formControlName="chipValue"
+                                />
+                            </ng-container>
+
+                            <!-- TYPE `string` -->
+                            <ng-container *ngSwitchCase="'string'">
+                                <input
+                                    type="text"
+                                    class="gtx-chip-input-value-inner gtx-chip-input-value-inner-string"
+                                    formControlName="chipValue"
+                                    [style.width]="getChipValue(chip)?.length < 4 ? '4ch' : getChipValue(chip).length + 1 + 'ch'"
+                                />
+                            </ng-container>
+
+                            <!-- TYPE `date` -->
+                            <ng-container *ngSwitchCase="'date'">
+                                <div class="date-selector">
+                                    <gtx-date-time-picker
+                                        class="gtx-chip-input-value-inner gtx-chip-input-value-inner-date"
+                                        formControlName="chipValue"
+                                    ></gtx-date-time-picker>
+                                </div>
+                            </ng-container>
+
+                            <!-- TYPE `objectid` -->
+                            <ng-container *ngSwitchCase="'objectid'">
+                                <gtx-input-select
+                                    *ngIf="getPropertyOptionsByIdentifier(chip)?.context.inputselectOptionsAsync | async as chipValueOptions; else errorObjectid"
+                                    class="gtx-chip-input-value-inner"
+                                    formControlName="chipValue"
+                                    [attr.disabled]="chipValueOptions.length === 1"
+                                    [options]="chipValueOptions"
+                                    [defaultValue]="(getPropertyOptionsByIdentifier(chip).context.inputselectOptionsDefaultValueAsync | async)"
+                                ></gtx-input-select>
+
+                                <ng-template #errorObjectid>
+                                    <p style.color="red">Error: No options configured for filter property "{{ chip.value }}"!</p>
+                                    <pre>{{ getPropertyOptionsByIdentifier(chip) | json }}</pre>
+                                </ng-template>
+                            </ng-container>
+
+                            <!-- TYPE INVALID -->
+                            <pre *ngSwitchDefault>
+                                <p style.color="red">ERROR: Invalid filter definition for property:</p>
+                                <pre>{{ getPropertyOptionsByIdentifier(chip) | json }}</pre>
+                            </pre>
+                        </ng-container>
+                    </span>
+
+                    <!-- Chip remove button -->
+                    <div class="gtx-chip-button-remove">
+                        <gtx-button
+                            icon
+                            type="primary"
+                            size="small"
+                            [disabled]="chip.disabled"
+                            (click)="removeChipAtIndex(i)"
+                        >
+                            <i class="material-icons" [attr.translate]="'no'">close</i>
+                        </gtx-button>
+                    </div>
+
+                </form>
+            </ng-container>
+
+        </ng-container>
+
+        <input
+            #searchBarValueElement
+            class="gtx-chipsearchbar-value"
+            type="text"
+            formControlName="searchBar"
+            [placeholder]="'common.search_placeholder' | i18n"
+            [style.width]="getSearchbarValue()?.length < 6 ? '6ch' : getSearchbarValue()?.length + 1 + 'ch'"
+            (keydown.backspace)="onKeyDownBackspace()"
+            (keydown.enter)="onSearchTriggered()"
+            (keydown.ArrowDown)="showSuggestionBar()"
+            (keyup)="searchBarKeyup.next($event)"
+        />
+    </div>
+
+    <div class="gtx-chipsearchbar-button-container">
+        <div *ngIf="!showRecent" class="gtx-chipsearchbar-button gtx-chipsearchbar-menu-filter-properties">
+            <gtx-input-select
+                *ngIf="chipSearchBarConfig.searchableProperties as searchableProperties"
+                [options]="searchableProperties"
+                [iconOnly]="true"
+                [disabled]="loading$ | async"
+                (ngModelChange)="onDropDownFilterPropertiesItemClicked($event)"
+            ></gtx-input-select>
+        </div>
+
+        <div
+            *ngIf="!showRecent"
+            class="gtx-chipsearchbar-button gtx-chipsearchbar-button-search"
+            [class.gtx-chipsearchbar-button-search-hintbox-active]="searchInputHasChanged$ | async"
+        >
+            <gtx-button
+                icon
+                type="primary"
+                size="regular"
+                [disabled]="loading$ | async"
+                (click)="onButtonSearchClicked()"
+            >
+                <i class="material-icons" [attr.translate]="'no'">search</i>
+            </gtx-button>
+        </div>
+        <div
+            *ngIf="searchInputHasChanged$ | async"
+            class="gtx-chipsearchbar-button-search-hintbox"
+        >
+            <div class="gtx-chipsearchbar-button-search-hintbox-inner">
+                <p>{{ 'search.search_hintbox' | i18n }}</p>
+            </div>
+        </div>
+
+        <div class="gtx-chipsearchbar-button gtx-chipsearchbar-button-search">
+            <gtx-button
+                icon
+                type="primary"
+                size="regular"
+                (click)="clearSearchbarAll()"
+                *ngIf="(!showRecent && !(showRecentButton$ | async)) || showRecent"
+            >
+                <i class="material-icons" [attr.translate]="'no'">close</i>
+            </gtx-button>
+
+            <gtx-button
+                icon
+                type="primary"
+                size="regular"
+                (click)="showSuggestionBar(); focusSearchbarValue()"
+                [title]="'common.history' | i18n"
+                *ngIf="!showRecent && (showRecentButton$ | async)"
+            >
+                <i class="material-icons" [attr.translate]="'no'">history</i>
+            </gtx-button>
+        </div>
+    </div>
+
+    <search-suggestion-bar
+        [(recentVisible)]="showRecent"
+        [(suggestionVisible)]="showSuggestion"
+        [filterTerm]="getSearchbarValue()"
+        [searchBarKeyup]="searchBarKeyup.asObservable()"
+        (close)="clearSearchbarAll()"
+    ></search-suggestion-bar>
+</form>

@@ -1,0 +1,33 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ 'shared.assign_packages_to_node' | i18n }}</h5>
+    </div>
+
+    <div class="modal-content">
+        <div class="gtx-modal-datagrid-container">
+            <gtx-dev-tool-package-table
+                [showSearch]="true"
+                [hideActions]="true"
+                [(selected)]="packageIdsCurrent"
+            ></gtx-dev-tool-package-table>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <gtx-button
+            type="primary"
+            (click)="buttonAssignPackagesToNodeClicked()"
+            gtxActionAllowed=""
+        >
+            {{ 'shared.assign_packages_to_node' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.74331",
+  "keyword" : "overview",
+  "icon" : "ds.gif",
+  "name" : {
+    "de" : "Übersicht",
+    "en" : "Overview"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.74338",
+    "name" : {
+      "de" : "",
+      "en" : "Übersicht"
+    },
+    "keyword" : "overview",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,28 @@
+@import '../../../../shared/components/base-entity-table/base-entity-table.component';
+
+:host {
+    height: 100%;
+
+    .gtx-entity-master {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.overview-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .back-button {
+        margin-right: 1.5rem;
+    }
+
+    .overview-title {
+        font-size: 1.1rem;
+    }
+}
+
+.node-select-header {
+    display: block;
+}

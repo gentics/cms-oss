@@ -1,0 +1,93 @@
+<div class="preview-pane" [ngClass]="file.type || ''">
+    <div class="file-preview" *ngIf="file.type === 'file'">
+        <div class="file-icon" [ngClass]="fileExtension || ''">
+            <i class="material-icons" [attr.translate]="'no'">insert_drive_file</i>
+            <span class="extension" *ngIf="fileExtension"
+                  [ngClass]="'len-' + fileExtension?.length">
+                {{ fileExtension | uppercase }}
+            </span>
+        </div>
+        <div class="file-details">
+            <div class="name">{{ file.name }}</div>
+            <div class="type">{{ file.fileType }}</div>
+            <div class="size">{{ file.fileSize | filesize }}</div>
+        </div>
+    </div>
+    <div class="image-preview" *ngIf="file.type === 'image'">
+        <div class="filename">{{ file.name }}</div>
+        <div class="thumbnail" [class.loading]="imageLoading | async">
+            <img class="previewed-image" [src]="imageUrl"
+                 [width]="displayDimensions.width" [height]="displayDimensions.height"
+                 (load)="onImageLoadSuccess()"
+                 (error)="onImageLoadError($event)"
+                 #thumbnailImage>
+            <div class="size-double"
+                 [style.width.px]="displayDimensions.width"
+                 [style.padding-bottom.%]="100 * displayDimensions.height / displayDimensions.width"></div>
+        </div>
+        <div class="image-details">
+            <span class="dimensions">{{ { width: file.sizeX, height: file.sizeY } | imagedimensions | i18n }}</span>
+            <span class="separator"> - </span>
+            <span class="filesize">{{ file.fileSize | filesize }}</span>
+        </div>
+    </div>
+    <div class="author-details">
+        <div class="created" *ngIf="creator"
+             [innerHTML]="'editor.file_preview_creator_label' | i18n:{
+                    name: creator.firstName + ' ' + creator.lastName,
+                    date: (file.cdate | i18nDate),
+                    time: (file.cdate | i18nDate:'time')
+                }"></div>
+        <div class="edited"
+             *ngIf="file.cdate !== file.edate && editor"
+             [innerHTML]="'editor.file_preview_editor_label' | i18n:{
+                    name: editor.firstName + ' ' + editor.lastName,
+                    date: (file.edate | i18nDate),
+                    time: (file.edate | i18nDate:'time')
+                }"></div>
+    </div>
+    <div class="actions">
+        <div class="action-rotate-left" *ngIf="file.type === 'image'">
+            <gtx-button flat (click)="rotateImage('ccw')" [disabled]="!isEditableImage(file)">
+                <i class="material-icons left">rotate_left</i> {{ 'editor.rotate_image_left_button' | i18n }}
+            </gtx-button>
+        </div>
+        <div class="action-rotate-right" *ngIf="file.type === 'image'">
+            <gtx-button flat (click)="rotateImage('cw')" [disabled]="!isEditableImage(file)">
+                <i class="material-icons left">rotate_right</i> {{ 'editor.rotate_image_right_button' | i18n }}
+            </gtx-button>
+        </div>
+    </div>
+    <div class="actions">
+        <div class="action-edit" *ngIf="file.type === 'image'">
+            <gtx-button flat (click)="editImage()" [disabled]="!isEditableImage(file)">
+                <i class="material-icons left" [attr.translate]="'no'">edit</i> {{ 'editor.edit_image_button' | i18n }}
+            </gtx-button>
+        </div>
+        <div class="action-download" *ngIf="file.type === 'file'">
+            <a [href]="downloadUrl" [download]="file.name" target="_blank">
+                <gtx-button flat>
+                    <i class="material-icons left" [attr.translate]="'no'">file_download</i> {{ 'editor.download_file_button' | i18n }}
+                </gtx-button>
+            </a>
+        </div>
+        <div class="action-replace"
+                *ngIf="hasFileEditPermission$ | async"
+                [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'">
+            <gtx-progress-bar #uploadBar></gtx-progress-bar>
+            <gtx-file-picker flat
+                    [overrideSlot]="file.type === 'image' ? 'replaceImageButton' : 'replaceFileButton'"
+                    [overrideParams]="{ FOLDERID: file.folderId, NODEID: nodeId }"
+                    [accept]="acceptedFiles()"
+                    (fileSelect)="replaceFile($event, uploadBar)"
+                    (fileSelectReject)="replaceFile($event, uploadBar)">
+                <icon left>file_upload</icon>
+                <span *ngIf="file.type === 'image'">{{ 'editor.upload_new_image_button' | i18n }}</span>
+                <span *ngIf="file.type === 'file'">{{ 'editor.upload_new_file_button' | i18n }}</span>
+            </gtx-file-picker>
+            <div class="keep-filename">
+                <gtx-checkbox [(ngModel)]="keepFileName" [label]="'editor.keep_filename_label' | i18n"></gtx-checkbox>
+            </div>
+        </div>
+    </div>
+</div>

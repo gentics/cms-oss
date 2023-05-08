@@ -1,0 +1,160 @@
+@import 'variables';
+
+:host {
+    display: block;
+    user-select: none;
+}
+
+.frame {
+    cursor: pointer;
+    color: $gtx-color-dark-gray;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    height: 8em;
+    width: 8em;
+    overflow: visible;
+    position: relative;
+}
+
+.frame:hover,
+.frame:focus {
+    color: rgba($gtx-color-dark-gray, 0.8);
+    outline: none;
+
+    .tool-icon {
+        color: #0096DC;
+    }
+
+    .tool-name {
+        color: #252525;
+    }
+}
+
+.tool-icon {
+    position: absolute;
+    top: 0.5em;
+    left: 2em;
+    height: 4em;
+    width: 4em;
+    transition: all 0.2s ease-in-out;
+
+    icon {
+        font-size: 4em;
+    }
+
+    img {
+        margin: auto;
+        max-width: 4em;
+        max-height: 4em;
+    }
+
+    &.icon-from-font,
+    &.icon-from-fallback {
+        background-color: $gtx-color-very-light-gray;
+        border-radius: 0.5em;
+    }
+}
+
+.fallback-icon {
+    font-size: 4em;
+    line-height: 1em;
+    text-align: center;
+    width: 100%;
+}
+
+.close-button {
+    position: absolute;
+    right: 1.1em;
+    top: 0.05em;
+    font-size: 1.25em;
+    width: 1.25em;
+    height: 1.25em;
+    border-radius: 50%;
+    background-color: white;
+    text-align: center;
+    color: $gtx-color-mid-gray;
+    box-shadow:
+        0 2px 2px 0 rgba(0, 0, 0, 0.14),
+        0 1px 5px 0 rgba(0, 0, 0, 0.12),
+        0 3px 1px -2px rgba(0, 0, 0, 0.2);
+
+    icon {
+        font-size: inherit;
+    }
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: $gtx-color-dark-gray;
+}
+
+.new-tab-icon {
+    position: absolute;
+    right: 1.1em;
+    top: 0.05em;
+    font-size: 1.25em;
+    width: 1.25em;
+    height: 1.25em;
+    text-align: center;
+    color: $gtx-color-mid-gray;
+
+    icon {
+        font-size: inherit;
+    }
+}
+
+.frame:not(:hover):not(:focus) .new-tab-icon {
+    display: none;
+}
+
+.tool-name {
+    display: flex;
+    align-items: unset;
+    justify-content: center;
+    position: absolute;
+    bottom: 0.5em;
+    left: 0.5em;
+    right: 0.5em;
+    height: 2.5em;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    transition: all 0.2s ease-in-out;
+
+    // multiline ellipsis (at the moment only supported by Chrome/Safari/Opera)
+    overflow: visible;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: -o-ellipsis-lastline;
+}
+
+@media screen and (max-width: $small-screen) {
+    .tool-icon {
+        display: inline-block;
+        position: relative;
+        left: 1em;
+    }
+
+    .tool-name {
+        align-items: center;
+        bottom: 1.5em;
+        left: 6em;
+        text-align: left;
+        justify-content: unset;
+        overflow: visible;
+    }
+
+    .frame {
+        width: 18em;
+        height: 6em;
+        display: table-cell;
+        vertical-align: middle;
+    }
+
+    .new-tab-icon, .close-button {
+        left: 3.3em;
+        top: 0.7em;
+    }
+}

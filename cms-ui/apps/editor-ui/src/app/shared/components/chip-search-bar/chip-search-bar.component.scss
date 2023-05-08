@@ -1,0 +1,245 @@
+@import "variables";
+
+@mixin boxShadow($alpha1, $alpha2, $alpha3) {
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, $alpha1),
+        0 3px 1px -2px rgba(0, 0, 0, $alpha2),
+        0 1px 5px 0 rgba(0, 0, 0, $alpha3);
+}
+
+$gtx-chip-height: 26px;
+
+:host {
+    ::ng-deep {
+        search-suggestion-bar {
+            margin-bottom: 2px !important;
+        }
+
+        input[type=text] {
+            background-color: transparent;
+            border: none;
+        }
+
+        select {
+            border: none !important;
+        }
+    }
+}
+
+.gtx-chipsearchbar {
+    background-color: white;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    min-height: 35px;
+    margin-top: 10px;
+    margin-bottom: 2px;
+    border: none;
+    padding-left: 10px;
+    font-size: 0.95em;
+    transition: background-color 0.2s ease-in-out;
+    @include boxShadow(0.14, 0.12, 0.2);
+
+    &.gtx-chipsearchbar-loading {
+        background-color: #eee;
+        &:hover {
+            cursor: not-allowed;
+        }
+    }
+}
+
+.gtx-chipsearchbar-chip-container {
+    display: flex;
+    flex: 2 1 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.gtx-chip {
+    display: flex;
+    align-self: center;
+    height: $gtx-chip-height;
+    border-radius: 3px;
+    margin: 5px 5px 5px 0;
+    @include boxShadow(0.25, 0.12, 0.6);
+
+    &.gtx-chip-invalid {
+        outline: 3px solid #f00;
+    }
+}
+
+.gtx-chip-property {
+    background-color: $gtx-color-primary;
+    align-self: center;
+    height: $gtx-chip-height;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    padding: 2px 0;
+
+    gtx-input-select ::ng-deep select,
+    ::ng-deep .default-trigger {
+        color: white;
+        background-color: transparent;
+        text-align: left;
+        padding: 2px 10px;
+    }
+}
+
+.gtx-chip-operator {
+    background-color: $gtx-color-light-gray;
+    align-self: center;
+    height: $gtx-chip-height;
+
+    gtx-input-select ::ng-deep select,
+    ::ng-deep .default-trigger {
+        color: $gtx-color-very-dark-gray;
+        background-color: transparent;
+
+        &.disabled, &.no-input {
+            padding: 2px 10px;
+        }
+    }
+}
+
+.gtx-chip-input-value {
+    display: flex;
+
+    &.gtx-chip-input-value-invalid {
+        background-color: rgba(255, 0, 0, 0.5);
+    }
+
+    input[type=text] {
+        max-width: 15vh;
+    }
+}
+
+.gtx-chip-input-value-boolean {
+    padding: 0 6px 0 2px;
+}
+
+.gtx-chip-input-value-inner-checkbox {
+    padding: 3px 8px;
+    width: 2em;
+    height: 1em;
+}
+
+.gtx-chip-input-value-inner-number {
+    border: none;
+    width: 6ch;
+}
+
+.gtx-chip-input-value-inner-date {
+    height: 26px;
+
+    &::ng-deep {
+        gtx-input {
+            input {
+                border: none !important;
+                margin: 0 !important;
+                height: 26px !important;
+                border-radius: 0 !important;
+            }
+
+            label {
+                display: none;
+            }
+        }
+    }
+}
+
+.gtx-chip-button-remove {
+    margin-left: 0.5rem;
+    background-color: transparent;
+    transition: background-color 0.2s ease-in-out;
+
+    gtx-button ::ng-deep button.btn-flat.btn-icon.small {
+        background-color: transparent;
+        i {
+            font-size: 18px;
+            color: #333;
+            transition: color 0.2s ease-in-out;
+        }
+    }
+    &:hover {
+        background-color: transparentize($gtx-color-primary, 0.75);
+
+        gtx-button ::ng-deep button.btn-flat.btn-icon.small {
+            i {
+                color: $gtx-color-primary;
+            }
+        }
+    }
+}
+
+.gtx-chipsearchbar-value {
+    display: flex;
+    flex-grow: 1;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 8px 0 8px 8px;
+
+    &:focus{
+        outline: none;
+    }
+}
+
+.gtx-chipsearchbar-button-container {
+    display: flex;
+    flex-direction: row;
+    align-content: flex-end;
+    align-self: flex-start;
+    justify-content: flex-end;
+    width: 10%;
+    margin-left: auto;
+}
+
+.gtx-chipsearchbar-button {
+    display: flex;
+    background-color: transparent;
+    transition: background-color 0.1s ease-in-out;
+
+    &:hover, &:focus {
+        background-color: transparentize($gtx-color-primary, 0.75);
+    }
+
+    gtx-button {
+        cursor: pointer;
+        padding: 0.4rem;
+    }
+
+    &.gtx-chipsearchbar-button-search.gtx-chipsearchbar-button-search-hintbox-active {
+        background-color: $gtx-color-primary;
+        box-shadow: 0 -2px 12px #ccc;
+
+        i {
+            color: white;
+        }
+    }
+}
+
+.gtx-chipsearchbar-menu-filter-properties {
+    padding: 0.4rem;
+}
+
+.gtx-chipsearchbar-button-search-hintbox {
+    pointer-events: none;
+    position: absolute;
+    min-width: 15rem;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.gtx-chipsearchbar-button-search-hintbox {
+    background-color: $gtx-color-primary;
+    color: white;
+    margin-top: 2.4rem;
+    padding: 0.5rem;
+    box-shadow: 0 6px 12px #ccc;
+    font-size: 90%;
+    text-align: left;
+
+    p {
+        margin: 0;
+    }
+}

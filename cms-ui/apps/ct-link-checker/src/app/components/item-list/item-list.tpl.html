@@ -1,0 +1,43 @@
+<div class="content-list" [class.empty]="items?.length === 0">
+    <div class="main-header" *ngIf="itemsInfo?.total > 0">
+        <span class="left-items">{{ 'common.displaying_pages' | translate:{ number: min(itemsInfo.perPage, itemsInfo.total, items.length), all: itemsInfo.total } }}</span>
+        <div>
+            <gtx-button size="small" type="secondary" flat (click)="expandAll()">{{ 'common.expand_all' | translate }}</gtx-button>
+            <gtx-button size="small" type="secondary" flat (click)="collapseAll()">{{ 'common.collapse_all' | translate }}</gtx-button>
+            <gtx-dropdown-list align="right">
+                <gtx-dropdown-trigger>
+                    <gtx-button icon type="secondary">
+                        <i class="material-icons">more_vert</i>
+                    </gtx-button>
+                </gtx-dropdown-trigger>
+                <gtx-dropdown-content>
+                    <gtx-dropdown-item (click)="selectDisplayFields()">{{ 'common.select_display_fields_label' | translate }}</gtx-dropdown-item>
+                    <gtx-dropdown-item (click)="selectSorting()">{{ 'common.sorting_fields_label' | translate }}</gtx-dropdown-item>
+                </gtx-dropdown-content>
+            </gtx-dropdown-list>
+        </div>
+    </div>
+    <ng-container *ngFor="let item of items | paginate: paginationConfig; trackBy: identify">
+        <gtxct-item-list-header #header
+                                class="list-header icon-checkbox-trigger"
+                                [item]="item"
+                                [itemsInfo]="itemsInfo"
+                                [filterTerm]="filterTerm"
+                                [isCollapsed]="isItemCollapsed(item.page.id)"
+                                (isCollapsedChanged)="itemCollapsedChanged(item.page.id, $event)">
+        </gtxct-item-list-header>
+
+        <div class="list-body" [class.collapsed]="isItemCollapsed(item.page.id)">
+            <ng-container *ngFor="let link of item.links">
+                <gtxct-item-list-row
+                    [item]="link"
+                    [filterTerm]="filterTerm"
+                    [liveUrl]="item.page.liveUrl"
+                    (replaceLinkClicked)="replaceLinkClicked(item.page.id, $event)"></gtxct-item-list-row>
+            </ng-container>
+        </div>
+    </ng-container>
+
+    <gtxct-paging-controls
+        (pageChange)="pageChanged($event)"></gtxct-paging-controls>
+</div>

@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.69661",
+  "keyword" : "dptteaser",
+  "icon" : "textit.gif",
+  "name" : {
+    "de" : "Abteilungsanreisser",
+    "en" : "Department Teaser"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.69667",
+    "name" : {
+      "de" : "Übersicht",
+      "en" : "Übersicht"
+    },
+    "keyword" : "overview",
+    "editable" : true,
+    "typeId" : 13,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69672",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.69677",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "velocity",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

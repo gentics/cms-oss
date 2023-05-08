@@ -1,0 +1,7 @@
+0: Node Name	0/0 (0) true: 2
+1: Folder 1	1/2 (1) true: 2
+2: Folder 1.1	1/2 (2) false: 0
+2: Folder 1.2	2/2 (3) false: 0
+1: Folder 2	2/2 (4) true: 2
+2: Folder 2.1	1/2 (5) false: 0
+2: Folder 2.2	2/2 (6) false: 0

@@ -1,0 +1,17 @@
+{
+	"tagname": "source_new",
+	"mapname": "target_new",
+	"objType": 10002,
+	"attributeType": 1,
+	"multivalue": true,
+	"optimized": true,
+	"filesystem": false,
+	"targetType": 0,
+	"foreignlinkAttribute": "",
+	"foreignlinkAttributeRule": "",
+	"category": "",
+	"displayfield": false,
+	"segmentfield": false,
+	"urlfield": false,
+	"elasticsearch": null
+}

@@ -1,0 +1,12 @@
+#foreach($tag in $cms.page.tags)##
+id:$tag.id
+	tag.id:$tag.tag.id
+	name:$tag.name
+	visible:$tag.visible
+	empty:$tag.empty
+	istag:$tag.istag
+	parts:
+#foreach($part in $tag.parts)##
+		$part
+#end##
+#end##

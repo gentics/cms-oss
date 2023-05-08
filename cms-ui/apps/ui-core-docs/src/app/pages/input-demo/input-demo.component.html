@@ -1,0 +1,158 @@
+<h1>InputField</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Input Types">
+    <div class="demo-result">
+        <p>
+            InputFields can be of type <code>text</code>, <code>number</code> or <code>password</code>. If no
+            type is specified, it will default to <code>text</code>.
+        </p>
+        <p>
+            An InputField may have a label and/or a placeholder. If there is a label and no placeholder, the
+            label will shift on focus. If there is both a label <em>and</em> a placeholder, the label will
+            always be above the input.
+        </p>
+        <div class="row">
+            <div class="col m4">
+                <gtx-input label="Text Input Label"></gtx-input>
+            </div>
+            <div class="col m4">
+                <gtx-input placeholder="Number Input Placeholder"
+                           type="number" min="0" max="100" step="5"></gtx-input>
+            </div>
+            <div class="col m4">
+                <gtx-input placeholder="Password Input Placeholder"
+                           label="Password Input Label"
+                           type="password"></gtx-input>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col m4">
+                <gtx-input placeholder="E-mail Input Placeholder"
+                            label="E-mail Input Label"
+                            type="email"></gtx-input>
+            </div>
+            <div class="col m4">
+                <gtx-input placeholder="Phone number Input Placeholder"
+                            label="Phone number Input Label"
+                            type="tel"></gtx-input>
+            </div>
+            <div class="col m4">
+                <gtx-input placeholder="URL Input Placeholder"
+                            label="URL Input Label"
+                            type="url"></gtx-input>
+            </div>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                  <gtx-input label="Text Input Label"></gtx-input>
+
+                  <gtx-input placeholder="Number Input Placeholder"
+                                         type="number" min="0" max="100" step="5"></gtx-input>
+
+                  <gtx-input placeholder="Password Input Placeholder"
+                             label="Password Input Label"
+                             type="password"></gtx-input>
+
+                  <gtx-input placeholder="E-mail Input Placeholder"
+                             label="E-mail Input Label"
+                             type="email"></gtx-input>
+
+                  <gtx-input placeholder="Phone number Input Placeholder"
+                             label="Phone number Input Label"
+                             type="tel"></gtx-input>
+
+                  <gtx-input placeholder="URL Input Placeholder"
+                             label="URL Input Label"
+                             type="url"></gtx-input>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+
+<gtx-demo-block demoTitle="Binding & Attributes">
+    <div class="demo-result">
+        <div class="row">
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="readonly" label="readonly"></gtx-checkbox>
+            </div>
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="disabled" label="disabled"></gtx-checkbox>
+            </div>
+            <div class="column small-4">
+                <gtx-checkbox [(ngModel)]="required" label="required"></gtx-checkbox>
+            </div>
+        </div>
+        <gtx-input label="Name"
+                   [readonly]="readonly"
+                   [disabled]="disabled"
+                   [required]="required"
+                   [(ngModel)]="name"
+        ></gtx-input>
+        name: <code>{{ name | json }}</code>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-checkbox [(ngModel)]="readonly" label="readonly"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="disabled" label="disabled"></gtx-checkbox>
+                <gtx-checkbox [(ngModel)]="required" label="required"></gtx-checkbox>
+
+                <gtx-input label="Name"
+                              [readonly]="readonly"
+                              [disabled]="disabled"
+                              [required]="required"
+                              [(ngModel)]="name"
+                ></gtx-input>
+                name: <code>(( name | json ))</code>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+
+<gtx-demo-block demoTitle="Binding to Model-driven Forms">
+    <div class="demo-result">
+        <form [formGroup]="addressForm">
+            <div class="row small-collapse" formGroupName="name">
+                <div class="columns small-5">
+                    <gtx-input formControlName="first" label="First name"></gtx-input>
+                </div>
+                <div class="columns small-6 small-push-1">
+                    <gtx-input formControlName="last" label="Last name"></gtx-input>
+                </div>
+            </div>
+            <gtx-input [formControl]="addressForm.get('address').get('streetName')" label="Street name"></gtx-input>
+        </form>
+        <div>
+            <pre>name.value: {{ addressForm.get('name').value | json }}</pre>
+            <pre>addressForm.value: {{ addressForm.value | json }}</pre>
+        </div>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="TypeScript" code='
+                this.addressForm = new FormGroup({
+                    name: new FormGroup({
+                        first: new FormControl("John"),
+                        last: new FormControl("Doe")
+                    }),
+                    address: new FormGroup({
+                        streetName: new FormControl("")
+                    })
+                });
+        '></gtx-highlighted-code>
+        <gtx-highlighted-code language="HTML" code='
+                <form [formGroup]="addressForm">
+                    <div formGroupName="name">
+                        <gtx-input formControlName="first" label="First name"></gtx-input>
+                        <gtx-input formControlName="last" label="Last name"></gtx-input>
+                    </div>
+                    <gtx-input [formControl]="addressForm.controls.address.controls.streetName" label="Street name"></gtx-input>
+                </form>
+                <pre>name.value: (( addressForm.controls.name.value | json ))</pre>
+                <pre>addressForm.value: (( addressForm.value | json ))</pre>
+        '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

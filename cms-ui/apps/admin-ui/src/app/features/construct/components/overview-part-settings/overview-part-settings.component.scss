@@ -1,0 +1,14 @@
+@import 'variables';
+
+label {
+    font-size: 0.8rem;
+    display: block;
+    color: $gtx-color-dark-gray;
+    transition: color 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    user-select: none;
+}

@@ -1,0 +1,20 @@
+@use 'sass:math';
+@import '../../../styles/base-import';
+
+$easeOutCubic: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+$easeOutSine: cubic-bezier(0.390, 0.575, 0.565, 1.000);
+
+.dropdown-content-wrapper {
+    a {
+        @include noselect;
+    }
+
+    position: relative;
+    transition: height 0.3s $easeOutCubic,
+                top 0.3s $easeOutCubic,
+                opacity 0.3s $easeOutSine;
+    overflow: hidden;
+    background-color: white;
+    @include z-depth-1;
+    z-index: 1002;
+}

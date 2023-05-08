@@ -1,0 +1,262 @@
+{
+    "aloha_editor": {
+        "en": "Enable Aloha Editor",
+        "de": "Aloha Editor aktivieren"
+    },
+    "allow_insecure_mesh_preview_url": {
+        "en": "Allow insecure connections to the Mesh Preview URL",
+        "de": "Unsichere Verbindung für Mesh Vorschau URL zulassen"
+    },
+    "content_repository": {
+        "en": "ContentRepository",
+        "de": "ContentRepository"
+    },
+    "copy_node_permission_required": {
+        "en": "You do not have permission to copy nodes",
+        "de": "Sie haben nicht die Berechtigung um Nodes zu kopieren"
+    },
+    "create_node": {
+        "en": "Create Node",
+        "de": "Node erstellen"
+    },
+    "create_node_permission_required": {
+        "en": "You do not have permission to create nodes",
+        "de": "Sie haben nicht die Berechtigung um Nodes zu erstellen"
+    },
+    "create_node_wizard_create_button": {
+        "en": "Create",
+        "de": "Erstellen"
+    },
+    "create_node_wizard_step_languages": {
+        "en": "Languages",
+        "de": "Sprachen"
+    },
+    "create_node_wizard_step_node_features": {
+        "en": "Node Features",
+        "de": "Node Features"
+    },
+    "create_node_wizard_step_properties": {
+        "en": "Properties",
+        "de": "Eigenschaften"
+    },
+    "create_node_wizard_step_publishing": {
+        "en": "Publishing",
+        "de": "Publizierung"
+    },
+    "create_node_wizard_title": {
+        "en": "Create Node",
+        "de": "Node erstellen"
+    },
+    "default_file_folder": {
+        "en": "Default file upload folder",
+        "de": "Standard Datei Upload Ordner"
+    },
+    "default_image_folder": {
+        "en": "Default image upload folder",
+        "de": "Standard Bild Upload Ordner"
+    },
+    "delete_node_permission_required": {
+        "en": "You do not have permission to delete nodes",
+        "de": "Sie haben nicht die Berechtigung um Nodes zu löschen"
+    },
+    "derived_from": {
+        "en": "Derived from",
+        "de": "Abgeleitet von"
+    },
+    "derives_from": {
+        "en": "Derives from {{master}}",
+        "de": "Abgeleitet von {{master}}"
+    },
+    "description": {
+        "en": "Description",
+        "de": "Beschreibung"
+    },
+    "feature_active": {
+        "en": "Active",
+        "de": "Aktiv"
+    },
+    "features_updated": {
+        "en": "Node features has been updated successfully",
+        "de": "Node Features wurde erfolgreich geändert"
+    },
+    "hostname": {
+        "en": "Hostname",
+        "de": "Hostname"
+    },
+    "https_only": {
+        "en": "Use HTTPS protocol",
+        "de": "HTTPS Protokoll verwenden"
+    },
+    "languages_updated": {
+        "en": "Node languages has been updated successfully",
+        "de": "Node Sprachen wurde erfolgreich geändert"
+    },
+    "mesh_preview_url": {
+        "en": "Mesh Preview URL",
+        "de": "Mesh Vorschau URL"
+    },
+    "node_name": {
+        "en": "Node name",
+        "de": "Nodename"
+    },
+    "online_documentation": {
+        "en": "Online documentation",
+        "de": "Online-Dokumentation"
+    },
+    "pub_content_repository": {
+        "en": "Publish into Content Repository",
+        "de": "In Content Repository publizieren"
+    },
+    "pub_cr_files": {
+        "en": "Publish files and images",
+        "de": "Dateien und Bilder publizieren"
+    },
+    "pub_cr_folders": {
+        "en": "Publish folders",
+        "de": "Ordner publizieren"
+    },
+    "pub_cr_pages": {
+        "en": "Publish pages",
+        "de": "Seiten publizieren"
+    },
+    "pub_dir_segments": {
+        "en": "Publish Directory Segments",
+        "de": "Verzeichnissegmente veröffentlichen"
+    },
+    "pub_disable_updates": {
+        "en": "Disable updates of content repository / filesystem",
+        "de": "Updates von Content Repository / Dateisystem deaktivieren"
+    },
+    "pub_files": {
+        "en": "Publish files and images",
+        "de": "Dateien und Bilder publizieren"
+    },
+    "pub_files_dir": {
+        "en": "Binary directory",
+        "de": "Binärverzeichnis"
+    },
+    "pub_pages": {
+        "en": "Publish pages",
+        "de": "Seiten publizieren"
+    },
+    "pub_pages_dir": {
+        "en": "Page directory",
+        "de": "Seitenverzeichnis"
+    },
+    "pub_pub_to_filesystem": {
+        "en": "Disable updates of content repository / filesystem",
+        "de": "Updates von Content Repository / Dateisystem deaktivieren"
+    },
+    "pub_to_filesystem": {
+        "en": "Publish into Filesystem",
+        "de": "In Dateisystem publizieren"
+    },
+    "pub_url_files_images": {
+        "en": "Files and images",
+        "de": "Dateien und Bilder"
+    },
+    "pub_url_pages": {
+        "en": "Pages",
+        "de": "Seiten"
+    },
+    "omit_page_extension": {
+        "en": "Omit page extension",
+        "de": "Dateitypendung für Seiten ausblenden"
+    },
+    "page_language_code": {
+        "en": "Page language code",
+        "de": "Seitensprachencodierung"
+    },
+    "title_content": {
+        "en": "Content",
+        "de": "Inhalt"
+    },
+    "title_content_repository": {
+        "en": "Content Repository",
+        "de": "Content Repository"
+    },
+    "title_content_updating": {
+        "en": "Content Updating",
+        "de": "Inhalt Aktualisierung"
+    },
+    "title_filesystem": {
+        "en": "Filesystem",
+        "de": "Dateisystem"
+    },
+    "title_networking": {
+        "en": "Networking",
+        "de": "Netzwerk"
+    },
+    "title_node_features": {
+        "en": "Node Features",
+        "de": "Node Features"
+    },
+    "title_node_packages": {
+        "en": "Node Packages",
+        "de": "Node Pakete"
+    },
+    "title_node_features_of_entity": {
+        "en": "Features of \"{{ entityName }}\"",
+        "de": "Features von „{{ entityName }}“"
+    },
+    "title_node_packages_of_entity": {
+        "en": "Packages assigned to \"{{ entityName }}\"",
+        "de": "Node „{{ entityName }}“ zugewiesene Pakete"
+    },
+    "title_publishing": {
+        "en": "Publishing",
+        "de": "Publizierung"
+    },
+    "title_publishing_of_entity": {
+        "en": "Publishing Settings of \"{{ entityName }}\"",
+        "de": "Publizierungseinstellungen von „{{ entityName }}“"
+    },
+    "title_url_rendering": {
+        "en": "URL Rendering",
+        "de": "URL Rendering"
+    },
+    "title_seo_i18n": {
+        "en": "SEO and Internationalization",
+        "de": "SEO und Internationalisierung"
+    },
+    "title_portal_configuration": {
+        "en": "Portal Configuration",
+        "de": "Portal-Konfiguration"
+    },
+    "type_channel": {
+        "en": "Channel",
+        "de": "Channel"
+    },
+    "type_node": {
+        "en": "Node",
+        "de": "Node"
+    },
+    "update_node_permission_required": {
+        "en": "You do not have permission to change nodes",
+        "de": "Sie haben nicht die Berechtigung um Nodes zu ändern"
+    },
+    "url_mode_automatic": {
+        "en": "Automatic",
+        "de": "Automatisch"
+    },
+    "url_mode_dynamic": {
+        "en": "Static URLs (dynamic)",
+        "de": "Statische URLs (dynamisch)"
+    },
+    "url_mode_plink": {
+        "en": "Portal-Links (<plink>)",
+        "de": "Portal-Links (<plink>)"
+    },
+    "url_mode_w_domain": {
+        "en": "Static URLs with domain",
+        "de": "Statische URLs mit Domain"
+    },
+    "url_mode_wo_domain": {
+        "en": "Static URLs without domain",
+        "de": "Statische URLs ohne Domain"
+    },
+    "use_utf8": {
+        "en": "Use UTF-8 charset",
+        "de": "UTF-8 verwenden"
+    }
+}

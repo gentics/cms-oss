@@ -1,0 +1,264 @@
+<div class="left-items">
+    <icon-checkbox class="left" [selected]="items | allItemsSelected:selectedItems" (change)="toggleSelectAll($event)" [icon]="icon"></icon-checkbox>
+    <span class="type">
+        <ng-template [ngIf]="0 < selectedItems.length" [ngIfElse]="noneSelected">
+            <span class="count-full">
+                <span class="item-list-status" id="item-list-status-1" *ngIf="filterTerm === ''">
+                    {{ 'editor.item_count_header_selected' | i18n: { selected: selectedItems.length, count: itemsInfo.total, _items: itemType, dative: true } }}
+                </span>
+                <span class="item-list-status" id="item-list-status-2" *ngIf="filterTerm !== ''">
+                    {{ 'editor.item_count_header_selected_matching' | i18n: { selected: selectedItems.length, count: items?.length, _items: itemType, dative: true } }}
+                </span>
+            </span>
+            <span class="count-part">
+                {{ 'editor.item_count_header_selected_simple' | i18n: { count: selectedItems.length, _items: itemType } }}
+            </span>
+        </ng-template>
+        <ng-template #noneSelected>
+            <span class="count-full">
+                <span class="item-list-status" id="item-list-status-3" *ngIf="itemsInfo.itemsPerPage >= itemsInfo.total && filterTerm === ''">
+                    {{ 'editor.item_count_header_simple' | i18n: { count: itemsInfo.total, _items: itemType } }}
+                </span>
+                <span class="item-list-status" id="item-list-status-4" *ngIf="itemsInfo.itemsPerPage < itemsInfo.total && filterTerm === ''">
+                    {{ 'editor.item_count_header_partial' | i18n: { count: (itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage < itemsInfo.itemsPerPage) ? itemsInfo.total - (itemsInfo.currentPage - 1) * itemsInfo.itemsPerPage : itemsInfo.itemsPerPage, total: itemsInfo.total, _items: itemType, dative: true } }}
+                </span>
+                <span class="item-list-status" id="item-list-status-5" *ngIf="filterTerm !== ''">
+                    {{ 'editor.item_count_header_matching' | i18n: { count: (items | filterItems:filterTerm:itemsInfo.showPath)?.length, _items: itemType } }}
+                </span>
+            </span>
+            <span class="count-part">
+                {{ 'editor.item_count_header_simple' | i18n: { count: items?.length, _items: itemType } }}
+            </span>
+        </ng-template>
+    </span>
+</div>
+
+<div class="header-controls right-items">
+    <div class="type-actions" *ngIf="!selectedItems.length">
+        <language-context-selector
+            *ngIf="nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')"
+            [availableLanguages]="nodeLanguages"
+            [activeLanguage]="activeLanguage$ | async"
+            [disabled]="elasticsearchQueryActive$ | async"
+            [title]="'editor.language_context_selector_disabled_search' | i18n"
+            (selectLanguage)="languageChanged($event)"
+        ></language-context-selector>
+
+        <ng-container *ngIf="uiMode === UIMode.EDIT">
+            <gtx-button
+                *ngIf="!acceptUploads && folderPermissions[itemType]?.create"
+                size="small"
+                type="secondary"
+                flat
+                [disabled]="!canCreateItem"
+                [overrideSlot]="itemType === 'folder' ? 'newFolderButton' : 'newPageButton'"
+                [overrideParams]="{ FOLDERID: currentFolderId, NODEID: activeNode.id }"
+                (click)="createClicked()"
+            >
+                <icon left>add</icon> {{ itemType | i18n }}
+            </gtx-button>
+
+            <upload-button
+                *ngIf="acceptUploads && folderPermissions[itemType].upload"
+                [itemType]="itemType"
+                [acceptUploads]="acceptUploads"
+                [multiple]="true"
+                [targetNodeId]="activeNode.id"
+                [targetFolderId]="currentFolderId"
+                [instantUpload]="true"
+                btnSize="small"
+            ></upload-button>
+        </ng-container>
+
+        <gtx-dropdown-list align="right">
+            <gtx-dropdown-trigger>
+                <gtx-button icon type="secondary">
+                    <icon>more_vert</icon>
+                </gtx-button>
+            </gtx-dropdown-trigger>
+
+            <gtx-dropdown-content>
+                <gtx-dropdown-item *ngIf="itemType === 'image'" (click)="toggleDisplayImagesGridView()">
+                    {{ (showImagesGridView ? 'editor.show_list' : 'editor.show_grid') | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item (click)="selectDisplayFields()">
+                    {{ 'editor.select_display_fields_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item
+                    class="sort-mode"
+                    [disabled]="elasticsearchQueryActive$ | async"
+                    (click)="selectSorting()"
+                >
+                    {{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + itemsInfo?.sortBy | i18n) } }}
+                    <icon>{{ itemsInfo?.sortOrder === 'asc' ? 'arrow_upward' : arrow_downward }}</icon>
+                </gtx-dropdown-item>
+
+                <gtx-dropdown-item
+                    *ngIf="(itemType === 'page' || itemType === 'form') && 1 < nodeLanguages.length"
+                    class="page-language-toggle"
+                    (click)="toggleDisplayAllLanguages()"
+                >
+                    <gtx-checkbox
+                        [checked]="showAllLanguages"
+                        (change)="toggleDisplayAllLanguages()"
+                    ></gtx-checkbox>
+                    {{ 'editor.display_all_languages_label' | i18n }}
+                </gtx-dropdown-item>
+
+                <ng-container *ngIf="uiMode === UIMode.EDIT">
+                    <gtx-dropdown-item
+                        *ngIf="(itemType === 'page' || itemType === 'form')"
+                        (click)="toggleDisplayStatusIcons()"
+                        class="page-language-toggle"
+                    >
+                        <gtx-checkbox
+                            [checked]="showStatusIcons"
+                            (change)="toggleDisplayStatusIcons()"
+                        ></gtx-checkbox>
+                        {{ 'editor.display_status_icons_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item class="page-language-toggle" (click)="toggleDisplayDeleted()">
+                        <gtx-checkbox
+                            [checked]="showDeleted"
+                            (change)="toggleDisplayDeleted()"
+                        ></gtx-checkbox>
+                        {{ 'editor.display_deleted_label' | i18n }}
+                    </gtx-dropdown-item>
+                </ng-container>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+    </div>
+
+    <div class="group-actions" *ngIf="selectedItems.length > 0">
+        <ng-container *ngIf="uiMode === UIMode.EDIT">
+            <gtx-button
+                *ngIf="itemType === 'page' || itemType === 'form' || itemType === 'file' || itemType === 'image'"
+                icon
+                type="secondary"
+                [title]="'editor.copy_label' | i18n"
+                (click)="copySelected()"
+            >
+                <icon>file_copy</icon>
+            </gtx-button>
+
+            <gtx-button
+                *ngIf="folderPermissions[itemType]?.edit"
+                icon
+                type="secondary"
+                [title]="'editor.move_label' | i18n"
+                (click)="moveSelected()"
+            >
+                <icon>subdirectory_arrow_right</icon>
+            </gtx-button>
+        </ng-container>
+
+        <gtx-dropdown-list
+            *ngIf="uiMode === UIMode.STAGING || folderPermissions[itemType]?.delete || (selectedItems | anyPageUnpublished) || (selectedItems | anyItemPublished)"
+            align="right"
+        >
+            <gtx-dropdown-trigger>
+                <gtx-button icon type="secondary">
+                    <icon>more_vert</icon>
+                </gtx-button>
+            </gtx-dropdown-trigger>
+
+            <gtx-dropdown-content>
+                <ng-container *ngIf="uiMode === UIMode.EDIT">
+                    <gtx-dropdown-item
+                        *ngIf="(itemType === 'page' || itemType === 'form') && selectedItems"
+                        (click)="publishSelected(itemType)"
+                        class="success"
+                    >
+                        <icon left>cloud_upload</icon>
+                        {{ 'editor.publish_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="itemType === 'page' && selectedItems" (click)="publishLanguageVariantsSelected()">
+                        <icon left>cloud_upload</icon>
+                        {{ 'editor.publish_language_variants_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="selectedItems && itemType === 'page'" (click)="createVariationsClicked(selectedItems)">
+                        <icon left>layers</icon>
+                        {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="selectedItems | anyItemInherited" (click)="localizeSelected()">
+                        <icon left>insert_drive_file</icon>
+                        {{ 'editor.localize_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="selectedItems | anyItemPublished" class="alert" (click)="takeSelectedOffline(itemType)">
+                        <icon left>cloud_off</icon>
+                        {{ 'editor.take_offline_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="folderPermissions[itemType]?.delete" class="alert" (click)="deleteSelected(itemType)">
+                        <icon left>delete</icon>
+                        {{ 'editor.delete_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="selectedItems | anyItemDeleted" (click)="restoreSelected(itemType)">
+                        <icon left>restore_from_trash</icon>
+                        {{ 'editor.restore_from_wastebin_label' | i18n }}
+                    </gtx-dropdown-item>
+                </ng-container>
+
+                <ng-container *ngIf="uiMode === UIMode.STAGING">
+                    <gtx-dropdown-item (click)="stageItems(StagingMode.REGULAR)">
+                        <icon left>inventory</icon>
+                        {{ 'editor.stage_multiple_items_label' | i18n:{
+                            itemType: ('common.type_' + itemType | i18n),
+                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
+                        } }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="itemType === 'folder'" (click)="stageItems(StagingMode.RECURSIVE)">
+                        <icon left>input</icon>
+                        {{ 'editor.stage_multiple_items_recursive_label' | i18n:{
+                            itemType: ('common.type_' + itemType | i18n),
+                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
+                        } }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="itemType === 'page'" (click)="stageItems(StagingMode.ALL_LANGUAGES)">
+                        <icon left>language</icon>
+                        {{ 'editor.stage_multiple_items_all_languages_label' | i18n:{
+                            itemType: ('common.type_' + itemType | i18n),
+                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
+                        } }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item (click)="unstageItems(StagingMode.REGULAR)">
+                        <icon left>remove</icon>
+                        {{ 'editor.unstage_multiple_items_label' | i18n:{
+                            itemType: ('common.type_' + itemType | i18n),
+                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
+                        } }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="itemType === 'page'" (click)="unstageItems(StagingMode.ALL_LANGUAGES)">
+                        <icon left>block</icon>
+                        {{ 'editor.unstage_multiple_items_all_languages_label' | i18n:{
+                            itemType: ('common.type_' + itemType | i18n),
+                            itemTypePlural: ('common.type_' + plural[itemType] | i18n)
+                        } }}
+                    </gtx-dropdown-item>
+                </ng-container>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+    </div>
+
+    <div
+        class="collapse-icon"
+        [class.collapsed]="isCollapsed"
+        (click)="isCollapsed = !isCollapsed"
+    >
+        <gtx-button icon type="secondary" [disabled]="items?.length === 0">
+            <icon>keyboard_arrow_down</icon>
+        </gtx-button>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+.column {
+    padding: 0;
+}
+
+gtx-select {
+    display: flex;
+}
+
+gtx-dropdown-list {
+    width: 100%;
+}
+
+::ng-deep .select-option .material-icons {
+    color: #3ebb16;
+    font-size: 12px;
+}

@@ -1,0 +1,118 @@
+{
+    "button.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/button/button.component.ts"
+    },
+    "breadcrumb.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/breadcrumbs/breadcrumbs.component.ts"
+    },
+    "checkbox.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/checkbox/checkbox.component.ts"
+    },
+    "contents-list-item.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/contents-list-item/contents-list-item.component.ts"
+    },
+    "date-time-picker-controls.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker-controls/date-time-picker-controls.component.ts"
+    },
+    "date-time-picker.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker/date-time-picker.component.ts"
+    },
+    "dropdown-list.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/dropdown-list/dropdown-list.component.ts"
+    },
+    "file-drop-area.directive": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/directives/file-drop-area/file-drop-area.directive.ts"
+    },
+    "file-picker.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/file-picker/file-picker.component.ts"
+    },
+    "grouped-tabs.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/grouped-tabs/grouped-tabs.component.ts"
+    },
+    "input.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/input/input.component.ts"
+    },
+    "menu-toggle-button.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/menu-toggle-button/menu-toggle-button.component.ts"
+    },
+    "overlay-host.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/overlay-host/overlay-host.component.ts"
+    },
+    "progress-bar.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/progress-bar/progress-bar.component.ts"
+    },
+    "radio-button.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/radio-button/radio-button.component.ts"
+    },
+    "range.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/range/range.component.ts"
+    },
+    "search-bar.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/search-bar/search-bar.component.ts"
+    },
+    "select.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/select/select.component.ts"
+    },
+    "side-menu.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/side-menu/side-menu.component.ts"
+    },
+    "sortable-list.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/sortable-list/sortable-list.component.ts"
+    },
+    "split-button.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/split-button/split-button.component.ts"
+    },
+    "split-view-container.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/split-view-container/split-view-container.component.ts"
+    },
+    "table.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/table/table.component.ts"
+    },
+    "tabs.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/tabs/tabs.component.ts"
+    },
+    "textarea.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/textarea/textarea.component.ts"
+    },
+    "tooltip.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/tooltip/tooltip.component.ts"
+    },
+    "top-bar.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/top-bar/top-bar.component.ts"
+    },
+    "modal.service": {
+        "type": "service",
+        "sourceFile": "../../libs/ui-core/src/lib/providers/modal/modal.service.ts"
+    },
+    "notification.service": {
+        "type": "service",
+        "sourceFile": "../../libs/ui-core/src/lib/providers/notification/notification.service.ts"
+    }
+}

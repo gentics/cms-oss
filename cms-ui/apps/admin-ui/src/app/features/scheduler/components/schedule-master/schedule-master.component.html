@@ -1,0 +1,10 @@
+<div class="gtx-entity-master gtx-entity-master-with-common-actions">
+    <gtx-schedule-table
+        #table
+        class="entity-table"
+        [showSearch]="true"
+        [activeEntity]="activeEntity"
+        (rowClick)="handleRowClick($event)"
+        (taskClick)="handleTaskClick()"
+    ></gtx-schedule-table>
+</div>

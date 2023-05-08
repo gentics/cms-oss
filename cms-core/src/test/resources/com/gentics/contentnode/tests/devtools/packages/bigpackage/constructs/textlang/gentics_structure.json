@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.69568",
+  "keyword" : "textlang",
+  "icon" : "text.gif",
+  "name" : {
+    "de" : "Text/HTML (lang)",
+    "en" : "Text/HTML (long)"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : true,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.69574",
+    "name" : {
+      "de" : "Text",
+      "en" : "Text"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : true
+  } ]
+}

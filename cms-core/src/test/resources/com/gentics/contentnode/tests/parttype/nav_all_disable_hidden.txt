@@ -1,0 +1,73 @@
+0: Node Name	0/0 (0) true: 12
+1: file1.txt	1/12 (1) false
+1: file2.txt	2/12 (2) false
+1: Folder 1	3/12 (3) true: 10
+2: file1_1.txt	1/10 (4) false
+2: file2_1.txt	2/10 (5) false
+2: Folder 1.1	3/10 (6) true: 8
+3: file1_2.txt	1/8 (7) false
+3: file2_2.txt	2/8 (8) false
+3: hidden_file_2.txt	3/8 (9) false
+3: hidden_image_2.jpg	4/8 (10) false
+3: image1_2.jpg	5/8 (11) false
+3: image2_2.jpg	6/8 (12) false
+3: Page 1	7/8 (13) false
+3: Page 2	8/8 (14) false
+2: Folder 1.2	4/10 (15) true: 8
+3: file1_3.txt	1/8 (16) false
+3: file2_3.txt	2/8 (17) false
+3: hidden_file_3.txt	3/8 (18) false
+3: hidden_image_3.jpg	4/8 (19) false
+3: image1_3.jpg	5/8 (20) false
+3: image2_3.jpg	6/8 (21) false
+3: Page 1	7/8 (22) false
+3: Page 2	8/8 (23) false
+2: hidden_file_1.txt	5/10 (24) false
+2: hidden_image_1.jpg	6/10 (25) false
+2: image1_1.jpg	7/10 (26) false
+2: image2_1.jpg	8/10 (27) false
+2: Page 1	9/10 (28) false
+2: Page 2	10/10 (29) false
+1: Folder 2	4/12 (30) true: 10
+2: file1_4.txt	1/10 (31) false
+2: file2_4.txt	2/10 (32) false
+2: Folder 2.1	3/10 (33) true: 8
+3: file1_5.txt	1/8 (34) false
+3: file2_5.txt	2/8 (35) false
+3: hidden_file_5.txt	3/8 (36) false
+3: hidden_image_5.jpg	4/8 (37) false
+3: image1_5.jpg	5/8 (38) false
+3: image2_5.jpg	6/8 (39) false
+3: Page 1	7/8 (40) false
+3: Page 2	8/8 (41) false
+2: Folder 2.2	4/10 (42) true: 8
+3: file1_6.txt	1/8 (43) false
+3: file2_6.txt	2/8 (44) false
+3: hidden_file_6.txt	3/8 (45) false
+3: hidden_image_6.jpg	4/8 (46) false
+3: image1_6.jpg	5/8 (47) false
+3: image2_6.jpg	6/8 (48) false
+3: Page 1	7/8 (49) false
+3: Page 2	8/8 (50) false
+2: hidden_file_4.txt	5/10 (51) false
+2: hidden_image_4.jpg	6/10 (52) false
+2: image1_4.jpg	7/10 (53) false
+2: image2_4.jpg	8/10 (54) false
+2: Page 1	9/10 (55) false
+2: Page 2	10/10 (56) false
+1: Hidden	5/12 (57) true: 8
+2: file1_7.txt	1/8 (58) false
+2: file2_7.txt	2/8 (59) false
+2: hidden_file_7.txt	3/8 (60) false
+2: hidden_image_7.jpg	4/8 (61) false
+2: image1_7.jpg	5/8 (62) false
+2: image2_7.jpg	6/8 (63) false
+2: Page 1	7/8 (64) false
+2: Page 2	8/8 (65) false
+1: hidden_file.txt	6/12 (66) false
+1: hidden_image.jpg	7/12 (67) false
+1: image1.jpg	8/12 (68) false
+1: image2.jpg	9/12 (69) false
+1: NavPage	10/12 (70) true
+1: Page 1	11/12 (71) false
+1: Page 2	12/12 (72) false

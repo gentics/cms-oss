@@ -1,0 +1,205 @@
+@import 'ui-core/src/styles/core';
+
+body {
+    overflow-x: hidden;
+}
+
+.top-bar {
+    background-color: $gtx-color-primary;
+    color: white;
+
+    h1 {
+        font-size: 1.64rem;
+        font-weight: normal;
+        line-height: 1.1;
+        margin: 0.82rem 0 0.656rem 0;
+        @media screen and (max-width: $small-screen) {
+            font-size: 1.2rem;
+        }
+    }
+
+    a.title {
+        &, &:link {
+            color: white;
+        }
+    }
+
+    .version-info {
+        font-size: $gtx-font-size-lead;
+        display: inline-block;
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-weight: 300;
+        a {
+            color: #b6d8e8;
+        }
+        gtx-docs-switcher {
+            button.btn-flat.btn-icon.small {
+                color: #b6d8e8;
+                height: 16px;
+                line-height: 13px;
+                &:hover {
+                    color: #b6d8e8;
+                }
+            }
+        }
+        @media screen and (max-width: $small-screen) {
+            font-size: $gtx-font-size-small;
+        }
+    }
+
+    .gentics-logo {
+        flex: 0 !important;
+        height: 38px;
+        padding-right: 10px;
+        svg-icon > svg {
+            width: 32px;
+            height: 38px;
+            g {
+                fill: white;
+            }
+        }
+        @media screen and (max-width: $small-screen) {
+            display: none !important;
+        }
+    }
+
+    .github-logo {
+        height: 32px;
+    }
+
+    @media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+        .gentics-logo {
+            padding-right: 45px;
+        }
+    }
+
+    .github-logo, .github-logo svg {
+        fill: white;
+        width: 32px;
+        height: 32px;
+    }
+}
+
+.menu-button {
+    cursor: pointer;
+}
+
+.menu-content {
+    background-color: white;
+    > ul {
+        margin: 50px 30px;
+        font-size: 2em;
+    }
+}
+
+gtx-contents-list-item {
+    .item-avatar icon,
+    .item-avatar i {
+        color: #8f8f8f;
+    }
+
+    .type-label {
+        padding: 3px 5px;
+        font-size: $gtx-font-size-small;
+        border-radius: 3px;
+        color: white;
+        &.css {
+            background-color: #d8d1b5;
+        }
+        &.component {
+            background-color: #99bdd0;
+        }
+        &.info {
+            background-color: #88b683;
+        }
+        &.service {
+            background-color: #bc9f9f;
+        }
+    }
+}
+
+gtx-file-drop-area,
+div[gtxFileDropArea] {
+    & {
+        background-color: $gtx-color-very-light-gray;
+        border-radius: 6px;
+        border: 3px solid transparent;
+        display: block;
+        padding-bottom: 1em;
+        padding-top: 1em;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    & ~ & {
+        margin-top: 1em;
+    }
+
+    &.dragging-over {
+        background-color: $gtx-color-mid-gray;
+    }
+
+    &.dragging-in-page {
+        border-color: $gtx-color-primary;
+    }
+}
+
+gtx-sortable-list[gtxFileDropArea] {
+    border: 1px solid $gtx-color-very-light-gray;
+
+    .filename {
+        flex: 1 1 auto;
+        padding-left: 10px;
+    }
+
+    .filesize {
+        align-self: right;
+    }
+
+    .placeholder {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.demo-result .outlined-block {
+    margin-top: 1em;
+    outline: 1px solid $gtx-color-light-gray;
+    padding: 1em;
+    width: 320px;
+    width: max-content;
+}
+
+.log-table {
+    display: inline-block;
+
+    td, th {
+        padding: 0 5px;
+        font-family: monospace;
+    }
+}
+
+
+code, kbd, pre, samp {
+    border-radius: 3px;
+    background-color: #FBFBFB;
+    padding: 2px 3px;
+}
+
+.split-view-container {
+    .list-pane {
+        background-color: lighten($gtx-color-secondary, 15%);
+        .item-avatar {
+            background-color: white;
+        }
+        a {
+            cursor: pointer;
+        }
+    }
+    .content-pane {
+        padding: 0 20px 50px 20px;
+    }
+}

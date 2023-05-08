@@ -1,0 +1,26 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+:host {
+    display: block;
+}
+
+.repo-list {
+    @include item-type-icon-colors;
+
+    &.empty {
+        color: $gtx-color-mid-gray;
+        > .list-header {
+            border-bottom: none;
+        }
+    }
+}
+
+.list-body {
+    @include masonry-thumbnail-grid;
+
+    &.collapsed {
+        display: none;
+    }
+}

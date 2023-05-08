@@ -1,0 +1,60 @@
+.brokenLinks, .filterPage {
+    display: flex;
+}
+
+gtxct-status-indicator {
+    margin: 15px;
+    text-transform: uppercase;
+
+    &:first-child {
+        margin-left: 0;
+    }
+}
+
+gtxct-filter-by-editor {
+    text-transform: uppercase;
+}
+
+gtxct-filter-translation {
+    text-transform: uppercase;
+    margin-left: 25px;
+}
+
+gtxct-filter-editable {
+    margin-left: 25px;
+    text-transform: uppercase;
+}
+
+.gtxct-link-filter {
+    display: flex;
+    align-items: baseline;
+}
+
+.gtxct-link-filter-title {
+    margin-right: 20px;
+    text-transform: uppercase;
+}
+
+.gtxct-page-status-filter {
+    display: flex;
+    align-items: baseline;
+}
+
+.gtxct-page-status-filter-title {
+    margin-right: 20px;
+    text-transform: uppercase;
+}
+
+.filterPage {
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 15px 0;
+}
+
+.nodeSelector {
+    margin-top: 10px;
+}
+
+.searchBar {
+    margin-top: -15px;
+}

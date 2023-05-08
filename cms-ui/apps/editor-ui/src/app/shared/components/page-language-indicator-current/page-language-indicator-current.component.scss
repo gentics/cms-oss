@@ -1,0 +1,73 @@
+@import "variables";
+@import "../page-language-indicator/page-language-indicator.component";
+
+:host {
+    align-self: flex-start;
+
+    .language-icon {
+        cursor: default;
+        padding: 0 0.4rem 0.4rem 0.4rem;
+
+        &.statusInfos {
+            &:hover,
+            &:hover .stateModified:after,
+            &:hover .stateInQueue:after,
+            &:hover .statePlanned:after,
+            &:hover .stateInherited:after,
+            &:hover .stateLocalized:after
+            {
+                background-color: white;
+            }
+
+            .stateDeleted {
+                &:after {
+                    left: -0.2rem;
+                }
+            }
+        }
+
+        &.current {
+            .status-label {
+                .language-code {
+                    padding: 1px 5.25px;
+                }
+
+                &.online {
+                    .language-code {
+                        padding: 1px 4px;
+                    }
+                }
+            }
+        }
+
+        .status-label {
+            .language-code {
+                color: $gtx-color-dark-gray;
+
+                i {
+                    font-size: calc( #{$gcms-icon-font-size} * 1.5 );
+                }
+
+                &.multi-lang {
+                    float: left;
+
+                    icon {
+                        margin-right: 0;
+                        font-size: calc( #{$gcms-icon-font-size} * 1.5 );
+                        padding: 2px 2.5px;
+                    }
+                }
+            }
+
+            &.online {
+                .language-code {
+                    &.multi-lang {
+                        icon {
+                            padding: 2px 1px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

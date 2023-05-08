@@ -1,0 +1,112 @@
+@import "variables";
+
+.modal-content {
+    max-height: calc(85vh - 100px);
+    @media screen and (min-width: $small-screen-up) {
+        min-width: 480px;
+    }
+}
+
+.description {
+    p {
+        margin: 0.5em 0;
+    }
+    .error {
+        color: $gtx-color-alert;
+    }
+    ::ng-deep button {
+        text-transform: none;
+    }
+}
+
+.affected-objects-wrapper {
+    border-top: 1px solid $gtx-color-light-gray;
+    margin-top: 20px;
+    padding-top: 10px;
+    position: relative;
+
+    .recursive-checkbox {
+        margin: 14px 14px 28px 0px;
+        display: block;
+    }
+
+    gtx-checkbox ::ng-deep label {
+        color: $gtx-color-off-black;
+    }
+
+    .affected-objects-row {
+        transition: opacity 0.3s;
+        &.loading {
+            opacity: 0.5;
+        }
+
+        .column {
+            white-space: nowrap;
+        }
+
+        gtx-checkbox {
+            display: inline-block;
+        }
+
+        .empty {
+            color: $gtx-color-light-gray;
+        }
+
+        .detail-toggle {
+            transition: transform 0.3s;
+            transform: rotateZ(-90deg);
+        }
+
+        .details {
+            max-height: 0;
+            overflow: hidden;
+            font-size: $gtx-font-size-small;
+            margin-bottom: 12px;
+            table {
+                margin-left: 75px;
+                width: inherit;
+                td {
+                    padding: 2px 5px;
+                }
+            }
+        }
+
+        &.expanded {
+            .detail-toggle {
+                transform: rotateZ(0deg);
+            }
+
+            .details {
+                max-height: 300px;
+                overflow: auto;
+            }
+        }
+
+        .localization-label {
+            &::before {
+                content: '';
+                width: 3px;
+                height: 10px;
+                margin-right: 3px;
+                display: inline-block;
+            }
+            padding: 1px 3px;
+            display: inline-block;
+        }
+
+        .local::before {
+            background-color: #c8cbff;
+        }
+        .localized::before {
+            background-color: #94ce90;
+        }
+        .localization-indicator::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 10px;
+        }
+    }
+
+
+}

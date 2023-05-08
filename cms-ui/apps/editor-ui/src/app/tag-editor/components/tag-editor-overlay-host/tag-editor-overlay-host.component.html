@@ -1,0 +1,5 @@
+<div class="tag-editor-bg" [class.visible]="isVisible">
+    <div class="tag-editor" [class.isIE11]="isIE11">
+        <tag-editor-host #tagEditorHost *ngIf="currentTag"></tag-editor-host>
+    </div>
+</div>

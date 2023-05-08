@@ -1,0 +1,22 @@
+## $bc.path is an array that contains all folders
+## to display in the breadcrumb.
+
+#foreach($nav in $bc.path)
+
+    ## $bc.disableactivepage is true if the current page 
+    ## should not be linked in the breadcrumb.
+    ## $nav.startpage is the startpage of the current nav object - In this case folders.
+    ## $cms.page is the currently displayed page.
+
+
+    #if( ! $bc.disableactivepage || ($bc.disableactivepage && ! $nav.startpage.equals($cms.page)) )
+
+        &gt;  <a href="$nav.startpage.url" title="$nav.name"> $nav.name</a>
+
+    #else
+
+        &gt;  $nav.name
+
+    #end
+
+#end

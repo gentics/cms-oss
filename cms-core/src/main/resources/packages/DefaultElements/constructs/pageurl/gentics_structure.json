@@ -1,0 +1,38 @@
+{
+  "globalId" : "A547.69527",
+  "keyword" : "pageurl",
+  "icon" : "url.gif",
+  "name" : {
+    "de" : "[URL] Seite",
+    "en" : "[URL] Page"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "newEditor" : true,
+  "parts" : [ {
+    "globalId" : "A547.69533",
+    "name" : {
+      "de" : "Seiten-URL",
+      "en" : "Page-URL"
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

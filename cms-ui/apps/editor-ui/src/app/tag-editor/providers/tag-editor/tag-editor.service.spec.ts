@@ -1,0 +1,338 @@
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@editor-ui/app/state';
+import { Node, Page, Raw, StringTagPartProperty, Tag, TagType } from '@gentics/cms-models';
+import { NgxsModule } from '@ngxs/store';
+import { cloneDeep } from 'lodash-es';
+import { getExampleNodeData, getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
+import { TestApplicationState } from '../../../state/test-application-state.mock';
+import { EditableTag, TagEditorContext, VariableTagEditorContext } from '../../common';
+import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
+import { TranslatorImpl } from '../../common/impl/translator-impl';
+import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
+import { EditTagInfo, TagEditorService } from './tag-editor.service';
+
+describe('TagEditorService', () => {
+
+    let state: TestApplicationState;
+    let tagEditorService: TagEditorService;
+    let tagEditorOverlayHost: TagEditorOverlayHostComponent;
+    let userAgentRef: MockUserAgentRef;
+    let entityResolver: MockEntityResolver;
+    let editorOverlayService: MockEditorOverlayService;
+    let repositoryBrowserClient: MockRepositoryBrowserClient;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            providers: [
+                { provide: ApplicationStateService, useClass: TestApplicationState },
+            ],
+        });
+
+        state = TestBed.get(ApplicationStateService);
+        editorOverlayService = new MockEditorOverlayService();
+        userAgentRef = new MockUserAgentRef();
+        entityResolver = new MockEntityResolver();
+        repositoryBrowserClient = new MockRepositoryBrowserClient();
+        tagEditorService = new TagEditorService(
+            state,
+            editorOverlayService as any,
+            entityResolver as any,
+            repositoryBrowserClient as any,
+            new MockTranslateService() as any,
+            userAgentRef as any,
+        );
+        tagEditorOverlayHost = <any> new MockTagEditorOverlayHost();
+        tagEditorService.registerTagEditorOverlayHost(tagEditorOverlayHost);
+        state.mockState({
+            editor: {
+                nodeId: 4711,
+            },
+            ui: {
+                language: 'en',
+            },
+        });
+    });
+
+    /**
+     * Generates initialization data for creating a new TagEditorContext. For convenience,
+     * the return value is typed, such that tagOwner is always a page.
+     */
+    function getTagEditorContextInitData(): EditTagInfo & { tagOwner: Page<Raw> } {
+        const data = getTagEditorInitData();
+        return {
+            tag: data.tag,
+            tagType: data.tagType,
+            tagOwner: data.page,
+            node: getExampleNodeData({ id: state.now.editor.nodeId }),
+            readOnly: false,
+        };
+    }
+
+    /** Checks that the tagEditorContext has been set up as expected */
+    function checkTagEditorContext(tagEditorContext: TagEditorContext, expectedData: EditTagInfo): void {
+        const expectedEditableTag: EditableTag = {
+            ...expectedData.tag,
+            tagType: expectedData.tagType,
+        };
+        const expectedVarContext: VariableTagEditorContext = {
+            uiLanguage: state.now.ui.language,
+        };
+
+        expect(tagEditorContext instanceof TagEditorContextImpl).toBeTruthy();
+        expect(tagEditorContext.editedTag).toEqual(expectedEditableTag);
+        expect(tagEditorContext.page).toEqual(expectedData.tagOwner);
+        expect(tagEditorContext.node).toEqual(expectedData.node);
+        expect(tagEditorContext.readOnly).toBe(expectedData.readOnly);
+        expect(tagEditorContext.sid).toBe(state.now.auth.sid);
+        expect(tagEditorContext.translator instanceof TranslatorImpl).toBeTruthy();
+        let actualContext: VariableTagEditorContext = null;
+        tagEditorContext.variableContext.subscribe(context => actualContext = context);
+        expect(actualContext).toEqual(expectedVarContext);
+    }
+
+    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and resolves the result promise correctly', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const expectedData = cloneDeep(data);
+        expectedData.tagOwnerFromIFrame = true;
+        expect((<any> data.tag)['tagType']).toBeUndefined();
+        const createTagEditorContextSpy = spyOn(tagEditorService, 'createTagEditorContext').and.callThrough();
+        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor')
+            .and.callFake((editableTag: EditableTag, context: TagEditorContext) => {
+                return Promise.resolve(createEditedTag(editableTag));
+            });
+
+        const expectedEditableTag: EditableTag = {
+            ...expectedData.tag,
+            tagType: expectedData.tagType,
+        };
+
+        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner);
+
+        expect(createTagEditorContextSpy).toHaveBeenCalledWith(expectedData);
+        expect(openTagEditorSpy).toHaveBeenCalled();
+        expect(openTagEditorSpy.calls.argsFor(0)[0]).toEqual(expectedEditableTag);
+        const tagEditorContext: TagEditorContext = openTagEditorSpy.calls.argsFor(0)[1];
+        checkTagEditorContext(tagEditorContext, expectedData);
+
+        // Make sure that the returned promise resolves to a tag without the tagType property set
+        const expectedFinalTag: Tag = {
+            ...expectedData.tag,
+        };
+        (expectedFinalTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified value';
+        let finalTag: Tag = null;
+        tagEditorPromise.then(result => finalTag = result);
+        tick();
+        expect(finalTag).toEqual(expectedFinalTag);
+    }));
+
+    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and relays a promise rejection correctly', fakeAsync(() => {
+        const data = getTagEditorInitData();
+        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor').and.returnValue(Promise.reject(undefined));
+
+        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
+
+        expect(openTagEditorSpy).toHaveBeenCalled();
+        let resolved = false;
+        let rejected = false;
+        let error: any;
+        tagEditorPromise
+            .then(() => resolved = true)
+            .catch(reason => {
+                rejected = true;
+                error = reason;
+            });
+        tick();
+        expect(resolved).toBe(false);
+        expect(rejected).toBe(true);
+        expect(error).toBeUndefined();
+    }));
+
+    it('openRepositoryBrowser() works fine with right parameters', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+
+        const openRepositoryBrowserSpy = spyOn(repositoryBrowserClient, 'openRepositoryBrowser');
+
+        tagEditorContext.gcmsUiServices.openRepositoryBrowser({ allowedSelection: 'page', selectMultiple: false });
+
+        expect(openRepositoryBrowserSpy).toHaveBeenCalledWith({ allowedSelection: 'page', selectMultiple: false });
+    }));
+
+    it('openImageEditor() works fine with right parameters', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+
+        const openImageEditorSpy = spyOn(editorOverlayService, 'editImage');
+
+        tagEditorContext.gcmsUiServices.openImageEditor({ nodeId: 1, imageId: 415 });
+
+        expect(openImageEditorSpy).toHaveBeenCalledWith({ nodeId: 1, itemId: 415 });
+    }));
+
+    it('createTagEditorContext() creates a new TagEditorContext with the correct values', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const expectedData = cloneDeep(data);
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+        checkTagEditorContext(tagEditorContext, expectedData);
+    }));
+
+    it('createTagEditorContext() denormalizes the entities when creating a new TagEditorContext', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const origPage = data.tagOwner;
+        const origNode = data.node;
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+        expect(entityResolver.denormalizeEntity).toHaveBeenCalledTimes(2);
+        expect(entityResolver.denormalizeEntity.calls.argsFor(0)).toEqual(['page', origPage]);
+        expect(entityResolver.denormalizeEntity.calls.argsFor(1)).toEqual(['node', origNode]);
+
+        expect(tagEditorContext.page).not.toBe(origPage);
+        expect(tagEditorContext.page).toBe(entityResolver.denormalizeEntity.calls.all()[0].returnValue);
+        expect(tagEditorContext.node).not.toBe(origNode);
+        expect(tagEditorContext.node).toBe(entityResolver.denormalizeEntity.calls.all()[1].returnValue);
+    }));
+
+    it('createTagEditorContext() creates a new TagEditorContext for readOnly=true', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        data.readOnly = true;
+        const expectedData = cloneDeep(data);
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+        checkTagEditorContext(tagEditorContext, expectedData);
+    }));
+
+    it('createTagEditorContext() handles cyclic references in the page object correctly', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const expectedData = cloneDeep(data);
+        const pageVariants = [ data.tagOwner ];
+        const languageVariants = { 1: data.tagOwner as any };
+        data.tagOwner.pageVariants = [ ...pageVariants ];
+        data.tagOwner.languageVariants = { ...languageVariants };
+
+        let tagEditorContext: TagEditorContext;
+        expect(() => tagEditorContext = tagEditorService.createTagEditorContext(data)).not.toThrow();
+        checkTagEditorContext(tagEditorContext, expectedData);
+
+        // Make sure that the original page has not been modified.
+        expect(data.tagOwner.pageVariants).toEqual(pageVariants);
+        expect(data.tagOwner.languageVariants).toEqual(languageVariants);
+    }));
+
+    it('unregisterTagEditorOverlayHost() works', fakeAsync(() => {
+        const data = getTagEditorInitData();
+        const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor')
+            .and.callFake((editableTag: EditableTag, context: TagEditorContext) => {
+                return Promise.resolve(createEditedTag(editableTag));
+            });
+
+        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
+        expect(openTagEditorSpy).toHaveBeenCalled();
+
+        let finalTag: Tag = null;
+        tagEditorPromise.then(result => finalTag = result);
+        tick();
+        expect(finalTag).toBeTruthy();
+
+        expect(() => tagEditorService.unregisterTagEditorOverlayHost(tagEditorOverlayHost)).not.toThrow();
+    }));
+
+    it('createTagEditorContext() sets up variableContext correctly such that it emits updates', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        state.dispatch(new SetUILanguageAction('en'));
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+
+        const expectedVarContext: VariableTagEditorContext = { uiLanguage: state.now.ui.language };
+        let actualVarContext: VariableTagEditorContext;
+        let subscriberCalled = 0;
+        tagEditorContext.variableContext.subscribe(varContext => {
+            ++subscriberCalled;
+            actualVarContext = varContext;
+        });
+        expect(subscriberCalled).toBe(1);
+        expect(actualVarContext).toEqual(expectedVarContext);
+
+        state.dispatch(new SetUILanguageAction('de'));
+        expectedVarContext.uiLanguage = 'de';
+        expect(subscriberCalled).toBe(2);
+        expect(actualVarContext).toEqual(expectedVarContext);
+    }));
+
+    it('createTagEditorContext() applies polyfills in IE11 if the tagOwner object comes from an IFrame', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const expectedData = cloneDeep(data);
+        data.tagOwnerFromIFrame = true;
+        userAgentRef.isIE11 = true;
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+        checkTagEditorContext(tagEditorContext, expectedData);
+        expect(tagEditorContext.editedTag).not.toBe(data.tag);
+        expect(tagEditorContext.editedTag.tagType).not.toBe(data.tagType);
+
+        expect(tagEditorContext.page).toEqual(data.tagOwner);
+        expect(tagEditorContext.page).not.toBe(data.tagOwner);
+    }));
+
+    it('createTagEditorContext() does not apply polyfills in IE11 if the tagOwner object does not come from an IFrame', fakeAsync(() => {
+        const data = getTagEditorContextInitData();
+        const expectedData = cloneDeep(data);
+        userAgentRef.isIE11 = true;
+
+        const tagEditorContext = tagEditorService.createTagEditorContext(data);
+        checkTagEditorContext(tagEditorContext, expectedData);
+        expect(tagEditorContext.editedTag.tagType).toBe(data.tagType);
+    }));
+
+});
+
+
+function getTagEditorInitData(): { tag: Tag, tagType: TagType, page: Page<Raw>} {
+    const tag = getExampleEditableTag();
+    const tagType = tag.tagType;
+    delete tag.tagType;
+    const page = getExamplePageData();
+    delete page.pageVariants;
+    delete page.languageVariants;
+    return {
+        tag,
+        tagType,
+        page,
+    };
+}
+
+function createEditedTag(editableTag: EditableTag): EditableTag {
+    const editedTag = cloneDeep(editableTag);
+    (editedTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified value';
+    return editedTag;
+}
+
+class MockTagEditorOverlayHost {
+    openTagEditor(): void { }
+}
+
+class MockEntityResolver {
+    denormalizeEntity = jasmine.createSpy('denormalizeEntity').and.callFake((type: string, entity: any) => ({
+        ...entity,
+    }));
+
+    getNode(id: number): Node {
+        return getExampleNodeData({ id });
+    }
+}
+
+class MockEditorOverlayService {
+    editImage(): void { }
+}
+
+class MockRepositoryBrowserClient {
+    openRepositoryBrowser(): void { }
+}
+
+class MockTranslateService { }
+
+class MockUserAgentRef {
+    isIE11 = false;
+}

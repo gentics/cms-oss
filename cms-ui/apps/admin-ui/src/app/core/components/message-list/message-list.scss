@@ -1,0 +1,87 @@
+@import 'variables';
+@import 'csshake/scss/tools';
+
+:host {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    width: 100%;
+}
+
+.message {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    height: 2em;
+    min-height: 2em;
+    max-width: 100%;
+    white-space: nowrap;
+
+    ::ng-deep .item-icon {
+        color: $gcms-color-message  !important;
+    }
+
+    &:hover ::ng-deep .item-icon {
+        color: lighten($gcms-color-message, 20%) !important;
+    }
+
+    &.read ::ng-deep .item-icon {
+        color: desaturate($gcms-color-message, 80%)  !important;
+    }
+
+    &.read:hover ::ng-deep .item-icon {
+        color: lighten(desaturate($gcms-color-message, 80%), 20%)  !important;
+    }
+
+    .name {
+        color: $gtx-color-very-dark-gray;
+    }
+
+    .item-primary {
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    gtx-message-body {
+        color: $gtx-color-dark-gray;
+        display: inline;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-left: 5px;
+        flex: 1 1;
+    }
+
+    .message-actions {
+        display: flex;
+
+        .material-icons {
+            color: $gtx-color-dark-gray;
+
+            /* make shake work without hover IE11 compatible */
+            animation-play-state: paused;
+
+            &:hover {
+                color: lighten($gtx-color-dark-gray, 20%);
+            }
+
+            &.confirm {
+                color: $gtx-color-alert;
+                margin-top: -2px;
+
+                /* shake that */
+                @include do-shake('shake-confirm', 6, 2, 10, 4s);
+
+                /* make it work without hover IE11 compatible */
+                animation-play-state: running;
+                animation-name: shake-confirm;
+                animation-duration: 4s;
+                animation-timing-function: ease-in-out;
+                animation-iteration-count: infinite;
+
+                &:hover {
+                    color: lighten($gtx-color-alert, 20%);
+                }
+            }
+        }
+    }
+}

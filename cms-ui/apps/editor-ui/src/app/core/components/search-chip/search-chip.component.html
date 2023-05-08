@@ -1,0 +1,9 @@
+<span *ngIf="prefix" class="prefix">{{ prefix }}</span>
+<div class="chip-contents" #contents>
+    <ng-content></ng-content>
+</div>
+<i
+    class="material-icons remove-button"
+    [attr.translate]="'no'"
+    (click)="remove.emit()"
+>close</i>

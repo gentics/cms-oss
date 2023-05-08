@@ -1,0 +1,3 @@
+#macro( hello )
+Hello World!##
+#end

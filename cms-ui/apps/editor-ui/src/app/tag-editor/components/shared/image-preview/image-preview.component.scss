@@ -1,0 +1,15 @@
+.image-preview__container {
+    width: 100%;
+    padding-bottom: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    gtx-progress-bar {
+        position: relative;
+    }
+}
+
+.image-preview__container:hover {
+    background-size: contain;
+}

@@ -1,0 +1,18 @@
+query ($languages: [String]) {
+  schema(name: "%s") {
+    nodes(perPage: %d, page: %d, lang: $languages) {
+      hasNextPage
+      elements {
+        uuid
+        languages {
+          language
+          fields {
+            ... on %s {
+              cms_id
+            }
+          }
+        }
+      }
+    }
+  }
+}

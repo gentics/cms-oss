@@ -1,0 +1,34 @@
+.main {
+    display: flex;
+
+    > * {
+        margin: 30px;
+    }
+
+    .lastChecked {
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    gtxct-status-indicator {
+        text-transform: uppercase;
+
+        &:first-child {
+            margin-left: 0;
+        }
+    }
+
+    .performCheck {
+        margin-left: auto;
+        margin-right: 0;
+
+        icon {
+            font-size: 14px;
+        }
+
+        span {
+            font-size: 12px;
+            text-transform: none;
+        }
+    }
+}

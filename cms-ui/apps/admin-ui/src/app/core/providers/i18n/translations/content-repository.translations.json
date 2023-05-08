@@ -1,0 +1,194 @@
+{
+    "contentRepository_singular": {
+        "en": "ContentRepository",
+        "de": "ContentRepository"
+    },
+    "contentRepository_plural": {
+        "en": "ContentRepositories",
+        "de": "ContentRepositories"
+    },
+    "contentRepository_successfully_added_to_package": {
+        "en": "ContentRepository {{name}} successfully added to package",
+        "de": "ContentRepository {{name}} erfolgreich zu Paket hinzugefügt"
+    },
+    "contentRepository_successfully_removed_from_package": {
+        "en": "ContentRepository {{name}} successfully removed from package",
+        "de": "ContentRepository {{name}} erfolgreich von Paket entfernt"
+    },
+    "info_selected_contentrepositories": {
+        "en": "{{amountSelected}} of {{amountTotal}} ContentRepositories selected",
+        "de": "{{amountSelected}} von {{amountTotal}} ContentRepositories ausgewählt"
+    },
+    "globalId": {
+        "en": "Global Id",
+        "de": "Globale Id"
+    },
+    "name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "crType": {
+        "en": "ContentRepository Type",
+        "de": "ContentRepository-Typ"
+    },
+    "dbType": {
+        "en": "Database type",
+        "de": "Datenbanktyp"
+    },
+    "username": {
+        "en": "Username",
+        "de": "Username"
+    },
+    "password": {
+        "en": "Password",
+        "de": "Passwort"
+    },
+    "usePassword": {
+        "en": "Password active",
+        "de": "Password aktiv"
+    },
+    "repeatPassword": {
+        "en": "confirm password",
+        "de": "Password bestätigen"
+    },
+    "url": {
+        "en": "URL",
+        "de": "URL"
+    },
+    "basepath": {
+        "en": "Basepath",
+        "de": "Basispfad"
+    },
+    "instantPublishing": {
+        "en": "Instant Publishing",
+        "de": "Instant-Publizierung"
+    },
+    "languageInformation": {
+        "en": "Add Language Information",
+        "de": "Sprachinformation hinzufügen"
+    },
+    "permissionInformation": {
+        "en": "Add permission information",
+        "de": "Berechtigungsinformation hinzufügen"
+    },
+    "permissionProperty": {
+        "en": "Roles Objectproperty",
+        "de": "Rollen-Objekteigenschaft"
+    },
+    "defaultPermission": {
+        "en": "Default Role",
+        "de": "Default Rolle"
+    },
+    "diffDelete": {
+        "en": "Check for deleted objects differentially",
+        "de": "Differentiell auf entfernte Objekte prüfen"
+    },
+    "elasticsearch": {
+        "en": "Searchindex Configuration",
+        "de": "Suchindex Einstellungen"
+    },
+    "projectPerNode": {
+        "en": "Project per Node",
+        "de": "Projekt pro Node"
+    },
+    "version": {
+        "en": "Implementation version",
+        "de": "Implementierungsversion"
+    },
+    "checkDate": {
+        "en": "Check Date",
+        "de": "Prüfdatum"
+    },
+    "checkStatus": {
+        "en": "Checkstatus",
+        "de": "Prüfstatus"
+    },
+    "checkStatus_unchecked": {
+        "en": "unchecked",
+        "de": "ungeprüft"
+    },
+    "checkStatus_error": {
+        "en": "error",
+        "de": "fehlerhaft"
+    },
+    "checkStatus_ok": {
+        "en": "ok",
+        "de": "ok"
+    },
+    "checkStatus_running": {
+        "en": "running",
+        "de": "läuft"
+    },
+    "checkStatus_queued": {
+        "en": "queued",
+        "de": "wartet"
+    },
+    "structureCheckResult": {
+        "en": "Structure check result",
+        "de": "Strukturprüfergebnis"
+    },
+    "statusDate": {
+        "en": "Status Date",
+        "de": "Status-Datum"
+    },
+    "dataStatus": {
+        "en": "Datastatus",
+        "de": "Datenstatus"
+    },
+    "dataCheckResult": {
+        "en": "Datacheck result",
+        "de": "Datenprüfergebnis"
+    },
+    "contentRepository_type_cr": {
+        "en": "ContentRepository",
+        "de": "ContentRepository"
+    },
+    "contentRepository_type_mccr": {
+        "en": "ContentRepository (Multichannelling aware)",
+        "de": "ContentRepository (Multichannelling-fähig)"
+    },
+    "contentRepository_type_mesh": {
+        "en": "Mesh ContentRepository",
+        "de": "Mesh ContentRepository"
+    },
+    "btn_data_check": {
+        "en": "Check data",
+        "de": "Daten überprüfen"
+    },
+    "btn_data_repair": {
+        "en": "Repair data",
+        "de": "Daten reparieren"
+    },
+    "btn_structure_check": {
+        "en": "Check structure",
+        "de": "Struktur überprüfen"
+    },
+    "btn_structure_repair": {
+        "en": "Repair structure",
+        "de": "Struktur reparieren"
+    },
+    "btn_entries_check": {
+        "en": "Check tagmap entries",
+        "de": "Tagmapeinträge überprüfen"
+    },
+    "result_data_checked": {
+        "en": "Checking data of {{name}} started. Refresh for results.",
+        "de": "Prüfen der Daten von {{name}} gestartet. Aktualisieren für Ergebnisse."
+    },
+    "result_data_repaired": {
+        "en": "Repairing of {{name}} started. Refresh for results.",
+        "de": "Reparieren der Daten von {{name}} gestartet. Aktualisieren für Ergebnisse."
+    },
+    "result_structure_checked": {
+        "en": "Checking structure of {{name}} started. Refresh for results.",
+        "de": "Prüfen der Struktur von {{name}} gestartet. Aktualisieren für Ergebnisse."
+    },
+    "result_structure_repaired": {
+        "en": "Repairing structure of {{name}} started. Refresh for results.",
+        "de": "Prüfen der Struktur von {{name}} gestartet. Aktualisieren für Ergebnisse."
+    },
+    "result_entries_checked": {
+        "en": "Tagmap entries of {{name}} checked",
+        "de": "Tagmap-Einträge von {{name}} üperprüft"
+    }
+}

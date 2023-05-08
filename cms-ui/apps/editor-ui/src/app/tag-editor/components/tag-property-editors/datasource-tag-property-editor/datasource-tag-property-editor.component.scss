@@ -1,0 +1,61 @@
+@import "variables";
+
+:host {
+
+    .column {
+        padding: 0;
+    }
+
+    .row .row {
+        margin-left: 0;
+    }
+
+    @include input-label-styles('.tag-prop-label');
+
+    .tag-prop-label {
+        position: static;
+        font-size: 0.8rem;
+    }
+
+    .new-option-editor > .column {
+        padding: 10px;
+
+        gtx-input ::ng-deep input, gtx-textarea ::ng-deep textarea {
+            margin-bottom: 0;
+        }
+
+        &.button-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            gtx-button {
+                margin-top: 14px;
+            }
+        }
+    }
+
+    sortable-array-list ::ng-deep {
+
+        gtx-contents-list-item {
+            padding: 0;
+            margin-top: 4px;
+
+            .item-primary {
+                padding-left: 0;
+
+                gtx-input ::ng-deep input, gtx-textarea ::ng-deep textarea {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+    }
+
+    .no-options-defined-label {
+        text-align: center;
+        color: $gtx-color-light-gray;
+        font-size: 2rem;
+    }
+
+}

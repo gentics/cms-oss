@@ -1,0 +1,87 @@
+@import '../../../styles/base-import';
+
+:host {
+
+    &.align-left {
+        .toggle-button {
+            left: 0;
+            float: left;
+        }
+        .menu {
+            left: 0;
+        }
+        .menu-content {
+            transform: translateX(-30px);
+        }
+    }
+
+    &.align-right {
+        .toggle-button {
+            right: 0;
+            float: right;
+        }
+        .menu {
+            right: 0;
+        }
+        .menu-content {
+            transform: translateX(30px);
+        }
+    }
+
+    > .toggle-button {
+        display: block;
+        z-index: 15;
+        top: 5px;
+        cursor: pointer;
+        position: absolute;
+        will-change: transform;
+    }
+
+    > .menu {
+        display: block;
+        position: absolute;
+        z-index: 10;
+        top: 0;
+        bottom: 0;
+        width: 300px;
+        background-color: white;
+        will-change: transform;
+
+        > .menu-content {
+            background-color: white;
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 100%;
+            opacity: 0;
+            will-change: transform;
+        }
+    }
+
+    > .side-menu-overlay {
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+    }
+
+    &.opened {
+        > .menu {
+            @include z-depth-2;
+            @media #{$small-and-down} {
+                box-shadow: none;
+                @media #{$small-and-down} {
+                    width: 100% !important;
+                }
+            }
+        }
+        > .side-menu-overlay {
+            width: auto;
+            left: 0;
+            right: 0;
+        }
+    }
+}

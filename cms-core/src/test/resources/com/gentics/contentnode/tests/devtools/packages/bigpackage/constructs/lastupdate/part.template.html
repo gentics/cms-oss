@@ -1,0 +1,4 @@
+#set($hash = $cms.imps.velocitytools.esc.hash)
+#if( $cms.rendermode.frontend ) 
+${hash}lastupdate("<node page.edittimestamp>" "<node page.editor.firstname>" "<node page.editor.lastname>" "<node type>")
+#end

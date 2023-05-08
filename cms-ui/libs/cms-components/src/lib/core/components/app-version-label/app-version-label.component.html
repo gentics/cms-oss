@@ -1,0 +1,16 @@
+<div *ngIf="environment === 'development'">development build</div>
+
+<div
+    class="container"
+    [class.is-clickable]="versionData"
+    (click)="containerClicked()"
+>
+    <div class="label">
+        {{ appTitle }}<span *ngIf="versionData && versionData.version">&nbsp;version {{ versionData.version }}</span>
+    </div>
+    <div class="compatibility-state" [ngSwitch]="compatibilityState">
+        <icon class="not-supported" *ngSwitchCase="'NOT_SUPPORTED'">report_problem</icon>
+        <icon class="supported" *ngSwitchCase="'SUPPORTED'">check_circle</icon>
+        <icon class="unknown" *ngSwitchCase="'UNKNOWN'">error</icon>
+    </div>
+</div>

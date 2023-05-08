@@ -1,0 +1,376 @@
+// The GIT repository for this pipeline lib is defined in the global Jenkins setting
+@Library('jenkins-pipeline-library') import com.gentics.*
+
+// Make the helpers aware of this jobs environment
+JobContext.set(this)
+
+
+final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
+final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-"
+final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
+
+final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
+final def testDbManagerPort    = "8080"
+
+def branchName                 = null
+def version                    = null
+def releaseVersion             = ""
+def tagName                    = null
+def dockerImageTag             = null
+def runJUnitTests              = true
+def qaDeploy                   = false
+def qaDeployBranchList         = ["dev"] as String[]
+
+
+pipeline {
+    agent {
+        kubernetes {
+            label env.BUILD_TAG.take(63)
+            defaultContainer 'build'
+            yaml ocpWorker("""
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    jenkinsbuild: true
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: jenkinsbuild
+              operator: In
+              values:
+              - true
+          topologyKey: kubernetes.io/hostname
+  containers:
+    - name: build
+      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "contentnode") + """
+      resources:
+        requests:
+          cpu: '0'
+          memory: '0'
+        limits:
+          cpu: '0'
+          memory: '0'
+    - name: docker
+      resources:
+        limits:
+          cpu: '0'
+          memory: '0'
+        requests:
+          cpu: '0'
+          memory: '0'
+    - name: jnlp
+      resources:
+        limits:
+          cpu: '0'
+          memory: '0'
+        requests:
+          cpu: '0'
+          memory: '0'
+""")
+        }
+    }
+
+    parameters {
+        booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. contentnode-lib tests will be skipped for MR builds if there are no relevant changes.")
+        booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module."),
+        string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
+        booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
+        booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
+        booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
+        booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
+        booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
+        booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
+        string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
+        string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
+    }
+
+    options {
+        withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')])
+        gitLabConnection('git.gentics.com')
+        gitlabBuilds(builds: ['Jenkins build'])
+        timestamps()
+        timeout(time: 4, unit: 'HOURS')
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage("Build, Deploy") {
+            steps {
+                updateGitlabCommitStatus name: 'Jenkins build', state: "running"
+
+                script {
+                    def mvnGoal       = "package"
+                    def mvnArguments  = ""
+
+                    version          = params.forceVersion
+                    branchName       = GitHelper.fetchCurrentBranchName()
+
+                    if (!version && params.runReleaseBuild) {
+                        version = MavenHelper.getVersion()
+                    }
+
+                    // Merge the hotfix branch if building a release branch
+                    if (params.mergeHotfixBranch && branchName.startsWith("release-")) {
+                        def branchToMerge = branchName.replaceFirst(/^release-/, "hotfix-")
+                        try {
+                            GitHelper.merge('origin/' + branchToMerge)
+                        } catch (Exception e) {
+                            error 'Couldn\'t merge ref origin/' + branchToMerge + 'into ' + branchName
+                        }
+                    }
+
+                    if (version) {
+                        if (params.runReleaseBuild) {
+                            version = MavenHelper.transformSnapshotToReleaseVersion(version)
+                        }
+
+                        MavenHelper.setVersion(version)
+                        currentBuild.description = version
+                    }
+
+                    if (params.runTests) {
+                        if (!params.runBaseLibTests) {
+                            mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
+                        }
+
+                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+
+                        // Check if triggered by a Gitlab merge request
+                        if (env.gitlabTargetBranch) {
+                            runJUnitTests = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch,
+                                (String[])["base-api/", "base-lib/", "cms-api/", "cms-cache/", "cms-cache/", "cms-core/", "cms-oss-server/", "cms-restapi/"])
+
+                            if (!runJUnitTests) {
+                                mvnArguments += " -Dskip.unit.tests"
+                            }
+                        }
+                    } else {
+                        mvnArguments           += " -DskipTests=true -Dskip.unit.tests"
+                        runJUnitTests = false
+                    }
+
+                    // Update chrome to the latest version
+                    //sh "sudo apt-get update"
+                    //sh "sudo apt-get install --assume-yes --allow-unauthenticated google-chrome-beta"
+
+                    if (params.runReleaseBuild) {
+                        // Release
+                        echo "Invoking release build on branch " + branchName + ".."
+
+                        currentBuild.description += ' - Release'
+
+                        if (params.releaseWithNewChangesOnly) {
+                            def lastCommitMessage = GitHelper.getLastCommitMessage().trim()
+
+                            if (lastCommitMessage.startsWith(gitCommitTag)) {
+                                error "Aborting the release build because there are no new changes. Last commit message is: \"" + lastCommitMessage + "\""
+                            }
+                        }
+
+                        def codeName = null
+                        if (branchName =~ /(release|hotfix)-.*/) {
+                            def branchNameSplitters = branchName.split('-')
+                            codeName = branchNameSplitters[1]
+                        } else {
+                            echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
+                        }
+
+                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix + codeName)
+                        mvnGoal = "deploy"
+                    } else {
+                        // for now, do not build modules in parallel
+                        // mvnArguments += " -T 1C"
+
+                        if (params.deploy) {
+                            // Deploy
+                            mvnGoal = "deploy"
+                        }
+                    }
+
+                    if (mvnGoal == "deploy") {
+                        // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
+                        // See: https://www.jfrog.com/jira/browse/RTFACT-17932
+                        sh "find . -maxdepth 3 -type f -name 'pom.xml' -print0 | xargs -0 sed -i -r 's/<\\?m2e[[:blank:]]+[[:alnum:]]+[[:blank:]]*\\?>//g'"
+                    }
+
+                    // Add private repository credentials and scopes
+                    sh "echo @gentics:registry=https://repo.apa-it.at/api/npm/gtx-npm/ > ~/.npmrc"
+                    withCredentials([string(credentialsId: 'artifactory-npm', variable: 'NPM_TOKEN')]) {
+                        sh "echo //repo.apa-it.at/api/npm/gtx-npm/:_authToken=${env.NPM_TOKEN} >> ~/.npmrc"
+                    }
+
+                    // Login to docker.apa-it.at, so that the tests can pull all Mesh images
+                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
+                        // NX_NON_NATIVE_HASHER temp fix for incompatible installations
+                        // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
+                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true"]) {
+                            sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
+                                " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
+                        }
+                    }
+
+                    if (params.runReleaseBuild) {
+                        // Fix for NPE when uploading pom to Artifactory that includes <?m2e ?> directives
+                        // See: https://www.jfrog.com/jira/browse/RTFACT-17932
+                        // Revert the workaround again for the GIT commit
+                        sh "find . -maxdepth 3 -type f -name 'pom.xml' -print0 -exec git checkout {} \\;"
+                        MavenHelper.setVersion(version)
+
+                        // Add the modified pom.xml and the generated changelog file
+                        def releaseMessage = 'Release of version ' + version
+                        GitHelper.addCommit('.', gitCommitTag + ' ' + releaseMessage)
+
+                        if (params.tagRelease) {
+                            tagName = version
+                            GitHelper.addTag(tagName, releaseMessage)
+                        }
+
+                        // It can't hurt to let Artifactory recalculate some meta data
+                        for (mavenName in ['cms']) {
+                            GenericHelper.recalculateArtifactoryMetadata(mavenRepositoryBase, repoUsername, repoPassword, '/lan.releases/com/gentics/' + mavenName)
+                        }
+                    }
+                }
+            }
+
+            post {
+                always {
+                    script {
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+                        boolean allowEmptyBaseLibResults = (!params.runBaseLibTests || params.singleTest ? true : false)
+
+                        if (params.runTests) {
+                            if (runJUnitTests) {
+                                junit  testResults: "base-lib/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyBaseLibResults
+                                junit  testResults: "cms-core/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                                junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
+                            }
+
+                            junit  testResults: "cms-ui/apps/admin-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
+                            junit  testResults: "cms-ui/apps/editor-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
+                        }
+                    }
+                }
+            }
+        }
+
+		stage("Docker build") {
+			when {
+				expression {
+					// Build the docker image only if the parameter runDockerBuild is enabled and
+					return params.runDockerBuild &&
+						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+				}
+			}
+
+            environment {
+                DOCKER_TAG   = "${branchName}"
+            }
+
+            steps {
+                script {
+                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageNameWithTag = "${imageName}:${branchName}"
+                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
+                        sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
+
+                        // Push released image
+                        if (tagName != null) {
+                            String dockerImageVersionTag = imageName + ":" + tagName
+                            sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                            sh "docker push " + dockerImageVersionTag
+                        } else if (params.deploy) {
+                            // push snapshot build image
+                            sh "docker push ${imageNameWithTag}"
+                        }
+                    }
+                }
+            }
+		}
+
+		stage("Deploy QA images to Kubernetes") {
+			when {
+				expression {
+					return qaDeploy
+				}
+			}
+
+			steps {
+				build job: 'contentnode-qa-deploy',
+					parameters: [
+						string(name: 'branchName', value: branchName)
+					],
+					wait: false
+			}
+		}
+
+		stage("Git push") {
+			when {
+				expression {
+					return params.runReleaseBuild && params.deploy
+				}
+			}
+
+            steps {
+                script {
+                    releaseVersion = version
+                    version = MavenHelper.getNextSnapShotVersion(version)
+                    MavenHelper.setVersion(version)
+                    GitHelper.addCommit('.', gitCommitTag + ' Prepare for the next development iteration (' + version + ')')
+
+                    sshagent(["git"]) {
+                        GitHelper.pushBranch(branchName)
+
+                        if (tagName != null) {
+                            GitHelper.pushTag(tagName)
+                        }
+                    }
+                }
+            }
+        }
+
+        stage("Package Build - cms-models") {
+            when {
+                expression {
+                    def changed = false
+                    if (env.gitlabTargetBranch) {
+                        // Build only when related files are changed or releasing & deploying
+                        changed = GitHelper.checkForChangesInPaths("origin/" + env.gitlabTargetBranch, (String[]) [
+                            "cms-ui/libs/cms-models/",
+                            "cms-ui/ci/Jenkinsfile.cms-models"
+                        ])
+                    }
+
+                    if ((params.runReleaseBuild && params.deploy) || changed) {
+                        return GenericHelper.triggerMultiBranchPipelineToScanIfJobNotExists('gentics-cms-models', 'gentics-cms-models/' + branchName, 60)
+                    }
+
+                    return false
+                }
+            }
+
+            steps {
+                build job: 'gentics-cms-models/' + branchName,
+                      parameters: [
+                        booleanParam(name: 'release', value: Boolean.valueOf(params.runReleaseBuild)),
+                        string(name: 'forceVersion', value: params.releaseVersion.toString())
+                      ],
+                      wait: false
+            }
+        }
+    }
+
+    post {
+        always {
+            updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
+            notifyMattermostUsers()
+        }
+    }
+}

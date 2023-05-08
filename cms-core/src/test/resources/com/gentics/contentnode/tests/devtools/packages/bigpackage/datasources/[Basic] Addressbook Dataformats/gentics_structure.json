@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.14669",
+  "type" : "statical",
+  "name" : "[Basic] Addressbook Dataformats",
+  "values" : [ {
+    "globalId" : "A547.75143",
+    "key" : "Persons with names and addresses",
+    "value" : "<li><ldap_cn> (<a href=\"mailto:<ldap_mail>\"><ldap_mail></a>)</li>"
+  }, {
+    "globalId" : "A547.75144",
+    "key" : "Persons with enhanced contactdata",
+    "value" : "<li><b><ldap_cn> (<a href=\"mailto:<ldap_mail>\"><ldap_mail></a>)</b><br>\r\n<ldap_postofficebox><br>\r\n<ldap_postalcode> <ldap_l><br><ldap_mobile></li>"
+  } ]
+}

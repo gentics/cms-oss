@@ -1,0 +1,26 @@
+<gtx-progress-bar [active]="creating$ | async"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.create_new_form_title' | i18n }}</h5>
+</div>
+<div class="modal-content">
+    <form-properties-form
+        #formPropertiesForm
+        mode="create"
+        [languages]="activeNodeLanguages$ | async"
+        [folderId]="folderId"
+        [nodeId]="nodeId"
+        [properties]="defaultProps"
+        [disabled]="creating$ | async"
+        [isMultiLang]="isMultiLang$ | async"
+        (submit)="formPropertiesForm?.formGroup.valid && saveChanges()"
+    ></form-properties-form>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="creating$ | async">
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="primary" (click)="saveChanges()" [disabled]="(creating$ | async) || !formPropertiesForm?.formGroup?.valid">
+        {{ 'common.okay_button' | i18n }}
+    </gtx-button>
+</div>

@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.14530",
+  "keyword" : "htmllang",
+  "icon" : "text.gif",
+  "name" : {
+    "de" : "HTML (lang)",
+    "en" : "HTML (long)"
+  },
+  "description" : {
+    "de" : "Tagtype mit großem Eingabefeld für Programmcode",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : true,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14157",
+    "name" : {
+      "de" : "3427",
+      "en" : "3427"
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

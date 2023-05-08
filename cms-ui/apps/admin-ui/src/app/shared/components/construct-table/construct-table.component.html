@@ -1,0 +1,88 @@
+<gtx-search-bar
+    *ngIf="showSearch"
+    class="search-bar"
+    [query]="query"
+    [placeholder]="'shared.search' | i18n"
+    (search)="updateSearchQuery($event)"
+    (clear)="updateSearchQuery('')"
+></gtx-search-bar>
+
+<div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
+    <gtx-button
+        *ngIf="!hideActions && !packageName"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'construct.createConstruct'"
+        (click)="handleCreateButton()"
+    >
+        <icon left>add</icon> {{ 'shared.create_new_construct' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="packageName"
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'contentadmin.updateContent'"
+        (click)="handleAssignToPackageButton()"
+    >
+        <icon left>link</icon> {{ 'shared.assign_entity_to_package_button' | i18n }}
+    </gtx-button>
+</div>
+
+<div *ngIf="selectable" class="entity-table-selection">
+    {{ 'construct.info_selected_constructs' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+</div>
+
+<gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>
+
+<gtx-table
+    class="entity-table"
+
+    [selectAllType]="TableSelectAllType.PAGE"
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [disabled]="disabled"
+
+    [paginated]="true"
+    [columns]="columns"
+    [rows]="rows"
+    [actions]="actions"
+    [selected]="selected"
+    [active]="activeEntity"
+    [totalCount]="totalCount"
+
+    [page]="page"
+    [perPage]="perPage"
+    [sortBy]="sortBy"
+    [sortOrder]="sortOrder"
+
+    [renderers]="{
+        category: categoryRenderer
+    }"
+
+    (pageChange)="changePageTo($event)"
+    (sortByChange)="updateSortBy($event)"
+    (sortOrderChange)="updateSortOrder($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+    (rowClick)="handleRowClick($event)"
+    (actionClick)="handleAction($event)"
+></gtx-table>
+
+<ng-template #categoryRenderer let-row="row" let-value="value">
+    <a
+        *ngIf="value; else textOnly"
+        class="category-link"
+        [routerLink]="'constructcategory' | gtxEntityDetailRouterLink:value"
+        (click)="cancelEvent($event)"
+    >{{ row.item.category?.name || value }}</a>
+
+    <ng-template #textOnly>{{ value }}</ng-template>
+</ng-template>

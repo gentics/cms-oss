@@ -1,0 +1,7 @@
+0: Node Name	0/0 (0) true: 6
+1: hidden_image.jpg	1/6 (1) false
+1: image1.jpg	2/6 (2) false
+1: image2.jpg	3/6 (3) false
+1: NavPage	4/6 (4) true
+1: Page 1	5/6 (5) false
+1: Page 2	6/6 (6) false

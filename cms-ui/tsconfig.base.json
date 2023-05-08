@@ -1,0 +1,87 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "downlevelIteration": true,
+        "composite": false,
+        "rootDir": ".",
+        "outDir": "./dist/out-tsc",
+        "sourceMap": true,
+        "forceConsistentCasingInFileNames": true,
+        "declaration": false,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": false,
+        "experimentalDecorators": true,
+        "esModuleInterop": false,
+        "importHelpers": true,
+        "target": "ES2022",
+        "useDefineForClassFields": false,
+        "typeRoots": ["./node_modules/@types", "./typings"],
+        "lib": ["es2018", "dom"],
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": true,
+        "baseUrl": ".",
+        "resolveJsonModule": true,
+        "paths": {
+            "@admin-ui": ["apps/admin-ui/src/app"],
+            "@admin-ui/*": ["apps/admin-ui/src/app/*"],
+            "@admin-ui/testing": ["apps/admin-ui/src/testing"],
+            "@admin-ui/testing/*": ["apps/admin-ui/src/testing/*"],
+            "@editor-ui": ["apps/editor-ui/src"],
+            "@editor-ui/*": ["apps/editor-ui/src/*"],
+            "@gentics/cms-components": [
+                "dist/libs/cms-components/public-api",
+                "libs/cms-components/src/public-api"
+            ],
+            "@gentics/cms-components/*": ["libs/cms-components/src/*"],
+            "@gentics/cms-models": [
+                "dist/libs/cms-models/public-api",
+                "libs/cms-models/src/public-api"
+            ],
+            "@gentics/cms-models/*": ["libs/cms-models/src/*"],
+            "@gentics/cms-rest-clients-angular": [
+                "dist/libs/cms-rest-clients-angular/public-api",
+                "libs/cms-rest-clients-angular/src/public-api"
+            ],
+            "@gentics/cms-rest-clients-angular/testing": [
+                "libs/cms-rest-clients-angular/src/testing"
+            ],
+            "@gentics/cms-rest-clients-angular/*": [
+                "dist/libs/cms-rest-clients-angular/*",
+                "libs/cms-rest-clients-angular/src/*"
+            ],
+            "@gentics/form-generator": [
+                "dist/libs/form-generator/public-api",
+                "libs/form-generator/src/public-api"
+            ],
+            "@gentics/form-generator/*": ["libs/form-generator/src/*"],
+            "@gentics/form-generator/core": [
+                "libs/form-generator/src/lib/core"
+            ],
+            "@gentics/form-generator/core/*": [
+                "libs/form-generator/src/lib/core/*"
+            ],
+            "@gentics/image-editor": [
+                "dist/libs/image-editor/public-api",
+                "libs/image-editor/src/public-api"
+            ],
+            "@gentics/image-editor/*": ["libs/image-editor/src/*"],
+            "@gentics/ui-core": [
+                "dist/libs/ui-core/public-api",
+                "libs/ui-core/src/public-api"
+            ],
+            "@gentics/ui-core/*": ["libs/ui-core/src/lib/*"],
+            "jszip": ["node_modules/jszip/dist/jszip.min.js"],
+            "lodash": ["node_modules/lodash-es"]
+        }
+    },
+    "angularCompilerOptions": {
+        "annotateForClosureCompiler": true,
+        "skipTemplateCodegen": false,
+        "strictMetadataEmit": true,
+        "strictTemplates": false,
+        "strictInjectionParameters": true,
+        "enableResourceInlining": false
+    },
+    "exclude": ["dist/**", "node_modules", "tmp"]
+}

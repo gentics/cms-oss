@@ -1,0 +1,87 @@
+{
+  "globalId" : "A547.58461",
+  "keyword" : "iframe1",
+  "icon" : "link.gif",
+  "name" : {
+    "de" : "Webpage einbetten (iFrame)",
+    "en" : "Integration (iFrame)"
+  },
+  "description" : {
+    "de" : "Integrieren Sie andere Anwendungen oder Inhalte auf einfache Weise",
+    "en" : "Integrate content or applications easily"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.58252",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58295",
+    "name" : {
+      "de" : "URL des Inhalts, der eingebunden werden soll.",
+      "en" : "URL des Inhalts, der eingebunden werden soll."
+    },
+    "keyword" : "iframeurl",
+    "editable" : true,
+    "typeId" : 4,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58331",
+    "name" : {
+      "de" : "Bezeichnung ",
+      "en" : "Bezeichnung "
+    },
+    "keyword" : "iframename",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58356",
+    "name" : {
+      "de" : "Breite des i-Frames (in Pixel oder Prozent)",
+      "en" : "Breite des i-Frames"
+    },
+    "keyword" : "iframewidth",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.58375",
+    "name" : {
+      "de" : "Höhe des i-Frames (in Pixel oder Prozent)",
+      "en" : "Höhe des i-Frames"
+    },
+    "keyword" : "iframeheight",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

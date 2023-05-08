@@ -1,0 +1,53 @@
+<ng-container *ngIf="item">
+    <div class="form-container active" *ngIf="item.type === 'folder'">
+        <folder-properties-form
+            [nodeId]="nodeId"
+            [folderId]="itemAsFolder.motherId"
+            [properties]="properties"
+            [disabled]="!(editPermission$ | async)"
+            [languages]="languages"
+            (changes)="simplePropertiesChanged($event)"
+        ></folder-properties-form>
+    </div>
+    <div class="form-container active" *ngIf="item.type === 'form'">
+        <form-properties-form
+            [form]="item"
+            [nodeId]="nodeId"
+            [folderId]="itemAsFolder.motherId"
+            [languages]="languages"
+            [disableLanguageSelect]="true"
+            [properties]="properties"
+            [disabled]="!(editPermission$ | async)"
+            [showDetailProperties]="true"
+            (changes)="simplePropertiesChanged($event)"
+        ></form-properties-form>
+    </div>
+    <div class="form-container active" *ngIf="item.type === 'page'">
+        <page-properties-form
+            [page]="item"
+            [enableFileNameSuggestion]="false"
+            [folderId]="itemAsPage.folderId"
+            [nodeId]="nodeId"
+            [properties]="properties"
+            [templates]="templates"
+            [languages]="languages"
+            [disableLanguageSelect]="true"
+            [disabled]="!(editPermission$ | async)"
+            (changes)="simplePropertiesChanged($event)"
+        ></page-properties-form>
+    </div>
+    <div class="form-container active" *ngIf="item.type === 'file' || item.type === 'image'">
+        <file-properties-form
+            [properties]="properties"
+            [disabled]="!(editPermission$ | async)"
+            (changes)="simplePropertiesChanged($event)"
+        ></file-properties-form>
+    </div>
+    <div class="form-container active" *ngIf="item.type === 'node' || item.type === 'channel'">
+        <node-properties-form
+            [properties]="properties"
+            [node]="item"
+            (changes)="simplePropertiesChanged($event)"
+        ></node-properties-form>
+    </div>
+</ng-container>

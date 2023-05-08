@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+	<title>GCN Intergration Plugin Tests</title>
+
+	<link rel="stylesheet" type="text/css" href="/CNPortletapp/DEV/alohaeditor/css/aloha.css">
+	<link rel="stylesheet" type="text/css" href="/CNPortletapp/DEV/gcn/contentnode-js-lib/src/test/js/vendor/qunit.css" />
+
+	<script type="text/javascript">
+		var Aloha = {
+			settings: {
+				plugins: {
+					gcn: {
+						magiclinkconstruct: 17,
+						buildRootTimestamp : 'DEV',
+						stag_prefix: '/.Node/'
+					}
+				}
+			}
+		};
+	</script>
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+	<script src="/CNPortletapp/DEV/gcn/contentnode-js-lib/src/test/js/vendor/qunit.js"></script>
+	<script src="/CNPortletapp/DEV/alohaeditor/lib/aloha.js"
+	        data-aloha-plugins="common/ui,
+	                            common/format,
+	                            common/block,
+	                            extra/ribbon,
+	                            gcn/gcn"></script>
+	<script src="/CNPortletapp/DEV/gcn/contentnode-js-lib/src/test/js/test-harness.js"></script>
+	<script src="tests.js"></script>
+</head>
+<body>
+	<h1 id="qunit-header">GCN Intergration Plugin</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture"><div id="edit"></div><div id="edit2"></div></div>
+	<div id="blackhole" style="display:none"></div>
+</body>
+</html>
+

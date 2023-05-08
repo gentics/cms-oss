@@ -1,0 +1,26 @@
+<gtx-progress-bar [active]="creating$ | async"></gtx-progress-bar>
+<div class="modal-title">
+    <h5>{{ 'modal.translate_page_title' | i18n:{ _language: defaultProps?.language } }}</h5>
+</div>
+<div class="modal-content">
+    <page-properties-form [properties]="defaultProps"
+                          [enableFileNameSuggestion]="true"
+                          [folderId]="folderId"
+                          [nodeId]="nodeId"
+                          [disabled]="creating$ | async"
+                          [languages]="languages$ | async"
+                          [disableLanguageSelect]="true"
+                          [autoUpdateFileName]="false"
+                          [templates]="templates$ | async"></page-properties-form>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="creating$ | async">
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="primary" (click)="createTranslation()" [disabled]="(creating$ | async) || !form?.valid">
+        {{ 'modal.translate_and_edit_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="primary" (click)="createTranslationAndEditTranslatedPage()" [disabled]="(creating$ | async) || !form?.valid">
+        {{ 'modal.translate_and_compare_button' | i18n }}
+    </gtx-button>
+</div>

@@ -1,0 +1,13 @@
+{
+  "globalId" : "A547.74662",
+  "name" : "[RSS Feed]",
+  "type" : "XML",
+  "templateTags" : [ {
+    "globalId" : "A547.74664",
+    "name" : "rssfeed",
+    "active" : true,
+    "constructId" : "A547.58468",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ]
+}

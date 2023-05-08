@@ -1,0 +1,15 @@
+@import "../../../../styles/variables";
+
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $gtx-font-size-small;
+    padding: 0.5rem;
+    background-color: transparent;
+
+    icon {
+        margin-right: 0.3rem;
+        font-size: $gtx-font-size-small;
+    }
+}

@@ -1,0 +1,93 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="TemplateDetailTabs.PROPERTIES"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    saveActionAllowedId="template.edit"
+                    [saveActionAllowedInstanceId]="currentEntity?.id"
+                    [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                    (saveClick)="btnSavePropertiesOnClick()"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <div class="gtx-entity-details-tab-content-body">
+                    <gtx-template-properties
+                        class="properties"
+                        [formControl]="fgProperties"
+                        [node]="node"
+                    ></gtx-template-properties>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="TemplateDetailTabs.TAG_LIST"
+            gtxDetailTabLink
+            [title]="'template.tagList' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_tagList_of_entity' | i18n: { entityName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-template-tag-master
+                    [templateId]="currentEntity.id"
+                    [nodeId]="node?.id"
+                    [disabled]="!(hasEditPermission$ | async)"
+                ></gtx-template-tag-master>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="TemplateDetailTabs.ASSIGNMENT"
+            gtxDetailTabLink
+            [title]="'shared.assign' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_assign_linked_folders_to_entity' | i18n: { entityName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-template-folder-link-master
+                    *ngIf="node"
+                    class="link-trable"
+                    [disabled]="!(hasEditPermission$ | async)"
+                    [rootFolderId]="node.folderId"
+                    [templateName]="currentEntity?.name"
+                ></gtx-template-folder-link-master>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="TemplateDetailTabs.TAG_STATUS"
+            gtxDetailTabLink
+            [title]="'template.tagStatus' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_tagList_of_entity' | i18n: { entityName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <!--
+                    Additional ngIf, to prevent this component from being rendered until actually needed.
+                    Loading the Tag-Status is quite expensive and should not be done just because the details
+                    were loaded.
+                -->
+                <gtx-template-tag-status-master
+                    *ngIf="(activeTabId$ | async) === TemplateDetailTabs.TAG_STATUS"
+                    [templateId]="currentEntity.id"
+                    [disabled]="!(hasEditPermission$ | async)"
+                ></gtx-template-tag-status-master>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

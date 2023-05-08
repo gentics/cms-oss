@@ -1,0 +1,31 @@
+{
+  "globalId" : "A547.75403",
+  "keyword" : "alohatext",
+  "icon" : "text.gif",
+  "name" : {
+    "de" : "Aloha Text (lang)",
+    "en" : "Aloha Text (long)"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : true,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.75407",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "text",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : true
+  } ]
+}

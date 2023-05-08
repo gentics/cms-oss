@@ -1,0 +1,3 @@
+<!DOCTYPE html>
+<body>
+<div data-gcn-pageid="#PAGEID#" data-gcn-tagid="#TAGID#" data-gcn-tagname="vtltag" data-gcn-i18n-constructname="Construct (de)" class="aloha-block" id="GENTICS_BLOCK_#TAGID#">/GenticsImageStore/80/80/force/rest/file/content/load/#IMAGEID#?sid=1&nodeId=#NODEID#&fingerprint=#IMAGEMD5#</div></body>

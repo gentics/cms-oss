@@ -1,0 +1,31 @@
+{
+  "globalId" : "B230.93539",
+  "keyword" : "folderurl",
+  "icon" : "link.gif",
+  "name" : {
+    "de" : "[URL] Folder",
+    "en" : "[URL] Folder"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "B230.93547",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "url",
+    "editable" : true,
+    "typeId" : 25,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

@@ -1,0 +1,184 @@
+<h1>Button</h1>
+
+<gtx-autodocs [docs]="documentation"></gtx-autodocs>
+
+<h2>Demos</h2>
+
+<gtx-demo-block demoTitle="Sizes">
+    <div class="demo-result">
+        <gtx-button size="small">Small</gtx-button>
+        <gtx-button size="regular">Regular (Default)</gtx-button>
+        <gtx-button size="large">Large</gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-button size="small">Small</gtx-button>
+                <gtx-button size="regular">Regular (Default)</gtx-button>
+                <gtx-button size="large">Large</gtx-button>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Types">
+    <div class="demo-result">
+        <gtx-button type="primary">Primary (Default)</gtx-button>
+        <gtx-button type="secondary">Secondary</gtx-button>
+        <gtx-button type="success">Success</gtx-button>
+        <gtx-button type="warning">Warning</gtx-button>
+        <gtx-button type="alert">Alert</gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-button type="primary">Primary (Default)</gtx-button>
+                <gtx-button type="secondary">Secondary</gtx-button>
+                <gtx-button type="success">Success</gtx-button>
+                <gtx-button type="warning">Warning</gtx-button>
+                <gtx-button type="alert">Alert</gtx-button>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Flat Buttons">
+    <div class="demo-result">
+        <gtx-button flat type="primary">Flat</gtx-button>
+        <gtx-button flat type="secondary">Button</gtx-button>
+        <gtx-button flat type="success">Got it!</gtx-button>
+        <gtx-button flat type="warning" size="small">undo</gtx-button>
+        <gtx-button flat type="alert" size="small"><i class="material-icons">delete</i></gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                 <gtx-button flat type="primary">Flat</gtx-button>
+                 <gtx-button flat type="secondary">Button</gtx-button>
+                 <gtx-button flat type="success">Got it!</gtx-button>
+                 <gtx-button flat type="warning" size="small">undo</gtx-button>
+                 <gtx-button flat type="alert" size="small"><i class="material-icons">delete</i></gtx-button>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Icon Buttons">
+    <div class="demo-result">
+        <h5>Small Icons Buttons</h5>
+        <gtx-button icon type="secondary" size="small">
+            <i class="material-icons">arrow_drop_down</i>
+        </gtx-button>
+        <gtx-button icon type="primary" size="small">
+            <i class="material-icons">visibility</i>
+        </gtx-button>
+        <gtx-button icon type="warning" size="small">
+            <i class="material-icons">not_interested</i>
+        </gtx-button>
+
+        <h5>Regular (default) Icons Buttons</h5>
+        <gtx-button icon type="secondary"><i class="material-icons">settings</i></gtx-button>
+        <gtx-button icon type="success"><i class="material-icons">check_circle</i></gtx-button>
+        <gtx-button icon type="warning"><i class="material-icons">delete</i></gtx-button>
+
+        <h5>Large Icon Buttons</h5>
+        <gtx-button icon type="primary" size="large">
+            <i class="material-icons">home</i>
+        </gtx-button>
+        <gtx-button icon type="secondary" size="large">
+            <i class="material-icons">settings_applications</i>
+        </gtx-button>
+        <gtx-button icon type="alert" size="large">
+            <i class="material-icons">delete_forever</i>
+        </gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                 <h5>Small Icons Buttons</h5>
+                 <gtx-button icon type="secondary" size="small">
+                     <i class="material-icons">arrow_drop_down</i>
+                 </gtx-button>
+                 <gtx-button icon type="primary" size="small">
+                     <i class="material-icons">visibility</i>
+                 </gtx-button>
+                 <gtx-button icon type="warning" size="small">
+                     <i class="material-icons">not_interested</i>
+                 </gtx-button>
+
+                 <h5>Regular (default) Icons Buttons</h5>
+                 <gtx-button icon type="secondary"><i class="material-icons">settings</i></gtx-button>
+                 <gtx-button icon type="success"><i class="material-icons">check_circle</i></gtx-button>
+                 <gtx-button icon type="warning"><i class="material-icons">delete</i></gtx-button>
+
+                 <h5>Large Icon Buttons</h5>
+                 <gtx-button icon type="primary" size="large">
+                     <i class="material-icons">home</i>
+                 </gtx-button>
+                 <gtx-button icon type="secondary" size="large">
+                     <i class="material-icons">settings_applications</i>
+                 </gtx-button>
+                 <gtx-button icon type="alert" size="large">
+                     <i class="material-icons">delete_forever</i>
+                 </gtx-button>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Text With Icons">
+    <div class="demo-result">
+        <p>
+            When including icons in a button with text, add a <code>left</code> or <code>right</code>
+            property to the icon to make it align left or right.
+        </p>
+        <gtx-button><icon left>add_shopping_cart</icon> Buy Now</gtx-button>
+        <gtx-button flat type="secondary"><icon left>settings</icon> Configure</gtx-button>
+        <gtx-button type="success">Next <icon right>navigate_next</icon></gtx-button>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                  <gtx-button><icon left>add_shopping_cart</icon> Buy Now</gtx-button>
+                  <gtx-button flat type="secondary"><icon left>settings</icon> Configure</gtx-button>
+                  <gtx-button type="success">Next <icon right>navigate_next</icon></gtx-button>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Submit button">
+    <div class="demo-result">
+        <form [formGroup]="demoForm" (ngSubmit)="formResult = demoForm.value">
+            <p>Enter some values and click submit (or press enter) to submit the values.</p>
+            <div class="row">
+                <gtx-input formControlName="firstName" label="First Name" class="small-6"></gtx-input>
+                <gtx-input formControlName="lastName" label="Last Name" class="small-6"></gtx-input>
+            </div>
+            <p>
+                <gtx-button submit>Submit</gtx-button>
+            </p>
+            <p *ngIf="formResult">Submitted data: <code>{{ formResult | json }}</code></p>
+        </form>
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <form [formGroup]="demoForm" (ngSubmit)="formResult = demoForm.value">
+                    <gtx-input formControlName="firstName"></gtx-input>
+                    <gtx-input formControlName="lastName"></gtx-input>
+                    <gtx-button submit>Submit</gtx-button>
+                    Submitted data: (( formResult | json ))
+                </form>
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>
+
+<gtx-demo-block demoTitle="Events">
+    <div class="demo-result">
+        <p>
+            The Button component does not implement any custom events. Therefore, all of the
+            standard events which apply regular HTML button elements will bubble up and can
+            be bound to.
+        </p>
+        <gtx-checkbox [(ngModel)]="buttonIsDisabled" label="Disable Button"></gtx-checkbox>
+        <p><gtx-button [disabled]="buttonIsDisabled" (click)="clickCount = clickCount + 1">Click Me</gtx-button></p>
+        Click count: {{ clickCount }}
+    </div>
+    <div class="demo-code">
+        <gtx-highlighted-code language="HTML" code='
+                <gtx-checkbox [(ngModel)]="buttonIsDisabled" label="Disable Button"></gtx-checkbox>
+                <p><gtx-button [disabled]="buttonIsDisabled" (click)="clickCount = clickCount + 1">Click Me</gtx-button></p>
+                Click count: (( clickCount ))
+           '></gtx-highlighted-code>
+    </div>
+</gtx-demo-block>

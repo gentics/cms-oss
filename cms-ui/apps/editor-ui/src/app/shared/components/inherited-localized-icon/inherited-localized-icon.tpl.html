@@ -1,0 +1,7 @@
+<div *ngIf="item?.inherited && item.masterNodeId !== editorNodeId" class="inherited-icon"
+    [title]="'editor.inherited_tooltip' | i18n:{ master: item?.inheritedFrom }">
+    <icon>input</icon>
+</div>
+<div *ngIf="item | itemIsLocalized" class="localized-icon" [title]="'editor.localized_tooltip' | i18n:{ master: item?.masterNode }">
+    <icon>file_copy</icon>
+</div>

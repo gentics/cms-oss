@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+	<title>GCN JS API + Aloha Editor</title>
+
+	<link rel="stylesheet"
+	      href="/CNPortletapp/DEV/alohaeditor/css/aloha.css"
+		  id="aloha-style-include"
+		  type="text/css">
+
+	<script type="text/javascript">
+		var Aloha = {
+			settings: {
+				toolbar: {
+					tabs: [{
+						components : ["editLink", "removeLink", "linkBrowser", "gcnLinkBrowser"],
+						label : "tab.link.label"
+					}]
+				},
+				plugins: {
+					gcn: {
+						magiclinkconstruct: 17,
+						buildRootTimestamp : 'DEV',
+						stag_prefix: '/.Node/'
+					 // webappPrefix: '/CNPortletapp/'
+					 // id: 1,
+					 // folderId: 4,
+					 // nodeId: 1
+		}}}};
+// for the backend: sid, id
+	</script>
+	<script src="/CNPortletapp/DEV/alohaeditor/lib/aloha.js"
+	        data-aloha-plugins="extra/ribbon,
+	                            common/ui,
+	                            common/format,
+	                            common/highlighteditables,
+	                            common/list,
+	                            common/link,
+	                            common/table,
+	                            common/paste,
+	                            common/contenthandler,
+	                            common/commands,
+	                            common/block,
+	                            gcn/gcn-linkbrowser,
+	                            gcn/gcn"></script>
+
+	<script src="demo.js"></script>
+</head>
+<body style="padding: 100px">
+	<h1>My Demo Page</h1>
+	<div id="teasers">#teasers</div>
+	<div id="content">#content</div>
+</body>
+</html>

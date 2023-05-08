@@ -1,0 +1,20 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_content_package_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-progress-bar [active]="loading"></gtx-progress-bar>
+    <gtx-content-package-properties
+        [mode]="ContentPackagePropertiesMode.CREATE"
+        [formControl]="form"
+    ></gtx-content-package-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()" [disabled]="loading || form.disabled">
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+    <gtx-button type="primary" (click)="createEntity()" [disabled]="loading || form.disabled || form.pristine || form.invalid">
+        {{ 'common.create_button' | i18n }}
+    </gtx-button>
+</div>

@@ -1,0 +1,12 @@
+<div *ngIf="file.type === 'image' || file.type === 'file'">
+    <div *ngIf="file.online; else fileOffline"
+            class="status-label"
+            [class.online]="file.online">
+        {{ 'editor.online_label' | i18n }}
+    </div>
+    <ng-template #fileOffline>
+        <div class="status-label">
+        {{ 'editor.offline_label' | i18n }}
+        </div>
+    </ng-template>
+</div>

@@ -1,0 +1,44 @@
+@use 'sass:math';
+@import '../../../styles/base-import';
+
+:host {
+    cursor: pointer;
+    $width: 40px;
+    user-select: none;
+
+    @media #{$medium-and-down} {
+        top: 0;
+    }
+
+    &:hover {
+        .bar {
+            background: white;
+        }
+    }
+
+    .bar {
+        @include z-depth-1;
+        display: block;
+        height: math.div($width, 10);
+        width: $width;
+        background: $gtx-color-very-light-gray;
+        margin: math.div($width, 5) auto;
+        transition: all .3s ease;
+    }
+
+    &.active {
+        .bar {
+            @include z-depth-0;
+            background: $gtx-color-primary;
+        }
+        .top {
+            transform: translateY(math.div($width, 3.33)) rotateZ(45deg);
+        }
+        .bottom {
+            transform: translateY(- math.div($width, 3.33)) rotateZ(-45deg);
+        }
+        .middle {
+            width: 0;
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.70121",
+  "type" : "folder",
+  "keyword" : "object.image",
+  "name" : {
+    "de" : "Bild",
+    "en" : "Images"
+  },
+  "description" : {
+    "de" : "Ein Bild für den Ordner, welches in Übersichten angezeigt wird",
+    "en" : "Image for Folder / Overviews"
+  },
+  "constructId" : "A547.69940"
+}

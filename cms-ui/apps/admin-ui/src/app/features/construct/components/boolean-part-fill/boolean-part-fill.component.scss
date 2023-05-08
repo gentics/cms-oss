@@ -1,0 +1,19 @@
+@import 'variables';
+
+label {
+    display: block;
+    color: $gtx-color-dark-gray;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -webkit-user-select: none;
+    user-select: none;
+    margin-bottom: 0.75rem;
+}
+
+gtx-checkbox {
+    display: inline-block;
+    margin-bottom: 1rem;
+}

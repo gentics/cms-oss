@@ -1,0 +1,105 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="DataSourceDetailTabs.properties"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="dataSource.updateDataSourceInstance"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                (saveClick)="btnSavePropertiesOnClick()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <form
+                        *ngIf="fgProperties"
+                        [formGroup]="fgProperties"
+                        class="buttons-form small-12 medium-9 row"
+                    >
+                        <div class="input-container small-12 medium-6 columns">
+                            <gtx-input
+                                type="text"
+                                [required]="true"
+                                maxlength="50"
+                                [label]="('shared.dataSource_name' | i18n) + ' *'"
+                                [placeholder]="'shared.dataSource_name' | i18n"
+                                formControlName="name"
+                                gtxActionAllowed="dataSource.updateDataSourceInstance"
+                                [aaInstanceId]="currentEntity?.id"
+                            >
+                            </gtx-input>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="DataSourceDetailTabs.entries"
+            gtxDetailTabLink
+            [title]="'shared.title_entries' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_entries_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="dataSource.updateDataSourceInstance"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="!entriesChanged"
+                (saveClick)="btnSaveDataSourceEntriesSorting()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-data-source-entry-table
+                    *ngIf="permissionDataSourceEntryRead$ | async; else unauthorized"
+                    [dataSourceId]="dsId"
+                    [rows]="entryRows"
+                    [sorting]="true"
+                    (sort)="sortDataSourceEntry($event)"
+                    (loadEnd)="entriesLoaded($event)"
+                ></gtx-data-source-entry-table>
+
+                <ng-template #unauthorized>
+                    <div class="message-unauthorized">
+                        <h5>{{ 'common.general_permission_required' | i18n }}</h5>
+                        <icon>warning</icon>
+                    </div>
+                </ng-template>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="DataSourceDetailTabs.usageOverview"
+            gtxDetailTabLink
+            [title]="'shared.title_usage_overview' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_usage_overview_of_entity' | i18n: { entityName: currentEntity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-construct-table
+                    *ngIf="permissionDataSourceEntryRead$ | async; else unauthorized"
+                    [showSearch]="true"
+                    [hideActions]="true"
+                    [selectable]="false"
+                    [dataSourceId]="currentEntity.id"
+                ></gtx-construct-table>
+
+                <ng-template #unauthorized>
+                    <div class="message-unauthorized">
+                        <h5>{{ 'common.general_permission_required' | i18n }}</h5>
+                        <icon>warning</icon>
+                    </div>
+                </ng-template>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

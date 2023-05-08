@@ -1,0 +1,59 @@
+#set($domain = "<node domain>")
+#if ($nav.level == 0)
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.sitemaps.org/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.sitemaps.org/schemas/sitemap-video/1.1">
+$nav.subtree
+</urlset>
+#else
+#set($obj = $nav.object)
+#set($lang = $cms.page.language.code)
+#set($render = false)
+#if ($obj.ttype == 10007 || $obj.ttype == 10008)
+#if($lang.equals($obj.language.code))
+#set($render = true)
+#set($name = $obj.name)
+#set($link = true)
+#set($href = $obj.url)
+#set($editdate = $obj.editdate)
+#end
+#if(!$obj.online)
+#set($render = false)
+#end
+#end
+#if ($obj.ttype == 10002)
+#set($render = true)
+#set($namelang = $obj.object.get("name_$lang"))
+#if($namelang)
+#set($name = $namelang)
+#else
+#set($name = $obj.name)
+#end
+#set($startpage = $obj.object.startpage.url.target)
+#set($startpagelang = $startpage.languageset.pages.get($lang))
+#if($startpagelang.id)
+#set($startpage = $startpagelang)
+#end
+#set($link = true)
+#set($href = $startpage.url)
+#set($editdate = $startpage.editdate)
+#end
+#if ($render == true)
+#if ($editdate)
+#if($domain=="")
+#set($domain="${cms.node.host}")
+#end
+<url>
+     <loc>$cms.imps.velocitytools.esc.xml("http://${domain}${href}")</loc>
+     <lastmod>$cms.imps.date.format($editdate, "yyyy-MM-dd")</lastmod>
+     <changefreq>weekly</changefreq>
+     <priority>0.5</priority>
+</url>
+#else
+#end
+#end
+#if ($nav.hasItems())
+$nav.subtree
+#end
+#end

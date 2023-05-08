@@ -1,0 +1,22 @@
+<div class="modal-content" [class.workaround-margin]="imageEditorHeightWorkaroundMargin">
+    <div class="image-editor-wrapper">
+        <gentics-ui-image-editor
+            [src]="imageUrl"
+            [canSetFocalPoint]="focalPointEditFeatureEnabled$ | async"
+            [disableAspectRatios]="disableAspectRatios"
+            [customAspectRatios]="customAspectRatios"
+            (editing)="isEditing = $event"
+            [(transform)]="params"
+            [language]="uiLanguage$ | async" #imageEditor></gentics-ui-image-editor>
+    </div>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat
+                (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+    <gtx-button type="secondary"
+                [disabled]="!params || isEditing"
+                (click)="saveAsCopyAndClose()">{{ 'modal.save_as_copy' | i18n }}</gtx-button>
+    <gtx-button type="primary"
+                [disabled]="!params || isEditing"
+                (click)="saveAndClose()">{{ 'modal.save_changes' | i18n }}</gtx-button>
+</div>

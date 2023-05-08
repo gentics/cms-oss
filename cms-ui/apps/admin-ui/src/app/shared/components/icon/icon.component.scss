@@ -1,0 +1,297 @@
+@import "variables";
+
+// this color is used for elements cutting icons or giving icons a background
+// if gtx-icon component is used on other background than `$gtx-icon-background-color` it will look flawed.
+$gtx-icon-background-color: #fff;
+$gtx-icon-secondary-size: 0.65em;
+
+.gtx-icon {
+    position: relative;
+    font-size: 3em;
+
+    .gtx-icon-primary {
+        color: $gtx-color-primary;
+        z-index: 0;
+
+        icon {
+            font-size: inherit;
+        }
+    }
+
+    .gtx-icon-secondary-container {
+        position: absolute;
+        bottom: -0.3em;
+        right: -0.3em;
+    }
+
+    .gtx-icon-secondary {
+        position: relative;
+        z-index: 0;
+        color: $gtx-color-primary;
+        padding-top: 5px;
+
+        icon {
+            font-size: $gtx-icon-secondary-size;
+        }
+
+        &:after {
+            content: '';
+            z-index: -1;
+            display: block;
+            position: absolute;
+            background-color: $gtx-icon-background-color;
+            width: $gtx-icon-secondary-size;
+            height: $gtx-icon-secondary-size;
+            bottom: 0.25em;
+            border-radius: 50%;
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // application-icon-specific styles below
+    // only those icons consisting of two icons must extend `.gtx-icon-secondary-container` and `.gtx-icon-secondary`
+    // override if necessary
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    &.content-node {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.node-management {
+        @extend .gtx-icon-primary;
+    }
+
+    &.node {
+        @extend .gtx-icon-primary;
+    }
+
+    &.inbox {
+        @extend .gtx-icon-primary;
+    }
+
+    &.queue {
+        @extend .gtx-icon-primary;
+    }
+
+    &.administration {
+        @extend .gtx-icon-primary;
+    }
+
+    &.user-management {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.user {
+        @extend .gtx-icon-primary;
+    }
+
+    &.group-management {
+        @extend .gtx-icon-primary;
+    }
+
+    &.groups {
+        @extend .gtx-icon-primary;
+    }
+
+    &.role-management {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.roles {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.operations {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.auto-update {
+        @extend .gtx-icon-primary;
+    }
+
+    &.system-maintenance {
+        @extend .gtx-icon-primary;
+    }
+
+    &.error {
+        @extend .gtx-icon-primary;
+    }
+
+    &.import-export {
+        @extend .gtx-icon-primary;
+    }
+
+    &.import {
+        @extend .gtx-icon-primary;
+    }
+
+    &.search-index-maintenance {
+        // special styles as the check icon shall be within the calendar icon
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        .gtx-icon-secondary-container {
+            top: -15px;
+        }
+        .gtx-icon-secondary {
+            &:after {
+                content: none;
+            }
+            icon {
+                font-size: 16px;
+            }
+        }
+    }
+
+    &.export {
+        @extend .gtx-icon-primary;
+    }
+
+    &.logs {
+        @extend .gtx-icon-primary;
+    }
+
+    &.scheduler {
+        // special styles as the check icon shall be within the calendar icon
+        @extend .gtx-icon-primary;
+    }
+
+    &.content-admin {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.object-properties {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.folder {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.folder-properties {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.templates {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.pages {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.images {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.files {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.object-properties-categories {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.object-properties-maintenance {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.tagtypes {
+        @extend .gtx-icon-primary;
+    }
+
+    &.tagtype-definitions {
+        @extend .gtx-icon-primary;
+    }
+
+    &.nodes {
+        @extend .gtx-icon-primary;
+    }
+
+    &.tagtype-categories {
+        @extend .gtx-icon-primary;
+        @extend .gtx-icon-secondary-container;
+        @extend .gtx-icon-secondary;
+    }
+
+    &.definitions-categories {
+        @extend .gtx-icon-primary;
+    }
+
+    &.dataSources {
+        @extend .gtx-icon-primary;
+    }
+
+    &.languages {
+        @extend .gtx-icon-primary;
+    }
+
+    &.maintenance {
+        @extend .gtx-icon-primary;
+    }
+
+    &.content-repositories {
+        @extend .gtx-icon-primary;
+    }
+
+    &.packages {
+        @extend .gtx-icon-primary;
+    }
+
+    &.cr-fragments {
+        @extend .gtx-icon-primary;
+    }
+
+    &.template-management {
+        @extend .gtx-icon-primary;
+    }
+
+    &.tools {
+        @extend .gtx-icon-primary;
+    }
+
+    &.unspecified {
+        @extend .gtx-icon-primary;
+    }
+
+    &.system-maintenance{
+        @extend .gtx-icon-primary;
+        .gtx-icon-secondary{
+            &:after{
+                bottom: 0.3em;
+                left: -0.05em;
+            }
+        }
+    }
+
+}
+

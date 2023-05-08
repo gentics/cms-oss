@@ -1,0 +1,115 @@
+{
+  "globalId" : "A547.14562",
+  "keyword" : "texttype",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Einzeiliges Eingabefeld",
+    "en" : "[Form] -- Singleline textfield"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14189",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14276",
+    "name" : {
+      "de" : "Text, der als Beschreibung vor dem Eingabefeld stehen soll<br />z.B: \"Geben Sie hier Ihren Vornamen ein:\"",
+      "en" : "Text, der als Beschreibung vor dem Eingabefeld stehen soll<br />z.B: \"Geben Sie hier Ihren Vornamen ein:\""
+    },
+    "keyword" : "label",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14324",
+    "name" : {
+      "de" : "Name des Textfeldes intern<br />z.B.: vorname",
+      "en" : "Name des Textfeldes intern<br />z.B.: vorname"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14366",
+    "name" : {
+      "de" : "Text, welcher bereits als Inhalt/Vorbelegung für das Textfeld vorhanden sein soll",
+      "en" : "Text, welcher bereits als Inhalt/Vorbelegung für das Textfeld vorhanden sein soll"
+    },
+    "keyword" : "value",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 4,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14393",
+    "name" : {
+      "de" : "Länge des Feldes im Formular selbst<br />z.B.: 25",
+      "en" : "Länge des Feldes im Formular selbst<br />z.B.: 25"
+    },
+    "keyword" : "size",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14415",
+    "name" : {
+      "de" : "Maximale Länge des Textes, der im Textfeld eingegeben werden kann<br />z.B.: 100",
+      "en" : "Maximale Länge des Textes, der im Textfeld eingegeben werden kann<br />z.B.: 100"
+    },
+    "keyword" : "maxlength",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 6,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14433",
+    "name" : {
+      "de" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")",
+      "en" : "Muss dieses Feld vom Benutzer ausgefüllt werden? (Ja=\"1\")"
+    },
+    "keyword" : "mandatory",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 7,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

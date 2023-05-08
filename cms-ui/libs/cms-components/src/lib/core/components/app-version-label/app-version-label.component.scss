@@ -1,0 +1,43 @@
+@import "../../../../styles/variables";
+
+:host {
+    padding: 0.5rem;
+    background-color: transparent;
+    z-index: 1;
+
+    .container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-size: $gtx-font-size-small;
+        
+        &.is-clickable {
+            cursor: pointer;
+        }
+    }
+
+    .label {
+        display: flex;
+        white-space: nowrap;
+        color: $gtx-color-mid-gray;
+    }
+
+    .compatibility-state {
+        display: flex;
+
+        .not-supported {
+            color: $gtx-color-alert;
+        }
+        .supported {
+            color: $gtx-color-success;
+        }
+        .unknown {
+            color: $gtx-color-warning;
+        }
+
+        icon {
+            padding-left: 0.5rem;
+        }
+    }
+}

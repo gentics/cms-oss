@@ -1,0 +1,30 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_schedule_task_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-loading-overlay class="body-load" [visible]="loading"></gtx-loading-overlay>
+
+    <gtx-schedule-task-properties
+        [mode]="ScheduleTaskPropertiesMode.CREATE"
+        [formControl]="form"
+    ></gtx-schedule-task-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="form.invalid || form.disabled"
+        (click)="createEntity()"
+    >
+        {{ 'modal.create_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

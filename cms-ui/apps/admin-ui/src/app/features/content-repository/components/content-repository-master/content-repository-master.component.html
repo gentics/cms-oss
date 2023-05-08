@@ -1,0 +1,12 @@
+
+<div class="gtx-entity-master gtx-entity-master-with-common-actions">
+    <gtx-content-repository-table
+        class="entity-table"
+        [showSearch]="true"
+        [linkDetails]="true"
+        [activeEntity]="activeEntity"
+        (createClick)="handleCreateClick()"
+        (rowClick)="handleRowClick($event)"
+        (openDetail)="handleOpenDetail($event)"
+    ></gtx-content-repository-table>
+</div>

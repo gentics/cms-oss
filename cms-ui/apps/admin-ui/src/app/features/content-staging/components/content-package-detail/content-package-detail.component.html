@@ -1,0 +1,28 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="activeTabId$ | async">
+        <gtx-tab
+            [id]="ContentPackageDetailTabs.PROPERTIES"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
+                saveActionAllowedId="content_staging.updateContentPackage"
+                [saveActionAllowedInstanceId]="currentEntity?.id"
+                [saveDisabled]="fgPropertiesSaveDisabled$ | async"
+                (saveClick)="btnSavePropertiesOnClick()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <div class="flex-row row">
+                    <gtx-content-package-properties
+                        [mode]="ContentPackagePropertiesMode.UPDATE"
+                        [formControl]="fgProperties"
+                    ></gtx-content-package-properties>
+                </div>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

@@ -1,0 +1,49 @@
+0: Node Name	0/0 (0) true: 9
+1: Folder 1	1/9 (1) true: 7
+2: Folder 1.1	1/7 (2) true: 5
+3: hidden_image_2.jpg	1/5 (3) false
+3: image1_2.jpg	2/5 (4) false
+3: image2_2.jpg	3/5 (5) false
+3: Page 1	4/5 (6) false
+3: Page 2	5/5 (7) false
+2: Folder 1.2	2/7 (8) true: 5
+3: hidden_image_3.jpg	1/5 (9) false
+3: image1_3.jpg	2/5 (10) false
+3: image2_3.jpg	3/5 (11) false
+3: Page 1	4/5 (12) false
+3: Page 2	5/5 (13) false
+2: hidden_image_1.jpg	3/7 (14) false
+2: image1_1.jpg	4/7 (15) false
+2: image2_1.jpg	5/7 (16) false
+2: Page 1	6/7 (17) false
+2: Page 2	7/7 (18) false
+1: Folder 2	2/9 (19) true: 7
+2: Folder 2.1	1/7 (20) true: 5
+3: hidden_image_5.jpg	1/5 (21) false
+3: image1_5.jpg	2/5 (22) false
+3: image2_5.jpg	3/5 (23) false
+3: Page 1	4/5 (24) false
+3: Page 2	5/5 (25) false
+2: Folder 2.2	2/7 (26) true: 5
+3: hidden_image_6.jpg	1/5 (27) false
+3: image1_6.jpg	2/5 (28) false
+3: image2_6.jpg	3/5 (29) false
+3: Page 1	4/5 (30) false
+3: Page 2	5/5 (31) false
+2: hidden_image_4.jpg	3/7 (32) false
+2: image1_4.jpg	4/7 (33) false
+2: image2_4.jpg	5/7 (34) false
+2: Page 1	6/7 (35) false
+2: Page 2	7/7 (36) false
+1: Hidden	3/9 (37) true: 5
+2: hidden_image_7.jpg	1/5 (38) false
+2: image1_7.jpg	2/5 (39) false
+2: image2_7.jpg	3/5 (40) false
+2: Page 1	4/5 (41) false
+2: Page 2	5/5 (42) false
+1: hidden_image.jpg	4/9 (43) false
+1: image1.jpg	5/9 (44) false
+1: image2.jpg	6/9 (45) false
+1: NavPage	7/9 (46) true
+1: Page 1	8/9 (47) false
+1: Page 2	9/9 (48) false

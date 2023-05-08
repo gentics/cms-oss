@@ -1,0 +1,36 @@
+<gtx-progress-bar [active]="fetching$ | async"></gtx-progress-bar>
+<div class="modal-title">
+    <h5>{{ 'modal.object_usage_title' | i18n: { _type: item.type, name: item.name } }}</h5>
+</div>
+<div class="modal-content">
+
+    <gtx-tabs>
+        <gtx-tab [title]="'modal.object_usages_label' | i18n: { count: (usageCount$ | async) }">
+            <div class="empty-message" *ngIf="usageEmpty$ | async">
+                {{ 'modal.object_not_used' | i18n:{ _type: item.type } }}
+            </div>
+
+            <usage-list type="page" [items]="pages$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="variant" [items]="variants$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="folder" [items]="folders$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="file" [items]="files$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="image" [items]="images$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="template" [items]="templates$ | async" (itemClick)="itemClicked($event)"></usage-list>
+        </gtx-tab>
+        <gtx-tab [title]="'modal.object_links_label' | i18n: { count: (linksCount$ | async) }" *ngIf="supportsExtendedUsage">
+
+            <div class="empty-message" *ngIf="linksEmpty$ | async">
+                {{ 'modal.object_has_no_links' | i18n:{ _type: item.type } }}
+            </div>
+
+            <usage-list type="linkedPage" [items]="linkedPages$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="linkedFile" [items]="linkedFiles$ | async" (itemClick)="itemClicked($event)"></usage-list>
+            <usage-list type="linkedImage" [items]="linkedImages$ | async" (itemClick)="itemClicked($event)"></usage-list>
+        </gtx-tab>
+    </gtx-tabs>
+
+
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.close_button' | i18n }}</gtx-button>
+</div>

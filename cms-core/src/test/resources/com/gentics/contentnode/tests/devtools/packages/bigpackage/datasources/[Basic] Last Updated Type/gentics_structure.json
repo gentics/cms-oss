@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.70002",
+  "type" : "statical",
+  "name" : "[Basic] Last Updated Type",
+  "values" : [ {
+    "globalId" : "A547.75169",
+    "key" : "Short / Kurz",
+    "value" : "short"
+  }, {
+    "globalId" : "A547.75170",
+    "key" : "Long / Lang",
+    "value" : "long"
+  } ]
+}

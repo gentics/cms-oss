@@ -1,0 +1,18 @@
+{
+    "extends": "./tsconfig.json",
+    "files": [
+        "src/main.ts",
+        "src/polyfills.ts"
+    ],
+    "include": [
+        "src/**/*.d.ts",
+        "../../libs/image-editor/src/public-api.ts",
+        "../../libs/ui-core/src/public-api.ts"
+    ],
+    "exclude": [
+        "src/test.ts",
+        "src/testing/**",
+        "**/*.mock.ts",
+        "**/*.spec.ts"
+    ]
+}

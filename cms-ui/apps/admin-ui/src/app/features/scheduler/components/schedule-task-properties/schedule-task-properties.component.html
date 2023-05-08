@@ -1,0 +1,40 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <div class="input-container small-12 columns">
+
+        <!-- Name -->
+        <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="('common.name' | i18n) + ' *'"
+            [required]="true"
+            formControlName="name"
+        ></gtx-input>
+
+        <!-- Description -->
+        <gtx-input
+            type="text"
+            maxlength="255"
+            [label]="'common.description' | i18n"
+            formControlName="description"
+        ></gtx-input>
+
+        <!-- Command -->
+        <gtx-input
+            type="text"
+            [label]="('scheduler.command' | i18n) + ' *'"
+            [required]="true"
+            formControlName="command"
+        ></gtx-input>
+
+        <div *ngIf="mode === ScheduleTaskPropertiesMode.UPDATE" class="readonly-visual">
+            <div class="readonly-visual-label">{{ 'scheduler.internal' | i18n }}:</div>
+            <div class="readonly-visual-value" [ngClass]="'value-' + !!value?.internal">
+                <icon>{{ !!value?.internal ? 'check' : 'close' }}</icon>
+            </div>
+        </div>
+    </div>
+</form>

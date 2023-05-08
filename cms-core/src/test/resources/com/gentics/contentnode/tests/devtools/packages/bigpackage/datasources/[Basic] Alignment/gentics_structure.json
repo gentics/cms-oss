@@ -1,0 +1,18 @@
+{
+  "globalId" : "A547.71915",
+  "type" : "statical",
+  "name" : "[Basic] Alignment",
+  "values" : [ {
+    "globalId" : "A547.75175",
+    "key" : "Left / Links",
+    "value" : "left"
+  }, {
+    "globalId" : "A547.75176",
+    "key" : "Right / Rechts",
+    "value" : "right"
+  }, {
+    "globalId" : "A547.75177",
+    "key" : "Center / Mittig",
+    "value" : "center"
+  } ]
+}

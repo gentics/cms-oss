@@ -1,0 +1,76 @@
+:host {
+    display: block;
+    user-select: none;
+}
+
+.suggestion-row {
+    border-radius: 2px;
+    height: 30px;
+    line-height: 30px;
+    text-align: left;
+
+    &:hover {
+        background-color: #eee;
+    }
+
+    &.selected {
+        background-color: #ddd;
+    }
+}
+
+.suggestion {
+    cursor: default;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    height: 30px;
+    max-width: 100%;
+    position: relative;
+}
+
+.size-prefix {
+    color: #bbb;
+    flex: 0 0 auto;
+    margin-left: 15px;
+    white-space: pre;
+    visibility: hidden;
+}
+
+icon {
+    flex: 0 0 auto;
+    margin: 0 0.5em;
+}
+
+icon.secondary {
+    position: absolute;
+    font-size: 16px;
+    bottom: 0;
+    left: 16px;
+    text-shadow: 0 0 1px white,
+                 0 0 2px white,
+                 0 0 3px white,
+                 0 0 4px white,
+                 0 0 5px white;
+}
+
+.size-prefix + icon {
+    position: absolute;
+    left: 0;
+}
+
+.text {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.context {
+    color: #bbb;
+    flex: 0 0 auto;
+    margin-left: 5px;
+
+    .selected & {
+        color: #aaa;
+    }
+}

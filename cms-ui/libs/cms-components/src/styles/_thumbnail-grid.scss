@@ -1,0 +1,175 @@
+@import "variables";
+
+@mixin masonry-thumbnail-grid {
+    masonry-grid {
+        margin-top: 16px;
+    }
+
+    masonry-grid ::ng-deep masonry-item {
+        @include masonry-item;
+    }
+}
+
+@mixin masonry-item {
+    margin-bottom: 16px;
+
+    &:hover ::ng-deep .image-container {
+        transform: scale(1.1, 1.1);
+        transition: transform 0.5s cubic-bezier(.22,.47,.37,.96);
+    }
+
+    &::shadow {
+        image-thumbnail {
+            max-width: 300px;
+            overflow: hidden;
+            box-shadow: 0 0 9px -2px rgba(0,0,0,0.4)
+        }
+
+        ::ng-deep .image-container {
+            transition: transform 0.3s;
+            will-change: transform;
+        }
+
+        .thumbnail-overlay {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: background 0.2s;
+
+            .show-on-hover {
+                opacity: 0.2;
+                transition: opacity 0.2s;
+            }
+
+            &:hover, &.selected {
+                background-color: rgba(255, 255, 255, 0);
+
+                .show-on-hover {
+                    opacity: 1;
+                }
+
+                .top-bar {
+                    background-color: rgba(255, 255, 255, 0.9);
+
+                    .image-info span {
+                        opacity: 1;
+                    }
+
+                    > gtx-checkbox,
+                    icon-checkbox {
+                        opacity: 1;
+                    }
+                }
+            }
+
+            .top-bar {
+                display: flex;
+                padding: 5px;
+                background-color: rgba(255, 255, 255, 0.1);
+                transition: background 0.2s;
+
+                > gtx-checkbox,
+                icon-checkbox {
+                    opacity: 0.1;
+                    transition: opacity 0.2s;
+                    will-change: opacity;
+                }
+
+                > gtx-checkbox {
+                    width: 24px;
+                    height: 24px;
+                    position: relative;
+                    left: 3px;
+                    top: 2px;
+                }
+
+                .image-info {
+                    flex: 1;
+                    span {
+                        margin: 4px 5px;
+                        font-size: 12px;
+                        display: inline-block;
+                        color: $gtx-color-dark-gray;
+                        background-color: rgba(255, 255, 255, 0.56);
+                        padding: 0 3px;
+                        border-radius: 2px;
+                        opacity: 0;
+                        transition: opacity 0.2s;
+                        white-space: nowrap;
+                    }
+                }
+            }
+
+            .thumbnail-middle {
+                flex-grow: 1;
+                cursor: pointer;
+                display: flex;
+                align-items: flex-end;
+                justify-content: flex-end;
+                outline: none;
+                user-select: none;
+                overflow: hidden;
+
+                ::ng-deep detail-chip {
+                    background-color: white;
+
+                    icon, .material-icons {
+                        font-size: 16px;
+                        margin-right: 2px;
+                    }
+                }
+            }
+
+            .bottom-bar {
+                text-align: center;
+                background-color: rgba(255, 255, 255, 0.9);
+                padding: 5px;
+                width: 100%;
+
+                .inherited-icon {
+                    display: inline;
+                    cursor: help;
+                    margin-right: 5px;
+
+                    icon {
+                        color: $gcms-color-icon-inheritance;
+                        font-size: $gtx-font-size-small;
+                    }
+                }
+
+                .item-name {
+                    display: inline;
+                    cursor: pointer;
+                    word-wrap: break-word;
+                    word-break: break-all;
+
+                    ::ng-deep .hl-pipe {
+                        background-color: rgba(255, 236, 10, 0.18);
+                        border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+                    }
+
+                    a {
+                        color: desaturate(lighten($gtx-color-primary, 20%), 45%);
+                        &:hover {
+                            color: desaturate(lighten($gtx-color-primary, 10%), 10%);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &:not(.selected)::shadow .item-name {
+        color: $gtx-color-off-black;
+    }
+
+    &.selected::shadow image-thumbnail {
+        box-shadow: 0 0 9px 0px $gtx-color-primary;
+    }
+}

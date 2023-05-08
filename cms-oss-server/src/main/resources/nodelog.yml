@@ -1,0 +1,23 @@
+Configuration:
+  status: error
+  name: CMS Configuration
+  monitorInterval: 10
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+  Loggers:
+    logger:
+      -
+        name: com.gentics.contentnode
+        level: error
+      -
+        name: wastebin
+        level: error
+    Root:
+      level: error
+      AppenderRef:
+        -
+          ref: STDOUT

@@ -1,0 +1,20 @@
+@import '../../../styles/base-import';
+
+:host {
+    position: relative;
+    display: block;
+
+    @include input-label-styles('> label');
+
+    > textarea.materialize-textarea {
+        @include input-base;
+        width: 100%;
+        min-height: 2.5rem;
+        line-height: 1.5;
+        overflow-y: auto;
+    }
+
+    &.ng-touched.ng-invalid > textarea.materialize-textarea:not(:focus) {
+        border-color: $gtx-color-alert;
+    }
+}

@@ -1,0 +1,26 @@
+<div class="modal-title">
+    <h5>{{ 'modal.sorting_title' | translate }}</h5>
+</div>
+<div class="modal-content">
+    <gtx-contents-list-item *ngFor="let field of availableFields"
+                            (click)="toggleSort(field)"
+                            class="no-select"
+                            [class.selected]="isSortedBy(field) !== ''">
+        <div class="item-primary">
+            <div class="field">
+                {{ 'common.sort_' + field | translate }}
+            </div>
+        </div>
+        <div class="sort-order" *ngIf="isSortedBy(field) !== ''">
+            ({{ getOrder(field) }})
+            {{ 'common.sort_' + isSortedByString(field) | translate }}
+            <i class="material-icons" *ngIf="isSortedBy(field) === '+'">arrow_upward</i>
+            <i class="material-icons" *ngIf="isSortedBy(field) === '-'">arrow_downward</i>
+        </div>
+    </gtx-contents-list-item>
+</div>
+<div class="modal-footer">
+    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | translate }}</gtx-button>
+    <gtx-button type="secondary" flat (click)="resetOrder()">{{ 'common.reset_button' | translate }}</gtx-button>
+    <gtx-button (click)="setSort()">{{ 'common.okay_button' | translate }}</gtx-button>
+</div>

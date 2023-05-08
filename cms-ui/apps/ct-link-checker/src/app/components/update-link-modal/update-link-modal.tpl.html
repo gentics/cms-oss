@@ -1,0 +1,52 @@
+<gtx-progress-bar [active]="loadingLinkDetails$ | async"></gtx-progress-bar>
+
+<div class="modal-title">
+    <h5>{{ 'modal.update_link_modal_title' | translate }}</h5>
+</div>
+<div class="modal-content">
+    <div class="row scope">
+        <div class="column small-12">
+            <span class="current-url">{{ 'modal.update_link_current_url' | translate }}:</span> <i *ngIf="item.lastStatus === 'invalid'; else noIcon" class="material-icons alert invalidIcon">warning</i>
+            <ng-template #noIcon><i class="material-icons success invalidIcon">check_circle</i></ng-template>
+            {{ item.url }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="column small-11">
+            <gtx-input
+                [label]="'modal.update_link_new_url' | translate"
+                [ngModel]="newUrl$ | async"
+                (ngModelChange)="newUrlChanged($event)"
+                (keyup.enter)="replace()"
+                required
+                #newUrlModel="ngModel"></gtx-input>
+        </div>
+        <div class="column small-1 url-result">
+            <i *ngIf="newUrlProgress$ | async; else newUrlStatus" class="material-icons primary invalidIcon">sync</i>
+            <ng-template #newUrlStatus>
+                <ng-container [ngSwitch]="(newUrlValidity$ | async)?.valid">
+                    <i *ngSwitchCase="true" class="material-icons success invalidIcon">check_circle</i>
+                    <i *ngSwitchCase="false" class="material-icons alert invalidIcon">warning</i>
+                    <span *ngSwitchDefault></span>
+                  </ng-container>
+
+            </ng-template>
+        </div>
+        <div class="column small-12">
+            <small *ngIf="(newUrlValidity$ | async)?.valid === false" class="warning">{{ (newUrlValidity$ | async)?.reason }}</small>
+        </div>
+    </div>
+
+    <div class="row scope">
+        <div class="column small-12">
+            <gtx-radio-button [(ngModel)]="scope" [value]="scopes.Link" [label]="'modal.update_scope_' + scopes.Link | translate"></gtx-radio-button>
+            <gtx-radio-button [(ngModel)]="scope" [value]="scopes.Page" [label]="'modal.update_scope_' + scopes.Page | translate: { count: (itemDetails$ | async)?.page }"></gtx-radio-button>
+            <gtx-radio-button [(ngModel)]="scope" [value]="scopes.Node" [label]="'modal.update_scope_' + scopes.Node | translate: { count: (itemDetails$ | async)?.node }"></gtx-radio-button>
+            <gtx-radio-button [(ngModel)]="scope" [value]="scopes.Global" [label]="'modal.update_scope_' + scopes.Global | translate: { count: (itemDetails$ | async)?.global }"></gtx-radio-button>
+        </div>
+    </div>
+</div>
+<div class="modal-footer">
+    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | translate }}</gtx-button>
+    <gtx-button (click)="replace()" [disabled]="newUrlModel.invalid || (newUrlProgress$ | async)">{{ 'modal.replace_button' | translate }}</gtx-button>
+</div>

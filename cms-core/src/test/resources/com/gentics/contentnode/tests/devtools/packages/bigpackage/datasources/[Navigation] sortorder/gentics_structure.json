@@ -1,0 +1,14 @@
+{
+  "globalId" : "A547.14656",
+  "type" : "statical",
+  "name" : "[Navigation] sortorder",
+  "values" : [ {
+    "globalId" : "A547.75158",
+    "key" : "ascending / aufsteigend",
+    "value" : "asc"
+  }, {
+    "globalId" : "A547.75159",
+    "key" : "descending / absteigend",
+    "value" : "desc"
+  } ]
+}

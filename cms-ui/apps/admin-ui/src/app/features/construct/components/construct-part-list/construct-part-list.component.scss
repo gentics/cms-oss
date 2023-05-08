@@ -1,0 +1,136 @@
+@import 'variables';
+
+$gtx-table-tagparts-border-color: #ddd;
+
+:host {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 1px;
+}
+
+.gtx-construct-part-list {
+    display: block;
+    height: 100%;
+    overflow: auto;
+}
+
+.gtx-table-tagparts {
+
+    .gtx-row-head {
+        border-bottom: 1px solid $gtx-table-tagparts-border-color;
+    }
+
+    tr {
+        border-top: none;
+        border-bottom: none;
+
+        &.gtx-row-data {
+            transition: background-color ease 0.2s;
+            background-color: auto;
+            cursor: pointer;
+
+            &:hover {
+                background-color: rgba($gtx-color-primary, 0.1);
+            }
+
+            &.invalid {
+                background-color: rgba($gtx-color-alert, 0.2);
+
+                &:hover,
+                &.open {
+                    background-color: rgba($gtx-color-alert, 0.1);
+                }
+            }
+
+            th, td {
+                border-bottom: none;
+                padding: 0.3rem 0.3rem;
+            }
+        }
+
+        &.gtx-row-nested {
+            max-height: auto;
+            line-height: auto;
+            overflow: hidden;
+            transition: all ease 0.15s;
+            border-bottom: 1px solid $gtx-table-tagparts-border-color;
+
+            &.invalid {
+                background-color: rgba($gtx-color-alert, 0.1);
+            }
+
+            th, td, gtx-construct-part-properties {
+                max-height: 100rem;
+                line-height: auto;
+                overflow: hidden;
+                transition: all ease 0.15s;
+                padding-bottom: 2rem;
+                padding-top: 0.3rem;
+            }
+
+            gtx-construct-part-properties {
+                display: block;
+            }
+        }
+
+        &.gtx-row-hidden {
+            max-height: 0;
+            border-top: 0;
+            line-height: 0;
+
+            th, td, gtx-construct-part-properties {
+                max-height: 0;
+                border-top: 0;
+                line-height: 0;
+                padding-bottom: 0;
+                padding-top: 0;
+            }
+
+            .gtx-nested-container th {
+                border-bottom: none;
+            }
+        }
+    }
+
+    th, td {
+        vertical-align: top;
+    }
+
+    .gtx-row-data-name {
+        display: flex;
+        align-items: center;
+
+        icon {
+            cursor: help;
+            font-size: 1rem;
+            color: #333;
+        }
+    }
+
+    .gtx-cell-last-inner {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .gtx-cell-last-value {
+        display: flex;
+        margin-right: 1rem;
+    }
+
+    .gtx-icon-expand {
+        transition: transform ease 0.2s;
+        cursor: pointer;
+
+        &.active {
+            transform: rotate(-90deg);
+        }
+    }
+}
+
+.gtx-nested-container {
+    th {
+        border-bottom: 1px solid $gtx-table-tagparts-border-color;
+    }
+}

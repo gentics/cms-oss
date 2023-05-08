@@ -1,0 +1,41 @@
+<div class="gtx-modal-datagrid">
+    <div class="modal-title">
+        <h5>{{ getModalTitle() | async }}</h5>
+    </div>
+    <div class="modal-content">
+        <gtx-group-table
+            [showSearch]="true"
+            [selectable]="false"
+            [hideActions]="true"
+            [activeEntity]="targetGroupId ? + targetGroupId + '' : null"
+            (rowClick)="handleRowClick($event)"
+        ></gtx-group-table>
+    </div>
+    <div class="modal-footer">
+        <!-- NOTE: `gtxActionAllowed` will override any `disabled` directive, thus the code below is a workaround -->
+        <gtx-button
+            *ngIf="!allIsValid()"
+            type="primary"
+            (click)="buttonMoveClicked()"
+            [disabled]="!allIsValid()"
+        >
+            {{ 'shared.move' | i18n }}
+        </gtx-button>
+        <gtx-button
+            *ngIf="allIsValid()"
+            type="primary"
+            (click)="buttonMoveClicked()"
+            gtxActionAllowed="group.moveGroup"
+        >
+            {{ 'shared.move' | i18n }}
+        </gtx-button>
+
+        <gtx-button
+            type="secondary"
+            flat
+            (click)="cancelFn()"
+        >
+            {{ 'common.cancel_button' | i18n }}
+        </gtx-button>
+    </div>
+</div>

@@ -1,0 +1,27 @@
+/**
+ * This is the main GUIC styles file. It should be imported once
+ * by any app that consumes GUIC.
+ */
+@import 'variables';
+@import 'variables_compat';
+@import 'mixins';
+
+// Library imports
+@import "materialize-css/sass/components/color-variables";
+@import "materialize-overrides";
+@import "materialize-css/sass/components/variables";
+
+/* Foundation grid with materialize breakpoints */
+$breakpoints: (
+    small: 0,
+    medium: $small-screen,
+    large: $medium-screen,
+    xlarge: $large-screen,
+    xxlarge: 1440px,
+);
+
+@import "foundation-sites/scss/util/util";
+$global-left: left !default;
+$global-right: right !default;
+$global-width: rem-calc(1200) !default;
+@import "foundation-sites/scss/grid/grid";

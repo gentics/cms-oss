@@ -1,0 +1,66 @@
+<div class="flex-row row">
+    <form
+        *ngIf="form"
+        [formGroup]="form"
+        class="buttons-form small-12 medium-12 row"
+    >
+        <div class="input-container small-12 medium-6 columns">
+            <gtx-input
+                type="text"
+                [required]="true"
+                maxlength="50"
+                [label]="('templateTag.name' | i18n) + ' *'"
+                [placeholder]="'template.name' | i18n"
+                (blur)="touchFn()"
+                formControlName="name"
+            ></gtx-input>
+        </div>
+
+        <div class="input-container small-12 medium-6 columns">
+            <gtx-select
+                [required]="true"
+                [label]="('templateTag.tagType' | i18n ) + ' *'"
+                [placeholder]="'templateTag.tagType' | i18n"
+                (blur)="touchFn()"
+                formControlName="constructId"
+            >
+                <gtx-option
+                    *ngFor="let construct of (constructs$ | async)"
+                    [value]="construct.constructId"
+                >{{ construct.name }}</gtx-option>
+            </gtx-select>
+        </div>
+
+        <div class="input-container small-12 medium-12 columns checkbox-container">
+            <gtx-checkbox
+                [required]="true"
+                [label]="'templateTag.editableInPage' | i18n"
+                (blur)="touchFn()"
+                formControlName="editableInPage"
+            ></gtx-checkbox>
+        </div>
+
+        <div class="input-container small-12 medium-12 columns checkbox-container">
+            <gtx-checkbox
+                [required]="true"
+                [label]="'templateTag.mandatory' | i18n"
+                (blur)="touchFn()"
+                formControlName="mandatory"
+            ></gtx-checkbox>
+        </div>
+
+        <div *ngIf="mode === TemplateTagPropertiesMode.UPDATE" class="input-container small-12 medium-12 columns">
+            <gtx-tag-editor-wrapper
+                class="tag-editor"
+                [nodeId]="nodeId"
+                [entityType]="'template'"
+                [entityId]="templateId"
+                [tagName]="tagName"
+                [baseUrl]="tagEditorBaseUrl"
+                [withTitle]="false"
+                [transparent]="true"
+                (change)="onTagEditorChange($event)"
+            ></gtx-tag-editor-wrapper>
+        </div>
+    </form>
+</div>

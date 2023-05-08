@@ -1,0 +1,14 @@
+@import "variables";
+
+.host-iframe {
+    width: 100%;
+    height: fit-content;
+}
+
+.hidden ::ng-deep iframe {
+    visibility: hidden;
+}
+
+.error {
+    color: $gtx-color-alert;
+}

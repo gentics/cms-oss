@@ -1,0 +1,20 @@
+{
+  "globalId" : "ABCD.466e0104-dbc1-11e6-8b5d-ea5d8efab9e8",
+  "name" : "Testtemplate",
+  "description" : "Description of the template",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId": "ABCD.4a74deb3-dbc3-11e6-8b5d-ea5d8efab9e8",
+    "name": "content",
+    "active": true,
+    "constructId": "8371.71123",
+    "editableInPage": true,
+    "mandatory": false
+  } ],
+  "objectTags" : [ {
+    "globalId" : "ABCD.fd35b2d4-dbeb-11e6-8b5d-ea5d8efab9e8",
+    "name" : "object.testoe",
+    "active" : true,
+    "constructId" : "8371.71123"
+  } ]
+}

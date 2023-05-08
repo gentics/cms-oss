@@ -1,0 +1,131 @@
+@import "variables";
+@import "thumbnail-grid";
+@import "list-styles";
+
+:host {
+    .show-on-hover {
+        display: inline-block;
+        filter: grayscale(20%);
+        opacity: 0.35;
+        margin-left: 3px;
+    }
+
+    .display-fields {
+        max-width: 50vw;
+        max-width: fit-content;
+        flex: 1;
+
+        filter: grayscale(20%);
+        opacity: 0.35;
+    }
+
+    &:hover {
+        .display-fields {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+        .show-on-hover {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+    }
+
+    @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+        .display-fields {
+            flex: auto;
+            width: 0%;
+        }
+    }
+}
+
+$item-list-min-height: 63px;
+
+.left-items {
+    display: flex;
+    flex-grow: 1;
+    white-space: nowrap;
+    width: 65%;
+
+    gtxct-status-indicator {
+        margin: 5px 20px;
+        text-transform: uppercase;
+    }
+}
+
+.pageLanguage {
+    // margin: 0 5px;
+    text-transform: uppercase;
+}
+
+.type {
+    margin-left: 10px;
+    width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    a {
+        cursor: pointer;
+
+        ::ng-deep .hl-pipe {
+            background-color: rgba(255, 236, 10, 0.18);
+            border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);
+        }
+    }
+    .count-full {
+        @media screen and (max-width: $small-screen) {
+            display: none;
+        }
+    }
+    .count-part {
+        @media screen and (min-width: $small-screen-up) {
+            display: none;
+        }
+    }
+}
+
+.header-controls {
+    display: inline-flex;
+}
+
+.type-actions {
+    display: inline-flex;
+    > * {
+        margin-left: 10px;
+    }
+    language-context-selector {
+        @media screen and (max-width: $small-screen) {
+            max-width: 100px;
+        }
+    }
+}
+
+gtx-file-picker {
+    white-space: nowrap;
+}
+
+.group-actions {
+    display: flex;
+    align-items: flex-start;
+    // margin-left: -5px;
+
+    ::ng-deep gtx-button button {
+        color: #0096DC;
+        text-transform: none;
+        width: max-content;
+
+        i {
+            font-size: 14px;
+        }
+    }
+
+    .collapse-icon {
+        transition: transform 0.2s;
+        display: flex;
+        align-items: flex-start;
+        margin: 0 5px;
+
+        &.collapsed {
+            transform: rotateZ(-90deg);
+        }
+    }
+}

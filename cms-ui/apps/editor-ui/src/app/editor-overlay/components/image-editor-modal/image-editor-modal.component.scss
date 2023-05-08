@@ -1,0 +1,86 @@
+@import 'variables';
+@import 'flex-modal';
+@include flex-modal;
+
+:host {
+    position: relative;
+    height: 70vh;
+    width: 100%;
+    max-width: 98vw;
+    min-width: 50vw;
+}
+
+.modal-content {
+    padding: 0;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1;
+
+    /**
+     * The image editor's height is slightly larger than that of its container (see .workaround-margin).
+     * These styles ensure that no vertical scrollbars are shown if the screen is large enough
+     * to fit the entire image editor.
+     */
+    .image-editor-wrapper {
+        height: calc(100% - 5px);
+        margin-bottom: 5px;
+    }
+}
+
+/**
+ * The image editor height is not properly respected by its container.
+ * Temporarily setting a bottom margin and then removing it is an ugly workaround for this problem.
+ */
+.workaround-margin {
+    margin-bottom: 10px;
+}
+
+:host-context(.isIE11) {
+    .modal-content {
+        display: inline;
+
+        @media screen and (max-width: $small-screen) {
+            max-height: 96vh;
+        }
+
+        @media screen and (min-width: $small-screen-up) {
+            max-height: 70vh;
+        }
+    }
+}
+
+$control-panel-background: $gtx-color-very-light-gray;
+$mode-selector-selected-btn-color: black;
+
+gentics-ui-image-editor ::ng-deep {
+    border-color: $control-panel-background;
+
+    .control-panel {
+        background-color: $control-panel-background;
+    }
+
+    gentics-image-cropper {
+        .cropper-drag-box {
+            background-color: white;
+        }
+        .cropper-crop-box {
+            .cropper-view-box {
+                outline-width: 2px;
+            }
+        }
+    }
+
+    .controls {
+        .mode-selector {
+            &:not(.preview) .mode-button {
+                gtx-button button.btn-flat.btn-icon.secondary {
+                    color: $mode-selector-selected-btn-color;
+                }
+                .button-label {
+                    color: $mode-selector-selected-btn-color;
+                }
+            }
+        }
+    }
+}

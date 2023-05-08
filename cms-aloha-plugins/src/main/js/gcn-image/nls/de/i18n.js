@@ -1,0 +1,1 @@
+define({'button.img.save.tooltip':'Erstellt eine Kopie des aktuellen Bildes. Die erstellte Kopie wird für alle weiteren Bearbeitungsschritte verwendet.'});

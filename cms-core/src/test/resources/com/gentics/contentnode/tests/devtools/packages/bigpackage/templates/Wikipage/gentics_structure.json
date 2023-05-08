@@ -1,0 +1,132 @@
+{
+  "globalId" : "A547.69793",
+  "name" : "Wikipage",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId" : "A547.71011",
+    "name" : "pre",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71021",
+    "name" : "portalcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71019",
+    "name" : "960css",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71023",
+    "name" : "autoSuggestcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75349",
+    "name" : "lightboxjs",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "79C9.69833",
+    "name" : "toc",
+    "active" : true,
+    "constructId" : "A547.69568",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71015",
+    "name" : "resetcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71017",
+    "name" : "textcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "79C9.69799",
+    "name" : "versionhistory",
+    "active" : true,
+    "constructId" : "A547.69989",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.69795",
+    "name" : "content",
+    "active" : true,
+    "constructId" : "A547.69568",
+    "editableInPage" : true,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75607",
+    "name" : "imagedeps",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75355",
+    "name" : "lightboxcss",
+    "active" : true,
+    "constructId" : "A547.69527",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71013",
+    "name" : "post",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75612",
+    "name" : "genticssharebar",
+    "active" : true,
+    "constructId" : "A547.74971",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.69975",
+    "name" : "imagegallerydeps",
+    "active" : true,
+    "constructId" : "A547.69809",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.75618",
+    "name" : "velocity_for_footer",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.70034",
+    "name" : "lastupdate",
+    "active" : true,
+    "constructId" : "A547.70013",
+    "editableInPage" : false,
+    "mandatory" : false
+  }, {
+    "globalId" : "A547.71032",
+    "name" : "basicinformation",
+    "active" : true,
+    "constructId" : "A547.69716",
+    "editableInPage" : false,
+    "mandatory" : false
+  } ]
+}

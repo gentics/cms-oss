@@ -1,0 +1,16 @@
+.maintenancemode-toolbar {
+
+    & > .columns {
+        display: flex;
+        align-items: center;
+    }
+}
+
+.gtx-maintenancemode-actions {
+    display: flex;
+    justify-content: flex-end;
+    
+    gtx-button {
+        margin-left: 1rem;
+    }
+}

@@ -1,0 +1,12 @@
+<iframe-wrapper
+    *ngIf="tagPart?.externalEditorUrl && !showError"
+    class="host-iframe"
+    [class.hidden]="!customTagPropEditor"
+    [srcUrl]="tagPart.externalEditorUrl"
+    [height]="iFrameHeight"
+    (iFrameLoad)="onIFrameLoad($event)">
+</iframe-wrapper>
+
+<span *ngIf="showError" class="error">
+    {{ tagPart.name }}: {{ 'editor.custom_tag_property_editor_load_error' | i18n }}
+</span>

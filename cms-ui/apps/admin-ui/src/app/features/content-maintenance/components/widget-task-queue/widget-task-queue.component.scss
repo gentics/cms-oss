@@ -1,0 +1,24 @@
+@import 'variables';
+
+.title {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+table {
+    border-bottom: 1px solid #eee;
+
+    tr {
+        border-top: none;
+        border-bottom: none;
+
+        th, td {
+            padding: 0.3rem 0.3rem;
+        }
+
+        td:last-child {
+            text-align: right;
+            vertical-align: bottom;
+        }
+    }
+}

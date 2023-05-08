@@ -1,0 +1,255 @@
+{
+  "globalId" : "A547.76858",
+  "keyword" : "btinclude",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "[BT] Include",
+    "en" : "[BT] Include"
+  },
+  "description" : {
+    "de" : "Inkludiert das Braintribe Meshup",
+    "en" : "Inkludiert das Braintribe Meshup"
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : true,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "A547.76942",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "keyword" : "velocity",
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76864",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 5,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76869",
+    "name" : {
+      "de" : "Container",
+      "en" : "Container"
+    },
+    "keyword" : "container",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 10,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76874",
+    "name" : {
+      "de" : "detail_css",
+      "en" : "detail_css"
+    },
+    "keyword" : "detailcss",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 15,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76947",
+    "name" : {
+      "de" : "edit_css",
+      "en" : "edit_css"
+    },
+    "keyword" : "editcss",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 20,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76952",
+    "name" : {
+      "de" : "list_css",
+      "en" : "list_css"
+    },
+    "keyword" : "listcss",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 25,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.76957",
+    "name" : {
+      "de" : "sarch_css",
+      "en" : "sarch_css"
+    },
+    "keyword" : "searchcss",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 30,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77034",
+    "name" : {
+      "de" : "mashuptools_css",
+      "en" : "mashupTools_css"
+    },
+    "keyword" : "mashuptoolscss",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 35,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77093",
+    "name" : {
+      "de" : "jqueryui",
+      "en" : "jqueryui"
+    },
+    "keyword" : "jqueryui",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 40,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77098",
+    "name" : {
+      "de" : "jquerycookie",
+      "en" : "jquerycookie"
+    },
+    "keyword" : "jquerycookie",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 45,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77103",
+    "name" : {
+      "de" : "jcl",
+      "en" : "jcl"
+    },
+    "keyword" : "jcl",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 50,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77108",
+    "name" : {
+      "de" : "jquerycontroller",
+      "en" : "jquerycontroller"
+    },
+    "keyword" : "jquerycontroller",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 55,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77113",
+    "name" : {
+      "de" : "mashuptools",
+      "en" : "mashuptools"
+    },
+    "keyword" : "mashuptools",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 60,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77118",
+    "name" : {
+      "de" : "detail",
+      "en" : "detail"
+    },
+    "keyword" : "detail",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 65,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77123",
+    "name" : {
+      "de" : "edit",
+      "en" : "edit"
+    },
+    "keyword" : "edit",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 70,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77128",
+    "name" : {
+      "de" : "search",
+      "en" : "search"
+    },
+    "keyword" : "search",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 75,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.77133",
+    "name" : {
+      "de" : "list",
+      "en" : "list"
+    },
+    "keyword" : "list",
+    "editable" : false,
+    "typeId" : 4,
+    "order" : 80,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  } ]
+}

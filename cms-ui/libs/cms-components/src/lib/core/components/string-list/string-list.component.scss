@@ -1,0 +1,92 @@
+@import "../../../../styles/variables";
+
+:host {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    width: 100%;
+
+    label {
+        display: block;
+        flex: 0 0 auto;
+        color: $gtx-color-dark-gray;
+        transition: color 0.2s;
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 0.8rem;
+        user-select: none;
+    }
+
+    .list {
+        display: block;
+        flex: 1 1 100%;
+        width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .drag-item,
+    .regular-item,
+    .item-primary {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .regular-item,
+    .drag-item {
+        padding-top: 0;
+        border-bottom: none;
+
+        .input {
+            margin-top: 5px;
+
+            &::ng-deep {
+                input {
+                    margin: 0;
+                }
+            }
+            &.error::ng-deep {
+                input {
+                    border-color: $gtx-color-alert;
+                }
+            }
+
+            + .delete-button,
+            + gtx-drag-handle {
+                margin-left: 1.5rem;
+            }
+        }
+    }
+
+    .regular-item:last-child,
+    .drag-list > gtx-sortable-item:last-child .drag-item {
+        padding-bottom: 0;
+    }
+
+    .delete-button,
+    gtx-drag-handle {
+        margin: auto 0.5rem;
+    }
+
+    .button-wrapper {
+        display: block;
+        width: 100%;
+        flex: 0 0 auto;
+
+        .add-button {
+            margin-bottom: 1rem;
+        }
+    }
+
+    .list + .button-wrapper .add-button {
+        margin-top: 0.25rem;
+    }
+
+    &.ng-dirty.ng-invalid {
+        label {
+            color: $gtx-color-alert;
+        }
+    }
+}

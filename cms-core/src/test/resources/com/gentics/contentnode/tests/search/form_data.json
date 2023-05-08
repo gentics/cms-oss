@@ -1,0 +1,63 @@
+{
+    "type": "form",
+    "email": "",
+    "mailsubject": "",
+    "mailtemp": "",
+    "successurl": "",
+    "elements": [
+        {
+            "type": "formpage",
+            "name": "formpage1",
+            "label_i18n": {
+                "de": "Formular Seite",
+                "en": "Form Page"
+            },
+            "info_i18n": {
+                "de": "",
+                "en": ""
+            },
+            "elements": [
+                {
+                    "type": "formsection",
+                    "elements": [
+                        {
+                            "type": "dropdown",
+                            "active": true,
+                            "name": "dropdown11",
+                            "placeholderName": "",
+                            "label_i18n": {
+                                "en": "Dropdown"
+                            },
+                            "mandatory": false,
+                            "info_i18n": {
+                                "de": "",
+                                "en": ""
+                            },
+                            "tooltip_i18n": {
+                                "de": "",
+                                "en": ""
+                            },
+                            "validation": "",
+                            "listelements": [
+                                {
+                                    "value": "option1",
+                                    "label_i18n": {
+                                        "de": "Option eins",
+                                        "en": "Option one"
+                                    }
+                                },
+                                {
+                                    "value": "option2",
+                                    "label_i18n": {
+                                        "de": "Option zwei"
+                                    }
+                                }
+                            ],
+                            "elements": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

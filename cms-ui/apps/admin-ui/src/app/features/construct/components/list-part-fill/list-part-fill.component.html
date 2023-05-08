@@ -1,0 +1,9 @@
+<gtx-string-list
+    [label]="label"
+    [addLabel]="'shared.add' | i18n"
+    [disabled]="disabled"
+    [sortable]="false"
+    [value]="value?.stringValues"
+    (touch)="triggerTouch()"
+    (valueChange)="listUpdated($event)"
+></gtx-string-list>

@@ -1,0 +1,34 @@
+@import "variables";
+
+:host {
+    line-height: 1.5em;
+    font-size: $gtx-font-size-small;
+    display: block;
+    padding-top: 10px;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+    max-width: 100%;
+
+    .start-page-item {
+        gtx-dropdown-list {
+            max-width: 100%;
+            gtx-dropdown-trigger {
+                color: $gtx-color-primary;
+                cursor: pointer;
+                max-width: 100%;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+
+                span {
+                    vertical-align: top;
+
+                    &.start-page-deleted {
+                        color: $gtx-color-dark-gray;
+                        font-style: italic;
+                    }
+                }
+            }
+        }
+    }
+}

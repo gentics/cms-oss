@@ -1,0 +1,45 @@
+{
+  "globalId" : "6C7E.63978",
+  "keyword" : "googlemaps",
+  "icon" : "meta.gif",
+  "name" : {
+    "de" : "Google Maps einbetten",
+    "en" : "Googlemaps"
+  },
+  "description" : {
+    "de" : "Google Maps Tag für embedding des Google Maps Iframes",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "6C7E.63987",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 3,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "6C7E.63993",
+    "name" : {
+      "de" : "Hier den Code einfügen den Sie bei Google Maps unter \"HTML-Code zum Einbetten in eine Website\" kopiert haben.",
+      "en" : "Please add the GoogleMaps code here"
+    },
+    "keyword" : "embed",
+    "editable" : true,
+    "typeId" : 3,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

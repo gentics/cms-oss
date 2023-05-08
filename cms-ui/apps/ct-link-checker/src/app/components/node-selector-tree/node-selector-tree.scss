@@ -1,0 +1,24 @@
+@import "variables";
+
+@for $i from 1 through 8 {
+    .depth-#{$i} {
+        padding-left: ($i * 18px) + 5px;
+    }
+}
+
+.inherited-icon {
+    display: inline-block;
+    i, icon {
+        color: $gcms-color-icon-inheritance;
+        font-size: $gtx-font-size-small;
+        margin-right: 2px;
+    }
+}
+
+
+span.badge {
+    font-size: 0.8em;
+    background: red;
+    color: white;
+    min-width: 0;
+}

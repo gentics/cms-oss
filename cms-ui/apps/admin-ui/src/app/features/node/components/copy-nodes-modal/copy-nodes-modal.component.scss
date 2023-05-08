@@ -1,0 +1,25 @@
+
+
+.gtx-copy-nodes-modal-subform {
+    margin-bottom: 10px;
+    margin-top: 10px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.gtx-copy-nodes-modal-subform-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 5px;
+}
+
+.gtx-copy-nodes-modal-subform-header-action {
+    background-color: transparent;
+    box-shadow: none;
+    ::ng-deep i {
+        font-size: 18px;
+    }
+}

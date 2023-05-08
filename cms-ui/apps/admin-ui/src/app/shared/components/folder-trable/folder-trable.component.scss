@@ -1,0 +1,23 @@
+@import '../base-entity-trable/base-entity-trable.component.scss';
+
+.name-wrapper {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+
+    .type-icon {
+        display: inline-block;
+        font-size: 20px;
+        height: 24px;
+        margin-right: 0.5rem;
+
+        &::ng-deep .gtx-icon {
+            font-size: inherit !important;
+        }
+    }
+
+    .name {
+        margin-top: 1px;
+        display: inline-block;
+    }
+}

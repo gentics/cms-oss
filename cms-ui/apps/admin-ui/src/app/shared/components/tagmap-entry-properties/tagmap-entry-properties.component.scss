@@ -1,0 +1,12 @@
+@import 'variables';
+
+[formcontrolname="elasticsearch"] {
+
+    ::ng-deep textarea {
+        margin-bottom: 0;
+    }
+}
+
+.container-validator-errors {
+    color: $gtx-color-alert;
+}

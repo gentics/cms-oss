@@ -1,0 +1,37 @@
+<pagination-template #p="paginationApi" (pageChange)="pageChange.emit($event)" [id]="id">
+
+    <ul role="navigation"
+        [class.hidden]="p.pages.length < 2"
+        aria-label="Pagination">
+        <li class="pagination-previous" [class.disabled]="p.isFirstPage()" *ngIf="directionLinks">
+            <a *ngIf="1 < p.getCurrent()" (click)="p.previous()" aria-label="Next page">
+                <i class="material-icons" [attr.translate]="'no'">chevron_left</i>
+            </a>
+            <span *ngIf="p.isFirstPage()">
+                <i class="material-icons" [attr.translate]="'no'">chevron_left</i>
+            </span>
+        </li>
+        <li [class.current]="p.getCurrent() === page.value" *ngFor="let page of p.pages">
+            <a (click)="p.setCurrent(page.value)" *ngIf="p.getCurrent() !== page.value">
+                <span>{{ page.label }}</span>
+            </a>
+            <div *ngIf="p.getCurrent() === page.value">
+                <span>{{ page.label }}</span>
+            </div>
+        </li>
+        <li class="mobile-pages">
+            <div class="compact-view">
+                <span>{{ p.getCurrent() }}/{{ p.getLastPage() }}</span>
+            </div>
+        </li>
+        <li class="pagination-next" [class.disabled]="p.isLastPage()" *ngIf="directionLinks">
+            <a *ngIf="!p.isLastPage()" (click)="p.next()" aria-label="Next page">
+                <i class="material-icons" [attr.translate]="'no'">chevron_right</i>
+            </a>
+            <span *ngIf="p.isLastPage()">
+                <i class="material-icons" [attr.translate]="'no'">chevron_right</i>
+            </span>
+        </li>
+    </ul>
+
+</pagination-template>

@@ -1,0 +1,17 @@
+# DEFAULT CACHE REGION
+jcs.default=
+jcs.default.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.default.cacheattributes.MaxObjects=1000
+jcs.default.cacheattributes.UseMemoryShrinker=true
+jcs.default.cacheattributes.MaxMemoryIdleTimeSeconds=900
+jcs.default.cacheattributes.ShrinkerIntervalSeconds=300
+jcs.default.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.default.elementattributes.IsEternal=false
+jcs.default.elementattributes.MaxLifeSeconds=1800
+jcs.default.elementattributes.IdleTime=1000
+
+jcs.region.with-element-attributes=
+jcs.region.with-element-attributes.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.region.with-element-attributes.elementattributes.MaxLifeSeconds=999
+
+jcs.region.without-element-attributes=

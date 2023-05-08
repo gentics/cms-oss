@@ -1,0 +1,46 @@
+@import "variables";
+
+:host {
+    display: block;
+    position: relative;
+    // Flexbox fix for y-scrollable children https://stackoverflow.com/a/28639686/772859
+    min-height: 0;
+    // required to enable y-scroll in IE 11
+    //    height: 0;
+    // TODO: has to be checked / re-enabled
+}
+
+.title {
+    font-size: 18px;
+    text-align: center;
+    font-weight: normal;
+    margin: 0;
+    padding: 1rem 0;
+}
+
+.empty-placeholder {
+    color: $gtx-color-mid-gray;
+    align-self: center;
+    text-align: center;
+    text-indent: -12px;
+
+    icon {
+        color: $gtx-color-success;
+        vertical-align: middle;
+        margin-top: -3px;
+    }
+}
+
+.alert-block {
+    h4 {
+        font-size: 0.8em;
+        text-transform: uppercase;
+        color: $gtx-color-dark-gray;
+        font-weight: 600;
+        margin: 5px 0;
+        display: inline-block;
+    }
+    gtx-button {
+        float: right;
+    }
+}

@@ -1,0 +1,41 @@
+:host {
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    position: relative;
+    height: 26px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 26px;
+    padding: 0 12px;
+    background-color: #f6f6f6;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 5px 5px 5px 5px;
+    user-select: none;
+}
+
+.prefix {
+    color: rgba(64, 64, 64, 0.6);
+    white-space: pre;
+}
+
+.chip-contents {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+}
+
+.chip-contents:nth-last-child(2) {
+    margin-right: 16px;
+}
+
+.remove-button {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    right: 5px;
+    font-size: 16px;
+    line-height: 26px;
+}

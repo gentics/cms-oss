@@ -1,0 +1,8 @@
+0: Node Name	0/0 (0) true: 7
+1: file1.txt	1/7 (1) false
+1: file2.txt	2/7 (2) false
+1: image1.jpg	3/7 (3) false
+1: image2.jpg	4/7 (4) false
+1: NavPage	5/7 (5) true
+1: Page 1	6/7 (6) false
+1: Page 2	7/7 (7) false

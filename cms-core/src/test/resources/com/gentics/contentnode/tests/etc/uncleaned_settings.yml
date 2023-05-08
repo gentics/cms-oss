@@ -1,0 +1,30 @@
+merged:
+  zero: true
+zero: true
+contentnode:
+  global:
+    config:
+      one: true
+      merged:
+        one: true
+global:
+  config:
+    two: true
+    merged:
+      two: true
+config:
+  three: true
+  merged:
+    three: true
+properties:
+  existent: ${sys:com.gentics.contentnode.existent}
+  nonexistent: ${sys:com.gentics.contentnode.nonexistent}
+  array:
+    - ${sys:com.gentics.contentnode.existent}
+    - ${sys:com.gentics.contentnode.nonexistent}
+  sub:
+    existent: ${sys:com.gentics.contentnode.existent}
+    nonexistent: ${sys:com.gentics.contentnode.nonexistent}
+    array:
+     - ${sys:com.gentics.contentnode.existent}
+     - ${sys:com.gentics.contentnode.nonexistent}

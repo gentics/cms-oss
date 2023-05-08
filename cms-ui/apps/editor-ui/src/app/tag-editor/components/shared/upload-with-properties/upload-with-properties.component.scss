@@ -1,0 +1,65 @@
+@import 'variables';
+
+gtx-file-drop-area {
+    background-color: $gtx-color-very-light-gray;
+    border-radius: 6px;
+    border: 3px solid transparent;
+    display: flex;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    padding-top: 0;
+    padding-bottom: 0;
+    text-align: center;
+
+    &.dragging-over {
+        background-color: $gtx-color-mid-gray;
+    }
+
+    &.dragging-in-page {
+        border-color: $gtx-color-primary;
+    }
+
+    .drop-area-label {
+        display: block;
+        margin-bottom: 5px;
+    }
+}
+
+.image-preview-container {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 10em;
+    background-color: $gtx-color-mid-gray;
+    border-radius: 4px;
+    overflow: hidden;
+    justify-content: center;
+}
+
+@media (max-width: 374px) {
+    .image-preview-container {
+        display: none;
+    }
+}
+
+.file-drop-info-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 3px;
+    padding-bottom: 1em;
+    padding-top: 1em;
+}
+
+browse-box {
+    margin-bottom: 15px;
+}
+
+.file-size {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.upload-button {
+    margin-top: 10px;
+}

@@ -1,0 +1,8 @@
+<tr>
+  <td><? if ($error[<node name>]) echo $errPrefix; ?><node label><? if ($error[<node name>]) echo $errPostfix; ?>&nbsp;</td>
+  <td>&nbsp;<xnl if ("<node mandatory>" == 1)><input type="hidden" name="mandatory[<node name>]" value="true"><xnl end><input type="hidden" name="label[<node name>]" value="<node label>">
+
+<!--//
+<? if (!$_REQUEST['submitted']) $fvalue = '<node value>'; else $fvalue = ""; ?>
+//-->
+<input type="password" name="element[<node name>]" value="<?=$fvalue?>" size="<node size>" maxlength="<node maxlength>" class="input"></td></tr>

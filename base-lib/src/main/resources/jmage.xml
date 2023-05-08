@@ -1,0 +1,41 @@
+<jmage>
+    <properties>
+        <!-- Uncomment and change this to the location of your resource directory /-->
+        <!-- property name="resourcedir" value=""/ -->
+
+        <!-- this setting autofixes PNG transparency on Internet Explorer, comment this out if experiencing /-->
+        <!-- issues with other user agents /-->
+        <property name="fixPNGonIE" value="true"/>
+
+        <!-- Uncomment and change this to the location of your cache directory /-->
+        <property name="cachedir" value="/cache"/>
+
+        <!-- Leave this commented out unless you want to manually override your servlet context for jsp tags /-->
+        <!--<property name="contextPath" value="/myApp"/>-->
+
+        <!-- Simple filter names and their implementing classes/-->
+    </properties>
+
+   <!-- Add custom ResourceFactories here /-->
+    <resourcemanager pool="100">
+        <factory class="com.gentics.lib.image.PatchedDefaultImageFactory"/>
+        <factory class="org.jmage.resource.FontFactory"/>
+    </resourcemanager>
+
+    <!-- Add custom FilterChainFactories here /-->
+    <filterchainmanager pool="100">
+        <factory class="org.jmage.filterchain.SimpleFilterChainFactory"/>
+        <factory class="org.jmage.filterchain.XmlFilterChainFactory"/>
+    </filterchainmanager>
+
+    <!-- Add custom ImageEncoders here /-->
+    <encodermanager pool="100">
+        <factory class="com.gentics.lib.image.JPEGEncoder"/>
+        <factory class="com.gentics.lib.image.PNGEncoder"/>
+        <factory class="com.gentics.lib.image.GifEncoder"/>
+        <factory class="org.jmage.encoder.DefaultImageEncoder"/>
+    </encodermanager>
+
+    <!-- Change this to any RequestDispatcher implementation /-->
+    <requestdispatcher class="org.jmage.dispatcher.FilteringRequestDispatcher" pool="100"/>
+</jmage>

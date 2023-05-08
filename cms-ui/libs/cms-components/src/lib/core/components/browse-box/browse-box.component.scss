@@ -1,0 +1,35 @@
+@import "../../../../styles/variables";
+
+:host {
+    display: flex;
+    flex-direction: row;
+
+    gtx-input {
+        flex: 1 1 auto;
+
+        ::ng-deep input[type=text] {
+            border-top-right-radius: 0px;
+            border-bottom-right-radius: 0px;
+            border-right-width: 1px;
+            margin-bottom: 5px;
+        }
+    }
+
+    .browse-box__button {
+        background: $gtx-color-very-light-gray;
+        border-top: 2px solid $gtx-color-light-gray;
+        border-bottom: 2px solid $gtx-color-light-gray;
+        display: flex;
+        flex-direction: column;
+        height: 2.5rem;
+        justify-content: center;
+        margin-top: 20px;
+        border-right: 1px solid $gtx-color-light-gray;
+    }
+
+    .browse-box__button:last-of-type {
+        border-right: 2px solid $gtx-color-light-gray;
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+}

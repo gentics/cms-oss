@@ -1,0 +1,18 @@
+#if ( !$cms.rendermode.backend )##
+<!-- noindexstart -->
+<!-- Version history -->
+<div id="historypanel">
+  <a href="#" onclick="javascript:$('#historypanel').fadeOut();" class="history">$portal.i18n("content.versionhistory")</a>
+  <div class="clear"></div>
+  <div class="cover"></div>
+  <node versionhistory>
+</div>
+<!-- Basic information -->
+<p>
+  <small>
+    <node lastupdate>
+    <a href="#" onclick="javascript:$('#historypanel').fadeIn();" class="history">$portal.i18n("content.versionhistory")</a>
+  </small>
+</p>
+<!-- noindexend -->
+#end

@@ -1,0 +1,12 @@
+:host {
+    display: flex;
+}
+
+.dashboard-items {
+    padding: 0 16px;
+    padding-right: 3em;
+
+    .disabled {
+        pointer-events: none;
+    }
+}

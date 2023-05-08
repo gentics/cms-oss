@@ -1,0 +1,45 @@
+<div class="fields-wrapper" #fieldsWrapper>
+    <div *ngFor="let field of fields">
+        <div [ngSwitch]="field">
+            <detail-chip *ngSwitchCase="'creator'">
+                {{ 'common.creator_label' | translate }}: {{ item[field] | userFullName }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'editor'">
+                {{ 'common.editor_label' | translate }}: {{ item[field] | userFullName }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'cdate'">
+                {{ 'common.date_created_label' | translate }}: {{ item[field] | i18nDate }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'customCdate'">
+                {{ 'common.date_custom_created_label' | translate }}: {{ item[field] ? (item[field] | i18nDate) : '-' }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'edate'">
+                {{ 'common.date_edited_label' | translate }}: {{ item[field] | i18nDate }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'customEdate'">
+                {{ 'common.date_custom_edited_label' | translate }}: {{ item[field] ? (item[field] | i18nDate) : '-' }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'pageStatus'">
+                {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'priority'">
+                Priority: {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'fileType'">
+                <i class="material-icons">insert_drive_file</i> {{ item[field] }}
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'usage'" (click)="usageClicked($event, item)" class="usage">
+                <span>{{ 'common.usage_label' | translate }}:</span>
+                <span *ngIf="item?.usage?.total !== undefined" class="usage-count">{{ totalUsage(item) }}</span>
+                <i *ngIf="item?.usage?.total === undefined"
+                   class="usage-spinner material-icons usage-count">hourglass_empty</i>
+            </detail-chip>
+            <detail-chip *ngSwitchDefault>
+                {{ field | uppercase }}: <strong>{{ item[field] }}</strong>
+            </detail-chip>
+            <detail-chip *ngSwitchCase="'globalId'">
+                {{ 'editor.item_global_id_label' | translate }}:<br>{{ item[field] }}
+            </detail-chip>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+@import 'variables';
+
+.row {
+    max-width: 100%;
+}
+
+.linkable-fields-wrapper {
+    position: relative;
+
+    ::ng-deep > gtx-input {
+        > input[type=text] {
+            width: calc(100% - 15px);
+        }
+    }
+
+    .link-inputs {
+        position: absolute;
+        height: calc(100% - 77px);
+        right: 0;
+        top: 39px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border: 1px solid #000000;
+        border-left: none;
+
+        icon {
+            cursor: pointer;
+            margin-right: -12.6px;
+            background: #ffffff;
+            color: $gtx-color-light-gray;
+            transform: rotate(90deg);
+        }
+
+        &.active {
+            icon {
+                color: $gtx-color-primary;
+            }
+        }
+
+        &.disabled {
+            icon {
+                color: $gtx-color-light-gray;
+            }
+        }
+
+        &:not(.active) {
+            icon {
+                &:before {
+                    position: absolute;
+                    content: "";
+                    left: 5%;
+                    top: 45%;
+                    right: 0;
+                    border-top: 2px solid;
+                    border-color: inherit;
+                    transform: rotate(45deg);
+                    width: 90%;
+                }
+            }
+        }
+    }
+}

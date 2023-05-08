@@ -1,0 +1,42 @@
+@import "../../../../styles/variables";
+
+:host {
+    font-size: 90%;
+}
+
+.form-editor-background {
+    position: relative;
+    display: flex;
+    flex-flow: row wrap;
+    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+    background-color: $gcms-color-editor-background;
+}
+
+.form-editor-form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    background-color: $gcms-color-page-background;
+    max-width: 62.5%;
+    margin-left: 2.5%;
+    margin-top: 5vh;
+    margin-bottom: 50vh;
+    padding: 0.8rem;
+    @include gcmsEditorBoxShadowForm;
+    transition: background-color $gcms-form-editor-transition-duration ease-in-out,
+        min-height $gcms-form-editor-transition-duration ease-in-out;
+
+    &:not(.read-only) {
+
+        &:hover {
+            background-color: $gcms-color-page-background-hover;
+        }
+    }
+}
+
+.form-editor-menu-container {
+    height: auto;
+    padding-left: 35px;
+}

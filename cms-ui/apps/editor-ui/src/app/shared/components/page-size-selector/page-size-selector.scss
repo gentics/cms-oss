@@ -1,0 +1,24 @@
+@import 'variables';
+
+:host {
+    display: flex;
+    flex: 0 1;
+    padding-right: 10px;
+    align-items: center;
+}
+
+gtx-select {
+    margin: 0;
+}
+
+span {
+    white-space: nowrap;
+    padding-right: 10px;
+    color: $gtx-color-dark-gray;
+}
+
+@media screen and (max-width: 800px) {
+    span {
+        display: none;
+    }
+}

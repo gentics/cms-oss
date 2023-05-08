@@ -1,0 +1,82 @@
+@import 'variables';
+
+@mixin mobile-scroll {
+    @media screen and (max-width: $small-screen) {
+        width: auto;
+        flex: 0 0 90%;
+        scroll-snap-align: start;
+        scroll-snap-coordinate: 0% 0%;
+    }
+}
+
+.properties-tabs {
+    @include mobile-scroll;
+
+    ::ng-deep {
+        .grouped-tabs {
+            width: 100%;
+            min-height: 100%;
+            overflow: visible;
+
+            .collapsible {
+                border-right: none;
+
+                .tab-link > a {
+                    display: flex;
+
+                    &::after {
+                        background: linear-gradient(to left, white 25%, rgba(255, 255, 255, 0));
+                        content: '';
+                        height: 100%;
+                        width: 20px;
+                        position: absolute;
+                        right: 0;
+                        top: 0;
+                    }
+                }
+
+                > li.tab-link, li.tab-group div {
+                    text-transform: none;
+                }
+
+                > li.tab-link:not(.is-active) {
+                    border-left: 1px solid $gtx-color-light-gray;
+                    border-right: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group:not(.is-active) {
+                    padding-left: 1px;
+                    border-left: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group li.tab-link:not(.is-active), .collapsible-header {
+                    border-right: 1px solid $gtx-color-light-gray;
+                }
+
+                > li.tab-group li.tab-link.is-active {
+                    border-right: 2px solid white;
+                }
+            }
+        }
+
+        .grouped-tab-content {
+            display: none;
+        }
+
+        .tab-group {
+            .tab-link {
+                margin-left: 32px !important;
+            }
+        }
+
+        .tab-link {
+            .obj-prop-inactive {
+                opacity: 0.5;
+
+                icon {
+                    opacity: 0.4;
+                }
+            }
+        }
+    }
+}

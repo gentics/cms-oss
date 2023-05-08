@@ -1,0 +1,11 @@
+.modal-content {
+    padding: 0 1.5rem;
+
+    > form {
+        display: flex;
+
+        div.columns {
+            padding-left: 0;
+        }
+    }
+}

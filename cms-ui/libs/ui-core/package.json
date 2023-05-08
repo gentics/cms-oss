@@ -1,0 +1,17 @@
+
+{
+    "name": "@gentics/ui-core",
+    "version": "14.0.0",
+    "dependencies": {},
+    "peerDependencies": {
+        "@angular/animations": ">=14.0.7",
+        "@angular/common": ">=14.0.7",
+        "@angular/core": ">=14.2.12",
+        "@angular/forms": ">=14.0.7",
+        "lodash-es": "^4.17.15",
+        "rxjs": "^6.6.3"
+    },
+    "publishConfig": {
+        "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    }
+}

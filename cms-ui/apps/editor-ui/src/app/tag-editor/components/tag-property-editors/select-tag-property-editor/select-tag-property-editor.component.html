@@ -1,0 +1,33 @@
+<ng-container *ngIf="tagProperty">
+    <div class="row column">
+        <gtx-select
+            *ngIf="tagPart.type === 'SELECT'"
+            [label]="tagPart | tagPropLabel"
+            clearable
+            [required]="tagPart?.mandatory"
+            [disabled]="readOnly"
+            [(ngModel)]="selectedSingleOptionId"
+            (valueChange)="onSingleSelectChange($event)"
+        >
+            <gtx-option
+                *ngFor="let item of tagProperty.options"
+                [value]="item.id"
+            >{{ item.key }}</gtx-option>
+        </gtx-select>
+
+        <gtx-select
+            *ngIf="tagPart.type === 'MULTISELECT'"
+            [label]="tagPart | tagPropLabel"
+            [required]="tagPart?.mandatory"
+            [disabled]="readOnly"
+            [(ngModel)]="selectedMultipleOptionsIds"
+            multiple="true"
+            (valueChange)="onMultipleSelectChange($event)"
+        >
+            <gtx-option
+                *ngFor="let item of tagProperty.options"
+                [value]="item.id"
+            >{{ item.key }}</gtx-option>
+        </gtx-select>
+    </div>
+</ng-container>

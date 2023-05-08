@@ -1,0 +1,59 @@
+{
+  "globalId" : "A547.14565",
+  "keyword" : "hiddentype",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "[Formular] -- Verstecktes Element",
+    "en" : "[Form] -- Hidden field"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "parts" : [ {
+    "globalId" : "A547.14192",
+    "name" : {
+      "de" : "",
+      "en" : ""
+    },
+    "keyword" : "html",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14279",
+    "name" : {
+      "de" : "Name des versteckten Elements",
+      "en" : "Name des versteckten Elements"
+    },
+    "keyword" : "name",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  }, {
+    "globalId" : "A547.14327",
+    "name" : {
+      "de" : "Wert des versteckten Elements",
+      "en" : "Wert des versteckten Elements"
+    },
+    "keyword" : "value",
+    "editable" : true,
+    "typeId" : 9,
+    "order" : 3,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : true,
+    "inlineEditable" : false
+  } ]
+}

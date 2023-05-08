@@ -1,0 +1,21 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+
+    .gtx-entity-master,
+    gtx-tabs,
+    gtx-tabs::ng-deep > gtx-tab > .tab-content.is-active {
+        display: block;
+        height: 100%;
+        width: 100%;
+    }
+
+    .gtx-entity-details-tab-content-body {
+        display: block;
+        height: 100%;
+        width: 100%;
+        overflow-y: auto;
+        padding-bottom: 1rem;
+    }
+}

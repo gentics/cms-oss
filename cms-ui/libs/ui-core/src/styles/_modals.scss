@@ -1,0 +1,134 @@
+@import './base-import';
+
+$easeOutCubic: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+
+.gtx-modal-dialog {
+    visibility: hidden;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 8%;
+    opacity: 0;
+    background-color: #fafafa;
+    padding: 0;
+    max-height: 0;
+    width: 55%;
+    margin: auto;
+    overflow-y: auto;
+    border-radius: 2px;
+    will-change: top, opacity;
+    z-index: 1000;
+    transform: scaleX(0.8);
+    box-shadow: 0 16px 28px 0 rgba(0, 0, 0, 0.22), 0 25px 55px 0 rgba(0, 0, 0, 0.21);
+    transition:
+        opacity 250ms $easeOutCubic,
+        visibility 0s 0.5s,
+        top 0s 0.5s,
+        transform 0s 0.5s,
+        max-height 0s 0.5s;
+
+    &.visible {
+        transition:
+            top 250ms $easeOutCubic,
+            opacity 250ms $easeOutCubic,
+            transform 250ms $easeOutCubic;
+        visibility: visible;
+        opacity: 1;
+        transform: scaleX(1);
+        top: 10%;
+        width: fit-content;
+        max-height: 70%;
+        max-width: 96%;
+
+        & > * {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media #{$small-and-down} {
+            position: static;
+            max-height: 96%;
+            top: 0;
+
+            & > * {
+                max-height: 96vh;
+            }
+        }
+
+        @media #{$medium-and-up} {
+            & > * {
+                max-height: 70vh;
+            }
+        }
+    }
+
+    // IE11 modal height fix. Using hardcoded title and footer of 150px in calc
+    &.isIE11.visible {
+        .modal-content {
+            @media #{$small-and-down} {
+                max-height: calc(96vh - 150px);
+            }
+
+            @media #{$medium-and-up} {
+                max-height: calc(70vh - 150px);
+            }
+        }
+    }
+
+    .modal-title {
+        margin-top: 0;
+        padding: 0 1.5rem;
+        min-height: fit-content;
+    }
+
+    .modal-title.flex {
+        display: flex;
+        width: 100%;
+        white-space: nowrap;
+
+        .ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+
+    .modal-content {
+        padding: 24px;
+        overflow: auto;
+        @media #{$small-and-down} {
+            padding: 12px;
+        }
+    }
+
+    .modal-title + .modal-content {
+        padding-top: 0;
+        padding-bottom: 0;
+
+        // GUIC-68
+        > * > form > gtx-input:first-child,
+        > * > gtx-input:first-child {
+            margin-top: 10px;
+        }
+    }
+
+    &.nopad .modal-title,
+    &.nopad .modal-content {
+        padding: 0;
+    }
+
+    .modal-footer {
+        text-align: right;
+        min-height: fit-content;
+
+        gtx-button {
+            margin: 5px;
+        }
+    }
+
+    @media #{$small-and-down} {
+        .modal-footer button.btn {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+}

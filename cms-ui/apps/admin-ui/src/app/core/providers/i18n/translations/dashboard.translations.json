@@ -1,0 +1,238 @@
+{
+    "archive_message_title": {
+        "en": "Archive message",
+        "de": "Nachricht archivieren"
+    },
+    "archive_selected_messages_title": {
+        "en": "Archive selected messages",
+        "de": "Ausgewählte Nachrichten archivieren"
+    },
+    "change_password_label": {
+        "en": "Change password",
+        "de": "Passwort ändern"
+    },
+    "confirm_delete": {
+        "en": "Click again to confirm delete",
+        "de": "Nochmals klicken um zu löschen"
+    },
+    "dashboard": {
+        "en": "Dashboard",
+        "de": "Dashboard"
+    },
+    "contentmaintenance": {
+        "en": "Content Maintenance",
+        "de": "Content-Wartung"
+    },
+    "contentrepositories": {
+        "en": "Contentrepositories",
+        "de": "Contentrepositories"
+    },
+    "data_sources": {
+        "en": "DataSources",
+        "de": "Datenquellen"
+    },
+    "objectproperties": {
+        "en": "Objectproperties",
+        "de": "Objekteigenschaften"
+    },
+    "constructs": {
+        "en": "Constructs",
+        "de": "Tagtypen"
+    },
+    "scheduler": {
+        "en": "Scheduler",
+        "de": "Scheduler"
+    },
+    "delete_message_title": {
+        "en": "Delete message",
+        "de": "Nachricht löschen"
+    },
+    "delete_selected_messages_title": {
+        "en": "Delete selected messages",
+        "de": "Ausgewählte Nachrichten löschen"
+    },
+    "search_index_maintenance": {
+        "en": "Search Index Maintenance",
+        "de": "Suchindex-Wartung"
+    },
+    "group_configuration": {
+        "en": "Configuration",
+        "de": "Konfiguration"
+    },
+    "group_custom_tools": {
+        "en": "Custom Tools",
+        "de": "Custom Tools"
+    },
+    "group_development": {
+        "en": "Development",
+        "de": "Entwicklung"
+    },
+    "group_operations": {
+        "en": "Operations",
+        "de": "Betrieb"
+    },
+    "group_user_management": {
+        "en": "Users and Permissions",
+        "de": "Benutzer und Berechtigungen"
+    },
+    "item_auto_update": {
+        "en": "AutoUpdate",
+        "de": "AutoUpdate"
+    },
+    "item_configuration": {
+        "en": "Configuration",
+        "de": "Konfiguration"
+    },
+    "item_content_maintenance": {
+        "en": "Content Maintenance",
+        "de": "Inhaltswartung"
+    },
+    "item_content_repositories": {
+        "en": "Content Repositories",
+        "de": "Content Repositories"
+    },
+    "item_cr_fragments": {
+        "en": "CR Fragments",
+        "de": "CR-Fragmente"
+    },
+    "item_data_sources": {
+        "en": "DataSources",
+        "de": "Datenquellen"
+    },
+    "item_folders": {
+        "en": "Folders",
+        "de": "Ordner"
+    },
+    "item_groups": {
+        "en": "Groups",
+        "de": "Gruppen"
+    },
+    "item_health_check": {
+        "en": "Health Check",
+        "de": "Health Check"
+    },
+    "item_content_staging": {
+        "en": "Content Staging",
+        "de": "Content Staging"
+    },
+    "item_languages": {
+        "en": "Languages",
+        "de": "Sprachen"
+    },
+    "item_logs": {
+        "en": "Logs",
+        "de": "Logs"
+    },
+    "item_maintenance_mode": {
+        "en": "Maintenance Mode",
+        "de": "Wartungmodus"
+    },
+    "item_node_management": {
+        "en": "Node Management",
+        "de": "Node Verwaltung"
+    },
+    "item_object_properties": {
+        "en": "Object Properties",
+        "de": "Objekt Eigenschaften"
+    },
+    "item_packages": {
+        "en": "Packages",
+        "de": "Pakete"
+    },
+    "item_roles": {
+        "en": "Roles",
+        "de": "Rollen"
+    },
+    "item_scheduler": {
+        "en": "Scheduler",
+        "de": "Scheduler"
+    },
+    "item_search_index": {
+        "en": "Search Index",
+        "de": "Suche index"
+    },
+    "item_tagtypes_constructs": {
+        "en": "Tagtypes / Constructs",
+        "de": "Tagtypen"
+    },
+    "item_templates": {
+        "en": "Templates",
+        "de": "Vorlagen"
+    },
+    "item_users": {
+        "en": "Users",
+        "de": "Benutzer"
+    },
+    "log_in": {
+        "en": "Log In",
+        "de": "Anmelden"
+    },
+    "log_out": {
+        "en": "Log Out",
+        "de": "Abmelden"
+    },
+    "logged_in_as": {
+        "en": "Logged in as <strong>{{name}}</strong>",
+        "de": "Angemeldet als <strong>{{name}}</strong>"
+    },
+    "maintenance_mode": {
+        "en": "Maintenance Mode",
+        "de": "Wartungsmodus"
+    },
+    "maintenance_mode_active_custom": {
+        "en": "Maintenance message: {{message}}",
+        "de": "Wartungsnachricht: {{message}}"
+    },
+    "maintenance_mode_active_default": {
+        "en": "Maintenance mode is active. Login and functionality may be limited.",
+        "de": "Der Wartungsmodus ist aktiv. Einige Funktionen stehen nur eingeschränkt zur Verfügung."
+    },
+    "messages_read_count_label": {
+        "en": "{{count}} archived messages",
+        "de": "{{count}} archivierte Nachrichten"
+    },
+    "messages_read_count_one_label": {
+        "en": "1 archived message",
+        "de": "1 archivierte Nachricht"
+    },
+    "messages_read_selected_label": {
+        "en": "{{selected}} of {{count}} messages selected",
+        "de": "{{selected}} von {{count}} Nachrichten ausgewählt"
+    },
+    "messages_send": {
+        "en": "Send message",
+        "de": "Nachricht senden"
+    },
+    "messages_title": {
+        "en": "Messages",
+        "de": "Nachrichten"
+    },
+    "messages_unread_count_label": {
+        "en": "{{count}} messages",
+        "de": "{{count}} Nachrichten"
+    },
+    "no_messages_label": {
+        "en": "No received messages",
+        "de": "Keine empfangenen Nachrichten"
+    },
+    "no_unread_messages_label": {
+        "en": "No unread messages",
+        "de": "Keine ungelesenen Nachrichten"
+    },
+    "password": {
+        "en": "Password",
+        "de": "Passwort"
+    },
+    "user_name": {
+        "en": "User Name",
+        "de": "Benutzername"
+    },
+    "activities_title": {
+        "en": "Activities",
+        "de": "Aktivitäten"
+    },
+    "packages": {
+        "en": "Packages",
+        "de": "Pakete"
+    }
+}

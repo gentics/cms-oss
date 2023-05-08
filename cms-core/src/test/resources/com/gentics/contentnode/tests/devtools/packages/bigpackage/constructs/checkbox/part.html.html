@@ -1,0 +1,31 @@
+<tr>
+  <td colspan="2"><? if ($error[<node name>]) echo $errPrefix; ?><node label><? if ($error[<node name>]) echo $errPostfix; ?><br><xnl if ("<node mandatory>" == 1)><input type="hidden" name="mandatory[<node name>]" value="true"><xnl end>
+
+<input type="hidden" name="label[<node name>]" value="<node label>">
+
+<!--//
+<?
+$options = <<<END
+<node options>
+END;
+    $options = str_replace("\r", "", $options);
+    $options = htmlspecialchars( $options );
+    $entries = explode("\n", $options);
+
+    $i = 0;
+    $outaput = "";
+    foreach ($entries as $entry) {
+        $i++;
+        unset($checked);
+        if (!$_REQUEST['submitted'] && $entry == "<node checked>") {
+            $checked = " checked";
+        } else if (htmlentities($entry) == htmlentities($_REQUEST['element'][<node name>][$i])) {
+            $checked = " checked";
+        }
+        $outaput .= "<input type=\"checkbox\" name=\"element[<node name>][$i]\" value=\"$entry\"".$checked." class=\"form_checkbox\"> $entry<br>";
+    }
+?>
+//-->
+<?=$outaput?>
+  </td>
+</tr>

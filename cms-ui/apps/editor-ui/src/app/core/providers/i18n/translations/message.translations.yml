@@ -1,0 +1,327 @@
+add_items_error:
+    en: Error while adding items
+    de: Fehler beim Hinzufügen von Objekten
+assign_pages_error:
+    en: Could not assign pages to users
+    de: Übergeben zur Bearbeitung fehlgeschlagen
+assigned_pages_for_revision:
+    en: Successfully assigned pages for revision
+    de: Erfolgreich zur Bearbeitung übergeben
+copied_files:
+    en: 'Successfully copied {{count}} {{type}}'
+    de: '{{count}} {{type}} erfolgreich kopiert'
+image_replaced_success:
+    en: 'Image {{fileName}} was successfully replaced'
+    de: 'Das Bild {{fileName}} wurde erfolgreich ersetzt'
+image_replaced_with_success:
+    en: 'Image {{fileName}} was successfully replaced with {{newFileName}}'
+    de: 'Das Bild {{fileName}} wurde erfolgreich ersetzt mit {{newFileName}}'
+file_replaced_success:
+    en: 'File {{fileName}} was successfully replaced'
+    de: 'Die Datei {{fileName}} wurde erfolgreich ersetzt'
+file_replaced_with_success:
+    en: 'File {{fileName}} was successfully replaced with {{newFileName}}'
+    de: 'Die Datei {{fileName}} wurde erfolgreich ersetzt mit {{newFileName}}'
+file_type_changed_warning:
+    en: 'File {{fileName}} does not match the file type of {{newFileName}}. This may result in unexpected behaviour.'
+    de: 'Datei {{fileName}} stimmt nicht mit dem Dateityp von {{newFileName}} überein. Dies kann zu unerwartetem Verhalten führen.'
+file_upload_cancelled:
+    en: Upload cancelled
+    de: Upload abgebrochen
+file_uploads_cancelled:
+    en: '{{count}} uploads cancelled'
+    de: '{{count}} Uploads abgebrochen'
+file_upload_error:
+    en: Error during file upload
+    de: Fehler beim Datei Upload
+file_uploads_error:
+    en: 'Uploading failed for {{type}}: {{files}}'
+    de: 'Upload fehlgeschlagen für {{type}}: {{files}}'
+file_uploads_success:
+    en: '{{count}} {{type}} successfully uploaded'
+    de: '{{count}} {{type}} erfolgreich hochgeladen'
+folder_permissions_error:
+    en: You don't have the permissions to view any folders.
+    de: 'Sie haben keine Berechtigungen zum anzeigen von Ordnern.'
+form_published_at:
+    en: 'Automatic publishing for version {{version}} activated'
+    de: 'Automatisches Veröffentlichen für Version {{version}} aktiviert'
+form_published_at_cleared:
+    en: 'Automatic publishing for version {{version}} deactivated'
+    de: 'Automatisches Veröffentlichen für Version {{version}} deaktiviert'
+form_published_at_queued:
+    en: 'Planned publish date queued'
+    de: 'Geplantes Veröffentlichungsdatum zur Warteschlange hinzugefügt'
+form_take_offline_at:
+    en: 'Automatic taking offline of form activated'
+    de: 'Automatisches vom Server nehmen für Formular aktiviert'
+form_take_offline_at_cleared:
+    en: 'Automatic taking offline of page deactivated'
+    de: 'Automatisches vom Server nehmen von Seite deaktiviert'
+form_take_offline_at_queued:
+    en: 'Automatic taking offline of form requested'
+    de: 'Automatisches vom Server nehmen von Formular beantragt'
+get_users_error:
+    en: Could not get users
+    de: Benutzerliste kann nicht geladen werden
+image_copied:
+    en: Image copied
+    de: Bild kopiert
+image_copy_error:
+    en: 'Could not create copy: {{error}}'
+    de: 'Bild kann nicht kopiert werden: {{error}}'
+image_load_error:
+    en: 'Error loading {{filename}}'
+    de: '{{filename}} konnte nicht geladen werden'
+image_updated:
+    en: Image updated
+    de: Bild gespeichert
+image_update_error:
+    en: 'Could not update image: {{error}}'
+    de: 'Bild kann nicht gespeichert werden: {{error}}'
+invalid_image_property:
+    en: 'Properties editor contains invalid data'
+    de: 'Eigenschaftseditor enthält ungültige Daten'
+item_moved:
+    en: '"{{name}}" was moved'
+    de: '"{{name}}" wurde verschoben'
+items_deleted:
+    en: '{{count}} {{type}} deleted'
+    de: '{{count}} {{type}} gelöscht'
+items_deleted_or_unlocalized:
+    en: '{{count}} {{type}} deleted, {{unlocalizedCount}} unlocalized'
+    de: '{{count}} {{type}} gelöscht, {{unlocalizedCount}} unlokalisiert'
+items_unlocalized:
+    en: '{{unlocalizedCount}} {{type}} unlocalized'
+    de: '{{unlocalizedCount}} {{type}} unlokalisiert'
+items_deleted_error:
+    en: 'Failed to delete {{count}} {{type}}: {{errorMessage}}'
+    de: '{{count}} {{type}} können nicht gelöscht werden: {{errorMessage}}'
+items_moved:
+    en: '{{count}} {{type}} were moved'
+    de: '{{count}} {{type}} verschoben'
+logged_out_error:
+    en: 'You are logged out'
+    de: 'Sie sind abgemeldet'
+login_again:
+    en: 'Login again'
+    de: 'Nochmal anmelden'
+maintenance_mode_active_custom:
+    en: 'Maintenance message: {{message}}'
+    de: 'Wartungsnachricht: {{message}}'
+maintenance_mode_active_default:
+    en: 'Maintenance mode is active. Login and functionality may be limited.'
+    de: 'Der Wartungsmodus ist aktiv. Einige Funktionen stehen nur eingeschränkt zur Verfügung.'
+pages_not_copied_localized:
+    en: '{{count}} localized {{type}} can not be copied'
+    de: '{{count}} lokalisierte {{type}} können nicht kopiert werden'
+localized_item:
+    en: 'Successfully localized {{type}}'
+    de: '{{type}} erfolgreich lokalisiert'
+page_copied:
+    en: '"{{name}}" was copied'
+    de: '"{{name}}" wurde kopiert'
+page_liveurl_multiple_nodes:
+    en: 'The URL was found in {{count}} nodes:\n{{nodes}}\nThis might be a configuration error.'
+    de: 'Die URL wurde in {{count}} Nodes gefunden:\n{{nodes}}\nDies könnte ein Konfigurationsfehler sein.'
+page_liveurl_not_found:
+    en: 'No page matching the URL "{{url}}" was found'
+    de: 'Die angegebene URL "{{url}}" wurde nicht gefunden'
+page_published_at:
+    en: 'Automatic publishing for version {{version}} activated'
+    de: 'Automatisches Veröffentlichen für Version {{version}} aktiviert'
+page_published_queued:
+    en: 'Automatic publishing for version {{version}} requested'
+    de: 'Automatisches Veröffentlichen für Version {{version}} beantragt'
+page_published_at_queued:
+    en: 'Planned publish date queued'
+    de: 'Geplantes Veröffentlichungsdatum zur Warteschlange hinzugefügt'
+page_published_at_cleared:
+    en: 'Automatic publishing for version {{version}} deactivated'
+    de: 'Automatisches Veröffentlichen für Version {{version}} deaktiviert'
+page_take_offline_at:
+    en: 'Automatic taking offline of page activated'
+    de: 'Automatisches vom Server nehmen für Seite aktiviert'
+page_take_offline_queued:
+    en: 'Take page offline requested'
+    de: 'Seite vom Server nehmen beantragt'
+page_take_offline_at_queued:
+    en: 'Automatic taking offline of page requested'
+    de: 'Automatisches vom Server nehmen von Seite beantragt'
+page_take_offline_at_cleared:
+    en: 'Automatic taking offline of page deactivated'
+    de: 'Automatisches vom Server nehmen von Seite deaktiviert'
+pages_copied:
+    en: '{{count}} pages were copied'
+    de: '{{count}} Seiten kopiert'
+pages_not_published_inherited:
+    en: '{{count}} inherited {{type}} not published'
+    de: '{{count}} vererbte {{type}} nicht veröffentlicht'
+items_not_inherited_or_localized:
+    en: '{{count}} non-inherited {{type}} skipped'
+    de: '{{count}} nicht vererbte {{type}} übersprungen'
+pages_planned:
+    en: '{{count}} {{type}} published but out of time frame'
+    de: '{{count}} {{type}} veröffentlicht, aber ausserhalb des Zeitrahmens'
+pages_published_singular:
+    en: '{{count}} {{type}} published'
+    de: 'Eine Seite wurde veröffentlicht'
+pages_published_plural:
+    en: '{{count}} {{type}} published'
+    de: '{{count}} {{type}} wurden veröffentlicht'
+pages_published_queued_singular:
+    en: 'Publishing a {{type}} queued'
+    de: 'Eine Seite veröffentlichen in Warteschlange hinzugefügt'
+pages_published_queued_plural:
+    en: 'Publishing {{count}} {{type}} queued'
+    de: '{{count}} Seiten veröffentlichen in Warteschlange hinzugefügt'
+items_localized_plural:
+    en: '{{count}} {{type}} localized'
+    de: '{{count}} {{type}} wurden lokalisiert'
+items_localized_singular:
+    en: '{{count}} {{type}} localized'
+    de: '{{count}} {{type}} wurde lokalisiert'
+pages_queued:
+    en: '{{count}} {{type}} sent to publish queue'
+    de: '{{count}} {{type}} zur Warteschlange hinzugefügt'
+page_saved:
+    en: Page saved
+    de: Seite gespeichert
+page_saved_error:
+    en: Could not save page
+    de: Speichern fehlgeschlagen
+form_saved:
+    en: Form saved
+    de: Formular gespeichert
+forms_published_singular:
+    en: '{{count}} form published'
+    de: 'Ein Formular wurde veröffentlicht'
+forms_published_plural:
+    en: '{{count}} forms published'
+    de: '{{count}} Formulare wurden veröffentlicht'
+take_forms_offline:
+    en: '{{count}} forms taken offline'
+    de: '{{count}} Formulare vom Server genommen'
+form_copied:
+    en: 'Form copied'
+    de: 'Formular kopiert'
+forms_copied:
+    en: '{{count}} forms were copied'
+    de: '{{count}} Formulare kopiert'
+form_saved_error:
+    en: Could not save form
+    de: Speichern fehlgeschlagen
+form_missing_language:
+    en: The Node must have at least one active language before create a form
+    de: Der Node muss mindestens eine aktive Sprache haben, bevor ein Formular erstellt wird
+message_sent:
+    en: Message has been sent
+    de: Nachricht wurde gesendet
+message_sent_error:
+    en: Error sending message
+    de: Nachricht wurde gesendet
+page_variations_created:
+    en: '{{count}} {{type}} created'
+    de: '{{count}} {{type}} erstellt'
+request_approved:
+    en: 'Request was successfully approved'
+    de: 'Anfrage wurde erfolgreich genehmigt'
+requests_approved:
+    en: 'Requests were successfully approved'
+    de: 'Anfragen wurden erfolgreich genehmigt'
+report_successfully_removed_singular:
+    en: 'Report were successfully removed'
+    de: 'Bericht wurde erfolgreich entfernt'
+report_successfully_removed_plural:
+    en: '{{count}} Reports were successfully removed'
+    de: '{{count}} Berichte wurden erfolgreich entfernt'
+search_syntax_error:
+    en: The search query contains an invalid character
+    de: Die Suchanfrage enthält ungültige Zeichen
+set_as_start_page:
+    en: '"{{name}}" was set as start page'
+    de: '"{{name}}" wurde als Startseite gesetzt'
+settings_save_error_offline:
+    en: 'Saving your user settings failed. Is your internet connection offline?'
+    de: 'Die Einstellung konnten nicht gespeichert werden. Sind Sie offline?'
+settings_save_error_other:
+    en: 'Saving your user settings failed.'
+    de: 'Die Einstellung konnte nicht gespeichert werden.'
+synchronized_item:
+    en: 'Successfully synchronized {{type}} with master node'
+    de: '{{type}} erfolgreich mit Masternode synchronisiert'
+synchronized_items:
+    en: 'Items were synchronized to {{masterNode}}'
+    de: 'Objekten wurden mit {{masterNode}} synchronisiert'
+synchronized_items_error:
+    en: 'Error while synchronizing items to {{masterNode}}'
+    de: 'Fehler beim Synchronisieren Objekten mit {{masterNode}}'
+take_pages_offline:
+    en: '{{count}} {{type}} taken offline'
+    de: '{{count}} {{type}} vom Server genommen'
+take_pages_offline_queued:
+    en: 'Taking {{count}} {{type}} offline requested'
+    de: '{{count}} {{type}} vom Server nehmen zu Warteschlange hinzugefügt'
+take_pages_offline_error:
+    en: '{{count}} errors when taking pages offline: {{errorMessage}}'
+    de: '{{count}} Fehler beim Seiten vom Server nehmen: {{errorMessage}}'
+template_link_success_singular:
+    en: 'Successfully linked templates to folder'
+    de: 'Vorlagen erfolgreich mit Ordner verknüpft'
+template_link_success_plural:
+    en: 'Successfully linked templates to folders'
+    de: 'Vorlagen erfolgreich mit Ordnern verknüpft'
+template_link_error_singular:
+    en: 'Linking templates to folder failed'
+    de: 'Vorlagen konnte nicht mit Ordner verknüpft werden'
+template_link_error_plural:
+    en: 'Linking templates to folders failed'
+    de: 'Vorlagen konnte nicht mit Ordnern verknüpft werden'
+template_unlink_success_singular:
+    en: 'Successfully unlinked templates from folder'
+    de: 'Verknüpfung von Vorlagen mit Ordner erfolgreich aufgehoben'
+template_unlink_success_plural:
+    en: 'Successfully unlinked templates from folders'
+    de: 'Verknüpfung von Vorlagen mit Ordnern erfolgreich aufgehoben'
+template_unlink_error_singular:
+    en: 'Unlinking templates from folder failed'
+    de: 'Verknüpfung von Vorlagen mit Ordner konnte nicht aufgehoben werden'
+template_unlink_error_plural:
+    en: 'Unlinking templates from folders failed'
+    de: 'Verknüpfung von Vorlagen mit Ordnern konnte nicht aufgehoben werden'
+unlocalized_item:
+    en: 'Successfully unlocalized {{type}}'
+    de: '{{type}} wurde erfolgreich unlokalisiert'
+updated_item:
+    en: 'Successfully updated {{type}}'
+    de: '{{type}} gespeichert'
+update_item_failed:
+    en: 'Failed to update {{type}}'
+    de: '{{type}} konnte nicht gespeichert werden'
+updated_item_inheritance:
+    en: 'Successfully updated inheritance for {{type}}'
+    de: 'Vererbung von {{type}} erfolgreich geändert'
+updated_password:
+    en: Successfully updated password
+    de: Kennwort erfolgreich geändert
+wastebin_deleted_single:
+    en: '{{type}} permanently deleted'
+    de: '{{type}} aus Papierkorb entfernt'
+wastebin_deleted_multiple:
+    en: '{{count}} {{type}} permanently deleted'
+    de: '{{count}} {{type}} aus Papierkorb entfernt'
+wastebin_delete_failed:
+    en: 'Failed to permanently delete {{type}}'
+    de: '{{type}} konnte nicht aus Papierkorb entfernt werden'
+wastebin_restored_single:
+    en: '{{type}} restored'
+    de: '{{type}} wiederhergestellt'
+wastebin_restored_multiple:
+    en: '{{count}} {{type}} restored'
+    de: '{{count}} {{type}} wiederhergestellt'
+wastebin_restore_failed_single:
+    en: 'Failed to restore {{type}}'
+    de: '{{type}} konnte nicht wiederhergestellt werden'
+wastebin_restore_failed_multiple:
+    en: 'Failed to restore {{count}} {{type}}'
+    de: '{{count}} {{type}} konnten nicht wiederhergestellt werden'

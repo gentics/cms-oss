@@ -1,0 +1,163 @@
+
+var mark_col_${name} = '$editcol';
+var tab_$name;
+
+function mark_${name}() {
+  var cols_${name} = false;
+  var rows_${name} = false;
+  var col_${name} = Array();
+  var row_${name} = Array();
+  for (i=0;i<=${cols}-1;i++) {
+	if (document.form_${name}) if (document.form_${name}.elements) if (document.form_${name}.elements[i]) if (document.form_${name}.elements[i].checked) {
+	  cols_${name} = true;
+	  col_${name}[i+1] = true;
+	}
+  }
+  for (j=i;j<${rows}+i;j++) {
+	if (document.form_${name}.elements[j]) if (document.form_${name}.elements[j].checked) {
+	  rows_${name} = true;
+	  row_${name}[j+1-i] = true;
+	}
+  }
+  // clean up the cells
+  for (i=1;i<=${cols};i++) {
+	for (j=1;j<=${rows};j++) {
+	  if (document.getElementById) document.getElementById('${name}-'+i+'-'+j).style.backgroundColor = "";
+	}
+  }
+  // select the cells
+  if (cols_${name} && rows_${name}) {
+	for (i=1;i<=${cols};i++) {
+	  if (col_${name}[i]) {
+		for (j=1;j<=${rows};j++) {
+		  if (row_${name}[j]) {
+			if (document.getElementById) { 
+			  document.getElementById('${name}-'+i+'-'+j).style.backgroundColor = mark_col_${name};
+			}
+		  }
+		}
+	  }
+	}
+	clear_${name}_opt();
+	c=0;
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext ---action cell---')');
+	document.form_${name}.opt_${name}.options[c++].selected = true;
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext format')');
+	document.form_${name}.opt_${name}.options[c++].value='cell_format';
+#if(!$info2)
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext define tagtype')');
+	document.form_${name}.opt_${name}.options[c++].value='cell_tag';
+#end
+  } else if (cols_${name}) {
+	for (i=1;i<=${cols};i++) {
+	  if (col_${name}[i]) {
+		for (j=1;j<=${rows};j++) {
+		  if (document.getElementById) {
+			document.getElementById('${name}-'+i+'-'+j).style.backgroundColor = mark_col_${name};
+		  }
+		}
+	  }
+	}
+	clear_${name}_opt();
+	c=0;
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext ---action column---')');
+	document.form_${name}.opt_${name}.options[c++].selected = true;
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext format')');
+	document.form_${name}.opt_${name}.options[c++].value='col_format';
+#if(!$info2)
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext define tagtype')');
+	document.form_${name}.opt_${name}.options[c++].value='col_tag';
+#end
+#if(!$info0)
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext insert')');
+	document.form_${name}.opt_${name}.options[c++].value='col_insert';
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext delete')');
+	document.form_${name}.opt_${name}.options[c++].value='col_delete';
+#end
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext move')');
+	document.form_${name}.opt_${name}.options[c++].value='col_move';
+  } else if (rows_${name}) {
+	for (i=1;i<=${cols};i++) {
+	  for (j=1;j<=${rows};j++) {
+		if (row_${name}[j]) { 
+		  if (document.getElementById) {
+			document.getElementById('${name}-'+i+'-'+j).style.backgroundColor = mark_col_${name};
+		  }
+		}
+	  }
+	}
+	clear_${name}_opt();
+	c=0;
+	document.form_${name}.opt_${name}.options[c]=new Option('${i18n.get("tblext ---action row---")}');
+	document.form_${name}.opt_${name}.options[c++].selected = true;
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext format')');
+	document.form_${name}.opt_${name}.options[c++].value='row_format';
+#if(!$info2)
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext define tagtype')');
+	document.form_${name}.opt_${name}.options[c++].value='row_tag';
+#end
+#if(!$info1)
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext insert')');
+	document.form_${name}.opt_${name}.options[c++].value='row_insert';
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext delete')');
+	document.form_${name}.opt_${name}.options[c++].value='row_delete';
+#end
+	document.form_${name}.opt_${name}.options[c]=new Option('$i18n.get('tblext move')');
+	document.form_${name}.opt_${name}.options[c++].value='row_move';
+  } else {
+	clear_${name}_opt();
+	document.form_${name}.opt_${name}.options[0]=new Option('---');
+	document.form_${name}.opt_${name}.options[0].selected = true;
+  }
+}
+function clear_${name}_opt() {
+  for (i=document.form_${name}.opt_${name}.length;i>0;i--) {
+	document.form_${name}.opt_${name}.options[i-1]=null;
+  }
+  document.form_${name}.opt_${name}.options[0]=new Option('---');
+  document.form_${name}.opt_${name}.options[0].selected = true;
+}
+function edit_${name}(what){
+  // get parameters
+  var sel='';
+  for (i=0;i<=${cols}-1;i++) {
+	if (document.form_${name}.elements[i]) if (document.form_${name}.elements[i].checked) {
+	  sel += '&t_col['+String.fromCharCode(i+65)+']=1';
+	}
+  }
+  for (j=i;j<${rows}+i;j++) {
+	if (document.form_${name}.elements[j]) if (document.form_${name}.elements[j].checked) {
+	  sel += '&t_row['+(j-i+1)+']=1';
+	}
+  }
+  document.form_${name}.opt_${name}.selectedIndex=0;
+  link_format='${STAG}&do=10008&id=${tag_id}&type=${mother_type}&keepsid=1&redo=${DO}';
+  link_modify='${STAG}&do=17100&id=${tag_id}&type=${mother_type}&redo=${DO}&edit=';
+  switch (what) {
+  case 'cell_format':
+  case 'col_format':
+  case 'row_format':
+	hopedit(link_format+sel);
+	break;
+  case 'cell_tag':
+  case 'col_tag':
+  case 'row_tag':
+	hopdialog(link_modify+what+sel,380,210);
+	break;
+  case 'col_insert':
+  case 'row_insert':
+	hopdialog(link_modify+what+sel,375,220);
+	break;
+  case 'col_move':
+  case 'row_move':
+	hopdialog(link_modify+what+sel,375,250);
+	break;
+  case 'col_delete':
+  case 'row_delete':
+	hopdialog(link_modify+what+sel,375,180);
+	break;
+  default:
+	return false;
+	break;
+  }
+}

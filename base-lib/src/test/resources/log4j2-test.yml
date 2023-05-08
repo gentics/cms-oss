@@ -1,0 +1,36 @@
+Configuration:
+  status: error
+  name: TestConfiguration
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+    RollingFile:
+      name: rollingFile
+      fileName: target/gentics.log
+      filePattern: target/gentics.%i.log
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+      Policies:
+        SizeBasedTriggeringPolicy:
+          size: 10MB
+      DefaultRollOverStrategy:
+          max: 5
+  Loggers:
+    logger:
+      -
+        name: com.gentics.node
+        level: info
+        AppenderRef:
+          ref: rollingFile
+      -
+        name: com.gentics.tests
+        level: info
+        AppenderRef:
+          ref: rollingFile
+    Root:
+      level: error
+      AppenderRef:
+        ref: rollingFile

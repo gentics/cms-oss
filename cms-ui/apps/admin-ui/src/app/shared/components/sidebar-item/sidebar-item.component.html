@@ -1,0 +1,12 @@
+<div class="title no-select" [class.open]="open" (click)="toggleOpen()">
+    <ng-container *ngIf="title['subscribe']; else titleString">
+        {{ title | async }}
+    </ng-container>
+    <ng-template #titleString>
+        {{ title }}
+    </ng-template>
+</div>
+
+<div class="content" [class.open]="open">
+    <ng-content></ng-content>
+</div>

@@ -1,0 +1,52 @@
+@import "variables";
+
+.list-header {
+    padding-left: 10px;
+    display: flex;
+
+    > gtx-checkbox {
+        flex-grow: 1;
+        border-bottom: 1px solid $gtx-color-light-gray;
+        padding-bottom: 0.5rem;
+    }
+}
+
+.row-checkbox {
+    height: 22px;
+}
+
+.page-icon {
+    color: $gtx-color-primary;
+}
+.page-title {
+    display: flex;
+    color: $gtx-color-primary;
+    .language {
+        color: $gcms-color-highlight;
+        margin-left: 3px;
+    }
+}
+.path {
+    color: $gtx-color-dark-gray;
+}
+.editor, .edited-at {
+    i {
+        font-size: $gtx-font-size-small;
+        margin-right: 3px;
+    }
+    display: inline-flex;
+    align-items: center;
+    font-size: $gtx-font-size-small;
+    color: $gtx-color-dark-gray;
+    padding: 0 3px;
+    margin: 1px 0;
+    border-radius: 2px;
+    background-color: $gtx-color-very-light-gray;
+    border: 1px solid $gtx-color-light-gray;
+}
+
+.display-fields {
+    max-width: 50vw;
+    max-width: fit-content;
+    flex: 0.5;
+}

@@ -1,0 +1,187 @@
+<div
+    class="grid-table gtx-table"
+    [class.selectable]="selectable"
+    [class.disabled]="disabled"
+    [class.has-actions]="!hideActions && hasActions"
+    [style.--grid-table-columns]="columns.length"
+>
+    <div class="grid-row header-row">
+        <div *ngIf="selectable" class="grid-cell select-column" (click)="preventClick($event)">
+            <gtx-checkbox
+                *ngIf="selectAllType != null && selectAllType !== TableSelectAllType.NONE"
+                [checked]="!(rows?.length < 1 && totalCount < 1) && allSelected"
+                [disabled]="disabled || rows?.length < 1 && totalCount < 1"
+                (click)="toggleAllSelections($event)"
+            ></gtx-checkbox>
+        </div>
+
+        <div
+            *ngFor="let column of (!paginated ? columns : (columns | paginate: {
+                id: UNIQUE_ID,
+                itemsPerPage: perPage,
+                currentPage: page,
+                totalItems: totalCount
+            })); trackBy: trackElement"
+            class="grid-cell data-column"
+            [class.sortable]="column.sortable"
+            [class.sort-active]="sortBy === column.id"
+            [ngClass]="column.align ? 'align-' + column.align : ''"
+            [attr.column-id]="column.id"
+            (click)="preventClick($event)"
+        >
+            <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
+            <icon
+                *ngIf="column.sortable"
+                class="sort-icon"
+                [ngClass]="sortOrder != null ? sortOrder : ''"
+                (click)="updateSortBy(column)"
+            >arrow_upward</icon>
+        </div>
+
+        <div
+            *ngIf="!hideActions && hasActions"
+            class="grid-cell action-column"
+            (click)="preventClick($event)"
+        >
+            <gtx-button
+                *ngFor="let action of multiActions; trackBy: trackElement"
+                class="action-button"
+                [icon]="true"
+                [size]="'small'"
+                [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || (action.disabled | gtxTableActionEnabled)"
+                [title]="action.label"
+                [type]="action.type"
+                (click)="handleMultiActionClick(action)"
+            >
+                <icon>{{ action.icon }}</icon>
+            </gtx-button>
+        </div>
+    </div>
+
+    <div
+        *ngFor="let row of rows; trackBy: trackRow"
+        class="grid-row data-row"
+        [class.selected]="selected | gtxIncludes:row.id"
+        [class.active]="!!active && active === row.id"
+        (click)="handleRowClick(row, $event)"
+    >
+        <div
+            *ngIf="selectable"
+            class="grid-cell select-column"
+            (click)="preventClick($event)"
+        >
+            <gtx-checkbox
+                class="selection-checkbox"
+                [checked]="selected | gtxIncludes:row.id"
+                [disabled]="disabled"
+                (click)="updateRowSelection(row, $event)"
+            ></gtx-checkbox>
+        </div>
+
+        <div
+            *ngFor="let column of columns; trackBy: trackElement"
+            class="grid-cell data-column"
+            [class.clickable]="column.clickable !== false"
+            [ngClass]="column.align ? 'align-' + column.align : ''"
+            [attr.column-id]="column.id"
+            (click)="handleCellClick(row, column, $event)"
+        >
+            <ng-container
+                *ngIf="renderers[column.id]; else fallbackCellRenderer"
+                [ngTemplateOutlet]="renderers[column.id]"
+                [ngTemplateOutletContext]="{
+                    row: row,
+                    column: column,
+                    value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                }"
+            ></ng-container>
+
+            <ng-template #fallbackCellRenderer>
+                <ng-container
+                    *ngIf="renderers[FALLBACK_TABLE_COLUMN_RENDERER]; else defaultCellRenderer"
+                    [ngTemplateOutlet]="renderers[FALLBACK_TABLE_COLUMN_RENDERER]"
+                    [ngTemplateOutletContext]="{
+                        row: row,
+                        column: column,
+                        value: row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column
+                    }"
+                ></ng-container>
+            </ng-template>
+
+            <ng-template #defaultCellRenderer>{{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}</ng-template>
+        </div>
+
+        <div
+            *ngIf="!hideActions && hasActions"
+            class="grid-cell action-column"
+            (click)="preventClick($event)"
+        >
+            <gtx-button
+                *ngFor="let action of singleActions; trackBy: trackElement"
+                class="action-button"
+                [icon]="true"
+                [size]="'small'"
+                [disabled]="disabled || (action.disabled | gtxTableActionEnabled:row.item)"
+                [title]="action.label"
+                [type]="action.type || 'secondary'"
+                (click)="handleSingleActionClick(action, row)"
+            >
+                <icon>{{ action.icon }}</icon>
+            </gtx-button>
+        </div>
+    </div>
+</div>
+
+<div
+    *ngIf="paginated && (rows?.length > perPage || totalCount > perPage)"
+    #p="paginationApi"
+    class="table-pagination"
+    pagination-template
+    [id]="UNIQUE_ID"
+    [maxSize]="5"
+    (pageChange)="pageChange.emit($event)"
+>
+    <ng-container *ngIf="p?.pages?.length > 1">
+        <button
+            type="button"
+            role="button"
+            class="previous"
+            [disabled]="p.isFirstPage()"
+            (click)="p.previous()"
+        >
+            <span>
+                <icon>chevron_left</icon>
+            </span>
+        </button>
+
+        <div class="pages">
+            <ng-container *ngFor="let singlePage of p.pages">
+                <button
+                    *ngIf="p.getCurrent() !== singlePage.value"
+                    type="button"
+                    role="button"
+                    class="page link"
+                    (click)="p.setCurrent(singlePage.value)"
+                >
+                    <span class="page-text link-text">{{ singlePage.label }}</span>
+                </button>
+
+                <div *ngIf="p.getCurrent() === singlePage.value" class="page current">
+                    <span class="page-text current-text">{{ singlePage.label }}</span>
+                </div>
+            </ng-container>
+        </div>
+
+        <button
+            type="button"
+            role="button"
+            class="next"
+            [disabled]="p.isLastPage()"
+            (click)="p.next()"
+        >
+            <span>
+                <icon>chevron_right</icon>
+            </span>
+        </button>
+    </ng-container>
+</div>

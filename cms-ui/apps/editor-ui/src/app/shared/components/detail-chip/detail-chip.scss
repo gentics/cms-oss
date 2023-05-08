@@ -1,0 +1,28 @@
+@import "variables";
+
+:host {
+    flex: 0 1 auto;
+    color: $gtx-color-dark-gray;
+    .item-row:hover & {
+        color: $gtx-color-very-dark-gray;
+    }
+    text-align: right;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding: 1px 3px;
+    font-size: $gtx-font-size-small;
+    border-radius: 2px;
+    border: 1px dotted $gtx-color-very-light-gray;
+
+    i.material-icons {
+        font-size: 16px;
+        color: $gtx-color-dark-gray;
+        margin-right: 4px;
+    }
+}
+
+:host-context(.item-in-editor) {
+    border-color: $gtx-color-light-gray;
+}

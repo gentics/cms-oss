@@ -1,0 +1,46 @@
+<ng-container *ngIf="tagProperty">
+    <div class="row column">
+
+        <span class="tag-prop-label">{{ tagPart | tagPropLabel }}</span>
+        <div class="row internal-external-selector">
+            <gtx-radio-button
+                [label]="'tag_editor.internal' | i18n"
+                [disabled]="readOnly"
+                [(ngModel)]="isInternalPage"
+                [value]="true"
+                (change)="onRadioButtonsChange()">
+            </gtx-radio-button>
+            <gtx-radio-button
+                [label]="'tag_editor.external' | i18n"
+                [disabled]="readOnly"
+                [(ngModel)]="isInternalPage"
+                [value]="false"
+                (change)="onRadioButtonsChange()">
+            </gtx-radio-button>
+        </div>
+
+        <browse-box
+            *ngIf="isInternalPage"
+            [label]="'tag_editor.internal_page' | i18n"
+            [displayValue]="internalPageDisplayValue$ | async"
+            [disabled]="readOnly"
+            (clear)="changeSelectedPage(null)"
+            (browse)="browseForPage()">
+        </browse-box>
+
+        <div *ngIf="isInternalPage && selectedInternalPagePath">
+            {{ 'tag_editor.selected_folder' | i18n }}: {{ selectedInternalPagePath }}
+        </div>
+
+        <gtx-input
+            *ngIf="!isInternalPage"
+            [label]="'tag_editor.external_url' | i18n"
+            [readonly]="readOnly"
+            [required]="tagPart?.mandatory"
+            [(ngModel)]="externalUrl"
+            (blur)="externalUrlBlur.next($event)"
+            (change)="externalUrlChange.next($event)">
+        </gtx-input>
+
+    </div>
+</ng-container>

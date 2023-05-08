@@ -1,0 +1,27 @@
+<div class="container">
+
+    <iframe-wrapper
+        *ngIf="customTagEditorUrl && !showError"
+        class="host-iframe"
+        [class.hidden]="!customTagEditor"
+        [srcUrl]="customTagEditorUrl"
+        [height]="iFrameHeight"
+        (iFrameLoad)="onIFrameLoad($event)">
+    </iframe-wrapper>
+
+    <div *ngIf="showButtons && !showError" class="footer">
+        <gtx-button class="cancel-button" type="secondary" (click)="onCancelClick()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+        <gtx-button class="ok-button" [disabled]="!allPropertiesValid" (click)="onOkClick()">{{ 'common.okay_button' | i18n }}</gtx-button>
+    </div>
+
+    <ng-container *ngIf="showError">
+        <p class="error">
+            {{ 'editor.custom_tag_editor_load_error' | i18n }}
+        </p>
+
+        <gtx-button *ngIf="!onTagChangeFn" class="close-button" (click)="onCloseClick()">
+            {{ 'common.close_button' | i18n }}
+        </gtx-button>
+    </ng-container>
+
+</div>

@@ -1,0 +1,22 @@
+
+{
+    "name": "@gentics/cms-components",
+    "version": "6.0.0-beta.0",
+    "dependencies": {},
+    "peerDependencies": {
+      "@angular/common": ">=14.0.7",
+      "@angular/core": ">=14.2.12",
+      "@gentics/ui-core": "^14.0.0",
+      "@gentics/cms-models": "^6.0.0",
+      "@ngx-translate/core": "^14.0.0",
+      "@ngx-translate/http-loader": "^7.0.0",
+      "@gentics/image-editor": "^0.6.0",
+      "lodash-es": "^4.17.15",
+      "ngx-pagination": "^6.0.3",
+      "rxjs": "^6.6.3",
+      "rxjs-compat": "^6.6.3"
+    },
+    "publishConfig": {
+      "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+    }
+  }

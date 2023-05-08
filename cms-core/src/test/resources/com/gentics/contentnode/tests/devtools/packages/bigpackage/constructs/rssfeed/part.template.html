@@ -1,0 +1,27 @@
+#set($date = $cms.imps.date.fromTimestamp($cms.page.publishtimestamp))
+#set($publishdate = $cms.imps.date.format($date, "EEE, d MMM yyyy HH:mm:ss z"))
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+  <channel>
+    <title><node page.name></title>
+    <link>http://<node node.host>/</link>
+    <description><node page.description></description>
+    <lastBuildDate>$publishdate</lastBuildDate>
+    <language><node page.language.code></language>
+
+#foreach( $item in $cms.tag.parts.ds.items )
+
+    <item>
+      <title>$item.name</title>
+      <link><![CDATA[ http://<node node.host>$item.url ]]></link>
+      <description><![CDATA[  ]]></description>
+      #set($publishdate = $cms.imps.date.format($cms.imps.date.fromTimestamp($item.publishtimestamp), "EEE, d MMM yyyy HH:mm:ss z"))
+      <pubDate>$publishdate</pubDate>
+      <guid><![CDATA[ http://<node node.host>$item.url ]]></guid>
+    </item>
+
+#end
+
+    </channel>
+</rss>
+<!--Mon, 12 Sep 2005 18:37:00 GMT-->

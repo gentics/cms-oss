@@ -1,0 +1,9 @@
+<div class="suggestion-row" [class.selected]="isSelected" (click)="use.emit()">
+    <div class="suggestion">
+        <span class="size-prefix" *ngIf="sizePrefix">{{sizePrefix}}</span>
+        <icon>{{ icon }}</icon>
+        <icon class="secondary" *ngIf="iconSecondary">{{ iconSecondary }}</icon>
+        <span class="text"><ng-content></ng-content></span>
+        <span class="context">{{ context }}</span>
+    </div>
+</div>

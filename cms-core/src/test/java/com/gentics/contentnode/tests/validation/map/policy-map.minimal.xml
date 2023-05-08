@@ -1,0 +1,18 @@
+<policyMap xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		   xsi:noNamespaceSchemaLocation="policy-map.xsd">
+	<!-- The minimal structure that is required by the schema -->
+	<inputChannels>
+		<contentAdmin>
+			<partTypes>
+			</partTypes>
+		</contentAdmin>
+		<nodes>
+			<default>
+			</default>
+		</nodes>
+	</inputChannels>
+    <policyGroups>
+    </policyGroups>
+	<policies>
+    </policies>
+</policyMap>

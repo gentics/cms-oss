@@ -1,0 +1,196 @@
+import { Component, OnInit } from '@angular/core';
+import { Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
+import { IModalDialog } from '@gentics/ui-core';
+import { iconForItemType } from '../../../common/utils/icon-for-item-type';
+import { itemIsLocalized } from '../../../common/utils/item-is-localized';
+import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
+
+export interface MultiDeleteResult {
+    delete: InheritableItem[];
+    deleteForms: FormLanguageVariantMap;
+    unlocalize: InheritableItem[];
+    localizations: LocalizationMap; // LocalizationInfo[]; //
+}
+
+export interface PageLanguageVariantMap {
+    [pageId: number]: Page[];
+}
+
+export interface FormLanguageVariantMap {
+    [formId: number]: string[];
+}
+
+/**
+ * A modal that lets the user choose actions when deleting inherited/localized files
+ */
+@Component({
+    selector: 'multi-delete-modal-modal',
+    templateUrl: './multi-delete-modal.tpl.html',
+    styleUrls: ['./multi-delete-modal.scss'],
+})
+export class MultiDeleteModal implements IModalDialog, OnInit {
+    closeFn: (result: MultiDeleteResult) => void;
+    cancelFn: (val?: any) => void;
+
+    // Should be passed in by the function which creates the modal
+    inheritedItems: InheritableItem[];
+    localizedItems: InheritableItem[];
+    otherItems: InheritableItem[];
+    pageLanguageVariants: PageLanguageVariantMap;
+    formLanguageVariants: FormLanguageVariantMap;
+    itemLocalizations: LocalizationMap;
+
+    itemType: ItemType;
+
+    /** Meaning: `{ pageId: languageVariantPageId[] }` */
+    selectedPageLanguageVariants: { [pageId: number]: number[] } = {};
+
+    /** Meaning: `{ formId: languageCodesOfForm[] }` */
+    selectedFormLanguageVariants: { [formId: number]: string[] } = {};
+
+    iconForItemType = iconForItemType;
+
+    get deleteCount(): number {
+        if (this.itemType === 'page') {
+            return this.flattenMap(this.selectedPageLanguageVariants).length;
+        } else if (this.itemType === 'form') {
+            return this.flattenMap(this.selectedFormLanguageVariants).length;
+        } else {
+            return this.otherItems.length + this.localizedItems.length;
+        }
+    }
+
+    constructor(private localizationService: LocalizationsService) {}
+
+    ngOnInit(): void {
+        this.itemType = this.getType();
+        [...this.otherItems, ...this.localizedItems].forEach(item => {
+            if (this.itemType === 'page') {
+                this.selectedPageLanguageVariants[item.id] = [item.id];
+            }
+            if (this.itemType === 'form') {
+                this.selectedFormLanguageVariants[item.id] = (item as Form).languages;
+            }
+        });
+    }
+
+    confirm(): void {
+        let itemsToDelete: InheritableItem[] = [];
+        let itemsToUnlocalize: InheritableItem[] = [];
+
+        if (this.itemType === 'page') {
+            const flatVariants = this.flattenMap(this.pageLanguageVariants);
+            const flatSelection = this.flattenMap(this.selectedPageLanguageVariants);
+            const allSelectedItems = flatVariants.filter(item => -1 < flatSelection.indexOf(item.id));
+
+            itemsToDelete = allSelectedItems.filter(page => !itemIsLocalized(page));
+            itemsToUnlocalize = allSelectedItems.filter(itemIsLocalized);
+        } else {
+            itemsToDelete = this.otherItems;
+            itemsToUnlocalize = this.localizedItems;
+        }
+
+        this.closeFn({
+            delete: itemsToDelete,
+            deleteForms: this.selectedFormLanguageVariants,
+            unlocalize: itemsToUnlocalize,
+            localizations: this.itemLocalizations,
+        });
+    }
+
+    /**
+     * Handles changes to the language variants selection for pages. When `checkLocalizations` is true, we also
+     * check that we have the needed localization info for any newly-selected language variants, and if not we
+     * get it from the server.
+     */
+    onPageLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
+        if (checkLocalizations) {
+            const uncheckedIds = this.getUncheckedLocalizationIds(variantIds);
+            if (0 < uncheckedIds.length) {
+                this.localizationService.getLocalizationMap(uncheckedIds, this.itemType)
+                    .take(1)
+                    .subscribe(newMap => {
+                        Object.assign(this.itemLocalizations, newMap);
+                        this.selectedPageLanguageVariants[itemId] = variantIds;
+                    });
+            } else {
+                this.selectedPageLanguageVariants[itemId] = variantIds;
+            }
+        } else {
+            this.selectedPageLanguageVariants[itemId] = variantIds;
+        }
+    }
+
+    onFormLanguageSelectionChange(itemId: number, languageCodes: string[]): void {
+        this.selectedFormLanguageVariants[itemId] = languageCodes;
+    }
+
+    /**
+     * Returns an array of localization info arrays which correspond to the given item plus any language
+     * variants (in the case of page items) which are selected.
+     */
+    getAllLocalizations(itemId: number): LocalizationInfo[] {
+        if (Object.keys(this.itemLocalizations).length === 0) {
+            return [];
+        }
+        if (this.itemType === 'form') {
+            return [];
+        }
+        const selectedVariants = this.selectedPageLanguageVariants[itemId];
+
+        if (Array.isArray(selectedVariants) && selectedVariants.length > 0) {
+            const allLocalizations = selectedVariants.map(itemId => this.itemLocalizations[itemId]);
+            return this.flattenArray(allLocalizations);
+        } else {
+            return [];
+        }
+    }
+
+    registerCloseFn(close: (result: MultiDeleteResult) => void): void {
+        this.closeFn = close;
+    }
+
+    registerCancelFn(cancel: (val: any) => void): void {
+        this.cancelFn = cancel;
+    }
+
+    isNoneSelected(item: InheritableItem): boolean {
+        const a = this.selectedPageLanguageVariants[item.id]?.length === 0;
+        const b = this.selectedFormLanguageVariants[item.id]?.length === 0;
+        return a || b;
+    }
+
+    /**
+     * Given a map of { id: T[] }, flattens it into an array of T.
+     */
+    private flattenMap<T>(hashMap: { [id: number]: T[] }): T[] {
+        return Object.keys(hashMap).reduce((all, id) => all.concat(hashMap[+id]), []);
+    }
+
+    /**
+     * Flattens a 2d array into a simple array.
+     */
+    private flattenArray<T>(arr: T[][]): T[] {
+        return arr.reduce((flattened, current) => flattened.concat(current), []);
+    }
+
+    private getUncheckedLocalizationIds(itemIds: number[]): number[] {
+        const knownIds = Object.keys(this.itemLocalizations).map(id => +id);
+        return itemIds.filter(id => knownIds.indexOf(id) === -1);
+    }
+
+    /**
+     * Get the item type which is being deleted.
+     */
+    private getType(): ItemType {
+        if (this.otherItems.length > 0) {
+            return this.otherItems[0].type;
+        }
+        if (this.localizedItems.length > 0) {
+            return this.localizedItems[0].type;
+        }
+        if (this.inheritedItems.length > 0) {
+            return this.inheritedItems[0].type;
+        }
+    }
+}

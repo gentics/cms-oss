@@ -1,0 +1,62 @@
+<div class="wrapper">
+    <gtx-top-bar class="top-bar">
+        <div class="gentics-logo">
+            <svg-icon src="assets/gentics-logo.svg"></svg-icon>
+        </div>
+        <h1>
+            <a class="title" [routerLink]="['index']">Gentics UI Core Docs</a>
+            <span class="version-info" title="Click to see changelog">
+                <a href="https://github.com/gentics/gentics-ui-core/blob/{{ changelogBranch }}/CHANGELOG.md">v{{ version }}</a>
+            </span>
+            <span class="version-info" title="Click to see previous versions of docs">
+                <gtx-docs-switcher></gtx-docs-switcher>
+            </span>
+        </h1>
+        <a class="gtx-top-bar-right github-logo"
+           title="Gentics UI Core on GitHub"
+           href="https://github.com/gentics/gentics-ui-core/">
+           <svg-icon src="assets/github-logo.svg"></svg-icon>
+        </a>
+    </gtx-top-bar>
+
+    <div class="container">
+        <gtx-search-bar
+            [(ngModel)]="searchQuery"
+            (change)="filterContentItems($event)"
+            (clear)="resetFilter()"
+        ></gtx-search-bar>
+    </div>
+
+    <gtx-split-view-container
+        class="split-view-container"
+        [initialSplit]="35"
+        [minPanelSizePixels]="320"
+        [rightPanelVisible]="hasContent"
+        [(focusedPanel)]="splitFocus"
+    >
+        <div class="list-pane" left>
+            <gtx-contents-list-item *ngFor="let item of filteredContentItems">
+                <div class="item-avatar" [ngSwitch]="item.type">
+                    <i class="material-icons" *ngSwitchCase="'css'">style</i>
+                    <i class="material-icons" *ngSwitchCase="'info'">info_outline</i>
+                    <i class="material-icons" *ngSwitchCase="'component'">code</i>
+                    <i class="material-icons" *ngSwitchCase="'service'">share</i>
+                </div>
+
+                <div class="item-primary">
+                    <a [routerLink]="[item.route]" (click)="focusRightPanel()">
+                        <strong>{{ item.title }}</strong>
+                    </a>
+                </div>
+
+                <div class="type-label" [ngClass]="item.type">{{ item.type }}</div>
+            </gtx-contents-list-item>
+        </div>
+
+        <div class="content-pane" right>
+            <router-outlet></router-outlet>
+        </div>
+    </gtx-split-view-container>
+</div>
+
+<gtx-overlay-host></gtx-overlay-host>

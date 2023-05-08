@@ -1,0 +1,1872 @@
+/*
+ * @author norbert
+ * @date 28.04.2010
+ * @version $Id: FileResource.java,v 1.3.6.3 2011-03-28 10:55:36 johannes2 Exp $
+ */
+package com.gentics.contentnode.rest.resource.impl;
+
+import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
+import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.MultiPart;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.i18n.I18nString;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.Supplier;
+import com.gentics.contentnode.factory.AutoCommit;
+import com.gentics.contentnode.factory.ChannelTreeSegment;
+import com.gentics.contentnode.factory.ChannelTrx;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.TransactionLockManager;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Wastebin;
+import com.gentics.contentnode.factory.WastebinFilter;
+import com.gentics.contentnode.factory.object.DisinheritUtils;
+import com.gentics.contentnode.factory.object.FileFactory;
+import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.msg.NodeMessage;
+import com.gentics.contentnode.object.ContentFile;
+import com.gentics.contentnode.object.File;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.ImageFile;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.OpResult;
+import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.PartType;
+import com.gentics.contentnode.object.parttype.TextPartType;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
+import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
+import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.Reference;
+import com.gentics.contentnode.rest.model.Tag;
+import com.gentics.contentnode.rest.model.perm.PermType;
+import com.gentics.contentnode.rest.model.request.FileCopyRequest;
+import com.gentics.contentnode.rest.model.request.FileCreateRequest;
+import com.gentics.contentnode.rest.model.request.FileSaveRequest;
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
+import com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest;
+import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.WastebinSearch;
+import com.gentics.contentnode.rest.model.response.FileListResponse;
+import com.gentics.contentnode.rest.model.response.FileLoadResponse;
+import com.gentics.contentnode.rest.model.response.FileUploadResponse;
+import com.gentics.contentnode.rest.model.response.FileUsageListResponse;
+import com.gentics.contentnode.rest.model.response.FolderUsageListResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.model.response.Message.Type;
+import com.gentics.contentnode.rest.model.response.MultiFileLoadResponse;
+import com.gentics.contentnode.rest.model.response.PageUsageListResponse;
+import com.gentics.contentnode.rest.model.response.PrivilegesResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.model.response.TemplateUsageListResponse;
+import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
+import com.gentics.contentnode.rest.resource.FileResource;
+import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FileListParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PageModelParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
+import com.gentics.contentnode.rest.util.FileUploadManipulatorFileSave;
+import com.gentics.contentnode.rest.util.ListBuilder;
+import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.rest.util.ModelBuilder;
+import com.gentics.contentnode.rest.util.Operator;
+import com.gentics.contentnode.rest.util.Operator.LockType;
+import com.gentics.contentnode.rest.util.ResolvableComparator;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.contentnode.staging.StagingUtil;
+import com.gentics.contentnode.validation.map.inputchannels.FileDescriptionInputChannel;
+import com.gentics.contentnode.validation.map.inputchannels.FileNameInputChannel;
+import com.gentics.contentnode.validation.map.inputchannels.InputChannel;
+import com.gentics.contentnode.validation.map.inputchannels.MimeTypeInputChannel;
+import com.gentics.contentnode.validation.util.ValidationUtils;
+import com.gentics.contentnode.validation.validator.ValidationException;
+import com.gentics.contentnode.validation.validator.ValidationResult;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.i18n.CNI18nString;
+import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.util.FileUtil;
+
+/**
+ * Resource for loading and manipulating Files in GCN
+ *
+ * @author norbert
+ */
+@Path("/file")
+public class FileResourceImpl extends AuthenticatedContentNodeResource implements FileResource {
+
+	@Context
+	HttpServletRequest servletRequest;
+
+	/**
+	 * Keyed lock to synchronize create/update calls for the same filename
+	 */
+	private static final TransactionLockManager<GenericResponse> fileNameLock = new TransactionLockManager<>();
+
+	/**
+	 * Default constructor
+	 */
+	public FileResourceImpl() {}
+
+	@PostConstruct
+	public void initialize() {
+		// Attention: Multipart requests require seperate authentication handling within the resouce. Basically you just need to set the
+		// session data and reinvoke this method.
+		if ((getSessionId() == null || getSessionSecret() == null) && servletRequest != null && servletRequest.getContentType() != null
+				&& servletRequest.getContentType().startsWith("multipart")) {
+			logger.debug(
+					"This request is a multipart request either sessionId or sessionSecret have not been set yet. The restcall may fail when no authentication will be invoked in the rest method.");
+			return;
+		}
+		super.initialize();
+	}
+
+	@Override
+	public FileListResponse list(
+			@BeanParam InFolderParameterBean inFolder,
+			@BeanParam FileListParameterBean fileListParams,
+			@BeanParam FilterParameterBean filterParams,
+			@BeanParam SortParameterBean sortingParams,
+			@BeanParam PagingParameterBean pagingParams,
+			@BeanParam EditableParameterBean editableParams,
+			@BeanParam WastebinParameterBean wastebinParams) {
+		Transaction t = getTransaction();
+		FolderResourceImpl folderResource = new FolderResourceImpl();
+
+		folderResource.setTransaction(t);
+
+		boolean channelIdSet = false;
+		boolean includeWastebin = Arrays.asList(WastebinSearch.include, WastebinSearch.only).contains(wastebinParams.wastebinSearch);
+
+		try {
+			channelIdSet = setChannelToTransaction(fileListParams.nodeId);
+
+			try (WastebinFilter filter = folderResource.getWastebinFilter(includeWastebin, inFolder.folderId)) {
+				com.gentics.contentnode.object.Folder folder = folderResource.getFolder(inFolder.folderId, false);
+				List<File> files = folderResource.getFilesOrImagesFromFolder(folder, ContentFile.TYPE_FILE,
+					Folder.FileSearch.create().setSearchString(filterParams.query).setNiceUrlSearch(fileListParams.niceUrl)
+						.setEditors(getMatchingSystemUsers(editableParams.editor, editableParams.editorIds))
+						.setCreators(getMatchingSystemUsers(editableParams.creator, editableParams.creatorIds))
+						.setEditedBefore(editableParams.editedBefore).setEditedSince(editableParams.editedSince)
+						.setCreatedBefore(editableParams.createdBefore).setCreatedSince(editableParams.createdSince)
+						.setRecursive(inFolder.recursive).setInherited(fileListParams.inherited).setOnline(fileListParams.online).setBroken(fileListParams.broken)
+						.setUsed(fileListParams.used).setUsedIn(fileListParams.usedIn).setWastebin(wastebinParams.wastebinSearch == WastebinSearch.only));
+
+				if (wastebinParams.wastebinSearch == WastebinSearch.only) {
+					Wastebin.ONLY.filter(files);
+				}
+
+				Collection<Reference> refs = new ArrayList<>();
+
+				if (fileListParams.folder) {
+					refs.add(Reference.FOLDER);
+				}
+
+				ResolvableComparator<File> comparator = ResolvableComparator.get(
+					sortingParams,
+					// From AbstractContentObject
+					"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
+					// From ContentFile
+					"datei", "file", "bild", "image", "name", "size", "sizeb", "readablesize", "sizekb",
+					"sizeKB", "sizemb", "sizeMB", "folder_id", "folder", "ordner", "node",
+					"extension", "creator", "ersteller", "editor", "bearbeiter", "createtimestamp",
+					"createtimstamp", "createdate", "edittimestamp", "editdate", "type", "object",
+					"url", "width", "sizex", "height", "sizey", "dpix", "dpiy", "dpi", "fpx", "fpy",
+					"gis_resisable", "ismaster", "inherited", "ice_url", "alternate_urls");
+				FileListResponse list = ListBuilder.from(files, file -> ModelBuilder.getFile(file, refs))
+					.sort(comparator)
+					.page(pagingParams)
+					.to(new FileListResponse());
+
+				list.setStagingStatus(StagingUtil.checkStagingStatus(files, inFolder.stagingPackageName, o -> o.getGlobalId().toString()));
+				return list;
+			}
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new FileListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (EntityNotFoundException e) {
+			return new FileListResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
+		} catch (NodeException e) {
+			logger.error("Error while getting files or images for folder " + inFolder.folderId, e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new FileListResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
+		} finally {
+			if (channelIdSet) {
+				// reset transaction channel
+				t.resetChannel();
+			}
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/content/load/{id}")
+	public Response loadContent(@PathParam("id") final String id, @QueryParam("nodeId") Integer nodeId) {
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			final File file = MiscUtils.load(File.class, id);
+
+			MediaType mediaType = null;
+			try {
+				mediaType = MediaType.valueOf(file.getFiletype());
+			} catch (IllegalArgumentException e) {
+				mediaType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
+			}
+
+			final InputStream inputStream = file.getFileStream();
+
+			if (inputStream == null) {
+				throw new NodeException("Could not open file with id {" + id + "} for reading.");
+			}
+
+			return Response.ok(new StreamingOutput() {
+				public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+
+					// Warning. Keep in mind that the transaction has already been committed when reaching this point.
+					// The CommittingResponseFilter has already committed the transaction.
+					try {
+						byte buf[] = new byte[1024];
+						int len;
+
+						while ((len = inputStream.read(buf)) > 0) {
+							outputStream.write(buf, 0, len);
+						}
+					} catch (Exception e) {
+						throw new WebApplicationException(e);
+					}
+				}
+			}, mediaType).build();
+		} catch (NodeException e) {
+			throw new WebApplicationException(e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#load(java.lang.String)
+	 */
+	@GET
+	@Path("/load/{id}")
+	public FileLoadResponse load(
+			@PathParam("id") String id,
+			@DefaultValue("false") @QueryParam("update") boolean update,
+			@DefaultValue("false") @QueryParam("construct") boolean construct,
+			@QueryParam("nodeId") Integer nodeId,
+			@QueryParam("package") String stagingPackageName
+			) {
+		boolean isChannelIdSet = false;
+		Transaction transaction = getTransaction();
+
+		try {
+			// Set the channel context from which to retrieve the image,
+			// if `nodeId' is provided.
+			isChannelIdSet = setChannelToTransaction(nodeId);
+			// Load the File from GCN
+			File file = getFile(id, update, ObjectPermission.view);
+
+			// if the object with this id is actually an image, throw an exception since only files should be returned
+			if (file.isImage()) {
+				throw new EntityNotFoundException();
+			}
+
+			Collection<Reference> refs = new ArrayList<>();
+			refs.add(Reference.TAGS);
+			refs.add(Reference.OBJECT_TAGS_VISIBLE);
+			if (construct) {
+				refs.add(Reference.TAG_EDIT_DATA);
+			}
+			com.gentics.contentnode.rest.model.File restFile = ModelBuilder.getFile(file, refs);
+
+			FileLoadResponse response = new FileLoadResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully loaded file " + id), restFile);
+			response.setStagingStatus(StagingUtil.checkStagingStatus(file, stagingPackageName));
+			return response;
+		} catch (EntityNotFoundException e) {
+			return new FileLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), null);
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new FileLoadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), null);
+		} catch (NodeException e) {
+			logger.error("Error while loading file " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new FileLoadResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while loading file " + id + ": " + e.getLocalizedMessage()), null);
+		} finally {
+			if (isChannelIdSet) {
+				transaction.resetChannel();
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.resource.FileResource#load(com.gentics.contentnode.rest.model.request.MultiObjectLoadRequest)
+	 */
+	@Override
+	@POST
+	@Path("/load")
+	public MultiFileLoadResponse load(MultiObjectLoadRequest request) {
+		Transaction t = getTransaction();
+		Set<Reference> references = new HashSet<>();
+
+		references.add(Reference.TAGS);
+		references.add(Reference.OBJECT_TAGS_VISIBLE);
+
+		try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+			boolean forUpdate = ObjectTransformer.getBoolean(request.isForUpdate(), false);
+			List<File> allFiles = t.getObjects(File.class, request.getIds());
+			List<com.gentics.contentnode.rest.model.File> returnedFiles = new ArrayList<>(allFiles.size());
+
+			for (com.gentics.contentnode.object.File file: allFiles) {
+				if (!file.isImage()
+						&& ObjectPermission.view.checkObject(file)
+						&& (!forUpdate || ObjectPermission.edit.checkObject(file))) {
+					if (forUpdate) {
+						file = t.getObject(file, true);
+					}
+
+					com.gentics.contentnode.rest.model.File restFile = ModelBuilder.getFile(file, references);
+
+					if (restFile != null) {
+						returnedFiles.add(restFile);
+					}
+				}
+			}
+			MultiFileLoadResponse response = new MultiFileLoadResponse(returnedFiles);
+			response.setStagingStatus(StagingUtil.checkStagingStatus(allFiles, request.getPackage(), o -> o.getGlobalId().toString()));
+			return response;
+		} catch (NodeException e) {
+			return new MultiFileLoadResponse(
+				new Message(Type.CRITICAL, e.getLocalizedMessage()),
+				new ResponseInfo(ResponseCode.FAILURE, "Could not load files"));
+		}
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#createSimpleMultiPartFallback(com.sun.jersey.multipart.MultiPart, javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("/createSimple")
+	@Consumes("multipart/form-data")
+	@Produces(MediaType.APPLICATION_JSON)
+	public FileUploadResponse createSimpleMultiPartFallback(MultiPart multiPart, @Context HttpServletRequest request,
+			@QueryParam(FileUploadMetaData.META_DATA_FOLDERID_KEY) String folderId,
+			@QueryParam(FileUploadMetaData.META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartName,
+			@QueryParam(AuthenticatedContentNodeResource.QQFILE_FILENAME_PARAMETER_NAME) String qqFileUploaderFileName,
+			@QueryParam(FileUploadMetaData.META_DATA_DESCRIPTION_KEY) String description,
+			@QueryParam(FileUploadMetaData.META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite) {
+
+		try {
+
+			if (multiPart.getBodyParts().isEmpty()) {
+				I18nString message = new CNI18nString("rest.file.upload.request_invalid");
+
+				throw new NodeException(message.toString());
+			}
+
+			// Load the metadata by examining the multipart payload
+			FileUploadMetaData metaData = getMetaData(multiPart, customBodyPartName);
+
+			// Since we previously omitted the authentication for multipart requests we have to do it now
+			// This also calls initialize()
+			authenticate(metaData);
+
+			// Set the folderId from the query parameters
+			if (!StringUtils.isEmpty(folderId)) {
+				metaData.setFolderId(folderId);
+			} else if (metaData.hasProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY)) {
+				throw new NodeException(
+						"Needed parameter is missing. Folderid parameter {" + FileUploadMetaData.META_DATA_FOLDERID_KEY + "} is {" + folderId + "}");
+			}
+
+			// Set the filename from the query parameters
+			if (!StringUtils.isEmpty(qqFileUploaderFileName)) {
+				metaData.setFilename(qqFileUploaderFileName);
+			} else if (StringUtils.isEmpty(metaData.getFilename())) {
+				throw new NodeException(
+						"Needed parameter is missing. Filename parameter {" + FileUploadMetaData.META_DATA_FILE_NAME_KEY + "} is {" + qqFileUploaderFileName + "}");
+			}
+
+			metaData.setDescription(ObjectTransformer.getString(description, ""));
+			metaData.setOverwrite(overwrite ? "true" : "false");
+
+			return handleMultiPartRequest(multiPart, metaData, 0);
+		} catch (Exception e) {
+
+			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
+
+			Message message = new Message(Message.Type.CRITICAL, e.getMessage());
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
+
+			if (e.getCause() != null) {
+				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
+			}
+
+			return new FileUploadResponse(message, responseInfo, false);
+		} finally {
+			if (multiPart != null) {
+				multiPart.cleanup();
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#createSimple(javax.servlet.http.HttpServletRequest, int, int, java.lang.String, java.lang.String)
+	 */
+	@POST
+	@Path("/createSimple")
+	@Produces(MediaType.APPLICATION_JSON)
+	public FileUploadResponse createSimple(@Context HttpServletRequest request, @QueryParam(FileUploadMetaData.META_DATA_FOLDERID_KEY) int folderId,
+			@QueryParam(FileUploadMetaData.META_DATA_NODE_ID_KEY) @DefaultValue("0") int nodeId,
+			@QueryParam(FileUploadMetaData.META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartKeyName,
+			@QueryParam(AuthenticatedContentNodeResource.QQFILE_FILENAME_PARAMETER_NAME) String fileName,
+			@QueryParam(FileUploadMetaData.META_DATA_DESCRIPTION_KEY) String description,
+			@QueryParam(FileUploadMetaData.META_DATA_OVERWRITE_KEY) @DefaultValue("false") boolean overwrite) {
+
+		Transaction t = getTransaction();
+
+		try {
+			if (fileName == null) {
+				I18nString message = new CNI18nString("rest.file.upload.filename_not_specified");
+
+				throw new NodeException(message.toString());
+			}
+
+			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+				Integer fileId = null;
+				if (overwrite) {
+					// If overwrite is enabled and a file with the same filename exists in the given folder,
+					// overwrite it
+					File file = findFileByName(folderId, FileFactory.sanitizeName(fileName));
+					if (file != null && !file.isInherited()) {
+						fileId = file.getId();
+					}
+				}
+
+				InputStream inputStream = request.getInputStream();
+
+				if (fileId == null) {
+					// Create a new file
+					return createFile(inputStream, false, request.getContentLength(), folderId,
+							nodeId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
+				} else {
+					// Save data to an existing file
+					return saveFile(inputStream, fileId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
+				}
+			}
+
+
+		} catch (Exception e) {
+
+			// If we encounter an error we just rollback
+			try {
+				t.rollback();
+			} catch (TransactionException e1) {
+				NodeLogger.getNodeLogger(getClass()).error("Error while rollback.", e1);
+				throw new WebApplicationException(new Exception("Error while saving file - Error while rollback of transaction.", e1));
+			}
+
+			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
+
+			Message message = new Message(Message.Type.CRITICAL, e.getMessage());
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
+
+			if (e.getCause() != null) {
+				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
+			}
+
+			return new FileUploadResponse(message, responseInfo, false);
+		}
+	}
+
+	/**
+	 * Returns the filename of the file
+	 *
+	 * @param fileName
+	 * @return filename
+	 */
+	private String stripFilepath(String fileName) throws NodeException {
+		if (fileName != null && !StringUtils.isEmpty(fileName)) {
+			int i = fileName.lastIndexOf("\\") + 1;
+
+			return fileName.substring(i);
+		} else {
+			throw new NodeException("Could not strip fileName from path because fileName was not set");
+		}
+	}
+
+	/**
+	 * Handles the multipart request. The given metaData properties will be used if given.
+	 *
+	 * @param multiPart
+	 * @param metaData
+	 * @param fileId
+	 * @return Returns the {@link FileUploadResponse}
+	 */
+	private FileUploadResponse handleMultiPartRequest(MultiPart multiPart, FileUploadMetaData metaData, int fileId) {
+
+		Transaction t = null;
+		// Will be closed in save
+		InputStream fileDataInputStream = null;
+
+		// If no initial metadata was given we create a empty properties object
+		if (metaData == null) {
+			metaData = new FileUploadMetaData();
+		}
+
+		try {
+			BodyPart fileDataBodyPart = getFileDataBodyPart(multiPart, metaData.getProperty(FileUploadMetaData.META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME));
+
+			if (fileDataBodyPart == null) {
+				throw new WebApplicationException(new Exception("Could not find valid bodypart to work with"));
+			}
+
+			// Check for mandatory fields
+			if ((fileId == 0 && !metaData.containsKey(FileUploadMetaData.META_DATA_FOLDERID_KEY))
+					|| metaData.getProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY).contentEquals("")) {
+				throw new WebApplicationException(
+						new Exception("Could not find value for folderId parameter {" + FileUploadMetaData.META_DATA_FOLDERID_KEY + "}"));
+			}
+
+			t = getTransaction();
+
+			if (t == null) {
+				throw new WebApplicationException(new Exception("Could not get valid transaction."));
+			}
+
+			NodeLogger.getNodeLogger(getClass()).debug("Post Data: " + metaData);
+			// Extract values from the fileDataBodyPart
+			String mediaType = fileDataBodyPart.getMediaType().toString();
+			String subMediaType = fileDataBodyPart.getMediaType().getSubtype();
+
+			boolean isImage = subMediaType.equals("image");
+
+			if (ObjectTransformer.isEmpty(metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY))) {
+
+				String fileName = fileDataBodyPart.getContentDisposition().getFileName();
+
+				// Fix for IE filename field
+				fileName = stripFilepath(fileName);
+				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, fileName);
+			}
+
+			// Get contentlenght and check filesize against it
+			long contentLength = Long.parseLong(multiPart.getHeaders().getFirst("content-length"));
+
+			// Load needed information from metaData
+			String filename = metaData.getFilename();
+			String description = metaData.getDescription();
+
+			Object fileEntity = fileDataBodyPart.getEntity();
+			if (fileEntity instanceof BodyPartEntity) {
+				fileDataInputStream = ((BodyPartEntity)fileEntity).getInputStream();
+			} else if (fileEntity instanceof String) {
+				fileDataInputStream = new ByteArrayInputStream(((String)fileEntity).getBytes(StandardCharsets.UTF_8));
+			} else {
+				throw new WebApplicationException(new Exception("Unsupported file body part type"));
+			}
+
+			boolean overwriteExisting = metaData.getOverwrite();
+			Integer nodeId = metaData.getNodeId();
+			Integer folderId = metaData.getFolderId();
+
+			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+				if (overwriteExisting && fileId == 0) {
+					// If overwrite is enabled and a file with the same filename exists in the given folder,
+					// overwrite it
+					File file = findFileByName(folderId, FileFactory.sanitizeName(filename));
+
+					// Only overwrite local or localized files
+					if (file != null && !file.isInherited()) {
+						fileId = file.getId();
+					}
+				}
+
+				if (fileId == 0) {
+					// Create a new file
+					return createFile(fileDataInputStream, isImage, contentLength, folderId, nodeId, filename,
+							mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
+				} else {
+					// Save data to an existing file
+					return saveFile(fileDataInputStream, fileId, filename, mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
+				}
+			}
+		} catch (Exception e) {
+			// If we encounter an error we just rollback
+			if (t != null) {
+				try {
+					t.rollback(false);
+				} catch (TransactionException e1) {
+					NodeLogger.getNodeLogger(getClass()).error("Error while rollback.", e1);
+					throw new WebApplicationException(new Exception("Error while saving file - Error while rollback of transaction.", e1));
+				}
+			} else {
+				NodeLogger.getNodeLogger(getClass()).error("Transaction not available.", e);
+			}
+
+			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
+
+			Message message = new Message(Message.Type.CRITICAL, e.getMessage());
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
+
+			if (e.getCause() != null) {
+				responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getCause().getMessage());
+			}
+
+			return new FileUploadResponse(message, responseInfo, false);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#create(com.sun.jersey.multipart.MultiPart)
+	 */
+	@POST
+	@Path("/create")
+	@Consumes("multipart/form-data")
+	@Produces(MediaType.APPLICATION_JSON)
+	public FileUploadResponse create(MultiPart multiPart) {
+
+		FileUploadMetaData metaData = null;
+		String sentFilename = null;
+		FileUploadResponse fileUploadResponse = null;
+
+		try {
+			// Load meta data without handling the custombodypartname
+			metaData = getMetaData(multiPart, null);
+			sentFilename = metaData.getFilename();
+
+			// Since we previously omitted the authentication for multipart requests we have to do it now
+			// This also calls initialize()
+			authenticate(metaData);
+
+			// Create a transaction lock on the filename
+			// This lock doesn't handle all cases of filename collisions because the FUM
+			// can change the filename to anything else, but we ignore this case here.
+			String lockKey = FileFactory.sanitizeName(sentFilename);
+
+			final FileUploadMetaData finalMetaData = metaData;
+			fileUploadResponse = (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, finalMetaData, 0));
+		} catch (Exception e) {
+			logger.error("Error while creating file " + sentFilename, e);
+			I18nString message = new CNI18nString("rest.general.error");
+			fileUploadResponse = new FileUploadResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while creating file " + sentFilename + ": " + e.getLocalizedMessage()), false);
+		} finally {
+			if (multiPart != null) {
+				multiPart.cleanup();
+			}
+		}
+
+		return fileUploadResponse;
+	}
+
+	@POST
+	@Path("/create")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Override
+	public FileUploadResponse create(FileCreateRequest request) {
+		int nodeId = request.getNodeId();
+		try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+			int fileId = 0;
+
+			if (request.isOverwriteExisting()) {
+				// If overwrite is enabled and a file with the same filename exists in the given folder,
+				// overwrite it
+				File file = findFileByName(request.getFolderId(), FileFactory.sanitizeName(request.getName()));
+
+				// Only overwrite local or localized files
+				if (file != null && !file.isInherited()) {
+					fileId = file.getId();
+				}
+			}
+
+			// get source image from URL
+			HttpClient httpClient = new HttpClient();
+			GetMethod getMethod = new GetMethod(request.getSourceURL());
+			int responseStatus = httpClient.executeMethod(getMethod);
+
+			if (responseStatus != 200) {
+				throw new NodeException(String.format("Request to %s returned response code %d", request.getSourceURL(), responseStatus));
+			}
+
+			// filename in request has no extension, so we need to detect it
+			if (ObjectTransformer.isEmpty(request.getName())) {
+				request.setName("new_file");
+			}
+			if (ObjectTransformer.getString(request.getName(), "").indexOf('.') < 0) {
+				String detectedMimeType = FileUtil.getMimeTypeByContent(new ByteArrayInputStream(getMethod.getResponseBody()), request.getName());
+				if (!"application/octet-stream".equals(detectedMimeType) && detectedMimeType.lastIndexOf('/') > 0) {
+					String subtype = detectedMimeType.substring(detectedMimeType.lastIndexOf('/') + 1);
+					request.setName(request.getName() + "." + subtype);
+
+					fileId = 0;
+					if (request.isOverwriteExisting()) {
+						// If overwrite is enabled and a file with the same filename exists in the given folder,
+						// overwrite it
+						File file = findFileByName(request.getFolderId(), FileFactory.sanitizeName(request.getName()));
+
+						// Only overwrite local or localized files
+						if (file != null && !file.isInherited()) {
+							fileId = file.getId();
+						}
+					}
+				}
+			}
+
+			String lockKey = FileFactory.sanitizeName(request.getName());
+
+			final int finalFileId = fileId;
+			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> {
+				try (ChannelTrx ctrx = new ChannelTrx(nodeId)) {
+					try (InputStream fileDataInputStream = getMethod.getResponseBodyAsStream()) {
+						if (finalFileId == 0) {
+							// Create a new file
+							return createFile(fileDataInputStream, false, 0, request.getFolderId(), request.getNodeId(), request.getName(),
+								null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+						} else {
+							// Save data to an existing file
+							return saveFile(fileDataInputStream, finalFileId, request.getName(), null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+						}
+					} catch (IOException e) {
+						throw new NodeException(e);
+					}
+				}
+			});
+		} catch (NodeException | IOException e) {
+			NodeLogger.getNodeLogger(getClass()).error(String.format("Error while creating file from URL %s", request.getSourceURL()), e);
+			Message message = new Message(Message.Type.CRITICAL, e.getMessage());
+			ResponseInfo responseInfo = new ResponseInfo(ResponseCode.FAILURE, e.getMessage());
+			return new FileUploadResponse(message, responseInfo, false);
+		}
+	}
+
+	/**
+	 * Stores the given file into the database
+	 *
+	 * @param input The files contents
+	 * @param isImage Whether the file is an image.
+	 * @param contentLength The file size.
+	 * @param folderId The ID of the parent folder
+	 * @param nodeId id of the node (channel) for which the file shall be created (for multichannelling)
+	 * @param fileName The filename.
+	 * @param mediaType The files media type.
+	 * @param description The files description.
+	 * @param niceUrl The files nice URL.
+	 * @param alternateUrls The files alternate URLs.
+	 * @param properties Additional properties to be saved to the files object properties.
+	 * @return
+	 * @throws NodeException
+	 */
+	private FileUploadResponse createFile(InputStream input, boolean isImage, long contentLength, int folderId, int nodeId, String fileName,
+			String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+
+		Transaction t = getTransaction();
+		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+
+		// Check permissions for creating the file
+		com.gentics.contentnode.object.Folder folder = (com.gentics.contentnode.object.Folder) t.getObject(com.gentics.contentnode.object.Folder.class, folderId);
+
+		if (null == folder) {
+			throw new EntityNotFoundException("No folder with ID `" + folderId + "'");
+		}
+
+		boolean hasPermission = t.getPermHandler().canCreate(folder, File.class, null);
+
+		// Handle permissions
+		if (!hasPermission) {
+			String msg = "You don't have permission to create files in the folder with id " + folderId + ".";
+			I18nString i18nMessage = new CNI18nString("rest.file.upload.missing_perm_folder");
+
+			i18nMessage.setParameter("0", folderId);
+
+			throw new NodeException(i18nMessage.toString(), new Exception(msg));
+		}
+
+		File file = (File) t.createObject(File.class);
+
+		// if multichannelling is active and a nodeId was set, we will create the file for a channel
+		if (prefs.isFeature(Feature.MULTICHANNELLING) && nodeId != 0) {
+			// check whether the nodeId belongs to a channel
+			Node channel = t.getObject(Node.class, nodeId);
+
+			if (channel != null && channel.isChannel()) {
+				file.setChannelInfo(nodeId, file.getChannelSetId());
+			}
+		}
+
+		// Set attributes
+		file.setFiletype(mediaType);
+		file.setFolderId(folderId);
+
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties);
+	}
+
+	/**
+	 * Saves a file under a given fileId from the given InputStream and stores it into the database
+	 *
+	 * @param input The file contents.
+	 * @param fileId The files ID.
+	 * @param fileName The filename.
+	 * @param mediaType The files media type.
+	 * @param description The files description.
+	 * @param niceUrl The files nice URL.
+	 * @param alternateUrls The files alternate URLs.
+	 * @param properties Additional values to save to the files object properties.
+	 * @return A {@code FileUploadResponse} corresponding to the saved file.
+	 * @throws NodeException
+	 */
+	private FileUploadResponse saveFile(InputStream input, int fileId, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+		Transaction t = getTransaction();
+
+		File file = (ContentFile) t.getObject(File.class, fileId, true);
+
+		if (file == null) {
+			I18nString message = new CNI18nString("file.notfound");
+
+			message.setParameter("0", fileId);
+			throw new EntityNotFoundException(message.toString());
+		}
+
+		// Check permissions for modifying the file
+		boolean hasPermission = t.getPermHandler().canEdit(file);
+
+		// Handle permissions
+		if (!hasPermission) {
+			Object folderId = file.getFolder().getId();
+			String msg = "You don't have permission to edit the file with id " + fileId + " in the folder with id " + folderId + ".";
+			I18nString i18nMessage = new CNI18nString("rest.file.upload.missing_perm_edit");
+
+			i18nMessage.setParameter("0", fileId);
+			i18nMessage.setParameter("1", folderId);
+			throw new NodeException(msg, new Exception(i18nMessage.toString()));
+		}
+
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties);
+	}
+
+	/**
+	 * Stores the given file into the database
+	 *
+	 * @param file The file to save.
+	 * @param input The file contents.
+	 * @param fileName The filename.
+	 * @param mediaType The files media type.
+	 * @param description The files description.
+	 * @param properties Additional values to save to the files object properties.
+	 * @return A {@code FileUploadResponse} corresponding to the saved file.
+	 * @throws NodeException
+	 */
+	private FileUploadResponse saveFileData(File file, InputStream input, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+		Transaction t = getTransaction();
+		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
+
+		// if no fileDescription property was set we use an empty one
+		description = (description == null) ? "" : description;
+
+		// if no contenttype was set use the default one
+		mediaType = (mediaType == null) ? ContentFile.DEFAULT_FILETYPE : mediaType;
+
+		if (file == null) {
+			I18nString i18nMessage = new CNI18nString("rest.file.upload.generic_error");
+
+			throw new WebApplicationException(new Exception(i18nMessage.toString()),
+					Response.status(Status.INTERNAL_SERVER_ERROR).entity(i18nMessage.toString()).build());
+		}
+
+		Node node = file.getFolder().getNode();
+
+		validateStrict(new MimeTypeInputChannel(node), mediaType, "validation.invalid.mimetype");
+		validateStrict(new FileNameInputChannel(node), fileName, "validation.invalid.filename");
+		validateStrict(new FileDescriptionInputChannel(node), description, "validation.invalid.filedescription");
+
+		// Set attributes
+		file.setName(fileName);
+		file.setDescription(description);
+		file.setAlternateUrls(alternateUrls);
+		file.setNiceUrl(niceUrl);
+
+		Message message = FileUploadManipulatorFileSave.handleFileUploadManipulator(t, prefs, file, input);
+
+		t.commit(false);
+
+		if (message == null) {
+			// There has been no Message from the FileUploadManipulator so we have to create the default response message.
+			I18nString i18nMessage = new CNI18nString("rest.file.upload.success");
+
+			i18nMessage.setParameter("0", file.getId());
+			message = new Message(Message.Type.SUCCESS, i18nMessage.toString());
+		}
+
+		ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "saved file with id: " + file.getId());
+
+		// Load the file again
+		File loadedFile = getFile(file.getId().toString(), true);
+
+		setProperties(loadedFile, properties);
+		loadedFile.save();
+		t.commit(false);
+		loadedFile = getFile(file.getId().toString(), true);
+
+		return new FileUploadResponse(message, responseInfo, true, ModelBuilder.getFile(loadedFile, Arrays.asList(Reference.TAGS)));
+
+	}
+
+	/**
+	 * Set the specified properties in the object tags of the given file.
+	 *
+	 * <p>
+	 *     When the key of a property matches the keyname of an object property,
+	 *     its value will be written to the first editable text part of the
+	 *     object property.
+	 * </p>
+	 *
+	 * @param file The file to set additional properties for.
+	 * @param properties The properties to set in the files object properties.
+	 */
+	private void setProperties(File file, Map<String, String> properties) throws NodeException {
+		if (properties == null) {
+			return;
+		}
+
+		for (Map.Entry<String, String> property : properties.entrySet()) {
+			ObjectTag objTag = file.getObjectTag(property.getKey());
+
+			if (objTag == null) {
+				continue;
+			}
+
+			for (Value value : objTag.getValues()) {
+				PartType partType = value.getPartType();
+
+				if (value.getPart().isEditable() && partType instanceof TextPartType) {
+					((TextPartType) partType).setText(property.getValue());
+					objTag.setEnabled(true);
+
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Performs strict validation on the given text.
+	 *
+	 * @param channel
+	 * 		The channel specifying text context for the validation.
+	 * @param text
+	 * 		The text to validate.
+	 * @param i18nError
+	 * 		The i18n error message that will be output on error.
+	 * @throws WebApplicationException
+	 * 		If validation fails, returns to the client a HTTP BAD_REQUEST response.
+	 */
+	private void validateStrict(InputChannel channel, String text, String i18nError) throws TransactionException {
+		try {
+			ValidationResult result = ValidationUtils.validateStrict(channel, text);
+
+			if (result.hasErrors()) {
+				I18nString i18nMessage = new CNI18nString(i18nError);
+
+				throw new WebApplicationException(new Exception(i18nMessage.toString()),
+						Response.status(Status.BAD_REQUEST).entity(i18nMessage.toString()).build());
+			}
+		} catch (ValidationException e) {
+			throw new WebApplicationException(e, Response.status(Status.INTERNAL_SERVER_ERROR).build());
+		}
+	}
+
+	/**
+	 * Handles the FileCopyRequest.
+	 *
+	 * @param request
+	 * @throws NodeException
+	 */
+	private FileUploadResponse handleFileCopyRequest(FileCopyRequest request) throws NodeException {
+		Transaction t = getTransaction();
+		Integer srcFileId = request.getFile().getId();
+		File file;
+
+		if (request.getNodeId() != null) {
+			try (ChannelTrx trx = new ChannelTrx(request.getNodeId())) {
+				file = MiscUtils.load(File.class, srcFileId.toString());
+			}
+		} else {
+			file = MiscUtils.load(File.class, srcFileId.toString());
+		}
+
+		Folder targetFolder;
+		Integer targetNodeId;
+		boolean sameFolder;
+
+		if (request.getTargetFolder() != null) {
+			targetNodeId = request.getTargetFolder().getChannelId();
+
+			try (ChannelTrx trx = new ChannelTrx(targetNodeId)) {
+				targetFolder = MiscUtils.load(Folder.class, request.getTargetFolder().getId().toString());
+				sameFolder = false;
+			}
+		} else {
+			targetFolder = file.getFolder();
+			targetNodeId = 0;
+			sameFolder = true;
+		}
+
+		try (ChannelTrx trx = new ChannelTrx(targetNodeId)) {
+			if (!t.canCreate(targetFolder, file.getClass(), null)) {
+				I18nString message = new CNI18nString("rest.file.upload.missing_perm_folder");
+
+				message.setParameter("0", targetFolder.getId());
+
+				throw new InsufficientPrivilegesException(message.toString(), file, PermType.create);
+			}
+		}
+
+		String newFilename = request.getNewFilename();
+		FileFactory fileFactory = (FileFactory) t.getObjectFactory(File.class);
+
+		if (!sameFolder) {
+			return createFile(
+				file.getFileStream(),
+				file.isImage(),
+				file.getFilesize(),
+				request.getTargetFolder().getId(),
+				request.getTargetFolder().getChannelId(),
+				StringUtils.isEmpty(newFilename) ? file.getFilename() : newFilename,
+				file.getFiletype(),
+				file.getDescription(),
+				null,
+				Collections.emptySet(),
+				Collections.emptyMap());
+		}
+
+		File newFile;
+
+		try (ChannelTrx trx = new ChannelTrx(file.getNode())) {
+			if (!t.canCreate(file.getFolder(), file.getClass(), null)) {
+				I18nString message = new CNI18nString("rest.file.upload.missing_perm_folder");
+
+				message.setParameter("0", file.getFolder().getId().toString());
+
+				throw new InsufficientPrivilegesException(message.toString(), file, PermType.create);
+			}
+		}
+
+		// Copy the file with the new filename if a name was set
+		if (newFilename == null) {
+			newFile = fileFactory.copyFile(file);
+		} else {
+			newFile = fileFactory.copyFile(file, newFilename);
+		}
+
+		boolean multichannelling = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING);
+
+		// when copying a localized file, the new file is also created in that channel
+		if (multichannelling && file.getChannel() != null) {
+			newFile.setChannelInfo(file.getChannel().getId(), newFile.getChannelSetId());
+		}
+
+		newFile.save();
+
+		if (multichannelling) {
+			File masterFile = file.getMaster();
+			newFile.changeMultichannellingRestrictions(masterFile.isExcluded(), masterFile.getDisinheritedChannels(), false);
+			newFile.setDisinheritDefault(masterFile.isDisinheritDefault(), false);
+		}
+
+		ResponseInfo responseInfo = new ResponseInfo(ResponseCode.OK, "copied file with id: " + file.getId());
+
+		I18nString i18nMessage = new CNI18nString("rest.file.copy.success");
+
+		i18nMessage.setParameter("0", ObjectTransformer.getString(file.getId(), null));
+		i18nMessage.setParameter("1", ObjectTransformer.getString(newFile.getId(), null));
+		Message message = new Message(Message.Type.SUCCESS, i18nMessage.toString());
+
+		return new FileUploadResponse(message, responseInfo, true, ModelBuilder.getFile(newFile, Arrays.asList(Reference.TAGS)));
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#copyFile(com.gentics.contentnode.rest.model.request.FileCopyRequest)
+	 */
+	@POST
+	@Path("/copy")
+	public FileUploadResponse copyFile(FileCopyRequest request) {
+		try {
+			return handleFileCopyRequest(request);
+		} catch (NodeException e) {
+			ResponseCode code = e instanceof InsufficientPrivilegesException
+				? ResponseCode.PERMISSION
+				: ResponseCode.NOTFOUND;
+
+			return new FileUploadResponse(
+				new Message(Type.CRITICAL, e.getLocalizedMessage()),
+				new ResponseInfo(code, e.getMessage()),
+				false);
+		}
+
+	}
+
+	/**
+	 * Mpve the given file to another folder
+	 * @param id file id
+	 * @param request request
+	 * @return generic response
+	 */
+	@POST
+	@Path("/move/{id}")
+	public GenericResponse move(@PathParam("id") String id, ObjectMoveRequest request) {
+		MultiObjectMoveRequest multiRequest = new MultiObjectMoveRequest();
+		multiRequest.setFolderId(request.getFolderId());
+		multiRequest.setNodeId(request.getNodeId());
+		multiRequest.setIds(Arrays.asList(id));
+		return move(multiRequest);
+	}
+
+	/**
+	 * Move multiple files to another folder
+	 * @param request request
+	 * @return generic response
+	 */
+	@POST
+	@Path("/move")
+	public GenericResponse move(MultiObjectMoveRequest request) {
+		try (AutoCommit trx = new AutoCommit()) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			Folder target = t.getObject(Folder.class, request.getFolderId());
+
+			if (ObjectTransformer.isEmpty(request.getIds())) {
+				throw new NodeException("No file ids provided");
+			}
+			for (String id : request.getIds()) {
+				File toMove = getFile(id, false);
+				OpResult result = toMove.move(target, ObjectTransformer.getInt(request.getNodeId(), 0));
+				switch (result.getStatus()) {
+				case FAILURE:
+					GenericResponse response = new GenericResponse();
+					for (NodeMessage msg : result.getMessages()) {
+						response.addMessage(ModelBuilder.getMessage(msg));
+					}
+					response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Error"));
+					return response;
+				case OK:
+					// Nothing to be done.
+				}
+			}
+			trx.success();
+			return new GenericResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully moved files"));
+		} catch (EntityNotFoundException e) {
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (NodeException e) {
+			I18nString message = new CNI18nString("rest.general.error");
+			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while moving files: " + e.getLocalizedMessage()));
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#save(java.lang.Integer, com.gentics.contentnode.rest.model.request.FileSaveRequest)
+	 */
+	@POST
+	@Path("/save/{id}")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public GenericResponse save(@PathParam("id") Integer id, FileSaveRequest request) {
+			// Get the file
+			com.gentics.contentnode.rest.model.File restFile = request.getFile();
+
+			if (restFile == null) {
+				I18nString message = new CNI18nString("file.notfound");
+				message.setParameter("0", id);
+			return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.NOTFOUND, ""));
+			}
+
+		Supplier<GenericResponse> save = () -> {
+			Transaction t = getTransaction();
+
+			// The image ID is probably not in the request, so we set it here
+			restFile.setId(id);
+
+			// load file (checking for existence and permissions)
+			getFile(Integer.toString(id), true, ObjectPermission.edit);
+
+			File file = ModelBuilder.getFile(restFile);
+
+			Map<String, ObjectTag> objectTags = file.getObjectTags();
+			Map<String, Tag> restTags = restFile.getTags();
+			if (restTags != null && objectTags != null) {
+				// Throw an error if the user doesn't have permission
+				// to update all the object properties
+				MiscUtils.checkObjectTagEditPermissions(restTags, objectTags, true);
+			}
+
+			if (ObjectTransformer.getBoolean(request.getFailOnDuplicate(), false) && !ObjectTransformer.isEmpty(request.getFile().getName())) {
+				// check whether the name shall be changed
+				File origFile = t.getObject(File.class, restFile.getId());
+
+				if (!StringUtils.isEqual(origFile.getName(), file.getName())) {
+					ChannelTreeSegment targetSegment = new ChannelTreeSegment(file, false);
+					Set<Folder> pcf = DisinheritUtils.getFoldersWithPotentialObstructors(file.getFolder(), targetSegment);
+					if (!DisinheritUtils.isFilenameAvailable(file, pcf)) {
+						I18nString message = new CNI18nString("a_file_with_this_name");
+						return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.INVALIDDATA,
+								"Error while saving file " + id + ": " + message.toString(), "name"));
+					}
+				}
+			}
+
+			if (StringUtils.isEmpty(file.getName())) {
+				I18nString message = new CNI18nString("invalid_filename");
+				return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.INVALIDDATA,
+						"Error while saving file " + id + ": " + message.toString()));
+			}
+
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
+				if (!StringUtils.isEmpty(file.getNiceUrl())) {
+					NodeObject conflictingObject = FileFactory.isNiceUrlAvailable(file, file.getNiceUrl());
+					if (conflictingObject != null) {
+						I18nString message = getUrlDuplicationMessage(file.getNiceUrl(), conflictingObject);
+						return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.INVALIDDATA,
+								"Error while saving file: " + message.toString(), "niceUrl"));
+					}
+				}
+				if (!file.getAlternateUrls().isEmpty()) {
+					List<Message> messages = new ArrayList<>();
+					for (String url : file.getAlternateUrls()) {
+						NodeObject conflictingObject = FileFactory.isNiceUrlAvailable(file, url);
+						if (conflictingObject != null) {
+							I18nString message = getUrlDuplicationMessage(url, conflictingObject);
+							messages.add(new Message(Message.Type.CRITICAL, message.toString()));
+						}
+					}
+					if (!messages.isEmpty()) {
+						GenericResponse response = new GenericResponse();
+						response.setResponseInfo(new ResponseInfo(ResponseCode.INVALIDDATA, "Error while saving file.",
+								"alternateUrls"));
+						response.setMessages(messages);
+						return response;
+					}
+				}
+			}
+
+			// save the file
+			file.save();
+
+			t.commit(false);
+
+			I18nString message = new CNI18nString("file.save.success");
+
+			return new GenericResponse(new Message(Message.Type.SUCCESS, message.toString()),
+					new ResponseInfo(ResponseCode.OK, "saved file with id: " + file.getId()));
+		};
+
+		try {
+			if (!ObjectTransformer.isEmpty(restFile.getName())) {
+				String lockKey = FileFactory.sanitizeName(restFile.getName());
+				return executeLocked(fileNameLock, lockKey, save);
+			} else {
+				return save.supply();
+			}
+		} catch (EntityNotFoundException e) {
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (NodeException e) {
+			logger.error("Error while saving file " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while saving file " + id + ": " + e.getLocalizedMessage()));
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#saveContent(com.sun.jersey.multipart.MultiPart)
+	 */
+	@POST
+	@Path("/save/{id}")
+	@Consumes("multipart/form-data")
+	public GenericResponse save(@PathParam("id") Integer id, MultiPart multiPart) {
+		// Load meta data without handling the custombodypartname
+		FileUploadMetaData metaData = getMetaData(multiPart, null);
+
+		// Since we previously omitted the authentication for multipart requests we have to do it now
+		// This also calls initialize()
+		authenticate(metaData);
+
+		String sentFilename = metaData.getFilename();
+		if (!ObjectTransformer.isEmpty(sentFilename)) {
+			try {
+				String lockKey = FileFactory.sanitizeName(sentFilename);
+				return executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, id));
+			} catch (NodeException e) {
+				logger.error("Error while saving file " + id, e);
+				I18nString message = new CNI18nString("rest.general.error");
+
+				return new GenericResponse(new Message(Message.Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.FAILURE, "Error while saving file " + id + ": " + e.getLocalizedMessage()));
+			}
+		} else {
+		return handleMultiPartRequest(multiPart, metaData, id);
+	}
+	}
+
+	/* (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.resource.FileResource#delete(java.lang.String, java.lang.Integer)
+	 */
+	@POST
+	@Path("/delete/{id}")
+	public GenericResponse delete(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
+		try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+			// get the file and check for permission to view and delete it
+			File file = getFile(id, false, ObjectPermission.view, ObjectPermission.delete);
+
+			Node node = file.getChannel();
+
+			int nodeIdOfObject = -1;
+
+			if (node != null) {
+				nodeIdOfObject = ObjectTransformer.getInteger(node.getId(), -1);
+			}
+
+			if (nodeId == null) {
+				nodeId = 0;
+			}
+
+			if (file.isInherited()) {
+				throw new NodeException("Can't delete an inherated file, the file has to be deleted in the master node.");
+			}
+
+			if (nodeId > 0 && nodeIdOfObject > 0 && nodeIdOfObject != nodeId) {
+				throw new EntityNotFoundException("The specified file exists, but is not part of the node you specified.");
+			}
+
+			int channelSetId = ObjectTransformer.getInteger(file.getChannelSetId(), 0);
+
+			if (channelSetId > 0 && !file.isMaster()) {
+				throw new NodeException("Deletion of localized files is currently not implemented, you maybe want to unlocalize it instead.");
+			}
+
+			final int fileId = file.getId();
+			return Operator.executeLocked(new CNI18nString("file.delete.job").toString(), 0, Operator.lock(LockType.channelSet, channelSetId),
+					new Callable<GenericResponse>() {
+						@Override
+						public GenericResponse call() throws Exception {
+							File file = getFile(String.valueOf(fileId), false);
+
+							// now delete the file
+							file.delete();
+
+							I18nString message = new CNI18nString("file.delete.success");
+							return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
+						}
+					});
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+		} catch (EntityNotFoundException e) {
+			return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
+		} catch (NodeException e) {
+			logger.error("Error while deleting file " + id, e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new GenericResponse(new Message(Type.CRITICAL, message.toString()), new ResponseInfo(ResponseCode.FAILURE, e.getLocalizedMessage()));
+		}
+	}
+
+	@Override
+	@POST
+	@Path("/wastebin/delete/{id}")
+	public GenericResponse deleteFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+		return deleteFromWastebin(new IdSetRequest(id), waitMs);
+	}
+
+	@Override
+	@POST
+	@Path("/wastebin/delete")
+	public GenericResponse deleteFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+		List<String> ids = request.getIds();
+		if (ObjectTransformer.isEmpty(ids)) {
+			I18nString message = new CNI18nString("rest.general.insufficientdata");
+			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+		}
+
+		I18nString description = null;
+		if (ids.size() == 1) {
+			description = new CNI18nString("file.delete.wastebin");
+			description.setParameter("0", ids.iterator().next());
+		} else {
+			description = new CNI18nString("files.delete.wastebin");
+			description.setParameter("0", ids.size());
+		}
+
+		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			@Override
+			public GenericResponse call() throws Exception {
+				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+					List<File> files = new ArrayList<File>();
+
+					for (String id : ids) {
+						File file = getFile(id, false);
+
+						try (ChannelTrx cTrx = new ChannelTrx(file.getChannel())) {
+							file = getFile(id, false, ObjectPermission.view, ObjectPermission.wastebin);
+						}
+
+						if (!file.isDeleted()) {
+							I18nString message = new CNI18nString("file.notfound");
+							message.setParameter("0", id.toString());
+							throw new EntityNotFoundException(message.toString());
+						}
+
+						files.add(file);
+					}
+
+					String filePaths = I18NHelper.getPaths(files, 5);
+					for (File file : files) {
+						file.delete(true);
+					}
+
+					trx.success();
+					// generate the response
+					I18nString message = new CNI18nString(ids.size() == 1 ? "file.delete.wastebin.success" : "files.delete.wastebin.success");
+					message.setParameter("0", filePaths);
+					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
+				}
+			}
+		});
+	}
+
+	@Override
+	@POST
+	@Path("/wastebin/restore/{id}")
+	public GenericResponse restoreFromWastebin(@PathParam("id") String id, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+		return restoreFromWastebin(new IdSetRequest(id), waitMs);
+	}
+
+	@Override
+	@POST
+	@Path("/wastebin/restore")
+	public GenericResponse restoreFromWastebin(IdSetRequest request, @QueryParam("wait") @DefaultValue("0") long waitMs) {
+		List<String> ids = request.getIds();
+		if (ObjectTransformer.isEmpty(ids)) {
+			I18nString message = new CNI18nString("rest.general.insufficientdata");
+			return new GenericResponse(new Message(Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.INVALIDDATA, "Insufficient data provided."));
+		}
+
+		I18nString description = null;
+		if (ids.size() == 1) {
+			description = new CNI18nString("file.restore.wastebin");
+			description.setParameter("0", ids.iterator().next());
+		} else {
+			description = new CNI18nString("files.restore.wastebin");
+			description.setParameter("0", ids.size());
+		}
+
+		return Operator.execute(description.toString(), waitMs, new Callable<GenericResponse>() {
+			@Override
+			public GenericResponse call() throws Exception {
+				try (WastebinFilter filter = Wastebin.INCLUDE.set(); AutoCommit trx = new AutoCommit();) {
+					List<File> files = new ArrayList<File>();
+
+					for (String id : ids) {
+						File file = getFile(id, false);
+
+						try (ChannelTrx cTrx = new ChannelTrx(file.getChannel())) {
+							file = getFile(id, false, ObjectPermission.view, ObjectPermission.wastebin);
+						}
+
+						if (!file.isDeleted()) {
+							I18nString message = new CNI18nString("file.notfound");
+							message.setParameter("0", id.toString());
+							throw new EntityNotFoundException(message.toString());
+						}
+
+						checkImplicitRestorePermissions(file);
+						files.add(file);
+					}
+
+					String filePaths = I18NHelper.getPaths(files, 5);
+					for (File file : files) {
+						file.restore();
+					}
+
+					trx.success();
+					// generate the response
+					I18nString message = new CNI18nString(ids.size() == 1 ? "file.restore.wastebin.success" : "files.restore.wastebin.success");
+					message.setParameter("0", filePaths);
+					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
+				}
+			}
+		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getPrivileges(java.lang.Integer)
+	 */
+	@GET
+	@Path("/privileges/{id}")
+	public PrivilegesResponse getPrivileges(@PathParam("id") Integer id) {
+		throw new WebApplicationException(Status.SERVICE_UNAVAILABLE);
+	}
+
+	@GET
+	@Path("/usage/total")
+	@Override
+	public TotalUsageResponse getTotalUsageInfo(@QueryParam("id") List<Integer> fileId, @QueryParam("nodeId") Integer nodeId) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new TotalUsageResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched folders using 0 files"));
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return getTotalUsageInfo(fileId, File.TYPE_FILE, nodeId);
+		} catch (Exception e) {
+			logger.error("Error while getting total usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + fileId.size() + " files" + e.getLocalizedMessage()));
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getFolderUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
+	 */
+	@GET
+	@Path("/usage/folder")
+	public FolderUsageListResponse getFolderUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("folders") @DefaultValue("true") boolean returnFolders) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new FolderUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched folders using 0 files"), null, 0, 0);
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return getFolderUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFolders);
+		} catch (Exception e) {
+			logger.error("Error while getting usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new FolderUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + fileId.size() + " files" + e.getLocalizedMessage()), null, 0, 0);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getPageUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean, boolean, boolean, boolean)
+	 */
+	@GET
+	@Path("/usage/page")
+	public PageUsageListResponse getPageUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("pages") @DefaultValue("true") boolean returnPages,
+			@BeanParam PageModelParameterBean pageModel) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new PageUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched pages using 0 files"), null, 0, 0);
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return MiscUtils.getPageUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, PageUsage.GENERAL, nodeId, returnPages, pageModel);
+		} catch (Exception e) {
+			logger.error("Error while getting usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new PageUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + fileId.size() + " files" + e.getLocalizedMessage()), null, 0, 0);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getTemplateUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
+	 */
+	@GET
+	@Path("/usage/template")
+	public TemplateUsageListResponse getTemplateUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("templates") @DefaultValue("true") boolean returnTemplates) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new TemplateUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 files"), null, 0, 0);
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return MiscUtils.getTemplateUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnTemplates);
+		} catch (Exception e) {
+			logger.error("Error while getting usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new TemplateUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + fileId.size() + " files" + e.getLocalizedMessage()), null, 0, 0);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getImageUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
+	 */
+	@GET
+	@Path("/usage/image")
+	public FileUsageListResponse getImageUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnImages) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new FileUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 files"), null, 0, 0);
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnImages, true);
+		} catch (Exception e) {
+			logger.error("Error while getting usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new FileUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + fileId.size() + " files" + e.getLocalizedMessage()), null, 0, 0);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.api.FileResource#getFileUsageInfo(java.lang.Integer, java.lang.Integer, java.lang.String, java.lang.String, java.util.List, java.lang.Integer, boolean)
+	 */
+	@GET
+	@Path("/usage/file")
+	public FileUsageListResponse getFileUsageInfo(@QueryParam("skipCount") @DefaultValue("0") Integer skipCount,
+			@QueryParam("maxItems") @DefaultValue("-1") Integer maxItems, @QueryParam("sortby") @DefaultValue("name") String sortBy,
+			@QueryParam("sortorder") @DefaultValue("asc") String sortOrder, @QueryParam("id") List<Integer> fileId,
+			@QueryParam("nodeId") Integer nodeId, @QueryParam("files") @DefaultValue("true") boolean returnFiles) {
+		if (ObjectTransformer.isEmpty(fileId)) {
+			return new FileUsageListResponse(null, new ResponseInfo(ResponseCode.OK, "Successfully fetched templates using 0 files"), null, 0, 0);
+		}
+
+		try {
+			fileId = getMasterFileIds(fileId);
+			return getFileUsage(skipCount, maxItems, sortBy, sortOrder, File.TYPE_FILE, fileId, nodeId, returnFiles, false);
+		} catch (Exception e) {
+			logger.error("Error while getting usage info for " + fileId.size() + " files", e);
+			I18nString message = new CNI18nString("rest.general.error");
+
+			return new FileUsageListResponse(new Message(Message.Type.CRITICAL, message.toString()),
+					new ResponseInfo(ResponseCode.FAILURE, "Error while getting usage info for " + fileId.size() + " files" + e.getLocalizedMessage()), null, 0, 0);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.gentics.contentnode.rest.resource.FileResource#getSyncableObjects(java.util.List, java.lang.Integer, java.lang.Integer)
+	 */
+
+	/**
+	 * For every file in the list, get the id of the master file (or the file itself, if it is a master page or multichannelling is not
+	 * activated)
+	 *
+	 * @param fileId
+	 *            list of file ids
+	 * @return list of master file ids
+	 * @throws NodeException
+	 */
+	protected List<Integer> getMasterFileIds(List<Integer> fileId) throws NodeException {
+		Transaction t = getTransaction();
+
+		if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
+			return fileId;
+		}
+		List<File> files = t.getObjects(File.class, fileId);
+		List<Integer> newFileId = new Vector<Integer>(fileId.size());
+
+		for (File file : files) {
+			Integer id = ObjectTransformer.getInteger(file.getMaster().getId(), null);
+
+			if (id != null && !newFileId.contains(id)) {
+				newFileId.add(id);
+			}
+		}
+		return newFileId;
+	}
+
+	/**
+	 * Get the file with given id, check whether the file exists (if not, throw a EntityNotFoundException). Also check the permission to
+	 * view the file and throw a InsufficientPrivilegesException, in case of insufficient permission.
+	 *
+	 * @param id
+	 *            id of the file
+	 * @param forUpdate
+	 *            true if the file shall be fetched for update, false if not
+	 * @param perms
+	 *            additional permissions to check
+	 * @return file
+	 * @throws NodeException
+	 *             when loading the file fails due to underlying error
+	 * @throws EntityNotFoundException
+	 *             when the file was not found
+	 * @throws InsufficientPrivilegesException
+	 *             when the user has no permission on the file
+	 */
+	@Deprecated
+	protected File getFile(Integer id, boolean forUpdate, PermHandler.ObjectPermission... perms) throws EntityNotFoundException,
+				InsufficientPrivilegesException, NodeException {
+		return getFile(Integer.toString(id), forUpdate, perms);
+	}
+
+	/**
+	 * Get the file with given id, check whether the file exists (if not, throw a EntityNotFoundException).
+	 *
+	 * Also checks for given permissions for the current user.
+	 *
+	 * @param id
+	 *            id of the file
+	 * @param forUpdate
+	 *            true if the file shall be fetched for update, false if not
+	 * @param perms
+	 *            additional permissions to check
+	 * @return file
+	 * @throws NodeException
+	 *             when loading the file fails due to underlying error
+	 * @throws EntityNotFoundException
+	 *             when the file was not found
+	 * @throws InsufficientPrivilegesException
+	 *             when the user has no permission on the file
+	 */
+	protected File getFile(String id, boolean forUpdate, PermHandler.ObjectPermission... perms) throws EntityNotFoundException,
+				InsufficientPrivilegesException, NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		File file = t.getObject(File.class, id, forUpdate);
+
+		if (file == null) {
+			I18nString message = new CNI18nString("file.notfound");
+
+			message.setParameter("0", id.toString());
+			throw new EntityNotFoundException(message.toString());
+		}
+
+		// if the file is an image the correct class has to be applied. this is important as
+		// saving will decide the ttype depending on the class by using the .getTType() method
+		// of the current transaction, which will result in 10008 for images without this fix.
+		if (file.isImage()) {
+			file = t.getObject(ImageFile.class, id, forUpdate);
+		}
+
+		// check additional permissions
+		for (PermHandler.ObjectPermission p : perms) {
+			if (!p.checkObject(file)) {
+				I18nString message = new CNI18nString("file.nopermission");
+
+				message.setParameter("0", id.toString());
+				throw new InsufficientPrivilegesException(message.toString(), file, p.getPermType());
+			}
+
+			// delete permissions for master files must be checked for all channels containing localized copies
+			if (file.isMaster() && p == ObjectPermission.delete) {
+				for (int channelSetNodeId : file.getChannelSet().keySet()) {
+					if (channelSetNodeId == 0) {
+						continue;
+					}
+					Node channel = t.getObject(Node.class, channelSetNodeId);
+					if (!ObjectPermission.delete.checkObject(file, channel)) {
+						I18nString message = new CNI18nString("file.nopermission");
+						message.setParameter("0", id.toString());
+						throw new InsufficientPrivilegesException(message.toString(), file, PermType.delete);
+					}
+				}
+			}
+		}
+
+		return file;
+	}
+
+	/**
+	 * Finds a file in the given folder by its name
+	 * @param folderId The ID of the folder
+	 * @param filename The file name to look for
+	 * @return An instance of File or null
+	 * @throws NodeException
+	 */
+	File findFileByName(Integer folderId, String filename) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		Folder folder = t.getObject(Folder.class, folderId);
+		if (folder != null) {
+			List<File> files = folder.getFilesAndImages();
+			for (File file : files) {
+				if (file.getName().equals(filename)) {
+					return file;
+				}
+			}
+		}
+
+		return null;
+	}
+}

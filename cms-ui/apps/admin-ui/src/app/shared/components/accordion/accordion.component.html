@@ -1,0 +1,25 @@
+<div class="trigger-wrapper" [class.toggleable]="triggerToggle" [class.open]="open" (click)="toggleOpen($event, true)">
+    <span *ngIf="trigger == null; else triggerTemplate" class="trigger-text">{{ text }}</span>
+
+    <ng-template #triggerTemplate>
+        <ng-template
+            [ngTemplateOutlet]="trigger"
+            [ngTemplateOutletContext]="{open:open}"
+        ></ng-template>
+    </ng-template>
+
+    <button class="accordion-trigger" [class.open]="open" (click)="toggleOpen($event)">
+        <icon>arrow_drop_down</icon>
+    </button>
+</div>
+
+<div
+    class="accordion-content"
+    [class.open]="open"
+    [@slide]="open ? 'open' : 'closed'"
+    (@slide.done)="slideAnimationDone()"
+>
+    <ng-container *ngIf="showContent">
+        <ng-content></ng-content>
+    </ng-container>
+</div>

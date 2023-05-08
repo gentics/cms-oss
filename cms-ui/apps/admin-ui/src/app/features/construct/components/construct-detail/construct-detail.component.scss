@@ -1,0 +1,16 @@
+gtx-textarea.gtx-logs-container {
+    overflow: scroll;
+
+    > ::ng-deep textarea {
+        margin: 0;
+        padding-bottom: 8rem;
+        color: #333;
+    }
+}
+
+.parts-wrapper {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}

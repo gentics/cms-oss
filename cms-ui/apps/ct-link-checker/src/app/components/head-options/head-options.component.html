@@ -1,0 +1,16 @@
+<div class="main">
+    <gtxct-status-indicator
+        [iconName]="(globalStats$ | async)?.invalid > 0 ? 'warning' : 'check_box'"
+        [alert]="(globalStats$ | async)?.invalid > 0"
+        [success]="(globalStats$ | async)?.invalid == 0">
+        <div [class.loading]="statsLoading$ | async" [innerHTML]="'common.status_broken_total' | translate:{ number: (globalStats$ | async)?.invalid }"></div>
+    </gtxct-status-indicator>
+    <span class="lastChecked" [class.loading]="statsLoading$ | async" [innerHTML]="'common.header_last_checked' | translate:{ date: ((globalStats$ | async)?.lastRun | i18nDate: 'dateTime') }"></span>
+
+<!-- We will probably need this button again, but currently it does not make much sense (https://jira.gentics.com/browse/GTXPE-723)
+    <gtx-button class="performCheck" flat size="small" type="primary" (click)="updateStatus()">
+        <icon left>cached</icon>
+        <span>{{ 'common.header_refresh' | translate }}</span>
+    </gtx-button>
+-->
+</div>

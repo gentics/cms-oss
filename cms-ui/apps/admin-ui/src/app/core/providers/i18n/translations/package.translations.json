@@ -1,0 +1,198 @@
+{
+    "package_name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "package_description": {
+        "en": "Description",
+        "de": "Beschreibung"
+    },
+    "package_subpackage_singular": {
+        "en": "Sub Package",
+        "de": "Sub-Paket"
+    },
+    "package_subpackage_plural": {
+        "en": "Sub Packages",
+        "de": "Sub-Pakete"
+    },
+    "package_delete_singular": {
+        "en": "Delete package",
+        "de": "Paket löschen"
+    },
+    "package_delete_plural": {
+        "en": "Delete packages",
+        "de": "Pakete löschen"
+    },
+    "package_sync_cms_to_filesystem": {
+        "en": "Sync from CMS to filesystem",
+        "de": "Snychronisiere von CMS zu Dateisystem"
+    },
+    "package_syncing_cms_to_filesystem": {
+        "en": "Syncing from CMS to filesystem",
+        "de": "Synchronisierung vom CMS zu Dateisystem"
+    },
+    "package_syncing_filesystem_to_cms": {
+        "en": "Syncing from filesystem to CMS",
+        "de": "Synchronisierung vom Dateisystem zu CMS"
+    },
+    "package_synced_cms_to_filesystem": {
+        "en": "Package {{name}} was synchronized into the filesystem: ",
+        "de": "Paket {{name}} wurde in das Dateisystem synchronisiert: "
+    },
+    "package_synced_filesystem_to_cms": {
+        "en": "Package {{name}} was synchronized from the filesystem: ",
+        "de": "Paket {{name}} wurde aus dem Dateisystem synchronisiert: "
+    },
+    "package_sync_filesystem_to_cms": {
+        "en": "Sync from filesystem to CMS",
+        "de": "Snychronisiere von Dateisystem zu CMS"
+    },
+    "package_create": {
+        "en": "Create new package",
+        "de": "Neues Paket erstellen"
+    },
+    "package_successfully_synced_to_filesystem": {
+        "en": "Package {{name}} successfully synced to filesystem",
+        "de": "Paket {{name}} erfolgreich nach Dateisystem synchronisiert"
+    },
+    "package_successfully_synced_from_filesystem": {
+        "en": "Package {{name}} successfully synced from filesystem",
+        "de": "Paket {{name}} erfolgreich von Dateisystem synchronisiert"
+    },
+    "package_successfully_added_to_node": {
+        "en": "Package {{name}} successfully added to node",
+        "de": "Paket {{name}} erfolgreich zu Node hinzugefügt"
+    },
+    "package_successfully_removed_from_node": {
+        "en": "Package {{name}} successfully removed from node",
+        "de": "Paket {{name}} erfolgreich von Node entfernt"
+    },
+    "info_selected_packages": {
+        "en": "{{amountSelected}} of {{amountTotal}} Packages selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Paketen ausgewählt"
+    },
+    "package_tab_nodes_label": {
+        "en": "Nodes",
+        "de": "Nodes"
+    },
+    "package_nodes_header_label": {
+        "en": "Nodes assigned to Package {{name}}",
+        "de": "Package {{name}} zugeordnete Nodes"
+    },
+    "constructs_of_package": {
+        "en": "Constructs of \"{{ packageName }}\"",
+        "de": "Constructs von „{{ packageName }}“"
+    },
+    "contentrepositories_of_package": {
+        "en": "Contentrepositories of \"{{ packageName }}\"",
+        "de": "Contentrepositories von „{{ packageName }}“"
+    },
+    "contentRepositoryFragments_of_package": {
+        "en": "ContentRepositoryfragments of \"{{ packageName }}\"",
+        "de": "ContentRepositoryfragments von „{{ packageName }}“"
+    },
+    "dataSources_of_package": {
+        "en": "DataSources of \"{{ packageName }}\"",
+        "de": "Datenquellen von „{{ packageName }}“"
+    },
+    "objectproperties_of_package": {
+        "en": "Objectproperties of \"{{ packageName }}\"",
+        "de": "Objekteigenschaften von „{{ packageName }}“"
+    },
+    "templates_of_package": {
+        "en": "Templates of \"{{ packageName }}\"",
+        "de": "Vorlagen von „{{ packageName }}“"
+    },
+    "remove_from_package": {
+        "en": "Remove from package",
+        "de": "Aus Paket entfernen"
+    },
+    "assign_nodes_to_packages_button_label": {
+        "en": "Assign nodes to packages",
+        "de": "Nodes Paketen zuweisen"
+    },
+    "property_basepath": {
+        "en": "Basepath",
+        "de": "Basepath"
+    },
+    "property_checkDate": {
+        "en": "Checkdate",
+        "de": "Prüfdatum"
+    },
+    "property_checkResult": {
+        "en": "Checkresult",
+        "de": "Prüfergebnis"
+    },
+    "property_checkStatus": {
+        "en": "Checkstatus",
+        "de": "Prüfstatus"
+    },
+    "property_crType": {
+        "en": "ContentRepository Type",
+        "de": "ContentRepository Typ"
+    },
+    "property_dataCheckResult": {
+        "en": "Datacheckresult",
+        "de": "Datenprüfergebnis"
+    },
+    "property_dataStatus": {
+        "en": "Datastatus",
+        "de": "Datenstatus"
+    },
+    "property_dbType": {
+        "en": "Database Type",
+        "de": "Datenbanktyp"
+    },
+    "property_defaultPermission": {
+        "en": "Default Permission",
+        "de": "Standardberechtigung"
+    },
+    "property_diffDelete": {
+        "en": "Diffdelete",
+        "de": "DiffDelete"
+    },
+    "property_elasticsearch": {
+        "en": "Elasticsearch",
+        "de": "Elasticsearch"
+    },
+    "property_globalId": {
+        "en": "Global Id",
+        "de": "Globale Id"
+    },
+    "property_name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "property_instantPublishing": {
+        "en": "Instantpublishing",
+        "de": "InstantPublishing"
+    },
+    "property_languageInformation": {
+        "en": "Language Information",
+        "de": "Sprachinformation"
+    },
+    "property_permissionInformation": {
+        "en": "Permission Information",
+        "de": "Berechtigungsinformation"
+    },
+    "property_permissionProperty": {
+        "en": "Permission Property",
+        "de": "Berechtigungseigenschaft"
+    },
+    "property_projectPerNode": {
+        "en": "Project per Node",
+        "de": "Projekt pro Node"
+    },
+    "property_statusDate": {
+        "en": "Statusdate",
+        "de": "Statusdatum"
+    },
+    "property_url": {
+        "en": "URL",
+        "de": "URL"
+    },
+    "property_version": {
+        "en": "Version",
+        "de": "Version"
+    }
+}

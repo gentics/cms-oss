@@ -1,0 +1,51 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <div class="input-container small-12 columns">
+
+        <div
+            class="properties-editor-i18n"
+        >
+            <gtx-grouped-tabs
+                *ngIf="languages$ | async as languagesAsync"
+                class="properties-tabs"
+                pure
+                wrap
+                statusIcons
+                [activeId]="activeTabI18nLanguage?.id"
+            >
+                <gtx-tab-pane
+                    *ngFor="let language of languagesAsync"
+                    [id]="language?.id"
+                    (select)="setActiveI18nTab($event)"
+                    [readonly]="disabled"
+                >
+                    <ng-template gtx-tab-label>
+                        <div
+                            class="language-pane-label"
+                            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+                        >{{ language?.name }}</div>
+                    </ng-template>
+                </gtx-tab-pane>
+            </gtx-grouped-tabs>
+
+            <div
+                *ngIf="activeTabI18nLanguage?.code as activeLanguage"
+                class="tab-content"
+            >
+                <h3>{{ activeTabI18nLanguage?.name }}</h3>
+
+                <gtx-i18n-input
+                    [label]="('common.name' | i18n) + ' *'"
+                    formControlName="nameI18n"
+                    [language]="activeLanguage"
+                    [requiredInCurrentLanguage]="true"
+                    [availableLanguages]="languages"
+                ></gtx-i18n-input>
+            </div>
+        </div>
+
+    </div>
+</form>

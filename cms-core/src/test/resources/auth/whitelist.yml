@@ -1,0 +1,13 @@
+config:
+  accesscontrol:
+    default:
+      secured: true
+      allowedfrom: | 
+        127.0.0.1
+        ,192.168.0.0/18
+        ,::/32
+        ,333.333.333.333
+        ,catsarecute
+        ,1.1.1.1
+        ,::1
+        ,FF:80::/64

@@ -1,0 +1,238 @@
+{
+    "template_singular": {
+        "en": "Template",
+        "de": "Vorlage"
+    },
+    "template_plural": {
+        "en": "Templates",
+        "de": "Vorlagen"
+    },
+    "template_successfully_added_to_package": {
+        "en": "Template {{name}} successfully added to package",
+        "de": "Vorlage {{name}} erfolgreich zu Paket hinzugefügt"
+    },
+    "template_successfully_removed_from_package": {
+        "en": "Template {{name}} successfully removed from package",
+        "de": "Vorlage {{name}} erfolgreich von Paket entfernt"
+    },
+    "assign_to_folder_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully assigned to the folder \"{{ folderName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich dem Ordner „{{ folderName }}“ hinzugefügt"
+    },
+    "assign_multiple_to_folder_success": {
+        "en": "The Templates have been successfully assigned to the folder \"{{ folderName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich dem Ordner „{{ folderName }}“ hinzugefügt"
+    },
+    "unassign_from_folder_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully un-assigned from the folder \"{{ folderName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich vom Ordner „{{ folderName }}“ entfernt"
+    },
+    "unassign_multiple_from_folder_success": {
+        "en": "The Templates have been successfully un-assigned from the folder \"{{ folderName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich vom Ordner „{{ folderName }}“ entfernt"
+    },
+    "recursive_assign_to_folder_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully inherited to the children of \"{{ folderName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich den Unterordnern von „{{ folderName }}“ hinzugefügt"
+    },
+    "recursive_assign_multiple_to_folder_success": {
+        "en": "The Templates have been successfully inherited to the children of \"{{ folderName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich den Unterordnern von „{{ folderName }}“ hinzugefügt"
+    },
+    "recursive_unassign_from_folder_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully removed from the children of \"{{ folderName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich von den Unterordnern von „{{ folderName }}“ entfernt"
+    },
+    "recursive_unassign_multiple_from_folder_success": {
+        "en": "The Templates have been successfully removed from the children of \"{{ folderName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich von den Unterordnern von „{{ folderName }}“ entfernt"
+    },
+    "assign_to_folder_error": {
+        "en": "An error occured while assigning the Template \"{{ templateName }}\" to \"{{ folderName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler bei der zuweisung der Vorlage „{{ templateName }}“ zu „{{ folderName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "unassign_from_folder_error": {
+        "en": "An error occured while un-assigning the Template \"{{ templateName }}\" from \"{{ folderName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler bei der entfernung der Vorlage „{{ templateName }}“ von „{{ folderName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "assign_to_node_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully assigned to the Node \"{{ nodeName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich dem Node „{{ nodeName }}“ hinzugefügt"
+    },
+    "assign_multiple_to_node_success": {
+        "en": "The Templates have been successfully assigned to the Node \"{{ nodeName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich dem Node „{{ nodeName }}“ hinzugefügt"
+    },
+    "unassign_from_node_success": {
+        "en": "The Template \"{{ templateName }}\" has been successfully un-assigned from the Node \"{{ nodeName }}\"",
+        "de": "Die Vorlage „{{ templateName }}“ wurde erfolgreich vom Node „{{ nodeName }}“ entfernt"
+    },
+    "unassign_multiple_from_node_success": {
+        "en": "The Templates have been successfully un-assigned from the Node \"{{ nodeName }}\"",
+        "de": "Die Vorlagen wurden erfolgreich vom Node „{{ nodeName }}“ entfernt"
+    },
+    "assign_to_node_error": {
+        "en": "An error occured while assigning the Template \"{{ templateName }}\" to \"{{ nodeName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler bei der zuweisung der Vorlage „{{ templateName }}“ zu „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "unassign_from_node_error": {
+        "en": "An error occured while un-assigning the Template \"{{ templateName }}\" from \"{{ nodeName }}\"!\n{{ errorMessage }}",
+        "de": "Es ist ein Fehler bei der entfernung der Vorlage „{{ templateName }}“ von „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
+    },
+    "info_selected_templates": {
+        "en": "{{amountSelected}} of {{amountTotal}} Templates selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Vorlagen ausgewählt"
+    },
+    "create_error": {
+        "en": "An Error occured while creating Template \"{{ name }}\"!",
+        "de": "Ein Fehler beim erstellen der Vorlage „{{ name }}“ ist aufgetreten!"
+    },
+    "created": {
+        "en": "Template \"{{ name }}\" successfully created!",
+        "de": "Vorlage „{{ name }}“ wurde erfolgreich erstellt!"
+    },
+    "globalId": {
+        "en": "Global Id",
+        "de": "Globale Id"
+    },
+    "name": {
+        "en": "Name",
+        "de": "Name"
+    },
+    "description": {
+        "en": "Description",
+        "de": "Beschreibung"
+    },
+    "creator": {
+        "en": "Creator",
+        "de": "Ersteller"
+    },
+    "cdate": {
+        "en": "Creation Date",
+        "de": "Erstelldatum"
+    },
+    "editor": {
+        "en": "Editor",
+        "de": "Editor"
+    },
+    "edate": {
+        "en": "Edit Date",
+        "de": "Bearbeitungsdatum"
+    },
+    "locked": {
+        "en": "Locked",
+        "de": "Gesperrt"
+    },
+    "inherited": {
+        "en": "Inherited",
+        "de": "Vererbt"
+    },
+    "master": {
+        "en": "Master",
+        "de": "Master"
+    },
+    "masterId": {
+        "en": "Master Id",
+        "de": "Master Id"
+    },
+    "folderId": {
+        "en": "Folder Id",
+        "de": "Ordner Id"
+    },
+    "path": {
+        "en": "Path",
+        "de": "Pfad"
+    },
+    "inheritedFrom": {
+        "en": "Inherited from",
+        "de": "Vererbt von"
+    },
+    "masterNode": {
+        "en": "Master Node",
+        "de": "Master-Node"
+    },
+    "objectTags": {
+        "en": "Object Tags",
+        "de": "Objekt-Tags"
+    },
+    "templateTags": {
+        "en": "Template Tags",
+        "de": "Vorlagen-Tags"
+    },
+    "source": {
+        "en": "Source",
+        "de": "Source"
+    },
+    "channelId": {
+        "en": "Channel Id",
+        "de": "Channel Id"
+    },
+    "channelSetId": {
+        "en": "Channel Set Id",
+        "de": "Channel-Set Id"
+    },
+    "tagList": {
+        "en": "Tag List",
+        "de": "Tag-Liste"
+    },
+    "tagStatus": {
+        "en": "Tag Status",
+        "de": "Tag Status"
+    },
+    "markupLanguage": {
+        "en": "Markup Language",
+        "de": "Markup Sprache"
+    },
+    "deleted_singular": {
+        "en": "The Template \"{{ name }}\" was successfully deleted!",
+        "de": "Die Vorlage „{{ name }}“ wurde erfolgreich gelöscht!"
+    },
+    "deleted_plural": {
+        "en": "The Template {{ names }} were successfully deleted!",
+        "de": "Die Vorlagen {{ names }} wurden erfolgreich gelöscht!"
+    },
+    "deleted_many": {
+        "en": "The {{ amount }} Template Tag were successfully deleted!",
+        "de": "Die {{ amount }} Vorlagen wurden erfolgreich gelöscht!"
+    },
+    "sync": {
+        "en": "Synchronize",
+        "de": "Abgleichen"
+    },
+    "sync_compatible": {
+        "en": "Sync with compatible Pages",
+        "de": "Mit kompatiblen Seiten abgleichen"
+    },
+    "sync_all": {
+        "en": "Sync with all Pages",
+        "de": "Mit allen Seiten abgleichen"
+    },
+    "assign_to_folders": {
+        "en": "Asssign to Folders",
+        "de": "Zu Ordnern zuweisen"
+    },
+    "assign_to_nodes": {
+        "en": "Assign to Nodes",
+        "de": "Zu Nodes zuweisen"
+    },
+    "assign_template_to_node_permission_required": {
+        "en": "You do not have permission to assign the Template \"{{ templateName }}\" to a Node",
+        "de": "Sie haben nicht die Berechtigung die Vorlage „{{ templateName }}“ an Nodes zu verknüpfen"
+    },
+    "assign_template_to_folder_permission_required": {
+        "en": "You do not have permission to assign the Template \"{{ templateName }}\" to a Folder",
+        "de": "Sie haben nicht die Berechtigung die Vorlage „{{ templateName }}“ an Ordner zu verknüpfen"
+    },
+    "delete_template_permission_required": {
+        "en": "You do not have permission to delete the Template \"{{ templateName }}\"",
+        "de": "Sie haben nicht die Berechtigung die Vorlage „{{ templateName }}“ zu löschen"
+    },
+    "select_node_overview_title": {
+        "en": "Select node",
+        "de": "Node auswählen"
+    },
+    "select_node_overview_description": {
+        "en": "Select a Node from which you want to view the Templates from",
+        "de": "Wählen Sie einen Node aus, von dem Sie die Vorlagen ansehen möchten"
+    }
+}

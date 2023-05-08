@@ -1,0 +1,445 @@
+package com.gentics.contentnode.tests.contentstaging;
+
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.Builder.create;
+import static com.gentics.contentnode.tests.utils.Builder.update;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObject.GlobalId;
+import com.gentics.contentnode.object.StageableChanneledNodeObject;
+import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
+
+/**
+ * Abstract test cases for content staging of channels
+ *
+ * @param <T>
+ */
+public abstract class AbstractMultichannellingContentStagingTest<T extends StageableChanneledNodeObject> extends AbstractContentStagingTest<T> {
+	/**
+	 * Test channel
+	 */
+	protected Node channel;
+
+	/**
+	 * Test subchannel (under channel)
+	 */
+	protected Node subChannel;
+
+	/**
+	 * Test sidechannel (sibling of channel)
+	 */
+	protected Node sideChannel;
+
+	/**
+	 * Create test instance
+	 * @param clazz object class
+	 * @param type object type
+	 */
+	protected AbstractMultichannellingContentStagingTest(Class<T> clazz, String type) {
+		super(clazz, type);
+	}
+
+	@Override
+	@Before
+	public void setup() throws NodeException, IOException {
+		super.setup();
+		channel = supply(() -> createChannel(node, "Channel", "channel", "/"));
+		subChannel = supply(() -> createChannel(channel, "SubChannel", "subchannel", "/"));
+		sideChannel = supply(() -> createChannel(node, "SideChannel", "sidechannel", "/"));
+	}
+
+	/**
+	 * Test importing a localized object to an existing master object
+	 * @throws NodeException
+	 */
+	@Test
+	public void testImportLocalizedObject() throws NodeException {
+		// create master
+		T masterObject = createMasterObject(supply(() -> node.getFolder()));
+
+		// localize master
+		T localizedObject = localizeObject(masterObject);
+		String localizedGlobalId = execute(o -> o.getGlobalId().toString(), localizedObject);
+
+		// create package and add object
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, localizedGlobalId, false));
+
+		// delete object in CMS
+		consume(f -> f.delete(true), localizedObject);
+		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
+		assertThat(localizedObject).as("Deleted object").isNull();
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
+		consume(this::assertLocalizedObject, masterObject, localizedObject, execute(Node::getFolder, node));
+	}
+
+	/**
+	 * Test importing a local channel object
+	 * @throws NodeException
+	 */
+	@Test
+	public void testImportLocalObject() throws NodeException {
+		// create object
+		T stagedObject = createLocalObject(supply(() -> node.getFolder()));
+		String objectGlobalId = execute(f -> f.getGlobalId().toString(), stagedObject);
+
+		// create package and add object
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, objectGlobalId, false));
+
+		// delete object in CMS
+		consume(f -> f.delete(true), stagedObject);
+		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
+		assertThat(stagedObject).as("Deleted object").isNull();
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		stagedObject = supply(t -> t.getObject(clazz, objectGlobalId));
+		consume(this::assertLocalObject, stagedObject, channel, execute(Node::getFolder, node));
+	}
+
+	/**
+	 * Test importing a master together with a localized object
+	 * @throws NodeException
+	 */
+	@Test
+	public void testImportMasterAndLocalizedObject() throws NodeException {
+		// create master
+		T masterObject = createMasterObject(supply(() -> node.getFolder()));
+		String masterGlobalId = execute(o -> o.getGlobalId().toString(), masterObject);
+
+		// localize master
+		T localizedObject = localizeObject(masterObject);
+		String localizedGlobalId = execute(o -> o.getGlobalId().toString(), localizedObject);
+
+		// create package and add objects
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, localizedGlobalId, false));
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, masterGlobalId, false));
+
+		// delete objects in CMS
+		consume(f -> f.delete(true), localizedObject);
+		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
+		assertThat(localizedObject).as("Deleted object").isNull();
+		consume(f -> f.delete(true), masterObject);
+		masterObject = supply(t -> t.getObject(clazz, masterGlobalId));
+		assertThat(masterObject).as("Deleted object").isNull();
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		masterObject = supply(t -> t.getObject(clazz, masterGlobalId));
+		localizedObject = supply(t -> t.getObject(clazz, localizedGlobalId));
+		consume(this::assertLocalizedObject, masterObject, localizedObject, execute(Node::getFolder, node));
+	}
+
+	/**
+	 * Test importing objects with different inheritance settings
+	 * @throws NodeException
+	 */
+	@Test
+	public void testImportInheritanceSettings() throws NodeException {
+		Folder folder = create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Folder");
+			f.setPublishDir("/");
+		}).build();
+
+		// create objects with different inheritance settings
+		T excludedObject = createExcludedObject(folder);
+		GlobalId excludedObjectGlobalId = execute(NodeObject::getGlobalId, excludedObject);
+
+		T disinheritedObject = createDisinheritedObject(folder);
+		GlobalId disinheritedObjectGlobalId = execute(NodeObject::getGlobalId, disinheritedObject);
+
+		T defaultDisinheritedObject = createDefaultDisinherited(folder);
+		GlobalId defaultDisinheritedObjectGlobalId = execute(NodeObject::getGlobalId, defaultDisinheritedObject);
+
+		// create package and add objects
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, excludedObjectGlobalId.toString(), false));
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, disinheritedObjectGlobalId.toString(), false));
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, defaultDisinheritedObjectGlobalId.toString(), false));
+
+		// delete the folder
+		consume(f -> f.delete(true), folder);
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		excludedObject = supply(t -> t.getObject(clazz, excludedObjectGlobalId));
+		disinheritedObject = supply(t -> t.getObject(clazz, disinheritedObjectGlobalId));
+		defaultDisinheritedObject = supply(t -> t.getObject(clazz, defaultDisinheritedObjectGlobalId));
+		consume(this::assertExcluded, excludedObject);
+		consume(this::assertDisinherited, disinheritedObject);
+		consume(this::assertDefaultDisinherited, defaultDisinheritedObject);
+	}
+
+	/**
+	 * Test importing a complete node with channel
+	 * @throws NodeException
+	 */
+	@Test
+	public void testImportNodeAndChannel() throws NodeException {
+		// create a folder structure
+		Folder level1 = create(Folder.class, f -> {
+			f.setMotherId(node.getFolder().getId());
+			f.setName("Level 1");
+			f.setPublishDir("/level1");
+		}).build();
+		String level1GlobalId = execute(f -> f.getGlobalId().toString(), level1);
+		Integer level1Id = execute(Folder::getId, level1);
+
+		Folder level2 = create(Folder.class, f -> {
+			f.setMotherId(level1Id);
+			f.setName("Overwritten Level 2");
+			f.setPublishDir("/level2");
+		}).build();
+		String level2GlobalId = execute(f -> f.getGlobalId().toString(), level2);
+
+		Folder localizedLevel2 = execute(f -> update(localize(f, channel), upd -> upd.setName("Localized Level 2")).build(), level2);
+		String localizedLevel2GlobalId = execute(f -> f.getGlobalId().toString(), localizedLevel2);
+
+		Folder inheritedLevel2 = create(Folder.class, f -> {
+			f.setMotherId(level1Id);
+			f.setName("Inherited Level 2");
+			f.setPublishDir("/level2");
+		}).build();
+		String inheritedLevel2GlobalId = execute(f -> f.getGlobalId().toString(), inheritedLevel2);
+
+		Folder localLevel2 = create(Folder.class, f -> {
+			f.setMotherId(level1Id);
+			f.setName("Local level 2");
+			f.setPublishDir("/local/level2");
+			f.setChannelInfo(channel.getId(), null);
+		}).build();
+		String localLevel2GlobalId = execute(f -> f.getGlobalId().toString(), localLevel2);
+
+		// create some objects in overwritten folder
+		T masterObject1 = createMasterObject(level2);
+		String master1GlobalId = execute(o -> o.getGlobalId().toString(), masterObject1);
+		T localized1 = localizeObject(masterObject1);
+		String localized1GlobalId = execute(o -> o.getGlobalId().toString(), localized1);
+		T localObject1 = createLocalObject(level2);
+		String local1GlobalId = execute(o -> o.getGlobalId().toString(), localObject1);
+
+		// create some objects in inherited folder
+		T masterObject2 = createMasterObject(inheritedLevel2);
+		String master2GlobalId = execute(o -> o.getGlobalId().toString(), masterObject2);
+		T localized2 = localizeObject(masterObject2);
+		String localized2GlobalId = execute(o -> o.getGlobalId().toString(), localized2);
+		T localObject2 = createLocalObject(inheritedLevel2);
+		String local2GlobalId = execute(o -> o.getGlobalId().toString(), localObject2);
+
+		// create local object in local folder
+		T localObject3 = createLocalObject(localLevel2);
+		String local3GlobalId = execute(o -> o.getGlobalId().toString(), localObject3);
+
+		String nodeGlobalId = execute(n -> n.getGlobalId().toString(), node);
+		String channelGlobalId = execute(c -> c.getGlobalId().toString(), channel);
+
+		// create package and add node and channel recursively
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, "node", nodeGlobalId, true));
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, "node", channelGlobalId, true));
+
+		// delete the channels and node
+		consume(f -> f.delete(true), sideChannel);
+		consume(f -> f.delete(true), subChannel);
+		consume(f -> f.delete(true), channel);
+		consume(f -> f.delete(true), node);
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		node = supply(t -> t.getObject(Node.class, nodeGlobalId));
+		channel = supply(t -> t.getObject(Node.class, channelGlobalId));
+
+		level1 = supply(t -> t.getObject(Folder.class, level1GlobalId));
+		level2 = supply(t -> t.getObject(Folder.class, level2GlobalId));
+		localizedLevel2 = supply(t -> t.getObject(Folder.class, localizedLevel2GlobalId));
+		inheritedLevel2 = supply(t -> t.getObject(Folder.class, inheritedLevel2GlobalId));
+		localLevel2 = supply(t -> t.getObject(Folder.class, localLevel2GlobalId));
+
+		masterObject1 = supply(t -> t.getObject(clazz, master1GlobalId));
+		localized1 = supply(t -> t.getObject(clazz, localized1GlobalId));
+		localObject1 = supply(t -> t.getObject(clazz, local1GlobalId));
+
+		masterObject2 = supply(t -> t.getObject(clazz, master2GlobalId));
+		localized2 = supply(t -> t.getObject(clazz, localized2GlobalId));
+		localObject2 = supply(t -> t.getObject(clazz, local2GlobalId));
+
+		localObject3 = supply(t -> t.getObject(clazz, local3GlobalId));
+
+		consume(f -> assertThat(f).as("Folder level 1").isNotNull().isMaster(), level1);
+		consume((m, l) -> assertThat(m).as("Folder level2").isNotNull().isMaster().isLocalizedAs(channel, l), level2, localizedLevel2);
+		consume(f -> assertThat(f).as("Inherited folder").isNotNull().isMaster().isInheritedIn(channel), inheritedLevel2);
+
+		consume(this::assertLocalizedObject, masterObject1, localized1, level2);
+		consume(this::assertLocalObject, localObject1, channel, level2);
+
+		consume(this::assertLocalizedObject, masterObject2, localized2, inheritedLevel2);
+		consume(this::assertLocalObject, localObject2, channel, inheritedLevel2);
+
+		consume(this::assertLocalObject, localObject3, channel, localLevel2);
+	}
+
+	/**
+	 * Test importing an object, which has been moved between channels
+	 * @throws NodeException
+	 */
+	@Test
+	public void testMovedBetweenChannels() throws NodeException {
+		Folder folder = create(Folder.class, f -> {
+			f.setMotherId(nodeRootFolder.getId());
+			f.setName("Folder");
+			f.setPublishDir("/");
+		}).build();
+
+		T stagedObject = createLocalObject(folder);
+		GlobalId stagedObjectGlobalId = execute(NodeObject::getGlobalId, stagedObject);
+
+		// create package and add object
+		String packageName = "TestPackage";
+		createContentPackage(packageName);
+		assertResponseOK(new ContentStagingResourceImpl().add(packageName, type, stagedObjectGlobalId.toString(), false));
+
+		// move object into side channel
+		stagedObject = update(stagedObject, o -> {
+			o.setFolder(sideChannel, folder);
+		}).build();
+		consume(this::assertLocalObject, stagedObject, sideChannel, folder);
+
+		// import the package
+		importContentPackage(packageName);
+
+		// reload and assert
+		stagedObject = execute(NodeObject::reload, stagedObject);
+		consume(this::assertLocalObject, stagedObject, channel, folder);
+	}
+
+	/**
+	 * Create a master object for staging
+	 * @param folder mother folder
+	 * @return object
+	 * @throws NodeException
+	 */
+	protected abstract T createMasterObject(Folder folder) throws NodeException;
+
+	/**
+	 * Localize the given master in the channel
+	 * @param master master
+	 * @return localized copy
+	 * @throws NodeException
+	 */
+	protected abstract T localizeObject(T master) throws NodeException;
+
+	/**
+	 * Create a local object for staging in the channel
+	 * @param folder mother folder
+	 * @return object
+	 * @throws NodeException
+	 */
+	protected abstract T createLocalObject(Folder folder) throws NodeException;
+
+	/**
+	 * Create an excluded object in the folder
+	 * @param folder folder
+	 * @return object
+	 * @throws NodeException
+	 */
+	protected abstract T createExcludedObject(Folder folder) throws NodeException;
+
+	/**
+	 * Create an object in the folder, which is disinherited in the channel
+	 * @param folder folder
+	 * @return object
+	 * @throws NodeException
+	 */
+	protected abstract T createDisinheritedObject(Folder folder) throws NodeException;
+
+	/**
+	 * Create an object in the folder, which is disinherited by default
+	 * @param folder folder
+	 * @return object
+	 * @throws NodeException
+	 */
+	protected abstract T createDefaultDisinherited(Folder folder) throws NodeException;
+
+	/**
+	 * Assert that the object in the CMS exists and is a master in the given folder
+	 * @param object object to check
+	 * @param folder asserted folder
+	 * @throws NodeException
+	 */
+	protected abstract void assertMasterObject(T object, Folder folder) throws NodeException;
+
+	/**
+	 * Assert that the given objects are master and localized copy in the given folder
+	 * @param masterObject master
+	 * @param localizedObject localized copy
+	 * @param folder asserted folder
+	 * @throws NodeException
+	 */
+	protected abstract void assertLocalizedObject(T masterObject, T localizedObject, Folder folder) throws NodeException;
+
+	/**
+	 * Assert that the object in the CMS exists and is local to the channel in the given folder
+	 * @param object object to check
+	 * @param channel expected channel
+	 * @param folder asserted folder
+	 * @throws NodeException
+	 */
+	protected abstract void assertLocalObject(T object, Node channel, Folder folder) throws NodeException;
+
+	/**
+	 * Assert that the object is excluded
+	 * @param object object
+	 * @throws NodeException
+	 */
+	protected abstract void assertExcluded(T object) throws NodeException;
+
+	/**
+	 * Assert that the object is disinherited in the channel
+	 * @param object object
+	 * @throws NodeException
+	 */
+	protected abstract void assertDisinherited(T object) throws NodeException;
+
+	/**
+	 * Assert that the object is disinherited by default
+	 * @param object object
+	 * @throws NodeException
+	 */
+	protected abstract void assertDefaultDisinherited(T object) throws NodeException;
+}

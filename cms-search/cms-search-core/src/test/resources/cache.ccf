@@ -1,0 +1,29 @@
+# DEFAULT CACHE REGION
+## maximum of 1000 objects per cache
+## objects will be removed if longer than 15 minutes idle
+## maximum object lifetime is 30 minutes
+## memory shrinker will actively remove old items every 5 minutes
+jcs.default=
+jcs.default.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.default.cacheattributes.MaxObjects=1000
+jcs.default.cacheattributes.UseMemoryShrinker=true
+jcs.default.cacheattributes.MaxMemoryIdleTimeSeconds=900
+jcs.default.cacheattributes.ShrinkerIntervalSeconds=300
+jcs.default.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.default.elementattributes.IsEternal=false
+jcs.default.elementattributes.MaxLifeSeconds=1800
+
+jcs.region.gentics-portal-contentrepository-objects=
+jcs.region.gentics-portal-contentrepository-objects.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.region.gentics-portal-contentrepository-objects.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.region.gentics-portal-contentrepository-objects.cacheattributes.MaxObjects=1000
+
+jcs.region.gentics-portal-contentrepository-atts=
+jcs.region.gentics-portal-contentrepository-atts.elementattributes=org.apache.jcs.engine.ElementAttributes
+jcs.region.gentics-portal-contentrepository-atts.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.region.gentics-portal-contentrepository-atts.cacheattributes.MaxObjects=2000
+
+jcs.region.gentics-portal-contentrepository-results=
+jcs.region.gentics-portal-contentrepository-results.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.region.gentics-portal-contentrepository-results.cacheattributes.MaxObjects=1000
+jcs.region.gentics-portal-contentrepository-results.elementattributes=org.apache.jcs.engine.ElementAttributes

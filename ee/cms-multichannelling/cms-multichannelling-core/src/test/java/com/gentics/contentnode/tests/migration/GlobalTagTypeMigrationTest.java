@@ -1,0 +1,491 @@
+package com.gentics.contentnode.tests.migration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.MultichannellingFactory;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.job.AbstractUserActionJob;
+import com.gentics.contentnode.migration.jobs.TagTypeMigrationJob;
+import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentTag;
+import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.parttype.HTMLPartType;
+import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
+import com.gentics.contentnode.rest.model.migration.MigrationPostProcessor;
+import com.gentics.contentnode.rest.model.migration.TagTypeMigrationMapping;
+import com.gentics.contentnode.rest.model.request.migration.TagTypeMigrationRequest;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.testutils.DBTestContext;
+
+/**
+ * Test cases for the global tagtype migration
+ */
+@RunWith(value = Parameterized.class)
+public class GlobalTagTypeMigrationTest {
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
+	/**
+	 * Get the test parameters
+	 * 
+	 * @return collection of test parameter sets
+	 */
+	@Parameters(name = "{index}: pages {0}, templates {1}, object properties {2}, nodes {3}, postprocessor {4}")
+	public static Collection<Object[]> data() {
+		Collection<Object[]> data = new ArrayList<>();
+		for (boolean pages : Arrays.asList(true, false)) {
+			for (boolean templates : Arrays.asList(true, false)) {
+				for (boolean objTagDefs : Arrays.asList(true, false)) {
+					if (!pages && !templates && !objTagDefs) {
+						continue;
+					}
+					for (List<?> restriction : Arrays.asList(Collections.emptyList(), Arrays.asList(NodeRestriction.master), Arrays.asList(NodeRestriction.channel), Arrays.asList(NodeRestriction.master, NodeRestriction.channel))) {
+						for (boolean postProcessor : Arrays.asList(true, false)) {
+							data.add(new Object[] {pages, templates, objTagDefs, restriction, postProcessor});
+						}
+					}
+				}
+			}
+		}
+		return data;
+	}
+
+	/**
+	 * Test variation setting for migrating pages
+	 */
+	protected boolean pages;
+
+	/**
+	 * Test variation setting for migrating templates
+	 */
+	protected boolean templates;
+
+	/**
+	 * Test variation setting for migrating object property definitions
+	 */
+	protected boolean objTagDefs;
+
+	/**
+	 * Test variation setting for node restrictions
+	 */
+	protected List<NodeRestriction> restriction;
+
+	/**
+	 * Test variation setting for application of a post processor
+	 */
+	protected boolean postProcessor;
+
+	/**
+	 * Test data objects
+	 */
+	private Node master;
+	private Node channel;
+	private Node other;
+	private Construct sourceConstruct;
+	private Construct targetConstruct;
+	private ObjectTagDefinition oeAllNodes;
+	private ObjectTagDefinition oeMaster;
+	private ObjectTagDefinition oeOther;
+	private ObjectTagDefinition oeMasterOther;
+	private Template masterTemplate;
+	private Template otherTemplate;
+	private Template bothTemplate;
+	private Page masterPage;
+	private Template channelTemplate;
+	private Page channelPage;
+	private Page otherPage;
+
+	/**
+	 * Map for objects, that are expected to be migrated
+	 */
+	private Map<NodeObject, Boolean> expectMigration;
+
+	/**
+	 * Create a test instance
+	 * @param pages true to migrate pages
+	 * @param templates true to migrate templates
+	 * @param objTagDefs true to migrate obj tag definitions
+	 * @param restriction node restrictions
+	 * @param postProcessor true to add a post processor
+	 */
+	public GlobalTagTypeMigrationTest(boolean pages, boolean templates, boolean objTagDefs, List<NodeRestriction> restriction, boolean postProcessor) {
+		this.pages = pages;
+		this.templates = templates;
+		this.objTagDefs = objTagDefs;
+		this.restriction = restriction;
+		this.postProcessor = postProcessor;
+	}
+
+	/**
+	 * Create test data
+	 * @throws Exception
+	 */
+	@Before
+	public void setUpTestData() throws Exception {
+		LoggingPostProcessor.reset();
+		Transaction t = TransactionManager.getCurrentTransaction();
+		t.getNodeConfig().getDefaultPreferences().setFeature(Feature.MULTICHANNELLING.toString().toLowerCase(), true);
+
+		testContext.getContext().login("node", "node");
+		t = TransactionManager.getCurrentTransaction();
+
+		// create nodes
+		master = ContentNodeTestDataUtils.createNode("master", "Master Node", PublishTarget.NONE);
+		channel = ContentNodeTestDataUtils.createChannel(master, "Channel", "channel", "/", PublishTarget.NONE);
+		other = ContentNodeTestDataUtils.createNode("other", "Other Node", PublishTarget.NONE);
+
+		// create constructs
+		sourceConstruct = t.getObject(Construct.class, ContentNodeTestDataUtils.createConstruct(master, HTMLPartType.class, "migratefrom", "part"));
+		targetConstruct = t.getObject(Construct.class, ContentNodeTestDataUtils.createConstruct(master, HTMLPartType.class, "migrateto", "part"));
+
+		// create obj tag defs
+		oeAllNodes = ContentNodeTestDataUtils.createObjectTagDefinition("tomigrate_all", Folder.TYPE_FOLDER, sourceConstruct.getId());
+		oeMaster = ContentNodeTestDataUtils.createObjectTagDefinition("tomigrate_master", Folder.TYPE_FOLDER, sourceConstruct.getId(), master);
+		oeOther = ContentNodeTestDataUtils.createObjectTagDefinition("tomigrate_other", Folder.TYPE_FOLDER, sourceConstruct.getId(), other);
+		oeMasterOther = ContentNodeTestDataUtils.createObjectTagDefinition("tomigrate_master_other", Folder.TYPE_FOLDER, sourceConstruct.getId(), master, other);
+
+		// edit the root folders to create the ObjectTags
+		for (Folder f : Arrays.asList(master.getFolder(), channel.getFolder(), other.getFolder())) {
+			f = t.getObject(Folder.class, f.getId(), true);
+			f.save();
+			t.commit(false);
+		}
+
+		// create templates
+		masterTemplate = ContentNodeTestDataUtils.createTemplate(master.getFolder(), "Master Template", "Master Template",
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate1", false, false),
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate2", true, false));
+		otherTemplate = ContentNodeTestDataUtils.createTemplate(other.getFolder(), "Other Template", "Other Template",
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate1", false, false),
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate2", true, false));
+		bothTemplate = ContentNodeTestDataUtils.createTemplate(master.getFolder(), "Both Template", "Both Template",
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate1", false, false),
+				ContentNodeTestDataUtils.createTemplateTag(sourceConstruct.getId(), "migrate2", true, false));
+		bothTemplate = t.getObject(Template.class, bothTemplate.getId(), true);
+		bothTemplate.addFolder(other.getFolder());
+		bothTemplate.save();
+		t.commit(false);
+		bothTemplate = t.getObject(Template.class, bothTemplate.getId());
+
+		channelTemplate = ContentNodeTestDataUtils.localize(masterTemplate, channel);
+
+		// create pages
+		masterPage = ContentNodeTestDataUtils.createPage(master.getFolder(), masterTemplate, "Master Page");
+		masterPage = t.getObject(Page.class, masterPage.getId(), true);
+		masterPage.getContent().addContentTag(sourceConstruct.getId());
+		masterPage.save();
+		t.commit(false);
+		masterPage = t.getObject(Page.class, masterPage.getId());
+
+		channelPage = ContentNodeTestDataUtils.localize(masterPage, channel);
+
+		otherPage = ContentNodeTestDataUtils.createPage(other.getFolder(), otherTemplate, "Other Page");
+		otherPage = t.getObject(Page.class, otherPage.getId(), true);
+		otherPage.getContent().addContentTag(sourceConstruct.getId());
+		otherPage.save();
+		t.commit(false);
+		otherPage = t.getObject(Page.class, otherPage.getId());
+	}
+
+	/**
+	 * Create test data
+	 * @throws Exception
+	 */
+	@After
+	public void cleanupTestData() throws Exception {
+		try (Trx trx = new Trx()) {
+			other.delete();
+			channel.delete();
+			master.delete();
+
+			oeAllNodes.delete();
+			oeMasterOther.delete();
+			oeOther.delete();
+			oeMaster.delete();
+
+			targetConstruct.delete();
+			sourceConstruct.delete();
+
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test performing a global tag migration
+	 * @throws Exception
+	 */
+	@Test
+	public void testMigration() throws Exception {
+		// Create mapping
+		TagTypeMigrationMapping mapping = new TagTypeMigrationMapping();
+		mapping.setFromTagTypeId(sourceConstruct.getId());
+		mapping.setToTagTypeId(targetConstruct.getId());
+		MigrationPartMapping partMapping = new MigrationPartMapping();
+
+		partMapping.setFromPartId(sourceConstruct.getParts().get(0).getId());
+		partMapping.setToPartId(targetConstruct.getParts().get(0).getId());
+		ArrayList<MigrationPartMapping> partMappings = new ArrayList<MigrationPartMapping>();
+
+		partMappings.add(partMapping);
+		mapping.setPartMappings(partMappings);
+
+		// create request
+		TagTypeMigrationRequest request = new TagTypeMigrationRequest();
+		request.setType("global");
+		ArrayList<TagTypeMigrationMapping> mappings = new ArrayList<TagTypeMigrationMapping>();
+		mappings.add(mapping);
+		request.setMappings(mappings);
+		request.setHandleGlobalPages(pages);
+		request.setHandleGlobalTemplates(templates);
+		request.setHandleGlobalObjTagDefs(objTagDefs);
+		request.setRestrictedNodeIds(new ArrayList<Integer>());
+		for (NodeRestriction r : restriction) {
+			switch (r) {
+			case master:
+				request.getRestrictedNodeIds().add(master.getId());
+				break;
+			case channel:
+				request.getRestrictedNodeIds().add(channel.getId());
+				break;
+			case other:
+				request.getRestrictedNodeIds().add(other.getId());
+				break;
+			}
+		}
+		if (postProcessor) {
+			request.setEnabledPostProcessors(Arrays.asList(new MigrationPostProcessor(LoggingPostProcessor.class.getName(), 0)));
+		}
+
+		// run the job and check whether it succeeded in foreground
+		TagTypeMigrationJob job = new TagTypeMigrationJob();
+		setJobParameter(job, request);
+		assertTrue("TagTypeMigrationJob must finish in foreground", job.execute(60));
+		List<Exception> exceptions = job.getExceptions();
+		for (Exception e : exceptions) {
+			throw e;
+		}
+		TransactionManager.getCurrentTransaction().commit();
+
+		testContext.startSystemUserTransaction();
+
+		// determine, which objects are expected to be migrated
+		expectMigration = new HashMap<>();
+		expectMigration.put(masterTemplate, templates && isHandled(NodeRestriction.master));
+		expectMigration.put(channelTemplate, templates && isHandled(NodeRestriction.channel));
+		expectMigration.put(otherTemplate, templates && isHandled(NodeRestriction.other));
+		expectMigration.put(bothTemplate, templates && isHandled(NodeRestriction.master, NodeRestriction.other));
+
+		expectMigration.put(masterPage, pages && isHandled(NodeRestriction.master));
+		expectMigration.put(channelPage, pages && isHandled(NodeRestriction.channel));
+		expectMigration.put(otherPage, pages && isHandled(NodeRestriction.other));
+		
+		expectMigration.put(oeAllNodes, objTagDefs);
+		expectMigration.put(oeMaster, objTagDefs && isHandled(NodeRestriction.master));
+		expectMigration.put(oeMasterOther, objTagDefs && isHandled(NodeRestriction.master, NodeRestriction.other));
+		expectMigration.put(oeOther, objTagDefs && isHandled(NodeRestriction.other));
+
+		// make assertions about what has been migrated
+		for (Template template : Arrays.asList(masterTemplate, channelTemplate, otherTemplate, bothTemplate)) {
+			assertMigrated(template);
+		}
+
+		for (Page page : Arrays.asList(masterPage, channelPage, otherPage)) {
+			assertMigrated(page);
+		}
+
+		for (ObjectTagDefinition objTagDef : Arrays.asList(oeAllNodes, oeMaster, oeMasterOther, oeOther)) {
+			assertMigrated(objTagDef);
+		}
+
+		// make assertions about post processing
+		for (NodeObject o : Arrays.asList(masterTemplate, channelTemplate, otherTemplate, bothTemplate, masterPage, channelPage, otherPage)) {
+			assertEquals("Check whether " + o + " was post processed", postProcessor && expectMigration.get(o), LoggingPostProcessor.isProcessed(o));
+		}
+		for (Folder f : Arrays.asList(master.getFolder(), channel.getFolder(), other.getFolder())) {
+			boolean hasMigratedObjectTag = false;
+
+			for (ObjectTag tag : f.getObjectTags().values()) {
+				if (ObjectTransformer.getBoolean(expectMigration.get(tag.getDefinition()), false)) {
+					hasMigratedObjectTag = true;
+					break;
+				}
+			}
+
+			assertEquals("Check whether " + f + " was post processed", postProcessor && hasMigratedObjectTag, LoggingPostProcessor.isProcessed(f));
+		}
+	}
+
+	/**
+	 * Sets the ttm job parameters
+	 * 
+	 * @param job ttm Job instance
+	 * @param request TTM Request
+	 */
+	private void setJobParameter(TagTypeMigrationJob job, TagTypeMigrationRequest request) throws NodeException {
+		job.addParameter(TagTypeMigrationJob.PARAM_REQUEST, request);
+		job.addParameter(TagTypeMigrationJob.PARAM_TYPE, request.getType());
+		job.addParameter(TagTypeMigrationJob.PARAM_OBJECTIDS, request.getObjectIds() != null ? new ArrayList<>(request.getObjectIds()) : null);
+		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_PAGES_BY_TEMPLATE, request.isHandlePagesByTemplate());
+		job.addParameter(TagTypeMigrationJob.PARAM_HANDLE_ALL_NODES, request.isHandleAllNodes());
+		job.addParameter(TagTypeMigrationJob.PARAM_PREVENT_TRIGGER_EVENT, request.isPreventTriggerEvent());
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		String sessionId = t.getSessionId();
+		assertNotNull("SessionId must be set", sessionId);
+		job.addParameter(AbstractUserActionJob.PARAM_SESSIONID, sessionId);
+		job.addParameter(AbstractUserActionJob.PARAM_USERID, t.getUserId());
+	}
+
+	/**
+	 * Check whether any of the given nodes shall be handled
+	 * @param nodes optional list of NodeRestrictions
+	 * @return true if any node shall be handled, false if not
+	 */
+	private boolean isHandled(NodeRestriction...nodes) {
+		if (restriction.isEmpty()) {
+			return true;
+		}
+		for (NodeRestriction node : nodes) {
+			if (restriction.contains(node)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Assert that the page has been migrated or not migrated
+	 * @param page page
+	 * @throws NodeException
+	 */
+	private void assertMigrated(Page page) throws NodeException {
+		boolean expected = expectMigration.get(page);
+		Transaction t = TransactionManager.getCurrentTransaction();
+		page = t.getObject(Page.class, page.getId());
+		ContentTag tag = page.getContentTag("migratefrom1");
+		assertNotNull("Tag 'migratefrom1' must exist in page " + page, tag);
+		if (expected) {
+			assertTrue(page + " was expected to be migrated", targetConstruct.equals(tag.getConstruct()));
+		} else {
+			assertTrue(page + " was not expected to be migrated", sourceConstruct.equals(tag.getConstruct()));
+		}
+	}
+
+	/**
+	 * Assert that the template has been migrated or not migrated
+	 * @param template template
+	 * @throws NodeException
+	 */
+	private void assertMigrated(Template template) throws NodeException {
+		boolean expected = expectMigration.get(template);
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		template = t.getObject(Template.class, template.getId());
+		TemplateTag migrate1 = template.getTemplateTag("migrate1");
+		assertNotNull("Tag 'migrate1' must exist in template " + template, migrate1);
+		TemplateTag migrate2 = template.getTemplateTag("migrate2");
+		assertNotNull("Tag 'migrate2' must exist in template " + template, migrate2);
+
+		if (expected) {
+			assertTrue(template + " was expected to be migrated", targetConstruct.equals(migrate1.getConstruct()));
+			assertTrue(template + " was expected to be migrated", targetConstruct.equals(migrate2.getConstruct()));
+		} else {
+			assertTrue(template + " was not expected to be migrated", sourceConstruct.equals(migrate1.getConstruct()));
+			assertTrue(template + " was not expected to be migrated", sourceConstruct.equals(migrate2.getConstruct()));
+		}
+
+		for (Page page : template.getPages()) {
+			// check whether page really uses the given template (or a localized copy)
+			Node pageChannel = page.getChannel();
+			if (pageChannel != null) {
+				if (!template.equals(MultichannellingFactory.getChannelVariant(page.getTemplate(), channel))) {
+					continue;
+				}
+			}
+
+			ContentTag tag = page.getContentTag("migrate2");
+			assertNotNull("Tag 'migrate2' must exist in " + page, tag);
+			if (expected || expectMigration.get(page)) {
+				assertTrue(page + " was expected to be migrated", targetConstruct.equals(tag.getConstruct()));
+			} else {
+				assertTrue(page + " was not expected to be migrated", sourceConstruct.equals(tag.getConstruct()));
+			}
+		}
+	}
+
+	/**
+	 * Assert that the objTagDef has been migrated or not migrated
+	 * @param objTagDef objTagDef
+	 * @throws NodeException
+	 */
+	private void assertMigrated(ObjectTagDefinition objTagDef) throws NodeException {
+		boolean expected = expectMigration.get(objTagDef);
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+		objTagDef = t.getObject(ObjectTagDefinition.class, objTagDef.getId());
+		List<Node> objTagDefNodes = objTagDef.getNodes();
+
+		if (expected) {
+			assertTrue(objTagDef + " was expected to be migrated", targetConstruct.equals(objTagDef.getObjectTag().getConstruct()));
+		} else {
+			assertTrue(objTagDef + " was not expected to be migrated", sourceConstruct.equals(objTagDef.getObjectTag().getConstruct()));
+		}
+
+		String name = objTagDef.getObjectTag().getName();
+		if (name.startsWith("object.")) {
+			name = name.substring("object.".length());
+		}
+		for (Folder f : Arrays.asList(master.getFolder(), channel.getFolder(), other.getFolder())) {
+			if (!objTagDefNodes.isEmpty() && !objTagDefNodes.contains(f.getOwningNode())) {
+				continue;
+			}
+			ObjectTag tag = f.getObjectTag(name);
+			assertNotNull(f + " is expected to have object tag " + name, tag);
+			if (expected) {
+				assertTrue("Object property" + objTagDef.getObjectTag().getName() + " of " + f + " was expected to be migrated",
+						targetConstruct.equals(tag.getConstruct()));
+			} else {
+				assertTrue("Object property" + objTagDef.getObjectTag().getName() + " of " + f + " was not expected to be migrated",
+						sourceConstruct.equals(tag.getConstruct()));
+			}
+		}
+	}
+
+	/**
+	 * Enumeration of possible node restrictions
+	 */
+	public static enum NodeRestriction {
+		master, channel, other
+	}
+}

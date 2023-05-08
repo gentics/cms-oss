@@ -1,0 +1,46 @@
+package com.gentics.contentnode.rest.resource.search;
+
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Response;
+
+import com.gentics.contentnode.rest.resource.parameter.SearchParameterBean;
+import com.webcohesion.enunciate.metadata.rs.ResponseCode;
+import com.webcohesion.enunciate.metadata.rs.StatusCodes;
+
+/**
+ * Resource for endpoints that are forwarded to elasticsearch for performing searches
+ */
+@Path("/elastic")
+@StatusCodes({
+	@ResponseCode(code = 401, condition = "No valid sid and session secret cookie were provided."),
+	@ResponseCode(code = 405, condition = "Feature elasticsearch is not activated.")
+})
+public interface SearchResource {
+	/**
+	 * Perform a search in indices for a specific type
+	 * @param type object type (one of "page", "image", "file" or "folder")
+	 * @param search search parameter bean
+	 * @param body request body
+	 * @return response
+	 * @throws Exception
+	 */
+	@POST
+	@Path("/{type}/_search")
+	Response searchType(@PathParam("type") String type, @BeanParam SearchParameterBean search, String body) throws Exception;
+
+	/**
+	 * Perform a search by forwarding the posted search request to elasticsearch under the given path.
+	 * The path will be prefixed with the index name.
+	 * @param path path (e.g. /_search)
+	 * @param search search parameter bean
+	 * @param body request body
+	 * @return response
+	 * @throws Exception
+	 */
+	@POST
+	@Path("{path: .*}")
+	Response search(@PathParam("path") String path, @BeanParam SearchParameterBean search, String body) throws Exception;
+}

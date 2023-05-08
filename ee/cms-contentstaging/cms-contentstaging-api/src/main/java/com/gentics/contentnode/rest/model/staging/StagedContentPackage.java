@@ -1,0 +1,136 @@
+package com.gentics.contentnode.rest.model.staging;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+/**
+ * Content staging package entity.
+ */
+@XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class StagedContentPackage extends ContentPackageBase {
+
+	private static final long serialVersionUID = 8051924103845219672L;
+
+	private int forms = 0;
+	private int files = 0;
+	private int pages = 0;
+	private int folders = 0;
+	private int images = 0;
+	private int nodes = 0;
+	private int channels = 0;
+
+	/**
+	 * Count of forms in the package.
+	 * 
+	 * @return forms count
+	 */
+	public int getForms() {
+		return forms;
+	}
+
+	/**
+	 * Set the count of forms in the package.
+	 * @param forms count
+	 */
+	public void setForms(int forms) {
+		this.forms = forms;
+	}
+
+	/**
+	 * Count of files in the package.
+	 * @return files count
+	 */
+	public int getFiles() {
+		return files;
+	}
+
+	/**
+	 * Set the count of files in the package.
+	 * @param files count
+	 */
+	public void setFiles(int files) {
+		this.files = files;
+	}
+
+	/**
+	 * Count of pages in the package.
+	 * @return pages count
+	 */
+	public int getPages() {
+		return pages;
+	}
+
+	/**
+	 * Set the count of pages in the package.
+	 * @param pages count
+	 */
+	public void setPages(int pages) {
+		this.pages = pages;
+	}
+
+	/**
+	 * Count of folders in the package.
+	 * @return folders count
+	 */
+	public int getFolders() {
+		return folders;
+	}
+
+	/**
+	 * Set the count of folders in the package.
+	 * @param folders count
+	 */
+	public void setFolders(int folders) {
+		this.folders = folders;
+	}
+
+	/**
+	 * Count of images in the package.
+	 * @return images count
+	 */
+	public int getImages() {
+		return images;
+	}
+
+	/**
+	 * Set the count of images in the package.
+	 * @param images count
+	 */
+	public void setImages(int images) {
+		this.images = images;
+	}
+
+	/**
+	 * Count of nodes in the package.
+	 * @return nodes count
+	 */
+	public int getNodes() {
+		return nodes;
+	}
+
+	/**
+	 * Set the count of nodes in the package.
+	 * @param nodes count
+	 */
+	public void setNodes(int nodes) {
+		this.nodes = nodes;
+	}
+
+	/**
+	 * Count of channels in the package.
+	 * @return channels count
+	 */
+	public int getChannels() {
+		return channels;
+	}
+
+	/**
+	 * Set the number of channels in the package.
+	 * @param channels count
+	 */
+	public void setChannels(int channels) {
+		this.channels = channels;
+	}
+}

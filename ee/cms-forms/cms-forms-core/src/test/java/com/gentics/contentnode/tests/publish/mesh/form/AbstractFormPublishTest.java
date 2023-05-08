@@ -1,0 +1,290 @@
+package com.gentics.contentnode.tests.publish.mesh.form;
+
+import static com.gentics.contentnode.factory.Trx.consume;
+import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.cleanMesh;
+import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.TEMPLATE_PARTNAME;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createContentRepository;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createVelocityConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentRepository;
+import com.gentics.contentnode.object.MarkupLanguage;
+import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.Part;
+import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.TemplateTag;
+import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.object.parttype.CmsFormPartType;
+import com.gentics.contentnode.object.parttype.LongHTMLPartType;
+import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
+import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.mesh.MeshContext;
+import com.gentics.contentnode.testutils.mesh.MeshTestRule;
+
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.FormBody.Builder;
+
+/**
+ * Abstract base class for form publish tests
+ */
+@Category(MeshTest.class)
+public abstract class AbstractFormPublishTest {
+	/**
+	 * Name of the mesh project
+	 */
+	public final static String MESH_PROJECT_NAME = "form";
+
+	public final static String pluginFileName = "mesh-forms-plugin.jar";
+
+	public final static String pluginFilePath = "./target/plugins/" + pluginFileName;
+
+	public static File pluginJarFile;
+
+	public static File pluginConfigDir;
+
+	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+
+	static {
+		try {
+			pluginJarFile = new File(pluginFilePath);
+			assertThat(pluginJarFile).as("Plugin File").exists().canRead().isFile();
+			pluginConfigDir = new File(FormPublishTest.class.getResource("config").toURI());
+		} catch (URISyntaxException e) {
+			fail("Error while preparing plugin", e);
+		}
+	}
+
+	private static final String EXTERNAL_CMS_URL = "http://cms.domain.test";
+	protected static final String FIELD_DOWNLOAD_BASE_URL = "downloadBaseUrl";
+	protected static final String FMT_DOWNLOAD_BASE_URL = EXTERNAL_CMS_URL + "/editor/#proxy/rest/form/%d/data";
+
+	@ClassRule
+	public static DBTestContext context = new DBTestContext().config(prefs -> {
+		prefs.setProperty("cn_external_server", EXTERNAL_CMS_URL);
+	});
+
+	/**
+	 * Start a container with Mesh and the deployed forms plugin
+	 */
+	@ClassRule
+	public static MeshContext mesh = new MeshContext()
+			.withFileSystemBind(pluginJarFile.getAbsolutePath(), "/plugins/" + pluginFileName, BindMode.READ_ONLY)
+			.withFileSystemBind(pluginConfigDir.getAbsolutePath(), "/plugins/forms", BindMode.READ_ONLY);
+
+	protected static final Logger log = LoggerFactory.getLogger(AbstractFormPublishTest.class);
+
+	protected static Node node;
+
+	protected static Integer crId;
+
+	protected static ContentRepository otherCR;
+
+	protected static Construct formConstruct;
+
+	protected static Integer vtlConstructId;
+
+	protected static Template template;
+
+	protected static OkHttpClient okHttpClient;
+
+	protected static Template eMailTemplate;
+
+	@Rule
+	public MeshTestRule meshTestRule = new MeshTestRule(mesh);
+
+	@Rule
+	public ExceptionChecker checker = new ExceptionChecker();
+
+	@BeforeClass
+	public static void setupOnce() throws Exception {
+		context.getContext().getTransaction().commit();
+		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY, getLanguage("de"), getLanguage("en")));
+
+		otherCR = supply(() -> createContentRepository("Other CR", false, false, ""));
+		crId = createMeshCR(mesh, MESH_PROJECT_NAME);
+		operate(t -> update(t.getObject(ContentRepository.class, crId), cr -> {
+			cr.setProjectPerNode(true);
+		}));
+		node = update(node, n -> {
+			n.setContentrepositoryId(crId);
+			n.activateFeature(Feature.FORMS);
+		});
+
+		formConstruct = supply(() -> create(Construct.class, c -> {
+			c.setAutoEnable(true);
+			c.setIconName("icon");
+			c.setKeyword("form");
+			c.setName("form", 1);
+			c.getNodes().add(node);
+
+			// VTL part
+			c.getParts().add(create(Part.class, p -> {
+				p.setEditable(0);
+				p.setHidden(false);
+				p.setKeyname("vtl");
+				p.setName("vtl", 1);
+				p.setPartTypeId(getPartTypeId(VelocityPartType.class));
+			}, false));
+
+			// Template part
+			c.getParts().add(create(Part.class, p -> {
+				p.setEditable(0);
+				p.setHidden(true);
+				p.setKeyname(TEMPLATE_PARTNAME);
+				p.setName(TEMPLATE_PARTNAME, 1);
+				p.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
+				p.setDefaultValue(create(Value.class, v -> {
+					v.setPart(p);
+					v.setValueText("#gtx_form($cms.tag.parts.form, {\"type\": \"java\", \"noForm\": \"No Form\"})");
+				}, false));
+			}, false));
+
+			// Form part
+			c.getParts().add(create(Part.class, p -> {
+				p.setEditable(1);
+				p.setHidden(true);
+				p.setKeyname("form");
+				p.setName("form", 1);
+				p.setPartTypeId(getPartTypeId(CmsFormPartType.class));
+			}, false));
+		}));
+
+		vtlConstructId = supply(() -> createVelocityConstruct(node, "vtl", "vtl"));
+
+		template = supply(() -> update(createTemplate(node.getFolder(), "Template"), tmpl -> {
+			tmpl.setSource("<node form>");
+			tmpl.getTemplateTags().put("form", create(TemplateTag.class, tt -> {
+				tt.setConstructId(formConstruct.getId());
+				tt.setEnabled(true);
+				tt.setName("form");
+				tt.setPublic(true);
+			}, false));
+		}));
+
+		MarkupLanguage formsTemplateMarkupLanguage = supply(t -> t.getObject(MarkupLanguage.class, DBUtils.select("SELECT id FROM ml WHERE feature = ?",
+				ps -> ps.setString(1, "forms"), DBUtils.firstInt("id"))));
+		assertThat(formsTemplateMarkupLanguage).as("Forms e-mail template ml").isNotNull();
+
+		eMailTemplate = create(Template.class, create -> {
+			create.setSource("<node content>");
+			create.setName("E-Mail Template");
+			create.addFolder(node.getFolder());
+			create.setMlId(formsTemplateMarkupLanguage.getId());
+			create.getTemplateTags().put("content", create(TemplateTag.class, tt -> {
+				tt.setConstructId(vtlConstructId);
+				tt.setEnabled(true);
+				tt.setName("content");
+				tt.setPublic(true);
+			}, false));
+		});
+
+		okHttpClient = new OkHttpClient();
+	}
+
+	@Before
+	public void setup() throws NodeException {
+		cleanMesh(mesh.client());
+
+		operate(() -> clear(node));
+
+		node = update(node, n -> {
+			n.setContentrepositoryId(crId);
+			n.activateFeature(Feature.FORMS);
+		});
+
+		operate(() -> node.deactivateFeature(Feature.DISABLE_INSTANT_DELETE));
+
+		operate(t -> {
+			update(t.getObject(ContentRepository.class, crId), upd -> {
+				upd.setInstantPublishing(false);
+			});
+		});
+
+		for (Node channel : execute(Node::getChannels, node)) {
+			consume(c -> {
+				c.delete(true);
+			}, channel);
+		}
+	}
+
+	/**
+	 * Prepare for instant publishing (run the publish process to activate the forms plugin and activate instant publishing for the CR)
+	 * @throws Exception
+	 */
+	protected void prepareForInstantPublishing() throws Exception {
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		operate(t -> {
+			update(t.getObject(ContentRepository.class, crId), upd -> {
+				upd.setInstantPublishing(true);
+			});
+		});
+	}
+
+	/**
+	 * Post some data to a form
+	 * @param projectName project name
+	 * @param formUuid form uuid
+	 * @param data data as key/value pairs
+	 * @throws IOException
+	 */
+	@SafeVarargs
+	protected final void postFormData(String projectName, String formUuid, Pair<String, String>...data) throws IOException {
+		Builder bodyBuilder = new FormBody.Builder();
+		for (Pair<String, String> pair : data) {
+			bodyBuilder.add(pair.getKey(), pair.getValue());
+		}
+
+		Request request = new Request.Builder().url("http://" + mesh.getContainerIpAddress() + ":" + mesh.getMappedPort(8080) + "/api/v1/"
+				+ projectName + "/plugins/forms/forms/" + formUuid + "/data")
+			.post(bodyBuilder.build())
+			.build();
+		try (Response response = okHttpClient.newCall(request).execute()) {
+			assertThat(response.isSuccessful()).as("POSTing data succeeded (response code is " + response.code() + ")")
+					.isTrue();
+		}
+	}
+}

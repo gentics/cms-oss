@@ -1,0 +1,9 @@
+Dropdown:
+name: {{ name }}
+label: {{ label }}
+mandatory: {{ mandatory }}
+label: {{ label }}
+{{#each listelements ~}}
+  {{ label }}: {{ value }}
+{{/each ~}}
+/Dropdown

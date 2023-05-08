@@ -1,0 +1,39 @@
+package com.gentics.contentnode.rest.resource.impl;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.StagedReferencedObjectTagDefinition;
+import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.rest.filters.Authenticated;
+import com.gentics.contentnode.rest.filters.RequiredPerm;
+import com.gentics.contentnode.rest.model.staging.ImplementationHashResponse;
+import com.gentics.contentnode.rest.resource.ObjectPropertyResource;
+import com.gentics.contentnode.rest.resource.StagedObjectPropertyResource;
+import com.gentics.contentnode.rest.util.MiscStagingUtils;
+
+/**
+ * Resource implementation of {@link ObjectPropertyResource}
+ */
+@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Authenticated
+@Path("/objectproperty")
+@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
+@RequiredPerm(type = PermHandler.TYPE_CONADMIN, bit = PermHandler.PERM_VIEW)
+@RequiredPerm(type = ObjectTagDefinition.TYPE_OBJTAG_DEFS, bit = PermHandler.PERM_VIEW)
+public class StagedObjectPropertyResourceImpl implements StagedObjectPropertyResource {
+	@Override
+	@GET
+	@Path("/{id}/hash")
+	public ImplementationHashResponse implementationHash(@PathParam("id") String id) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return MiscStagingUtils.getImplementationHash(ObjectTagDefinition.class, StagedReferencedObjectTagDefinition::new, id);
+		}
+	}
+}

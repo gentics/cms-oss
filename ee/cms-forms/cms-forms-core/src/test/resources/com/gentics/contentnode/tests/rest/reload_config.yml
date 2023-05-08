@@ -1,0 +1,4 @@
+global:
+  config:
+    node_settings_global:
+      reloaded: true

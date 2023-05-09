@@ -15,6 +15,7 @@ public class CNStringUtilsTest {
 				.daisyDiff(
 						"<html><head><title>older</title></head><body>some<p>text</body>",
 						"<html><head><title>newer</title></head><body id=\"the>Body\">some other<p>text and some<br/><br/> elements</body>");
+		diff = diff.replaceAll("\\r\\n", "\n");
 
 		assertEquals(
 				"<html><head><title>newer</title></head><body id=\"the>Body\"><div id=\"gtxDiffWrapper\">some <span changeId=\"added-gtxDiff-0\" class=\"diff-html-added\" id=\"added-gtxDiff-0\" next=\"added-gtxDiff-1\" previous=\"first-gtxDiff\">other</span>"
@@ -30,6 +31,7 @@ public class CNStringUtilsTest {
 		String diff = CNStringUtils.daisyDiff(
 				"<p>a paragraph<p>another paragraph",
 				"<p>yet another paragraph<p>and yet another");
+		diff = diff.replaceAll("\\r\\n", "\n");
 
 		assertEquals(
 				"<div id=\"gtxDiffWrapper\">"
@@ -46,6 +48,7 @@ public class CNStringUtilsTest {
 				.daisyDiff(
 						"<html><head><title><![CDATA[older title<body>]]></title></head><body>older text</body></html>",
 						"<html><head><title><![CDATA[newer title<body>]]></title></head><body>newer text</body></html>");
+		diff = diff.replaceAll("\\r\\n", "\n");
 
 		assertEquals(
 				"<html><head><title>newer title&lt;body&gt;</title></head><body><div id=\"gtxDiffWrapper\">"
@@ -59,6 +62,7 @@ public class CNStringUtilsTest {
 				.daisyDiff(
 						"<html><head><title>older title></title></head><body><![CDATA[<body>older text]]></body></html>",
 						"<html><head><title>newer title></title></head><body><![CDATA[<body>newer text]]></body></html>");
+		diff = diff.replaceAll("\\r\\n", "\n");
 
 		assertEquals(
 				"<html><head><title>newer title></title></head><body><div id=\"gtxDiffWrapper\">"

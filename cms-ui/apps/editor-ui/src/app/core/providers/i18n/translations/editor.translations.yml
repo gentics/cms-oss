@@ -178,9 +178,33 @@ folder_not_found_in_node:
 form_reports_download_binaries_button:
     en: 'Download all binaries'
     de: 'Alle Binärdateien herunterladen'
+form_reports_generate_binary_button:
+    en: 'Generate binary download'
+    de: 'Binaries Download erstellen'
+form_reports_binary_generated_at:
+    en: 'Binaries created at: {{date}}'
+    de: 'Binärdaten erstellt am: {{date}}'
+form_reports_binary_generate_started:
+    en: 'Binaries are getting generated in the background ...'
+    de: 'Binärdaten werden im Hintergrund erstellt ...'
+form_reports_binary_generate_finished:
+    en: 'Binaries have been generated'
+    de: 'Binärdaten wurden erstellt'
 form_reports_download_csv_button:
     en: 'Download CSV'
     de: 'CSV herunterladen'
+form_reports_generate_csv_button:
+    en: 'Generate export download'
+    de: 'Export Download erstellen'
+form_reports_csv_generated_at:
+    en: 'Export created at: {{date}}'
+    de: 'Export erstellt am: {{date}}'
+form_reports_csv_generate_started:
+    en: 'Export is getting generated in the background ...'
+    de: 'Export wird im Hintergrund erstellt ...'
+form_reports_csv_generate_finished:
+    en: 'Export has been generated'
+    de: 'Export wurde erstellt'
 form_reports_label:
     en: 'Form reports'
     de: 'Formularberichte'

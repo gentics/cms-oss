@@ -1,19 +1,22 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { dateToFileSystemString } from '@editor-ui/app/common/utils/date-to-string';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
+import { downloadFromBlob } from '@gentics/cms-components';
 import {
     Form,
     FormDataListEntry,
     FormDataListResponse,
+    FormDownloadInfo,
     FormElementLabelPropertyI18nValues,
-    GcmsUiLanguage,
+    GcmsUiLanguage
 } from '@gentics/cms-models';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { PaginationInstance } from 'ngx-pagination';
-import { BehaviorSubject, combineLatest, Observable, Subject, throwError } from 'rxjs';
-import { catchError, finalize, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, interval, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { Api } from '../../../core/providers/api';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
@@ -26,25 +29,25 @@ import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete
     styleUrls: ['./form-reports-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: [
-    trigger('fadeAnim', [
-        state('in', style({
-            opacity: 1,
-        })),
-        transition(':enter', [
-            style({
-                opacity: 0,
-            }),
-            animate(100),
-        ]),
-        transition(':leave',
-            animate(100, style({
-                opacity: 0,
+        trigger('fadeAnim', [
+            state('in', style({
+                opacity: 1,
+            })),
+            transition(':enter', [
+                style({
+                    opacity: 0,
                 }),
-            )),
+                animate(100),
+            ]),
+            transition(':leave',
+                animate(100, style({
+                    opacity: 0,
+                })),
+            ),
         ]),
     ],
 })
-export class FormReportsListComponent implements OnInit {
+export class FormReportsListComponent implements OnInit, OnDestroy {
 
     private _form: Form;
 
@@ -72,12 +75,11 @@ export class FormReportsListComponent implements OnInit {
         currentPage: 1,
     };
 
-    pathForBinaries: string;
-    pathForCSV: string;
     sid: number;
 
-    isDisabledDownloadBinariesButton = true;
-    isDisabledDownloadCsvButton = true;
+    binaryStatus: FormDownloadInfo;
+    exportStatus: FormDownloadInfo;
+
     errorMessage: string;
 
     result: FormDataListResponse;
@@ -86,7 +88,8 @@ export class FormReportsListComponent implements OnInit {
     entryValues = [];
 
     private reload$ = new Subject<void>();
-    private destroyed$ = new Subject<void>();
+
+    protected subscriptions: Subscription[] = [];
 
     public formElementLabelPropertyI18nValues$: Observable<FormElementLabelPropertyI18nValues>;
 
@@ -102,24 +105,19 @@ export class FormReportsListComponent implements OnInit {
         private translation: TranslateService,
     ) { }
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
 
         this.definePageSizeByClientHeight();
 
-        this.appState.select(state => state.auth.sid).pipe(
-            takeUntil(this.destroyed$),
-        ).subscribe(sid => {
+        this.subscriptions.push(this.appState.select(state => state.auth.sid).subscribe(sid => {
             this.sid = sid;
-            this.pathForBinaries = `${API_BASE_URL}/form/${this.form.id}/binaries?sid=${sid}`;
-            this.pathForCSV = `${API_BASE_URL}/form/${this.form.id}/export?sid=${sid}`;
-        });
+        }))
 
-        combineLatest([
+        this.subscriptions.push(combineLatest([
             this.currentPage$,
             this.reload$,
         ]).pipe(
             switchMap(([currentPage]) => this.getReports(currentPage)),
-            takeUntil(this.destroyed$),
         ).subscribe((res: FormDataListResponse) => {
             this.result = res;
 
@@ -138,23 +136,45 @@ export class FormReportsListComponent implements OnInit {
             }
 
             this.changeDetector.detectChanges();
-        });
+        }));
 
-        this.appState.select(state => state.ui.language).subscribe((language: GcmsUiLanguage) => {
+        this.subscriptions.push(this.appState.select(state => state.ui.language).subscribe((language: GcmsUiLanguage) => {
             /**
              * We need to set the language manually in the form editor service.
              * (This is normally done in the form editor component. However, it is not used here).
              */
             this.formEditorService.activeUiLanguageCode = language;
-        });
+        }));
 
-        this.appState.select(state => state.folder.activeFormLanguage).pipe(
+        this.subscriptions.push(this.appState.select(state => state.folder.activeFormLanguage).pipe(
             map(languageId => this.entityResolver.getLanguage(languageId)),
         ).subscribe(language => {
-            this.formEditorService.activeContentLanguageCode = language.code;
-        });
+            if (language) {
+                this.formEditorService.activeContentLanguageCode = language.code;
+            }
+        }));
+
+        const statusLoader$ = new BehaviorSubject<void>(null);
+
+        this.subscriptions.push(statusLoader$.pipe(
+            switchMap(() => combineLatest([
+                this.api.forms.getBinaryStatus(this.form.id),
+                this.api.forms.getExportStatus(this.form.id),
+            ])),
+        ).subscribe(([binaryStatus, exportStatus]) => {
+            this.binaryStatus = binaryStatus;
+            this.exportStatus = exportStatus;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(interval(30_000).subscribe(() => statusLoader$.next()));
+        statusLoader$.next();
 
         this.reload();
+    }
+
+    public ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     public isFile(entryValue: any): boolean {
@@ -173,6 +193,66 @@ export class FormReportsListComponent implements OnInit {
         return entryValue;
     }
 
+    public generateBinaryDownload(): void {
+        this.notification.show({
+            message: 'editor.form_reports_binary_generate_started',
+            type: 'secondary',
+        });
+
+        this.subscriptions.push(this.api.forms.createBinaryDownload(this.form.id).pipe(
+            switchMap(() => this.api.forms.getBinaryStatus(this.form.id)),
+        ).subscribe(status => {
+            this.notification.show({
+                message: 'editor.form_reports_binary_generate_finished',
+                type: 'success',
+            });
+
+            this.binaryStatus = status;
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    public downloadBinaries(): void {
+        if (!this.binaryStatus?.downloadReady) {
+            return;
+        }
+
+        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.binaryStatus.downloadUuid).subscribe(blob => {
+            const time = new Date(this.binaryStatus.downloadTimestamp);
+            downloadFromBlob(blob, `form_${this.form.id}_binaries_${dateToFileSystemString(time)}`);
+        }));
+    }
+
+    public generateExportDownload(): void {
+        this.notification.show({
+            message: 'editor.form_reports_csv_generate_started',
+            type: 'secondary',
+        });
+
+        this.subscriptions.push(this.api.forms.createExportDownload(this.form.id).pipe(
+            switchMap(() => this.api.forms.getExportStatus(this.form.id)),
+        ).subscribe(status => {
+            this.notification.show({
+                message: 'editor.form_reports_csv_generate_finished',
+                type: 'success',
+            });
+
+            this.exportStatus = status;
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    public downloadExport(): void {
+        if (!this.exportStatus?.downloadReady) {
+            return;
+        }
+
+        this.subscriptions.push(this.api.forms.downloadFormData(this.form.id, this.exportStatus.downloadUuid).subscribe(blob => {
+            const time = new Date(this.exportStatus.downloadTimestamp);
+            downloadFromBlob(blob, `form_${this.form.id}_export_${dateToFileSystemString(time)}`);
+        }));
+    }
+
     public getFileHref(entryValue: any, entry: FormDataListEntry): string {
         const field = Object.entries(entry.fields).find(([key, value]) => {
             return Object.values(value).includes(entryValue.fileName);
@@ -182,6 +262,7 @@ export class FormReportsListComponent implements OnInit {
 
     getReports(pageIndex: number): Observable<FormDataListResponse> {
         this.loading$.next(true);
+
         return this.api.forms.getReports(
             this.form.id,
             {
@@ -189,14 +270,6 @@ export class FormReportsListComponent implements OnInit {
                 pageSize: this.paginationConfig.itemsPerPage,
             },
         ).pipe(
-            tap((form: FormDataListResponse) => {
-                if (form.entries.length > 0) {
-                    this.isDisabledDownloadCsvButton = false;
-                    if (form.elements && Object.values(form.elements).find(element => element.type === 'file')) {
-                        this.isDisabledDownloadBinariesButton = false;
-                    }
-                }
-            }),
             catchError(err => {
                 if (err.statusCode === 403) {
                     this.errorMessage = this.translation.instant('editor.reports_loading_permission_error');
@@ -330,13 +403,11 @@ export class FormReportsListComponent implements OnInit {
     }
 
     private reload(): void {
-        this.formElementLabelPropertyI18nValues$.pipe(
-            takeUntil(this.destroyed$),
-        ).subscribe(formElementLabelPropertyI18nValues => {
+        this.subscriptions.push(this.formElementLabelPropertyI18nValues$.subscribe(formElementLabelPropertyI18nValues => {
             if (formElementLabelPropertyI18nValues && Object.keys(formElementLabelPropertyI18nValues).length > 0) {
                 this.reload$.next();
             }
-        })
+        }));
     }
 
     /**

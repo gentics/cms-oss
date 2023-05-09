@@ -1,6 +1,7 @@
 import {
     Form,
     FormDataListResponse,
+    FormDownloadInfoResponse,
     FormListRequest,
     FormListResponse,
     FormReportsRequest,
@@ -79,6 +80,34 @@ export class FormApi {
         return this.apiBase.delete(`form/${id}`);
     }
 
+    getExportStatus(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.get(`form/${id}/export/status`);
+    }
+
+    createExportDownload(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.post(`form/${id}/export`, null);
+    }
+
+    getExportDownload(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.get(`form/${id}/export`);
+    }
+
+    getBinaryStatus(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.get(`form/${id}/binaries/status`);
+    }
+
+    createBinaryDownload(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.post(`form/${id}/binaries`, null);
+    }
+
+    getBinaryDownload(id: number): Observable<FormDownloadInfoResponse> {
+        return this.apiBase.get(`form/${id}/binaries`)
+    }
+
+    downloadFormData(id: number, downloadUuid: string): Observable<Blob> {
+        return this.apiBase.getBlob(`form/${id}/download/${downloadUuid}`);
+    }
+
     private sanitizeFormSaveRequest(payload: Partial<Form>): FormSaveRequest {
         // read-only properties not meant to send in DTO
         const readOnlyProperties = [
@@ -110,6 +139,4 @@ export class FormApi {
 
         return payload;
     }
-
-
 }

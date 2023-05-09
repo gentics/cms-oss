@@ -38,9 +38,10 @@ export class GtxI18nDatePipe implements OnDestroy, PipeTransform {
     private lastResult: string;
     private formatFunction: (date: Date) => string;
 
-    constructor(private translate: TranslateService,
-                private changeDetector: ChangeDetectorRef) {
-
+    constructor(
+        private translate: TranslateService,
+        private changeDetector: ChangeDetectorRef,
+    ) {
         this.subscription = translate.onLangChange.subscribe((event: LangChangeEvent) => {
             this.lastValue = undefined;
             this.lastResult = undefined;
@@ -56,6 +57,15 @@ export class GtxI18nDatePipe implements OnDestroy, PipeTransform {
     transform(value: Date | number, format: KnownDateFormatName = 'date'): string {
         if (value === this.lastValue && this.lastFormat === format) {
             return this.lastResult;
+        }
+
+        if (typeof value === 'string') {
+            const tmp = new Date(value);
+            // Only reliable way to check if parsing worked.
+            if (tmp.toString() === 'Invalid Date') {
+                return '';
+            }
+            value = tmp;
         }
 
         if (value == null ||

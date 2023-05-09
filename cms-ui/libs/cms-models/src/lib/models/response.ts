@@ -1,5 +1,5 @@
 import { GcmsUiLanguage } from '../gcms-ui-bridge';
-import { Form } from './cms-form';
+import { Form, FormDownloadInfo } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
 import { ContentRepository } from './content-repository';
@@ -438,6 +438,11 @@ export interface FormCreateResponse extends Response {
 export interface FormResponse extends Response {
     item: Form<Raw>;
 }
+
+/**
+ * Response from `GET|POST /form/:id/(binaries|export)`
+ */
+export interface FormDownloadInfoResponse extends FormDownloadInfo, Response {}
 
 /**
  * Response from `GET /form`

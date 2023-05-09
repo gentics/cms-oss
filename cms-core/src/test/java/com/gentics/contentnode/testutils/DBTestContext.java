@@ -3,19 +3,15 @@ package com.gentics.contentnode.testutils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +39,6 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.exception.FeatureRequiredException;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
@@ -294,7 +289,15 @@ public class DBTestContext extends TestWatcher {
 	protected void setFeatures(Description description) throws NodeException {
 		Class<?> testClass = description.getTestClass();
 		if (testClass != null) {
-			setFeatures(testClass.getAnnotation(GCNFeature.class));
+			List<Class<?>> classes = new ArrayList<>();
+			while (testClass != null) {
+				classes.add(testClass);
+				testClass = testClass.getSuperclass();
+			}
+			Collections.reverse(classes);
+			for (Class<?> clazz : classes) {
+				setFeatures(clazz.getAnnotation(GCNFeature.class));
+			}
 		}
 		setFeatures(description.getAnnotation(GCNFeature.class));
 	}

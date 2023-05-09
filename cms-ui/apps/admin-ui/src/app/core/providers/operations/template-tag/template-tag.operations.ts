@@ -3,8 +3,10 @@ import { EntityIdType, Tag, TemplateSaveRequest, TemplateSaveResponse, TemplateT
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+import { discard } from '@admin-ui/common';
 import { EntityManagerService } from '../../entity-manager';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
+import { I18nNotificationService } from '../../i18n-notification';
 
 @Injectable()
 export class TemplateTagOperations extends ExtendedEntityOperationsBase<'templateTag'> {
@@ -13,6 +15,7 @@ export class TemplateTagOperations extends ExtendedEntityOperationsBase<'templat
         injector: Injector,
         private api: GcmsApi,
         private entityManager: EntityManagerService,
+        private notification: I18nNotificationService,
     ) {
         super(injector, 'templateTag');
     }
@@ -36,7 +39,9 @@ export class TemplateTagOperations extends ExtendedEntityOperationsBase<'templat
                     mandatory: tag.mandatory ?? false,
                 }) as any as TemplateTag);
             }),
-            tap(tags => this.entityManager.addEntities(this.entityIdentifier, tags)),
+            tap(tags => {
+                this.entityManager.addEntities(this.entityIdentifier, tags);
+            }),
             this.catchAndRethrowError(),
         );
     }
@@ -50,9 +55,24 @@ export class TemplateTagOperations extends ExtendedEntityOperationsBase<'templat
             switchMap(res => {
                 // Reload the tags when they have been edited
                 return this.getAll(null, templateId).pipe(
-                    map(() => res)
+                    map(() => res),
                 );
             }),
+        );
+    }
+
+    delete(templateId: string | number, tagId: string): Observable<void> {
+        return this.api.template.updateTemplate(templateId, {
+            delete: [tagId],
+        }).pipe(
+            discard(() => {
+                this.notification.show({
+                    type: 'success',
+                    message: 'shared.item_singular_deleted',
+                    translationParams: { name: tagId },
+                });
+            }),
+            this.catchAndRethrowError(),
         );
     }
 }

@@ -1,5 +1,5 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateTagBO } from '@admin-ui/common';
-import { BaseTableLoaderService, EntityManagerService, TemplateOperations } from '@admin-ui/core';
+import { BaseTableLoaderService, EntityManagerService, TemplateTagOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { TemplateTag, TemplateTagsRequestOptions } from '@gentics/cms-models';
@@ -18,7 +18,7 @@ export class TemplateTagTableLoaderService extends BaseTableLoaderService<Templa
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: TemplateOperations,
+        protected operations: TemplateTagOperations,
     ) {
         super('templateTag', entityManager, appState);
     }
@@ -27,8 +27,8 @@ export class TemplateTagTableLoaderService extends BaseTableLoaderService<Templa
         return Promise.resolve(true);
     }
 
-    public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(entityId).toPromise();
+    public deleteEntity(templateId: string | number, tagId?: string): Promise<void> {
+        return this.operations.delete(templateId, tagId).toPromise();
     }
 
     protected loadEntities(
@@ -57,7 +57,7 @@ export class TemplateTagTableLoaderService extends BaseTableLoaderService<Templa
     public mapToBusinessObject(tag: TemplateTag): TemplateTagBO {
         return {
             ...tag,
-            [BO_ID]: String(tag.id),
+            [BO_ID]: tag.name,
             [BO_PERMISSIONS]: [],
             [BO_DISPLAY_NAME]: tag.name,
         };

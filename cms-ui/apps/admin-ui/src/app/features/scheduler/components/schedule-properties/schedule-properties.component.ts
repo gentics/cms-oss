@@ -1,7 +1,7 @@
 import { ScheduleTaskDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import { AnyModelType, Schedule, ScheduleTaskBO } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -68,7 +68,7 @@ export class SchedulePropertiesComponent extends BasePropertiesComponent<Schedul
     }
 
     protected override onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 name: this.value?.name || '',
                 description: this.value?.description || '',

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { AnyModelType, ScheduleTask } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 
@@ -40,7 +40,7 @@ export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<Sch
     }
 
     protected override onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 name: this.value?.name || '',
                 description: this.value?.description || '',

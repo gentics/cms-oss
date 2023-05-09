@@ -10,7 +10,7 @@ import {
     Output,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     Language,
     ModelType,
@@ -174,7 +174,7 @@ export class ObjectpropertyPropertiesComponent
     }
 
     protected onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 nameI18n: this.value?.nameI18n ?? null,
                 descriptionI18n: this.value?.descriptionI18n ?? null,

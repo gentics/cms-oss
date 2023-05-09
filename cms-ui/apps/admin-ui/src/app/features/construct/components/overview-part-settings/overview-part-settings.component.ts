@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { ListType, OverviewSetting, SelectType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
@@ -45,7 +46,7 @@ export class OverviewPartSettingsComponent extends BaseFormElementComponent<Over
     }
 
     protected onValueChange(): void {
-        if (this.form) {
+        if (this.form && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 listTypes: [],
                 selectTypes: [],

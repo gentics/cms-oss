@@ -1,5 +1,6 @@
 import { SelectableType } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { PageTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { pick } from 'lodash';
@@ -28,6 +29,10 @@ export class PagePartFillComponent extends BaseFormElementComponent<PageTagPartP
     public linkType: PageLinkType = PageLinkType.INTERNAL;
 
     protected override onValueChange(): void {
+        if ((this.value as any) === CONTROL_INVALID_VALUE) {
+            return;
+        }
+
         if (this.value?.pageId) {
             this.linkType = PageLinkType.INTERNAL;
         } else if (this.value?.stringValue) {

@@ -18,7 +18,7 @@ import {
     UntypedFormControl,
     UntypedFormGroup, Validators,
 } from '@angular/forms';
-import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {
     AnyModelType,
     CmsI18nValue,
@@ -403,7 +403,7 @@ export class ConstructPartPropertiesComponent
     }
 
     protected onValueChange(): void {
-        if (this.form) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 keyword: this.value?.keyword ?? null,
                 nameI18n: this.value?.nameI18n ?? null,

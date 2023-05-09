@@ -2,7 +2,7 @@ import { createI18nRequiredValidator } from '@admin-ui/common';
 import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     CmsI18nValue,
     Language,
@@ -11,7 +11,6 @@ import {
     ObjectPropertyCategoryBO,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
 import { Observable } from 'rxjs';
 
 export interface ObjectPropertyCategoryPropertiesFormData {
@@ -97,10 +96,9 @@ export class ObjectPropertyCategoryPropertiesComponent
     }
 
     protected override onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
-                nameI18n: {},
-                ...pick(this.value || {}, 'nameI18n'),
+                nameI18n: this.value?.nameI18n || {},
             });
         }
     }

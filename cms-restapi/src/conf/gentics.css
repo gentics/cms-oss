@@ -1,0 +1,45 @@
+nav.navbar.navbar-inverse.navbar-fixed-top {
+    background: #0096DC;
+    border: 0;
+}
+
+nav.navbar.navbar-inverse.navbar-fixed-top a {
+    color: white;
+}
+
+.navbar-inverse .navbar-toggle {
+    border: 1px solid white;
+}
+
+.navbar-inverse .navbar-toggle:hover {
+    background: #0096DC;
+}
+
+.navbar-inverse .navbar-collapse {
+    border-color: white;
+}
+
+.nav-sidebar li {
+    white-space: nowrap;
+}
+
+a {
+    color: #0096DC;
+}
+
+#apinav {
+    position: fixed;
+    top: 70px;
+    height: 100%;
+    overflow: scroll;
+}
+
+@media (max-width: 768px) {
+    #apinav {
+        position: relative;
+    }
+}
+
+.clickable-row {
+    cursor: pointer;
+}

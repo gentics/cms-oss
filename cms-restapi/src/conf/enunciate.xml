@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<enunciate label="gentics.contentnode" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://enunciate.webcohesion.com/schemas/enunciate-2.10.1.xsd">
+	<services>
+		<rest defaultRestSubcontext="/CNPortletapp/rest" />
+	</services>
+
+	<modules>
+		<!-- Docs -->
+		<docs splashPackage="com.gentics.contentnode.rest" title="Gentics CMS REST API"
+			copyright="Gentics Software" disabled="false" disableResourceLinks="true" css="gentics.css" />
+		<c-xml-client disabled="true" />
+		<csharp-xml-client disabled="true" />
+		<gwt-json-overlay disabled="true" />
+		<idl disabled="true" />
+		<jackson disabled="false" />
+		<jackson1 disabled="true" />
+		<java-json-client disabled="true" />
+		<java-xml-client disabled="true" />
+		<javascript-client disabled="true" />
+		<jaxb disabled="true" />
+		<jaxrs disabled="false" />
+		<jaxws disabled="true" />
+		<obj-c-xml-client disabled="true" />
+		<php-json-client disabled="true" />
+		<php-xml-client disabled="true" />
+		<ruby-json-client disabled="true" />
+		<spring-web disabled="true" />
+		<swagger disabled="true" />
+	</modules>
+</enunciate>

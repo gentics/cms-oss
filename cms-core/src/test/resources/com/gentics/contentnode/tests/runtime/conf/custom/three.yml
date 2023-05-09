@@ -1,0 +1,7 @@
+common: three
+three: set
+complex:
+  three: set
+array:
+  - common
+  - three

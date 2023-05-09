@@ -1,3 +1,8 @@
 .gtx-cancel-button::ng-deep button {
     border: 1px solid transparent !important;
 }
+
+.gtx-entity-details-tab-content-header-buttons {
+    flex: 0 0 auto;
+    margin: auto 0;
+}

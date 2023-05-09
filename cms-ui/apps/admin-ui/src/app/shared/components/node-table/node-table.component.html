@@ -74,6 +74,7 @@
 <ng-template #crRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
+        class="gtx-entity-grid-link"
         [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.contentRepositoryName || value }}</a>
@@ -82,6 +83,7 @@
 <ng-template #masterRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0 && value !== row.item.id"
+        class="gtx-entity-grid-link"
         [routerLink]="'node' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.masterName || value }}</a>

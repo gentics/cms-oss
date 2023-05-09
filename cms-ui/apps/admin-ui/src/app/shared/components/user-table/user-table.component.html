@@ -62,8 +62,8 @@
         <ng-template #groupNameTemplate>{{ group.name }}</ng-template>
         <a
             *ngIf="linkGroups; else groupNameTemplate"
-            class="group-link"
-            [routerLink]="['/' + AdminUIModuleRoutes.GROUPS, { outlets: { detail: ['group', group.id] } }]"
+            class="gtx-entity-grid-link group-link"
+            [routerLink]="group | gtxEntityDetailRouterLink"
             (click)="cancelEvent($event)"
         >{{ group.name }}</a>{{ !last ? ', ' : '' }}
     </ng-container>

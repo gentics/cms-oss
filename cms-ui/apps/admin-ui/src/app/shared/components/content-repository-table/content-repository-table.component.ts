@@ -10,7 +10,7 @@ import {
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
@@ -48,9 +48,6 @@ export class ContentRepositoryTableComponent
     implements OnChanges {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
-
-    @Output()
-    public openDetail = new EventEmitter<OpenCRDetailEvent>();
 
     @Input()
     public linkDetails = false;
@@ -255,11 +252,6 @@ export class ContentRepositoryTableComponent
         }
 
         super.handleAction(event);
-    }
-
-    openDetailTab(event: MouseEvent, item: ContentRepositoryBO, tab: ContentRepositoryDetailTabs): void {
-        this.cancelEvent(event);
-        this.openDetail.emit({ item, tab });
     }
 
     protected async assignNodes(crId: string | number): Promise<void> {

@@ -16,6 +16,7 @@ import { combineLatest, Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 import { ConstructPartPropertiesMode } from '../construct-part-properties/construct-part-properties.component';
 import { CreateConstructPartModalComponent } from '../create-construct-part-modal/create-construct-part-modal.component';
+import { FormControl } from '@angular/forms';
 
 interface DisplayItem {
     item: TagPart;
@@ -248,7 +249,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             return;
         }
 
-        const ctl = new UntypedFormControl(created, Validators.required);
+        const ctl: FormControl = new UntypedFormControl(created, Validators.required);
         const index = this.internalParts.push(created) - 1;
 
         this.observeSingleTag(ctl, index);
@@ -262,11 +263,17 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             },
         });
 
-        ctl.markAsDirty();
-        ctl.updateValueAndValidity();
-        this.form.updateValueAndValidity();
         this.triggerChange(this.form.value);
         this.changeDetector.markForCheck();
+
+        setTimeout(() => {
+            ctl.markAsDirty();
+            ctl.markAsTouched();
+            ctl.updateValueAndValidity();
+            this.form.markAsDirty();
+            this.form.markAsTouched();
+            this.form.updateValueAndValidity();
+        }, 10);
     }
 
     private observeSingleTag(control: AbstractControl, index: number): void {

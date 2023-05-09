@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "contentnode") + """
+      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms") + """
       resources:
         requests:
           cpu: '0'
@@ -77,7 +77,7 @@ spec:
     }
 
     parameters {
-        booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. contentnode-lib tests will be skipped for MR builds if there are no relevant changes.")
+        booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")

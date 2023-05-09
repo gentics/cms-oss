@@ -96,13 +96,22 @@
 </ng-template>
 
 <ng-template #resultRenderer let-value="value" let-row="row">
-    <a (click)="openExecutionDetails(row, $event)">
+    <a
+        *ngIf="value != null"
+        class="gtx-entity-grid-link"
+        (click)="openExecutionDetails(row, $event)"
+    >
         {{ 'scheduler.execution_result_' + (value ? 'true' : 'false') | i18n }}
     </a>
 </ng-template>
 
 <ng-template #taskRenderer let-value="value" let-row="row">
-    <a *ngIf="value > 0" (click)="handleTaskClick(value, $event)">
+    <a
+        *ngIf="value > 0"
+        class="gtx-entity-grid-link"
+        [routerLink]="'scheduleTask' | gtxEntityDetailRouterLink:row.item.taskId"
+        (click)="cancelEvent($event)"
+    >
         {{ row.item.task?.name || row.item.taskId }}
     </a>
 </ng-template>

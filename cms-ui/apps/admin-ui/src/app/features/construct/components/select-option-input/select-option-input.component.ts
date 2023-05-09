@@ -1,6 +1,7 @@
 import { blacklistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { SelectOption } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
@@ -48,8 +49,16 @@ export class SelectOptionInputComponent extends BaseFormElementComponent<SelectO
     }
 
     protected onValueChange(): void {
+        if ((this.value as any) === CONTROL_INVALID_VALUE) {
+            return;
+        }
+
         try {
-            this.form.setValue(this.value || {});
+            this.form.setValue({
+                id: this.value?.id,
+                key: this.value?.key,
+                value: this.value?.value,
+            });
         } catch (err) {
             console.warn('Error while updating select-option-input form', err);
         }

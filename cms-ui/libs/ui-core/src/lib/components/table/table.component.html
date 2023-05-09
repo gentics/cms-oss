@@ -9,6 +9,7 @@
         <div *ngIf="selectable" class="grid-cell select-column" (click)="preventClick($event)">
             <gtx-checkbox
                 *ngIf="selectAllType != null && selectAllType !== TableSelectAllType.NONE"
+                class="selection-checkbox"
                 [checked]="!(rows?.length < 1 && totalCount < 1) && allSelected"
                 [disabled]="disabled || rows?.length < 1 && totalCount < 1"
                 (click)="toggleAllSelections($event)"
@@ -108,7 +109,11 @@
                 ></ng-container>
             </ng-template>
 
-            <ng-template #defaultCellRenderer>{{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}</ng-template>
+            <ng-template #defaultCellRenderer>
+                <div class="cell-content-wrapper">
+                    {{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}
+                </div>
+            </ng-template>
         </div>
 
         <div

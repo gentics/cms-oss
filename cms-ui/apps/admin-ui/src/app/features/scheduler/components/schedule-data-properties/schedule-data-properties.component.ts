@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import { FollowUpScheduleData, IntervalScheduleData, ScheduleData, ScheduleType } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { pick } from 'lodash';
@@ -88,14 +88,13 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
     }
 
     protected override onValueChange(): void {
-        if (this.form) {
+        if (this.form && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
-                type: null,
-                startTimestamp: null,
-                endTimestamp: null,
-                interval: null,
-                follow: null,
-                ...this.value,
+                type: this.value?.type || null,
+                startTimestamp: this.value?.startTimestamp || null,
+                endTimestamp: this.value?.endTimestamp || null,
+                interval: (this.value as IntervalScheduleData)?.interval || null,
+                follow: (this.value as FollowUpScheduleData)?.follow || null,
             });
         }
     }

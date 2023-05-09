@@ -81,6 +81,7 @@
 <ng-template #constructRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
+        class="gtx-entity-grid-link"
         [routerLink]="'construct' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.construct?.name || value }}</a>
@@ -89,6 +90,7 @@
 <ng-template #categoryRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
+        class="gtx-entity-grid-link"
         [routerLink]="'objectpropcategory' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>

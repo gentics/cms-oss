@@ -106,7 +106,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * Basic implementation which will simply put the value into the form.
      */
     protected onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
                 tmpObj[controlName] = this.value?.[controlName] || null;

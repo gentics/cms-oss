@@ -37,7 +37,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
     apk add --no-cache bash rsync curl iputils busybox-extras tar nano
 
 ADD --chown=1000:0 ./target/cms-server*jar /cms/cms-server.jar
-ADD --chown=1000:0 entrypoint.sh /cms/
+ADD --chown=1000:0 --chmod=700 entrypoint.sh /cms/
 
 USER node
 WORKDIR /cms

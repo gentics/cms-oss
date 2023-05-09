@@ -97,6 +97,7 @@
 
 <ng-template #resultRenderer let-value="value" let-row="row">
     <a
+        *ngIf="value != null"
         class="gtx-entity-grid-link"
         (click)="openExecutionDetails(row, $event)"
     >
@@ -109,7 +110,7 @@
         *ngIf="value > 0"
         class="gtx-entity-grid-link"
         [routerLink]="'scheduleTask' | gtxEntityDetailRouterLink:row.item.taskId"
-        (click)="handleTaskClick(value, $event)"
+        (click)="cancelEvent($event)"
     >
         {{ row.item.task?.name || row.item.taskId }}
     </a>

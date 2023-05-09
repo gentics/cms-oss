@@ -1,9 +1,8 @@
-import { BO_PERMISSIONS, buildEntityDetailPath, discard, ScheduleBO } from '@admin-ui/common';
+import { BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, PermissionsService, ScheduleOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Router } from '@angular/router';
 import {
     AccessControlledType,
     AnyModelType,
@@ -13,7 +12,7 @@ import {
     SchedulerStatus,
     ScheduleSaveReqeust,
 } from '@gentics/cms-models';
-import { cancelEvent, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { combineLatest, forkJoin, interval, Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
@@ -99,7 +98,6 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         protected operations: ScheduleOperations,
         protected permissions: PermissionsService,
         protected notification: I18nNotificationService,
-        protected router: Router,
     ) {
         super(
             changeDetector,
@@ -213,16 +211,6 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         }
 
         super.handleAction(event);
-    }
-
-    public handleTaskClick(taskId: number, event?: MouseEvent): void {
-        cancelEvent(event);
-        const target = buildEntityDetailPath('scheduleTask', taskId);
-        this.router.navigate(target).then(didNavigate => {
-            if (didNavigate) {
-                this.taskClick.emit(taskId);
-            }
-        });
     }
 
     public handleSchedulerResume(): void {

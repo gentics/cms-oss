@@ -1,24 +1,27 @@
 <ng-container *ngIf="tagProperty">
     <div class="row column text-box">
-        <gtx-input *ngIf="isTextShort"
+        <gtx-input
+            *ngIf="isTextShort"
             maxLength="255"
             [label]="tagPart | tagPropLabel"
             [pattern]="tagPart?.regex?.expression"
             [placeholder]="tagPart?.regex?.description"
             [required]="tagPart?.mandatory"
             [readonly]="readOnly"
-            [(ngModel)]="tagProperty.stringValue"
+            [value]="tagProperty.stringValue"
             (blur)="onBlur($event)"
             (change)="onChange($event)">
         </gtx-input>
-        <gtx-textarea *ngIf="!isTextShort"
+
+        <gtx-textarea
+            *ngIf="!isTextShort"
             multiline="true"
             [label]="tagPart | tagPropLabel"
             [pattern]="tagPart?.regex?.expression"
             [placeholder]="tagPart?.regex?.description"
             [required]="tagPart?.mandatory"
             [readonly]="readOnly"
-            [(ngModel)]="tagProperty.stringValue"
+            [value]="tagProperty.stringValue"
             (touch)="onBlur($event)"
             (valueChange)="onChange($event)">
         </gtx-textarea>

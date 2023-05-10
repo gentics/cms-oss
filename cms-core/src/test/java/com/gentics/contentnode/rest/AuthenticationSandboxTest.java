@@ -72,16 +72,11 @@ public class AuthenticationSandboxTest {
 	 */
 	public int groupId = 5;
 
-	protected RsaTokenValidator rsaTokenValidator;
-
-
 	/**
 	 * Initializes the client and the WebResource
 	 */
 	@Before
 	public void setUp() throws Exception {
-		rsaTokenValidator = new RsaTokenValidator();
-
 		// Make sure all stored passwords are "bcrypted"
 		BcryptPasswords bcryptPasswords = new BcryptPasswords();
 		bcryptPasswords.execute();
@@ -156,6 +151,7 @@ public class AuthenticationSandboxTest {
 		AuthenticationResourceImpl authenticationResource = getAuthenticationResource();
 		RsaAuthenticationResourceImpl rsaAuthenticationResource  = new RsaAuthenticationResourceImpl();
 		rsaAuthenticationResource.initialize();
+		RsaTokenValidator rsaTokenValidator = rsaAuthenticationResource.getRsaTokenValidator();
 
 		// Load the private key from generic test utils
 		InputStream privateKeyStream = AuthenticationSandboxTest.class.getResourceAsStream(RSALOGIN_KEY_PRIVATE);

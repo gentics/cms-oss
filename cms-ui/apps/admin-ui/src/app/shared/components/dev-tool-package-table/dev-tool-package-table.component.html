@@ -32,6 +32,20 @@
     >
         <icon left>link</icon> {{ 'shared.assign_packages_to_node' | i18n }}
     </gtx-button>
+
+    <gtx-button
+        *ngIf="!hideSync"
+        flat
+        size="small"
+        class="table-action-button sync-status-toggle"
+        [type]="syncEnabled ? 'success' : 'alert'"
+        [disabled]="!(canEdit$ | async) || syncLoading"
+        (click)="toggleSync()"
+    >
+        <icon left>{{ syncEnabled ? 'play_arrow' : 'pause' }}</icon>
+        {{ 'package.autosync_label' | i18n }}:
+        {{ (syncEnabled ? 'package.autosync_active' : 'package.autosync_inactive') | i18n }}
+    </gtx-button>
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">

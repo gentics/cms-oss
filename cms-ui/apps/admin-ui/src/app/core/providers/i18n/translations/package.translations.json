@@ -194,5 +194,25 @@
     "property_version": {
         "en": "Version",
         "de": "Version"
+    },
+    "autosync_label": {
+        "en": "Automatic synchronization",
+        "de": "Automatische Synchronisierung"
+    },
+    "autosync_active": {
+        "en": "Active",
+        "de": "Aktiv"
+    },
+    "autosync_inactive": {
+        "en": "Inactive",
+        "de": "Inaktiv"
+    },
+    "autosync_activate_message": {
+        "en": "Automatic synchronization successfully activated!",
+        "de": "Automatische Synchronisierung erfolgreich aktiviert!"
+    },
+    "autosync_deactivate_message": {
+        "en": "Automatic synchronization successfully deactivated!",
+        "de": "Automatische Synchronisierung erfolgreich deaktiviert!"
     }
 }

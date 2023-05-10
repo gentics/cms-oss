@@ -17,8 +17,8 @@ import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-    AssignContentrepositoriesToCrfragmentsModalComponent,
-} from '../assign-content-repositories-to-cr-fragments-modal/assign-content-repositories-to-crf-ragments-modal.component';
+    AssignCRFragmentsToContentRepositoryModal,
+} from '../assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 import {
     AssignContentrepositoriesToNodesModalComponent,
 } from '../assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
@@ -150,7 +150,7 @@ export class ContentRepositoryTableComponent
                         icon: 'dns',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('shared.assign_contentrepositories_to_crfragments'),
+                        label: this.i18n.instant('shared.assign_crfragments_to_contentrepositories'),
                     },
                     {
                         id: DATA_CHECK_ACTION,
@@ -267,7 +267,7 @@ export class ContentRepositoryTableComponent
 
     protected async assignFragments(crId: string | number): Promise<void> {
         const dialog = await this.modalService.fromComponent(
-            AssignContentrepositoriesToCrfragmentsModalComponent,
+            AssignCRFragmentsToContentRepositoryModal,
             { closeOnOverlayClick: false, width: '50%' },
             { contentRepositoryId: String(crId) },
         );

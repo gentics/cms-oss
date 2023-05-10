@@ -36,7 +36,7 @@ import {
 import { isEqual } from 'lodash';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
-import { delay, first, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
+import { delay, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
 import { ConstructPropertiesMode } from '../construct-properties/construct-properties.component';
 
 export enum ConstructDetailTabs {
@@ -302,7 +302,6 @@ export class ConstructDetailComponent
             );
         }
 
-        this.applyDirtCorrection(this.fgParts);
         this.fgParts.markAsPristine();
     }
 

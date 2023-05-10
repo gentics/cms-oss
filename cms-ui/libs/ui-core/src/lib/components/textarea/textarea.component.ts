@@ -105,6 +105,12 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         });
 
         this.observer.observe(this.textAreaEl.nativeElement);
+
+        setTimeout(() => {
+            if (this.autosizeDir) {
+                this.autosizeDir.adjust();
+            }
+        });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -119,6 +125,11 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         if (this.observer) {
             this.observer.disconnect();
         }
+    }
+
+    public textAreaInputHandler(event: KeyboardEvent) {
+        const elementValue = (event.target as HTMLTextAreaElement).value;
+        this.triggerChange(elementValue);
     }
 
     protected onValueChange(): void {

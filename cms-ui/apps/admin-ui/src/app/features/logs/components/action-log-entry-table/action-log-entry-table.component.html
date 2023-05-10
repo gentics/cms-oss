@@ -55,8 +55,8 @@
         <gtx-icon [name]="row.item.type.name" class="type-icon"></gtx-icon>
         <a
             *ngIf="row.item.type.name !== 'template'"
+            class="gtx-entity-grid-link name"
             [routerLink]="row.item | gtxEntityDetailRouterLink"
-            class="name"
         >{{ row.item.type.label }}</a>
         <span *ngIf="row.item.type.name === 'template'" class="name">{{ row.item.type.label }}</span>
     </div>

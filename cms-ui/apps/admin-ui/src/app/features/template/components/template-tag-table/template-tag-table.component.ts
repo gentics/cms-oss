@@ -79,6 +79,10 @@ export class TemplateTagTableComponent
         };
     }
 
+    protected override callToDeleteEntity(id: string): Promise<void> {
+        return (this.loader as TemplateTagTableLoaderService).deleteEntity(this.templateId, id);
+    }
+
     protected createTableActionLoading(): Observable<TableAction<TemplateTagBO>[]> {
         return this.actionRebuildTrigger$.pipe(
             map(() => {

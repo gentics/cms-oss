@@ -5,7 +5,12 @@ import { NormalizableEntityType } from '@gentics/cms-models';
 @Pipe({ name: 'gtxEntityDetailRouterLink' })
 export class EntityDetailRouterLinkPipe implements PipeTransform {
 
-    transform(typeOrItem: NormalizableEntityType | any, id?: string | number, nodeId?: number): any[] {
-        return buildEntityDetailPath(typeOrItem, id, nodeId);
+    transform(
+        typeOrItem: NormalizableEntityType | any,
+        id?: string | number,
+        nodeIdOrTab?: number | string,
+        tab?: string,
+    ): any[] {
+        return buildEntityDetailPath(typeOrItem, id, nodeIdOrTab, tab);
     }
 }

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { ContentPackageCreateRequest, ContentPackageSaveRequest } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 
@@ -39,9 +39,11 @@ export class ContentPackagePropertiesComponent extends BasePropertiesComponent<C
     }
 
     protected override onValueChange(): void {
-        this.form.setValue({
-            name: this.value?.name || null,
-            description: this.value?.description || null,
-        });
+        if (this.form  && (this.value as any) !== CONTROL_INVALID_VALUE) {
+            this.form.setValue({
+                name: this.value?.name || null,
+                description: this.value?.description || null,
+            });
+        }
     }
 }

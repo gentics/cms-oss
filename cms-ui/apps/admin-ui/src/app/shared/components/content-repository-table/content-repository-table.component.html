@@ -87,8 +87,10 @@
 <ng-template #detailLink let-label="label" let-date="date" let-tab="tab" let-item="item">
     <a
         *ngIf="linkDetails; else textRenderer"
+        class="gtx-entity-grid-link"
+        [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:item.id:tab"
         [title]="date > 0 ? (date | i18nDate:'dateTime') : ''"
-        (click)="openDetailTab($event, item, tab)"
+        (click)="cancelEvent($event)"
     >{{ label }}</a>
 
 <ng-template #textRenderer>

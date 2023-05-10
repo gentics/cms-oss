@@ -49,7 +49,7 @@ import com.gentics.lib.log.NodeLogger;
 /**
  * Server Runner for the GCMS
  */
-public class Runner {
+public class OSSRunner {
 
 	static NodeLogger log;
 
@@ -73,7 +73,7 @@ public class Runner {
 	 */
 	protected static void start() {
 		Initializer.get().init();
-		log = NodeLogger.getNodeLogger(Runner.class);
+		log = NodeLogger.getNodeLogger(OSSRunner.class);
 		servletContextHandlerServiceLoader = ServiceLoader.load(ServletContextHandlerService.class);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
@@ -222,7 +222,7 @@ public class Runner {
 		// serve AlohaEditor files
 		if (StringUtils.isBlank(alohaEditorPath)) {
 			// determine the build timestamp
-			try (InputStream buildFile = Runner.class.getResourceAsStream("/build.txt")) {
+			try (InputStream buildFile = OSSRunner.class.getResourceAsStream("/build.txt")) {
 				if (buildFile != null) {
 					String buildTimestamp = IOUtils.toString(buildFile);
 					if (!StringUtils.startsWith(buildTimestamp, "$")) {
@@ -232,7 +232,7 @@ public class Runner {
 					}
 				}
 			} catch (IOException e) {
-				NodeLogger.getNodeLogger(Runner.class)
+				NodeLogger.getNodeLogger(OSSRunner.class)
 						.error("Error while reading build.txt from classpath", e);
 			}
 

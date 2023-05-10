@@ -128,7 +128,7 @@
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
-										<Main-Class>com.gentics.contentnode.server.Runner</Main-Class>
+										<Main-Class>com.gentics.contentnode.server.OSSRunner</Main-Class>
 										<!-- The Implementation-Vendor and Implementation-Version are necessary for the embedded ImageIO to work properly -->
 										<Implementation-Vendor>Gentics Software</Implementation-Vendor>
 										<Implementation-Version>${project.version}</Implementation-Version>

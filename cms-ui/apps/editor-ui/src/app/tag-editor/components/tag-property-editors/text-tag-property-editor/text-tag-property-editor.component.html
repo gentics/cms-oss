@@ -17,7 +17,6 @@
             *ngIf="!isTextShort"
             multiline="true"
             [label]="tagPart | tagPropLabel"
-            [pattern]="tagPart?.regex?.expression"
             [placeholder]="tagPart?.regex?.description"
             [required]="tagPart?.mandatory"
             [readonly]="readOnly"

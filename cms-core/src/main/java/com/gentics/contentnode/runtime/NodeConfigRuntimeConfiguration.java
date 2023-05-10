@@ -100,9 +100,19 @@ public class NodeConfigRuntimeConfiguration {
 			Map<String, Object> data = loadConfiguration();
 
 			nodeConfig = new PropertyNodeConfig(data);
-			nodeConfig.init();
-
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
+
+			// check features
+			for (Feature feature : Feature.values()) {
+				if (feature.activatedButNotAvailable()) {
+					logger.error(String.format(
+							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
+							feature.getName()));
+					nodePreferences.setFeature(feature, false);
+				}
+			}
+
+			nodeConfig.init();
 
 			// TODO move this to PopertyNodeConfig.init
 			// set configuration for the instant cr publishing disabler
@@ -115,15 +125,6 @@ public class NodeConfigRuntimeConfiguration {
 			}
 
 			MBeanRegistry.registerMBean(new SessionInfo(), "System", "SessionInfo");
-
-			// check features
-			for (Feature feature : Feature.values()) {
-				if (feature.activatedButNotAvailable()) {
-					logger.error(String.format(
-							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
-							feature.getName()));
-				}
-			}
 		} catch (Exception e) {
 			throw new NodeException("Error while loading Gentics Content.Node configuration", e);
 		}

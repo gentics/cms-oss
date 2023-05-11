@@ -993,6 +993,10 @@ export interface PackageCreateResponse extends Response {
     package: Package<Raw>;
 }
 
+export interface PackageSyncResponse extends Response {
+    enabled: boolean;
+}
+
 // OBJECTPROPERTY //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**

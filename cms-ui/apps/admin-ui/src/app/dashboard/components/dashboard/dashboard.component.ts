@@ -1,10 +1,10 @@
 import { AdminUIModuleRoutes } from '@admin-ui/common';
 import { AuthOperations, PermissionsService } from '@admin-ui/core';
-import { AppStateService, AuthStateModel, CloseEditor, SelectState } from '@admin-ui/state';
+import { AppStateService, CloseEditor } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { combineLatest, Observable, of } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -15,9 +15,6 @@ import { map, switchMap } from 'rxjs/operators';
 export class DashboardComponent implements OnInit {
 
     readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
-
-    @SelectState(state => state.auth)
-    protected authState$: Observable<AuthStateModel>;
 
     // Observables for checking which modules are enabled based on the user's permissions.
     public usersModuleEnabled$: Observable<boolean>;
@@ -61,9 +58,24 @@ export class DashboardComponent implements OnInit {
         this.logsModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.ACTION_LOG, permissions: GcmsPermission.READ });
         this.nodesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.CONTENT, permissions: GcmsPermission.READ });
         this.dataSourcesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.DATA_SOURCE_ADMIN, permissions: GcmsPermission.READ });
-        this.packagesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.DEVTOOL_ADMIN, permissions: GcmsPermission.READ });
-        this.searchMaintenanceModuleEnabled$ =
-            this.permissions.checkPermissions({ type: AccessControlledType.SEARCH_INDEX_MAINTENANCE, permissions: GcmsPermission.READ });
+        this.packagesModuleEnabled$ = combineLatest([
+            this.appState.select(state => state.features.global.devtools),
+            this.permissions.checkPermissions({
+                type: AccessControlledType.DEVTOOL_ADMIN,
+                permissions: GcmsPermission.READ,
+            }),
+        ]).pipe(
+            map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
+        );
+        this.searchMaintenanceModuleEnabled$ = combineLatest([
+            this.appState.select(state => state.features.global.elasticsearch),
+            this.permissions.checkPermissions({
+                type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
+                permissions: GcmsPermission.READ,
+            }),
+        ]).pipe(
+            map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
+        );
         this.crFragmentsModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.CR_FRAGMENT_ADMIN, permissions: GcmsPermission.READ });
         this.templatesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.ADMIN, permissions: GcmsPermission.READ });
         // Can open the schedule module and can either read schedules or tasks
@@ -95,10 +107,6 @@ export class DashboardComponent implements OnInit {
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
         );
-        this.searchMaintenanceModuleEnabled$ = this.permissions.checkPermissions({
-            type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
-            permissions: GcmsPermission.READ,
-        });
         this.contentMaintenanceModuleEnabled$ = this.permissions.checkPermissions({
             type: AccessControlledType.MAINTENANCE,
             permissions: GcmsPermission.READ,

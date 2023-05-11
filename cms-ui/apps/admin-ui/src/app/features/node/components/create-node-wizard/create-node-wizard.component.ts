@@ -114,20 +114,13 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
     }
 
     private onFinishClick(): Promise<Node<Raw>> {
-        return new Promise<Node<Raw>>((resolve, reject) => {
-            this.createNode().pipe(
-                switchMap((node: Node<Raw>) => this.setNodeFeatures(node)),
-                switchMap((node: Node<Raw>) => this.setNodeLanguages(node)),
-                tap(node => console.log('created node: ', node)),
+        return this.createNode().pipe(
+            switchMap((node: Node<Raw>) => this.setNodeFeatures(node)),
+            switchMap((node: Node<Raw>) => this.setNodeLanguages(node)),
 
-                // We need to catch any errors and emit something to make sure that the wizard closes.
-                catchError(() => observableOf(null)),
-            ).subscribe(node => {
-                resolve(node);
-            }, err => {
-                reject(err);
-            });
-        });
+            // We need to catch any errors and emit something to make sure that the wizard closes.
+            catchError(() => observableOf(null)),
+        ).toPromise();
     }
 
     private createNode(): Observable<Node<Raw> | string> {

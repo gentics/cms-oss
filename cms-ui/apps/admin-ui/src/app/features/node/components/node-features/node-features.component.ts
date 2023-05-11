@@ -1,12 +1,10 @@
 import { ChangesOf, FormControlOnChangeFn, ObservableStopper } from '@admin-ui/common';
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
-    HostListener,
     Input,
     OnChanges,
-    OnDestroy,
+    OnDestroy
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { Index, IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
@@ -40,10 +38,6 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
     public disabled = false;
 
     fgFeatures: UntypedFormGroup;
-    descriptionVisible: NodeFeatureModel = null;
-    descriptionHideTimeout: any;
-    descriptionShowTimeout: any;
-    descriptionPosition: string;
 
     /**
      * This subject is used to decouple the `registerOnChange()` subscription
@@ -57,10 +51,6 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
     private currentValue: NodeFeaturesFormData = {};
 
     private stopper = new ObservableStopper();
-
-    constructor(
-        private changeDetector: ChangeDetectorRef,
-    ) {}
 
     ngOnDestroy(): void {
         this.stopper.stop();
@@ -122,67 +112,4 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
             takeUntil(this.stopper.stopper$),
         ).subscribe(value => this.valueChangesSubj$.next(value));
     }
-
-    toggleDescription(event: Event, feature: NodeFeatureModel): void {
-        // if (this.isMobile() && (event.type === 'mouseenter' || event.type === 'mouseleave')) {
-        //     return;
-        // }
-        // if (event.type === 'click') {
-        //     event.stopPropagation();
-        //     this.descriptionVisible = this.descriptionVisible ? null : feature;
-        // }
-
-        // if (event.type === 'mouseleave') {
-        //     clearTimeout(this.descriptionShowTimeout);
-        //     this.descriptionHideTimeout = setTimeout(() => {
-        //         this.descriptionVisible = null;
-        //         this.changeDetector.detectChanges();
-        //     }, 200);
-        // }
-
-        // if (event.type === 'mouseenter') {
-        //     clearTimeout(this.descriptionHideTimeout);
-        //     this.descriptionShowTimeout = setTimeout(() => {
-        //         this.descriptionVisible = feature;
-        //         this.changeDetector.detectChanges();
-        //     }, 200);
-        // }
-
-        // if (this.isMobile()) {
-        //     this.descriptionPosition = 'bottom';
-        // } else {
-        //     this.descriptionPosition = 'right';
-        // }
-    }
-
-    onHoverState(hover: boolean, feature: NodeFeatureModel): void {
-        this.descriptionVisible = hover ? feature : null;
-        clearTimeout(this.descriptionHideTimeout);
-    }
-
-    @HostListener('window:resize', ['$event'])
-    onResize(event: Event): void {
-        if (this.isMobile()) {
-            this.descriptionVisible = null;
-        }
-    }
-
-    /**
-     * Returns if it's mobile device.
-     */
-    isMobile(): boolean {
-        if ((/Android/i.exec(navigator.userAgent))
-            || (/webOS/i.exec(navigator.userAgent))
-            || (/iPhone/i.exec(navigator.userAgent))
-            || (/iPad/i.exec(navigator.userAgent))
-            || (/iPod/i.exec(navigator.userAgent))
-            || (/BlackBerry/i.exec(navigator.userAgent))
-            || (/Windows Phone/i.exec(navigator.userAgent))
-        ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
 }

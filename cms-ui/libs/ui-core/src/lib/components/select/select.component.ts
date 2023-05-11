@@ -143,6 +143,7 @@ export class SelectComponent
                 this.writeValue(this.value);
                 this.optionGroups = this.buildOptionGroups();
                 this.selectedOptions = this.getInitiallySelectedOptions();
+                this.updateViewValue();
             }),
         );
 

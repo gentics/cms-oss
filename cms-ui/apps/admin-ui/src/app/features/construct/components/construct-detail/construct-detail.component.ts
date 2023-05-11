@@ -178,7 +178,6 @@ export class ConstructDetailComponent
             descriptionI18n: this.fgProperties.value.descriptionI18n,
             keyword: this.fgProperties.value.keyword,
             icon: this.fgProperties.value.icon,
-            newEditor: this.fgProperties.value.newEditor,
             externalEditorUrl: this.fgProperties.value.externalEditorUrl,
             mayBeSubtag: this.fgProperties.value.mayBeSubtag,
             mayContainSubtags: this.fgProperties.value.mayContainSubtags,

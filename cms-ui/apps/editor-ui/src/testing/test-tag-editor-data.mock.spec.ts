@@ -161,7 +161,6 @@ describe('TagEditor Test Helper Functions', () => {
                     typeId: TagPartType.Text
                 }
             ],
-            newEditor: true,
             icon: 'tag.gif'
         };
 
@@ -210,7 +209,6 @@ describe('TagEditor Test Helper Functions', () => {
             id: 1,
             keyword: 'custom_keyword',
             name: 'Custom Name',
-            newEditor: false
         };
 
         const tagType: TagType = {
@@ -233,7 +231,6 @@ describe('TagEditor Test Helper Functions', () => {
                     typeId: TagPartType.Text
                 }
             ],
-            newEditor: tagTypeInfo.newEditor,
             icon: 'tag.gif',
         };
 
@@ -319,7 +316,6 @@ describe('TagEditor Test Helper Functions', () => {
                     typeId: TagPartType.TextShort
                 }
             ],
-            newEditor: true,
             icon: 'tag.gif'
         };
 
@@ -373,7 +369,6 @@ describe('TagEditor Test Helper Functions', () => {
                 id: 1,
                 keyword: 'custom_keyword',
                 name: 'Custom Name',
-                newEditor: false
             },
             name: 'object.customName',
             displayName: 'Display Name Test',
@@ -404,7 +399,6 @@ describe('TagEditor Test Helper Functions', () => {
                     typeId: TagPartType.Text
                 }
             ],
-            newEditor: objTagInfo.tagType.newEditor,
             icon: 'tag.gif',
         };
 
@@ -480,7 +474,6 @@ describe('TagEditor Test Helper Functions', () => {
                     typeId: TagPartType.Text
                 }
             ],
-            newEditor: true,
             icon: 'tag.gif',
         };
 

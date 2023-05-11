@@ -46,7 +46,6 @@ export interface MockTagTypeInfo {
     keyword?: string;
     name?: string;
     icon?: string;
-    newEditor?: boolean;
 }
 
 /** Captures information about a mocked ObjectTag and its TagType. */
@@ -99,7 +98,6 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         keyword: tagTypeInfo.keyword || 'test_tagtype',
         name: tagTypeInfo.name || 'Test Tag',
         icon: tagTypeInfo.icon || 'tag.gif',
-        newEditor: typeof tagTypeInfo.newEditor === 'boolean' ? tagTypeInfo.newEditor : true,
         parts: []
     };
 

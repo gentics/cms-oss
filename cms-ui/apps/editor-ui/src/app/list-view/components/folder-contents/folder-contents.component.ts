@@ -250,7 +250,7 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
         ]).pipe(
             map(([activeNodeId, nodeFeatures]) => {
                 const activeNodeFeatures = nodeFeatures[activeNodeId];
-                const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.forms);
+                const isActiveFeatureForms = Array.isArray(activeNodeFeatures) && activeNodeFeatures.includes(NodeFeature.FORMS);
                 const itemTypes: FolderItemType[] = ['folder', 'page', 'file', 'image'];
                 if (isActiveFeatureForms) {
                     itemTypes.push('form');

@@ -143,7 +143,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
             map(term => this.isValidString(term)),
         );
         this.elasticsearchQueryActive$ = combineLatest([
-            this.appState.select(state => state.features[Feature.elasticsearch]),
+            this.appState.select(state => state.features[Feature.ELASTICSEARCH]),
             this.appState.select(state => state.folder.searchFiltersVisible),
         ]).pipe(
             map(([elasticsearchFeatureEnabled, seearchQueryActive]) => elasticsearchFeatureEnabled && seearchQueryActive),

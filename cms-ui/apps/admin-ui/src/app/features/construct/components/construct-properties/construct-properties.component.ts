@@ -38,7 +38,6 @@ export interface ConstructPropertiesFormData {
     keyword: string;
     icon: string;
     nodeIds: number[];
-    newEditor: boolean;
     parts?: TagPart[],
     externalEditorUrl?: string;
     mayBeSubtag?: boolean;
@@ -172,7 +171,6 @@ export class ConstructPropertiesComponent
             descriptionI18n: new UntypedFormControl({}),
             icon: new UntypedFormControl('', Validators.required),
             nodeIds: new UntypedFormControl([], Validators.required),
-            newEditor: new UntypedFormControl(true),
             externalEditorUrl: new UntypedFormControl(''),
             mayBeSubtag: new UntypedFormControl(false),
             mayContainSubtags: new UntypedFormControl(false),
@@ -210,7 +208,6 @@ export class ConstructPropertiesComponent
             descriptionI18n: formData.descriptionI18n,
             keyword: formData.keyword,
             icon: formData.icon,
-            newEditor: formData.newEditor,
             externalEditorUrl: formData.externalEditorUrl,
             mayBeSubtag: formData.mayBeSubtag,
             mayContainSubtags: formData.mayContainSubtags,
@@ -251,7 +248,6 @@ export class ConstructPropertiesComponent
                 keyword: this.value?.keyword || null,
                 icon: this.value?.icon || null,
                 nodeIds: this.value?.nodeIds || [],
-                newEditor: this.value?.newEditor || false,
                 externalEditorUrl: this.value?.externalEditorUrl || null,
                 mayBeSubtag: this.value?.mayBeSubtag || false,
                 mayContainSubtags: this.value?.mayContainSubtags || null,

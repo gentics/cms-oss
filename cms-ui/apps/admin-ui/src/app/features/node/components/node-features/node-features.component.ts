@@ -6,12 +6,12 @@ import {
     HostListener,
     Input,
     OnChanges,
-    OnDestroy
+    OnDestroy,
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { Index, IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual as _isEqual } from 'lodash';
+import { isEqual } from 'lodash';
 import { Subject } from 'rxjs';
 import { map, takeUntil, takeWhile } from 'rxjs/operators';
 
@@ -30,14 +30,20 @@ export type NodeFeaturesFormData = Partial<Index<NodeFeature, boolean>>;
 })
 export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValueAccessor {
 
-    fgFeatures: UntypedFormGroup;
+    public readonly NodeFeature = NodeFeature;
 
     /** An array of all node features that are available. */
     @Input()
-    availableFeatures: NodeFeatureModel[];
+    public availableFeatures: NodeFeatureModel[];
 
     @Input()
     public disabled = false;
+
+    fgFeatures: UntypedFormGroup;
+    descriptionVisible: NodeFeatureModel = null;
+    descriptionHideTimeout: any;
+    descriptionShowTimeout: any;
+    descriptionPosition: string;
 
     /**
      * This subject is used to decouple the `registerOnChange()` subscription
@@ -52,11 +58,6 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
 
     private stopper = new ObservableStopper();
 
-    descriptionVisible: NodeFeatureModel = null;
-    descriptionHideTimeout: any;
-    descriptionShowTimeout: any;
-    descriptionPosition: string;
-
     constructor(
         private changeDetector: ChangeDetectorRef,
     ) {}
@@ -66,7 +67,7 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
     }
 
     ngOnChanges(changes: ChangesOf<this>): void {
-        if (changes.availableFeatures && !_isEqual(changes.availableFeatures.previousValue, changes.availableFeatures.currentValue)) {
+        if (changes.availableFeatures && !isEqual(changes.availableFeatures.previousValue, changes.availableFeatures.currentValue)) {
             this.recreateForm(changes.availableFeatures.currentValue);
         }
         if (changes.disabled) {
@@ -123,35 +124,35 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
     }
 
     toggleDescription(event: Event, feature: NodeFeatureModel): void {
-        if (this.isMobile() && (event.type === 'mouseenter' || event.type === 'mouseleave')) {
-             return;
-        }
-        if (event.type === 'click') {
-            event.stopPropagation();
-            this.descriptionVisible = this.descriptionVisible ? null : feature;
-        }
+        // if (this.isMobile() && (event.type === 'mouseenter' || event.type === 'mouseleave')) {
+        //     return;
+        // }
+        // if (event.type === 'click') {
+        //     event.stopPropagation();
+        //     this.descriptionVisible = this.descriptionVisible ? null : feature;
+        // }
 
-        if (event.type === 'mouseleave') {
-            clearTimeout(this.descriptionShowTimeout);
-            this.descriptionHideTimeout = setTimeout(() => {
-                this.descriptionVisible = null;
-                this.changeDetector.detectChanges();
-            }, 200);
-        }
+        // if (event.type === 'mouseleave') {
+        //     clearTimeout(this.descriptionShowTimeout);
+        //     this.descriptionHideTimeout = setTimeout(() => {
+        //         this.descriptionVisible = null;
+        //         this.changeDetector.detectChanges();
+        //     }, 200);
+        // }
 
-        if (event.type === 'mouseenter') {
-            clearTimeout(this.descriptionHideTimeout);
-            this.descriptionShowTimeout = setTimeout(() => {
-                this.descriptionVisible = feature;
-                this.changeDetector.detectChanges();
-            }, 200);
-        }
+        // if (event.type === 'mouseenter') {
+        //     clearTimeout(this.descriptionHideTimeout);
+        //     this.descriptionShowTimeout = setTimeout(() => {
+        //         this.descriptionVisible = feature;
+        //         this.changeDetector.detectChanges();
+        //     }, 200);
+        // }
 
-        if (this.isMobile()) {
-            this.descriptionPosition = 'bottom';
-        } else {
-            this.descriptionPosition = 'right';
-        }
+        // if (this.isMobile()) {
+        //     this.descriptionPosition = 'bottom';
+        // } else {
+        //     this.descriptionPosition = 'right';
+        // }
     }
 
     onHoverState(hover: boolean, feature: NodeFeatureModel): void {
@@ -170,18 +171,18 @@ export class NodeFeaturesComponent implements OnDestroy, OnChanges, ControlValue
      * Returns if it's mobile device.
      */
     isMobile(): boolean {
-        if (navigator.userAgent.match(/Android/i)
-            || navigator.userAgent.match(/webOS/i)
-            || navigator.userAgent.match(/iPhone/i)
-            || navigator.userAgent.match(/iPad/i)
-            || navigator.userAgent.match(/iPod/i)
-            || navigator.userAgent.match(/BlackBerry/i)
-            || navigator.userAgent.match(/Windows Phone/i)
-            ) {
-                return true;
-            } else {
-                return false;
-            }
+        if ((/Android/i.exec(navigator.userAgent))
+            || (/webOS/i.exec(navigator.userAgent))
+            || (/iPhone/i.exec(navigator.userAgent))
+            || (/iPad/i.exec(navigator.userAgent))
+            || (/iPod/i.exec(navigator.userAgent))
+            || (/BlackBerry/i.exec(navigator.userAgent))
+            || (/Windows Phone/i.exec(navigator.userAgent))
+        ) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

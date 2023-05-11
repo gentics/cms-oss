@@ -69,7 +69,7 @@ export class DecisionModalsService {
         }
 
         return Promise.all([
-            this.featuresActions.checkFeature(Feature.always_localize),
+            this.featuresActions.checkFeature(Feature.ALWAYS_LOCALIZE),
             this.permissionService.forItem(item, item.inheritedFromId).pipe(take(1)).toPromise(),
         ])
             .then(([alwaysLocalizeIsEnabled, permOriginal]) => {

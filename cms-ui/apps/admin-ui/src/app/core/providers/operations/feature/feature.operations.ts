@@ -3,7 +3,7 @@ import { Injectable, Injector } from '@angular/core';
 import { Feature } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { OperationsBase } from '../operations.base';
 
 /** An array of all global CMS features known to the UI. */
@@ -49,9 +49,10 @@ export class FeatureOperations extends OperationsBase {
      */
     getNodeFeatures(nodeId: number): Observable<NodeFeaturesMap> {
         return this.api.folders.getNodeFeatures(nodeId).pipe(
-            map(response => {
-                this.appState.dispatch(new SetNodeFeatures(nodeId, response.features));
-                return this.appState.now.features.node[nodeId];
+            switchMap(response => {
+                return this.appState.dispatch(new SetNodeFeatures(nodeId, response.features)).pipe(
+                    map(data => this.appState.now.features.node[nodeId]),
+                );
             }),
             this.catchAndRethrowError(),
         );

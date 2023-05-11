@@ -1,7 +1,6 @@
-<div class="tag-editor" *ngIf="useNewTagEditor$ | async; else oldTagEditorIFrame">
+<div class="tag-editor">
     <div
         class="tag-wrapper"
-        [class.disabled]="isDisabled"
         [class.nonActive]="!editedTag?.active"
         [class.tagfillLightEnabled]="(tagfillLightEnabled$ | async)"
     >
@@ -23,15 +22,3 @@
         <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
     </ng-template>
 </div>
-
-<ng-template #oldTagEditorIFrame>
-    <iframe-wrapper
-        *ngIf="showOldTagFill && oldTagfillUrl"
-        class="old-tagfill-iframe"
-        height="100%"
-        [attr.data-gcms-ui-iframe-loaded]="oldTagFillIFrameState"
-        [srcUrl]="oldTagfillUrl"
-        [disableValidation]="!canSave"
-        (iFrameLoadedStateChange)="onOldTagEditorIFrameLoad($event)">
-    </iframe-wrapper>
-</ng-template>

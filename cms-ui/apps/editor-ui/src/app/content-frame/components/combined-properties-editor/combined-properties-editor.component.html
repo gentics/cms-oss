@@ -25,7 +25,6 @@
                 [id]="ITEM_TAG_LIST_TAB"
                 [label]="'editor.tag_list_label' | i18n"
                 (select)="onTabChange(ITEM_TAG_LIST_TAB)"
-                [class.hidden]="disableTagList$ | async"
             ></gtx-tab-pane>
 
             <ng-container *ngIf="item.type !== 'node' && item.type !== 'channel'">
@@ -127,9 +126,13 @@
         <tag-editor-overlay-host #taglistOverlayHost [class.active]="taglistOverlayHost.isVisible"></tag-editor-overlay-host>
     </div>
 
-    <div #objPropWrapper class="object-property" [class.has-editing-permission]="canSave" *ngIf="activeTabObjectProperty$ | async as activeTabObjProp">
-
-        <div class="tag-editor" *ngIf="useNewTagEditor$ | async; else oldTagEditorIFrame">
+    <div
+        #objPropWrapper
+        *ngIf="activeTabObjectProperty$ | async as activeTabObjProp"
+        class="object-property"
+        [class.has-editing-permission]="canSave"
+    >
+        <div class="tag-editor">
             <div
                 class="tag-wrapper"
                 [class.disabled]="isDisabled"
@@ -152,19 +155,6 @@
                 <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
             </ng-template>
         </div>
-
-        <ng-template #oldTagEditorIFrame>
-            <iframe-wrapper
-                *ngIf="oldTagfillUrl"
-                class="old-tagfill-iframe"
-                height="100%"
-                [attr.data-gcms-ui-iframe-loaded]="oldTagFillIFrameState"
-                [srcUrl]="oldTagfillUrl"
-                [disableValidation]="!canSave"
-                (iFrameLoadedStateChange)="onOldTagEditorIFrameLoad($event)">
-            </iframe-wrapper>
-        </ng-template>
-
     </div>
 
 </ng-container>

@@ -3,9 +3,9 @@
         "en": "Assign nodes to ContentRepository",
         "de": "Nodes zu ContentRepository hinzfügen"
     },
-    "assign_contentrepositories_to_crfragments": {
-        "en": "Assign ContentRepository to CR-Fragments",
-        "de": "ContentRepository zu CR-Fragmente hinzfügen"
+    "assign_crfragments_to_contentrepositories": {
+        "en": "Assign CR-Fragments to ContentRepository",
+        "de": "CR-Fragments zu ContentRepository zuweisen"
     },
     "assign_entity_to_package": {
         "en": "Assign {{entityNamePlural}} to Package",

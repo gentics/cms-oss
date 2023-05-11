@@ -5,11 +5,11 @@ import { BaseModal } from '@gentics/ui-core';
 import { delay } from 'rxjs/operators';
 
 @Component({
-    selector: 'gtx-assign-content-repositories-to-cr-fragments-modal',
-    templateUrl: './assign-content-repositories-to-cr-fragments-modal.component.html',
+    selector: 'gtx-assign-cr-fragments-to-content-repository-modal',
+    templateUrl: './assign-cr-fragments-to-content-repository-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AssignContentrepositoriesToCrfragmentsModalComponent extends BaseModal<string[]> implements OnInit {
+export class AssignCRFragmentsToContentRepositoryModal extends BaseModal<string[]> implements OnInit {
 
     /** IDs of crfragments to be (un)assigned to/from contentRepository */
     crfragmentIds: string[];

@@ -6,7 +6,7 @@ import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import {
     AccordionComponent,
-    AssignContentrepositoriesToCrfragmentsModalComponent,
+    AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
     AssignGroupToUsersModalComponent,
@@ -121,7 +121,7 @@ import {
 
 const COMPONENTS: any[] = [
     AccordionComponent,
-    AssignContentrepositoriesToCrfragmentsModalComponent,
+    AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
     AssignGroupToUsersModalComponent,

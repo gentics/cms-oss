@@ -296,7 +296,7 @@ describe('FolderPropertiesForm', () => {
         it('with feature setting autocomplete_folder_path = TRUE and pub_dir_segment = FALSE',
             componentTest(() => TestComponent, (fixture, instance) => {
 
-                state.dispatch(new SetFeatureAction(Feature.autocomplete_folder_path, true));
+                state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
 
                 instance.mode = 'create';
                 instance.properties = {
@@ -324,7 +324,7 @@ describe('FolderPropertiesForm', () => {
         it('with feature setting autocomplete_folder_path = FALSE and pub_dir_segment = TRUE',
             componentTest(() => TestComponent, (fixture, instance) => {
 
-                state.dispatch(new SetFeatureAction(Feature.pub_dir_segment, true));
+                state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = 'create';
@@ -353,8 +353,8 @@ describe('FolderPropertiesForm', () => {
         it('with feature setting autocomplete_folder_path = TRUE and pub_dir_segment = TRUE',
             componentTest(() => TestComponent, (fixture, instance) => {
 
-                state.dispatch(new SetFeatureAction(Feature.autocomplete_folder_path, true));
-                state.dispatch(new SetFeatureAction(Feature.pub_dir_segment, true));
+                state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
+                state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = 'create';
@@ -425,7 +425,7 @@ describe('FolderPropertiesForm', () => {
 
                 const TEST_STRING_DIRECTORY_NAME = '/custom_publish_dir/';
 
-                state.dispatch(new SetFeatureAction(Feature.autocomplete_folder_path, true));
+                state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
 
                 instance.mode = 'edit';
                 instance.properties = {
@@ -462,7 +462,7 @@ describe('FolderPropertiesForm', () => {
 
                 const TEST_STRING_DIRECTORY_NAME = 'testPubDirSegmentPath';
 
-                state.dispatch(new SetFeatureAction(Feature.pub_dir_segment, true));
+                state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = 'edit';
@@ -500,8 +500,8 @@ describe('FolderPropertiesForm', () => {
 
                 const TEST_STRING_DIRECTORY_NAME = 'testPubDirSegmentPath';
 
-                state.dispatch(new SetFeatureAction(Feature.autocomplete_folder_path, true));
-                state.dispatch(new SetFeatureAction(Feature.pub_dir_segment, true));
+                state.dispatch(new SetFeatureAction(Feature.AUTOCOMPLETE_FOLDER_PATH, true));
+                state.dispatch(new SetFeatureAction(Feature.PUB_DIR_SEGMENT, true));
                 setPubDirSegmentToTrueInInitialState(state);
 
                 instance.mode = 'edit';

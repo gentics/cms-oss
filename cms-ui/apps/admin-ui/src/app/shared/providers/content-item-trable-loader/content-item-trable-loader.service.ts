@@ -7,11 +7,21 @@ import { flatMap } from 'lodash-es';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+type ListableEntityType = Exclude<ContentItemTypes, 'folder' | 'node' | 'channel'>;
+
+const ENTITY_TYPES: ListableEntityType[] = [
+    'file',
+    'form',
+    'image',
+    'page',
+    'template',
+];
+
 export interface ContentItemTrableLoaderOptions {
     includeRoot?: boolean;
     rootId?: number;
     selectable: ContentItemTypes[];
-    listable: Exclude<ContentItemTypes, 'folder' | 'node' | 'channel'>[];
+    listable: ListableEntityType[];
 }
 
 @Injectable()
@@ -37,7 +47,10 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
                 map(res => res.folders),
             );
             if (parentId) {
-                loader = forkJoin([loader, ...options.listable.map(type => this.getTypedLoader(type, parentId))]).pipe(
+                const typeLoaders = (options.listable || [])
+                    .filter(type => ENTITY_TYPES.includes(type))
+                    .map(type => this.getTypedLoader(type, parentId));
+                loader = forkJoin([loader, ...typeLoaders]).pipe(
                     map(res => flatMap(res)),
                 );
             }

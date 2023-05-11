@@ -76,7 +76,7 @@ module.exports = {
             },
         ],
         '@typescript-eslint/explicit-module-boundary-types': 'warn',
-        '@typescript-eslint/indent': 'error',
+        '@typescript-eslint/indent': 'warn',
         '@typescript-eslint/member-ordering': 'off',
         '@typescript-eslint/naming-convention': [
             'warn',
@@ -185,7 +185,7 @@ module.exports = {
                 lib: 'always',
             },
         ],
-        '@typescript-eslint/unbound-method': 'error',
+        '@typescript-eslint/unbound-method': 'warn',
         '@typescript-eslint/unified-signatures': 'error',
         'arrow-parens': [
             'off',

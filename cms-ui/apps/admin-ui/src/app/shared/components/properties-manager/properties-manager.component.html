@@ -17,7 +17,7 @@
 
             <ng-template #defaultEditor>
                 <ng-container *ngIf="propertiesMap[activeTab]?.construct">
-                    <div class="tag-editor" *ngIf="propertiesMap[activeTab].construct.newEditor; else oldTagEditorIFrame">
+                    <div class="tag-editor">
                         <div
                             class="tag-wrapper"
                             [class.disabled]="isDisabled"
@@ -48,10 +48,6 @@
                             <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
                         </ng-template>
                     </div>
-
-                    <ng-template #oldTagEditorIFrame>
-                        TODO: Add old editor iframe
-                    </ng-template>
                 </ng-container>
             </ng-template>
         </ng-container>

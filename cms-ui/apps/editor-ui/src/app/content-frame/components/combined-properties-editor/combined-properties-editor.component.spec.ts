@@ -169,7 +169,7 @@ describe('CombinedPropertiesEditorComponent', () => {
             },
             features: {
                 nodeFeatures: {
-                    [mockNode.id]: [ NodeFeature.newTagEditor ],
+                    [mockNode.id]: [ NodeFeature.ASSET_MANAGEMENT ],
                 },
                 tagfill_light: true,
             },
@@ -831,7 +831,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -862,7 +861,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -912,7 +910,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     (mockFolder.tags[editedObjProp.name] as ObjectTag).readOnly = true;
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -946,7 +943,6 @@ describe('CombinedPropertiesEditorComponent', () => {
             it('uses the correct URL builder parameters if the tag does not contain an overview',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -968,7 +964,6 @@ describe('CombinedPropertiesEditorComponent', () => {
             it('uses the correct URL builder parameters if the tag contains an overview',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockPage.tags[TAG_WITH_OVERVIEW];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -990,7 +985,6 @@ describe('CombinedPropertiesEditorComponent', () => {
             it('sets the state correctly if the object property was already active',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1022,7 +1016,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1079,8 +1072,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
-                    editedObjProp.construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1156,8 +1147,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
-                    editedObjProp.construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,

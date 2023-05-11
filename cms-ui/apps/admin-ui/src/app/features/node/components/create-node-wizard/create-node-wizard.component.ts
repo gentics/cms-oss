@@ -53,7 +53,9 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
     fgPublishingValid$: Observable<boolean>;
     fgNodeFeaturesValid$: Observable<boolean>;
 
-    finishClickAction: WizardStepNextClickFn<Node<Raw>> = () => this.onFinishClick();
+    finishClickAction: WizardStepNextClickFn<Node<Raw>> = () => {
+        return this.onFinishClick();
+    }
 
     constructor(
         private appState: AppStateService,

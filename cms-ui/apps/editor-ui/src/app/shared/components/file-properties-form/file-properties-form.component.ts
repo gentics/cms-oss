@@ -44,7 +44,7 @@ export class FilePropertiesForm {
         this.contentAutoOfflineActive$ = this.appState.select(state => state.editor.nodeId).pipe(
             switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
             filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.findIndex(value => value === NodeFeature.contentAutoOffline) !== -1),
+            map(nodeFeatures => nodeFeatures.findIndex(value => value === NodeFeature.CONTENT_AUTO_OFFLINE) !== -1),
         );
 
         this.form = new UntypedFormGroup({
@@ -58,7 +58,7 @@ export class FilePropertiesForm {
         this.form.get('niceUrl').disable({ emitEvent: false });
         this.form.get('alternateUrls').disable({ emitEvent: false });
 
-        this.featuresActions.checkFeature(Feature.nice_urls)
+        this.featuresActions.checkFeature(Feature.NICE_URLS)
             .then(active => {
                 if (active) {
                     this.form.get('niceUrl').enable({ emitEvent: false });

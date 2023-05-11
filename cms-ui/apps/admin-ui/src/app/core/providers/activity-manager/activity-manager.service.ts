@@ -114,11 +114,11 @@ export class ActivityManagerService {
                 this.activitySetProperty(currentId, 'inProgress', false);
                 this.activitySetProperty(currentId, 'succeeded', true);
                 newActivity.label = this.getLabel(response, useResponseStringAsLabelOnSuccess, config.labelOnSuccess, newActivity.label);
+                if (config.callBackOnSuccess) {
+                    config.callBackOnSuccess(response);
+                }
                 setTimeout(() => {
                     this.activityRemove(newActivity.id);
-                    if (config.callBackOnSuccess) {
-                        config.callBackOnSuccess(response);
-                    }
                 }, this.animDelay);
             }),
             catchError((error: any) => {
@@ -126,11 +126,9 @@ export class ActivityManagerService {
                 this.activitySetProperty(currentId, 'inProgress', false);
                 this.activitySetProperty(currentId, 'failed', true);
                 newActivity.label = this.getLabel(errorMessage, useResponseStringAsLabelOnFailed, config.labelOnFailed, newActivity.label);
-                setTimeout(() => {
-                    if (config.callBackOnFailed) {
-                        config.callBackOnFailed(errorMessage);
-                    }
-                }, this.animDelay);
+                if (config.callBackOnFailed) {
+                    config.callBackOnFailed(errorMessage);
+                }
                 return of(error);
             }),
         ).toPromise();

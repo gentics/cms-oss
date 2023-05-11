@@ -221,7 +221,7 @@ describe('ListService', () => {
             it('gets all items whenever searchFilters changes and filters are visible', fakeAsync(() => {
                 initListService();
                 tick(DEBOUNCE_INTERVAL);
-                state.dispatch(new SetFeatureAction(Feature.elasticsearch, true));
+                state.dispatch(new SetFeatureAction(Feature.ELASTICSEARCH, true));
                 triggerSearchQuery();
                 setFolderState({ searchFilters: { creatorId: [{ value: 1, operator: 'IS' }] }, searchFiltersVisible: true });
                 // setFolderState({ searchFilters: { creatorId: [{ value: 2, operator: 'IS' }] }, searchFiltersVisible: true });

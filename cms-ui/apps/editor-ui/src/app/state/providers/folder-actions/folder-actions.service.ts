@@ -957,7 +957,7 @@ export class FolderActionsService {
         nodeId: number,
         getRequest: Observable<FormListResponse>,
     ): Observable<ItemListResponse> {
-        return this.nodeFeatureIsActive(nodeId, NodeFeature.forms).pipe(
+        return this.nodeFeatureIsActive(nodeId, NodeFeature.FORMS).pipe(
             switchMap((isActive) => {
                 if (isActive) {
                     return getRequest;

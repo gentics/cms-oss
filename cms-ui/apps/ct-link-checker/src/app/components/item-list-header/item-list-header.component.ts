@@ -3,7 +3,7 @@ import {
     Language,
     Page,
     PageWithExternalLinks,
-    Raw
+    Raw,
 } from '@gentics/cms-models';
 import { Observable, Subscription } from 'rxjs';
 import { ItemsInfo } from '../../common/models/items-info';
@@ -15,14 +15,23 @@ import { ToolApiService } from '../../services/tool-api/tool-api.service';
     styleUrls: ['./item-list-header.scss']
 })
 export class ItemListHeaderComponent implements OnInit, OnDestroy {
-    @Input() item: PageWithExternalLinks<Raw>;
-    @Input() itemsInfo: ItemsInfo;
-    @Input() filterTerm: string;
-    @Input() isCollapsed: boolean;
 
-    @Output() isCollapsedChanged = new EventEmitter<boolean>();
+    @Input()
+    item: PageWithExternalLinks<Raw>;
 
-    private subscriptions = new Subscription();
+    @Input()
+    itemsInfo: ItemsInfo;
+
+    @Input()
+    filterTerm: string;
+
+    @Input()
+    isCollapsed: boolean;
+
+    @Output()
+    isCollapsedChanged = new EventEmitter<boolean>();
+
+    private subscriptions: Subscription[] = [];
 
     brokenLinksPerPage = 0;
     activeLanguage$: Observable<Language>;
@@ -39,7 +48,7 @@ export class ItemListHeaderComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     toggleCollapse(): void {
@@ -48,20 +57,14 @@ export class ItemListHeaderComponent implements OnInit, OnDestroy {
     }
 
     openPageInEditMode(page: Page): void {
-        this.subscriptions.add(
-            this.toolApi.connected.subscribe(
-              toolApi => {
-                toolApi.ui.editPage(page.id);
-              })
-          );
+        this.subscriptions.push(this.toolApi.connected.subscribe(toolApi => {
+            toolApi.ui.editPage(page.id);
+        }));
     }
 
     openPageInPreviewMode(page: Page): void {
-        this.subscriptions.add(
-            this.toolApi.connected.subscribe(
-                toolApi => {
-                    toolApi.ui.previewPage(page.id);
-                })
-        );
+        this.subscriptions.push(this.toolApi.connected.subscribe(toolApi => {
+            toolApi.ui.previewPage(page.id);
+        }));
     }
 }

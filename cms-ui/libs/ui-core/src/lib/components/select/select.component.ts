@@ -5,12 +5,11 @@ import {
     ChangeDetectorRef,
     Component,
     ContentChildren,
-    ElementRef,
     EventEmitter,
     Input,
     Output,
     QueryList,
-    ViewChild,
+    ViewChild
 } from '@angular/core';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
@@ -130,7 +129,6 @@ export class SelectComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private elementRef: ElementRef,
     ) {
         super(changeDetector);
         this.booleanInputs.push('clearable', 'selectAll', 'multiple');
@@ -146,9 +144,6 @@ export class SelectComponent
                 this.updateViewValue();
             }),
         );
-
-        this.elementRef.nativeElement.querySelector('gtx-dropdown-list')
-            .addEventListener('keydown', this.handleKeydown.bind(this));
     }
 
     ngAfterContentInit(): void {
@@ -178,8 +173,18 @@ export class SelectComponent
             this.valueArray = this.value;
         }
 
+        let selectOptions: SelectOptionDirective[] = [];
         if (this.selectOptions) {
-            let tmp = this.selectOptions.toArray().filter(option => this.valueArray.includes(option.value));
+            selectOptions.push(...this.selectOptions.toArray());
+        }
+        if (this.selectOptionGroups) {
+            this.selectOptionGroups.toArray().forEach(group => {
+                selectOptions.push(...group.options);
+            });
+        }
+
+        if (selectOptions) {
+            let tmp = selectOptions.filter(option => this.valueArray.includes(option.value));
             if (!this.multiple && tmp.length > 1) {
                 tmp = tmp.slice(0, 1);
             }

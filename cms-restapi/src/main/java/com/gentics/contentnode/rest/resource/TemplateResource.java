@@ -31,6 +31,7 @@ import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.TemplateListParameterBean;
 import com.webcohesion.enunciate.metadata.rs.ResponseCode;
 import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 
@@ -58,7 +59,8 @@ public interface TemplateResource {
 			@BeanParam FilterParameterBean filterParams,
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
-			@BeanParam PermsParameterBean perms) throws Exception;
+			@BeanParam PermsParameterBean perms,
+			@BeanParam TemplateListParameterBean listParams) throws Exception;
 
 	/**
 	 * Create a new template
@@ -74,7 +76,7 @@ public interface TemplateResource {
 	 * @param id The template id (either local or global)
 	 * @param nodeId channel id
 	 * @param update true when the template shall be locked, false if not
-	 * @param construct if true, the construct info will be added to tags 
+	 * @param construct if true, the construct info will be added to tags
 	 * @return template load response
 	 * @throws Exception
 	 */

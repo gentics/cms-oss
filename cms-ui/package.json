@@ -104,6 +104,7 @@
     "@ngxs/devtools-plugin": "^3.7.1",
     "@ngxs/logger-plugin": "^3.7.1",
     "@ngxs/store": "^3.7.1",
+    "@nrwl/nx-linux-x64-gnu": "^15.9.3",
     "angular-svg-icon": "^15.0.0",
     "angular2-hotkeys": "^13.1.0",
     "buffer": "^5.4.3",

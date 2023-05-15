@@ -38,7 +38,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
 ADD --chown=1000:0 ./target/cms-oss-server*jar /cms/cms-oss-server.jar
 ADD --chown=1000:0 entrypoint.sh /cms/
 
-RUN chmod 700 /cms/entrypoint.sh
+RUN chmod u+x,g+x /cms/entrypoint.sh
 
 USER node
 WORKDIR /cms
@@ -52,4 +52,4 @@ VOLUME /cms/content-packages
 VOLUME /cms/scheduler-commands
 VOLUME /cms/libs
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/cms/entrypoint.sh"]

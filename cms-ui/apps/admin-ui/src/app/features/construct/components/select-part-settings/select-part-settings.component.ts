@@ -1,12 +1,11 @@
 import { DataSourceDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSource, IndexById, Raw, SelectSetting } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
-import { combineLatest, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { generateFormProvider } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'gtx-select-part-settings',
@@ -15,9 +14,8 @@ import { distinctUntilChanged, map } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SelectPartSettingsComponent)],
 })
-export class SelectPartSettingsComponent extends BaseFormElementComponent<SelectSetting> implements OnInit, OnDestroy {
+export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnInit, OnDestroy {
 
-    public form: UntypedFormGroup;
     public dataSourceMap: IndexById<DataSource<Raw>> = {};
 
     private entriesSubscription: Subscription;
@@ -31,23 +29,7 @@ export class SelectPartSettingsComponent extends BaseFormElementComponent<Select
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormGroup({
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            dataSourceId: new UntypedFormControl(null, Validators.required),
-            template: new UntypedFormControl(''),
-            options: new UntypedFormControl([]),
-        });
-
-        this.subscriptions.push(combineLatest([
-            this.form.valueChanges,
-            this.form.statusChanges,
-        ]).pipe(
-            map(([value, status]) => status === 'VALID' ? value : null),
-            distinctUntilChanged(isEqual),
-        ).subscribe(value => {
-            this.triggerChange(value);
-            this.changeDetector.markForCheck();
-        }))
+        super.ngOnInit();
 
         this.subscriptions.push(this.dataSourceData.watchAllEntities().subscribe(dataSources => {
             this.dataSourceMap = {};
@@ -66,16 +48,38 @@ export class SelectPartSettingsComponent extends BaseFormElementComponent<Select
         }
     }
 
-    protected onValueChange(): void {
-        // If the dataSourceId has been changed, we need to reload the entries
-        if (this.value?.datasourceId !== this.form.value?.dataSourceId) {
+    protected createForm(): UntypedFormGroup {
+        return new UntypedFormGroup({
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            datasourceId: new UntypedFormControl(null, Validators.required),
+            template: new UntypedFormControl(''),
+            options: new UntypedFormControl([]),
+        });
+    }
+
+    protected configureForm(value: SelectSetting, loud?: boolean): void {
+        // Nothing
+    }
+
+    protected assembleValue(value: SelectSetting): SelectSetting {
+        // Nothing
+        return value;
+    }
+
+    protected override onValueChange(): void {
+        if (!this.form || (this.value as any) === CONTROL_INVALID_VALUE) {
+            return;
+        }
+        // If the datasourceId has been changed, we need to reload the entries
+        if (this.value?.datasourceId !== this.form.value?.datasourceId) {
             this.loadEntries(this.value?.datasourceId);
         }
 
         this.form.setValue({
-            dataSourceId: this.value?.datasourceId || null,
+            ...this.form.value,
+            // datasourceId: this.value?.datasourceId || null,
             template: this.value?.template || '',
-            options: this.value?.options || [],
+            // options: this.value?.options || [],
         }, { emitEvent: false });
     }
 
@@ -84,12 +88,15 @@ export class SelectPartSettingsComponent extends BaseFormElementComponent<Select
             this.entriesSubscription.unsubscribe();
         }
 
-        if (typeof dsId === 'number') {
-            dsId = (dsId < 1) ? null : String(dsId);
+        if (typeof dsId !== 'number') {
+            dsId = parseInt(dsId, 10);
+            if (!Number.isInteger(dsId)) {
+                dsId = null;
+            }
         }
 
         if (dsId == null) {
-            this.form.patchValue({ dataSourceId: null, options: [] });
+            this.form.patchValue({ datasourceId: null, options: [] });
             return;
         }
 
@@ -98,17 +105,13 @@ export class SelectPartSettingsComponent extends BaseFormElementComponent<Select
          * Potentially abstract the APi again as EntityOperations should be for BOs only?
          */
         this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe(res => {
-            this.form.patchValue({ dataSourceId: dsId, options: res.items });
+            this.form.setValue({
+                ...this.form.value,
+                datasourceId: dsId,
+                options: res.items,
+            });
+            this.form.updateValueAndValidity();
+            this.changeDetector.markForCheck();
         });
-    }
-
-    setDisabledState(isDisabled: boolean): void {
-        super.setDisabledState(isDisabled);
-
-        if (isDisabled) {
-            this.form.disable({ emitEvent: false });
-        } else {
-            this.form.enable({ emitEvent: false });
-        }
     }
 }

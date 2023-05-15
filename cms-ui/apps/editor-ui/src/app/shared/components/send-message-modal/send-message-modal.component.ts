@@ -1,37 +1,36 @@
-import { Component, ViewChild } from '@angular/core';
-import { UntypedFormGroup } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { UntypedFormControl } from '@angular/forms';
+import { SendMessageForm } from '@editor-ui/app/common/models';
+import { createNestedControlValidator } from '@gentics/cms-components';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { Api } from '../../../core/providers/api/api.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
-import { SendMessageForm, SendMessageFormValue } from '../send-message-form/send-message-form.component';
 
 @Component({
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
     styleUrls: ['./send-message-modal.scss']
-    })
-export class SendMessageModal implements IModalDialog {
+})
+export class SendMessageModal extends BaseModal<any> implements OnInit {
+
     users$: Observable<User[]>;
     groups$: Observable<Group[]>;
 
-    form: UntypedFormGroup;
-    @ViewChild(SendMessageForm, { static: true }) private sendMessageForm: SendMessageForm;
+    form: UntypedFormControl;
 
     constructor(
         private api: Api,
         private notification: I18nNotification,
     ) {
+        super();
     }
 
     ngOnInit(): void {
         this.users$ = this.api.user.getUsers().map(response => response.items);
         this.groups$ = this.api.group.getGroupsTree().map(response => response.groups);
-    }
-
-    ngAfterViewInit(): void {
-        this.form = this.sendMessageForm.form;
+        this.form = new UntypedFormControl({}, createNestedControlValidator());
     }
 
     okayClicked(): void {
@@ -46,14 +45,16 @@ export class SendMessageModal implements IModalDialog {
                 type: 'alert',
                 delay: 5000,
             });
+            console.error('Error while sending message', error);
+        }, () => {
             this.closeFn(true);
-        }, () => this.closeFn(true),
-        );
+        });
     }
 
-    transformValuesForApi(formValues: SendMessageFormValue): SendMessageRequest {
+    transformValuesForApi(formValues: SendMessageForm): SendMessageRequest {
         return formValues.recipientIds.reduce((acc: any, selectedId: string) => {
             const [key, value] = selectedId.split('_');
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             acc[key].push(value);
             return acc;
         }, {
@@ -61,16 +62,5 @@ export class SendMessageModal implements IModalDialog {
             toGroupId: [],
             toUserId: [],
         });
-    }
-
-    closeFn = (val: any) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val: any) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
     }
 }

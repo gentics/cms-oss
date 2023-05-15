@@ -12,6 +12,7 @@ export * from './events';
 export * from './page';
 export * from './repository-browser';
 export * from './staging';
+export * from './message';
 
 // State models
 export * from './auth-state';

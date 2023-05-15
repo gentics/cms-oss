@@ -1,29 +1,29 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { Folder, Message, Node, Normalized, Page } from '@gentics/cms-models';
+import { Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { combineLatest, distinctUntilChanged, map, publishReplay, refCount, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map, publishReplay, refCount, tap } from 'rxjs/operators';
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { ApplicationStateService, FolderActionsService, MessageActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { I18nService } from '../../providers/i18n/i18n.service';
 import { NavigationService } from '../../providers/navigation/navigation.service';
-import { PermissionService } from '../../providers/permissions/permission.service';
 import { MessageLink } from '../message-body/message-parsing';
 import { MessageModal } from '../message-modal/message-modal.component';
 
 @Component({
     selector: 'message-inbox',
-    templateUrl: './message-inbox.tpl.html',
-    styleUrls: ['./message-inbox.scss'],
+    templateUrl: './message-inbox.component.html',
+    styleUrls: ['./message-inbox.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
-})
+    })
 export class MessageInbox implements OnInit {
 
     /** Emits when a link in a message is clicked */
-    @Output() navigate = new EventEmitter<MessageLink>();
+    @Output()
+    navigate = new EventEmitter<MessageLink>();
 
     selectedRead: number[] = [];
     selectedUnread: number[] = [];
@@ -39,7 +39,9 @@ export class MessageInbox implements OnInit {
     readMessagesCount$: Observable<number>;
     readMessages$: Observable<Message<Normalized>[]>;
     nodes$: Observable<Node[]>;
+
     showReadMessages = false;
+
     private messageToKeepInUnread$ = new BehaviorSubject<number | undefined>(undefined);
 
     constructor(
@@ -50,9 +52,8 @@ export class MessageInbox implements OnInit {
         private messageActions: MessageActionsService,
         private changeDetector: ChangeDetectorRef,
         private router: Router,
-        private permissions: PermissionService,
         private modalService: ModalService,
-        private i18n: I18nService
+        private i18n: I18nService,
     ) { }
 
     @HostListener('document:mouseup', ['$event'])
@@ -64,57 +65,70 @@ export class MessageInbox implements OnInit {
 
     ngOnInit(): void {
         // MessageState Observable that keeps the currently opened message in the "unread" messages.
-        const messages$ = this.appState.select(state => state.messages).pipe(
-            distinctUntilChanged((a, b) => a.read === b.read && a.unread === b.unread),
-            combineLatest(this.messageToKeepInUnread$),
-            map(([state, keep]) => {
+        const messages$ = combineLatest([
+            this.appState.select(state => state.messages).pipe(
+                distinctUntilChanged((a, b) => a.read === b.read && a.unread === b.unread),
+            ),
+            this.messageToKeepInUnread$,
+            this.appState.select(state => state.entities.message),
+        ]).pipe(
+            map(([state, keep, messages]) => {
                 const read = (!keep || state.read.indexOf(keep) < 0)
                     ? state.read
-                    : state.read.filter(id => id != keep);
+                    : state.read.filter(id => id !== keep);
                 const unread = (!keep || state.unread.indexOf(keep) >= 0)
                     ? state.unread
                     : state.unread.concat(keep);
 
                 return {
-                    all: this.sortMapMessages(state.all, keep),
-                    read: this.sortMapMessages(read, keep),
-                    unread: this.sortMapMessages(unread, keep)
+                    all: this.sortMapMessages(state.all, keep, messages),
+                    read: this.sortMapMessages(read, keep, messages),
+                    unread: this.sortMapMessages(unread, keep, messages),
                 };
             }),
             publishReplay(1),
             refCount(),
         );
 
-        this.hasMessages$ = messages$.pipe(map(state => state.all.length > 0));
+        this.hasMessages$ = messages$.pipe(
+            map(state => (state.all || []).length > 0),
+        );
+
         this.readMessages$ = messages$.pipe(
             map(state => state.read),
             tap(messages => {
                 this.allReadIds = messages.map(msg => msg.id);
-                this.selectedRead = this.selectedRead.filter(id =>
-                    !!messages.find(msg => msg.id === id)
-                ).slice();
-            })
+                this.selectedRead = this.selectedRead.filter(id => {
+                    return !!messages.find(msg => msg.id === id)
+                });
+            }),
         );
+
         this.readMessagesCount$ = this.readMessages$.pipe(
             map(messages => messages.length),
             distinctUntilChanged(isEqual),
         );
+
         this.unreadMessages$ = messages$.pipe(
-            map(state => state.unread),
+            map(state => state.unread || []),
             tap(messages => {
                 this.allUnreadIds = messages.map(msg => msg.id);
                 this.selectedUnread = this.selectedUnread.filter(id =>
-                    !!messages.find(msg => msg.id === id)
+                    !!messages.find(msg => msg.id === id),
                 ).slice();
-            })
+            }),
         );
+
         this.unreadMessagesCount$ = this.unreadMessages$.pipe(
-            map(messages => messages.length),
+            map(messages => messages?.length),
             distinctUntilChanged(isEqual),
         );
 
         this.nodes$ = this.appState.select(state => state.folder.nodes.list).pipe(
-            map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id))),
+            map(nodeIds => nodeIds
+                .map(id => this.entityResolver.getNode(id))
+                .filter(node => node != null),
+            ),
         );
     }
 
@@ -225,9 +239,19 @@ export class MessageInbox implements OnInit {
             title: this.i18n.translate('modal.confirmation_message_delete_title'),
             body: this.i18n.translate('modal.delete_message_confirm_' + type, { count: count }),
             buttons: [
-                { label: this.i18n.translate('common.cancel_button'), type: 'secondary' as const, flat: true, returnValue: false, shouldReject: true },
-                { label: this.i18n.translate('common.delete_button'), type: 'alert' as const, returnValue: true }
-            ]
+                {
+                    label: this.i18n.translate('common.cancel_button'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                    shouldReject: true,
+                },
+                {
+                    label: this.i18n.translate('common.delete_button'),
+                    type: 'alert',
+                    returnValue: true,
+                },
+            ],
         })
             .then(dialog => dialog.open())
             .then(result => callback());
@@ -255,7 +279,7 @@ export class MessageInbox implements OnInit {
                 return this.navigateToFolder(folder.id, nodeId);
             })
             .then(succeeded => succeeded &&
-                this.navigationService.detailOrModal(nodeId, 'page', link.id, 'preview').navigate()
+                this.navigationService.detailOrModal(nodeId, 'page', link.id, 'preview').navigate(),
             );
     }
 
@@ -321,10 +345,14 @@ export class MessageInbox implements OnInit {
     }
 
     /** Maps message IDs to their entities and sorts them by unread first, newest first. */
-    private sortMapMessages(ids: number[], keep: number | undefined): Message<Normalized>[] {
-        const entities = this.appState.now.entities.message;
+    private sortMapMessages(
+        ids: number[],
+        keep: number | undefined,
+        messages: IndexById<Message<Normalized>>,
+    ): Message<Normalized>[] {
         return ids
-            .map(id => entities[id])
+            .map(id => messages[id])
+            .filter(msg => msg != null)
             .sort((a, b) => {
                 const aUnread = a.unread || a.id === keep;
                 const bUnread = b.unread || b.id === keep;

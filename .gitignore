@@ -37,3 +37,5 @@ processlogger.lock
 # VS Code files
 .vscode
 dependency-reduced-pom.xml
+cache
+.run

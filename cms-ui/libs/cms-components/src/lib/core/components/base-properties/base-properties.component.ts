@@ -114,4 +114,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.form.setValue(tmpObj);
         }
     }
+
+    public override setDisabledState(isDisabled: boolean): void {
+        super.setDisabledState(isDisabled);
+
+        if (isDisabled) {
+            this.form.disable({ emitEvent: false });
+        } else {
+            this.form.enable({ emitEvent: false });
+        }
+    }
 }

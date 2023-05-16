@@ -10,16 +10,16 @@ import {
     filter,
     map,
     pairwise,
+    publishReplay,
+    refCount,
     skip,
     switchMap,
+    switchMapTo,
     take,
     tap,
     withLatestFrom,
-    switchMapTo,
-    publishReplay,
-    refCount,
 } from 'rxjs/operators';
-import { AppState, AuthState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
+import { AppState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
@@ -302,7 +302,7 @@ export class ListService implements OnDestroy {
             filter(() => !this.updatingByUrlParams),
             withLatestFrom(this.state.select(state => state.features.elasticsearch)),
             // searchUrl for Advanced Search not yet implemented
-            filter(([[], elasticsearch]) => elasticsearch),
+            filter(([, elasticsearch]) => elasticsearch),
         ).subscribe(() => {
             const currentFilters = this.getCurrentFilters();
             this.setSearchUrl(

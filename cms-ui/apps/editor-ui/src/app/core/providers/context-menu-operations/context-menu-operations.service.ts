@@ -147,7 +147,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     ): Promise<any> {
         const featureLinkTemplatesNew = this.state.now.features.folder_based_template_selection;
         if (!featureLinkTemplatesNew) {
-            const modal = await this.modalService.fromComponent(LinkTemplateModal, { padding: true, width: '1000px' }, { nodeId, folderId });
+            const modal = await this.modalService.fromComponent(LinkTemplateModal, {
+                padding: true,
+                width: '1000px',
+            }, {
+                nodeId,
+                folderId,
+            });
             await modal.open();
             return;
         }
@@ -159,7 +165,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             startFolder: folderId,
         });
 
-        if (!selectResult) {
+        if (!selectResult || !selectResult.length) {
             return;
         }
 
@@ -181,10 +187,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             ],
         });
         const recursive: boolean = await dialog.open();
-
-        if (!selectResult.length) {
-            return;
-        }
 
         await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
         await this.folderActions.getTemplates(folderId, true);
@@ -299,9 +301,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                             this.showMultiDeleteErrorNotification(type, deleteResult.failed, deleteResult.error);
                         }
                         return removedItemIds;
-                    }).then((removedItemIds) => {
-                        this.folderActions.refreshList(type);
-                        this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds));
+                    }).then(async (removedItemIds) => {
+                        await this.folderActions.refreshList(type);
+                        await this.state.dispatch(new ChangeListSelectionAction(type, 'remove', removedItemIds)).toPromise();
                         return removedItemIds;
                     });
             });
@@ -318,41 +320,46 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             image: [],
             page: [],
         };
-        Object.keys(itemMap).forEach(key => itemMap[key] = items.filter(i => i.type === key && this.isDeleted(i)));
+
+        Object.keys(itemMap).forEach(key => {
+            itemMap[key] = items.filter(singleItem => singleItem.type === key && this.isDeleted(singleItem));
+        });
 
         // if no language variants exist, dont show modal as there would be nothing to select
         if (itemMap.page.length === 0 || !itemMap.page.some(p => Object.keys((p as Page).languageVariants).length > 0)) {
-            return Promise.all(Object.keys(itemMap).map((type: FolderItemType) => {
-                if (itemMap[type].length > 0) {
-                    const parentFolderId = this.state.now.folder.activeFolder;
-                    const idsBeRestored: number[] = itemMap[type].map((i: Item) => i.id);
-                    return this.wastebinActions.restoreItemsFromWastebin(type, idsBeRestored)
-                        .then(() => this.folderActions.getItems(parentFolderId, type));
+            await Promise.all(Object.keys(itemMap).map((type: FolderItemType) => {
+                if (itemMap[type].length <= 0) {
+                    return Promise.resolve();
                 }
-            })).then(() => {
-                return;
-            });
-        } else {
-            return this.decisionModals.selectItemsToRestore(
-                itemMap.file as FileModel[],
-                itemMap.folder as Folder[],
-                itemMap.form as Form[],
-                itemMap.image as Image[],
-                itemMap.page as Page[],
-            ).then(async (itemIdsToBeRestored: { [type: string]: number[] }) => {
-                if (!itemIdsToBeRestored) {
-                    return;
-                }
-                const requests: Promise<void>[] = Object.keys(itemIdsToBeRestored).map((type: FolderItemType) => {
-                    if (itemIdsToBeRestored[type].length > 0) {
-                        return this.wastebinActions.restoreItemsFromWastebin(type, itemIdsToBeRestored[type]);
-                    }
-                });
-                return Promise.all(requests).then(() => {
-                    return;
-                });
-            });
+
+                const parentFolderId = this.state.now.folder.activeFolder;
+                const idsBeRestored: number[] = itemMap[type].map((i: Item) => i.id);
+                return this.wastebinActions.restoreItemsFromWastebin(type, idsBeRestored)
+                    .then(() => this.folderActions.getItems(parentFolderId, type));
+            }));
+
+            return;
         }
+
+        const itemIdsToBeRestored = await this.decisionModals.selectItemsToRestore(
+            itemMap.file as FileModel[],
+            itemMap.folder as Folder[],
+            itemMap.form as Form[],
+            itemMap.image as Image[],
+            itemMap.page as Page[],
+        );
+
+        if (!itemIdsToBeRestored) {
+            return;
+        }
+
+        const requests: Promise<void>[] = Object.keys(itemIdsToBeRestored).map((type: FolderItemType) => {
+            if (itemIdsToBeRestored[type].length > 0) {
+                return this.wastebinActions.restoreItemsFromWastebin(type, itemIdsToBeRestored[type]);
+            }
+        }).filter(action => action != null);
+
+        await Promise.all(requests);
     }
 
     /**
@@ -454,18 +461,14 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Publish pages (and possibly their language variants) and
      * then clear the current pages selection.
      */
-    publishPages(pages: Page[], publishLanguageVariants: boolean = false): Promise<number[]> {
+    async publishPages(pages: Page[], publishLanguageVariants: boolean = false): Promise<number[]> {
         const pagesNotDeleted = pages.filter(page => !this.isDeleted(page));
-        return this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants)
-            .then(pagesToPublish => {
-                return this.publishPagesWithTimeManagementCheck(pagesToPublish)
-                    .then((ids: number[]) => {
-                        const pageLanguages = ids.map(id => this.entityResolver.getPage(id).language);
-                        this.state.dispatch(new ChangeListSelectionAction('page', 'clear'));
-                        this.folderActions.refreshList('page', pageLanguages);
-                        return ids;
-                    });
-            });
+        const pagesToPublish = await this.decisionModals.selectPagesToPublish(pagesNotDeleted, publishLanguageVariants)
+        const ids = await this.publishPagesWithTimeManagementCheck(pagesToPublish);
+        const pageLanguages = ids.map(id => this.entityResolver.getPage(id).language);
+        await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
+        await this.folderActions.refreshList('page', pageLanguages);
+        return ids;
     }
 
     /**
@@ -516,31 +519,33 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     /**
      * Take pages (and possibly their language variants) offline.
      */
-    takePagesOffline(pages: Page[]): Promise<any> {
-        return this.decisionModals.selectPagesToTakeOffline(pages)
-            .then(pagesToTakeOffline => this.folderActions.takePagesOffline(pagesToTakeOffline))
-            .then(async (response: { queued: Page[], takenOffline: Page[] }) => {
-                // Wait half a second to let the server unlock the pages
-                await new Promise(resolve => setTimeout(resolve, 500));
-                this.state.dispatch(new ChangeListSelectionAction('page', 'clear'));
-                const pages = response.queued.length > 0 ? response.queued : response.takenOffline;
-                const pageLanguages = pages.map(page => page.language);
-                this.folderActions.refreshList('page', pageLanguages);
-            })
-            .catch(this.errorHandler.catch);
+    async takePagesOffline(pages: Page[]): Promise<any> {
+        try {
+            const pagesToTakeOffline = await this.decisionModals.selectPagesToTakeOffline(pages);
+            const response = await this.folderActions.takePagesOffline(pagesToTakeOffline);
+            // Wait half a second to let the server unlock the pages
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await this.state.dispatch(new ChangeListSelectionAction('page', 'clear')).toPromise();
+            const responsePages: Page[] = response.queued.length > 0 ? response.queued : response.takenOffline;
+            const pageLanguages = responsePages.map(page => page.language);
+            await this.folderActions.refreshList('page', pageLanguages);
+        } catch (error) {
+            this.errorHandler.catch(error);
+        }
     }
 
     /**
      * Take forms (and possibly their language variants) offline.
      */
-    takeFormsOffline(forms: Form[]): Promise<any> {
+    async takeFormsOffline(forms: Form[]): Promise<any> {
         const formIds = forms.map(form => form.id);
-        return this.folderActions.takeFormsOffline(formIds)
-            .then(() => {
-                this.state.dispatch(new ChangeListSelectionAction('form', 'clear'));
-                this.folderActions.refreshList('form');
-            })
-            .catch(this.errorHandler.catch);
+        try {
+            await this.folderActions.takeFormsOffline(formIds);
+            await this.state.dispatch(new ChangeListSelectionAction('form', 'clear')).toPromise();
+            await this.folderActions.refreshList('form');
+        } catch (error) {
+            this.errorHandler.catch(error);
+        }
     }
 
     listPageVersions(page: Page, activeNodeId: number): void {
@@ -574,7 +579,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Display a repo browser and then copy the items to the target folder.
      * Returns a promise that resolves to the folder which the items have been copied to.
      */
-    copyItems(itemType: FolderItemType, items: Item[], activeNodeId: number): Promise<Folder | undefined> {
+    async copyItems(itemType: FolderItemType, items: Item[], activeNodeId: number): Promise<Folder | undefined> {
 
         const options: RepositoryBrowserOptions = {
             allowedSelection: 'folder',
@@ -587,27 +592,27 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             selectMultiple: false,
         };
 
-        return this.repositoryBrowserClient.openRepositoryBrowser(options)
-            .then((targetFolder: ItemInNode<Folder<Raw>>) => {
-                if (targetFolder) {
-                    if (itemType === 'page') {
-                        const itemIds = items.map(item => item.id);
-                        return this.folderActions.copyPagesToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId)
-                            .then(() => this.goToOrRefreshFolder(targetFolder, itemType))
-                            .then(() => targetFolder);
-                    } else if (itemType === 'form') {
-                        const itemIds = items.map(item => item.id);
-                        return this.folderActions.copyFormsToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId)
-                            .then(() => this.goToOrRefreshFolder(targetFolder, itemType))
-                            .then(() => targetFolder);
-                    } else if (itemType === 'file' || itemType === 'image') {
-                        const files = items as FileModel[];
-                        return this.folderActions.copyFilesToFolder(files, activeNodeId, targetFolder.id, targetFolder.nodeId)
-                            .then(() => this.goToOrRefreshFolder(targetFolder, itemType))
-                            .then(() => targetFolder);
-                    }
-                }
-            });
+        const targetFolder = await this.repositoryBrowserClient.openRepositoryBrowser(options) as ItemInNode<Folder<Raw>>;
+        if (!targetFolder) {
+            return;
+        }
+
+
+        if (itemType === 'page') {
+            const itemIds = items.map(item => item.id);
+            await this.folderActions.copyPagesToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId);
+        } else if (itemType === 'form') {
+            const itemIds = items.map(item => item.id);
+            await this.folderActions.copyFormsToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId);
+        } else if (itemType === 'file' || itemType === 'image') {
+            const files = items as FileModel[];
+            await this.folderActions.copyFilesToFolder(files, activeNodeId, targetFolder.id, targetFolder.nodeId);
+        } else {
+            return
+        }
+
+        await this.goToOrRefreshFolder(targetFolder, itemType);
+        return targetFolder;
     }
 
     private goToOrRefreshFolder(folder: Folder, itemType: FolderItemType): Promise<any> {
@@ -692,39 +697,45 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 return this.modalService.fromComponent(InheritanceDialog, {}, { item, nodes });
             })
             .then(modal => modal.open())
-            .then((request: InheritanceRequest) => {
-                this.folderActions.updateItemInheritance(item.type, item.id, request);
-            })
+            .then((request: InheritanceRequest) => this.folderActions.updateItemInheritance(item.type, item.id, request))
             .catch(this.errorHandler.catch);
     }
 
-    synchronizeChannel(item: Folder | Page | FileModel | Image): void {
+    async synchronizeChannel(item: Folder | Page | FileModel | Image): Promise<void> {
         const channel: Node = this.entityResolver.getNode(this.state.now.folder.activeNode);
         let folderResponse: ChannelSyncRequest;
         let masterNode: Node;
-        this.modalService.fromComponent(SynchronizeChannelModal, {}, { item, channel })
-            .then(modal => modal.open())
-            .then((response: ChannelSyncRequest) => {
-                if (item.type === 'folder') {
-                    folderResponse = response;
-                    folderResponse.ids = [item.id];
-                }
-                masterNode = this.entityResolver.getEntity('node', response.masterId);
-                return this.modalService.fromComponent(ChannelDependenciesModal, { padding: true, width: '800px' }, { item, response })
-                    .then(modal => modal.open());
-            })
-            .then((response: ItemsGroupedByChannelId) => {
-                this.pushFolderToMaster(item.type, folderResponse).concat(this.pushNonFolderItems(response)).subscribe(
-                    success => this.showPushToMasterSuccessNotification(masterNode),
-                    error => this.showPushToMasterErrorNotification(masterNode),
-                    () => {
-                        this.folderActions.refreshList('page');
-                        this.folderActions.refreshList('file');
-                        this.folderActions.refreshList('image');
-                    },
-                );
-            })
-            .catch(this.errorHandler.catch);
+
+        const syncModal = await this.modalService.fromComponent(SynchronizeChannelModal, {}, { item, channel });
+        const syncResponse: ChannelSyncRequest = await syncModal.open();
+
+        if (item.type === 'folder') {
+            folderResponse = syncResponse;
+            folderResponse.ids = [item.id];
+        }
+        masterNode = this.entityResolver.getEntity('node', syncResponse.masterId);
+
+        const depModal = await this.modalService.fromComponent(ChannelDependenciesModal, {
+            padding: true,
+            width: '800px',
+        }, {
+            item,
+            response: syncResponse,
+        });
+        const depResponse: ItemsGroupedByChannelId = await depModal.open();
+
+        try {
+            await this.pushFolderToMaster(item.type, folderResponse).toPromise();
+            await this.pushNonFolderItems(depResponse).toPromise();
+            this.showPushToMasterSuccessNotification(masterNode);
+        } catch (error) {
+            this.showPushToMasterSuccessNotification(masterNode);
+            this.errorHandler.catch(error);
+        }
+
+        this.folderActions.refreshList('page');
+        this.folderActions.refreshList('file');
+        this.folderActions.refreshList('image');
     }
 
     /**
@@ -849,14 +860,14 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 requests.push(this.folderActions.pushItemsToMaster((type.slice(0, -1)) as FolderItemType | any, item));
             });
         });
-        return Observable.forkJoin(...requests);
+        return Observable.forkJoin(requests);
     }
 
     private pushFolderToMaster(itemType: FolderItemType, folderResponse: ChannelSyncRequest): Observable<any> {
         if (folderResponse) {
             return this.folderActions.pushItemsToMaster('folder' as FolderItemType | any, folderResponse as ChannelSyncRequest | any);
         } else {
-            return Observable.empty();
+            return of();
         }
     }
 
@@ -917,23 +928,27 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     private removeLanguagesFromObject(object: object, languages: string[]): void {
-        Object.keys(object)
-            .forEach((propertyName: string) => {
-                const property = object[propertyName];
-                if (propertyName.endsWith('_i18n')) {
-                    if (!!property && typeof property === 'object') {
-                        for (const language of languages) {
-                            delete property[language];
-                        }
-                    }
-                } else {
-                    if (!!property && typeof property === 'object') {
-                        this.removeLanguagesFromObject(property, languages);
-                    } else if (!!property && Array.isArray(property)) {
-                        this.removeLanguagesFromArray(property, languages);
-                    }
+        Object.keys(object).forEach((propertyName: string) => {
+            const property = object[propertyName];
+
+            if (propertyName.endsWith('_i18n')) {
+                if (!property || typeof property !== 'object') {
+                    return;
                 }
-            });
+
+                for (const language of languages) {
+                    delete property[language];
+                }
+
+                return;
+            }
+
+            if (!!property && typeof property === 'object') {
+                this.removeLanguagesFromObject(property, languages);
+            } else if (!!property && Array.isArray(property)) {
+                this.removeLanguagesFromArray(property, languages);
+            }
+        });
     }
 
     private removeLanguagesFromArray(array: any[], languages: string[]): void {

@@ -8,7 +8,7 @@ import { createNestedControlValidator } from '@gentics/cms-components';
 import { CmsI18nValue, Language, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { first } from 'rxjs/operators';
+import { first, switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-copy-construct-modal',
@@ -81,11 +81,28 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
 
     buttonCopyEntityClicked(): void {
         const { nodeIds, ...body } = this.form.value;
+        const cleanParts = (this.construct.parts || []).map(part => {
+            // Delete all IDs and GlobalIDs, as they will be populated by creating them
+            delete part.globalId;
+            delete part.id;
+
+            if (part.defaultProperty) {
+                delete part.defaultProperty.globalId;
+                delete part.defaultProperty.id;
+                delete part.defaultProperty.partId;
+            }
+
+            return part;
+        });
 
         this.loading = true;
         this.form.disable();
 
-        this.subscriptions.push(this.entityOperations.create(body, nodeIds).subscribe(() => {
+        this.subscriptions.push(this.entityOperations.create(body, nodeIds).pipe(
+            switchMap(created => this.entityOperations.update(created.id, {
+                parts: cleanParts,
+            })),
+        ).subscribe(() => {
             this.closeFn(true);
         }, err => {
             this.loading = false;

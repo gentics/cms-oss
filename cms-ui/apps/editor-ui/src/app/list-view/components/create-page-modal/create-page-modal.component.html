@@ -14,7 +14,6 @@
         [disabled]="creating$ | async"
         [languages]="languages"
         [templates]="templates"
-        (templatesLoaded)="reloadTemplates()"
         (submit)="form.valid && saveChanges()"
     ></page-properties-form>
 </div>

@@ -58,7 +58,7 @@ export * from './sidebar-item/sidebar-item.component';
 export * from './split-view-router-outlet/split-view-router-outlet.component';
 export * from './tag-editor-wrapper/tag-editor-wrapper.component';
 export * from './tag-map-entry-table/tag-map-entry-table.component';
-export * from './tagmap-entry-properties/tagmap-entry-properties.component';
+export * from './tag-map-entry-properties/tag-map-entry-properties.component';
 export * from './template-folder-link-trable/template-folder-link-trable.component';
 export * from './template-table/template-table.component';
 export * from './user-table/user-table.component';

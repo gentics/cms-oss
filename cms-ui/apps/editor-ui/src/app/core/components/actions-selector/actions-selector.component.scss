@@ -13,11 +13,11 @@
         }
 
         .action-button-group-content {
-            display: flex;
-            flex-wrap: nowrap;
-            flex-direction: row;
-            margin: 1rem;
-            align-items: baseline;
+            display: grid;
+            grid-template-columns: repeat(3, auto);
+            grid-gap: 0px;
+            padding: 0 1rem;
+            width: 100%;
         }
     }
 
@@ -31,6 +31,7 @@
         cursor: pointer;
         width: 8rem;
         max-width: 8rem;
+        margin: 1rem 0;
 
         .action-button-icon-wrapper {
             margin: auto auto 0;

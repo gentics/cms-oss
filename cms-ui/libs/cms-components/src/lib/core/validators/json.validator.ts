@@ -4,27 +4,27 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
  * Returns `null` if `!control.value` or valid JSON, otherwise `{ errorIsInvalidJson: true }`.
  */
 export const GtxJsonValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
-    const _value = control.value;
+    const value = control.value;
     control.hasError('errorIsInvalidJson')
-    const _error = { errorIsInvalidJson: true };
+    const validationError = { errorIsInvalidJson: true };
 
     // if input is empty, there is no error
-    if (!_value) {
+    if (!value) {
         return null;
     }
 
-    if (typeof _value === 'string') {
-        let _parsedValue: object;
+    if (typeof value === 'string') {
+        let parsed: object;
         try {
-            _parsedValue = JSON.parse(_value);
-            if (_parsedValue instanceof Object && Object.keys(_parsedValue).length) {
+            parsed = JSON.parse(value);
+            if (parsed != null && typeof parsed === 'object') {
                 return null;
             }
         } catch (error) {
-            return _error;
+            return validationError;
         }
     }
 
     // if in doubt, return error
-    return _error;
+    return validationError;
 }

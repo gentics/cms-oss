@@ -44,14 +44,20 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         this.form = this.createForm();
 
         this.configureForm(this.value);
+        this.form.updateValueAndValidity();
         this.form.markAsPristine();
+        this.changeDetector.markForCheck();
 
         let firstChange = true;
 
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap(value => this.configureForm(value)),
+                tap(value => {
+                    this.configureForm(value);
+                    this.form.updateValueAndValidity();
+                    this.changeDetector.markForCheck();
+                }),
             ),
             this.form.statusChanges,
         ]).pipe(

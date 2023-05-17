@@ -5,7 +5,7 @@ import {
     MaintenanceModeFetchSuccessAction,
     StartMaintenanceModeFetchingAction,
 } from '@editor-ui/app/state';
-import { Subscription, combineLatest, of } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, map, skip, switchMap } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { Api } from '../api/api.service';
@@ -81,24 +81,21 @@ export class MaintenanceModeService {
         return subscription;
     }
 
-    refresh(): Promise<void> {
+    async refresh(): Promise<void> {
         /** Maintenance mode endpoint only exists in ContentNode >= 5.27.7 */
         if (this.appState.now.maintenanceMode.reportedByServer === false) {
-            return Promise.resolve();
+            return;
         }
 
-        this.appState.dispatch(new StartMaintenanceModeFetchingAction());
+        await this.appState.dispatch(new StartMaintenanceModeFetchingAction()).toPromise();
 
-        return this.api.info.getMaintenanceModeStatus().pipe(
-            map(response => {
-                this.appState.dispatch(new MaintenanceModeFetchSuccessAction(response));
-                return;
-            }),
-            catchError(() => {
-                this.appState.dispatch(new MaintenanceModeFetchErrorAction());
-                return of<void>();
-            }),
-        ).toPromise();
+        try {
+            const response = await this.api.info.getMaintenanceModeStatus().toPromise();
+            await this.appState.dispatch(new MaintenanceModeFetchSuccessAction(response)).toPromise();
+        } catch (error) {
+            console.error('Error while loading maintenance-status', error);
+            await this.appState.dispatch(new MaintenanceModeFetchErrorAction()).toPromise();
+        }
     }
 
     /** Check maintenance mode when the user is logged out. */

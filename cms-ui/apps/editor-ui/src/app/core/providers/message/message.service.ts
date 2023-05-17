@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { filter, switchMap, switchMapTo } from 'rxjs/operators';
+import { Subject, Subscription, combineLatest, interval, of } from 'rxjs';
+import { delay, filter, map, mergeMap } from 'rxjs/operators';
 import { ApplicationStateService, MessageActionsService } from '../../../state';
 import { PermissionService } from '../permissions/permission.service';
 
@@ -51,14 +51,24 @@ export class MessageService implements OnDestroy {
     }
 
     private fetchWhenUserIsLoggedIn(): void {
-        this.subscription = this.appState.select(state => state.auth.isLoggedIn).pipe(
-            filter(loggedIn => loggedIn),
-            switchMapTo(this.permissions.viewInbox$),
-            switchMap(hasPermissions => hasPermissions
-                ? Observable.timer(this.fetchDelay * 1000, this.fetchInterval * 1000)
-                    .map((ignored, index) => index === 0)
-                : Observable.never(),
-            ),
+        const doFetch$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
+            mergeMap(loggedIn => {
+                if (loggedIn) {
+                    return this.permissions.viewInbox$;
+                }
+                return of(false);
+            }),
+        );
+
+        this.subscription = combineLatest([
+            doFetch$,
+            combineLatest([
+                interval(this.fetchInterval * 1000),
+                of(null).pipe(delay(this.fetchDelay * 1000)),
+            ]).map((_, idx) => idx === 0),
+        ]).pipe(
+            filter(([allow]) => allow),
+            map(([_, first]) => first),
         ).subscribe(firstFetch => {
             if (firstFetch) {
                 this.messageActions.fetchAllMessages();

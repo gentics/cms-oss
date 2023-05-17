@@ -262,7 +262,7 @@ export class FolderStateModule {
 
     /** Generic method when an item list was fetched from the server. */
     @ActionDefinition(ListFetchingSuccessAction)
-    handleListFetchingSuccessAction(ctx: StateContext<FolderState>, action: ListFetchingSuccessAction): void {
+    async handleListFetchingSuccessAction(ctx: StateContext<FolderState>, action: ListFetchingSuccessAction): void {
         const type: FolderStateItemListKey = plural[action.type] || action.type;
 
         // If there's no result/items to process, then simply set the fetching status
@@ -292,7 +292,7 @@ export class FolderStateModule {
 
             // Entities can always be applied to the entity state.
             const normalized = normalize(slice, new schemaNamespace.Array(schema));
-            ctx.dispatch(new AddEntitiesAction(normalized));
+            await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
             let idsToSaveToFolderState: number[];
             if (hasMoreBatches) {
@@ -469,13 +469,13 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(CreateItemSuccessAction)
-    handleCreateItemSuccessAction<T extends FolderItemOrTemplateType>(ctx: StateContext<FolderState>, action: CreateItemSuccessAction<T>): void {
+    async handleCreateItemSuccessAction<T extends FolderItemOrTemplateType>(ctx: StateContext<FolderState>, action: CreateItemSuccessAction<T>): void {
         const state = ctx.getState();
         const typeKey = plural[action.type];
 
         const normalized = normalize(action.items, new schemaNamespace.Array(getNormalizrSchema(action.type)));
 
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch<FolderState>({
             [typeKey]: compose(
@@ -530,11 +530,11 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(EditImageSuccessAction)
-    handleEditImageSuccessAction(ctx: StateContext<FolderState>, action: EditImageSuccessAction): void {
+    async handleEditImageSuccessAction(ctx: StateContext<FolderState>, action: EditImageSuccessAction): void {
         const state = ctx.getState().images;
         const normalized = normalize(action.image, imageSchema);
 
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch<FolderState>({
             images: patch<ItemsInfo>({
@@ -546,7 +546,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(InheritanceFetchingSuccessAction)
-    handleInheritanceFetchingSuccessAction(ctx: StateContext<FolderState>, action: InheritanceFetchingSuccessAction): void {
+    async handleInheritanceFetchingSuccessAction(ctx: StateContext<FolderState>, action: InheritanceFetchingSuccessAction): void {
         const type = plural[action.type] || action.type;
 
         // Update the item with the data returned by the `<type>/disinherit` endpoint
@@ -554,11 +554,11 @@ export class FolderStateModule {
             ...action.result,
         };
 
-        ctx.dispatch(new UpdateEntitiesAction({
+        await ctx.dispatch(new UpdateEntitiesAction({
             [action.type]: {
                 [action.itemId]: updatedProps,
             },
-        }));
+        })).toPromise();
 
         ctx.setState(patch<FolderState>({
             [type]: patch<ItemsInfo>({
@@ -568,9 +568,9 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(ItemFetchingSuccessAction)
-    handleItemFetchingSuccessAction<T extends ItemType>(ctx: StateContext<FolderState>, action: ItemFetchingSuccessAction<T>): void {
+    async handleItemFetchingSuccessAction<T extends ItemType>(ctx: StateContext<FolderState>, action: ItemFetchingSuccessAction<T>): void {
         const normalized = normalize(action.item, getNormalizrSchema(action.type));
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         const type = plural[action.type] || action.type;
         ctx.setState(patch<FolderState>({
@@ -581,9 +581,9 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(LanguageFetchingSuccessAction)
-    handleLanguageFetchingSuccessAction(ctx: StateContext<FolderState>, action: LanguageFetchingSuccessAction): void {
+    async handleLanguageFetchingSuccessAction(ctx: StateContext<FolderState>, action: LanguageFetchingSuccessAction): void {
         const normalized = normalize(action.languages, new schemaNamespace.Array(languageSchema));
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch({
             activeNodeLanguages: patch({
@@ -597,11 +597,13 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(NodeFetchingSuccessAction)
-    handleNodeFetchingSuccessAction(ctx: StateContext<FolderState>, action: NodeFetchingSuccessAction): void {
+    async handleNodeFetchingSuccessAction(ctx: StateContext<FolderState>, action: NodeFetchingSuccessAction): Promise<void> {
         const normalizedFolders = normalize(action.folders, new schemaNamespace.Array(folderSchema));
         const normalizedNodes = normalize(action.nodes, new schemaNamespace.Array(nodeSchema));
-        ctx.dispatch(new AddEntitiesAction(normalizedFolders));
-        ctx.dispatch(new AddEntitiesAction(normalizedNodes));
+        await Promise.all([
+            ctx.dispatch(new AddEntitiesAction(normalizedFolders)).toPromise(),
+            ctx.dispatch(new AddEntitiesAction(normalizedNodes)).toPromise(),
+        ]);
 
         const state = ctx.getState();
         const entityState = this.appState.now.entities;
@@ -638,11 +640,14 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(ChannelSyncReportFetchingSuccessAction)
-    handleChannelSyncReportFetchingSuccessAction(ctx: StateContext<FolderState>, action: ChannelSyncReportFetchingSuccessAction): void {
+    async handleChannelSyncReportFetchingSuccessAction(ctx: StateContext<FolderState>, action: ChannelSyncReportFetchingSuccessAction): void {
+        let adders: Promise<any>[] = [];
         Object.entries(action.report).forEach(([itemType, items]) => {
             const normalized = normalize(items, new schemaNamespace.Array(getNormalizrSchema(itemType)));
-            ctx.dispatch(new AddEntitiesAction(normalized));
+            adders.push(ctx.dispatch(new AddEntitiesAction(normalized)).toPromise());
         });
+
+        await Promise.all(adders);
 
         ctx.setState(patch<FolderState>({
             channelSyncReport: patch<ChannelSyncReport>({
@@ -684,19 +689,19 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(SetActiveFolderAction)
-    handleSetActiveFolderAction(ctx: StateContext<FolderState>, action: SetActiveFolderAction): void {
+    async handleSetActiveFolderAction(ctx: StateContext<FolderState>, action: SetActiveFolderAction): void {
         const state = ctx.getState();
 
-        ctx.dispatch(new FocusListAction());
+        await ctx.dispatch(new FocusListAction()).toPromise();
 
         if (Number.isInteger(action.folderId) && action.folderId !== state.activeFolder) {
             if (state.activeFolder && state.activeNode) {
-                ctx.dispatch(new AddToRecentItemsAction({
+                await ctx.dispatch(new AddToRecentItemsAction({
                     id: action.folderId,
                     mode: 'navigate',
                     nodeId: state.activeNode,
                     type: 'folder',
-                }));
+                })).toPromise();
             }
 
             ctx.setState(compose(
@@ -731,7 +736,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(SetActiveNodeAction)
-    handleSetActiveNodeAction(ctx: StateContext<FolderState>, action: SetActiveNodeAction): void {
+    async handleSetActiveNodeAction(ctx: StateContext<FolderState>, action: SetActiveNodeAction): void {
         const state = ctx.getState();
 
         if (Number.isInteger(action.nodeId) && action.nodeId !== state.activeNode) {
@@ -740,7 +745,7 @@ export class FolderStateModule {
                 activeNode: action.nodeId,
             });
         }
-        ctx.dispatch(new FocusListAction());
+        await ctx.dispatch(new FocusListAction()).toPromise();
     }
 
     @ActionDefinition(SetDisplayAllLanguagesAction)

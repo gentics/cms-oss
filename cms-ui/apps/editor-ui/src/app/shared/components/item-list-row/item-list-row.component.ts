@@ -272,13 +272,13 @@ export class ItemListRowComponent implements OnInit {
      * A page language variant was clicked. If the variant exists, we preview it. If it does not
      * exist, we display the "create translation" dialog.
      */
-    formLanguageClicked(event: ItemLanguageClickEvent<Form>): void {
+    async formLanguageClicked(event: ItemLanguageClickEvent<Form>): Promise<void> {
         const { item, language, compare, source, restore } = event;
 
         if (restore) {
             const entityToBeRestoredId = item.id;
-            this.wastebinActions.restoreItemsFromWastebin('form', [entityToBeRestoredId])
-                .then(() => this.changeDetectorRef.markForCheck());
+            await this.wastebinActions.restoreItemsFromWastebin('form', [entityToBeRestoredId]);
+            this.changeDetectorRef.markForCheck();
             return;
         }
 
@@ -290,13 +290,13 @@ export class ItemListRowComponent implements OnInit {
         if (source) {
             this.folderActions.setActiveFormLanguage(language.id);
             this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'preview').navigate();
-        } else {
-            this.folderActions.updateFormLanguage(item, language).then(() => {
-                this.folderActions.setActiveFormLanguage(language.id);
-                this.folderActions.refreshList('form');
-                this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'edit').navigate();
-            });
+            return;
         }
+
+        await this.folderActions.updateFormLanguage(item, language);
+        await this.folderActions.setActiveFormLanguage(language.id);
+        await this.folderActions.refreshList('form');
+        this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'edit').navigate();
     }
 
     isModeSelect(): boolean {

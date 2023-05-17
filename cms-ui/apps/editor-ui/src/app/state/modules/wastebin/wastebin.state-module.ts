@@ -62,9 +62,9 @@ export class WastebinStateModule {
     }
 
     @ActionDefinition(WasteBinItemsFetchingSuccessAction)
-    handleWasteBinItemsFetchingSuccessAction(ctx: StateContext<WastebinState>, action: WasteBinItemsFetchingSuccessAction): void {
+    async handleWasteBinItemsFetchingSuccessAction(ctx: StateContext<WastebinState>, action: WasteBinItemsFetchingSuccessAction): void {
         const normalized = normalize(action.items, new schema.Array(getNormalizrSchema(action.itemType)));
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch<WastebinState>({
             [action.itemType]: patch<WastebinTypeList>({

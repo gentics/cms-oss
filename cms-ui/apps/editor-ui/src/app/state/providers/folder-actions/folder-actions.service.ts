@@ -228,9 +228,13 @@ export class FolderActionsService {
         forkJoin([
             this.appState.dispatch(new StartListFetchingAction('nodes', undefined, true)),
             this.api.folders.getNodes(),
-        ]).subscribe(([,res]) => {
-            this.appState.dispatch(new NodeFetchingSuccessAction(res.folders, res.nodes));
-
+        ]).pipe(
+            switchMap(([, res]) => {
+                return this.appState.dispatch(new NodeFetchingSuccessAction(res.folders, res.nodes)).pipe(
+                    map(() => res),
+                );
+            }),
+        ).subscribe(res => {
             if (res.nodes.length === 0) {
                 this.notification.show({
                     type: 'alert',
@@ -282,15 +286,15 @@ export class FolderActionsService {
     /**
      * Set the active language and persist that selection to localStorage.
      */
-    setActiveLanguage(languageId: number): void {
-        this.appState.dispatch(new SetFolderLanguageAction(languageId));
+    setActiveLanguage(languageId: number): Promise<void> {
+        return this.appState.dispatch(new SetFolderLanguageAction(languageId)).toPromise();
     }
 
     /**
      * Set the active form language and persist that selection to localStorage.
      */
-    setActiveFormLanguage(languageId: number): void {
-        this.appState.dispatch(new SetFormLanguageAction(languageId));
+    setActiveFormLanguage(languageId: number): Promise<void> {
+        return this.appState.dispatch(new SetFormLanguageAction(languageId)).toPromise();
     }
 
     /**
@@ -376,9 +380,10 @@ export class FolderActionsService {
      * is one of the available languages. If not, default to the first language
      * in the list.
      */
-    private setActiveLanguageFromAvailable(languages: Language[]): void {
+    private async setActiveLanguageFromAvailable(languages: Language[]): Promise<void> {
         const activeLanguage = this.appState.now.folder.activeLanguage;
         let activeLanguageAvail: number;
+
         if (activeLanguage && languages.map(l => l.id).includes(activeLanguage)) {
             activeLanguageAvail = activeLanguage;
         } else {
@@ -389,8 +394,9 @@ export class FolderActionsService {
                 activeLanguageAvail = 1;
             }
         }
-        this.setActiveLanguage(activeLanguageAvail);
-        this.setActiveFormLanguage(activeLanguageAvail);
+
+        await this.setActiveLanguage(activeLanguageAvail);
+        await this.setActiveFormLanguage(activeLanguageAvail);
     }
 
     /**

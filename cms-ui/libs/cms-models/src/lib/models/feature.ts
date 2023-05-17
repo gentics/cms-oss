@@ -32,6 +32,7 @@ export enum Feature {
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
     CONTENT_STAGING = 'content_staging',
     MULTICHANNELING = 'multichanneling',
+    MESH_CR = 'mesh_contentrepository',
 }
 
 /**

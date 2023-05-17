@@ -74,6 +74,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
     inheritedFromNode$?: Observable<Node>;
 
     multiChannelingEnabled = false;
+    meshCrEnabled = false;
 
     private subscriptions: Subscription[] = [];
 
@@ -88,6 +89,11 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
 
         this.subscriptions.push(this.appState.select(state => state.features.global.multichanneling).subscribe(featureEnabled => {
             this.multiChannelingEnabled = featureEnabled;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features.global.mesh_contentrepository).subscribe(featureEnabled => {
+            this.meshCrEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));
 

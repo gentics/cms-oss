@@ -262,7 +262,7 @@ export class FolderStateModule {
 
     /** Generic method when an item list was fetched from the server. */
     @ActionDefinition(ListFetchingSuccessAction)
-    async handleListFetchingSuccessAction(ctx: StateContext<FolderState>, action: ListFetchingSuccessAction): void {
+    async handleListFetchingSuccessAction(ctx: StateContext<FolderState>, action: ListFetchingSuccessAction): Promise<void> {
         const type: FolderStateItemListKey = plural[action.type] || action.type;
 
         // If there's no result/items to process, then simply set the fetching status
@@ -469,7 +469,10 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(CreateItemSuccessAction)
-    async handleCreateItemSuccessAction<T extends FolderItemOrTemplateType>(ctx: StateContext<FolderState>, action: CreateItemSuccessAction<T>): void {
+    async handleCreateItemSuccessAction<T extends FolderItemOrTemplateType>(
+        ctx: StateContext<FolderState>,
+        action: CreateItemSuccessAction<T>,
+    ): Promise<void> {
         const state = ctx.getState();
         const typeKey = plural[action.type];
 
@@ -530,7 +533,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(EditImageSuccessAction)
-    async handleEditImageSuccessAction(ctx: StateContext<FolderState>, action: EditImageSuccessAction): void {
+    async handleEditImageSuccessAction(ctx: StateContext<FolderState>, action: EditImageSuccessAction): Promise<void> {
         const state = ctx.getState().images;
         const normalized = normalize(action.image, imageSchema);
 
@@ -546,7 +549,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(InheritanceFetchingSuccessAction)
-    async handleInheritanceFetchingSuccessAction(ctx: StateContext<FolderState>, action: InheritanceFetchingSuccessAction): void {
+    async handleInheritanceFetchingSuccessAction(ctx: StateContext<FolderState>, action: InheritanceFetchingSuccessAction): Promise<void> {
         const type = plural[action.type] || action.type;
 
         // Update the item with the data returned by the `<type>/disinherit` endpoint
@@ -568,7 +571,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(ItemFetchingSuccessAction)
-    async handleItemFetchingSuccessAction<T extends ItemType>(ctx: StateContext<FolderState>, action: ItemFetchingSuccessAction<T>): void {
+    async handleItemFetchingSuccessAction<T extends ItemType>(ctx: StateContext<FolderState>, action: ItemFetchingSuccessAction<T>): Promise<void> {
         const normalized = normalize(action.item, getNormalizrSchema(action.type));
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
@@ -581,7 +584,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(LanguageFetchingSuccessAction)
-    async handleLanguageFetchingSuccessAction(ctx: StateContext<FolderState>, action: LanguageFetchingSuccessAction): void {
+    async handleLanguageFetchingSuccessAction(ctx: StateContext<FolderState>, action: LanguageFetchingSuccessAction): Promise<void> {
         const normalized = normalize(action.languages, new schemaNamespace.Array(languageSchema));
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
@@ -640,7 +643,10 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(ChannelSyncReportFetchingSuccessAction)
-    async handleChannelSyncReportFetchingSuccessAction(ctx: StateContext<FolderState>, action: ChannelSyncReportFetchingSuccessAction): void {
+    async handleChannelSyncReportFetchingSuccessAction(
+        ctx: StateContext<FolderState>,
+        action: ChannelSyncReportFetchingSuccessAction,
+    ): Promise<void> {
         let adders: Promise<any>[] = [];
         Object.entries(action.report).forEach(([itemType, items]) => {
             const normalized = normalize(items, new schemaNamespace.Array(getNormalizrSchema(itemType)));
@@ -689,7 +695,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(SetActiveFolderAction)
-    async handleSetActiveFolderAction(ctx: StateContext<FolderState>, action: SetActiveFolderAction): void {
+    async handleSetActiveFolderAction(ctx: StateContext<FolderState>, action: SetActiveFolderAction): Promise<void> {
         const state = ctx.getState();
 
         await ctx.dispatch(new FocusListAction()).toPromise();
@@ -736,7 +742,7 @@ export class FolderStateModule {
     }
 
     @ActionDefinition(SetActiveNodeAction)
-    async handleSetActiveNodeAction(ctx: StateContext<FolderState>, action: SetActiveNodeAction): void {
+    async handleSetActiveNodeAction(ctx: StateContext<FolderState>, action: SetActiveNodeAction): Promise<void> {
         const state = ctx.getState();
 
         if (Number.isInteger(action.nodeId) && action.nodeId !== state.activeNode) {

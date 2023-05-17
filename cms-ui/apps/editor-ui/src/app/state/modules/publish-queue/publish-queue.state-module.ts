@@ -41,7 +41,7 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(AssigningUsersToPagesSuccessAction)
-    async handleAssigningUsersToPagesSuccessAction(ctx: StateContext<PublishQueueState>, action: AssigningUsersToPagesSuccessAction): void {
+    async handleAssigningUsersToPagesSuccessAction(ctx: StateContext<PublishQueueState>, action: AssigningUsersToPagesSuccessAction): Promise<void> {
         const pageUpdates: { [id: number]: Partial<Page<Normalized>> } = {};
         for (let id of action.pageIds) {
             pageUpdates[id] = {
@@ -71,7 +71,10 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(PublishQueuePagesFetchingSuccessAction)
-    async handlePublishQueueFetchingSuccessAction(ctx: StateContext<PublishQueueState>, action: PublishQueuePagesFetchingSuccessAction): void {
+    async handlePublishQueueFetchingSuccessAction(
+        ctx: StateContext<PublishQueueState>,
+        action: PublishQueuePagesFetchingSuccessAction,
+    ): Promise<void> {
         const normalized = normalize(action.pages, new schema.Array(pageSchema));
 
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
@@ -92,7 +95,10 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(PublishQueueUsersFetchingSuccessAction)
-    async handlePublishQueueUsersFetchingSuccessAction(ctx: StateContext<PublishQueueState>, action: PublishQueueUsersFetchingSuccessAction): void {
+    async handlePublishQueueUsersFetchingSuccessAction(
+        ctx: StateContext<PublishQueueState>,
+        action: PublishQueueUsersFetchingSuccessAction,
+    ): Promise<void> {
         const normalized = normalize(action.users, new schema.Array(userSchema));
 
         await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();

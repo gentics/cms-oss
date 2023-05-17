@@ -84,7 +84,7 @@ export class UsageStateModule  {
     }
 
     @ActionDefinition(ItemUsageFetchingSuccessAction)
-    async handleItemUsageFetchingSuccessAction(ctx: StateContext<UsageState>, action: ItemUsageFetchingSuccessAction): void {
+    async handleItemUsageFetchingSuccessAction(ctx: StateContext<UsageState>, action: ItemUsageFetchingSuccessAction): Promise<void> {
         const diff: Partial<UsageState> = {
             fetching: false,
         };

@@ -4,6 +4,7 @@ import { StateContext } from '@ngxs/store';
 import { patch } from '@ngxs/store/operators';
 import { NormalizedSchema } from 'normalizr';
 import { MessageState } from '../../../common/models';
+import { ApplicationStateService } from '../../providers';
 import { ActionDefinition, AppStateBranch, concatUnique } from '../../state-utils';
 import { AddEntitiesAction, SetMessageEntitiesAction, UpdateEntitiesAction } from '../entity/entity.actions';
 import {
@@ -13,7 +14,6 @@ import {
     MessagesReadAction,
     StartMessagesFetchingAction,
 } from './message.actions';
-import { ApplicationStateService } from '../../providers';
 
 const INITIAL_MESSAGES_STATE: MessageState = {
     fetching: false,
@@ -42,7 +42,7 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(MessagesFetchingSuccessAction)
-    async handleMessagesFetchSuccessAction(ctx: StateContext<MessageState>, action: MessagesFetchingSuccessAction): void {
+    async handleMessagesFetchSuccessAction(ctx: StateContext<MessageState>, action: MessagesFetchingSuccessAction): Promise<void> {
         const state = ctx.getState();
         let newMessages: MessageFromServer[];
 
@@ -98,7 +98,7 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(MessagesReadAction)
-    async handleMessagesReadAction(ctx: StateContext<MessageState>, action: MessagesReadAction): void {
+    async handleMessagesReadAction(ctx: StateContext<MessageState>, action: MessagesReadAction): Promise<void> {
         const state = ctx.getState();
         const messageEntities = this.appState.now.entities.message;
         const hasChanges = action.messageIds?.length && action.messageIds.some(id => messageEntities[id]?.unread);

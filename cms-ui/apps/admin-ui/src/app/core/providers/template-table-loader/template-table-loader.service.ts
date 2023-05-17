@@ -47,7 +47,10 @@ export class TemplateTableLoaderService extends BaseTableLoaderService<Template,
             if (additionalOptions?.nodeId) {
                 loadOptions.nodeId = additionalOptions.nodeId;
                 loadOptions.perms = true;
+            } else {
+                loadOptions.reduce = true;
             }
+
             loader = this.api.template.getTemplates(loadOptions);
         }
 

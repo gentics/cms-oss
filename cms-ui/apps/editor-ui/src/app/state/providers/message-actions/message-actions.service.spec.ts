@@ -29,7 +29,7 @@ describe('MessageActionsService', () => {
     });
 
     describe('fetchAllMessages', () => {
-        it('calls getMessages action before loading from the API', () => {
+        it('calls getMessages action before loading from the API', fakeAsync(() => {
             let loadingWasStarted = false;
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages').and.callFake(() => {
                 loadingWasStarted = true;
@@ -37,19 +37,21 @@ describe('MessageActionsService', () => {
             });
 
             messageActions.fetchAllMessages();
+            tick();
 
             expect(loadingWasStarted).toBe(true);
-        });
+        }));
 
-        it('fetches read and unread messages from the API', () => {
+        it('fetches read and unread messages from the API', fakeAsync(() => {
             api.messages.getMessages = jasmine.createSpy('api.messages.getMessages')
                 .and.callFake(() => Observable.never());
 
             messageActions.fetchAllMessages();
+            tick();
 
             expect(api.messages.getMessages).toHaveBeenCalledWith(true);
             expect(api.messages.getMessages).toHaveBeenCalledWith(false);
-        });
+        }));
 
         it('calls fetchAllMessagesSuccess action when loaded successfully', fakeAsync(() => {
             const message: MessageFromServer = {
@@ -277,41 +279,45 @@ describe('MessageActionsService', () => {
             });
         });
 
-        it('marks the passed messages as read via the API', () => {
+        it('marks the passed messages as read via the API', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
                 .and.returnValue(Observable.never());
 
             messageActions.markMessagesAsRead([1, 2, 3]);
+            tick();
 
             expect(api.messages.markAsRead).toHaveBeenCalledWith([1, 2, 3]);
-        });
+        }));
 
-        it('marks the messages as read in the app state when the API request succeeds', () => {
+        it('marks the messages as read in the app state when the API request succeeds', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
                 .and.callFake(() => Observable.of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
+            tick();
 
             expect(state.now.messages.read).toEqual([1, 2, 3]);
-        });
+        }));
 
-        it('does not mark the messages as read in the app state  when the API request fails', () => {
+        it('does not mark the messages as read in the app state  when the API request fails', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
                 .and.callFake(() => Observable.throw('Request failed'));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
+            tick();
 
             expect(state.now.messages.read).toEqual([]);
-        });
+        }));
 
-        it('works with an array of message IDs as input', () => {
+        it('works with an array of message IDs as input', fakeAsync(() => {
             api.messages.markAsRead = jasmine.createSpy('api.messages.markAsRead')
                 .and.callFake(() => Observable.of({}));
 
             messageActions.markMessagesAsRead([1, 2, 3]);
+            tick();
 
             expect(state.now.messages.read).toEqual([1, 2, 3]);
-        });
+        }));
 
     });
 

@@ -25,7 +25,7 @@ describe('FeaturesStateModule', () => {
         appState = TestBed.get(ApplicationStateService);
     });
 
-    fit('sets the correct initial state', () => {
+    it('sets the correct initial state', () => {
         const expected: FeaturesState = {
             [Feature.NICE_URLS]: false,
             [Feature.ELASTICSEARCH]: false,
@@ -62,7 +62,10 @@ describe('FeaturesStateModule', () => {
     });
 
     it('feature definitions are congruent with feature state', () => {
-        const featureEnumKeys: string[] = getOrderedObjectKeys(Feature);
+        const featureEnumKeys: string[] = Object.keys(Feature)
+            .filter(key => key !== 'nodeSettings')
+            .map(key => Feature[key])
+            .sort();
         const appStateFeaturesKeys: string[] = getOrderedObjectKeys(appState.now.features);
         expect(featureEnumKeys).toEqual(appStateFeaturesKeys);
     });

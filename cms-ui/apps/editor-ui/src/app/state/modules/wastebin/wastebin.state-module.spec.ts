@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed,  fakeAsync, tick } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import { getExampleFolderData } from '../../../../testing/test-data.mock';
 import { WastebinState } from '../../../common/models';
@@ -57,12 +57,14 @@ describe('WastebinStateModule', () => {
         } as WastebinState);
     });
 
-    it('fetchItemsStart works', () => {
+    it('fetchItemsStart works', fakeAsync(() => {
         appState.dispatch(new StartWasteBinItemsFetchingAction('page'));
-        expect(appState.now.wastebin.page.requesting).toBe(true);
-    });
+        tick();
 
-    it('fetchItemsSuccess works', () => {
+        expect(appState.now.wastebin.page.requesting).toBe(true);
+    }));
+
+    it('fetchItemsSuccess works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 page: {
@@ -77,6 +79,7 @@ describe('WastebinStateModule', () => {
             getExampleFolderData({ id: 7, userId: 3 }),
             getExampleFolderData({ id: 23, userId: 3 }),
         ]));
+        tick();
 
         expect(appState.now.wastebin.page).toEqual({
             list: [3, 7, 23],
@@ -87,9 +90,9 @@ describe('WastebinStateModule', () => {
 
         expect(numericKeys(appState.now.entities.page)).toEqual([3, 7, 23]);
         expect(numericKeys(appState.now.entities.user)).toEqual([1, 3]);
-    });
+    }));
 
-    it('fetchItemsError works', () => {
+    it('fetchItemsError works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 folder: {
@@ -105,9 +108,9 @@ describe('WastebinStateModule', () => {
 
         expect(appState.now.wastebin.folder.requesting).toBe(false);
         expect(appState.now.wastebin.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('deleteFromWastebinStart works', () => {
+    it('deleteFromWastebinStart works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 page: {
@@ -118,11 +121,13 @@ describe('WastebinStateModule', () => {
         });
 
         appState.dispatch(new StartWasteBinItemsDeletionAction('page', [2, 3, 4]));
+        tick();
+
         expect(appState.now.wastebin.page.requesting).toBe(true);
         expect(appState.now.wastebin.page.list).toEqual([1, 5]);
-    });
+    }));
 
-    it('deleteFromWastebinSuccess works', () => {
+    it('deleteFromWastebinSuccess works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 folder: {
@@ -133,14 +138,15 @@ describe('WastebinStateModule', () => {
         });
 
         appState.dispatch(new WasteBinItemsDeletionSuccessAction('folder', [2, 3]));
+        tick();
 
         expect(appState.now.wastebin.folder).toEqual({
             list: [1, 4, 5],
             requesting: false,
         });
-    });
+    }));
 
-    it('deleteFromWastebinError works', () => {
+    it('deleteFromWastebinError works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 folder: {
@@ -152,13 +158,14 @@ describe('WastebinStateModule', () => {
 
         const errorMessage = 'Some error occurred';
         appState.dispatch(new WasteBinItemsDeletionErrorAction('folder', [6, 7], errorMessage));
+        tick();
 
         expect(appState.now.wastebin.folder.requesting).toBe(false);
         expect(appState.now.wastebin.folder.list).toEqual([1, 2, 3, 4, 5, 6, 7]);
         expect(appState.now.wastebin.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('restoreItemsFromWastebin works', () => {
+    it('restoreItemsFromWastebin works', fakeAsync(() => {
         appState.mockState({
             wastebin: {
                 folder: {
@@ -169,8 +176,9 @@ describe('WastebinStateModule', () => {
         });
 
         appState.dispatch(new RestoreWasteBinItemsAction('folder', [2, 3]));
+        tick();
 
         expect(appState.now.wastebin.folder.list).toEqual([1, 4, 5]);
-    });
+    }));
 
 });

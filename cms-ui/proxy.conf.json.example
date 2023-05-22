@@ -1,15 +1,5 @@
 {
-    "/CNPortletapp": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
     "/rest": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
-    "/.Node": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
@@ -24,7 +14,27 @@
         "secure": false,
         "changeOrigin": true
     },
-    "/customer-config": {
+    "/ui-conf": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/alohapage": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/alohaeditor": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/GenticsImageStore": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/gcnjsapi": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true

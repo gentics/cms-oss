@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { CmsFormElementBO, CmsFormElementProperty, CmsFormElementPropertyType, CmsFormType } from '@gentics/cms-models';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter, take } from 'rxjs/operators';
+import { distinctUntilChanged, filter, refCount, take, tap, publishReplay } from 'rxjs/operators';
 import {
     FormEditorConfiguration,
     FormElementConfiguration,
@@ -15,45 +16,49 @@ export class FormEditorService {
 
     /** Current UI language. */
     set activeUiLanguageCode(v: string) {
-        this._activeUiLanguageCode$.next(v);
+        this.activeUiLanguageCodeSubject.next(v);
     }
     get activeUiLanguageCode(): string {
-        return this._activeUiLanguageCode$.getValue();
+        return this.activeUiLanguageCodeSubject.getValue();
     }
-    get activeUiLanguageCode$(): Observable<string> {
-        return this._activeUiLanguageCode$.asObservable().pipe(
-            filter(v => !!v),
-        );
-    }
-    private _activeUiLanguageCode$ = new BehaviorSubject<string>(null);
+    private activeUiLanguageCodeSubject = new BehaviorSubject<string>(null);
+    readonly activeUiLanguageCode$ = this.activeUiLanguageCodeSubject.asObservable().pipe(
+        filter(v => !!v),
+        distinctUntilChanged(isEqual),
+        publishReplay(1),
+        refCount(),
+    );
 
     /** Current content language. */
     set activeContentLanguageCode(v: string) {
-        this._activeContentLanguageCode$.next(v);
+        this.activeContentLanguageCodeSubject.next(v);
     }
     get activeContentLanguageCode(): string {
-        return this._activeContentLanguageCode$.getValue();
+        return this.activeContentLanguageCodeSubject.getValue();
     }
-    get activeContentLanguageCode$(): Observable<string> {
-        return this._activeContentLanguageCode$.asObservable().pipe(
-            filter(v => !!v),
-        );
-    }
-    private _activeContentLanguageCode$ = new BehaviorSubject<string>(null);
+    private activeContentLanguageCodeSubject = new BehaviorSubject<string>(null);
+    readonly activeContentLanguageCode$ =this.activeContentLanguageCodeSubject.asObservable().pipe(
+        filter(v => !!v),
+        distinctUntilChanged(isEqual),
+        tap(lang => console.log('actiove form content-language changed', lang)),
+        publishReplay(1),
+        refCount(),
+    );
 
     /** All languages the form shall be available in. */
     set formLanguages(v: string[]) {
-        this._formLanguages$.next(v);
+        this.formLanguagesSubject.next(v);
     }
     get formLanguages(): string[] {
-        return this._formLanguages$.getValue();
+        return this.formLanguagesSubject.getValue();
     }
-    get formLanguages$(): Observable<string[]> {
-        return this._formLanguages$.asObservable().pipe(
-            filter(v => !!v),
-        );
-    }
-    private _formLanguages$ = new BehaviorSubject<string[]>([]);
+    private formLanguagesSubject = new BehaviorSubject<string[]>([]);
+    readonly formLanguages$ = this.formLanguagesSubject.asObservable().pipe(
+        filter(v => !!v),
+        distinctUntilChanged((a, b) => isEqual(a, b)),
+        publishReplay(1),
+        refCount(),
+    );
 
     private formElementsSubjects: { [key in CmsFormType]?: BehaviorSubject<CmsFormElementBO[]> } = {}
 

@@ -531,9 +531,43 @@ public class TemplateResourceTest {
 			assertThat(tmpl.getTemplateTag(tagName)).isNotNull()
 				.hasFieldOrPropertyWithValue("constructId", constructId)
 				.hasFieldOrPropertyWithValue("enabled", true)
-				.hasFieldOrPropertyWithValue("name", tagName);
+				.hasFieldOrPropertyWithValue("name", tagName)
+				.hasFieldOrPropertyWithValue("isPublic", true)
+				.hasFieldOrPropertyWithValue("mandatory", false);
 			assertThat(tmpl.getTemplateTag(tagName).getValues().getByKeyname("text")).isNotNull().hasFieldOrPropertyWithValue("valueText", "After update");
 		}, template);
+
+		consume(testUser, tmpl -> {
+			com.gentics.contentnode.rest.model.Template model = new com.gentics.contentnode.rest.model.Template();
+			com.gentics.contentnode.rest.model.TemplateTag tagModel = new com.gentics.contentnode.rest.model.TemplateTag();
+			tagModel.setConstructId(constructId);
+			tagModel.setName(tagName);
+			tagModel.setEditableInPage(false);
+			tagModel.setMandatory(true);
+
+			Map<String, com.gentics.contentnode.rest.model.TemplateTag> templateTags = new HashMap<>();
+
+			templateTags.put(tagName, tagModel);
+			model.setTemplateTags(templateTags);
+
+			TemplateSaveRequest request = new TemplateSaveRequest();
+
+			request.setTemplate(model);
+
+			assertResponseCodeOk(new TemplateResourceImpl().update(tmpl.getId().toString(), request));
+		}, template);
+
+		TagList tags = execute(
+			tmpl -> new TemplateResourceImpl().listTags(tmpl.getId().toString(), new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean(), new EmbedParameterBean()),
+			template);
+
+		assertThat(tags.getItems())
+			.as("Loaded template tags")
+			.hasSize(1);
+		assertThat(tags.getItems().get(0))
+			.as("Template tag")
+			.hasFieldOrPropertyWithValue("editableInPage", false)
+			.hasFieldOrPropertyWithValue("mandatory", true);
 	}
 
 	@Test

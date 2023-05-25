@@ -5,7 +5,6 @@ import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParameterContainsAttribute;
 
-import com.gentics.contentnode.object.SystemUser;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -69,6 +68,7 @@ import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.BulkLinkUpdateRequest;
 import com.gentics.contentnode.rest.model.request.ConstructSortAttribute;
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryListResponse;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryLoadResponse;
@@ -449,7 +449,7 @@ public class ConstructResourceImpl implements ConstructResource {
 	 * Currently, there are no real channel specific permissions, so this might be workarounded by giving a user
 	 * the permission to see the channel, but not its master node. Therefore, in order to list the constructs for the given node,
 	 * the user must be allowed to see either the node or any of its channels.
-	 * 
+	 *
 	 * @param node node
 	 * @return true if the user is allowed to see either the node or any of its channels
 	 * @throws NodeException
@@ -478,8 +478,6 @@ public class ConstructResourceImpl implements ConstructResource {
 	 * available to be used in new tags created in this page.
 	 *
 	 * @param id The id of the page whose constructs are to be fetched.
-	 * @param error Out parameter which will receive any errors that occur
-	 *              during this operation.
 	 * @return  A list of constructs.
 	 */
 	private List<com.gentics.contentnode.object.Construct> fetchPageConstructs(final Integer id) throws NodeException {
@@ -860,6 +858,41 @@ public class ConstructResourceImpl implements ConstructResource {
 
 	@Override
 	@POST
+	@Path("/category/sortorder")
+	public ConstructCategoryListResponse sortCategories(IdSetRequest categoryOrder) throws NodeException {
+		List<String> categoryIds = categoryOrder.getIds();
+
+		if (categoryIds == null || categoryIds.isEmpty()) {
+			return listCategories(new SortParameterBean(), new FilterParameterBean(), new PagingParameterBean(), new EmbedParameterBean());
+		}
+
+		List<ConstructCategory> categories = new ArrayList<>();
+
+		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+			int order = 0;
+
+			for (String categoryId : categoryIds) {
+				ConstructCategory category = MiscUtils.load(ConstructCategory.class, categoryId, ObjectPermission.edit);
+
+				category = trx.getTransaction().getObject(category, true);
+				category.setSortorder(order++);
+				category.save();
+
+				categories.add(category);
+			}
+
+			trx.success();
+
+			ConstructCategoryListResponse response = ListBuilder
+				.from(categories, ConstructCategory.TRANSFORM2REST)
+				.to(new ConstructCategoryListResponse());
+
+			return response;
+		}
+	}
+
+	@Override
+	@POST
 	@Path("/category")
 	public ConstructCategoryLoadResponse createCategory(com.gentics.contentnode.rest.model.ConstructCategory category) throws NodeException {
 		if (category.getNameI18n() == null && category.getName() == null) {
@@ -981,7 +1014,7 @@ public class ConstructResourceImpl implements ConstructResource {
 			NodeList response = new NodeList();
 			response.setResponseInfo(ResponseInfo.ok("Successfully loaded nodes, that are linked to the construct"));
 			response.setItems(constructs);
-			
+
 			trx.success();
 			return response;
 		}

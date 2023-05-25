@@ -35,6 +35,9 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		} else if (from.getName() != null) {
 			to.setName(from.getName(), 1);
 		}
+		if (from.getSortOrder() != null) {
+			to.setSortorder(from.getSortOrder());
+		}
 		return to;
 	};
 
@@ -47,6 +50,7 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		to.setGlobalId(from.getGlobalId() != null ? from.getGlobalId().toString() : null);
 		to.setName(from.getName().toString());
 		to.setNameI18n(I18NHelper.toI18nMap(from.getName()));
+		to.setSortOrder(from.getSortorder());
 
 		// set the constructs
 		Map<String, com.gentics.contentnode.rest.model.Construct> constructs = new HashMap<String, com.gentics.contentnode.rest.model.Construct>();
@@ -75,9 +79,40 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		return to;
 	};
 
-	/**
-	 * Serial Version UID
-	 */
+	/*
+	protected static Map<String, Property> resolvableProperties = new HashMap<>();
+
+	static {
+		resolvableProperties.put("id", new Property(new String[] { "id" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getId();
+			}
+		});
+
+		resolvableProperties.put("name", new Property(new String[] { "name" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getName();
+			}
+		});
+
+		resolvableProperties.put("sortorder", new Property(new String[] { "sortorder" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getSortorder();
+			}
+		});
+
+	}
+	*/
+
+/**
+ * Serial Version UID
+ */
 	private static final long serialVersionUID = 7525761751665157710L;
 
 	/**
@@ -97,6 +132,22 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 	 */
 	protected ConstructCategory(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	public Object get(String key) {
+		switch (key) {
+		case "id":
+			return getId();
+
+		case "name":
+			return getName();
+
+		case "sortorder":
+			return getSortorder();
+
+		default:
+			return super.get(key);
+		}
 	}
 
 	/**

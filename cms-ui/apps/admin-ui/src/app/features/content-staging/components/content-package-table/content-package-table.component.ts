@@ -156,7 +156,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
 
         switch (event.actionId) {
             case DOWNLOAD_PACKAGE_ACTION:
-                this.operations.download(event.item[BO_ID]);
+                this.operations.download(event.item[BO_ID]).subscribe();
                 return;
 
             case UPLOAD_PACKAGE_ACTION:

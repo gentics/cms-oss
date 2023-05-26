@@ -89,6 +89,8 @@
                 <gtx-permissions-trable
                     *ngIf="permissionContentRead$ | async; else unauthorized"
                     [group]="currentEntity"
+                    [inlineExpansion]="true"
+                    [inlineSelection]="true"
                     [parentName]="currentEntity.name"
                     [parentType]="PermissionsTreeType.CONTENT"
                     [groupPermissionsByCategory]="true"
@@ -118,6 +120,8 @@
                 <gtx-permissions-trable
                     *ngIf="permissionContentRead$ | async; else unauthorized"
                     [group]="currentEntity"
+                    [inlineExpansion]="true"
+                    [inlineSelection]="true"
                     [parentName]="currentEntity.name"
                     [groupPermissionsByCategory]="false"
                 ></gtx-permissions-trable>

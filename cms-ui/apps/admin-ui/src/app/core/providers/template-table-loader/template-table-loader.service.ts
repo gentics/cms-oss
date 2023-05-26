@@ -1,7 +1,7 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateBO } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { PagedTemplateListResponse, Template, TemplateFolderListRequest, TemplateListRequest } from '@gentics/cms-models';
+import { PagedTemplateListResponse, Template, TemplateListRequest } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -10,7 +10,7 @@ import { EntityManagerService } from '../entity-manager';
 import { TemplateOperations } from '../operations';
 
 export interface TemplateTableLoaderOptions {
-    nodeId?: number;
+    nodeId?: number | number[];
     packageName?: string;
 }
 

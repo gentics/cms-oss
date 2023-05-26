@@ -14,8 +14,8 @@ import {
     ValidationResult,
 } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
-import { Subject, Subscription, combineLatest } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
 
 /**
  * Used to edit Text TagParts.
@@ -44,8 +44,8 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
     displayedValidationResult: ValidationResult;
 
     /** Used to debounce the input/textarea changes. */
-    private inputChange = new Subject<string>();
-    private blur = new Subject<string>();
+    private inputChange = new BehaviorSubject<string>('');
+    private blur = new BehaviorSubject<void>(null);
     private subscriptions: Subscription[] = [];
 
     /** The onChange function registered by the TagEditor. */
@@ -57,13 +57,27 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
     ) { }
 
     ngOnInit(): void {
-        const inputValue = this.inputChange.asObservable();
-        const blurOrDebouncedChange = combineLatest([this.blur, inputValue]).pipe(
-            map(([,val]) => val),
+        const tmp$ = new BehaviorSubject<void>(null);
+
+        this.subscriptions.push(this.inputChange.asObservable().pipe(
+            skip(1),
             distinctUntilChanged(isEqual),
-        );
-        this.subscriptions.push(blurOrDebouncedChange.subscribe(newValue => {
-            this.processChange(newValue);
+        ).subscribe(newValue => {
+            this.tagProperty.stringValue = newValue;
+            tmp$.next();
+        }));
+
+        this.subscriptions.push(this.blur.asObservable().pipe(
+            skip(1),
+        ).subscribe(() => {
+            tmp$.next();
+        }));
+
+        this.subscriptions.push(tmp$.asObservable().pipe(
+            skip(1),
+            debounceTime(100),
+        ).subscribe(() => {
+            this.processChange();
         }));
     }
 
@@ -96,11 +110,9 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
         }
     }
 
-    onBlur(newValue: string): void {
-        if (typeof newValue === 'string') {
-            this.blur.next(newValue);
-            this.displayedValidationResult = this.lastValidationResult;
-        }
+    onBlur(): void {
+        this.blur.next();
+        this.displayedValidationResult = this.lastValidationResult;
     }
 
     /**
@@ -118,11 +130,10 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
      * Signals the change to the TagEditor and also validates the change if the
      * last validation was unsuccessful.
      */
-    private processChange(newValue: string): void {
+    private processChange(): void {
         if (this.onChangeFn) {
             // Signal only the changed tag properties.
             const changes: Partial<TagPropertyMap> = {};
-            this.tagProperty.stringValue = newValue;
             changes[this.tagPart.keyword] = this.tagProperty;
             const validationResults = this.onChangeFn(changes);
             this.lastValidationResult = validationResults[this.tagPart.keyword];

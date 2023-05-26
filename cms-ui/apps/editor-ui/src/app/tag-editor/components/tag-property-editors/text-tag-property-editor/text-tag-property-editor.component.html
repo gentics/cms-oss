@@ -9,9 +9,9 @@
             [required]="tagPart?.mandatory"
             [readonly]="readOnly"
             [value]="tagProperty.stringValue"
-            (blur)="onBlur($event)"
-            (change)="onChange($event)">
-        </gtx-input>
+            (blur)="onBlur()"
+            (change)="onChange($event)"
+        ></gtx-input>
 
         <gtx-textarea
             *ngIf="!isTextShort"
@@ -21,9 +21,10 @@
             [required]="tagPart?.mandatory"
             [readonly]="readOnly"
             [value]="tagProperty.stringValue"
-            (touch)="onBlur($event)"
-            (valueChange)="onChange($event)">
-        </gtx-textarea>
+            (touch)="onBlur()"
+            (valueChange)="onChange($event)"
+        ></gtx-textarea>
+
         <validation-error-info [validationResult]="displayedValidationResult"></validation-error-info>
     </div>
 </ng-container>

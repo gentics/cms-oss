@@ -37,6 +37,7 @@ export class FeaturesActionsService {
             [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
             [Feature.CONTENT_STAGING]: false,
             [Feature.MULTICHANNELING]: false,
+            [Feature.MESH_CR]: false,
 
             nodeFeatures: {},
         };

@@ -61,6 +61,7 @@ import {
     Tag,
     Tags,
     Template,
+    TemplateFolderListRequest,
     TemplateListRequest,
     noItemPermissions
 } from '@gentics/cms-models';
@@ -753,9 +754,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             return observableOf(templates);
         }
 
-        const options: TemplateListRequest = {
+        const options: TemplateFolderListRequest = {
             nodeId: folder.nodeId,
-            pageSize: -1,
+            maxItems: -1,
             recursive: false,
         };
 

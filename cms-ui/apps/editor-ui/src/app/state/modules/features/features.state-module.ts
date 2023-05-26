@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
+import { Feature } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import { patch } from '@ngxs/store/operators';
 import { FeaturesState } from '../../../common/models';
-import { Feature } from '@gentics/cms-models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import { FEATURES_STATE_KEY, SetFeatureAction, SetNodeFeaturesAction } from './features.actions';
 
@@ -26,6 +26,7 @@ const INTIIAL_FEATURES_STATE: FeaturesState = {
     [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
     [Feature.CONTENT_STAGING]: false,
     [Feature.MULTICHANNELING]: false,
+    [Feature.MESH_CR]: false,
 
     nodeFeatures: {},
 };

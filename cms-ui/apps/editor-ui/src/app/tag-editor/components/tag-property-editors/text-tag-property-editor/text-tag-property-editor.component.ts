@@ -11,11 +11,11 @@ import {
     TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult
+    ValidationResult,
 } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Subscription, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 
 /**
  * Used to edit Text TagParts.
@@ -25,7 +25,7 @@ import { distinctUntilChanged } from 'rxjs/operators';
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
-})
+    })
 export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
@@ -46,26 +46,29 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
     /** Used to debounce the input/textarea changes. */
     private inputChange = new Subject<string>();
     private blur = new Subject<string>();
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
     private lastValidationResult: ValidationResult;
 
-    constructor(private changeDetector: ChangeDetectorRef) { }
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+    ) { }
 
     ngOnInit(): void {
-        const debouncer = this.inputChange.debounceTime(100);
-        const blurOrDebouncedChange = Observable.merge(this.blur, debouncer).pipe(
+        const inputValue = this.inputChange.asObservable();
+        const blurOrDebouncedChange = combineLatest([this.blur, inputValue]).pipe(
+            map(([,val]) => val),
             distinctUntilChanged(isEqual),
         );
-        this.subscriptions.add(
-            blurOrDebouncedChange.subscribe(newValue => this.processChange(newValue))
-        );
+        this.subscriptions.push(blurOrDebouncedChange.subscribe(newValue => {
+            this.processChange(newValue);
+        }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
@@ -107,7 +110,7 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
         if (newValue.type !== TagPropertyType.STRING && newValue.type !== TagPropertyType.RICHTEXT) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by TextTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as StringTagPartProperty;
+        this.tagProperty = newValue ;
         this.changeDetector.markForCheck();
     }
 

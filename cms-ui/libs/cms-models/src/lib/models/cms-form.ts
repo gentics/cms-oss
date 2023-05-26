@@ -478,3 +478,14 @@ export enum CmsFormElementInsertionType {
     INSERT = 'INSERT',
     MOVE = 'MOVE',
 }
+
+export interface FormDownloadInfo {
+    /** If the download has been created/ready to download. */
+    downloadReady: boolean;
+    /** If the download is still being created. */
+    requestPending: boolean;
+    /** The UUID of the download when it's ready. */
+    downloadUuid?: string;
+    /** ISO Date string for when the download has been created. */
+    downloadTimestamp?: string;
+}

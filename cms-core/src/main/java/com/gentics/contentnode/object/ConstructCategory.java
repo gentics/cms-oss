@@ -79,40 +79,10 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		return to;
 	};
 
-	/*
-	protected static Map<String, Property> resolvableProperties = new HashMap<>();
 
-	static {
-		resolvableProperties.put("id", new Property(new String[] { "id" }) {
-
-			@Override
-			public Object get(ConstructCategory category, String key) {
-				return category.getId();
-			}
-		});
-
-		resolvableProperties.put("name", new Property(new String[] { "name" }) {
-
-			@Override
-			public Object get(ConstructCategory category, String key) {
-				return category.getName();
-			}
-		});
-
-		resolvableProperties.put("sortorder", new Property(new String[] { "sortorder" }) {
-
-			@Override
-			public Object get(ConstructCategory category, String key) {
-				return category.getSortorder();
-			}
-		});
-
-	}
-	*/
-
-/**
- * Serial Version UID
- */
+	/**
+	 * Serial Version UID
+	 */
 	private static final long serialVersionUID = 7525761751665157710L;
 
 	/**
@@ -134,6 +104,7 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		super(id, info);
 	}
 
+	@Override
 	public Object get(String key) {
 		switch (key) {
 		case "id":

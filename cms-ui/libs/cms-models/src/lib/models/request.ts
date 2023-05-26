@@ -695,8 +695,9 @@ export interface TemplateFolderListRequest extends FolderListOptions {
 }
 
 export interface TemplateListRequest extends BaseListOptionsWithPaging<Template> {
-    nodeId?: number;
+    nodeId?: number | number[];
     perms?: boolean;
+    reduce?: boolean;
 }
 
 export interface NodeMultiLinkRequest {

@@ -27,7 +27,7 @@ export class TemplateTableComponent
     implements OnChanges {
 
     @Input()
-    public nodeId: number;
+    public nodeId: number | number[];
 
     protected rawColumns: TableColumn<TemplateBO>[] = [
         {

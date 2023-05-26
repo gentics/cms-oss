@@ -12,7 +12,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
@@ -30,6 +32,7 @@ import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.InstantCRPublishing;
+import com.gentics.contentnode.server.ServletContextHandlerService;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -58,6 +61,11 @@ public class NodeConfigRuntimeConfiguration {
 	private static Map<String, Object> overwriteConfig;
 
 	/**
+	 * ServiceLoader for the {@link ServletContextHandlerService}s
+	 */
+	protected static ServiceLoader<ServletContextHandlerService> servletContextHandlerServiceLoader;
+
+	/**
 	 * Configuration instance
 	 */
 	private NodeConfig nodeConfig;
@@ -77,6 +85,14 @@ public class NodeConfigRuntimeConfiguration {
 			throw new RuntimeException("Error while initializing configuration.", e);
 		}
 		return singleton;
+	}
+
+	/**
+	 * Set the ServiceLoader for the {@link ServletContextHandlerService}
+	 * @param loader loader
+	 */
+	public static void setServletContextHandlerServiceLoader(ServiceLoader<ServletContextHandlerService> loader) {
+		servletContextHandlerServiceLoader = loader;
 	}
 
 	/**
@@ -188,6 +204,8 @@ public class NodeConfigRuntimeConfiguration {
 	public void reloadConfiguration() throws NodeException {
 		initConfigurationProperties();
 		operate(() -> CNDictionary.ensureConsistency());
+		Optional.ofNullable(servletContextHandlerServiceLoader)
+				.ifPresent(loader -> loader.forEach(ServletContextHandlerService::onReloadConfiguration));
 	}
 
 	/**

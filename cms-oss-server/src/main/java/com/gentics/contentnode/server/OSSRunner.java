@@ -75,6 +75,8 @@ public class OSSRunner {
 		Initializer.get().init();
 		log = NodeLogger.getNodeLogger(OSSRunner.class);
 		servletContextHandlerServiceLoader = ServiceLoader.load(ServletContextHandlerService.class);
+		// set the loader also to the NodeConfigRuntimeConfiguration, so that the services can be called when the configuration is reloaded
+		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
 

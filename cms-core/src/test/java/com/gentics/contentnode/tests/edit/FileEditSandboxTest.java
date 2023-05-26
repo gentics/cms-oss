@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequestWrapper;
 
@@ -1113,20 +1112,6 @@ public class FileEditSandboxTest {
 		ServletInputStream servletInputStream=new ServletInputStream(){
 			public int read() throws IOException {
 				return byteArrayInputStream.read();
-			}
-
-			@Override
-			public boolean isFinished() {
-				return false;
-			}
-
-			@Override
-			public boolean isReady() {
-				return true;
-			}
-
-			@Override
-			public void setReadListener(ReadListener readListener) {
 			}
 		};
 		byteArrayInputStream.close();

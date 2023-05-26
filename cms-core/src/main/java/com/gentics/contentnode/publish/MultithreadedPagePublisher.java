@@ -206,7 +206,11 @@ public class MultithreadedPagePublisher extends PagePublisher {
 						threadPool.shutdown();
 						threadPool.awaitTermination(1, TimeUnit.DAYS);
 					} catch (InterruptedException e) {
-						renderResult.error(Publisher.class, "An error occurred while preparing publish cache, continuing anyway", e);
+						String message = "An error occurred while preparing publish cache, continuing anyway";
+
+						renderResult.error(Publisher.class, message, e);
+
+						throw new NodeException(message, e);
 					}
 					if (publishStats) {
 						renderResult.info(Publisher.class, "Initialized PublishablePage cache: " + initializeCacheStats.getInfo());
@@ -266,15 +270,15 @@ public class MultithreadedPagePublisher extends PagePublisher {
 				if (e2 != null) {
 					throw e2;
 				}
-                
+
 			} catch (InterruptedException e) {
 				logger.error("The publish process has been interuppted - stopped? Starting rollback.");
-                
+
 				// stop the page distributor - no new pages will be given to the workers
 				pageDistributor.stop();
-                
+
 				// now let the workers finish what they have started (with timeout)
-				// otherwise we will get a lot of ugly nullpointerexceptions 
+				// otherwise we will get a lot of ugly nullpointerexceptions
 				// because the rollback will close the connections
 				for (Iterator<PublishWorker> waitIt = workers.iterator(); waitIt.hasNext();) {
 					PublishWorker w = waitIt.next();
@@ -292,7 +296,7 @@ public class MultithreadedPagePublisher extends PagePublisher {
 
 			for (Iterator<PublishThreadInfo> infoIterator = publishInfo.getPublishThreadInfos().iterator(); infoIterator.hasNext();) {
 				logger.info(infoIterator.next().toString());
-			}            
+			}
 
 			// set handle dependencies to true again
 			if (publishRun > 0) {

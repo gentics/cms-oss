@@ -483,7 +483,9 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                 a.nodeId === b.nodeId,
             ),
             filter(state => state.itemId != null && state.itemType != null),
-            switchMap(state => {
+            withLatestFrom(this.appState.select(state => state.folder.activeNodeLanguages.list)),
+            filter(([, langs]) => langs?.length > 0),
+            switchMap(([state]) => {
                 this.itemLanguage = this.getItemLanguage();
                 this.changeDetector.markForCheck();
 

@@ -721,9 +721,7 @@ export class FolderStateModule {
 
     @ActionDefinition(SetFolderLanguageAction)
     handleSetFolderLanguageAction(ctx: StateContext<FolderState>, action: SetFolderLanguageAction): void {
-        const state = ctx.getState();
-
-        if (Number.isInteger(action.languageId) && action.languageId !== state.activeLanguage) {
+        if (Number.isInteger(action.languageId)) {
             ctx.patchState({
                 activeLanguage: action.languageId,
             });
@@ -732,9 +730,7 @@ export class FolderStateModule {
 
     @ActionDefinition(SetFormLanguageAction)
     handleSetFormLanguageAction(ctx: StateContext<FolderState>, action: SetFormLanguageAction): void {
-        const state = ctx.getState();
-
-        if (Number.isInteger(action.languageId) && action.languageId !== state.activeLanguage) {
+        if (Number.isInteger(action.languageId)) {
             ctx.patchState({
                 activeFormLanguage: action.languageId,
             });

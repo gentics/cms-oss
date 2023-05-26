@@ -733,7 +733,7 @@ public class ModelBuilder {
 	public static com.gentics.contentnode.rest.model.Overview getOverview(
 			Overview nodeOverview) throws NodeException {
 		com.gentics.contentnode.rest.model.Overview restOverview = new com.gentics.contentnode.rest.model.Overview();
-	
+
 		restOverview.setId(nodeOverview.getId());
 
 		// set the selection type
@@ -809,6 +809,8 @@ public class ModelBuilder {
 
 		applyTagProperties(templateTag, restTemplateTag, addConstruct, addPrivateData);
 		restTemplateTag.setEditableInPage(templateTag.isPublic());
+		restTemplateTag.setMandatory(templateTag.getMandatory());
+
 		return restTemplateTag;
 	}
 
@@ -835,6 +837,14 @@ public class ModelBuilder {
 	}
 
 	public static com.gentics.contentnode.rest.model.Tag getTag(Tag nodeTag, boolean addConstruct, boolean addPrivateData) throws NodeException {
+		if (nodeTag instanceof TemplateTag) {
+			return getTemplateTag((TemplateTag) nodeTag, addConstruct, addPrivateData);
+		}
+
+		if (nodeTag instanceof ObjectTag) {
+			return getObjectTag((ObjectTag) nodeTag, 0, addConstruct, addPrivateData);
+		}
+
 		com.gentics.contentnode.rest.model.Tag restTag = new com.gentics.contentnode.rest.model.Tag();
 
 		applyTagProperties(nodeTag, restTag, addConstruct, addPrivateData);

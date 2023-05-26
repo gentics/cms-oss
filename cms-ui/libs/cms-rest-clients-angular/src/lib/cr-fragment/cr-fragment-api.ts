@@ -101,7 +101,7 @@ export class ContentrespositoryFragmentApi {
      */
     updateContentRepositoryFragmentTagmapEntry(
         fragmentId: EntityIdType,
-        tagmapId: string,
+        tagmapId: string | number,
         payload: TagmapEntryUpdateRequest,
     ): Observable<TagmapEntryUpdateResponse> {
         return this.apiBase.put(`cr_fragments/${fragmentId}/entries/${tagmapId}`, payload);

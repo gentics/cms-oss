@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { CmsFormElementBO, CmsFormElementProperty, CmsFormElementPropertyType, CmsFormType } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { distinctUntilChanged, filter, refCount, take, tap, publishReplay } from 'rxjs/operators';
+import { distinctUntilChanged, filter, publishReplay, refCount, take } from 'rxjs/operators';
 import {
     FormEditorConfiguration,
     FormElementConfiguration,
@@ -37,10 +37,9 @@ export class FormEditorService {
         return this.activeContentLanguageCodeSubject.getValue();
     }
     private activeContentLanguageCodeSubject = new BehaviorSubject<string>(null);
-    readonly activeContentLanguageCode$ =this.activeContentLanguageCodeSubject.asObservable().pipe(
+    readonly activeContentLanguageCode$ = this.activeContentLanguageCodeSubject.asObservable().pipe(
         filter(v => !!v),
         distinctUntilChanged(isEqual),
-        tap(lang => console.log('actiove form content-language changed', lang)),
         publishReplay(1),
         refCount(),
     );

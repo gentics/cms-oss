@@ -138,7 +138,7 @@ public class PublishController {
 	 * Wait for a running publish process to exit.
 	 * @return true when a publish process was running and exited, false if not
 	 */
-	public static synchronized boolean joinPublisherLocally() {
+	public static boolean joinPublisherLocally() {
 		if (!isRunningLocally()) {
 			return false;
 		}

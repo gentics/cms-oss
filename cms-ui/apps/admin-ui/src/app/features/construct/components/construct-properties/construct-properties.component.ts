@@ -180,22 +180,13 @@ export class ConstructPropertiesComponent
 
     protected configureForm(value: Partial<TagTypeBO<Normalized>>, loud: boolean = false): void {
         const options = { emitEvent: loud };
-        // const categorySortCtl = this.form.get('categorySortorder');
-        const keywordCtl = this.form.get('keyword');
         const nodesIdCtl = this.form.get('nodeIds');
 
-        // categorySortCtl.disable(options);
-        keywordCtl.disable(options);
         nodesIdCtl.disable(options);
-
-        // Only show the sorting, once a category has been selected
-        // if (this.mode !== ConstructPropertiesMode.COPY && typeof value?.categoryId === 'number') {
-        //     categorySortCtl.enable(options);
-        // }
 
         // Can only be edited when we create a new construct
         if (this.mode === ConstructPropertiesMode.CREATE || this.mode === ConstructPropertiesMode.COPY) {
-            keywordCtl.enable(options);
+            // keywordCtl.enable(options);
             nodesIdCtl.enable(options);
         }
     }
@@ -238,25 +229,27 @@ export class ConstructPropertiesComponent
             return;
         }
 
-        if (this.form) {
-            const cleanedValue: ConstructPropertiesFormData = {
-                nameI18n: this.value?.nameI18n ?? {},
-                descriptionI18n: this.value?.descriptionI18n ?? {},
-                keyword: this.value?.keyword || null,
-                icon: this.value?.icon || null,
-                nodeIds: this.value?.nodeIds || [],
-                externalEditorUrl: this.value?.externalEditorUrl || null,
-                mayBeSubtag: this.value?.mayBeSubtag || false,
-                mayContainSubtags: this.value?.mayContainSubtags || null,
-                categoryId: this.value?.categoryId || null,
-                autoEnable: this.value?.autoEnable || false,
-            };
-
-            this.form.setValue(cleanedValue, { emitEvent: false });
-            this.form.markAsPristine();
-            this.form.updateValueAndValidity();
-            this.changeDetector.markForCheck();
+        if (!this.form) {
+            return;
         }
+
+        const cleanedValue: ConstructPropertiesFormData = {
+            nameI18n: this.value?.nameI18n ?? {},
+            descriptionI18n: this.value?.descriptionI18n ?? {},
+            keyword: this.value?.keyword || null,
+            icon: this.value?.icon || null,
+            nodeIds: this.value?.nodeIds || [],
+            externalEditorUrl: this.value?.externalEditorUrl || null,
+            mayBeSubtag: this.value?.mayBeSubtag || false,
+            mayContainSubtags: this.value?.mayContainSubtags || null,
+            categoryId: this.value?.categoryId || null,
+            autoEnable: this.value?.autoEnable || false,
+        };
+
+        this.form.setValue(cleanedValue, { emitEvent: false });
+        this.form.markAsPristine();
+        this.form.updateValueAndValidity();
+        this.changeDetector.markForCheck();
     }
 
     /**

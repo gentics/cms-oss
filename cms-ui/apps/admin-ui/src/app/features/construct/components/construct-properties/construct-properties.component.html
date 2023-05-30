@@ -11,6 +11,7 @@
             maxlength="255"
             [label]="('construct.keyword' | i18n) + ' *'"
             [required]="true"
+            [readonly]="mode === ConstructPropertiesMode.UPDATE"
             formControlName="keyword"
         ></gtx-input>
 

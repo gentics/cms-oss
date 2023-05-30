@@ -1,17 +1,52 @@
-import { ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { UntypedFormGroup } from '@angular/forms';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
 import { combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import { CONTROL_INVALID_VALUE } from '../../../common';
 
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit {
 
-    /** If it should skip the initial change trigger when initializing. */
+    /**
+     * Flag which indicates that the provided value is a new initial value.
+     * This ensures that this component only triggers a change initially when
+     * the value is invalid or has actually changed.
+     *
+     * May be used in the following way:
+     *
+     * Template
+     * ```html
+     * <some-properties
+     *      [formControl]="ctl"
+     *      [(initialValue)]="isInitial"
+     * ></some-properties>
+     * ```
+     *
+     * Implementation
+     * ```ts
+     * public ctl: FormControl = new UntypedFormControl({}, createNestedControlValidator());
+     *
+     * loadItem(): void {
+     *      loadContentFromSomewhere().then(item => {
+     *          isInitial = true;
+     *          ctl.setValue(item);
+     *          ctl.markAsPristine();
+     *          ctl.updateValueAndValidity();
+     *      });
+     * }
+     *
+     * updateItem(): void {
+     *      updateContent(ctl.value).then(() => this.loadItem());
+     * }
+     * ```
+     */
     @Input()
-    public skipInitialChange = false;
+    public initialValue = true;
+
+    @Output()
+    public initialValueChange = new EventEmitter<boolean>();
 
     /**
      * The form which should be used in the component template for all form interactions.
@@ -20,21 +55,11 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
-        this.booleanInputs.push('skipInitialChange');
+        this.booleanInputs.push(['initialValue', true]);
     }
 
     public ngOnInit(): void {
         this.initializeForm();
-
-        this.form.updateValueAndValidity();
-
-        // Special opt-out for the initial change trigger
-        if (!this.skipInitialChange) {
-            // Trigger an initial change, to make the parent form detect if these properties
-            // are invalid in the beginning - Initial value may be invalid and would otherwise only
-            // be detected/validated on user-input which is not what we want to achieve with this.
-            this.triggerChange(this.form.valid ? this.form.value : CONTROL_INVALID_VALUE);
-        }
     }
 
     /**
@@ -44,23 +69,33 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         this.form = this.createForm();
 
         this.configureForm(this.value);
-        this.form.updateValueAndValidity();
-        this.form.markAsPristine();
-        this.changeDetector.markForCheck();
 
-        let firstChange = true;
+        // For some reason, changes from `configureForm` are only really applied,
+        // when this is done a tick later. No idea why.
+        setTimeout(() => {
+            this.form.updateValueAndValidity();
+            this.form.markAsPristine();
+        });
+
+        this.changeDetector.markForCheck();
 
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
                 tap(value => {
                     this.configureForm(value);
-                    this.form.updateValueAndValidity();
-                    this.changeDetector.markForCheck();
+
+                    // See comment above
+                    setTimeout(() => {
+                        this.form.updateValueAndValidity();
+                        this.changeDetector.markForCheck();
+                    });
                 }),
             ),
             this.form.statusChanges,
         ]).pipe(
+            // Do not emit values if disabled/pending
+            filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value, status]) => {
                 if (status === 'VALID') {
                     return this.assembleValue(value);
@@ -72,10 +107,10 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
-            if (value === CONTROL_INVALID_VALUE || (!firstChange && !isEqual(this.value, value))) {
+            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.value, value))) {
                 this.triggerChange(value);
             }
-            firstChange = false;
+            this.initialValueChange.emit(false);
         }));
 
     }

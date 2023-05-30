@@ -254,6 +254,10 @@ export interface EmbedListOptions<T> {
     embed?: T | T[];
 }
 
+export interface IdSetRequest {
+    ids: string[];
+}
+
 /**
  * Request object used to configure the behaviour of the `admin/actionlog` endpoint.
  */
@@ -1567,6 +1571,8 @@ export type ConstructCategoryListOptions = BaseListOptionsWithPaging<ConstructCa
 export type ConstructCategoryCreateRequest = Partial<ConstructCategory<Raw>>;
 
 export type ConstructCategoryUpdateRequest = ConstructCategoryCreateRequest;
+
+export type ConstructCategorySortRequest = IdSetRequest;
 
 // CONTENTREPOSITORY /////////////////////////////////////////////////////////////////////////////////////////////////////
 

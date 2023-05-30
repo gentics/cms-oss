@@ -18,6 +18,7 @@ import { map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
+import { discard } from '@admin-ui/common';
 
 @Injectable()
 export class ConstructCategoryOperations extends ExtendedEntityOperationsBase<'constructCategory'> {
@@ -59,7 +60,7 @@ export class ConstructCategoryOperations extends ExtendedEntityOperationsBase<'c
     /**
      * Create a constructCategory.
      */
-     create(constructCategory: ConstructCategoryCreateRequest): Observable<ConstructCategoryBO<Raw>> {
+    create(constructCategory: ConstructCategoryCreateRequest): Observable<ConstructCategoryBO<Raw>> {
         return this.api.constructCategory.createConstructCategoryCategory(constructCategory).pipe(
             map((response: ConstructCategoryCreateResponse) => response.constructCategory),
             // fake entity's `id` property to enforce internal application entity uniformity
@@ -125,4 +126,12 @@ export class ConstructCategoryOperations extends ExtendedEntityOperationsBase<'c
         );
     }
 
+    sort(categoryIds: string[]): Observable<void> {
+        return this.api.constructCategory.sortConstructCategories({
+            ids: categoryIds,
+        }).pipe(
+            discard(),
+            this.catchAndRethrowError(),
+        );
+    }
 }

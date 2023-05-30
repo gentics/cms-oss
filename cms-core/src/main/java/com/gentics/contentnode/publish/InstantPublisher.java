@@ -297,7 +297,7 @@ public class InstantPublisher {
 		try {
 			boolean needToRevealInherited = false;
 			// flag is set, if we should inform the publish process about the instant publishing of the object
-			boolean informPublishProcess = false;
+			boolean informPublishProcess = true;
 			List<Operator> operations = new ArrayList<>();
 			List<Consumer<MeshPublisher>> meshOperations = new ArrayList<>();
 			int nodeId = node.getId();

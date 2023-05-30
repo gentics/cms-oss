@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges, Type } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, Type } from '@angular/core';
 import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
@@ -22,7 +22,7 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap, take } from 'rxjs/operators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -43,7 +43,7 @@ import { CreatePageModalComponent } from '../create-page-modal/create-page-modal
     styleUrls: ['./item-list-header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ItemListHeaderComponent implements OnInit, OnChanges {
+export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
     readonly StagingMode = StagingMode;
@@ -67,6 +67,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     @Input()
     public nodeLanguages: Language[] = [];
 
+    // TODO: Check if this is somehow used? Doesn't seem like it
     @Input()
     public activeLanguage: Language;
 
@@ -110,14 +111,16 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     public stagingMap: StagedItemsMap;
 
     isCollapsed = false;
-    activeLanguage$: Observable<Language>;
-    basicSearchQueryActive$: Observable<boolean>;
-    elasticsearchQueryActive$: Observable<boolean>;
-    searchQueryActive$: Observable<boolean>;
+    wastebinEnabled = false;
+    folderLanguage: Language = null;
+    elasticsearchQueryActive = false;
+    searchQueryActive = false;
 
     private itemsInfo$: Observable<ItemsInfo>;
+    protected subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private modalService: ModalService,
         private errorHandler: ErrorHandler,
@@ -129,38 +132,59 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
         private contextMenuOperations: ContextMenuOperationsService,
         private notifications: I18nNotification,
         private i18n: I18nService,
-    ) {
-        this.activeLanguage$ = this.appState.select(state => state.folder.activeLanguage).pipe(
-            map(langId => this.entityResolver.getLanguage(langId)),
-        );
-    }
+    ) {}
 
     ngOnInit(): void {
         this.itemsInfo$ = this.appState.select(state => state.folder)
             .map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]);
 
-        this.basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
+        const basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
             map(term => this.isValidString(term)),
         );
-        this.elasticsearchQueryActive$ = combineLatest([
+
+        const esQueryActive$ = combineLatest([
             this.appState.select(state => state.features[Feature.ELASTICSEARCH]),
             this.appState.select(state => state.folder.searchFiltersVisible),
         ]).pipe(
             map(([elasticsearchFeatureEnabled, seearchQueryActive]) => elasticsearchFeatureEnabled && seearchQueryActive),
         );
 
-        this.searchQueryActive$ = combineLatest([
-            this.basicSearchQueryActive$,
-            this.elasticsearchQueryActive$,
+        this.subscriptions.push(this.appState.select(state => state.folder.activeLanguage).pipe(
+            map(langId => this.entityResolver.getLanguage(langId)),
+        ).subscribe(lang => {
+            this.folderLanguage = lang;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(esQueryActive$.subscribe(active => {
+            this.elasticsearchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
+            basicSearchQueryActive$,
+            esQueryActive$,
         ]).pipe(
             map(([basicSearchQueryActive, elasticsearchQueryActive]) => basicSearchQueryActive || elasticsearchQueryActive),
-        );
+        ).subscribe(active => {
+            this.searchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features.wastebin).subscribe(enabled => {
+            this.wastebinEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }))
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['selectedItems'] && !changes['selectedItems'].currentValue) {
             this.selectedItems = [];
         }
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     toggleSelectAll(selectAllItems: boolean): void {

@@ -57,3 +57,22 @@ gtx-file-picker {
         transform: rotateZ(-90deg);
     }
 }
+
+.show-deleted-toggle,
+.page-language-toggle {
+    gtx-checkbox {
+        float: left;
+    }
+}
+
+.sort-mode {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+
+    .sort-icon {
+        font-size: 1.25rem;
+        margin-left: 0.5rem;
+    }
+}

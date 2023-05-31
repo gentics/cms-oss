@@ -15,3 +15,5 @@ global:
 quartz:
   threadPool:
     threadCount: 1
+mesh:
+  prepareThreshold: 1

@@ -4,13 +4,11 @@
       hasNextPage
       elements {
         uuid
+        parent {
+          uuid
+        }
         languages {
           language
-          fields {
-            ... on %s {
-              cms_id
-            }
-          }
         }
       }
     }

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Form, InheritableItem, ItemType, Page } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { itemIsLocalized } from '../../../common/utils/item-is-localized';
 import { LocalizationInfo, LocalizationMap, LocalizationsService } from '../../../core/providers/localizations/localizations.service';
@@ -25,12 +27,11 @@ export interface FormLanguageVariantMap {
  */
 @Component({
     selector: 'multi-delete-modal-modal',
-    templateUrl: './multi-delete-modal.tpl.html',
-    styleUrls: ['./multi-delete-modal.scss'],
+    templateUrl: './multi-delete-modal.component.html',
+    styleUrls: ['./multi-delete-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MultiDeleteModal implements IModalDialog, OnInit {
-    closeFn: (result: MultiDeleteResult) => void;
-    cancelFn: (val?: any) => void;
+export class MultiDeleteModal extends BaseModal<MultiDeleteResult> implements OnInit, OnDestroy {
 
     // Should be passed in by the function which creates the modal
     inheritedItems: InheritableItem[];
@@ -50,20 +51,20 @@ export class MultiDeleteModal implements IModalDialog, OnInit {
 
     iconForItemType = iconForItemType;
 
-    get deleteCount(): number {
-        if (this.itemType === 'page') {
-            return this.flattenMap(this.selectedPageLanguageVariants).length;
-        } else if (this.itemType === 'form') {
-            return this.flattenMap(this.selectedFormLanguageVariants).length;
-        } else {
-            return this.otherItems.length + this.localizedItems.length;
-        }
-    }
+    deleteCount: number;
 
-    constructor(private localizationService: LocalizationsService) {}
+    private subscriptions: Subscription[] = [];
+
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+        private localizationService: LocalizationsService,
+    ) {
+        super();
+    }
 
     ngOnInit(): void {
         this.itemType = this.getType();
+
         [...this.otherItems, ...this.localizedItems].forEach(item => {
             if (this.itemType === 'page') {
                 this.selectedPageLanguageVariants[item.id] = [item.id];
@@ -72,6 +73,18 @@ export class MultiDeleteModal implements IModalDialog, OnInit {
                 this.selectedFormLanguageVariants[item.id] = (item as Form).languages;
             }
         });
+
+        if (this.itemType === 'page') {
+            this.deleteCount = this.flattenMap(this.selectedPageLanguageVariants).length;
+        } else if (this.itemType === 'form') {
+            this.deleteCount = this.flattenMap(this.selectedFormLanguageVariants).length;
+        } else {
+            this.deleteCount = this.otherItems.length + this.localizedItems.length;
+        }
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     confirm(): void {
@@ -104,21 +117,23 @@ export class MultiDeleteModal implements IModalDialog, OnInit {
      * get it from the server.
      */
     onPageLanguageSelectionChange(itemId: number, variantIds: number[], checkLocalizations: boolean = false): void {
-        if (checkLocalizations) {
-            const uncheckedIds = this.getUncheckedLocalizationIds(variantIds);
-            if (0 < uncheckedIds.length) {
-                this.localizationService.getLocalizationMap(uncheckedIds, this.itemType)
-                    .take(1)
-                    .subscribe(newMap => {
-                        Object.assign(this.itemLocalizations, newMap);
-                        this.selectedPageLanguageVariants[itemId] = variantIds;
-                    });
-            } else {
-                this.selectedPageLanguageVariants[itemId] = variantIds;
-            }
-        } else {
+        if (!checkLocalizations) {
             this.selectedPageLanguageVariants[itemId] = variantIds;
+            return;
         }
+        const uncheckedIds = this.getUncheckedLocalizationIds(variantIds);
+        if (uncheckedIds.length < 1) {
+            this.selectedPageLanguageVariants[itemId] = variantIds;
+            return;
+        }
+
+        this.subscriptions.push(this.localizationService.getLocalizationMap(uncheckedIds, this.itemType).pipe(
+            take(1),
+        ).subscribe(newMap => {
+            Object.assign(this.itemLocalizations, newMap);
+            this.selectedPageLanguageVariants[itemId] = variantIds;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     onFormLanguageSelectionChange(itemId: number, languageCodes: string[]): void {
@@ -144,14 +159,6 @@ export class MultiDeleteModal implements IModalDialog, OnInit {
         } else {
             return [];
         }
-    }
-
-    registerCloseFn(close: (result: MultiDeleteResult) => void): void {
-        this.closeFn = close;
-    }
-
-    registerCancelFn(cancel: (val: any) => void): void {
-        this.cancelFn = cancel;
     }
 
     isNoneSelected(item: InheritableItem): boolean {

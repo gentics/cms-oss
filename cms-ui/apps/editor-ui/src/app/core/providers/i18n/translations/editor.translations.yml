@@ -877,3 +877,9 @@ custom_tools_label:
 administration_tool_label:
     en: Administration
     de: Administration
+select_not_deleted_items:
+    en: Please select {{itemTypePlural}} which are not deleted
+    de: Bitte wählen Sie {{itemTypePlural}} aus, welche nicht gelöscht sind
+select_deleted_items:
+    en: Please select {{itemTypePlural}} which are deleted
+    de: Bitte wählen Sie {{itemTypePlural}} aus, welche gelöscht sind

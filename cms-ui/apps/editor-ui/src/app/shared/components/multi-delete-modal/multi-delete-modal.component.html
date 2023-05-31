@@ -144,8 +144,10 @@
             </div>
 
             <div class="item-primary">
-                <span class="inherited-icon"
-                      [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }">
+                <span
+                    class="inherited-icon"
+                    [title]="'editor.inherited_tooltip' | i18n:{ master: item.inheritedFrom }"
+                >
                     <icon>input</icon>
                 </span>
                 <span class="item-name">{{ item.name }}</span>
@@ -155,8 +157,18 @@
 </div>
 
 <div class="modal-footer">
-    <gtx-button type="secondary" flat (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button type="alert" (click)="confirm()" class="confirm-button" [disabled]="deleteCount === 0">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        type="alert"
+        class="confirm-button"
+        [disabled]="deleteCount === 0"
+        (click)="confirm()"
+    >
         {{ 'modal.multi_delete_confirm_button' | i18n:{ count: deleteCount, _type: itemType } }}
     </gtx-button>
 </div>

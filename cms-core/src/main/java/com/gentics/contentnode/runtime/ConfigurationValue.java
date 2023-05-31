@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.server.CustomRequestLog;
 
 /**
  * Enum containing configuration values, which can be either read from environment variables or system properties
@@ -54,6 +55,11 @@ public enum ConfigurationValue {
 	 * Path to the log files
 	 */
 	LOGS_PATH("LOGS_PATH", "com.gentics.contentnode.logs.path", () -> "logs", path -> StringUtils.appendIfMissing(path, "/")),
+
+	/**
+	 * Access Log Format
+	 */
+	ACCESS_LOG("ACCESS_LOG", "com.gentics.contentnode.access_log", () -> CustomRequestLog.NCSA_FORMAT),
 
 	/**
 	 * Path for static file publishing

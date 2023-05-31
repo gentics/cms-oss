@@ -16,6 +16,9 @@ Configuration:
       -
         name: wastebin
         level: error
+      -
+        name: access_log
+        level: info
     Root:
       level: error
       AppenderRef:

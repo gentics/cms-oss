@@ -902,6 +902,14 @@ public class ConstructResourceImpl implements ConstructResource {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
 
+			if (category.getSortOrder() == null) {
+				int defaultSortOrder = DBUtils.select(
+					"SELECT MAX(sortorder) FROM construct_category",
+					rs -> rs.next() ? rs.getInt(1) + 1 : 0);
+
+				category.setSortOrder(defaultSortOrder);
+			}
+
 			if (!t.getPermHandler().canCreate(null, ConstructCategory.class, null)) {
 				throw new InsufficientPrivilegesException(I18NHelper.get("construct_category.nopermission"), null, null,
 						ConstructCategory.TYPE_CONSTRUCT_CATEGORY, 0, PermType.create);

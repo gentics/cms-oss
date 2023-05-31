@@ -38,8 +38,8 @@
         <language-context-selector
             *ngIf="nodeLanguages?.length > 1 && (itemType === 'page' || itemType === 'form')"
             [availableLanguages]="nodeLanguages"
-            [activeLanguage]="activeLanguage$ | async"
-            [disabled]="elasticsearchQueryActive$ | async"
+            [activeLanguage]="folderLanguage"
+            [disabled]="elasticsearchQueryActive"
             [title]="'editor.language_context_selector_disabled_search' | i18n"
             (selectLanguage)="languageChanged($event)"
         ></language-context-selector>
@@ -88,11 +88,11 @@
 
                 <gtx-dropdown-item
                     class="sort-mode"
-                    [disabled]="elasticsearchQueryActive$ | async"
+                    [disabled]="elasticsearchQueryActive"
                     (click)="selectSorting()"
                 >
-                    {{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + itemsInfo?.sortBy | i18n) } }}
-                    <icon>{{ itemsInfo?.sortOrder === 'asc' ? 'arrow_upward' : arrow_downward }}</icon>
+                    <span class="sort-label">{{ 'editor.sorting_by_label' | i18n:{ field: ('common.sort_' + itemsInfo?.sortBy | i18n) } }}</span>
+                    <icon class="sort-icon">{{ itemsInfo?.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</icon>
                 </gtx-dropdown-item>
 
                 <gtx-dropdown-item
@@ -120,7 +120,11 @@
                         {{ 'editor.display_status_icons_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item class="page-language-toggle" (click)="toggleDisplayDeleted()">
+                    <gtx-dropdown-item
+                        *ngIf="wastebinEnabled"
+                        class="show-deleted-toggle"
+                        (click)="toggleDisplayDeleted()"
+                    >
                         <gtx-checkbox
                             [checked]="showDeleted"
                             (change)="toggleDisplayDeleted()"

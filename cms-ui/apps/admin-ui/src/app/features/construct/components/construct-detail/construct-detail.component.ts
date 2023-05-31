@@ -21,9 +21,9 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { AbstractControl, UntypedFormControl, Validators } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {
     ConstructUpdateRequest,
     Index,
@@ -33,7 +33,6 @@ import {
     SingleInstancePermissionType,
     TagTypeBO,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { delay, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
@@ -73,6 +72,7 @@ export class ConstructDetailComponent
     /** current entity value */
     public currentEntity: TagTypeBO<Raw>;
     public currentActiveTabId: ConstructDetailTabs;
+    public entityIsClean = true;
 
     public fgProperties: UntypedFormControl;
     public fgParts: UntypedFormControl;
@@ -138,6 +138,11 @@ export class ConstructDetailComponent
             takeUntil(this.stopper.stopper$),
         ).subscribe((currentEntity: TagTypeBO<Raw>) => {
             this.currentEntity = currentEntity;
+            this.fgProperties = null;
+            this.fgParts = null;
+            this.entityIsClean = true;
+            this.changeDetectorRef.markForCheck();
+
             // fill form with entity property values
             this.initForms();
             this.changeDetectorRef.markForCheck();
@@ -190,6 +195,7 @@ export class ConstructDetailComponent
             detailLoading(this.appState),
             tap((updatedEntity: TagTypeBO<Raw>) => {
                 this.currentEntity = updatedEntity;
+                this.entityIsClean = true;
                 this.entityData.reloadEntities();
                 this.tableLoader.reload();
                 this.initForms();
@@ -210,6 +216,7 @@ export class ConstructDetailComponent
             detailLoading(this.appState),
             tap((updatedEntity: TagTypeBO<Raw>) => {
                 this.currentEntity = updatedEntity;
+                this.entityIsClean = true;
                 this.entityData.reloadEntities();
                 this.initForms();
             }),
@@ -218,103 +225,95 @@ export class ConstructDetailComponent
     }
 
     private initForms(): void {
-        if (this.currentEntity) {
-            this.initPropertiesForm();
-            this.initPartsForm();
-
-            this.tabHandles = {
-                [ConstructDetailTabs.PROPERTIES]: {
-                    isDirty: () => this.fgProperties.dirty,
-                    isValid: () => this.fgProperties.valid,
-                    save: (): Promise<void> => this.updateEntity(),
-                    reset: (): Promise<void> => Promise.resolve(this.initPropertiesForm()),
-                },
-                [ConstructDetailTabs.PARTS]: {
-                    isDirty: () => this.fgParts.dirty,
-                    isValid: () => this.fgParts.valid,
-                    save: () => this.updateParts(),
-                    reset: () => Promise.resolve(this.initPartsForm()),
-                },
-            };
+        if (!this.currentEntity) {
+            return;
         }
+        this.initPropertiesForm();
+        this.initPartsForm();
+
+        this.tabHandles = {
+            [ConstructDetailTabs.PROPERTIES]: {
+                isDirty: () => this.fgProperties.dirty,
+                isValid: () => this.fgProperties.valid,
+                save: (): Promise<void> => this.updateEntity(),
+                reset: (): Promise<void> => Promise.resolve(this.initPropertiesForm()),
+            },
+            [ConstructDetailTabs.PARTS]: {
+                isDirty: () => this.fgParts.dirty,
+                isValid: () => this.fgParts.valid,
+                save: () => this.updateParts(),
+                reset: () => Promise.resolve(this.initPartsForm()),
+            },
+        };
     }
 
     private initPropertiesForm(): void {
         if (this.fgProperties) {
             this.fgProperties.setValue({ ...this.currentEntity });
-        } else {
-            this.fgProperties = new UntypedFormControl({ ...this.currentEntity }, Validators.required);
-            this.fgPropertiesSaveDisabled$ = combineLatest([
-                this.currentEntity$.pipe(
-                    map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),
-                ),
-                createFormSaveDisabledTracker(this.fgProperties),
-            ]).pipe(
-                map(([hasPermission, formInvalid]) => !hasPermission || formInvalid),
-            );
+            this.fgProperties.markAsPristine();
+            return;
         }
+
+        this.fgProperties = new UntypedFormControl({ ...this.currentEntity }, createNestedControlValidator());
+        this.fgPropertiesSaveDisabled$ = combineLatest([
+            this.currentEntity$.pipe(
+                map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),
+            ),
+            createFormSaveDisabledTracker(this.fgProperties),
+        ]).pipe(
+            map(([hasPermission, formInvalid]) => !hasPermission || formInvalid),
+        );
+
         this.fgProperties.markAsPristine();
     }
 
     private initPartsForm(): void {
         if (this.fgParts) {
             this.fgParts.setValue([...this.currentEntity.parts]);
-        } else {
-            this.fgParts = new UntypedFormControl([...this.currentEntity.parts], (control) => {
-                if (control == null || control.value == null) {
-                    return { null: true };
-                }
-                if (control.value === CONTROL_INVALID_VALUE) {
-                    return { nestedError: true };
-                }
-                if (!Array.isArray(control.value)) {
-                    return { notArray: true };
-                }
-                const missingArray: number[] = [];
-                const invalidArray: number[] = [];
+            this.fgParts.markAsPristine();
+            return;
+        }
 
-                control.value.forEach((partValue, index) => {
-                    if (partValue == null) {
-                        missingArray.push(index);
-                    } else if (partValue === CONTROL_INVALID_VALUE) {
-                        invalidArray.push(index);
-                    }
-                });
+        this.fgParts = new UntypedFormControl([...this.currentEntity.parts], (control) => {
+            if (control == null || control.value == null) {
+                return { null: true };
+            }
+            if (control.value === CONTROL_INVALID_VALUE) {
+                return { nestedError: true };
+            }
+            if (!Array.isArray(control.value)) {
+                return { notArray: true };
+            }
+            const missingArray: number[] = [];
+            const invalidArray: number[] = [];
 
-                if (missingArray.length > 0) {
-                    return { missingParts: missingArray };
+            control.value.forEach((partValue, index) => {
+                if (partValue == null) {
+                    missingArray.push(index);
+                } else if (partValue === CONTROL_INVALID_VALUE) {
+                    invalidArray.push(index);
                 }
-                if (invalidArray.length > 0) {
-                    return { invalidParts: invalidArray };
-                }
-
-                return null;
             });
 
-            this.fgPartsSaveDisabled$ = combineLatest([
-                this.currentEntity$.pipe(
-                    map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),
-                ),
-                createFormSaveDisabledTracker(this.fgParts),
-            ]).pipe(
-                map(([hasPermission, formInvalid]) => !hasPermission || formInvalid),
-            );
-        }
+            if (missingArray.length > 0) {
+                return { missingParts: missingArray };
+            }
+            if (invalidArray.length > 0) {
+                return { invalidParts: invalidArray };
+            }
+
+            return null;
+        });
+
+        this.fgPartsSaveDisabled$ = combineLatest([
+            this.currentEntity$.pipe(
+                map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),
+            ),
+            createFormSaveDisabledTracker(this.fgParts),
+        ]).pipe(
+            map(([hasPermission, formInvalid]) => !hasPermission || formInvalid),
+        );
 
         this.fgParts.markAsPristine();
     }
-
-    private applyDirtCorrection(control: AbstractControl): void {
-        let isFirst = true;
-        let oldValue = control.value;
-
-        this.subscriptions.push(control.valueChanges.subscribe(value => {
-            if (isFirst || isEqual(oldValue, value)) {
-                control.markAsPristine();
-                isFirst = false;
-            }
-            oldValue = value;
-        }));
-    }
-
 }

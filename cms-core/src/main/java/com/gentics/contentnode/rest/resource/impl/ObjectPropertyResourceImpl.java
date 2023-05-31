@@ -5,6 +5,7 @@ import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParam
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -12,15 +13,18 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import com.gentics.contentnode.job.DeleteJob;
 import org.apache.commons.lang.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -324,9 +328,13 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 	@Override
 	@DELETE
 	@Path("{id}")
-	public GenericResponse delete(@PathParam("id") String objectPropertyId) throws NodeException {
+	public GenericResponse delete(@PathParam("id") String objectPropertyId, @QueryParam("foregroundTime") @DefaultValue("-1") int foregroundTime) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
+
+			if (foregroundTime < 0) {
+				foregroundTime = ObjectTransformer.getInt(t.getNodeConfig().getDefaultPreferences().getProperty("contentnode.global.config.backgroundjob_foreground_time"), 5);
+			}
 
 			if (!t.getPermHandler().canDelete(null, ObjectTagDefinition.class, null)) {
 				throw new InsufficientPrivilegesException(I18NHelper.get("objectproperty.nopermission"), null, null,
@@ -338,20 +346,12 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 				message.setParameter("0", objectPropertyId);
 				throw new EntityNotFoundException(message.toString());
 			}
-			try (WastebinFilter wb = Wastebin.INCLUDE.set()) {
-				if (!toDelete.getObjectTags().isEmpty()) {
-					CNI18nString message = new CNI18nString("resource.cannotdelete");
-					message.setParameter("0", "Object Tag Definition");
-					message.setParameter("1", toDelete.getName());
-					message.setParameter("2", "Object Tag");
-					message.setParameter("3", toDelete.getObjectTags().stream().map(ObjectTag::getName).collect(Collectors.joining(", ")));
-					throw new EntityInUseException(message.toString());
-				}
-			}
-			toDelete.delete();
+
+			GenericResponse response = DeleteJob.process(ObjectTagDefinition.class, Collections.singletonList(toDelete.getId()), false, foregroundTime);
 
 			trx.success();
-			return new GenericResponse(null, ResponseInfo.ok("Successfully deleted object property"));
+
+			return response;
 		}
 	}
 

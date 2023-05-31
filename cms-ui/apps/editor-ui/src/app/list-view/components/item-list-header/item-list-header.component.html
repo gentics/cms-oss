@@ -185,7 +185,7 @@
                         {{ 'editor.publish_language_variants_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="selectedItems && itemType === 'page'" (click)="createVariationsClicked(selectedItems)">
+                    <gtx-dropdown-item *ngIf="selectedItems && itemType === 'page'" (click)="createVariationsClicked()">
                         <icon left>layers</icon>
                         {{ (selectedItems.length === 1 ? 'editor.create_page_variation_label' : 'editor.create_page_variations_label') | i18n }}
                     </gtx-dropdown-item>
@@ -205,7 +205,7 @@
                         {{ 'editor.delete_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item *ngIf="selectedItems | anyItemDeleted" (click)="restoreSelected(itemType)">
+                    <gtx-dropdown-item *ngIf="showDeleted && (selectedItems | anyItemDeleted)" (click)="restoreSelected(itemType)">
                         <icon left>restore_from_trash</icon>
                         {{ 'editor.restore_from_wastebin_label' | i18n }}
                     </gtx-dropdown-item>

@@ -9,12 +9,12 @@ import {
 } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Raw, Template } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService, TableAction, TableActionClickEvent, TableRow } from '@gentics/ui-core';
-import { Subscription, of } from 'rxjs';
+import { of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 import { AssignTemplatesToNodesModalComponent } from '../assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
@@ -32,15 +32,13 @@ const COPY_ACTION = 'copy';
     styleUrls: ['./template-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TemplateMasterComponent extends BaseTableMasterComponent<Template, TemplateBO> implements OnInit, OnDestroy {
+export class TemplateMasterComponent extends BaseTableMasterComponent<Template, TemplateBO> implements OnInit {
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'template';
 
     public activeNode?: Node;
     public selected: string[] = [];
     public actions: TableAction<TemplateBO>[] = [];
-
-    protected subscriptions: Subscription[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -66,6 +64,8 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     public ngOnInit(): void {
+        super.ngOnInit();
+
         this.subscriptions.push(this.route.paramMap.pipe(
             map(params => params.get(NODE_ID_PARAM)),
             distinctUntilChanged(),
@@ -115,10 +115,6 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
                 single: true,
             },
         ];
-    }
-
-    public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     public handleNodeSelect(row: TableRow<NodeBO>): void {

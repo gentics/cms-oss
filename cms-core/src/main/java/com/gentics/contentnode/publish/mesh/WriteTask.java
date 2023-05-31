@@ -39,9 +39,9 @@ class WriteTask extends AbstractWriteTask {
 	protected String language;
 
 	/**
-	 * Base Version (null for new objects)
+	 * Flag to mark existing objects
 	 */
-	protected String baseVersion;
+	protected boolean exists;
 
 	/**
 	 * Fields of the Mesh Node
@@ -116,10 +116,10 @@ class WriteTask extends AbstractWriteTask {
 
 	@Override
 	public String toString() {
-		if (baseVersion == null) {
+		if (!exists) {
 			return String.format("Create %s as %s (uuid %s)", description, schema, uuid);
 		} else {
-			return String.format("Update %s as %s (uuid %s, version %s)", description, schema, uuid, baseVersion);
+			return String.format("Update %s as %s (uuid %s)", description, schema, uuid);
 		}
 	}
 }

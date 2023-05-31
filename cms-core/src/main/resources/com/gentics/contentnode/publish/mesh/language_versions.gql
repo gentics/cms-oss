@@ -1,7 +1,6 @@
 query($uuid: String) {
   node(uuid: $uuid) {
     languages {
-      version
       language
       parent {
         uuid

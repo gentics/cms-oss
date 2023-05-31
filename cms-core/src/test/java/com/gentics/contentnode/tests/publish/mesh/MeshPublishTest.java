@@ -1087,4 +1087,37 @@ public class MeshPublishTest {
 			trx.success();
 		}
 	}
+
+	/**
+	 * Test that the nodes written to Mesh are "published"
+	 * @throws Exception
+	 */
+	@Test
+	public void testMeshNodeIsPublished() throws Exception {
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		operate(() -> {
+			assertObject("Published folder", mesh.client(), MESH_PROJECT_NAME, folder, true, node -> {
+				assertThat(node.getVersion()).as("Node Version").endsWith(".0");
+				assertThat(node.getAvailableLanguages()).as("Available languages").containsKey("en");
+				assertThat(node.getAvailableLanguages().get("en")).as("English version").hasFieldOrPropertyWithValue("published", true);
+			});
+		});
+	}
 }

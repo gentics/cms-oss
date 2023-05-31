@@ -21,7 +21,7 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { AbstractControl, UntypedFormControl } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {
@@ -33,7 +33,6 @@ import {
     SingleInstancePermissionType,
     TagTypeBO,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { delay, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
@@ -265,7 +264,6 @@ export class ConstructDetailComponent
             map(([hasPermission, formInvalid]) => !hasPermission || formInvalid),
         );
 
-        // this.applyDirtCorrection(this.fgProperties);
         this.fgProperties.markAsPristine();
     }
 
@@ -318,20 +316,4 @@ export class ConstructDetailComponent
 
         this.fgParts.markAsPristine();
     }
-
-    private applyDirtCorrection(control: AbstractControl): void {
-        let isFirst = true;
-        let oldValue = control.value;
-
-        this.subscriptions.push(combineLatest([
-            control.valueChanges,
-        ]).subscribe(([value]) => {
-            if (isFirst || isEqual(oldValue, value)) {
-                control.markAsPristine();
-                isFirst = false;
-            }
-            oldValue = value;
-        }));
-    }
-
 }

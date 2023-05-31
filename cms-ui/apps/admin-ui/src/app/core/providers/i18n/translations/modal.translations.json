@@ -179,6 +179,10 @@
         "en": "Create new Template",
         "de": "Neue Vorlage erstellen"
     },
+    "copy_template_title": {
+        "en": "Copy Template \"{{ entityName }}\"",
+        "de": "Vorlage „{{ entityName }}“ kopieren"
+    },
     "create_templateTag_title": {
         "en": "Create Template Tag",
         "de": "Vorlagen-Tag erstellen"

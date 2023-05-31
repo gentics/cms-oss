@@ -1,20 +1,30 @@
 import { AdminUIModuleRoutes, BO_PERMISSIONS, NodeBO, TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, I18nService, NodeOperations, PermissionsService, TemplateTableLoaderService } from '@admin-ui/core';
+import {
+    ErrorHandler,
+    I18nNotificationService,
+    I18nService,
+    NodeOperations,
+    PermissionsService,
+    TemplateTableLoaderService,
+} from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Template } from '@gentics/cms-models';
+import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Raw, Template } from '@gentics/cms-models';
+import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ModalService, TableAction, TableActionClickEvent, TableRow } from '@gentics/ui-core';
-import { of, Subscription } from 'rxjs';
+import { Subscription, of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 import { AssignTemplatesToNodesModalComponent } from '../assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
+import { CopyTemplateModal } from '../copy-template-modal/copy-template-modal.component';
 import { CreateTemplateModalComponent } from '../create-template-modal/create-template-modal.component';
 
 const NODE_ID_PARAM = 'nodeId';
 const LINK_TO_FOLDER_ACTION = 'linkToFolder';
 const LINK_TO_NODE_ACTION = 'linkToNode';
+const COPY_ACTION = 'copy';
 
 @Component({
     selector: 'gtx-template-master',
@@ -37,12 +47,15 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         router: Router,
         route: ActivatedRoute,
         appState: AppStateService,
+        protected api: GcmsApi,
         protected nodeOperations: NodeOperations,
         protected modalService: ModalService,
         protected loader: TemplateTableLoaderService,
         protected i18n: I18nService,
         protected notification: I18nNotificationService,
         protected permissions: PermissionsService,
+        protected templateTableLoader: TemplateTableLoaderService,
+        protected errorHandler: ErrorHandler,
     ) {
         super(
             changeDetector,
@@ -74,6 +87,15 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }));
 
         this.actions = [
+            {
+                id: COPY_ACTION,
+                icon: 'content_copy',
+                label: this.i18n.instant('shared.copy'),
+                type: 'secondary',
+                enabled: (template) => template[BO_PERMISSIONS].includes(GcmsPermission.EDIT),
+                multiple: false,
+                single: true,
+            },
             {
                 id: LINK_TO_NODE_ACTION,
                 icon: 'device_hub',
@@ -132,6 +154,10 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
 
         switch (event.actionId) {
+            case COPY_ACTION:
+                this.openCopyModal(event.item);
+                return;
+
             case LINK_TO_FOLDER_ACTION:
                 this.linkTemplatesToFolders(getTemplates());
                 return;
@@ -148,6 +174,34 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
             { relativeTo: this.route },
         );
         this.appState.dispatch(new FocusEditor());
+    }
+
+    protected async openCopyModal(template: TemplateBO): Promise<void> {
+        let loadedTemplate: Template<Raw>;
+
+        try {
+            const res = await this.api.template.getTemplate(template.id, {
+                nodeId: this.activeNode.id,
+            }).toPromise();
+            loadedTemplate = res.template;
+        } catch (err) {
+            this.errorHandler.notifyAndReturnErrorMessage(err);
+            return;
+        }
+
+        const dialog = await this.modalService.fromComponent(CopyTemplateModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+        }, {
+            template: loadedTemplate,
+            node: this.activeNode,
+        });
+        const created: Template<Raw> = await dialog.open();
+
+        if (created) {
+            this.templateTableLoader.reload();
+            this.navigateToEntityDetails(created.id);
+        }
     }
 
     protected async linkTemplatesToNodes(templates: TemplateBO[]): Promise<void> {

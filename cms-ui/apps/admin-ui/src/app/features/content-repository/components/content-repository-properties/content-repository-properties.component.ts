@@ -21,7 +21,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { GtxJsonValidator } from '@gentics/cms-components';
-import { ContentRepositoryBO, ContentRepositoryType, Normalized } from '@gentics/cms-models';
+import { ContentRepositoryBO, ContentRepositoryType, Feature, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -114,7 +114,7 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
         this.fgPropertiesInit();
         this.updateCRTypes();
 
-        this.subscriptions.push(this.appState.select(state => state.features.global.mesh_contentrepository).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
             this.meshCrEnabled = featureEnabled;
             this.updateCRTypes();
             this.changeDetector.markForCheck();

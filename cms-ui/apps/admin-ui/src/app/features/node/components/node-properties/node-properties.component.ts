@@ -2,7 +2,7 @@ import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common'
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Node, Normalized } from '@gentics/cms-models';
+import { Feature, Node, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -87,12 +87,12 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
     ngOnInit(): void {
         this.nodes$ = this.entityManager.watchNormalizedEntitiesList('node');
 
-        this.subscriptions.push(this.appState.select(state => state.features.global.multichanneling).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(featureEnabled => {
             this.multiChannelingEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.appState.select(state => state.features.global.mesh_contentrepository).subscribe(featureEnabled => {
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
             this.meshCrEnabled = featureEnabled;
             this.changeDetector.markForCheck();
         }));

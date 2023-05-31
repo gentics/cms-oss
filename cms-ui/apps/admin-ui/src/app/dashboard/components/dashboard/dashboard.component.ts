@@ -3,7 +3,7 @@ import { AuthOperations, PermissionsService } from '@admin-ui/core';
 import { AppStateService, CloseEditor } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission } from '@gentics/cms-models';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -59,7 +59,7 @@ export class DashboardComponent implements OnInit {
         this.nodesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.CONTENT, permissions: GcmsPermission.READ });
         this.dataSourcesModuleEnabled$ = this.permissions.checkPermissions({ type: AccessControlledType.DATA_SOURCE_ADMIN, permissions: GcmsPermission.READ });
         this.packagesModuleEnabled$ = combineLatest([
-            this.appState.select(state => state.features.global.devtools),
+            this.appState.select(state => state.features.global[Feature.DEVTOOLS]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.DEVTOOL_ADMIN,
                 permissions: GcmsPermission.READ,
@@ -68,7 +68,7 @@ export class DashboardComponent implements OnInit {
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
         );
         this.searchMaintenanceModuleEnabled$ = combineLatest([
-            this.appState.select(state => state.features.global.elasticsearch),
+            this.appState.select(state => state.features.global[Feature.ELASTICSEARCH]),
             this.permissions.checkPermissions({
                 type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                 permissions: GcmsPermission.READ,
@@ -102,7 +102,7 @@ export class DashboardComponent implements OnInit {
             permissions: GcmsPermission.READ,
         });
         this.contentStagingModuleEnabled$ = combineLatest([
-            this.appState.select(state => state.features.global.content_staging),
+            this.appState.select(state => state.features.global[Feature.CONTENT_STAGING]),
             this.permissions.checkPermissions({ type: AccessControlledType.CONTENT_STAGING_ADMIN, permissions: GcmsPermission.READ }),
         ]).pipe(
             map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),

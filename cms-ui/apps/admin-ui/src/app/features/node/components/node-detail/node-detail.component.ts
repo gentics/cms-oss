@@ -35,6 +35,7 @@ import {
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+    Feature,
     Folder,
     Index,
     IndexById,
@@ -87,7 +88,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
 
     public readonly NodeDetailTabs = NodeDetailTabs;
 
-    @SelectState(state => state.features.global.devtools)
+    @SelectState(state => state.features.global[Feature.DEVTOOLS])
     featureDevtoolsIsEnabled$: Observable<boolean>;
 
     activeTabId$: Observable<string>;

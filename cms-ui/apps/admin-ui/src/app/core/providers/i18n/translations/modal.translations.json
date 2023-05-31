@@ -462,5 +462,9 @@
     "import_content_package_plural": {
         "en": "Are you sure you want to import the following Content Packages from the File-System?<br/><ul><li>{{packageNames}}</li></ul>",
         "de": "Sind sie sicher, dass Sie die folgenden Inhalt Pakete aus dem Datei-System importeren möchten?<br/><ul><li>{{packageNames}}</li></ul>"
+    },
+    "sort_construct_categories_title": {
+        "en": "Sort construct categories",
+        "de": "Tagtyp Kategorien sortieren"
     }
 }

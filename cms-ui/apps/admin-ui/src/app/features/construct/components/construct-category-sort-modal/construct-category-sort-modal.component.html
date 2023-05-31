@@ -1,0 +1,32 @@
+<div class="modal-title">
+    <h5>{{ 'modal.sort_construct_categories_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-construct-category-table
+        [sorting]="true"
+        [selectable]="false"
+        [disabled]="disabled"
+        [rows]="rows"
+        (sort)="sortRows($event)"
+        (loadEnd)="rowsLoaded($event)"
+    ></gtx-construct-category-table>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="disabled"
+        (click)="updateSorting()"
+    >
+        {{ 'modal.save_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn(false)"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

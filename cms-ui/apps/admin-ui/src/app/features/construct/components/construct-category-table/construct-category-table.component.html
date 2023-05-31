@@ -7,7 +7,7 @@
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
 
-<div *ngIf="!hideActions" class="entity-table-actions-bar">
+<div *ngIf="!hideActions && !sorting" class="entity-table-actions-bar">
     <gtx-button
         class="table-action-button"
         flat
@@ -18,6 +18,18 @@
         (click)="handleCreateButton()"
     >
         <icon left>add</icon> {{ 'shared.create_new_construct_category' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled"
+        [gtxActionAllowed]="'constructCategory.updateCategoryInstance'"
+        (click)="openSortModal()"
+    >
+        <icon left>sort</icon> {{ 'construct.sort_categories' | i18n }}
     </gtx-button>
 </div>
 
@@ -34,8 +46,9 @@
     [selectable]="selectable"
     [hideActions]="hideActions"
     [disabled]="disabled"
+    [sortable]="!sorting"
 
-    [paginated]="true"
+    [paginated]="!sorting"
     [columns]="columns"
     [rows]="rows"
     [actions]="actions"

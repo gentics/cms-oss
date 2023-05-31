@@ -29,6 +29,10 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     @Input()
     public hideActions = false;
 
+    /** If the sortable column-headers should be active. */
+    @Input()
+    public sortable = true;
+
     /** Columns that this trable should display. */
     @Input()
     public columns: TableColumn<T>[] = [];
@@ -102,7 +106,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true]);
+        this.booleanInputs.push('selectable', 'hideActions', ['multiple', true], ['sortable', true]);
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
@@ -128,7 +132,7 @@ export abstract class BaseTableComponent<T, R extends TableRow<T> = TableRow<T>>
     }
 
     public updateSortBy(column: TableColumn<T>): void {
-        if (!column.sortable) {
+        if (!this.sortable || !column.sortable) {
             return;
         }
 

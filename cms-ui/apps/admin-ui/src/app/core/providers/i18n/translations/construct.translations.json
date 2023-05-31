@@ -187,6 +187,10 @@
         "en": "Category Sortorder",
         "de": "Kategoriesortierung"
     },
+    "sort_categories": {
+        "en": "Sort Categories",
+        "de": "Kategorien sortieren"
+    },
     "visibleInMenu": {
         "en": "Visible in Menu",
         "de": "Sichtbar in Menü"

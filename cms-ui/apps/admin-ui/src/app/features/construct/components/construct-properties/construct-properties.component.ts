@@ -13,7 +13,7 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     AccessControlledType,
@@ -38,7 +38,6 @@ export interface ConstructPropertiesFormData {
     keyword: string;
     icon: string;
     nodeIds: number[];
-    parts?: TagPart[],
     externalEditorUrl?: string;
     mayBeSubtag?: boolean;
     mayContainSubtags?: boolean;
@@ -163,7 +162,7 @@ export class ConstructPropertiesComponent
         }
     }
 
-    protected createForm(): UntypedFormGroup {
+    protected createForm(): FormGroup {
         return new UntypedFormGroup({
             keyword: new UntypedFormControl(null, Validators.required),
             nameI18n: new UntypedFormControl({}, this.createNameValidator()),
@@ -186,7 +185,6 @@ export class ConstructPropertiesComponent
 
         // Can only be edited when we create a new construct
         if (this.mode === ConstructPropertiesMode.CREATE || this.mode === ConstructPropertiesMode.COPY) {
-            // keywordCtl.enable(options);
             nodesIdCtl.enable(options);
         }
     }

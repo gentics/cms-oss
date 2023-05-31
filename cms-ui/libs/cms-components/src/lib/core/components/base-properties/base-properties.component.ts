@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { UntypedFormGroup } from '@angular/forms';
+import { FormGroup, UntypedFormGroup } from '@angular/forms';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
 import { combineLatest } from 'rxjs';
@@ -110,6 +110,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.value, value))) {
                 this.triggerChange(value);
             }
+            // Set it, in case that the parent-component has no binding for it
+            this.initialValue = false;
             this.initialValueChange.emit(false);
         }));
 
@@ -125,7 +127,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * All controls should already be present and should be toggled by disabling them
      * via the `configureForm` method.
      */
-    protected abstract createForm(): UntypedFormGroup;
+    protected abstract createForm(): FormGroup;
 
     /**
      * Hook for whenever the form value changes, to configure the form controls.

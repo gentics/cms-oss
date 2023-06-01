@@ -1,0 +1,34 @@
+<h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
+
+<div class="properties-editor-i18n">
+    <gtx-grouped-tabs
+        class="properties-tabs"
+        pure
+        wrap
+        statusIcons
+        [activeId]="activeLanguage?.id"
+    >
+        <gtx-tab-pane
+            *ngFor="let language of languages"
+            [id]="language?.id"
+            [readonly]="disabled"
+            (select)="setActiveLanguage($event)"
+        >
+            <ng-template gtx-tab-label>
+                <div
+                    class="language-pane-label"
+                    [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
+                >{{ language?.name }}</div>
+            </ng-template>
+        </gtx-tab-pane>
+    </gtx-grouped-tabs>
+
+    <div
+        *ngIf="activeLanguage?.code"
+        class="tab-content"
+    >
+        <h3>{{ activeLanguage?.name }}</h3>
+
+        <ng-content></ng-content>
+    </div>
+</div>

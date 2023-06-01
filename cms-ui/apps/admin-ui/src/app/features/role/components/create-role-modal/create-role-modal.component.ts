@@ -1,8 +1,11 @@
 import { RoleOperations } from '@admin-ui/core';
+import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
-import { Raw, RoleBO } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { UntypedFormControl } from '@angular/forms';
+import { createNestedControlValidator } from '@gentics/cms-components';
+import { Language, RoleBO, RoleCreateRequest } from '@gentics/cms-models';
+import { BaseModal } from '@gentics/ui-core';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'gtx-create-role-modal',
@@ -10,43 +13,27 @@ import { IModalDialog } from '@gentics/ui-core';
     styleUrls: [ './create-role-modal.component.scss' ],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateRoleModalComponent implements IModalDialog, OnInit {
+export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnInit {
 
     /** Current step (tab) of the entity creation wizzard */
     currentTab = String(1);
 
+    public supportedLanguages$: Observable<Language[]>;
+
     /** form instance */
-    form: UntypedFormGroup;
+    form: UntypedFormControl;
 
     constructor(
         private roleOperations: RoleOperations,
+        private languageData: LanguageDataService,
     ) {
+        super();
     }
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new UntypedFormGroup({
-            name: new UntypedFormControl(null),
-            description: new UntypedFormControl(null),
-        });
-    }
-
-    closeFn = (entityCreated: RoleBO) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = (entityCreated: RoleBO) => {
-            close(entityCreated);
-        };
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
-    }
-
-    /** Get form validity state */
-    isValid(): boolean {
-        return this.form.valid;
+        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
     }
 
     /** Programmatic tab set */
@@ -71,9 +58,8 @@ export class CreateRoleModalComponent implements IModalDialog, OnInit {
 
     private createEntity(): Promise<RoleBO> {
         // assemble payload with conditional properties
-        const role: Partial<RoleBO<Raw>> = {
-            name: this.form.value.name,
-            description: this.form.value.description,
+        const role: RoleCreateRequest = {
+            ...this.form.value,
         };
         return this.roleOperations.create(role).toPromise();
     }

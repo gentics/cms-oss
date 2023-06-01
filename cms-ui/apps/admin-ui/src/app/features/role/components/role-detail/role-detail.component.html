@@ -5,7 +5,7 @@
     -->
     <gtx-tabs pure [activeId]="activeTabId$ | async">
         <gtx-tab
-            [id]="RoleDetailTabs.properties"
+            [id]="RoleDetailTabs.PROPERTIES"
             gtxDetailTabLink
             [title]="'shared.title_properties' | i18n"
         >
@@ -20,68 +20,37 @@
             ></gtx-entity-detail-header>
 
             <div class="gtx-entity-details-tab-content-body">
-                <div class="flex-row row">
-                    <form
-                        *ngIf="fgProperties"
-                        [formGroup]="fgProperties"
-                        class="buttons-form small-12 medium-9 row"
-                    >
-                        <div class="input-container small-12 medium-6 columns">
-                            <gtx-input
-                                type="text"
-                                [required]="true"
-                                maxlength="50"
-                                [label]="('shared.role_name' | i18n) + ' *'"
-                                [placeholder]="'shared.role_name' | i18n"
-                                formControlName="name"
-                                gtxActionAllowed="role.updateRole"
-                                [aaInstanceId]="currentEntity?.id"
-                            >
-                            </gtx-input>
-                        </div>
-
-                        <div class="small-12 medium-6 columns"></div>
-
-                        <div class="input-container medium-12 columns">
-                            <gtx-textarea
-                                [required]="false"
-                                maxlength="255"
-                                [label]="'shared.description' | i18n"
-                                [placeholder]="'shared.description' | i18n"
-                                formControlName="description"
-                                gtxActionAllowed="role.updateRole"
-                                [aaInstanceId]="currentEntity?.id"
-                            >
-                            </gtx-textarea>
-                        </div>
-                    </form>
-                </div>
+                <gtx-role-properties
+                    [supportedLanguages]="supportedLanguages$ | async"
+                    [formControl]="fgProperties"
+                ></gtx-role-properties>
             </div>
         </gtx-tab>
+
         <gtx-tab
-            [id]="RoleDetailTabs.pagePrivileges"
+            [id]="RoleDetailTabs.PAGE_PRIVILEGES"
             gtxDetailTabLink
             [title]="'shared.title_page_privileges' | i18n"
         >
-            <gtx-entity-detail-header
-                [hidden]="isLoading"
-                [title]="'shared.title_page_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
-                saveActionAllowedId="role.updateRole"
-                [saveActionAllowedInstanceId]="currentEntity?.id"
-                [saveDisabled]="fgPagePrivilegesSaveDisabled$ | async"
-                (saveClick)="btnSavePrivilegesOnClick('page')"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
-
             <div class="gtx-entity-details-tab-content-body">
-                <div class="flex-row row">
-                    <form
-                        *ngIf="fgPagePrivileges"
-                        [formGroup]="fgPagePrivileges"
-                        class="gtx-entity-details-tab-content-body-form gtx-form small-12 medium-9 columns row"
-                    >
-                        <div [formGroupName]="'page'" class="input-container medium-12">
-                            <div class="gtx-form-section-title">{{ 'role.all_languages' | i18n }}</div>
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_page_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    saveActionAllowedId="role.updateRole"
+                    [saveActionAllowedInstanceId]="currentEntity?.id"
+                    [saveDisabled]="fgPagePrivilegesSaveDisabled$ | async"
+                    (saveClick)="btnSavePrivilegesOnClick('page')"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <form
+                    *ngIf="fgPagePrivileges"
+                    class="language-permissions"
+                    [formGroup]="fgPagePrivileges"
+                >
+                    <div class="language-group all-languages">
+                        <h3 class="role-language-title">{{ 'role.all_languages' | i18n }}</h3>
+                        <div [formGroupName]="'page'" class="role-language-content">
                             <gtx-checkbox
                                 [formControlName]="'viewpage'"
                                 [label]="'role.view_page' | i18n"
@@ -107,13 +76,16 @@
                                 [label]="'role.translate_page' | i18n"
                             ></gtx-checkbox>
                         </div>
-                        <ng-container [formGroupName]="'pageLanguages'">
-                            <div
-                                *ngFor="let controlIdAndName of pageLanguagesSortedAndRemainingChildControlNames; trackBy: childControlInformationTrackBy"
-                                [formGroupName]="controlIdAndName.id"
-                                class="input-container medium-12"
-                            >
-                                <div class="gtx-form-section-title">{{ controlIdAndName.name }}</div>
+                    </div>
+
+                    <ng-container [formGroupName]="'pageLanguages'">
+                        <div
+                            *ngFor="let controlIdAndName of pageLanguagesSortedAndRemainingChildControlNames; trackBy: childControlInformationTrackBy"
+                            class="language-group"
+                            [formGroupName]="controlIdAndName.id"
+                        >
+                            <h3 class="role-language-title">{{ controlIdAndName.name }}</h3>
+                            <div class="role-language-content">
                                 <gtx-checkbox
                                     [formControlName]="'viewpage'"
                                     [label]="'role.view_page' | i18n"
@@ -139,36 +111,36 @@
                                     [label]="'role.translate_page' | i18n"
                                 ></gtx-checkbox>
                             </div>
-                        </ng-container>
-                    </form>
-                </div>
+                        </div>
+                    </ng-container>
+                </form>
             </div>
         </gtx-tab>
 
         <gtx-tab
-            [id]="RoleDetailTabs.filePrivileges"
+            [id]="RoleDetailTabs.FILE_PRIVILEGES"
             gtxDetailTabLink
             [title]="'shared.title_file_privileges' | i18n"
         >
-            <gtx-entity-detail-header
-                [hidden]="isLoading"
-                [title]="'shared.title_file_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
-                saveActionAllowedId="role.updateRole"
-                [saveActionAllowedInstanceId]="currentEntity?.id"
-                [saveDisabled]="fgFilePrivilegesSaveDisabled$ | async"
-                (saveClick)="btnSavePrivilegesOnClick('file')"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
-
             <div class="gtx-entity-details-tab-content-body">
-                <div class="flex-row row">
-                    <form
-                        *ngIf="fgFilePrivileges"
-                        [formGroup]="fgFilePrivileges"
-                        class="gtx-entity-details-tab-content-body-form gtx-form small-12 medium-9 columns row"
-                    >
-                        <div [formGroupName]="'file'" class="input-container medium-12">
-                            <div class="gtx-form-section-title">{{ 'role.images_and_files' | i18n }}</div>
+                <gtx-entity-detail-header
+                    [hidden]="isLoading"
+                    [title]="'shared.title_file_privileges_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    saveActionAllowedId="role.updateRole"
+                    [saveActionAllowedInstanceId]="currentEntity?.id"
+                    [saveDisabled]="fgFilePrivilegesSaveDisabled$ | async"
+                    (saveClick)="btnSavePrivilegesOnClick('file')"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
+
+                <form
+                    *ngIf="fgFilePrivileges"
+                    [formGroup]="fgFilePrivileges"
+                    class="language-permissions"
+                >
+                    <div [formGroupName]="'file'" class="language-group">
+                        <h3 class="role-language-title">{{ 'role.images_and_files' | i18n }}</h3>
+                        <div class="role-language-content">
                             <gtx-checkbox
                                 [formControlName]="'viewfile'"
                                 [label]="'role.view_file' | i18n"
@@ -186,8 +158,8 @@
                                 [label]="'role.delete_file' | i18n"
                             ></gtx-checkbox>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </gtx-tab>
     </gtx-tabs>

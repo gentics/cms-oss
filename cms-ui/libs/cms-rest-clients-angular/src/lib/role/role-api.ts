@@ -56,7 +56,7 @@ export class RoleApi {
     /**
      * Update a single role by id.
      */
-    updateRole(roleId: string, request: RoleUpdateRequest): Observable<RoleUpdateResponse> {
+    updateRole(roleId: number | string, request: RoleUpdateRequest): Observable<RoleUpdateResponse> {
         return this.apiBase.post(`role/${roleId}`, request);
     }
 

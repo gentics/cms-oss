@@ -1,40 +1,18 @@
 <div class="modal-title">
     <h5>{{ 'modal.create_role_title' | i18n }}</h5>
 </div>
-<div class="modal-content">
-    <form *ngIf="form" autocomplete="off" [formGroup]="form" class="gtx-create-role-modal-tab-content-body-form">
-        <div class="input-container small-6 medium-6 row">
-            <div class="input-container small-12 medium-12 columns">
-                <gtx-input
-                    type="text"
-                    [required]="true"
-                    maxlength="50"
-                    [label]="('shared.role_name' | i18n) + ' *'"
-                    [placeholder]="'shared.role_name' | i18n"
-                    formControlName="name"
-                >
-                </gtx-input>
-            </div>
-        </div>
 
-        <div class="input-container small-6 medium-6 row">
-            <div class="input-container medium-12 columns">
-                <gtx-textarea
-                    [required]="false"
-                    maxlength="255"
-                    [label]="('shared.role_description' | i18n)"
-                    [placeholder]="'shared.role_description' | i18n"
-                    formControlName="description"
-                >
-                </gtx-textarea>
-            </div>
-        </div>
-    </form>
+<div class="modal-content">
+    <gtx-role-properties
+        [supportedLanguages]="supportedLanguages$ | async"
+        [formControl]="form"
+    ></gtx-role-properties>
 </div>
+
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!isValid()"
+        [disabled]="!form.valid"
         (click)="buttonCreateEntityClicked()"
         gtxActionAllowed="role.createRole"
     >

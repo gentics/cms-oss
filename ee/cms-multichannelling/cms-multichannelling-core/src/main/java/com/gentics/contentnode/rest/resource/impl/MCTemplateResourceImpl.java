@@ -63,8 +63,8 @@ import com.gentics.contentnode.rest.util.MCMiscUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/template")
 @Authenticated
 public class MCTemplateResourceImpl implements MCTemplateResource {

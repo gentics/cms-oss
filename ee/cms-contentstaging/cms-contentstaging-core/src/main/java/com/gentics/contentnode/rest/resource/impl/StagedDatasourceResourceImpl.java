@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -16,7 +17,7 @@ import com.gentics.contentnode.rest.model.staging.ImplementationHashResponse;
 import com.gentics.contentnode.rest.resource.StagedDatasourceResource;
 import com.gentics.contentnode.rest.util.MiscStagingUtils;
 
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/datasource")
 @RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)

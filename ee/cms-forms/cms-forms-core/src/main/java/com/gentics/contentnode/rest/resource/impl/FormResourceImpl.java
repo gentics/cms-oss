@@ -100,8 +100,8 @@ import java.util.stream.Collectors;
 /**
  * Resource implementation for forms
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("form")
 @RequiredFeature(Feature.FORMS)

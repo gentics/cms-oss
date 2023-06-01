@@ -9,6 +9,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.keycloak.adapters.servlet.KeycloakOIDCFilter;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.auth.filter.AbstractSSOFilter;
 import com.gentics.contentnode.auth.filter.KeycloakIntegrationFilter;
@@ -60,7 +61,7 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 		final var AUTH_PATH = "/rest/auth/ssologin/*";
 
 		if (featureIsEnabled) {
-			Map<String, String> keycloakPreferences = NodeConfigRuntimeConfiguration
+			Map<String, Object> keycloakPreferences = NodeConfigRuntimeConfiguration
 					.getPreferences()
 					.getPropertyObject("keycloak");
 
@@ -80,17 +81,17 @@ public class KeycloakServletContextHandlerService implements ServletContextHandl
 				addFilter(servletHandler, INTEGRATION_FILTER_NAME, KeycloakIntegrationFilter.class, AUTH_PATH, EnumSet.of(DispatcherType.REQUEST), keycloakServletFilterHolder -> {
 					if (keycloakPreferences.containsKey("user_created_callback")) {
 						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_CALLBACK,
-								keycloakPreferences.get("user_created_callback"));
+								ObjectTransformer.getString(keycloakPreferences.get("user_created_callback"), null));
 					}
 
 					if (keycloakPreferences.containsKey("init_groups")) {
 						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_GROUPS_PARAM,
-								keycloakPreferences.get("init_groups"));
+								ObjectTransformer.getString(keycloakPreferences.get("init_groups"), null));
 					}
 
 					if (keycloakPreferences.containsKey("sync_groups")) {
 						keycloakServletFilterHolder.setInitParameter(AbstractSSOFilter.INIT_GROUPS_SYNC,
-								keycloakPreferences.get("sync_groups"));
+								ObjectTransformer.getString(keycloakPreferences.get("sync_groups"), null));
 					}
 				});
 			} catch (NodeException e) {

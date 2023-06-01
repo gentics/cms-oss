@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.contentnode.cluster.ClusterSupport;
 import com.gentics.contentnode.etc.Feature;
@@ -16,7 +17,7 @@ import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.model.response.cluster.ClusterInfo;
 import com.gentics.contentnode.rest.resource.cluster.ClusterResource;
 
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON})
 @Path("/cluster")
 @Authenticated
 @RequiredFeature(Feature.CLUSTER)

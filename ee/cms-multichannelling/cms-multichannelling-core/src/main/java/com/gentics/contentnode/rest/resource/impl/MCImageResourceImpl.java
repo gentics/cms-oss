@@ -68,8 +68,8 @@ import com.gentics.contentnode.rest.util.Operator.LockType;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/image")
 @Authenticated
 public class MCImageResourceImpl implements MCImageResource {

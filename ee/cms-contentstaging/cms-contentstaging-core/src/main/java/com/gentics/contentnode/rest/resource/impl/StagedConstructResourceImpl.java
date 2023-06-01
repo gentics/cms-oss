@@ -16,8 +16,8 @@ import com.gentics.contentnode.rest.model.staging.ImplementationHashResponse;
 import com.gentics.contentnode.rest.resource.StagedConstructResource;
 import com.gentics.contentnode.rest.util.MiscStagingUtils;
 
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/construct")
 @Authenticated
 public class StagedConstructResourceImpl implements StagedConstructResource {

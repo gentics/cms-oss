@@ -1,0 +1,13 @@
+Optionally embed referenced objects in API response of:
+
+* @GET objectproperty/{id}@ embed @category@ and @construct@
+* @GET user/@ embed @group@
+* @GET user/{id}@ embed @group@
+* @GET scheduler/schedule@ embed @task@
+* @GET scheduler/schedule/{id}/executions@ embed @scheduler@
+* @GET template/tag/{id}@ embed @construct@
+* @GET construct/{id}@ embed @category@
+* @GET construct/load/{id}@ embed @category@
+* @GET construct@ embed @category@
+
+Manual Change required as construct category datatype has changed and is now of Type @ConstructCategory@ instead of String.

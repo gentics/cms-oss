@@ -1,0 +1,7 @@
+Improve existing endpoints:
+
+* @GET /node@ add @masterName@ and @contentRepositoryName@ fields to response
+* @GET /group/{id}/users@ add embed option to embed groups into response
+* @GET /devtools/packages/{name}/objectproperties@ add embed option to embed constructs and categories into response 
+* @GET /devtools/packages/{name}/construct@ add embed option to embed categories into response
+

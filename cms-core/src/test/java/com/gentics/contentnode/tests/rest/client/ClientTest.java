@@ -318,23 +318,6 @@ public class ClientTest {
 	}
 
 	/**
-	 * Test creating a folder using XML format.
-	 * @throws Exception
-	 */
-	@Test
-	public void testCreateFolderXML() throws Exception {
-		try (LoggedInClient client = restContext.client(LOGIN, PASSWORD)) {
-			FolderCreateRequest createRequest = new FolderCreateRequest();
-			createRequest.setMotherId(Integer.toString(folderId));
-			createRequest.setName("Name");
-
-			FolderLoadResponse createResponse = client.get().base().path("folder").path("create").request(MediaType.APPLICATION_XML)
-					.post(Entity.xml(createRequest), FolderLoadResponse.class);
-			client.get().assertResponse(createResponse);
-		}
-	}
-
-	/**
 	 * Test deleting a folder
 	 * @throws Exception
 	 */

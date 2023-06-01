@@ -111,8 +111,8 @@ import java.util.stream.Collectors;
 /**
  * Resource used for loading, saving and manipulating GCN templates.
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/template")
 public class TemplateResourceImpl implements TemplateResource {

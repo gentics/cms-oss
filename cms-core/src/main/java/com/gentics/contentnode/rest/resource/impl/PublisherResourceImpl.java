@@ -23,7 +23,7 @@ import com.gentics.contentnode.rest.model.response.admin.PublishInfoResponse;
  * Resource for management of the publish process (start/stop/status).
  * TODO: When the new scheduler REST API is done, think about migrating this endpoints to the scheduler
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/publisher")
 @RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)

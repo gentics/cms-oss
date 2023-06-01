@@ -1228,7 +1228,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 */
 	@POST
 	@Path("/save/{id}")
-	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Consumes({ MediaType.APPLICATION_JSON })
 	public GenericResponse save(@PathParam("id") Integer id, FileSaveRequest request) {
 			// Get the file
 			com.gentics.contentnode.rest.model.File restFile = request.getFile();

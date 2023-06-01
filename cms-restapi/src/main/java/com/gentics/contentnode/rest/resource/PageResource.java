@@ -98,7 +98,6 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/create")
-	@Produces("application/json")
 	PageLoadResponse create(PageCreateRequest request);
 
 	/**

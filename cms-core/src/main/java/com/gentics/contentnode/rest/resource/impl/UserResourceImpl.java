@@ -103,7 +103,7 @@ import com.gentics.lib.log.NodeLogger;
  * user permission: A user may only see users that are members of the same
  * groups or subgroups of the groups, the user is member of
  */
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/user")
 public class UserResourceImpl implements UserResource {

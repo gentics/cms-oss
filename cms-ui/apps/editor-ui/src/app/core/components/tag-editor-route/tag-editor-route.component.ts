@@ -25,6 +25,7 @@ import { TagEditorHostComponent, TagEditorService } from '../../../tag-editor';
 import { Api } from '../../providers/api';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
 import { PermissionService } from '../../providers/permissions/permission.service';
+import { UsersnapService } from '../../providers/usersnap/usersnap.service';
 
 type EditableEntity = ItemWithObjectTags | Template<Raw>;
 
@@ -72,10 +73,12 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
         private permissionService: PermissionService,
         private tagEditorService: TagEditorService,
         private windowRef: WindowRef,
+        private usersnap: UsersnapService,
     ) { }
 
     ngOnInit(): void {
         this.appState.dispatch(new SetHideExtrasAction(true));
+        this.usersnap.destroy();
         this.tagfillLightEnabled$ = this.appState.select(state => state.features.tagfill_light);
 
         this.tagName$ = this.route.paramMap.pipe(

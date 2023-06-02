@@ -20,6 +20,10 @@
 	<description>Gentics CMS OSS Changelog</description>
 	<url>http://www.gentics.com</url>
 
+	<properties>
+		<changelog.version>${project.version}</changelog.version>
+	</properties>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -39,7 +43,7 @@
 					<outputDirectory>${basedir}/target/output</outputDirectory>
 					<changelogTitle>Gentics CMS OSS</changelogTitle>
 					<changelogTypes>note,manualchange,optional-manualchange,security,feature,enhancement,documentation,bugfix,newui</changelogTypes>
-					<changelogVersion>${project.version}</changelogVersion>
+					<changelogVersion>${changelog.version}</changelogVersion>
 					<strictRenderMode>true</strictRenderMode>
 					<allowEmptyChangelog>true</allowEmptyChangelog>
 					<includeProjectProperties>false</includeProjectProperties>

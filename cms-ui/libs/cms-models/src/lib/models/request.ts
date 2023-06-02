@@ -1523,9 +1523,9 @@ export type RoleListOptions = BaseListOptionsWithPaging<Role>;
 /**
  * Request used for saving a `Role`.
  */
-export type RoleCreateRequest = Partial<Role<Raw>>;
+export type RoleCreateRequest = Pick<Role, 'nameI18n' | 'descriptionI18n'>;
 
-export type RoleUpdateRequest = RoleCreateRequest;
+export type RoleUpdateRequest = Pick<Role, 'id'> & Partial<Pick<Role, 'nameI18n' | 'descriptionI18n'>>;
 
 /**
  * Query parameters for POST `/roles/{id}/perm`

@@ -1,7 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-import { RoleDetailComponent, RoleMasterComponent, CreateRoleModalComponent, RoleTableComponent } from './components';
+import {
+    RoleDetailComponent,
+    RoleMasterComponent,
+    CreateRoleModalComponent,
+    RoleTableComponent,
+    RolePropertiesComponent,
+} from './components';
 import { CanActivateRoleGuard, RoleTableLoaderService } from './providers';
 import { ROLE_ROUTES } from './role.routes';
 
@@ -10,6 +16,7 @@ import { ROLE_ROUTES } from './role.routes';
         CreateRoleModalComponent,
         RoleMasterComponent,
         RoleDetailComponent,
+        RolePropertiesComponent,
         RoleTableComponent,
     ],
     providers: [

@@ -67,6 +67,7 @@ import {
     WidgetPublishingProcessTotalComponent,
     WizardComponent,
     WizardModalComponent,
+    I18nPanelGroupComponent,
 } from './components';
 import { ContentItemTrableComponent } from './components/content-item-trable/content-item-trable.component';
 import {
@@ -155,6 +156,7 @@ const COMPONENTS: any[] = [
     GenericRouterOutletComponent,
     GroupTableComponent,
     GroupTrableComponent,
+    I18nPanelGroupComponent,
     IconCheckboxComponent,
     IconComponent,
     LanguageTableComponent,

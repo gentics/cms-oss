@@ -1,0 +1,27 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <gtx-i18n-panel-group
+        *ngIf="supportedLanguages"
+        [languages]="supportedLanguages"
+        [invalidLanguages]="invalidLanguages"
+        [(activeLanguage)]="activeTabI18nLanguage"
+    >
+        <gtx-i18n-input
+            [label]="('common.name' | i18n) + ' *'"
+            [requiredInCurrentLanguage]="true"
+            [language]="activeTabI18nLanguage?.code"
+            [availableLanguages]="supportedLanguages"
+            formControlName="nameI18n"
+        ></gtx-i18n-input>
+
+        <gtx-i18n-input
+            [label]="'common.description' | i18n"
+            [language]="activeTabI18nLanguage?.code"
+            [availableLanguages]="supportedLanguages"
+            formControlName="descriptionI18n"
+        ></gtx-i18n-input>
+    </gtx-i18n-panel-group>
+</form>

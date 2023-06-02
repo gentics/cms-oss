@@ -1,7 +1,7 @@
 import { FormTabHandle, ObservableStopper } from '@admin-ui/common';
 import { ExtendedEntityOperationsBase } from '@admin-ui/core';
 import { OnDiscardChanges } from '@admin-ui/core/providers/guards/discard-changes';
-import { AppStateService, CloseEditor, FocusEditor, SelectState, SetUIFocusEntity, UIStateModel } from '@admin-ui/state';
+import { AppStateService, SelectState, SetUIFocusEntity, UIStateModel } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {

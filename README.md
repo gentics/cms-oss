@@ -127,8 +127,19 @@ This will build the changelog (in `cms-oss/cms-oss-changelog/target/output/merge
 Then the CMS Changelog can be **packaged** (no need to install it too).
 
 ```
-cd [worspace]/cms
+cd [workspace]/cms
 mvn -pl cms-changelog clean package
 ```
 
 The combined changelog can then be checked from `cms/cms-changelog/target/output/merged_changelog.html`.
+
+It is also possible to generate a "real" (non-snapshot) changelog by setting the property `-Dchangelog.version`.
+
+```
+cd [workspace]/cms
+mvn -pl cms-changelog clean package -Dchangelog.version=6.0.0
+```
+
+Important: Doing this will generate a mapping file for that version (under `cms-changelog/src/changelog/mappings`), which must **not** be checked into the git repository (unless you know exactly, what you are doing)!
+
+If some changelog entries are missing in the generated changelog, check the directory `cms-changelog/src/changelog/mappings` for generated mapping files of snapshot versions (and remove them). The changelog manager plugin will not add entries to the changelog for a specific version, if the entry is found in a mapping file of a different version (and versions `6.0.0` and `6.0.0-SNAPSHOT` **are** different).

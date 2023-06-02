@@ -5,7 +5,6 @@ import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParam
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -24,7 +23,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import com.gentics.contentnode.job.DeleteJob;
+import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.rest.model.response.Message;
+import com.gentics.contentnode.rest.util.Operator;
 import org.apache.commons.lang.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -328,31 +330,65 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 	@Override
 	@DELETE
 	@Path("{id}")
-	public GenericResponse delete(@PathParam("id") String objectPropertyId, @QueryParam("foregroundTime") @DefaultValue("-1") int foregroundTime) throws NodeException {
-		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-			Transaction t = trx.getTransaction();
+	public GenericResponse delete(@PathParam("id") String objectPropertyId, @QueryParam("wait") @DefaultValue("0") int wait) throws NodeException {
+		I18nString description = new CNI18nString("objectproperty.delete");
 
-			if (foregroundTime < 0) {
-				foregroundTime = ObjectTransformer.getInt(t.getNodeConfig().getDefaultPreferences().getProperty("contentnode.global.config.backgroundjob_foreground_time"), 5);
-			}
+		description.setParameter("0", objectPropertyId);
 
-			if (!t.getPermHandler().canDelete(null, ObjectTagDefinition.class, null)) {
-				throw new InsufficientPrivilegesException(I18NHelper.get("objectproperty.nopermission"), null, null,
-						ObjectTagDefinition.TYPE_OBJTAG_DEF, 0, PermType.delete);
-			}
-			ObjectTagDefinition toDelete = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.delete);
-			if (toDelete == null) {
-				I18nString message = new CNI18nString("objectproperty.notfound");
+		return Operator.execute(description.toString(), wait, () -> {
+			try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+				Transaction t = trx.getTransaction();
+
+				if (!t.getPermHandler().canDelete(null, ObjectTagDefinition.class, null)) {
+					throw new InsufficientPrivilegesException(
+						I18NHelper.get("objectproperty.nopermission"),
+						null,
+						null,
+						ObjectTagDefinition.TYPE_OBJTAG_DEF,
+						0,
+						PermType.delete);
+				}
+
+				ObjectTagDefinition toDelete = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.delete);
+
+				if (toDelete == null) {
+					I18nString message = new CNI18nString("objectproperty.notfound");
+
+					message.setParameter("0", objectPropertyId);
+
+					throw new EntityNotFoundException(message.toString());
+				}
+
+				// delete all tags based on the definition
+
+				for (ObjectTag tag : toDelete.getObjectTags()) {
+					t.dirtObjectCache(ObjectTag.class, tag.getId(), true);
+
+					NodeObject tagContainer = tag.getNodeObject();
+
+					if (tagContainer != null) {
+						t.dirtObjectCache(tagContainer.getObjectInfo().getObjectClass(), tagContainer.getId(), true);
+					}
+
+					if (tag.isEnabled()) {
+						Events.trigger(tag, null, Events.DELETE);
+					}
+
+					tag.delete();
+				}
+
+				t.dirtObjectCache(ObjectTagDefinition.class, toDelete.getId(), true);
+				toDelete.delete();
+
+				trx.success();
+
+				I18nString message = new CNI18nString("objectproperty.delete.success");
+
 				message.setParameter("0", objectPropertyId);
-				throw new EntityNotFoundException(message.toString());
+
+				return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 			}
-
-			GenericResponse response = DeleteJob.process(ObjectTagDefinition.class, Collections.singletonList(toDelete.getId()), false, foregroundTime);
-
-			trx.success();
-
-			return response;
-		}
+		});
 	}
 
 	@Override

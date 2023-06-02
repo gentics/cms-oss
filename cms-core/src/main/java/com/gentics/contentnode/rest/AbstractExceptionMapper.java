@@ -45,6 +45,7 @@ public abstract class AbstractExceptionMapper {
 	 *            root cause exception
 	 */
 	protected void tryRollback(Exception e) {
+		logger.error("Error in request", e);
 		Transaction t;
 		t = TransactionManager.getCurrentTransactionOrNull();
 		if (t != null) {

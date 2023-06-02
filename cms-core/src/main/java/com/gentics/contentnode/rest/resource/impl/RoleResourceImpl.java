@@ -52,8 +52,8 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 /**
  * Resource implementation for roles
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @RequiredPerm(type = Role.TYPE_ROLE, bit = PermHandler.PERM_VIEW)
 @Path("/role")

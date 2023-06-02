@@ -21,9 +21,11 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.rewrite.handler.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -144,6 +146,10 @@ public class OSSRunner {
 		for (Connector c : server.getConnectors()) {
 			c.getConnectionFactory(HttpConnectionFactory.class).getHttpConfiguration().addCustomizer(new ForwardedRequestCustomizer());
 		}
+
+		Slf4jRequestLogWriter logWriter = new Slf4jRequestLogWriter();
+		logWriter.setLoggerName("access_log");
+		server.setRequestLog(new CustomRequestLog(logWriter, ConfigurationValue.ACCESS_LOG.get()));
 
 		try {
 			NodeConfigRuntimeConfiguration.runtimeLog.info(String.format("Starting server at port %d", port));

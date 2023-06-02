@@ -5,7 +5,6 @@ import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParameterContainsAttribute;
 
-import com.gentics.contentnode.object.SystemUser;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -108,8 +107,8 @@ import com.gentics.lib.i18n.CNI18nString;
 /**
  * Resource for loading construct information
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/construct")
 @Authenticated
 public class ConstructResourceImpl implements ConstructResource {

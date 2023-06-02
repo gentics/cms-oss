@@ -48,8 +48,8 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 /**
  * Implementation of {@link ContentRepositoryFragmentResource}
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/cr_fragments")
 @Authenticated
 @RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)

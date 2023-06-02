@@ -50,8 +50,8 @@ import com.gentics.lib.i18n.CNI18nString;
  * Messaging resource to access the inbox (list, view, mark read, delete) and
  * send messages TODO: make ObjectFactory for messages
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/msg")
 public class MessagingResourceImpl implements MessagingResource {

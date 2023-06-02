@@ -35,8 +35,8 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 /**
  * Resource for handling ContentRepositories
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/contentrepositories")
 @StatusCodes({
 	@ResponseCode(code = 401, condition = "No valid sid and session secret cookie were provided."),

@@ -6,12 +6,20 @@
 	<formats>
 		<format>zip</format>
 	</formats>
+	<files>
+		<file>
+			<source>${project.basedir}/src/changelog/aloha.editor.properties</source>
+			<filtered>true</filtered>
+		</file>
+	</files>
 	<fileSets>
 		<fileSet>
 			<directory>${project.basedir}/src/changelog</directory>
 			<outputDirectory>/</outputDirectory>
+			<filtered>false</filtered>
 			<excludes>
 				<exclude>**/mappings/**</exclude>
+				<exclude>aloha.editor.properties</exclude>
 			</excludes>
 		</fileSet>
 	</fileSets>

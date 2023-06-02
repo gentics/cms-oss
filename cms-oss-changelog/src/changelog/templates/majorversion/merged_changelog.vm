@@ -4,7 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate, post-check=0, pre-check=0">
-	<title>$changelogTitle</title>
+	<title>$changelogTitle Changelog</title>
 
 	<link rel="stylesheet" type="text/css" href="../static/stylesheets/style.css" />
 	<link rel="stylesheet" type="text/css" href="../static/stylesheets/print.css" media="print" />
@@ -21,7 +21,7 @@
 
 	<div id="header">
 		<div class="wrapper clearfix">
-			<h1><a href="index.html" title="Return to home page">Gentics CMS OSS Changelogs</a></h1>
+			<h1><a href="index.html" title="Return to home page">$changelogTitle Changelogs</a></h1>
 			<p class="hide"><a href="#mainCol">Skip navigation</a>.</p>
 			<ul class="nav">
 				<li><a href="index.html">Home</a></li>
@@ -30,10 +30,10 @@
 						<hr />
 						<dl class="L">
 							<dt>Summary</dt>
-							<dd><a href="merged_changelog.html">Gentics CMS OSS Changelog Summary</a></dd>
+							<dd><a href="merged_changelog.html">$changelogTitle Changelog Summary</a></dd>
 							<dt>Releases</dt>
 							#foreach($changelog in $changelogsSubset)
-								<dd><a href="${changelog.version}.html">Gentics CMS Feature Release $changelog.version</a></dd>
+								<dd><a href="${changelog.version}.html">$changelogTitle Feature Release $changelog.version</a></dd>
 							#end
 						</dl>
 						<dl class="R"></dl>
@@ -47,7 +47,7 @@
 
 	<div id="feature">
 		<div class="wrapper">
-			<h2>Gentics CMS OSS Changelog Summary</h2>
+			<h2>$changelogTitle Changelog Summary</h2>
 		</div>
 	</div>
 
@@ -56,7 +56,7 @@
 			<div id="mainCol">
 				<div class="manual"></div>
 				#foreach($changelog in $changelogsSubset)
-					<h2>Gentics CMS $changelog.version</h2>
+					<h2>$changelogTitle $changelog.version</h2>
 					<hr />
 					 #foreach($entry in $changelog.getChangelogEntries())
 					 	## double qutote escaping

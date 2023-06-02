@@ -4,16 +4,16 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate, post-check=0, pre-check=0">
-	<title>$changelogTitle</title>
+	<title>$changelogTitle Changelog</title>
 </head>
 <body>
 	<div id="main">
-		<h2>Gentics CMS OSS Changelog Summary</h2>
+		<h2>$changelogTitle Changelog Summary</h2>
 		The online version of the changelog can be found <a href="http://www.gentics.com/Content.Node/changelog/index.html" target="_blank">here</a>
 
 		#foreach($changelog in $changelogs)
 			<div id="$changelog.version" class="version-entry">
-				<h2>Gentics CMS $changelog.version</h2>
+				<h2>$changelogTitle $changelog.version</h2>
 				#foreach($entry in $changelog.getChangelogEntries())
 					## double qutote escaping
 					#set($d = '"')##
@@ -56,10 +56,6 @@
 			</div>
 		#end
 		</div>
-		<h2>Changes for Gentics CMS 5.0 20110311c, 4.x and older</h2>
-		<ul>
-			<li><a href="http://www.gentics.com/Content.Node/infoportal/cms/changelog/changelog.php">/Content.Node/infoportal/cms/changelog/changelog.php</a></li>
-		</ul>
 	</div>
 </body>
 </html>

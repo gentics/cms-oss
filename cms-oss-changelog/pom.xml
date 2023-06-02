@@ -37,7 +37,7 @@
 					<foldNewlinesInEntries>true</foldNewlinesInEntries>
 					<baseDirectory>${basedir}/src/changelog</baseDirectory>
 					<outputDirectory>${basedir}/target/output</outputDirectory>
-					<changelogTitle>Gentics CMS OSS Changelog</changelogTitle>
+					<changelogTitle>Gentics CMS OSS</changelogTitle>
 					<changelogTypes>note,manualchange,optional-manualchange,security,feature,enhancement,documentation,bugfix,newui</changelogTypes>
 					<changelogVersion>${project.version}</changelogVersion>
 					<strictRenderMode>true</strictRenderMode>
@@ -90,7 +90,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>entries</id>
+						<id>src</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
@@ -99,7 +99,7 @@
 							<attach>true</attach>
 							<appendAssemblyId>true</appendAssemblyId>
 							<descriptors>
-								<descriptor>${project.basedir}/src/assembly/changelog-entries.xml</descriptor>
+								<descriptor>${project.basedir}/src/assembly/changelog-src.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</execution>

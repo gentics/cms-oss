@@ -4,7 +4,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate, post-check=0, pre-check=0">
-	<title>$changelogTitle</title>
+	<title>$changelogTitle Changelog</title>
 	
 	<link rel="stylesheet" type="text/css" href="static/stylesheets/style.css" />
 	<link rel="stylesheet" type="text/css" href="static/stylesheets/print.css" media="print" />
@@ -20,7 +20,7 @@
 	</div>
 	<div id="header">
 		<div class="wrapper clearfix">
-		<h1><a href="index.html" title="Return to home page">Gentics CMS OSS Changelogs</a></h1>
+		<h1><a href="index.html" title="Return to home page">$changelogTitle Changelogs</a></h1>
 		<p class="hide"><a href="#mainCol">Skip navigation</a>.</p>
 			<ul class="nav">
 				<li><a href="index.html">Home</a></li>
@@ -31,7 +31,7 @@
 	
 	<div id="feature">
 		<div class="wrapper">
-			<h2>Gentics CMS OSS Changelogs</h2>
+			<h2>$changelogTitle Changelogs</h2>
 		</div>
 	</div>
 	
@@ -41,7 +41,7 @@
 			<h3>Feature Releases</h3>
 			<dl>
 			#foreach($entry in $minorVersions.keySet())
-				<dt><a href="${entry}/index.html">Gentics CMS $entry</a></dt>
+				<dt><a href="${entry}/index.html">$changelogTitle $entry</a></dt>
 			#end
 			</dl>
 	</div>

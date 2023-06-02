@@ -2,6 +2,7 @@
   - [Checkout](#checkout)
   - [Setup Runner](#setup-runner)
   - [Running the UIs](#running-the-uis)
+- [Building the Changelog locally](#building-the-changelog-locally)
 
 # IDE Setup
 ## Checkout
@@ -104,3 +105,30 @@ cd [workspace]/cms-oss/cms-ui/
 npm start admin-ui
 ```
 
+# Building the Changelog locally
+
+The changelog consists of entries in `cms-oss/cms-oss-changelog/src/changelog/entries` (for changes which apply to the CMS OSS) and `cms/cms-changelog/src/changelog/entries` (for changes which apply only to the Commercial CMS).
+
+Therefore, building the changelog locally has to be done in two steps:
+
+## Step 1 - CMS OSS Changelog
+
+The CMS OSS Changelog has be be **installed** into the local maven repository, because the CMS Changelog has a dependency on the deployment artifacts.
+
+```
+cd [workspace]/cms-oss
+mvn -pl cms-oss-changelog clean install
+```
+
+This will build the changelog (in `cms-oss/cms-oss-changelog/target/output/merged_changelog.html`) and install the artifacts into the local repository.
+
+## Step 2 - CMS Changelog
+
+Then the CMS Changelog can be **packaged** (no need to install it too).
+
+```
+cd [worspace]/cms
+mvn -pl cms-changelog clean package
+```
+
+The combined changelog can then be checked from `cms/cms-changelog/target/output/merged_changelog.html`.

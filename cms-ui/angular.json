@@ -275,8 +275,7 @@
               "masonry-layout",
               "rxjs",
               "serialize-to-js",
-              "immutablets",
-              "uuidv4"
+              "immutablets"
             ],
             "outputPath": "dist/apps/editor-ui",
             "index": "apps/editor-ui/src/index.html",

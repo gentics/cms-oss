@@ -1525,7 +1525,7 @@ export type RoleListOptions = BaseListOptionsWithPaging<Role>;
  */
 export type RoleCreateRequest = Pick<Role, 'nameI18n' | 'descriptionI18n'>;
 
-export type RoleUpdateRequest = Pick<Role, 'id' | 'nameI18n' | 'descriptionI18n'>;
+export type RoleUpdateRequest = Pick<Role, 'id'> & Partial<Pick<Role, 'nameI18n' | 'descriptionI18n'>>;
 
 /**
  * Query parameters for POST `/roles/{id}/perm`

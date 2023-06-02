@@ -47,8 +47,7 @@ export class RoleTableLoaderService extends BaseTableLoaderService<Role<Raw>, Ro
             ...role,
             [BO_ID]: String(role.id),
             [BO_PERMISSIONS]: [],
-            // TODO: Fix me
-            [BO_DISPLAY_NAME]: role.nameI18n['de'],
+            [BO_DISPLAY_NAME]: role.name,
         };
     }
 }

@@ -63,11 +63,4 @@ export class RolePropertiesComponent extends BasePropertiesComponent<Role> imple
     setActiveI18nTab(languageId: number): void {
         this.activeTabI18nLanguage = this.supportedLanguages.find(l => l.id === languageId);
     }
-
-    activeI18nTabValueExists(languageCode: string): boolean {
-        return [
-            this.form.get('nameI18n')?.value as GtxI18nProperty,
-            this.form.get('descriptionI18n')?.value as GtxI18nProperty,
-        ].some(data => !!data?.[languageCode]);
-    }
 }

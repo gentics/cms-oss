@@ -12,7 +12,7 @@
         "@gentics/cms-models": "^6.0.0",
         "lodash-es": "^4.17.15",
         "rxjs": "^6.6.3",
-        "uuidv4": "~5.0.1"
+        "uuid": "^9.0.0"
     },
     "publishConfig": {
         "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

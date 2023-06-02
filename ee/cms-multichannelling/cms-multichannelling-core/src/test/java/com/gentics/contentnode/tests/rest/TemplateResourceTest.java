@@ -54,6 +54,7 @@ import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.TemplateInNode;
 import com.gentics.contentnode.rest.model.request.LinkRequest;
 import com.gentics.contentnode.rest.model.request.LocalizeRequest;
+import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.request.TemplateCopyRequest;
 import com.gentics.contentnode.rest.model.request.TemplateCreateRequest;
 import com.gentics.contentnode.rest.model.request.TemplateSaveRequest;
@@ -742,7 +743,7 @@ public class TemplateResourceTest {
 				new FilterParameterBean(),
 				new SortParameterBean(),
 				new PagingParameterBean(),
-				new PermsParameterBean(),
+				new PermsParameterBean().setPerms(true),
 				new TemplateListParameterBean().setReduce(reduce));
 		});
 
@@ -759,6 +760,10 @@ public class TemplateResourceTest {
 		// sort assigned node names in response
 		response.getItems().stream().forEach(t -> Collections.sort(t.getAssignedNodes()));
 
+		assertThat(response.getPerms().get(template.getId()))
+			.as("Test user permissions")
+			.containsExactly(Permission.view);
+
 		if (reduce) {
 			assertThat(response.getItems())
 				.as("Templates per node")
@@ -771,6 +776,20 @@ public class TemplateResourceTest {
 				.usingElementComparatorOnFields("id", "nodeId", "assignedNodes")
 				.containsOnlyElementsOf(expected);
 		}
+
+		// Check again with system user if all permissions are set.
+		response = supply(() -> {
+			return new TemplateResourceImpl().list(nodeIds.stream().map(Object::toString).collect(Collectors.toList()),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
+				new PermsParameterBean().setPerms(true),
+				new TemplateListParameterBean().setReduce(reduce));
+		});
+
+		assertThat(response.getPerms().get(template.getId()))
+			.as("System user permissions")
+			.containsExactlyInAnyOrder(Permission.view, Permission.edit, Permission.delete);
 	}
 
 	@Test

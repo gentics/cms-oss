@@ -251,7 +251,7 @@ public class ObjectPropertyResourceTest {
 		ObjectPropertyLoadResponse response = createRandomObjectProperty();
 
 		// deletion
-		GenericResponse deleted = supply(() -> new ObjectPropertyResourceImpl().delete(response.getObjectProperty().getId().toString()));
+		GenericResponse deleted = supply(() -> new ObjectPropertyResourceImpl().delete(response.getObjectProperty().getId().toString(), 0));
 		assertResponseCodeOk(deleted);
 
 		operate(() -> setPermissions(ObjectTagDefinition.TYPE_OBJTAG_DEF, response.getObjectProperty().getId(), Arrays.asList(group),

@@ -79,8 +79,8 @@ import com.gentics.contentnode.rest.util.PermissionFilter;
 /**
  * Implementation of {@link LinkCheckerResource}
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @RequiredFeature(Feature.LINK_CHECKER)
 @Path("/linkChecker")

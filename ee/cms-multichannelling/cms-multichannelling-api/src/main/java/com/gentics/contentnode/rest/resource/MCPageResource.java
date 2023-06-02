@@ -30,8 +30,8 @@ import com.gentics.contentnode.rest.model.response.ReferencedSyncableObjectsList
  * @HTTP 401 No valid sid and session secret cookie were provided.
  * @HTTP 403 User has insufficient permissions.
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/page")
 public interface MCPageResource {
 	@GET

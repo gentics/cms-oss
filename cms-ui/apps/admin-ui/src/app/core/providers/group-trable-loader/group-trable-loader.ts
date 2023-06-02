@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { AccessControlledType, Group, PermissionInfo, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
-import { forkJoin, Observable, of } from 'rxjs';
+import { combineLatest, forkJoin, Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 import { GroupOperations } from '../operations';
@@ -25,6 +25,15 @@ export class GroupTrableLoaderService extends BaseTrableLoaderService<Group, Gro
         protected operations: GroupOperations,
     ) {
         super();
+    }
+
+    protected loadEntityRow(entity: GroupBO, options?: GroupTrableLoaderOptions): Observable<GroupBO> {
+        return combineLatest([
+            this.api.group.getGroup(entity.id),
+            this.operations.getGroupInstancePermissions(entity.id, options.parentType, options.parentId),
+        ]).pipe(
+            map(([loadRes, permRes]) => this.mapToBusinessObject(loadRes.group, options, permRes)),
+        );
     }
 
     protected loadEntityChildren(parent: GroupBO | null, options?: GroupTrableLoaderOptions): Observable<GroupBO[]> {

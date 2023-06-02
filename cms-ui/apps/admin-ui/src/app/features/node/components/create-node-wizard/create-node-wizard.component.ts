@@ -113,17 +113,19 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
         return formGroup.value.data || {};
     }
 
-    private onFinishClick(): Promise<Node<Raw>> {
-        return this.createNode().pipe(
-            switchMap((node: Node<Raw>) => this.setNodeFeatures(node)),
-            switchMap((node: Node<Raw>) => this.setNodeLanguages(node)),
-
+    private async onFinishClick(): Promise<Node<Raw>> {
+        try {
+            const created = await this.createNode().toPromise();
+            await this.setNodeFeatures(created).toPromise();
+            await this.setNodeLanguages(created).toPromise();
+            return created;
+        } catch (error) {
             // We need to catch any errors and emit something to make sure that the wizard closes.
-            catchError(() => observableOf(null)),
-        ).toPromise();
+            return null;
+        }
     }
 
-    private createNode(): Observable<Node<Raw> | string> {
+    private createNode(): Observable<Node<Raw>> {
         const nodeProperties: NodePropertiesFormData = this.getFormData(this.fgProperties);
         const publishingData: NodePublishingPropertiesFormData = this.getFormData(this.fgPublishing);
 

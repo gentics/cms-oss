@@ -10,6 +10,7 @@ import {
     TableActionClickEvent,
     TableColumn,
     TrableRow,
+    TrableRowExpandEvent,
 } from '@gentics/ui-core';
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
@@ -136,10 +137,21 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         }));
     }
 
-    public updateRowExpansion(event: { row: TrableRow<O>, expanded: boolean }): void {
+    public updateRowExpansion(event: TrableRowExpandEvent<O>): void {
         if (event.row) {
             event.row.expanded = event.expanded;
         }
+        this.rows = [...this.rows];
+        this.changeDetector.markForCheck();
+    }
+
+    public reloadRow(row: TrableRow<O>): void {
+        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions()).subscribe(() => {
+            this.rows = [...this.rows];
+            this.changeDetector.markForCheck();
+        }));
+
+        row.loading = true;
         this.rows = [...this.rows];
         this.changeDetector.markForCheck();
     }

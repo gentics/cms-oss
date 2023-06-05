@@ -3,7 +3,6 @@ import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import {
-    coerceInstance,
     CoerceOption,
     FALLBACK_TABLE_COLUMN_RENDERER,
     TableAction,
@@ -11,9 +10,9 @@ import {
     TableColumn,
     TrableRow,
     TrableRowExpandEvent,
+    coerceInstance,
 } from '@gentics/ui-core';
-import { forkJoin, Observable, Subscription } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { Observable, Subscription, forkJoin } from 'rxjs';
 
 @Component({ template: '' })
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {
@@ -90,36 +89,35 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
+    /**
+     * Function to reload the current trable.
+     * Simply reloads all currently loaded/visible rows (root-row or row.loaded === true),
+     * via `reloadRow` and waits for all to complete.
+     * Once it's done, re-assigns the rows to trigger a change detection for angular.
+     * Rows which aren't displayed/loaded yet, will be added back to the store like they were.
+     */
     public reload(): void {
         const storeClone = { ...this.loader.flatStore };
         this.loader.resetStore();
 
-        this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).pipe(
-            switchMap(rootRows => {
-                if (!Array.isArray(rootRows)) {
-                    rootRows = [rootRows];
-                }
+        const loaders: Observable<TrableRow<O>>[] = [];
+        const options = this.createAdditionalLoadOptions();
 
-                const loadQueue: Observable<any>[] = [];
+        Object.values(storeClone).forEach(row => {
+            // If it's a child row which isn't yet loaded fully, we don't load it,
+            // but we need to add it back to the store.
+            if (row.parent != null && !row.loaded) {
+                this.loader.flatStore[row.id] = row;
+                return;
+            }
+            loaders.push(this.loader.reloadRow(row, options));
+        });
 
-                // Delete all root rows
-                Object.entries(storeClone).forEach(([id, row]) => {
-                    if (row.level === 0) {
-                        delete storeClone[id];
-                    } else if (row.loaded) {
-                        loadQueue.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()));
-                    }
-                });
-
-                return forkJoin(loadQueue).pipe(
-                    tap(() => {
-                        this.rows = rootRows as TrableRow<O>[];
-                        this.onLoad();
-                        this.changeDetector.markForCheck();
-                    }),
-                );
-            }),
-        )
+        this.subscriptions.push(forkJoin(loaders).subscribe(() => {
+            this.rows = [...this.rows];
+            this.onLoad();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     protected loadRootElements(): void {

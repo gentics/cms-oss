@@ -69,8 +69,12 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
         return new Date().toISOString();
     }
 
-    protected override mapToTrableRow(entity: PermissionsSetBO, parent?: TrableRow<PermissionsSetBO>): TrableRow<PermissionsSetBO> {
-        const row = super.mapToTrableRow(entity, parent);
+    protected override mapToTrableRow(
+        entity: PermissionsSetBO,
+        parent?: TrableRow<PermissionsSetBO>,
+        options?: PermissionsTrableLoaderOptions,
+    ): TrableRow<PermissionsSetBO> {
+        const row = super.mapToTrableRow(entity, parent, options);
         row.hasChildren = entity.children;
         row.loaded = !entity.children;
 

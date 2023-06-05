@@ -22,8 +22,15 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
     }
 
     protected loadEntityRow(entity: FolderBO, options?: FolderTrableLoaderOptions): Observable<FolderBO> {
-        return this.api.folders.getItem(entity.id, entity.type).pipe(
-            map(res => this.mapToBusinessObject(res.folder)),
+        const entityType = (entity.type as 'folder' | 'channel' | 'node') === 'channel'
+            ? 'node'
+            : entity.type;
+        const id = entityType === 'node'
+            ? entity.channelId || entity.nodeId
+            : entity.id;
+
+        return this.api.folders.getItem(id, entityType).pipe(
+            map(res => this.mapToBusinessObject(res[entityType])),
         );
     }
 
@@ -64,8 +71,12 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
             .filter(perm => !!perm);
     }
 
-    protected override mapToTrableRow(entity: FolderBO): TrableRow<FolderBO> {
-        const mapped = super.mapToTrableRow(entity);
+    protected override mapToTrableRow(
+        entity: FolderBO,
+        parent?: TrableRow<FolderBO>,
+        options?: FolderTrableLoaderOptions,
+    ): TrableRow<FolderBO> {
+        const mapped = super.mapToTrableRow(entity, parent, options);
         if (!entity.hasSubfolders) {
             mapped.hasChildren = false;
             mapped.loaded = true;

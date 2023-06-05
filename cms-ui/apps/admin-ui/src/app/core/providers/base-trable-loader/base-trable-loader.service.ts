@@ -1,7 +1,7 @@
 import { BO_ID, BusinessObject } from '@admin-ui/common';
 import { TrableRow } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, switchMap, tap, delay } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 
 export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = never> {
 
@@ -133,7 +133,7 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     }
 
     protected getChildIds(id: string, buffer: Set<string>): void {
-        let parent: TrableRow<O> = this.flatStore[id];
+        const parent: TrableRow<O> = this.flatStore[id];
         if (parent) {
             buffer.add(parent.id);
         }

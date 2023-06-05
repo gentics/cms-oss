@@ -69,8 +69,9 @@ export class GroupTrableLoaderService extends BaseTrableLoaderService<Group, Gro
     protected override mapToTrableRow(
         entity: GroupBO,
         parent?: TrableRow<GroupBO>,
+        options?: GroupTrableLoaderOptions,
     ): TrableRow<GroupBO> {
-        const mapped = super.mapToTrableRow(entity, parent);
+        const mapped = super.mapToTrableRow(entity, parent, options);
 
         mapped.children = (entity.children || []).map(child => this.mapToTrableRow(child as any, mapped));
 

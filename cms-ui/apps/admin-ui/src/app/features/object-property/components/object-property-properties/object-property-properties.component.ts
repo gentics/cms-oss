@@ -23,6 +23,7 @@ import {
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export enum ObjectpropertyPropertiesMode {
     CREATE = 'create',
@@ -96,7 +97,12 @@ export class ObjectpropertyPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.constructs$ = this.entityData.watchAllEntities();
+        this.constructs$ = this.entityData.watchAllEntities().pipe(
+            map(constructs => constructs.map(con => ({
+                ...con,
+                id: Number(con.id),
+            }))),
+        ) as any;
         this.objectPropertyCategories$ = this.categoryData.watchAllEntities();
         this.languages$ = this.languageData.watchSupportedLanguages();
 
@@ -138,15 +144,17 @@ export class ObjectpropertyPropertiesComponent
                 ...defaultDesc,
                 ...this.value?.descriptionI18n || {},
             }),
+            /* eslint-disable @typescript-eslint/unbound-method */
             keyword: new UntypedFormControl(this.value?.keyword, Validators.required),
             type: new UntypedFormControl(this.value?.type, Validators.required),
-            constructId: new UntypedFormControl(this.value?.constructId + '', Validators.required),
+            constructId: new UntypedFormControl(this.value?.constructId, Validators.required),
             categoryId: new UntypedFormControl(this.value?.categoryId),
             required: new UntypedFormControl(this.value?.required),
             inheritable: new UntypedFormControl(this.value?.inheritable),
             syncContentset: new UntypedFormControl(this.value?.syncContentset),
             syncChannelset: new UntypedFormControl(this.value?.syncChannelset),
             syncVariants: new UntypedFormControl(this.value?.syncVariants),
+            /* eslint-disable @typescript-eslint/unbound-method */
         }, { updateOn: 'change' });
     }
 
@@ -160,7 +168,7 @@ export class ObjectpropertyPropertiesComponent
         if (this.mode === ObjectpropertyPropertiesMode.UPDATE) {
             return {
                 ...formData,
-                constructId: Number(formData.constructId),
+                constructId: formData.constructId,
                 globalId: this.value?.globalId,
                 id: this.value?.id,
                 keyword: this.value?.keyword,
@@ -180,7 +188,7 @@ export class ObjectpropertyPropertiesComponent
                 descriptionI18n: this.value?.descriptionI18n ?? null,
                 keyword: this.value?.keyword ?? null,
                 type: this.value?.type ?? null,
-                constructId: (this.value?.constructId ?? '') + '',
+                constructId: this.value?.constructId,
                 categoryId: this.value?.categoryId ?? null,
                 required: this.value?.required ?? false,
                 inheritable: this.value?.inheritable ?? false,

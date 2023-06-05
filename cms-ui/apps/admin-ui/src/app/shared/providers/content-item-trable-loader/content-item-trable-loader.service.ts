@@ -33,6 +33,12 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         super();
     }
 
+    protected loadEntityRow(entity: ContentItemBO, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO> {
+        return this.api.folders.getItem(entity.id, entity.type).pipe(
+            map(res => res[entity.type]),
+        )
+    }
+
     protected loadEntityChildren(parent: ContentItemBO | null, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO[]> {
         let parentId = options?.rootId ?? 0;
         let loader: Observable<ContentItem[]>;
@@ -49,7 +55,7 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
             if (parentId) {
                 const typeLoaders = (options.listable || [])
                     .filter(type => ENTITY_TYPES.includes(type))
-                    .map(type => this.getTypedLoader(type, parentId));
+                    .map(type => this.getTypedChildrenLoader(type, parentId));
                 loader = forkJoin([loader, ...typeLoaders]).pipe(
                     map(res => flatMap(res)),
                 );
@@ -61,7 +67,7 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         );
     }
 
-    protected getTypedLoader(type: ContentItemTypes, parentId?: number): Observable<ContentItem[]> {
+    protected getTypedChildrenLoader(type: ContentItemTypes, parentId?: number): Observable<ContentItem[]> {
         switch (type) {
             case 'folder':
                 return this.api.folders.getFolders(parentId).pipe(

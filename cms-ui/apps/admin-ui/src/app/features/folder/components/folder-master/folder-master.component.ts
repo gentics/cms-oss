@@ -10,6 +10,7 @@ import { TrableRow } from '@gentics/ui-core';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FolderMasterComponent extends BaseTableMasterComponent<Folder, FolderBO> {
+
     protected entityIdentifier: NormalizableEntityType = 'folder';
 
     public override handleRowClick(row: TrableRow<FolderBO>): void {

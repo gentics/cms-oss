@@ -92,7 +92,7 @@ export class PermissionsTrableComponent
     override handleRowClick(row: TrableRow<PermissionsSetBO>): void {
         this.dataService.editGroupPermissions(row.item.group, row.item, this.groupPermissionsByCategory).then(didChange => {
             if (didChange) {
-                this.loadRow(row);
+                this.reloadRow(row);
             }
         });
     }

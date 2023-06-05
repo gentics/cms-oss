@@ -1,4 +1,4 @@
-import { detailLoading, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { BO_ID, detailLoading, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import { EditorTabTrackerService, FolderOperations, FolderTrableLoaderService, PermissionsService } from '@admin-ui/core';
 import { BaseDetailComponent, FolderDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
@@ -123,7 +123,18 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
             map((updatedFolder: Folder<Raw>) => this.currentEntity = updatedFolder),
             tap(() => {
                 this.fgProperties.markAsPristine();
-                this.trableLoader.reload();
+                const bo = this.trableLoader.getEntityById(this.currentEntity.id);
+                let didReload = false;
+                if (bo) {
+                    const row = this.trableLoader.flatStore[bo[BO_ID]];
+                    if (row) {
+                        this.trableLoader.reloadRow(row, null, true).subscribe();
+                        didReload = true;
+                    }
+                }
+                if (!didReload) {
+                    this.trableLoader.reload();
+                }
             }),
         ).toPromise();
     }

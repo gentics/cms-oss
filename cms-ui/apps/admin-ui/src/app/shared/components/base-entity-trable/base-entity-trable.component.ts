@@ -78,6 +78,11 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
             this.reload();
         }));
 
+        this.subscriptions.push(this.loader.refreshView$.subscribe(() => {
+            this.rows = [...this.rows];
+            this.changeDetector.markForCheck();
+        }));
+
         this.loadRootElements();
     }
 
@@ -91,25 +96,14 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
 
     /**
      * Function to reload the current trable.
-     * Simply reloads all currently loaded/visible rows (root-row or row.loaded === true),
-     * via `reloadRow` and waits for all to complete.
+     * Simply reloads all currently loaded/visible rows, via `reloadRow` and waits for all to complete.
      * Once it's done, re-assigns the rows to trigger a change detection for angular.
-     * Rows which aren't displayed/loaded yet, will be added back to the store like they were.
      */
     public reload(): void {
-        const storeClone = { ...this.loader.flatStore };
-        this.loader.resetStore();
-
         const loaders: Observable<TrableRow<O>>[] = [];
         const options = this.createAdditionalLoadOptions();
 
-        Object.values(storeClone).forEach(row => {
-            // If it's a child row which isn't yet loaded fully, we don't load it,
-            // but we need to add it back to the store.
-            if (row.parent != null && !row.loaded) {
-                this.loader.flatStore[row.id] = row;
-                return;
-            }
+        Object.values(this.loader.flatStore).forEach(row => {
             loaders.push(this.loader.reloadRow(row, options));
         });
 
@@ -122,7 +116,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
 
     protected loadRootElements(): void {
         this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe(rows => {
-            this.rows = rows as TrableRow<O>[];
+            this.rows = rows;
             this.onLoad();
             this.changeDetector.markForCheck();
         }));
@@ -155,10 +149,8 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     public loadRow(row: TrableRow<O>): void {
-        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()).subscribe(() => {
-            this.rows = [...this.rows];
+        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions(), true).subscribe(() => {
             this.onLoad();
-            this.changeDetector.markForCheck();
         }));
     }
 

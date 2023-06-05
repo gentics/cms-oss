@@ -1,6 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, FolderBO } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS } from '@gentics/cms-models';
+import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS, Node } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -22,15 +22,8 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
     }
 
     protected loadEntityRow(entity: FolderBO, options?: FolderTrableLoaderOptions): Observable<FolderBO> {
-        const entityType = (entity.type as 'folder' | 'channel' | 'node') === 'channel'
-            ? 'node'
-            : entity.type;
-        const id = entityType === 'node'
-            ? entity.channelId || entity.nodeId
-            : entity.id;
-
-        return this.api.folders.getItem(id, entityType).pipe(
-            map(res => this.mapToBusinessObject(res[entityType])),
+        return this.api.folders.getItem(entity.id, 'folder').pipe(
+            map(res => this.mapToBusinessObject(res.folder)),
         );
     }
 
@@ -58,7 +51,7 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
     public mapToBusinessObject(folder: Folder): FolderBO {
         return {
             ...folder,
-            [BO_ID]: `${folder.id}${folder.channelId ? `_${folder.channelId}` : ''}`,
+            [BO_ID]: `${(folder as any as Node).folderId || folder.id}${folder.channelId > 0 ? `:${folder.channelId}` : ''}`,
             [BO_PERMISSIONS]: this.privilegesToPermissions(folder),
             [BO_DISPLAY_NAME]: folder.name,
         };

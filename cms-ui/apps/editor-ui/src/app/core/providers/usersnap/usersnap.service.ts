@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { UsersnapSettings } from '@gentics/cms-models';
-import { filter, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { combineLatest } from 'rxjs';
+import { debounceTime, filter, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 import { ApplicationStateService, UIActionsService } from '../../../state';
 
@@ -59,6 +60,9 @@ interface UsersnapConfig {
  */
 interface UsersnapApi {
     init(config: UsersnapConfig): void;
+    destroy(): Promise<any>;
+    hide(): Promise<any>;
+    show(): Promise<any>;
 }
 
 const USERSNAP_CONFIG: UsersnapConfig = {
@@ -97,8 +101,16 @@ export class UsersnapService implements OnDestroy {
         this.initialized = true;
     }
 
+    destroy(): Promise<any> {
+        if (!this.usersnapApi) {
+            return Promise.resolve();
+        }
+        return this.usersnapApi.destroy();
+    }
+
     ngOnDestroy(): void {
         this.stopper.stop();
+        this.destroy();
     }
 
     protected activateUsersnap(settings: UsersnapSettings): void {
@@ -112,18 +124,25 @@ export class UsersnapService implements OnDestroy {
     }
 
     private loadUsersnapSettingsAndActivateIfEnabled(): void {
-        this.appState.select(state => state.features.usersnap).pipe(
-            filter(active => active),
+        combineLatest([
+            this.appState.select(state => state.features.usersnap),
+            this.appState.select(state => state.ui.hideExtras),
+        ]).pipe(
+            // Debounce/Delay init by 3 seconds
+            debounceTime(3_000),
+            filter(([active, hideExtras]) => active && !hideExtras),
             tap(() => this.uiActions.getUsersnapSettings()),
             switchMap(() => this.appState.select(state => state.ui.usersnap)),
             filter(usersnapSettings => usersnapSettings && !!usersnapSettings.key),
             take(1),
             takeUntil(this.stopper.stopper$),
-        ).subscribe(settings => this.activateUsersnap(settings));
+        ).subscribe(settings => {
+            this.activateUsersnap(settings);
+        });
     }
 
     private registerUsersnapLoadEventHandler(): void {
-        (window as any)[USERSNAP_LOAD_FN] = (api) => {
+        (window as any)[USERSNAP_LOAD_FN] = (api: UsersnapApi) => {
             api.init(USERSNAP_CONFIG);
             this.usersnapApi = api;
         };

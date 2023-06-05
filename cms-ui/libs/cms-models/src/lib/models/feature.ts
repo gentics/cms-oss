@@ -31,7 +31,7 @@ export enum Feature {
     KEYCLOAK_SIGNOUT = 'keycloak_signout',
     FOLDER_BASED_TEMPLATE_SELECTION = 'folder_based_template_selection',
     CONTENT_STAGING = 'content_staging',
-    MULTICHANNELING = 'multichanneling',
+    MULTICHANNELLING = 'multichannelling',
     MESH_CR = 'mesh_contentrepository',
 }
 

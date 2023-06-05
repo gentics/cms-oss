@@ -1,7 +1,7 @@
 import { Tab, TabGroup } from '@admin-ui/common';
 import { SelectState } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, TemplateRef } from '@angular/core';
-import { ICON_MAPPING, Tag, TagEditorChange } from '@gentics/cms-models';
+import { Feature, ICON_MAPPING, Tag, TagEditorChange } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -41,7 +41,7 @@ export class PropertiesManagerComponent implements OnChanges, OnInit {
     @Output()
     public activeTabChange = new EventEmitter<string>();
 
-    @SelectState(state => state.features.global.tagfill_light)
+    @SelectState(state => state.features.global[Feature.TAGFILL_LIGHT])
     public tagfillLightState$: Observable<boolean>;
 
     baseUrl = new URL(environment.editorUrl, window.location.toString());

@@ -25,7 +25,7 @@ import { selectLoginEventOrIsLoggedIn, SelectState } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AccessControlledType, GcmsPermission, GcmsUiLanguage, GtxVersion, I18nLanguage, Normalized, User } from '@gentics/cms-models';
+import { AccessControlledType, Feature, GcmsPermission, GcmsUiLanguage, GtxVersion, I18nLanguage, Normalized, User } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
 import { forkJoin, Observable, of } from 'rxjs';
@@ -118,7 +118,7 @@ export class AppComponent implements OnDestroy, OnInit {
             map(auth => auth.loggingIn || auth.loggingOut),
         );
 
-        this.keycloakSignOut$ = this.appState.select(state => state.features.global.keycloak_signout);
+        this.keycloakSignOut$ = this.appState.select(state => state.features.global[Feature.KEYCLOAK_SIGNOUT]);
 
         this.authOps.validateSessionFromLocalStorage();
 
@@ -168,7 +168,7 @@ export class AppComponent implements OnDestroy, OnInit {
 
         this.cmpVersion$ = this.appState.select(state => state.ui.cmpVersion);
         this.uiVersion$ = this.appState.select(state => state.ui.uiVersion);
-        this.featureHideManual$ = this.appState.select(state => state.features.global.hide_manual || false);
+        this.featureHideManual$ = this.appState.select(state => state.features.global[Feature.HIDE_MANUAL] || false);
     }
 
     ngOnDestroy(): void {

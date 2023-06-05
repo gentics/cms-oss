@@ -18,7 +18,6 @@ module.exports = {
         'eslint-plugin-import',
         'eslint-plugin-jsdoc',
         '@angular-eslint/eslint-plugin',
-        'eslint-plugin-prefer-arrow',
         '@typescript-eslint',
     ],
     rules: {
@@ -76,7 +75,15 @@ module.exports = {
             },
         ],
         '@typescript-eslint/explicit-module-boundary-types': 'warn',
-        '@typescript-eslint/indent': 'warn',
+        '@typescript-eslint/indent': [
+            'warn',
+            4,
+            {
+                SwitchCase: 1,
+                MemberExpression: 1,
+                ArrayExpression: 1,
+            },
+        ],
         '@typescript-eslint/member-ordering': 'off',
         '@typescript-eslint/naming-convention': [
             'warn',
@@ -219,12 +226,17 @@ module.exports = {
             'Undefined',
             'undefined',
         ],
+        indent: 'off',
         'id-match': 'error',
         'import/no-deprecated': 'warn',
-        'import/order': 'error',
+        'import/order': 'warn',
+        'import/no-nodejs-modules': 'error',
+        'import/no-mutable-exports': 'error',
+        'import/no-empty-named-blocks': 'warn',
         'jsdoc/check-alignment': 'error',
         'jsdoc/check-indentation': 'error',
-        'jsdoc/newline-after-description': 'error',
+        'jsdoc/check-param-names': 'error',
+        'jsdoc/check-property-names': 'error',
         'jsdoc/no-types': 'error',
         'linebreak-style': [
             'error',
@@ -302,8 +314,6 @@ module.exports = {
             'error',
             'never',
         ],
-        'prefer-arrow/prefer-arrow-functions': 'off',
-        'prefer-const': 'off',
         'quote-props': [
             'error',
             'as-needed',

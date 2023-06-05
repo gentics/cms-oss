@@ -25,7 +25,7 @@ const INTIIAL_FEATURES_STATE: FeaturesState = {
     [Feature.KEYCLOAK_SIGNOUT]: false,
     [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
     [Feature.CONTENT_STAGING]: false,
-    [Feature.MULTICHANNELING]: false,
+    [Feature.MULTICHANNELLING]: false,
     [Feature.MESH_CR]: false,
 
     nodeFeatures: {},

@@ -86,6 +86,8 @@ module.exports = {
                     'FunctionExpression > .params[decorators.length > 0]',
                     'FunctionExpression > .params > :matches(Decorator, :not(:first-child))',
                     'ClassBody.body > PropertyDefinition[decorators.length > 0] > .key',
+                    'ClassDeclaration[superClass]',
+                    'ClassDeclaration[implements.length > 0]',
                 ],
             },
         ],
@@ -174,6 +176,7 @@ module.exports = {
         '@typescript-eslint/no-unused-expressions': 'error',
         '@typescript-eslint/no-unused-vars': ['warn', {
             argsIgnorePattern: '_',
+            args: 'none',
         }],
         '@typescript-eslint/no-use-before-define': 'warn',
         '@typescript-eslint/no-var-requires': 'off',
@@ -296,6 +299,7 @@ module.exports = {
         'no-invalid-this': 'off',
         'no-multiple-empty-lines': 'off',
         'no-new-wrappers': 'error',
+        'no-prototype-builtins': 'off',
         'no-restricted-imports': [
             'error',
             'rxjs/Rx',

@@ -9,6 +9,11 @@
 }
 
 :host {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 1px;
+    flex-direction: column;
+    flex-wrap: nowrap;
 
     tr {
         border-bottom: none;
@@ -18,7 +23,9 @@
         border-bottom: 1px solid #d0d0d0;
     }
 
-    .controls-header::ng-deep {
+    .controls-header {
+        flex: 0 0 auto;
+        min-height: 1px;
         text-align: center;
         background-color: $secondary-color;
         font-weight: 300;
@@ -46,6 +53,12 @@
         @media #{$small-and-down} {
             @include compact-header();
         }
+    }
+
+    .controls-content {
+        display: block;
+        flex: 1 1 auto;
+        overflow: auto;
     }
 
     .year-selector {

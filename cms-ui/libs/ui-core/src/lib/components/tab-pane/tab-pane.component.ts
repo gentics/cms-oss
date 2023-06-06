@@ -85,7 +85,7 @@ export class TabPaneComponent extends BaseComponent {
     /** If this tab-pane is currently the active one in the group/collection */
     public active = false;
 
-    constructor(changeDetector: ChangeDetectorRef) {
+    constructor(public changeDetector: ChangeDetectorRef) {
         super(changeDetector);
         this.booleanInputs.push('hideStatusIcon', 'readonly', 'inactive');
     }

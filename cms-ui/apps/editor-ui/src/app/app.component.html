@@ -12,7 +12,7 @@
 
         <div class="search-container" *ngIf="!(showingTools$ | async)">
             <chip-search-bar
-                *ngIf="chipSearchBarConfig"
+                *ngIf="activeNode && chipSearchBarConfig"
                 [chipSearchBarConfig]="chipSearchBarConfig"
                 [loading]="searchInProgress$ | async"
             ></chip-search-bar>

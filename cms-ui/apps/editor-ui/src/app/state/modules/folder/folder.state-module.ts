@@ -106,6 +106,7 @@ type CachedItemsInfo = Pick<ItemsInfo, 'fetchAll' | 'hasMore' | 'list' | 'total'
 const LIST_BATCH_SIZE = 20;
 
 const INITIAL_FOLDER_STATE: FolderState = {
+    nodesLoaded: false,
     activeFolder: null,
     activeLanguage: null,
     activeFormLanguage: null,
@@ -240,7 +241,7 @@ export class FolderStateModule {
     @ActionDefinition(StartListFetchingAction)
     handleStartListFetchingAction(ctx: StateContext<FolderState>, action: StartListFetchingAction): void {
         // Making sure it's always the plural version, if available
-        let key: FolderStateItemListKey = plural[action.type as any] || action.type;
+        const key: FolderStateItemListKey = plural[action.type as any] || action.type;
         const state = ctx.getState();
 
         // Pre-set from cache
@@ -624,6 +625,7 @@ export class FolderStateModule {
                 list: action.nodes.map(node => node.id),
                 total: action.nodes.length,
             }),
+            nodesLoaded: true,
             ...diff,
         }));
     }
@@ -647,7 +649,7 @@ export class FolderStateModule {
         ctx: StateContext<FolderState>,
         action: ChannelSyncReportFetchingSuccessAction,
     ): Promise<void> {
-        let adders: Promise<any>[] = [];
+        const adders: Promise<any>[] = [];
         Object.entries(action.report).forEach(([itemType, items]) => {
             const normalized = normalize(items, new schemaNamespace.Array(getNormalizrSchema(itemType)));
             adders.push(ctx.dispatch(new AddEntitiesAction(normalized)).toPromise());

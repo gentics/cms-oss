@@ -2682,9 +2682,34 @@ public class MeshPublisher implements AutoCloseable {
 															throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
 														}
 
-														return client.updateNodeBinaryField(task.project.name, task.uuid, getMeshLanguage(file), "draft",
-																"binarycontent", in, file.getFilesize(), file.getFilename(), file.getFiletype(),
-																task.project.enforceBranch(task.nodeId)).toSingle();
+														if (supportsPublishOnCreate) {
+															return client.updateNodeBinaryField(
+																	task.project.name,
+																	task.uuid,
+																	getMeshLanguage(file),
+																	"draft",
+																	"binarycontent",
+																	in,
+																	file.getFilesize(),
+																	file.getFilename(),
+																	file.getFiletype(),
+																	true,
+																	task.project.enforceBranch(task.nodeId))
+																.toSingle();
+														}
+
+														return client.updateNodeBinaryField(
+																task.project.name,
+																task.uuid,
+																getMeshLanguage(file),
+																"draft",
+																"binarycontent",
+																in,
+																file.getFilesize(),
+																file.getFilename(),
+																file.getFiletype(),
+																task.project.enforceBranch(task.nodeId))
+															.toSingle();
 													});
 												});
 											}
@@ -2697,6 +2722,11 @@ public class MeshPublisher implements AutoCloseable {
 															NodeUpdateRequest update = new NodeUpdateRequest();
 															update.setLanguage(getMeshLanguage(image));
 															update.setVersion("draft");
+
+															if (supportsPublishOnCreate) {
+																update.setPublish(true);
+															}
+
 															update.getFields().put("binarycontent", new BinaryFieldImpl().setFocalPoint(image.getFpX(), image.getFpY()));
 															return client.updateNode(task.project.name, task.uuid, update, task.project.enforceBranch(task.nodeId))
 																	.toSingle();
@@ -3721,7 +3751,11 @@ public class MeshPublisher implements AutoCloseable {
 							}
 						}
 						if (task.tracker != null) {
-							task.tracker.created(task.project, task.nodeId);
+							try (Trx trx = new Trx()) {
+								task.tracker.created(task.project, task.nodeId);
+
+								trx.success();
+							}
 						}
 
 						if (task.postponed != null) {

@@ -106,7 +106,7 @@ public class MeshPublishTest {
 
 	/**
 	 * Setup static test data
-	 * 
+	 *
 	 * @throws NodeException
 	 */
 	@BeforeClass
@@ -885,6 +885,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Created node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.7f).hasFieldOrPropertyWithValue("y", 0.3f);
@@ -904,6 +908,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after update", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Updated node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.9f).hasFieldOrPropertyWithValue("y", 0.1f);

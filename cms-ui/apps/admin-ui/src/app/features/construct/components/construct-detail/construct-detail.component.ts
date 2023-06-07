@@ -33,7 +33,6 @@ import {
     SingleInstancePermissionType,
     TagPart,
     TagPartType,
-    TagPartValidatorConfigs,
     TagTypeBO,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
@@ -211,18 +210,21 @@ export class ConstructDetailComponent
      * Requests changes of user by id to CMS
      */
     async updateParts(): Promise<void> {
+        const normalizedParts = (this.fgParts.value as TagPart[]).map(part => {
+            // Regexes are saved as `int` in the DB, because they reference entries in the regex table.
+            // The rest model includes this info inline for easier usage.
+            // However, setting it to `null` will not do in this case, because the backend thinks this is
+            // a partial update and therefore ignores the value.
+            // When the value is `null`, we instead post it with a regex of ID 0 to clear it in the backend.
+            if ('regex' in part) {
+                part.regex = part.regex || {
+                    id: 0,
+                } as any;
+            }
+            return part;
+        });
         const payload: ConstructUpdateRequest = {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            parts: this.fgParts.value.map((part: TagPart) => {
-                if (part.typeId === TagPartType.Text
-                    || part.typeId === TagPartType.HtmlLong
-                ) {
-                    if (part.regex != null && typeof part.regex === 'number') {
-                        part.regex = TagPartValidatorConfigs[part.regex];
-                    }
-                }
-                return part;
-            }),
+            parts: normalizedParts,
         };
 
         return this.operations.update(this.currentEntity.id, payload).pipe(

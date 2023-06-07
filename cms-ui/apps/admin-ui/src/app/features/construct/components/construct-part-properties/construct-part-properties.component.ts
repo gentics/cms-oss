@@ -23,7 +23,6 @@ import {
     AnyModelType,
     CmsI18nValue,
     DataSourceBO,
-    GtxI18nProperty,
     Language,
     MarkupLanguage,
     Normalized,
@@ -168,6 +167,8 @@ export class ConstructPartPropertiesComponent
 
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
+
+    protected override delayedSetup = true;
 
     constructor(
         changeDetector: ChangeDetectorRef,

@@ -52,9 +52,13 @@
                 *ngIf="form.get('regex').enabled"
                 [label]="'construct.regex' | i18n"
                 [clearable]="true"
+                [idPath]="'id'"
                 formControlName="regex"
             >
-                <gtx-option *ngFor="let item of TagPartValidatorConfigs | values" [value]="item.id">{{ ('construct.' + item.name) | i18n }}</gtx-option>
+                <gtx-option
+                    *ngFor="let item of TagPartValidatorConfigs | values"
+                    [value]="item"
+                >{{ ('construct.' + item.name) | i18n }}</gtx-option>
             </gtx-select>
 
             <!-- overviewSettings -->

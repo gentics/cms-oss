@@ -3,20 +3,22 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    EventEmitter,
     Input,
     OnDestroy,
     OnInit,
+    Output,
 } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
+import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
 import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import { Language, Raw, TagPart } from '@gentics/cms-models';
-import { generateFormProvider, ModalService } from '@gentics/ui-core';
+import { ModalService, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
-import { combineLatest, Subscription } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import { cloneDeep } from 'lodash-es';
+import { Subscription, combineLatest } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { ConstructPartPropertiesMode } from '../construct-part-properties/construct-part-properties.component';
 import { CreateConstructPartModalComponent } from '../create-construct-part-modal/create-construct-part-modal.component';
-import { FormControl } from '@angular/forms';
 
 interface DisplayItem {
     item: TagPart;
@@ -77,11 +79,18 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     @Input()
     public supportedLanguages: Language[];
 
+    @Input()
+    public initialValue = true;
+
+    @Output()
+    public initialValueChange = new EventEmitter<boolean>();
+
     public form: UntypedFormArray;
     public displayItems: DisplayItem[] = [];
     public allCollapsed = true;
 
     protected internalParts: TagPart[] = [];
+    protected clonedParts: TagPart[] = [];
 
     private disabled = false;
     private subscription: Subscription;
@@ -96,6 +105,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
 
     ngOnInit(): void {
         this.form = new UntypedFormArray([], (ctl) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             if ((ctl.value || []).find(value => value === CONTROL_INVALID_VALUE)) {
                 return { invalid: true };
             }
@@ -109,10 +119,25 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.form.valueChanges,
             this.form.statusChanges,
         ]).pipe(
-            map(([value, status]) => status === 'VALID' ? value : CONTROL_INVALID_VALUE),
+            // Do not emit values if disabled/pending
+            filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
+            map(([value, status]) => {
+                if (status === 'VALID') {
+                    return value;
+                }
+                return CONTROL_INVALID_VALUE;
+            }),
             distinctUntilChanged(isEqual),
+            debounceTime(100),
         ).subscribe(value => {
-            this.triggerChange(value);
+            // Only trigger a change if the value actually changed or gone invalid.
+            // Ignores the first value change, as it's a value from the initial setup.
+            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.clonedParts, value))) {
+                this.triggerChange(value);
+            }
+            // Set it, in case that the parent-component has no binding for it
+            this.initialValue = false;
+            this.initialValueChange.emit(false);
         });
     }
 
@@ -143,6 +168,8 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
 
             this.displayItems = [];
             this.form.clear({ emitEvent: false });
+            this.internalParts = parts;
+            this.clonedParts = cloneDeep(parts);
 
             parts.forEach((singlePart, index) => {
                 const ctl = new UntypedFormControl(singlePart, createNestedControlValidator());
@@ -158,11 +185,10 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
                     },
                 });
             });
-
-            this.internalParts = parts;
         } else {
-            this.form.setValue(parts);
             this.internalParts = parts;
+            this.clonedParts = cloneDeep(parts);
+            this.form.setValue(parts);
             this.displayItems = [];
 
             parts.forEach((singlePart, index) => {
@@ -204,6 +230,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     triggerChange(value: any): void {
         if (typeof this.cvaChange === 'function') {
             this.cvaChange(value);
@@ -216,6 +243,11 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
         }
     }
 
+    updateInitialValueFlag(value: boolean): void {
+        this.initialValue = value;
+        this.initialValueChange.emit(value);
+    }
+
     /**
      * Tracking function for ngFor for better performance.
      */
@@ -225,7 +257,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
 
     async createNewPart(): Promise<void> {
         const usedOrders = this.internalParts.map(part => part.partOrder);
-        let highestOrder = Math.max(...usedOrders);
+        const highestOrder = Math.max(...usedOrders);
 
         const modalInput: any = {
             supportedLanguages: this.supportedLanguages,

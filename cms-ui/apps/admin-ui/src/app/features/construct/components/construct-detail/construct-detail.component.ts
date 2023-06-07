@@ -31,6 +31,9 @@ import {
     NormalizableEntityType,
     Raw,
     SingleInstancePermissionType,
+    TagPart,
+    TagPartType,
+    TagPartValidatorConfigs,
     TagTypeBO,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
@@ -209,7 +212,17 @@ export class ConstructDetailComponent
      */
     async updateParts(): Promise<void> {
         const payload: ConstructUpdateRequest = {
-            parts: this.fgParts.value,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            parts: this.fgParts.value.map((part: TagPart) => {
+                if (part.typeId === TagPartType.Text
+                    || part.typeId === TagPartType.HtmlLong
+                ) {
+                    if (part.regex != null && typeof part.regex === 'number') {
+                        part.regex = TagPartValidatorConfigs[part.regex];
+                    }
+                }
+                return part;
+            }),
         };
 
         return this.operations.update(this.currentEntity.id, payload).pipe(
@@ -268,13 +281,56 @@ export class ConstructDetailComponent
     }
 
     private initPartsForm(): void {
+        /*
+         * We need to normalize the parts from the API before we set the into the properties.
+         * Some properties are only available with a certain type.
+         * These might be omited from the backend response (instead of sending `null`).
+         * The properties will emit a change with this property set to `null` however,
+         * resulting in the form to be marked as changed/dirty which isn't what we want.
+         * Therefore, add the property initially with a `null` value and it's fine.
+         */
+        const normalizedParts: TagPart[] = (this.currentEntity.parts || []).map(rawPart => {
+            const { markupLanguageId, regex, selectSettings, overviewSettings, ...part } = rawPart;
+
+            if (part.typeId === TagPartType.Text) {
+                return {
+                    ...part,
+                    regex: regex || null,
+                };
+            }
+
+            if (part.typeId === TagPartType.HtmlLong) {
+                return {
+                    ...part,
+                    regex: regex || null,
+                    markupLanguageId: markupLanguageId || null,
+                };
+            }
+
+            if (part.typeId === TagPartType.SelectMultiple || part.typeId === TagPartType.SelectSingle) {
+                return {
+                    ...part,
+                    selectSettings: selectSettings || null,
+                };
+            }
+
+            if (part.typeId === TagPartType.Overview) {
+                return {
+                    ...part,
+                    overviewSettings: overviewSettings || null,
+                };
+            }
+
+            return part;
+        });
+
         if (this.fgParts) {
-            this.fgParts.setValue([...this.currentEntity.parts]);
+            this.fgParts.setValue(normalizedParts);
             this.fgParts.markAsPristine();
             return;
         }
 
-        this.fgParts = new UntypedFormControl([...this.currentEntity.parts], (control) => {
+        this.fgParts = new UntypedFormControl(normalizedParts, (control) => {
             if (control == null || control.value == null) {
                 return { null: true };
             }

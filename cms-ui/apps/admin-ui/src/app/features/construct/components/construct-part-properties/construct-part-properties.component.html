@@ -60,8 +60,10 @@
             <!-- overviewSettings -->
             <gtx-overview-part-settings
                 *ngIf="form.get('overviewSettings').enabled"
-                [label]="'construct.overviewSettings' | i18n"
                 class="settings-group"
+                [label]="'construct.overviewSettings' | i18n"
+                [initialValue]="initialValue"
+                (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="overviewSettings"
             ></gtx-overview-part-settings>
 
@@ -69,6 +71,8 @@
             <gtx-select-part-settings
                 *ngIf="form.get('selectSettings').enabled"
                 [label]="'construct.selectSettings' | i18n"
+                [initialValue]="initialValue"
+                (initialValueChange)="updateInitialValueFlag($event)"
                 formControlName="selectSettings"
             ></gtx-select-part-settings>
 
@@ -114,49 +118,20 @@
                 formControlName="externalEditorUrl"
             ></gtx-input>
 
-            <ng-container *ngIf="supportedLanguages">
-                <h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
-
-                <div class="properties-editor-i18n">
-                    <gtx-grouped-tabs
-                        class="properties-tabs"
-                        pure
-                        wrap
-                        statusIcons
-                        [activeId]="activeTabI18nLanguage?.id"
-                    >
-                        <gtx-tab-pane
-                            *ngFor="let language of supportedLanguages"
-                            [id]="language?.id"
-                            (select)="setActiveI18nTab($event)"
-                            [readonly]="disabled"
-                            [inactive]="!activeI18nTabValueExists(language?.code)"
-                        >
-                            <ng-template gtx-tab-label>
-                                <div
-                                    class="language-pane-label"
-                                    [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
-                                >{{ language?.name }}</div>
-                            </ng-template>
-                        </gtx-tab-pane>
-                    </gtx-grouped-tabs>
-
-                    <div
-                        *ngIf="activeTabI18nLanguage?.code as activeLanguage"
-                        class="tab-content"
-                    >
-                        <h3>{{ activeTabI18nLanguage?.name }}</h3>
-
-                        <gtx-i18n-input
-                            [label]="('common.name' | i18n) + ' *'"
-                            [language]="activeLanguage"
-                            [availableLanguages]="languages"
-                            [requiredInCurrentLanguage]="true"
-                            formControlName="nameI18n"
-                        ></gtx-i18n-input>
-                    </div>
-                </div>
-            </ng-container>
+            <gtx-i18n-panel-group
+                *ngIf="supportedLanguages"
+                [languages]="supportedLanguages"
+                [invalidLanguages]="invalidLanguages"
+                [(activeLanguage)]="activeTabI18nLanguage"
+            >
+                <gtx-i18n-input
+                    [label]="('common.name' | i18n) + ' *'"
+                    [language]="activeTabI18nLanguage?.code"
+                    [availableLanguages]="supportedLanguages"
+                    [requiredInCurrentLanguage]="true"
+                    formControlName="nameI18n"
+                ></gtx-i18n-input>
+            </gtx-i18n-panel-group>
 
             <!-- defaultProperty -->
             <gtx-construct-part-fill

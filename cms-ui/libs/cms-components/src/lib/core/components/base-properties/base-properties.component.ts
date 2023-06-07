@@ -78,7 +78,10 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         });
 
         this.changeDetector.markForCheck();
+        this.setupFormSubscription();
+    }
 
+    protected setupFormSubscription(): void {
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
@@ -114,7 +117,6 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.initialValue = false;
             this.initialValueChange.emit(false);
         }));
-
     }
 
     // Override to fix the typings
@@ -166,5 +168,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         } else {
             this.form.enable({ emitEvent: false });
         }
+    }
+
+    /**
+     * Simple event handler which may be used for nested properties components
+     * to properly handle/forward the initialValue flag.
+     */
+    public updateInitialValueFlag(value: boolean): void {
+        this.initialValue = value;
+        this.initialValueChange.emit(value);
     }
 }

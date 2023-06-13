@@ -1,5 +1,6 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
 import { ConstructDataService, LanguageDataService, ObjectPropertyCategoryDataService } from '@admin-ui/shared';
+import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -12,6 +13,7 @@ import {
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
+    Feature,
     Language,
     ModelType,
     Normalized,
@@ -22,7 +24,7 @@ import {
     TagTypeBO,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export enum ObjectpropertyPropertiesMode {
@@ -55,6 +57,9 @@ export class ObjectpropertyPropertiesComponent
     public constructs$: Observable<TagTypeBO<Raw>[]>;
     public languages$: Observable<Language[]>;
     public objectPropertyCategories$: Observable<ObjectPropertyCategoryBO<Raw>[]>;
+
+    public multiChannelingEnabled = false;
+    public objTagSyncEnabled = false;
 
     public localConstructs: TagTypeBO[] = [];
     public languages: Language[];
@@ -90,6 +95,7 @@ export class ObjectpropertyPropertiesComponent
         private entityData: ConstructDataService,
         private categoryData: ObjectPropertyCategoryDataService,
         private languageData: LanguageDataService,
+        private appState: AppStateService,
     ) {
         super(changeDetector);
     }
@@ -130,6 +136,20 @@ export class ObjectpropertyPropertiesComponent
             }
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(combineLatest([
+            this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]),
+            this.appState.select(state => state.features.global[Feature.OBJECT_TAG_SYNC]),
+        ]).subscribe(([multiChannelingEnabled, objTagSyncEnabled]) => {
+            this.multiChannelingEnabled = multiChannelingEnabled;
+            this.objTagSyncEnabled = objTagSyncEnabled;
+
+            if (this.form) {
+                this.configureForm(this.form.value);
+            }
+
+            this.changeDetector.markForCheck();
+        }));
     }
 
     protected createForm(): UntypedFormGroup {
@@ -159,8 +179,48 @@ export class ObjectpropertyPropertiesComponent
     }
 
     protected configureForm(value: ObjectPropertyBO<ModelType.Normalized>, loud: boolean = false): void {
+        const options = { emitEvent: !!loud };
         if (this.mode === ObjectpropertyPropertiesMode.UPDATE) {
-            this.form.get('keyword').disable({ onlySelf: !loud });
+            this.form.get('keyword').disable(options);
+        }
+
+        const inheritCtl = this.form.get('inheritable');
+        const syncContentCtl = this.form.get('syncContentset');
+        const syncChannelCtl = this.form.get('syncChannelset');
+        const syncVariantsCtl = this.form.get('syncVariants');
+
+        switch (value?.type) {
+            case ObjectPropertiesObjectType.FOLDER:
+                inheritCtl.enable(options);
+                syncContentCtl.disable(options);
+                syncVariantsCtl.disable(options);
+                break;
+
+            case ObjectPropertiesObjectType.PAGE:
+                inheritCtl.disable(options);
+                if (this.objTagSyncEnabled) {
+                    syncContentCtl.enable(options);
+                    syncVariantsCtl.enable(options);
+                } else {
+                    syncContentCtl.disable(options);
+                    syncVariantsCtl.disable(options);
+                }
+                break;
+
+            case ObjectPropertiesObjectType.IMAGE:
+            case ObjectPropertiesObjectType.FILE:
+            case ObjectPropertiesObjectType.TEMPLATE:
+            default:
+                inheritCtl.disable(options);
+                syncContentCtl.disable(options);
+                syncVariantsCtl.disable(options);
+                break;
+        }
+
+        if (this.objTagSyncEnabled && this.multiChannelingEnabled) {
+            syncChannelCtl.enable(options);
+        } else {
+            syncChannelCtl.disable(options);
         }
     }
 

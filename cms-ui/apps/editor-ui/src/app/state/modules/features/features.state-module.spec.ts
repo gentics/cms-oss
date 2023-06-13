@@ -44,8 +44,9 @@ describe('FeaturesStateModule', () => {
             [Feature.KEYCLOAK_SIGNOUT]: false,
             [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
             [Feature.CONTENT_STAGING]: false,
-            [Feature.MULTICHANNELING]: false,
+            [Feature.MULTICHANNELLING]: false,
             [Feature.MESH_CR]: false,
+            [Feature.OBJECT_TAG_SYNC]: false,
 
             nodeFeatures: {},
         };

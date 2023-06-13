@@ -883,3 +883,18 @@ select_not_deleted_items:
 select_deleted_items:
     en: Please select {{itemTypePlural}} which are deleted
     de: Bitte wählen Sie {{itemTypePlural}} aus, welche gelöscht sind
+admin_no_nodes_title:
+    en: No Nodes configured yet
+    de: Keine Nodes eingestellt
+user_no_nodes_title:
+    en: Missing Permissions
+    de: Fehlende Berechtigungen
+admin_no_nodes_message:
+    en: It seems there are no Nodes configured yet.<br>Please finish the setup in the Administration Interface first.<br>This might be related to your permissions as well.
+    de: Es wurden keine Nodes gefunden.<br>Bitte stellen Sie sicher das die Nodes passend in der Administration Oberfläche konfiguriert wurden.<br>Überprüfen Sie auch die Berechtigungen für diese.
+user_no_nodes_message:
+    en: You do not have permissions to read any Content currently.<br>Please contact an Administrator if you belief this is an error.
+    de: Sie haben keine Berechtigugen um Inhalt zu lesen.<br>Bitte kontaktieren Sie einen Administrator wenn Sie glauben, dass es ein Fehler ist.
+admin_ui_button_link:
+    en: Open Administration Interface
+    de: Administrator Oberfläche öffnen

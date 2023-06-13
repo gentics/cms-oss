@@ -23,6 +23,7 @@ import {
     ValidationSuccessAction,
 } from '../../modules';
 import { ApplicationStateService } from '../application-state/application-state.service';
+import { FolderActionsService } from '../folder-actions/folder-actions.service';
 
 @Injectable()
 export class AuthActionsService {
@@ -34,105 +35,111 @@ export class AuthActionsService {
         private notification: I18nNotification,
         private errorHandler: ErrorHandler,
         private api: Api,
+        private folderActions: FolderActionsService,
     ) {}
 
     /**
      * Check the local storage for an sid, and if found, attempt to validate the user's session
      * with the API.
      */
-    validateSession(): void {
-        let sid = this.localStorage.getSid();
+    async validateSession(): Promise<boolean> {
+        const sid = this.localStorage.getSid();
         if (!sid) {
-            return;
+            return false;
         }
 
-        this.appState.dispatch(new StartValidationAction());
+        await this.appState.dispatch(new StartValidationAction()).toPromise();
 
-        this.api.auth.validate(sid)
-            .subscribe(res => {
-                this.appState.dispatch(new ValidationSuccessAction(sid, res.user));
-                const normalizedUser = normalize(res.user, userSchema);
-                this.appState.dispatch(new AddEntitiesAction(normalizedUser));
-            },
-            (error: ApiError) => {
-                this.localStorage.setSid(null);
-                this.appState.dispatch(new ValidationErrorAction(error.message));
+        try {
+            const res = await this.api.auth.validate(sid).toPromise();
+            const normalizedUser = normalize(res.user, userSchema);
+            await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
+            await this.appState.dispatch(new ValidationSuccessAction(sid, res.user)).toPromise();
+            return true;
+        } catch (error) {
+            this.localStorage.setSid(null);
+            await this.appState.dispatch(new ValidationErrorAction(error.message)).toPromise();
 
-                if (error.reason !== 'auth') {
-                    this.errorHandler.catch(error);
-                }
-            });
+            if (error.reason !== 'auth') {
+                this.errorHandler.catch(error);
+            }
+            return false;
+        }
     }
 
     updateAdminState(): void {
-        let admin = AccessControlledType.ADMIN;
-        let response = this.api.permissions.getPermissionsForType(admin);
+        const admin = AccessControlledType.ADMIN;
+        const response = this.api.permissions.getPermissionsForType(admin);
         response.subscribe(permissionResponse => {
             const permissionsMap = permissionResponse.permissionsMap.permissions;
             this.appState.dispatch(new UpdateIsAdminAction(permissionsMap.read))
         });
     }
 
-    login(username: string, password: string, returnUrl: string): void {
-        this.appState.dispatch(new StartLoginAction());
+    async login(username: string, password: string, returnUrl?: string): Promise<boolean> {
+        await this.appState.dispatch(new StartLoginAction()).toPromise();
 
-        this.api.auth.login(username, password)
-            .subscribe(res => {
-                this.localStorage.setSid(res.sid);
-                this.appState.dispatch(new LoginSuccessAction(res.sid, res.user));
-                const normalizedUser = normalize(res.user, userSchema);
-                this.appState.dispatch(new AddEntitiesAction(normalizedUser));
+        try {
+            const res = await this.api.auth.login(username, password).toPromise();
+            this.localStorage.setSid(res.sid);
+            const normalizedUser = normalize(res.user, userSchema);
+            await this.appState.dispatch(new AddEntitiesAction(normalizedUser)).toPromise();
+            await this.appState.dispatch(new LoginSuccessAction(res.sid, res.user)).toPromise();
 
-                if (returnUrl) {
-                    this.router.navigateByUrl(returnUrl);
-                }
-            },
-            (error: ApiError) => {
-                this.appState.dispatch(new LoginErrorAction(error.message));
-                this.errorHandler.catch(error);
-            });
+            if (returnUrl) {
+                this.router.navigateByUrl(returnUrl);
+            } else {
+                this.folderActions.navigateToDefaultNode();
+            }
+
+            return true;
+        } catch (error) {
+            this.appState.dispatch(new LoginErrorAction(error.message));
+            this.errorHandler.catch(error);
+            return false;
+        }
     }
 
-    logout(sid: number): Promise<any> {
-        this.appState.dispatch(new StartLogoutAction());
+    async logout(sid: number): Promise<void> {
+        await this.appState.dispatch(new StartLogoutAction()).toPromise();
 
-        return this.api.auth.logout(sid).toPromise()
-            .then(res => {
-                this.localStorage.setSid(null);
-                this.appState.dispatch(new LogoutSuccessAction());
-                this.appState.dispatch(new UpdateSearchFilterAction({
-                    changing: false,
-                    valid: false,
-                    visible: false,
-                }));
-            },
-            (error: ApiError) => {
-                this.notification.show({
-                    message: error.message,
-                    type: 'alert',
-                });
-                this.appState.dispatch(new LogoutErrorAction(error.message));
+        try {
+            await this.api.auth.logout(sid).toPromise();
+            this.localStorage.setSid(null);
+            await this.appState.dispatch(new LogoutSuccessAction()).toPromise();
+            await this.appState.dispatch(new UpdateSearchFilterAction({
+                changing: false,
+                valid: false,
+                visible: false,
+            })).toPromise();
+        } catch (error) {
+            this.notification.show({
+                message: error.message,
+                type: 'alert',
             });
+            await this.appState.dispatch(new LogoutErrorAction(error.message)).toPromise();
+        }
     }
 
     /**
      * Update the user's password.
      */
-    changePassword(userId: number, newPassword: string): Promise<any> {
-        this.appState.dispatch(new ChangePasswordAction(true));
+    async changePassword(userId: number, newPassword: string): Promise<boolean> {
+        await this.appState.dispatch(new ChangePasswordAction(true)).toPromise();
 
-        return this.api.auth.changePassword(userId, newPassword).toPromise()
-            .then(res => {
-                this.localStorage.setSid(null);
-                this.notification.show({
-                    message: 'message.updated_password',
-                    type: 'success',
-                });
-                this.appState.dispatch(new ChangePasswordAction(false));
-            })
-            .catch(error => {
-                this.appState.dispatch(new ChangePasswordAction(false, error.message || error));
-                this.errorHandler.catch(error);
+        try {
+            await this.api.auth.changePassword(userId, newPassword).toPromise();
+            this.localStorage.setSid(null);
+            this.notification.show({
+                message: 'message.updated_password',
+                type: 'success',
             });
+            await this.appState.dispatch(new ChangePasswordAction(false)).toPromise();
+            return true;
+        } catch (error) {
+            await this.appState.dispatch(new ChangePasswordAction(false, error.message || error)).toPromise();
+            this.errorHandler.catch(error);
+            return false;
+        }
     }
 }

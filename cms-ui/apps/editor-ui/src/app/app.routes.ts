@@ -1,12 +1,11 @@
 import { Route } from '@angular/router';
+import { NoNodesComponent, TagEditorRouteComponent } from './core/components';
 import { ProjectEditor } from './core/components/project-editor/project-editor.component';
-import { TagEditorRouteComponent } from './core/components/tag-editor-route/tag-editor-route.component';
 import { AuthGuard } from './core/providers/guards/auth-guard';
 import { OpenModalGuard } from './core/providers/guards/open-modal-guard';
 import { ToolOverviewComponent } from './embedded-tools/components/tool-overview/tool-overview.component';
 import { ToolProxyComponent } from './embedded-tools/components/tool-proxy/tool-proxy.component';
-import { ProxyRouteComponent } from './shared/components/proxy-route/proxy-route.component';
-import { RessourceProxyComponent } from './shared/components/ressource-proxy/ressource-proxy.component';
+import { ProxyRouteComponent, RessourceProxyComponent } from './shared/components';
 
 export const APP_ROUTES: Route[] = [
     {
@@ -19,6 +18,12 @@ export const APP_ROUTES: Route[] = [
         canActivate: [AuthGuard],
         pathMatch: 'full',
         loadChildren: () => import('./login/login.module').then(m => m.LoginModule),
+    },
+    {
+        path: 'no-nodes',
+        canActivate: [AuthGuard],
+        pathMatch: 'full',
+        component: NoNodesComponent,
     },
     {
         path: 'editor',

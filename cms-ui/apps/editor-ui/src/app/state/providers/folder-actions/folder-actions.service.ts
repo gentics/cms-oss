@@ -93,7 +93,7 @@ import {
     TemplateRequestOptions,
     TimeManagement,
     TypedItemListResponse,
-    folderItemTypePlurals
+    folderItemTypePlurals,
 } from '@gentics/cms-models';
 import { normalize, schema } from 'normalizr';
 import {
@@ -111,7 +111,7 @@ import {
     publishLast,
     refCount,
     switchMap,
-    take
+    take,
 } from 'rxjs/operators';
 import {
     DisplayFields,
@@ -235,13 +235,7 @@ export class FolderActionsService {
                 );
             }),
         ).subscribe(res => {
-            if (res.nodes.length === 0) {
-                this.notification.show({
-                    type: 'alert',
-                    message: 'message.folder_permissions_error',
-                    delay: 10000,
-                });
-            } else {
+            if (res.nodes.length > 0) {
                 this.getActiveNodeLanguages()
                     .then(languages => this.setActiveLanguageFromAvailable(languages));
             }
@@ -302,13 +296,23 @@ export class FolderActionsService {
      * in the list of nodes by alphabetic order.
      */
     navigateToDefaultNode(): void {
+        const defaultNode = this.resolveDefaultNode();
+
+        if (defaultNode) {
+            this.navigationService.list(defaultNode.id, defaultNode.folderId).navigate();
+            return;
+        }
+
+        this.navigationService.navigateToNoNodes();
+    }
+
+    resolveDefaultNode(): Node {
         const nodes = this.appState.now.folder.nodes.list
             .map(nodeId => this.entityResolver.getNode(nodeId))
             .filter(node => node != null);
         const defaultNode = getDefaultNode(nodes);
-        if (defaultNode) {
-            this.navigationService.list(defaultNode.id, defaultNode.folderId).navigate();
-        }
+
+        return defaultNode;
     }
 
     /**
@@ -412,7 +416,7 @@ export class FolderActionsService {
 
         const folderState = this.appState.now.folder;
         const loaders: Promise<any>[] = [];
-        for (let itemType of folderItemTypePlurals) {
+        for (const itemType of folderItemTypePlurals) {
             const items: ItemsInfo = folderState[itemType];
             if (!items || !items.hasMore || items.fetchAll) {
                 continue;
@@ -495,7 +499,7 @@ export class FolderActionsService {
     searchLiveUrl(liveUrl: string): Observable<Page<Raw> | undefined> {
         this.appState.dispatch(new StartListFetchingAction('page', undefined, true));
 
-        let stripped = liveUrl.replace(/^https?:\/\//, '');
+        const stripped = liveUrl.replace(/^https?:\/\//, '');
         const options: SearchPagesOptions = {
             liveUrl: stripped,
             update: false,
@@ -591,7 +595,7 @@ export class FolderActionsService {
 
         // permissions are not available for the current folder
         // when the page is loaded from within a folder
-        let parentFolder = this.entityResolver.getFolder(parentId);
+        const parentFolder = this.entityResolver.getFolder(parentId);
         if (!parentFolder || !(parentFolder.privilegeMap || parentFolder.privilegeBits)) {
             await this.getFolder(parentId);
         }
@@ -603,13 +607,13 @@ export class FolderActionsService {
     async refreshList(type: FolderItemType, itemLanguages?: string[]): Promise<void> {
         const folderState = this.appState.now.folder;
         const languages = this.appState.now.entities.language;
-        let itemInfo: ItemsInfo = folderState[`${type}s` as FolderItemTypePlural];
-        let fetchAll = itemInfo.fetchAll;
-        let maxItems = fetchAll ? -1 : 10;
-        let search = folderState.searchTerm;
-        let recursive = search !== '';
-        let parentId = folderState.activeFolder;
-        let options: PageListOptions = {
+        const itemInfo: ItemsInfo = folderState[`${type}s` as FolderItemTypePlural];
+        const fetchAll = itemInfo.fetchAll;
+        const maxItems = fetchAll ? -1 : 10;
+        const search = folderState.searchTerm;
+        const recursive = search !== '';
+        const parentId = folderState.activeFolder;
+        const options: PageListOptions = {
             maxItems,
             search,
             recursive,
@@ -637,7 +641,7 @@ export class FolderActionsService {
      * Fetches the root folders of each available node.
      */
     getFolders(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
-        let itemInfo: ItemsInfo = this.appState.now.folder['folders' as FolderItemTypePlural];
+        const itemInfo: ItemsInfo = this.appState.now.folder['folders' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
 
@@ -652,7 +656,7 @@ export class FolderActionsService {
      * Get pages in this folder
      */
     getPages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
-        let itemInfo: ItemsInfo = this.appState.now.folder['pages' as FolderItemTypePlural];
+        const itemInfo: ItemsInfo = this.appState.now.folder['pages' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
         const language = this.entityResolver.getLanguage(this.appState.now.folder.activeLanguage);
@@ -686,9 +690,9 @@ export class FolderActionsService {
      * Get files in this folder
      */
     getFiles(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
-        let itemInfo: ItemsInfo = this.appState.now.folder['files' as FolderItemTypePlural];
+        const itemInfo: ItemsInfo = this.appState.now.folder['files' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
-        let recursive = search !== '';
+        const recursive = search !== '';
 
         const options: FolderListOptions = {
             maxItems,
@@ -714,9 +718,9 @@ export class FolderActionsService {
      * Get images in this folder
      */
     getImages(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void> {
-        let itemInfo: ItemsInfo = this.appState.now.folder['images' as FolderItemTypePlural];
+        const itemInfo: ItemsInfo = this.appState.now.folder['images' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
-        let recursive = search !== '';
+        const recursive = search !== '';
 
         const options: FolderListOptions = {
             maxItems,
@@ -742,7 +746,7 @@ export class FolderActionsService {
      * Get forms in this folder
      */
     getForms(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber: number = 1): Promise<void> {
-        let itemInfo: ItemsInfo = this.appState.now.folder['forms' as FolderItemTypePlural];
+        const itemInfo: ItemsInfo = this.appState.now.folder['forms' as FolderItemTypePlural];
         const maxItems = fetchAll ? -1 : itemInfo.itemsPerPage;
         const recursive = search !== '';
         const options: FormListOptions = {
@@ -1206,7 +1210,7 @@ export class FolderActionsService {
      * Get templates of this node
      */
     getAllTemplatesOfNode(nodeId: number, search: string = '', sort: CommonSortFields = 'name', fetchAll: boolean = true): Observable<Template<Raw>[] | void> {
-        let options: TemplateListRequest = { pageSize: fetchAll ? -1 : 10, sort, ...( search && { q: search }) };
+        const options: TemplateListRequest = { pageSize: fetchAll ? -1 : 10, sort, ...( search && { q: search }) };
         return this.api.folders.getAllTemplatesOfNode(nodeId, options).pipe(
             map((response: PagedTemplateListResponse) => response.items),
             catchError(error => of(this.errorHandler.catch(error))),
@@ -1583,7 +1587,7 @@ export class FolderActionsService {
      * Update the time management property of a page.
      */
     savePageTimeManagement(pageId: number, timeManagement: TimeManagement): Promise<Page<Raw> | void> {
-        let page = this.entityResolver.getPage(pageId);
+        const page = this.entityResolver.getPage(pageId);
         const props = { timeManagement, unlock: page && !page.locked };
         return this.updateItem('page', pageId, props, {},  { showNotification: true, fetchForUpdate: false });
     }
@@ -1689,7 +1693,7 @@ export class FolderActionsService {
     ): Promise<ItemTypeMap<AnyModelType>[T]> {
         return updatedItem.then(async updatedItem => {
             let propertiesDeleted = false;
-            for (let property in changes) {
+            for (const property in changes) {
                 // eslint-disable-next-line no-prototype-builtins
                 if (updatedItem && changes.hasOwnProperty(property) && !updatedItem.hasOwnProperty(property)) {
                     updatedItem[property] = null;
@@ -1735,7 +1739,7 @@ export class FolderActionsService {
         items: UpdateableItemObjectProperty<T, R>[],
         postUpdateBehavior: PostUpdateBehavior & Required<Pick<PostUpdateBehavior, 'fetchForUpdate'>>,
     ): Promise<U[]> {
-        let updateItems: UpdateableItem<T>[] = [];
+        const updateItems: UpdateableItem<T>[] = [];
         items.forEach(item => {
             const update = { tags: item.updatedObjProps } as unknown as Partial<U>;
             updateItems.push({
@@ -2126,9 +2130,9 @@ export class FolderActionsService {
      * Set a page as the startpage for a folder.
      */
     setFolderStartpage(folder: number | Folder, page: number | Page): Promise<any> {
-        let folderId = typeof folder === 'number' ? folder : (folder ).id;
-        let pageId = typeof page === 'number' ? page : (page ).id;
-        let pageName = this.entityResolver.getPage(pageId).name;
+        const folderId = typeof folder === 'number' ? folder : (folder ).id;
+        const pageId = typeof page === 'number' ? page : (page ).id;
+        const pageName = this.entityResolver.getPage(pageId).name;
 
         return this.api.folders.setFolderStartpage(folderId, pageId).toPromise()
             .then(() => {
@@ -2188,12 +2192,12 @@ export class FolderActionsService {
         try {
             await this.api.folders.copyPages(ids, sourceNodeId, targetFolderId, targetNodeId).toPromise();
             await this.appState.dispatch(new ListSavingSuccessAction('page')).toPromise();
-            let translationParams: any = {
+            const translationParams: any = {
                 count: ids.length,
             };
             let message = 'message.pages_copied';
             if (ids.length === 1) {
-                let copiedPage: Page = this.appState.now.entities.page[ids[0]];
+                const copiedPage: Page = this.appState.now.entities.page[ids[0]];
                 translationParams.name = copiedPage.name;
                 message = 'message.page_copied';
             }
@@ -2222,12 +2226,12 @@ export class FolderActionsService {
         return this.api.folders.copyForms(ids, targetFolderId, targetNodeId).toPromise()
             .then(res => {
                 this.appState.dispatch(new ListSavingSuccessAction('form'));
-                let translationParams: any = {
+                const translationParams: any = {
                     count: ids.length,
                 };
                 let message = 'message.forms_copied';
                 if (ids.length === 1) {
-                    let copiedForm: Form = this.appState.now.entities.form[ids[0]];
+                    const copiedForm: Form = this.appState.now.entities.form[ids[0]];
                     translationParams.name = copiedForm.name;
                     message = 'message.form_copied';
                 }
@@ -2335,7 +2339,7 @@ export class FolderActionsService {
                 this.appState.dispatch(new ListSavingSuccessAction(type));
 
                 if (ids.length === 1) {
-                    let movedItem: Item = this.entityResolver.getEntity(type, ids[0]);
+                    const movedItem: Item = this.entityResolver.getEntity(type, ids[0]);
                     this.notification.show({
                         type: 'success',
                         message: 'message.item_moved',
@@ -2420,7 +2424,7 @@ export class FolderActionsService {
                 const completed: UploadResponse[] = [];
                 const failed: UploadResponse[] = [];
 
-                for (let upload of uploads) {
+                for (const upload of uploads) {
                     if (upload.cancelled) {
                         cancelled.push(upload);
                     } else if (upload.error || !upload.response || !upload.response.success) {
@@ -2582,7 +2586,7 @@ export class FolderActionsService {
      * upload & replace calls.
      */
     uploadAndReplace(sortedFiles: SortedFiles, folderId: number, nodeId: number): Observable<UploadResponse[][]> {
-        let completedObservables: Observable<UploadResponse[]>[] = [];
+        const completedObservables: Observable<UploadResponse[]>[] = [];
 
         if (sortedFiles.create.images.length > 0) {
             completedObservables.push(this.uploadFiles('image', sortedFiles.create.images, folderId));
@@ -2591,12 +2595,12 @@ export class FolderActionsService {
             completedObservables.push(this.uploadFiles('file', sortedFiles.create.files, folderId));
         }
         if (sortedFiles.replace.images.length > 0) {
-            let replaceImages = sortedFiles.replace.images.map(data =>
+            const replaceImages = sortedFiles.replace.images.map(data =>
                 this.replaceFile('image', data.id, data.file, folderId, nodeId).done$);
             completedObservables.push(...replaceImages);
         }
         if (sortedFiles.replace.files.length > 0) {
-            let replaceFiles = sortedFiles.replace.files.map(data =>
+            const replaceFiles = sortedFiles.replace.files.map(data =>
                 this.replaceFile('file', data.id, data.file, folderId, nodeId).done$);
             completedObservables.push(...replaceFiles);
         }
@@ -2738,7 +2742,7 @@ export class FolderActionsService {
                 let message: string;
 
                 // assign to arrays depending on page permissions
-                for (let page of publishedOrQueuedPages) {
+                for (const page of publishedOrQueuedPages) {
                     const pageEntity = this.entityResolver.getPage(page.id);
                     if (page.permissions.publish) {
                         published.push(pageEntity);
@@ -2821,10 +2825,10 @@ export class FolderActionsService {
                     };
                 });
 
-                let succeeded = results.filter(r => !r.failed).map(r => r.id);
-                let badResponses = results.filter(r => r.failed);
-                let failed = badResponses.map(r => r.id);
-                let errorResponse = badResponses.length && badResponses[0].response.responseInfo;
+                const succeeded = results.filter(r => !r.failed).map(r => r.id);
+                const badResponses = results.filter(r => r.failed);
+                const failed = badResponses.map(r => r.id);
+                const errorResponse = badResponses.length && badResponses[0].response.responseInfo;
 
                 if (failed.length) {
                     this.appState.dispatch(new ListSavingErrorAction('page', errorResponse.responseMessage));
@@ -2842,7 +2846,7 @@ export class FolderActionsService {
                 if (succeeded.length) {
                     this.appState.dispatch(new ListSavingSuccessAction('page'));
                     const pageUpdates: { [id: number]: Partial<Page<Normalized>> } = {};
-                    for (let id of pageIds) {
+                    for (const id of pageIds) {
                         pageUpdates[id] = {
                             online: false,
                         };
@@ -2853,7 +2857,7 @@ export class FolderActionsService {
                     let message: string;
 
                     // assign to arrays depending on page permissions
-                    for (let page of results) {
+                    for (const page of results) {
                         const pageEntity = this.entityResolver.getPage(page.id);
                         if (page.permissions.publish) {
                             takenOffline.push(pageEntity);
@@ -2903,6 +2907,8 @@ export class FolderActionsService {
     /**
      * Publish a form at a certain date&time
      *
+     * @param formId Id of the form
+     * @param timestamp When the form should be published at
      * @param keepVersion If the form has been edited after timemanagement has been set, editing timemanagement
      * will affect prior instead of current form version if TRUE.
      */
@@ -2946,6 +2952,8 @@ export class FolderActionsService {
     /**
      * Publish a page at a certain date&time
      *
+     * @param pageId Id of the page
+     * @param timestamp When the form should be published at
      * @param keepVersion If the page has been edited after timemanagement has been set, editing timemanagement
      * will affect prior instead of current page version if TRUE.
      */
@@ -2992,6 +3000,7 @@ export class FolderActionsService {
     /**
      * Publish pages at a certain date&time
      *
+     * @param pages The pages to publish
      * @param timestamp Timestamp of publication. If set to 0, publishing will take place immediately.
      * @param keepPublishAt If set to true, pages will keep their existing publication date. In case one does not have one,
      * the provided timestamp will be used.
@@ -3159,7 +3168,7 @@ export class FolderActionsService {
      * Approve page actions queued which had been requested by users with insufficient permissions before.
      */
     async pageQueuedApprove(pages: Page[]): Promise<void> {
-        let requests: Promise<any>[] = [];
+        const requests: Promise<any>[] = [];
         const pageLanguages = pages.map(page => page.language);
         pages.forEach((page) => {
             const queuedRequestForPublish = page.timeManagement.queuedPublish;
@@ -3224,7 +3233,7 @@ export class FolderActionsService {
                 let message: string;
 
                 // assign to arrays depending on form permissions
-                for (let form of publishedOrQueuedForms) {
+                for (const form of publishedOrQueuedForms) {
                     const formEntity = this.entityResolver.getForm(form.id);
                     if (form.permissions.publish) {
                         published.push(formEntity);
@@ -3308,10 +3317,10 @@ export class FolderActionsService {
                     };
                 });
 
-                let succeeded = results.filter(r => !r.failed).map(r => r.id);
-                let badResponses = results.filter(r => r.failed);
-                let failed = badResponses.map(r => r.id);
-                let errorResponse = badResponses.length && badResponses[0].response.responseInfo;
+                const succeeded = results.filter(r => !r.failed).map(r => r.id);
+                const badResponses = results.filter(r => r.failed);
+                const failed = badResponses.map(r => r.id);
+                const errorResponse = badResponses.length && badResponses[0].response.responseInfo;
 
                 if (failed.length) {
                     this.appState.dispatch(new ListSavingErrorAction('form', errorResponse.responseMessage));
@@ -3320,7 +3329,7 @@ export class FolderActionsService {
                 if (succeeded.length) {
                     this.appState.dispatch(new ListSavingSuccessAction('form'));
                     const formUpdates: { [id: number]: Partial<Form<Normalized>> } = {};
-                    for (let id of succeeded) {
+                    for (const id of succeeded) {
                         formUpdates[id] = {
                             online: false,
                         };
@@ -3331,7 +3340,7 @@ export class FolderActionsService {
                     let message: string;
 
                     // assign to arrays depending on form permissions
-                    for (let form of results) {
+                    for (const form of results) {
                         const formEntity = this.entityResolver.getForm(form.id);
                         if (form.permissions.publish) {
                             takenOffline.push(formEntity);
@@ -3405,7 +3414,7 @@ export class FolderActionsService {
      * `image/resize` and `file/create` endpoints returns a file object rather than an image.
      */
     private fileToImage(file: File, width: number, height: number, sourceImage?: Image, resizeParams?: CropResizeParameters): Image<Raw> {
-        let imageProperties: any = {
+        const imageProperties: any = {
             type: 'image',
             sizeX: width,
             sizeY: height,

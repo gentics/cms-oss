@@ -112,7 +112,16 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
 
     editProperties(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, 'editProperties').navigate());
+            .then(({ item, nodeId }) => {
+                // This is the case when editing the nodes root-folder properties, and then the
+                // type is incorrect which would fail.
+                let type: FolderItemType | 'node' | 'channel' = item.type;
+                if (type === 'node' || type === 'channel') {
+                    type = 'folder';
+                }
+
+                this.navigationService.detailOrModal(nodeId, type, item.id, 'editProperties').navigate();
+            });
     }
 
     editInParentNode(item: InheritableItem): void {
@@ -219,7 +228,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 let deleteIds: number[] = [];
                 let unlocalizeIds: number[] = [];
                 // deleting Form translations without deleting the Form means updating the Form
-                let updateItems: {
+                const updateItems: {
                     itemId: number;
                     payload: Partial<Form>;
                 }[] = [];
@@ -255,7 +264,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     unlocalizeIds = result.unlocalize.map(item => item.id) || [];
                 }
 
-                let localizationIdsDeleted: LocalizationMap = {};
+                const localizationIdsDeleted: LocalizationMap = {};
                 let localizationIds: number[];
 
                 if (deleteIds.length) {
@@ -367,8 +376,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      */
     private deleteItemsFavourites(nodeId: number, type: FolderItemType, deleteResult: any): void {
         if (deleteResult && deleteResult.ids && deleteResult.ids.succeeded && deleteResult.ids.succeeded.length > 0) {
-            let favouritesToRemove: Favourite[] = deleteResult.ids.succeeded.map((id: number) => {
-                let entity = this.entityResolver.getEntity(type, id);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            const favouritesToRemove: Favourite[] = deleteResult.ids.succeeded.map((id: number) => {
+                const entity = this.entityResolver.getEntity(type, id);
                 return { id: entity.id, type: entity.type, name: entity.name, globalId: entity.globalId, nodeId: entity.masterNodeId };
             });
 
@@ -395,7 +405,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             message = 'message.items_unlocalized';
         }
 
-        let undoAction = isUndoable && {
+        const undoAction = isUndoable && {
             label: 'common.undo_button',
             onClick: (): void => {
                 this.wastebinActions.restoreItemsFromWastebin(type, removedItemIds, localizationIds);
@@ -555,7 +565,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     localize(item: InheritableItem, activeNodeId: number): void {
-        let localizingEditedItem: boolean = item.id === this.state.now.editor.itemId;
+        const localizingEditedItem: boolean = item.id === this.state.now.editor.itemId;
         this.folderActions.localizeItem(item.type, item.id, activeNodeId)
             .then((item: InheritableItem) => {
                 this.folderActions.refreshList(item.type);
@@ -630,7 +640,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Display a repo browser for selecting the location(s) in which to create the page variation(s).
      */
     createVariationsClicked(pages: Page[], activeNodeId: number): void {
-        let options: RepositoryBrowserOptions = {
+        const options: RepositoryBrowserOptions = {
             allowedSelection: 'folder',
             selectMultiple: true,
             submitLabel: 'modal.create_page_variations_submit',
@@ -647,7 +657,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
      * Display a repo browser for selecting the location in which to create the page variation.
      */
     createVariationClicked(page: Page, activeNodeId: number): void {
-        let options: RepositoryBrowserOptions = {
+        const options: RepositoryBrowserOptions = {
             allowedSelection: 'folder',
             selectMultiple: false,
             submitLabel: 'modal.create_page_variation_submit',
@@ -704,7 +714,6 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     async synchronizeChannel(item: Folder | Page | FileModel | Image): Promise<void> {
         const channel: Node = this.entityResolver.getNode(this.state.now.folder.activeNode);
         let folderResponse: ChannelSyncRequest;
-        let masterNode: Node;
 
         const syncModal = await this.modalService.fromComponent(SynchronizeChannelModal, {}, { item, channel });
         const syncResponse: ChannelSyncRequest = await syncModal.open();
@@ -713,7 +722,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             folderResponse = syncResponse;
             folderResponse.ids = [item.id];
         }
-        masterNode = this.entityResolver.getEntity('node', syncResponse.masterId);
+        const masterNode = this.entityResolver.getEntity('node', syncResponse.masterId);
 
         const depModal = await this.modalService.fromComponent(ChannelDependenciesModal, {
             padding: true,
@@ -854,8 +863,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     private pushNonFolderItems(response: ItemsGroupedByChannelId): Observable<any> {
-        let requests: Array<Observable<any>> = [];
+        const requests: Array<Observable<any>> = [];
         Object.keys(response).forEach((type: DependencyItemTypePlural) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             response[type].forEach((item: ChannelSyncRequest) => {
                 requests.push(this.folderActions.pushItemsToMaster((type.slice(0, -1)) as FolderItemType | any, item));
             });

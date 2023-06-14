@@ -5,7 +5,7 @@ import {
     Injectable,
     ViewContainerRef,
 } from '@angular/core';
-import { DEFAULT_TOAST_OPTIONS, INotificationOptions } from '../../common';
+import { DEFAULT_TOAST_OPTIONS, INotificationOptions, OpenedNotification } from '../../common';
 import { ToastComponent } from '../../components/toast/toast.component';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 
@@ -66,9 +66,9 @@ export class NotificationService {
      * Show a toast notification. Returns an object with a dismiss() method, which will
      * dismiss the toast when invoked.
      */
-    public show(options: INotificationOptions): { dismiss: () => void } {
-        let mergedOptions: INotificationOptions = Object.assign({}, DEFAULT_TOAST_OPTIONS, options);
-        let toast = this.createToast(mergedOptions);
+    public show(options: INotificationOptions): OpenedNotification {
+        const mergedOptions: INotificationOptions = Object.assign({}, DEFAULT_TOAST_OPTIONS, options);
+        const toast = this.createToast(mergedOptions);
         return {
             dismiss: (): void => toast.dismissFn(),
         };
@@ -91,10 +91,10 @@ export class NotificationService {
      * openToasts array.
      */
     private destroyToast(componentRef: ComponentRef<ToastComponent>): void {
-        let toast: ToastComponent = componentRef.instance;
-        let index = this.getToastIndex(toast);
+        const toast: ToastComponent = componentRef.instance;
+        const index = this.getToastIndex(toast);
         if (-1 < index) {
-            let timer: any = this.openToasts[index].dismissTimer;
+            const timer: any = this.openToasts[index].dismissTimer;
             if (timer) {
                 clearTimeout(timer);
             }
@@ -112,9 +112,9 @@ export class NotificationService {
      * NotificationHost component in the DOM.
      */
     private createToast(options: INotificationOptions): ToastComponent {
-        let toastFactory = this.componentFactoryResolver.resolveComponentFactory(ToastComponent);
-        let ref = this.hostViewContainer.createComponent(toastFactory);
-        let toast: ToastComponent = ref.instance;
+        const toastFactory = this.componentFactoryResolver.resolveComponentFactory(ToastComponent);
+        const ref = this.hostViewContainer.createComponent(toastFactory);
+        const toast: ToastComponent = ref.instance;
 
         let dismissTimer: any;
         toast.message = options.message;
@@ -154,7 +154,7 @@ export class NotificationService {
      * the heights of the other toasts which are open above this one.
      */
     private getToastTop(toast: ToastComponent): number {
-        let index = this.getToastIndex(toast);
+        const index = this.getToastIndex(toast);
 
         return this.openToasts
             .filter((o: IOpenToast, i: number) => i < index)

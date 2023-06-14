@@ -366,6 +366,8 @@ export class ConstructPartPropertiesComponent
             output.keyword = this.value?.keyword;
             output.name = this.value?.name;
             output.type = this.value?.type;
+        } else {
+            output.keyword = formData.keyword;
         }
 
         return output;

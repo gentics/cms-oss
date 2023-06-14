@@ -297,6 +297,7 @@ export class ConstructDetailComponent
             if (part.typeId === TagPartType.Text) {
                 return {
                     ...part,
+                    defaultProperty: part.defaultProperty || null,
                     regex: regex || null,
                 };
             }
@@ -304,6 +305,7 @@ export class ConstructDetailComponent
             if (part.typeId === TagPartType.HtmlLong) {
                 return {
                     ...part,
+                    defaultProperty: part.defaultProperty || null,
                     regex: regex || null,
                     markupLanguageId: markupLanguageId || null,
                 };
@@ -312,6 +314,7 @@ export class ConstructDetailComponent
             if (part.typeId === TagPartType.SelectMultiple || part.typeId === TagPartType.SelectSingle) {
                 return {
                     ...part,
+                    defaultProperty: part.defaultProperty || null,
                     selectSettings: selectSettings || null,
                 };
             }
@@ -319,11 +322,15 @@ export class ConstructDetailComponent
             if (part.typeId === TagPartType.Overview) {
                 return {
                     ...part,
+                    defaultProperty: part.defaultProperty || null,
                     overviewSettings: overviewSettings || null,
                 };
             }
 
-            return part;
+            return {
+                ...part,
+                defaultProperty: part.defaultProperty || null,
+            };
         });
 
         if (this.fgParts) {

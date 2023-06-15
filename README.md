@@ -113,7 +113,7 @@ Therefore, building the changelog locally has to be done in two steps:
 
 ## Step 1 - CMS OSS Changelog
 
-The CMS OSS Changelog has be be **installed** into the local maven repository, because the CMS Changelog has a dependency on the deployment artifacts.
+The CMS OSS Changelog has to be **installed** into the local maven repository, because the CMS Changelog has a dependency on the deployment artifacts.
 
 ```
 cd [workspace]/cms-oss

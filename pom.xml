@@ -36,6 +36,7 @@
 		<module>cms-linkchecker</module>
 		<module>cms-search</module>
 		<module>cms-server</module>
+		<module>cms-changelog</module>
 	</modules>
 
 	<properties>

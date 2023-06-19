@@ -1,21 +1,22 @@
 import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { coerceToBoolean } from '@gentics/cms-components';
 import { DirtQueueSummary } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
-import { distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, startWith, switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-widget-task-queue',
     templateUrl: './widget-task-queue.component.html',
     styleUrls: ['./widget-task-queue.component.scss'],
 })
-export class WidgetTaskQueueComponent implements OnChanges {
+export class WidgetTaskQueueComponent implements OnInit, OnChanges, OnDestroy {
 
     /** If TRUE component polls and refreshs the data display in an intervall defined in `lifeSyncIntervall` */
     @Input()
-    lifeSyncEnabled = true;
+    public lifeSyncEnabled = true;
 
     /** Determines the amount of seconds between polling information. */
     @Input()
@@ -31,7 +32,9 @@ export class WidgetTaskQueueComponent implements OnChanges {
 
     constructor(
         protected adminOps: AdminOperations,
-    ) {
+    ) { }
+
+    ngOnInit(): void {
         const intervall$ = this.syncIntervall$.asObservable().pipe(
             distinctUntilChanged(isEqual),
             switchMap(milliseconds => timer(0, milliseconds)),
@@ -39,12 +42,14 @@ export class WidgetTaskQueueComponent implements OnChanges {
         );
 
         this.subscriptions.push(intervall$.pipe(
+            startWith(null),
             switchMap(() => this.adminOps.getPublishQueueSummary()),
         ).subscribe(summaries => {
             this.summary$.next(summaries);
         }));
 
         this.subscriptions.push(intervall$.pipe(
+            startWith(null),
             switchMap(() => this.adminOps.getDirtQueue()),
         ).subscribe(tasks => {
             const failedTasks = tasks.filter(t => t.failed).length;
@@ -53,6 +58,10 @@ export class WidgetTaskQueueComponent implements OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
+        if (changes.lifeSyncEnabled) {
+            this.lifeSyncEnabled = coerceToBoolean(this.lifeSyncEnabled);
+        }
+
         if (changes.lifeSyncIntervall) {
             this.syncIntervall$.next(this.lifeSyncIntervall);
         }

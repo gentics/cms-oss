@@ -52,13 +52,13 @@
 
 <ng-template #typeRenderer let-row="row">
     <div class="name-wrapper">
-        <gtx-icon [name]="row.item.type.name" class="type-icon"></gtx-icon>
+        <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
         <a
-            *ngIf="row.item.type.name !== 'template'"
+            *ngIf="row.item?.type?.name !== 'template'"
             class="gtx-entity-grid-link name"
             [routerLink]="row.item | gtxEntityDetailRouterLink"
-        >{{ row.item.type.label }}</a>
-        <span *ngIf="row.item.type.name === 'template'" class="name">{{ row.item.type.label }}</span>
+        >{{ row.item?.type?.label || row.item?.action?.label }}</a>
+        <span *ngIf="row.item?.type?.name === 'template'" class="name">{{ row.item?.type?.label || row.item?.action?.label }}</span>
     </div>
 </ng-template>
 

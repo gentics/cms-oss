@@ -1,5 +1,8 @@
 import {
     AfterContentInit,
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     ContentChildren,
     EventEmitter,
@@ -7,11 +10,13 @@ import {
     Input,
     OnChanges,
     OnDestroy,
+    OnInit,
     Output,
     QueryList,
     SimpleChanges,
 } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { coerceToBoolean } from '../../utils';
 import { TabComponent } from '../tab/tab.component';
 
@@ -71,39 +76,35 @@ import { TabComponent } from '../tab/tab.component';
     selector: 'gtx-tabs',
     templateUrl: './tabs.component.html',
     styleUrls: ['./tabs.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TabsComponent implements AfterContentInit, OnChanges, OnDestroy {
+export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     /**
      * When present (or set to true), tabs are displayed vertically.
      */
     @Input()
-    set vertical(val: any) {
-        this.verticalTabs = coerceToBoolean(val);
-    }
+    @HostBinding('class.vertical')
+    public vertical = false;
 
     /**
      * When present (or set to true), only active tabs with icons will show the title.
      * Non-active tabs with icons will hide the title, show only icon.
      */
     @Input()
-    set hideTitle(val: any) {
-        this.shouldHideTitle = coerceToBoolean(val);
-    }
+    public hideTitle = false;
 
     /**
      * The id of the active tab. Should only be used in pure (stateless) mode.
      */
     @Input()
-    activeId: string;
+    public activeId: string;
 
     /**
      * When present, sets the tabs to pure (stateless) mode.
      */
     @Input()
-    set pure(val: any) {
-        this.isPure = val != null;
-    }
+    public pure = false;
 
     /**
      * When present (or set to true), tabs which do not fit into the width of their container will wrap onto
@@ -111,64 +112,88 @@ export class TabsComponent implements AfterContentInit, OnChanges, OnDestroy {
      * space is filled.
      */
     @Input()
-    set wrap(val: any) {
-        this.tabsShouldWrap = coerceToBoolean(val);
-    }
+    public wrap = false;
 
     /**
      * Fires an event whenever the active tab changes. Argument is the id of the selected tab.
      */
     @Output()
-    tabChange = new EventEmitter<string>();
+    public tabChange = new EventEmitter<string>();
 
     @ContentChildren(TabComponent)
-    tabs: QueryList<TabComponent>;
+    protected tabs: QueryList<TabComponent>;
 
-    @HostBinding('class.vertical')
-    verticalTabs = false;
-    shouldHideTitle = false;
-    tabsShouldWrap = false;
+    protected activeTabId$ = new BehaviorSubject<string>(null);
 
-    private isPure = false;
+    protected subscriptions: Subscription[] = [];
 
-    tabsChangeSubscription: Subscription;
+    constructor(
+        protected changeDetector: ChangeDetectorRef,
+    ) {}
 
-    ngAfterContentInit(): void {
-        if (this.isPure) {
-            this.tabsChangeSubscription = this.tabs.changes.subscribe(() => {
-                setTimeout(() => this.setActiveTab());
+    ngAfterViewInit(): void {
+        let initial = true;
+
+        this.subscriptions.push(combineLatest([
+            this.activeTabId$.asObservable().pipe(
+                distinctUntilChanged(),
+            ),
+            this.tabs.changes,
+        ]).subscribe(([id, tabs]: [string, QueryList<TabComponent>]) => {
+            let hasSet = false;
+
+            // In a timeout, so it is performing this a angular tick later, to prevent the annoying
+            // changed after checked error.
+            setTimeout(() => {
+                if (tabs != null && tabs.length > 0) {
+                    tabs.forEach(singleTab => {
+                        singleTab.active = id === singleTab.id;
+                        singleTab.changeDetector.markForCheck();
+                        hasSet = hasSet || singleTab.active;
+                    });
+
+                    if (initial && !hasSet && !this.pure) {
+                        const first = tabs.first;
+                        first.active = true;
+                        first.changeDetector.markForCheck();
+                        this.activeId = first.id;
+                        this.activeTabId$.next(first.id);
+                    }
+
+                    initial = false;
+                }
+
+                this.changeDetector.markForCheck();
             });
-        } else {
-            let activeTabs = this.tabs.filter(tab => tab.active);
+        }));
 
-            // if there is no active tab set, activate the first
-            if (activeTabs.length === 0) {
-                this.tabs.first.active = true;
-            }
-        }
         this.tabs.notifyOnChanges();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        this.setActiveTab();
+        if (changes.activeId) {
+            this.activeTabId$.next(this.activeId);
+        }
+
+        if (changes.vertical) {
+            this.vertical = coerceToBoolean(this.vertical);
+        }
+
+        if (changes.wrap) {
+            this.wrap = coerceToBoolean(this.wrap);
+        }
+
+        if (changes.hideTitle) {
+            this.hideTitle = coerceToBoolean(this.hideTitle);
+        }
+
+        if (changes.pure) {
+            this.pure = coerceToBoolean(this.pure);
+        }
     }
 
     ngOnDestroy(): void {
-        if (this.tabsChangeSubscription) {
-            this.tabsChangeSubscription.unsubscribe();
-        }
-    }
-
-    /**
-     * Sets the tab with id === this.activeId to active.
-     */
-    setActiveTab(): void {
-        if (this.tabs) {
-            let tabToActivate = this.tabs.filter(t => t.id === this.activeId)[0];
-            if (tabToActivate) {
-                this.setAsActive(tabToActivate);
-            }
-        }
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     /**
@@ -178,7 +203,7 @@ export class TabsComponent implements AfterContentInit, OnChanges, OnDestroy {
         if (tab.disabled) {
             return;
         }
-        if (!this.isPure) {
+        if (!this.pure) {
             this.setAsActive(tab);
             this.tabChange.emit(tab.id);
         } else {

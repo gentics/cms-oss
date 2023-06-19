@@ -363,9 +363,9 @@ export class SplitViewContainerComponent implements AfterViewInit, OnChanges, On
         const element: HTMLElement = this.ownElement.nativeElement;
         if ((element.firstElementChild as HTMLElement).offsetParent !== element) {
             const css: CSSStyleDeclaration = element.style;
-            css.top = element.offsetTop + 'px';
             css.bottom = css.left = css.right = '0';
             css.position = 'absolute';
+            css.setProperty('--gtx-view-top', `${element.offsetTop}px`);
         }
     }
 

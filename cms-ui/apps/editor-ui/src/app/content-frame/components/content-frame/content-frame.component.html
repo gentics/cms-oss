@@ -270,6 +270,7 @@
 
     <div *ngIf="(editMode === 'preview' || editMode === 'edit') && currentItem?.type === 'form'" class="form-editor">
         <gtx-form-editor
+            class="form-editor"
             [form]="currentItem"
             [activeUiLanguageCode]="activeUiLanguageCode$ | async"
             [activeContentLanguageCode]="activeFormLanguageCode$ | async"

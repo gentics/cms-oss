@@ -72,9 +72,9 @@ folder-context-menu {
 
 // On small screen widths or in focus mode, expand edit mode to the full screensize
 gtx-split-view-container.split-view-container::ng-deep {
+    --gtx-view-top: 75px;
     background-color: white;
     position: absolute;
-    top: $header-area-height;
     left: 0;
     right: 0;
     bottom: 0;

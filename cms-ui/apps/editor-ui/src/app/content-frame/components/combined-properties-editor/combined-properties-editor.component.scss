@@ -312,3 +312,42 @@ tag-editor-overlay-host.active {
         width: 90%;
     }
 }
+
+.property-tab-mobile {
+    display: none;
+    height: 16px;
+    margin-top: 2px;
+
+    @media screen and (max-width: $small-screen) {
+        display: block;
+    }
+}
+
+.properties-editor-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+
+    .properties-tabs {
+        flex: 0 1 auto;
+    }
+
+    .properties-content {
+        flex: 1 1 auto;
+        min-height: 1px;
+        overflow: auto;
+        height: 100%;
+    }
+
+    @media screen and (max-width: $small-screen) {
+        flex-direction: column;
+
+        .properties-tabs {
+            flex: 0 0 auto;
+            width: 100%;
+            padding-right: 1.5rem;
+        }
+    }
+}

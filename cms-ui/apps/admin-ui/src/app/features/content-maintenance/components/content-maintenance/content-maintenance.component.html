@@ -12,7 +12,7 @@
         >
             <gtx-progress-bar [active]="isLoading$ | async"></gtx-progress-bar>
 
-            <div class="maintenance-tab-content row">
+            <div class="maintenance-tab-content">
                 <div class="columns small-12 medium-2">
                     <gtx-widget-task-queue
                         [lifeSyncEnabled]="lifeSyncEnabled"
@@ -31,7 +31,7 @@
                         [selectable]="true"
                         [lifeSyncEnabled]="lifeSyncEnabled"
                         [lifeSyncIntervall]="lifeSyncIntervall"
-                        (selectedIdsChange)="selectedNodeIds = $event"
+                        (selectedIdsChange)="updateSelectedIds($event)"
                     ></gtx-widget-publishing-process-per-node>
                 </div>
 
@@ -51,11 +51,11 @@
                                     type="number"
                                     step="1"
                                     min="1"
+                                    placeholder="3"
                                     [required]="true"
                                     [label]="'contentmaintenance.life_sync_intervall' | i18n"
-                                    placeholder="3"
                                     [value]="(lifeSyncIntervall / 1000)"
-                                    (change)="lifeSyncIntervall = $event * 1000"
+                                    (change)="updateInterval($event)"
                                 ></gtx-input>
                             </div>
                         </div>

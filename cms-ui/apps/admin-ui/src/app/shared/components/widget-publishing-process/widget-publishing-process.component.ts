@@ -18,18 +18,18 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
 
     @Input()
-    showTitle = false;
+    public showTitle = false;
 
     /** If TRUE component polls and refreshs the data display in an intervall defined in `lifeSyncIntervall` */
     @Input()
-    lifeSyncEnabled = true;
+    public lifeSyncEnabled = true;
 
     /** Determines the amount of seconds between polling information. */
     @Input()
     public lifeSyncIntervall: number;
 
-    info$ = new BehaviorSubject<PublishInfo>(null);
-    hasFailedJobs$ = new BehaviorSubject<boolean>(true);
+    public info$ = new BehaviorSubject<PublishInfo>(null);
+    public hasFailedJobs$ = new BehaviorSubject<boolean>(true);
 
     private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
 
@@ -50,6 +50,7 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
         );
 
         this.subscriptions.push(intervall$.pipe(
+            startWith(null),
             switchMap(() => this.adminOps.getPublishInfo()),
         ).subscribe(info => {
             this.info$.next(info);

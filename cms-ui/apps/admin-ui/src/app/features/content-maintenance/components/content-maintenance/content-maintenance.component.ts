@@ -17,21 +17,21 @@ export enum ContentMaintenanceTabs {
 })
 export class ContentMaintenanceComponent implements OnInit, OnDestroy {
 
-    readonly ContentMaintenanceTabs = ContentMaintenanceTabs;
+    public readonly ContentMaintenanceTabs = ContentMaintenanceTabs;
 
     @SelectState(state => state.loading.masterLoading)
-    isLoading$: Observable<boolean>;
+    public isLoading$: Observable<boolean>;
 
-    activeTabId: ContentMaintenanceTabs = ContentMaintenanceTabs.GENERAL;
+    public activeTabId: ContentMaintenanceTabs = ContentMaintenanceTabs.GENERAL;
 
     /** Node IDs selected for ction request. */
-    selectedNodeIds: number[] = [];
+    public selectedNodeIds: number[] = [];
 
     /** If TRUE components in this view poll and refresh the data they display in an intervall defined in `lifeSyncIntervall` */
-    lifeSyncEnabled = false;
+    public lifeSyncEnabled = false;
 
     /** Determines the amount of seconds of components in this view between polling information. */
-    lifeSyncIntervall = PUBLISH_PROCESS_REFRESH_INTERVAL;
+    public lifeSyncIntervall = PUBLISH_PROCESS_REFRESH_INTERVAL;
 
     private subscriptions: Subscription[] = [];
 
@@ -58,11 +58,20 @@ export class ContentMaintenanceComponent implements OnInit, OnDestroy {
     }
 
     changeLifeSyncPoll(doPoll: boolean): void {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.appState.dispatch(new SetUserSettingAction('pollContentMaintenance', doPoll));
     }
 
     changeTab(activeTabId: ContentMaintenanceTabs): void {
         this.activeTabId = activeTabId;
         this.changeDetector.markForCheck();
+    }
+
+    updateSelectedIds(newIds: number[]): void {
+        this.selectedNodeIds = newIds;
+    }
+
+    updateInterval(valInSeconds: number): void {
+        this.lifeSyncIntervall = valInSeconds * 1000;
     }
 }

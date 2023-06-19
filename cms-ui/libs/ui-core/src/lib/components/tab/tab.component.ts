@@ -1,38 +1,39 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 
 /**
  * For documentation, see the Tabs
  */
 @Component({
     selector: 'gtx-tab',
-    template: `
-        <div [class.is-active]="active" class="tab-content">
-            <ng-content></ng-content>
-        </div>
-    `,
+    templateUrl: './tab.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabComponent {
 
     @Input()
-    title: string;
+    public title: string;
 
     @Input()
-    icon: string;
+    public icon: string;
 
     @Input()
-    id: string;
+    public id: string;
 
     @Input()
-    routerLink: any[];
+    public routerLink: any[];
 
     @Input()
-    disabled: boolean;
+    public disabled: boolean;
 
     /**
      * When the tab is clicked, this event is fired with the tab id.
      */
     @Output()
-    select = new EventEmitter<string>();
+    public select = new EventEmitter<string>();
 
-    active = false;
+    public active = false;
+
+    constructor(
+        public changeDetector: ChangeDetectorRef,
+    ) {}
 }

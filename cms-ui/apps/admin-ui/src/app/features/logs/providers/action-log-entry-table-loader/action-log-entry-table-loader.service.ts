@@ -42,12 +42,20 @@ export class ActionLogEntryLoaderService extends BaseTableLoaderService<ActionLo
     }
 
     public mapToBusinessObject(log: ActionLogEntry): ActionLogEntryBO {
+        let displayName: string;
+
+        if (log.objId > 0) {
+            displayName = `${log.action?.label} ${log.type?.label}: ${log.objId}`;
+        } else {
+            displayName = log.action.label;
+        }
+
         return {
             ...log,
             [BO_ID]: String(log.id),
             [BO_PERMISSIONS]: [],
             // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-            [BO_DISPLAY_NAME]: `${log.action} ${log.type.label}: ${log.objId}`,
+            [BO_DISPLAY_NAME]: displayName,
         }
     }
 }

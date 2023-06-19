@@ -33,6 +33,7 @@ export enum Feature {
     CONTENT_STAGING = 'content_staging',
     MULTICHANNELLING = 'multichannelling',
     MESH_CR = 'mesh_contentrepository',
+    OBJECT_TAG_SYNC = 'objtag_sync',
 }
 
 /**

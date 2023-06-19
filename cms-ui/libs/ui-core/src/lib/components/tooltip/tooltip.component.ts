@@ -53,6 +53,12 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
     public position: TooltipPosition = 'top';
 
     /**
+     * If the position should be different when on mobile views, set this input as well.
+     */
+    @Input()
+    public mobilePosition: TooltipPosition | null = null;
+
+    /**
      * How the Tooltip should be aligned once it's in position.
      */
     @Input()
@@ -118,7 +124,7 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.position || changes.align || changes.type) {
+        if (changes.position || changes.mobilePosition || changes.align || changes.type) {
             this.updateWrapperContent();
         }
     }
@@ -226,6 +232,10 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
 
         if (this.isHovered || this.manuallyOpened) {
             el.classList.add('is-active');
+        }
+
+        if (this.mobilePosition != null) {
+            el.classList.add(`mobile-position-${this.mobilePosition}`);
         }
 
         this.contentWrapper.instance.styling = this.createStyleObj();

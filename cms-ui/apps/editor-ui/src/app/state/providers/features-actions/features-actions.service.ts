@@ -38,6 +38,7 @@ export class FeaturesActionsService {
             [Feature.CONTENT_STAGING]: false,
             [Feature.MULTICHANNELLING]: false,
             [Feature.MESH_CR]: false,
+            [Feature.OBJECT_TAG_SYNC]: false,
 
             nodeFeatures: {},
         };

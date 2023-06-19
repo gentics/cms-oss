@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { UsersnapSettings } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { ApplicationStateService, STATE_MODULES, UIActionsService } from '../../../state';
@@ -55,8 +55,11 @@ describe('UsersnapService', () => {
         usersnapService.ngOnDestroy();
     });
 
-    it('loads the Usersnap settings and activates usersnap if the feature is enabled', () => {
+    it('loads the Usersnap settings and activates usersnap if the feature is enabled', fakeAsync(() => {
         usersnapService.init();
+
+        tick(5_000);
+
         expect(uiActions.getUsersnapSettings.calls.count()).toBe(0, 'Usersnap should only be initialized if the corresponding feature is enabled.');
 
         appState.mockState({
@@ -64,6 +67,9 @@ describe('UsersnapService', () => {
                 usersnap: true,
             },
         });
+
+        tick(5_000);
+
         expect(uiActions.getUsersnapSettings).toHaveBeenCalledTimes(1);
         expect(usersnapService.activateUsersnapSpy.calls.count()).toBe(0, 'Usersnap should only be initialized after the its settings have been loaded.');
 
@@ -72,23 +78,32 @@ describe('UsersnapService', () => {
                 usersnap: { key: 'test' },
             },
         });
+
+        tick(5_000);
+
         expect(usersnapService.activateUsersnapSpy).toHaveBeenCalledTimes(1);
         expect(usersnapService.activateUsersnapSpy).toHaveBeenCalledWith(appState.now.ui.usersnap);
-    });
+    }));
 
-    it('does not activate Usersnap twice', () => {
+    it('does not activate Usersnap twice', fakeAsync(() => {
         appState.mockState({
             features: {
                 usersnap: true,
             },
         });
+
         usersnapService.init();
+
+        tick(5_000);
 
         appState.mockState({
             ui: {
                 usersnap: { key: 'test' },
             },
         });
+
+        tick(5_000);
+
         expect(usersnapService.activateUsersnapSpy).toHaveBeenCalledTimes(1);
 
         appState.mockState({
@@ -96,12 +111,16 @@ describe('UsersnapService', () => {
                 usersnap: false,
             },
         });
+
         appState.mockState({
             ui: {
                 usersnap: { key: 'test2' },
             },
         });
+
+        tick(5_000);
+
         expect(usersnapService.activateUsersnapSpy.calls.count()).toBe(1, 'Usrsnap should not be activated twice.');
-    });
+    }));
 
 });

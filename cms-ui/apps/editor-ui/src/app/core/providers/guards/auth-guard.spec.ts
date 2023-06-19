@@ -1,10 +1,10 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlSegment } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
+import { NgxsModule } from '@ngxs/store';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { AuthGuard } from './auth-guard';
-import { NgxsModule } from '@ngxs/store';
 
 class MockRouter {
     navigate = jasmine.createSpy('navigate');
@@ -195,6 +195,7 @@ describe('AuthGuard', () => {
 
             appState.mockState({
                 folder: {
+                    nodesLoaded: true,
                     nodes: {
                         list: [1, 2, 3, 4],
                     },
@@ -219,6 +220,7 @@ describe('AuthGuard', () => {
             appState.mockState({
                 folder: {
                     activeNode: 2,
+                    nodesLoaded: true,
                     nodes: {
                         list: [1, 2, 3, 4],
                     },

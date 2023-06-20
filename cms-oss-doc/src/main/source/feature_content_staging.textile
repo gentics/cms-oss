@@ -1,0 +1,139 @@
+h2. Gentics CMS Content Staging
+
+This feature allows transporting content (nodes, channels, folders, pages, images, files and forms) by
+* Exporting selected content into the filesystem of the CMS
+* Downloading the exported content as ZIP file
+* Uploading exported content as ZIP file into the target CMS
+* Importing a content package from the filesystem into the CMS
+
+endprologue.
+
+h3. Configuration
+
+INFO: This feature requires an extra activation for your Gentics CMS license key. Please contact your account manager for details.
+To activate Content Staging for your installation add the following setting to your node.conf and restart your application or container server, where Gentics CMS is hosted.
+
+<javascript filename="conf/features.yml">
+feature:
+  content_staging: true
+</javascript>
+
+The content staging packages are located at the filesystem under _/cms/content-packages_.
+
+h3. Usage
+
+h4. Packages manipulation
+
+If the feature is configured properly, a new @Content Staging@ item appears under @Administration UI - Operations@:
+
+!images/gcn_dialogs/staging/admin_operations.png!
+
+@Content Staging@ window allows basic operation over Content Staging packages:
+ * Creation
+ * Removal
+ * Rename
+ * Metadata edit
+
+Supported package content functions:
+ * Import into CMS: the package content is to be imported into CMS content
+ * Export from CMS: the package content is to be refreshed from CMS contents
+ * Download: the package is downloaded in form of ZIP archive, for further local content altering.
+ * Upload: the content ZIP archive can be uploaded into an existing package
+
+!images/gcn_dialogs/staging/admin_staging_window.png!
+
+h4. Content manipulation
+
+In order to add / remove content against the Content Staging package, use the @Content Staging@ button under @Product Tools@ in the @Editor UI@:
+
+!images/gcn_dialogs/staging/content_manipulation_1.png!
+
+In the following modal, you can select the content package to modify:
+
+!images/gcn_dialogs/staging/content_manipulation_3.png!
+
+This switches the @Editor UI@ in the @Content Staging Mode@ for the selected package, and the context menu for entities will now show actions to add and remove the entity.
+
+!images/gcn_dialogs/staging/content_manipulation_2.png!
+
+When you are done with the content package, use the button labelled @Leave Content Staging@ to switch back to the normal mode.
+
+!images/gcn_dialogs/staging/content_manipulation_4.png!
+
+h3. Implementation details
+
+h4. Adding objects
+
+When objects are added to content packages, they will immediately be written to the filesystem (in their current state). If objects are modified afterwards, their stored
+representation in the content package will *not* be updated automatically.
+
+To make sure that all objects in the content package are up to date with the objects in the CMS, the action "Export from CMS" needs to be executed.
+
+h4. Staging of folder structures
+
+When objects are added to a content package, their parent folders will also be added to the content package (up to and including the node or channel).
+Importing the content package to the target system will always import the whole folder structure, not only a single object.
+
+h4. Staging of nodes/channels
+
+For nodes and channels, not all of the attributes are handled in the same way when it comes to staging.
+
+|_. Attribute                     |_. Import                      |_. Overwrite                   |_. Note |
+| Name                            | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Description                     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Https                           | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Hostname                        | !images/gcn_icons/ok.gif!     | !images/gcn_icons/remove.gif! |        |
+| Publish directory segments      | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Mesh Preview URL                | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! |        |
+| Allow insecure Mesh Preview URL | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! |        |
+| Disable publishing              | !images/gcn_icons/remove.gif! | !images/gcn_icons/remove.gif! | New nodes will have the "disable publishing" flag set after importing |
+| Publish files to filesystem     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish pages to filesystem     | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish files to CR             | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish pages to CR             | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish folders to CR           | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish directory (pages)       | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Publish directory (files)       | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Omit page extensions            | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Page language code placement    | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Page URLs rendering             | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| File URLs rendering             | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Activated node features         | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Node languages                  | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     |        |
+| Assigned constructs             | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     | Already assigned constructs will never be unassigned by an import. |
+| Assigned object properties      | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     | Already assigned object properties will never be unassigned by an import. |
+| Assigned content repositories   | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     | Already assigned content repositories will not be unassigned by an import, if the node does not have a content repository assigned in the content package. |
+| Assigned devtool packages       | !images/gcn_icons/ok.gif!     | !images/gcn_icons/ok.gif!     | Already assigned devtool packages will never be unassigned by an import. |
+
+h4. Staging of page/form versions
+
+When a page or form is added to a content package, all relevant versions of the object will be stored in the content package:
+# Published version (if the page/form is currently published)
+# Planned version (if the page/form is planned to be published at a certain time in the future)
+# Current version (this version always exists)
+
+When importing the content package to the target system, all versions contained in the content package will be imported and set in the correct state:
+# If a published version exists in the content package, it will be imported and published
+# If a planned version exists in the content package, it will be imported and planned for the stored timestamp
+# The current version from the content package will be imported
+
+Note: Version numbers and dates will *not* be stored in the content package but will be created during import. So they are very likely to be different in the source and target systems.
+
+h4. Implementation check
+
+Content Staging does a very strict check for consistency of the "implementation entities", which are used for exported objects.
+
+Implementation entities are
+* Templates of pages
+* Constructs used by pages or object properties
+* Object property definitions
+* Datasources used in constructs
+
+When exporting a content object, that references implementation entities, md5 hashes will be generated for all those implementation entities and stored with the content object.
+Importing will only be possible, if
+# All referenced implementation entities exist in the target system (identified by their global IDs)
+# All referenced implementation entities are implemented exactly like they were in the source system (md5 hashes must match)
+
+If at least one implementation entity does not match, the import will fail (nothing will be changed in the target CMS) and a list of all mismatching entities is shown to the user.
+
+It is advisable to use devtool packages for transport of the implementation entities between source and target systems to make sure that the implementation is identical.

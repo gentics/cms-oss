@@ -1,0 +1,35 @@
+<% guides.each do |name, list| %>
+  <% 
+     # Determin whether this chapter contains any chapter notes that should be displayed
+     chapterContainsNote = false;
+     chapterNote = "";
+     list.each do |guide|
+        # save the first chapter note
+        if guide["note"]
+          chapterContainsNote = true;
+          chapterNote = guide["note"];
+        end
+     end
+   %>
+  <h3><%= name %></h3>
+  <% if chapterContainsNote %>
+      <div class="warning"><p><%= chapterNote %></p></div>
+  <% end %>
+  <dl>
+    <% list.each do |guide| %>
+      <dt>
+        <% if guide["ext-url"] %>
+          <a href="<%= guide["ext-url"] %>"><%= guide["title"] %></a>
+        <% else %>
+          <%= guide_link(guide) %>
+        <% end %>
+      </dt>
+      <dd>
+        <% if guide["construction"] %>
+          <img src="images/construction.png" />
+        <% end %>
+        <p><%= guide["text"] %></p>
+      </dd>
+    <% end %>
+  </dl>
+<% end %>

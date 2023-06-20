@@ -1,0 +1,78 @@
+h2. File publish dependencies
+
+When the feature _contentfile_auto_offline_ is activated for a node, files and images of that node will not be published, unless they are used by other objects.
+
+endprologue.
+
+h3. Activating Feature
+
+The feature must be generally activated:
+
+<javascript filename="conf/features.yml">
+feature:
+  contentfile_auto_offline: true
+</javascript>
+
+NOTE: Changing the general setting for the feature requires the CMS to be restarted.
+
+Once the feature is generally activated, it can be turned on and off for each node using the Backend UI by a user with edit permission on the node:
+
+# Choose _Features_ from the Context Menu of the Node in the tree.
+# Activate the checkbox next to _contentfile_auto_offline_
+# Click _OK_ to activate the feature
+
+NOTE: If the option _Features_ is missing from the context menu, or the feature _contentfile_auto_offline_ is not listed in the features activation dialog, the feature _contentfile_auto_offline_ is probably not generally activated.
+
+h3. How the feature works
+
+During the publish process, a file or image will be marked _online_, if at least one of the following is true
+
+* The feature _contentfile_auto_offline_ is generally disabled (meaning: all files should be _online_)
+* The feature _contentfile_auto_offline_ is not set for the node of the file
+* The file shall be forced to go online (see "Forcing files to go online":#forcing-files-to-go-online on details)
+* The file is used by at least one page or folder (see "Examples of objects using files":#examples-of-objects-using-files for details)
+
+If a files is not marked _online_, it is _offline_ and will neither be published into the filesystem, nor into the contentrepository.
+
+NOTE: This will be done in every publish process, regardless of whether the feature _contentfile_auto_offline_ is activated or not.
+
+h4. Examples of objects using files
+
+* A page contains a link to the file
+* A page displays properties of the file by rendering an overview that contains the file
+* A page displays properties of the file by rendering velocity code
+
+NOTE: Dependencies are only calculated when rendering objects during the publish process. If e.g. a page uses a file only in edit or preview mode, but not in publish mode, the dependency does not count.
+When the dependency is created in an object property, it only counts, if the object property is either rendered in the page content or published into the contentrepository.
+
+NOTE: Dependencies from other files (e.g. in object properties) do +not+ count. If the system contains e.g. two files that link to each other in an object property, but not other object has dependencies on either of the files, they will both be _offline_.
+
+h3. Forcing files to go online
+
+Files/images that need to be published regardless of whether they are used or not can be forced to go online by checking the checkbox next to _Force publish_ in the _Properties_ dialog of the file or image.
+
+!images/gcn_dialogs/force_publish_file.png!
+
+h3. Display of publish status
+
+The tooltip for files/images in the file/image list of the backend UI displays the current status of the file (whether the file is currently marked _online_ or _offline_).
+
+!images/gcn_dialogs/file_online_status.png!
+
+h3. Online status of new files
+
+When a new file is created, it is marked _offline_ by default (because it has not yet been published). During the next publish process, a check will be done, whether the file has to be set _online_.
+
+h3. Instant publishing
+
+Instant publishing is also affected by the feature _contentfile_auto_offline_.
+When a new file is created in a node with the feature enabled, and the file does not have _Force publish_ flag enabled, the file will not be instantly published into the content repository.
+If then a page is published, that uses the currently offline file, this is detected and the file will be set to be online (because it is now used by a page) and instantly published together with the page into the content repository.
+
+This ensures that no page written into the content repository will link to files that are not yet written into the content repository, even if instant publishing is used.
+
+h3. Searching for offline or online files
+
+The extended search for files/images now contains an option to filter only _online_ or _offline_ files/images. This option will be available even if the feature _contentfile_auto_offline_ is not activated.
+
+!images/gcn_dialogs/file_search_online.png!

@@ -1,0 +1,91 @@
+h2. Migrating to Aloha Editor
+
+As Live Editor support for Gentics CMS has ended, projects should be migrated to Aloha Editor when updating Gentics CMS to 5.19.0 or higher. Otherwise inline-editing will not be possible anymore.
+
+endprologue.
+
+h3. Migration
+
+h4. Aloha Page Link Tag
+
+First make sure that your "Aloha Editor Page Link Tag":aloha_gcn_alohapagelink.html is available and implemented as specified.
+
+h4. Table Tags
+
+Table Tags are no longer necessary to allow editing of tables using Aloha Editor. Tables are edited using the table plugin and are stored as part of the editable content.
+The migration from editing as a Gentics CMS Table Tag to editing with Aloha Editor is automatically done while editing a page containing a Table Tag.
+
+When a page is rendered to be edited with Aloha Editor, contained Table Tags will not be rendered as blocks in Aloha Editor, but will simply output the HTML table tag into the editable area.
+When the page is then saved with Aloha Editor, the HTML markup for the table will be stored as part of the editable.
+
+NOTE: The Table Tags will still remain in the page's content, although they are no longer used. After editing a page containing a Table Tag with Aloha Editor, it is safe to remove the Table Tags,
+unless the cells of the table contain not live editable tags.
+
+h5. Tags used for tables
+
+A page containing a Table Tag will have three different types of tags (that can be listed in the Taglist of the page):
+
+NOTE: The names are examples for a table named +table1+.
+
+|_. Name          |_. Description                                            |_. Still used with Aloha Editor |
+| table1          | Main tag rendering the table (and all related tags)      | No                             |
+| table1.A1       | Cell tag for the cell A1 (A is the column, 1 is the row) | Only, if not inline editable   |
+| table1.1.style  | Style tag for the first row                              | No                             |
+| table1.A1.style | Style tag for the cell A1                                | No                             |
+
+h5. Table Tags with live editable cells
+
+If the cells of the table are all live editable, editing of the cells is done with Aloha Editor without using the cell tags. In this case, all tags related to the Table Tag can be removed from the page after
+it has once been edited with Aloha Editor.
+
+h5. Table Tags with not live editable cells
+
+If the cells of the table are not live editable, Aloha Editor will render blocks in the table cells and the corresponding Gentics CMS Tags (cell tags) will still be used.
+In this case, the tags named like +table1.A1+ must remain in the page, all other Table Tag related tags may be removed.
+
+h4. Migrate Constructs
+
+WARNING: Read this part carefully. Skipping steps can lead to severe problems after enabling Aloha Editor.
+
+* The __Table ext__ Parttype is *no longer supported* when using Aloha Editor. All tables have to be converted to html code. You can use "Postprocessors of the Migration feature":feature_migration.html#post-processors or write a custom script that uses the REST API.
+* Make sure your Constructs all have a single root tag, as described in "Constructs - Single Root Tags":aloha_gcn_overview.html#constructs.
+* In the latest version of Gentics CMS, existing Live editable tags must *not* be converted to use the @HTML (long)@ parts for their contents - see "Live Editable Tags":aloha_gcn_overview.html#live-editable-tags. It is recommended to not change existing editables, because it would be necessary to migrate all stored contents from newlines to breaks (including versioned content), which is not possible.
+
+NOTE: When using existing editables with a part like @Text@, @Text/HTML@ or @Text/HTML (long)@ (which will replace newlines to br-Tags while rendering), it is necessary to have the content being stripped of all newlines before saving.
+This will be done automatically, but requires that the feature @aloha_annotate_editables@ is activated (see "Annotating Editables":aloha_gcn_overview.html#annotating-editables for details).
+
+h4. Configure Constructs that will be replaced by Aloha Editor
+
+Some constructs are no longer required to be used, when a project is migrated to Aloha Editor. If, for example, a construct was used to create tags that render content in an HTML &lt;h1&gt; tag,
+this functionality can completely be replaced by the formatting capabilities of Aloha Editor.
+
+By configuring
+
+<javascript filename="conf/*.yml">
+# configure a list of tagtype keywords or IDs for tags, that are migrated to Aloha Editor
+aloha_migrate_tagtypes:
+  - "header"
+</javascript>
+
+all tags using the tagtype with keyword +header+ will not be rendered as blocks in Aloha Editor, but will simply render their HTML into the editable.
+When the page is saved, the HTML content will be stored as part of the editable contents.
+
+NOTE: Some tagtype implementations may behave differently when used with Aloha Editor. Reviewing your editing workflows is advised. You should also use the migration to consolidate your implementation - eg. h2 tags do not need a construct anymore as Aloha Editor allows to handle them directly.
+
+h4. Activate Aloha Editor
+
+Activate Aloha Editor from the Node settings.
+
+h4. Adapt Plugins and Configuration (optional)
+
+NOTE: This step ist optional. You can start out with the "default set of plugins":aloha_gcn_plugins.html#list-of-default-aloha-editor-plugins provided by Gentics CMS.
+
+"Adapt the list of plugins":aloha_gcn_plugins.html to be loaded with Aloha Editor and the corresponding "plugin settings":aloha_gcn_settings.html to match your needs.
+
+INFO: Don't forget to restart the CMS after updating your configuration settings.
+
+&nbsp;
+
+
+
+

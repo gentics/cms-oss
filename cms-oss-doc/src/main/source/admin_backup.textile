@@ -1,0 +1,60 @@
+h2. Backup
+
+This article describes how to create a consistent backup of Gentics CMS.
+
+endprologue.
+
+WARNING: Doing backups is *not* part of Gentics CMS - doing backups is part of
+each customer's liability.
+
+WARNING: Backing up database tables while Gentics CMS is up and
+running will most certainly lead to data inconsistencies.
+
+WARNING: The following steps may vary, depending on your system. Please adapt
+your steps accordingly.
+
+
+h3. Database Backup
+
+Create a backup of your MySQL database.
+
+<shell>
+  # stop Gentics CMS
+  /Node/bin/nodectl stop 
+  # stop Apache service
+  service apache2 stop
+  # dump the database
+  mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 42006 -p node_utf8 > /Node/tmp/node_utf8.sql
+  # NOTE: You can decide if want to backup any contentrepositories
+  # mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 42006 -p contentrepository > /Node/tmp/cr.sql
+</shell>
+
+h3. File Backup
+
+NOTE: This is the recommended way to backup your system
+
+NOTE: Backup your database first
+
+<shell> 
+# stop Gentics CMS
+/Node/bin/nodectl stop
+# create a full backup
+tar cvfz /backup/Node-`date +%F`.tar.gz /Node 
+# start Gentics CMS
+/Node/bin/nodectl start
+</shell> 
+
+h3. Differential Backup
+
+NOTE: Backup your database first
+
+@rdiff-backup@ allows you to restore the system to a state at a given point in time.
+
+<shell> 
+# stop Gentics CMS
+/Node/bin/nodectl stop 
+# create backup using rdiff-backup
+rdiff-backup /Node/ /backup/Node 
+# start Gentics CMS
+/Node/bin/nodectl start
+</shell> 

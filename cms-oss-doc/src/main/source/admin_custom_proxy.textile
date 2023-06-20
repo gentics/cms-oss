@@ -1,0 +1,102 @@
+h2. Custom Proxy
+
+It is possible to configure access to external resources through GCMS REST endpoints that check for GCMS authentication and authorization.
+
+endprologue.
+
+h3. Configuration
+
+External resources are configured in the configuration files:
+
+<shell filename="conf/*.yml">
+
+// configure custom resource with key "myresourcekey"
+custom_proxy:
+  myresourcekey:
+	baseUrl: "http://myresource/basepath/{{param}}"
+	methods:
+      - "GET"
+      - "POST"
+	permission:
+	  type: 90001
+	  id: 1
+	headers:
+      Authorization: "Bearer <token>"
+	parameters:
+	  param:
+        default: "path"
+        values:
+          - "path"
+          - "otherpath"
+	proxy:
+      host: "internal.proxy"
+      port: 4711
+	jwt:
+      enabled: false
+      prefix: ""
+</shell>
+
+|_. Property    |_. Description                                                                                                                                 |_. Mandatory |
+| *baseUrl*     | Base URL of the accessed resource.                                                                                                            | yes         |
+| *methods*     | Optional list of allowed HTTP methods. Possible values are DELETE, GET, HEAD, OPTIONS, POST, PUT                                              | no          |
+| *permission*  | GCMS Permission required for accessing the resource.                                                                                          | no          |
+| *headers*     | Optional list of request headers that will be added by the Proxy                                                                              | no          |
+| *parameters*  | Optional parameters configuration. Parameters can be passed to the proxy as query parameters and will replace {{placeholder}} in the baseUrl. | no          |
+| *proxy*       | Optional HTTP proxy configuration                                                                                                             | no          |
+| *jwt*         | Settings for adding JWT to the forwarded request                                                                                              | no          |
+| *jwt.enabled* | Flag for enabling JWT                                                                                                                         | no          |
+| *jwt.prefix*  | Optional prefix for username and group names in the claims                                                                                    | no          |
+
+h3. REST Endpoint
+
+The base URL for the proxy is @http(s)://[gcms.hostname]/rest/proxy/[key]@ where @[key]@ is the configuration key of the resource.
+
+Any path after the @[key]@ section will be appended to the configured @baseUrl@.
+
+All headers and query parameters sent to the proxy endpoints will be forwarded to the external resource.
+
+h3. JWT
+
+By enabling the flag *jwt.enabled* on a custom proxy, the CMS will add a *Authorization: Bearer _token_* header containing a
+signed "JSON Web Token":https://jwt.io/ (JWT) to each forwarded request.
+
+The JWT will be signed with the private key of the CMS (using algorithm _RS256_), which is created (when is does not exist) upon CMS start and
+stored as file @/cms/keys/private-key.jwk@.
+
+The public key, which can be used to verify the signature can be obtained via the
+"REST API":https://gentics.com/Content.Node/cmp8/guides/restapi/resource_AdminResource.html#resource_AdminResource_publicKey_GET by calling
+
+<code>
+GET http(s)://[gcms.hostname]/rest/admin/publicKey
+</code>
+
+The JWT will contain the following claims:
+
+|_. Property           |_. Description                                                    |
+| *sub*                | Login name of the user (optionally prefixed)                     |
+| *preferred_username* | Login name of the user (optionally prefixed)                     |
+| *given_name*         | First name of the user                                           |
+| *family_name*        | Last name of the user                                            |
+| *email*              | Email address of the user                                        |
+| *gcms_groups*        | List of group names, the user is member of (optionally prefixed) |
+| *iss*                | "Gentics CMS" - to identify the JWT issuer                       |
+| *iat*                | Current timestamp as "issued at" value                           |
+
+Example JWT:
+
+<shell>
+{
+  "sub": "node",
+  "preferred_username": "node",
+  "given_name": "Node",
+  "family_name": "Admin",
+  "email": "nowhere@gentics.com",
+  "gcms_groups": [
+    "Demo",
+    "Node Super Admin"
+  ],
+  "iss": "Gentics CMS",
+  "iat": 1584453152
+}
+</shell>
+

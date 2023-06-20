@@ -1,0 +1,146 @@
+h2. ExpressionParser for TagMap Entries
+
+With the ExpressionParser for TagMap Entries it is possible to dynamically decide which attributes and properties of an
+object are written into the ContentRepository.
+endprologue.
+
+h3. Configuration and usage
+
+To enable the ExpressionParser for the column "tagname" of the Tagmap set the feature 'tagmap_useexpressionparser'
+to @true@.
+
+<shell filename="conf/features.yml">
+feature:
+	tagmap_useexpressionparser: true
+</shell>
+
+When the feature is enabled it is possible to use Expressions in the column "tagname" instead of simple
+references to object properties or tag values. These Expressions are evaluated each time the object is published
+and the result of this evaluation is written to the ContentRepository.
+
+
+h3. ExpressionParser Syntax
+
+This section describes the valid syntax for expressions. In general an Expression is any legal combination of
+Operations, Constants, Literals, Names and Functions.
+
+h4. Binary Operations
+
+Binary Operations define how operators (left hand side [lhs] operator and righ hand side [rhs] operator) shall be
+combined to calculate other values. The supported values of the operators and the generated value depend on the Operator
+and are listed below.
+
+|_. Operator |_. Supported operator types |_. Result type |_. Description |
+| OR | boolean | boolean | Logical or: is true when at least one of the operands is true. Can also be written as &vert;&vert; . |
+| AND | boolean | boolean | Logical and: is true when both operands are true. Can also be written as &&. |
+| == | any | boolean | Equality comparison: is true when the operand values are equal. |
+| != | any | boolean | Unequality comparison: is true when the operand values are not equal. |
+| > | numbers | boolean | "Greater" comparison: is true when the numerical value of the lhs operator is greater than the numerical value of the rhs operator. |
+| >= | numbers | boolean | "Greater or equal" comparison: is true when the numerical value of the lhs operator is greater or equal than the numerical value of the rhs operator. |
+| < | numbers | boolean | "Smaller" comparison: is true when the numerical value of the lhs operator is smaller than the numerical value of the rhs operator. |
+| <= | numbers | boolean | "Smaller or equal" comparison: is true when the numerical value of the lhs operator is smaller or equal than the numerical value of the rhs operator. |
+| LIKE | strings | boolean | "Like" operation: the result is true, when the rhs value matches the pattern of the lhs value. The rhs value might contain the character % as wildcard for any character sequence. |
+| CONTAINSONEOF | arrays | boolean | "Contains one of": the result is true, when the lhs values contain at least one of the values of the rhs array. |
+| CONTAINSNONE | arrays | boolean | "Contains none of": the result is true, when the lhs values contain none of the values of the rhs array. |
+| CONTAINSALL | arrays | boolean | "Contains all": the result is true, when the lhs values contain all of the values of the rhs array. Note: currently, this operator can only be used with static values (i.e. it is not possible to filter a datasource with a rule like "object.attribute CONTAINSALL ['a', 'b', 'c']") |
+| + | numbers | number | "Summation" operation: the result is the sum of the operands values. |
+| - | numbers | number | "Subtraction" operation: the result is the difference of the operands values. |
+| * | numbers | number | "Multiplication" operation: the result is the product of the operands values. |
+| / | numbers | number | "Division" operation: the result is the quotient of the operands values. This will fail when the rhs value is 0. |
+| % | numbers | number | "Modulus" operation: the result is the modulus of the integer division of the operands. This will fail when the rhs value is 0. |
+
+
+h4. Unary Operators
+
+Unary Operations modify values of a single operand.
+
+|_. Operator |_. Supported operator type |_. Result type |_. Description |
+| + | number | number | This operation does not modify the value (is just for the sake of completeness). |
+| - | number | number | Modifies the sign of the numerival value. |
+| ! | boolean | boolean | Logical "Not" operation: Switches true and false. |
+
+h4. Constants
+
+There are three constants: @true@, @false@ and @null@ (empty value).
+
+h4. Literals
+
+There exist four types of literals: integer numbers, floating point numbers, strings and arrays.
+
+
+|_. Type |_. Description |
+| Integer | Integer literals can be notated in decimal form (starting with a number, but not with 0), in hexadecimal notation (starting with 0x) or in octal notation (starting with 0). |
+| Floating Point Number | Floating point numbers can be given in the technical notation, including signs and exponents (see examples below). |
+| String | Strings have to be enclosed by " (double quotes) or ' (single quotes). The special characters enclosing character (double or single quote) and backslash (/) have to be escaped by backslash. Newline is written as \n and tabulator as \t. |
+| Array | Arrays are notated as [value1, value2, ...], where the values may be literals (inluding nested arrays) or constants. |
+
+Examples of literals in expressions
+<shell>
+42 (decimal integer)
+-99 (signed decimal integer)
+0xff (hexadecimal integer, decimal value: 255)
+010 (octal integer, decimal value: 8)
+-18.98e+1 (floating point integer, value: -189.8)
+31.415926e-1 (floating point integer, value: 3.1415926)
+"Franz" (string literal)
+'Sepp' (string literal)
+"\"'\n\t" (string literal, containing escaped characters)
+["Franz", 42, true] (array)
+[['Sepp', 1.95], ['Franz', 1.84]] (nested arrays)
+</shell>
+
+h4. Names and Variables
+
+All character sequences that are not operators, literals, constants or functions (see below) and for which the rules for
+Java identifiers apply, are interpreted as names. Sequences of names that are only separated by . (dots) are interpreted
+as name-paths. When expression containing names are evaluated, name-paths are resolved into their current values (which
+might be null). Special name-paths starting with object. are interpreted as variables. When the expression is used as
+filter for datasource queries, the variables are placeholders for attributes of the filtered objects and their properties.
+For details on Java identifiers, see the Javadoc for Character.isJavaIdentifierPart() .
+
+
+h4. Functions
+
+Functions are Names followed by parenthesis () . Functions might have function parameters that can be Literals,
+Constants, Name-paths, Functions or even Expressions.
+
+|_. Name |_. Parameters |_. Result value |_. Description |
+| concat(string, string, ...) | 2 or more | string | Concatenates the given strings. |
+| isempty(object) | 1 | boolean | Returns true when the object's value is null, an empty string or an empty Collection or Array. |
+| if(expression1, expression2[, expression3]) | 2 or 3 | any | Evaluates expression2 when expression1 is true or expression3 when expression1 is false and 3 parameters where given. |
+| fromArray(array, index) | 2 | any | Fetches the object with index from the given array . |
+| get(object, attributeName) | 2 | any | The get method allows you to get a given attributeName from the object. This can be used, when the attributeName itself is not static, but is itself resolved or constructed by using functions. |
+
+h4. Evaluation priority
+
+The evaluation priority of different expression parts can be seen in the following table (operations with highest priority listed on top):
+
+# Constants, Literals, Names and Functions
+# Unary operations
+# Multiplicative calculation operations
+# Additive calculation operations
+# Comparison operations
+# Boolean operations
+# Assignments
+
+Sequences of operations with the same priority level are evaluated from right to left. It is legal to use parenthesis within expressions to modify the evaluation order.
+
+h3. Examples
+
+h4. Conditionally choose a value to be written in the tagmap
+
+If the tag-part "email" of the "author" tag in the page is filled (@!isempty()@) the contents of the tag-part will be
+written into the tagmap, otherwise the email of the page creator (CMS-User).
+
+<shell>
+if(!isempty(page.tags.author.email.text), page.tags.author.email, page.creator.email)
+</shell>
+
+h4. Concatenate two or more values before writing them in to the tagmap
+
+<shell>
+concat(object.author.firstname, " ", object.author.lastname, " (", object.author.email, ")")
+</shell>
+
+This would produce, given the object property with the given parts exists, an output like
+"<code>Jane Doe (jane.doe@example.com)</code>" for the attribute value in the ContentRepository.

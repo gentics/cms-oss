@@ -1,0 +1,39 @@
+h2. File Resource
+
+endprologue.
+
+
+h3. File create
+
+
+The create Request is used to create new files. The method will accept multipart/form-data
+Binary data must be located within the BodyPart with the name 'fileBinaryData'.
+
+<javascript>
+POST /CNPortletapp/rest/file/create.json
+</javascript>
+
+Fields:
+
+| Name | Description | Mandatory |
+| folderId | Id of the target folder | true |
+| nodeId | Id of the target node | false |
+| fileBinaryData | Binary data field name | false |
+| fileDescription | Description of the file | false |
+
+h4. Generic Request Parameters:
+
+<javascript>&content-wrapper-filter=true</javascript>
+
+When adding this Request Parameter the response content will be wrapped by a textarea tag. This is useful if you use uploaders that utilizes hidden iframes.
+
+<javascript>&filter-contenttype=text/html;charset=utf8</javascript>
+
+This parameter will overwrite the reponse content-type header by the given value. Rest calls will usually return a content-type of 'application/json'. 
+
+h3. File createSimple
+
+The createSimple Request is used to create a new file. The method will accept binary post data.
+<javascript>
+POST /CNPortletapp/rest/file/createSimple?folderId={folderid}&qqfile={fileName}
+</javascript>

@@ -1,0 +1,74 @@
+h2. Gentics CMS package configuration
+
+endprologue.
+
+NOTE: This documentation is for Gentics CMS installations that still use the old package apache only.
+If you are using a distribution webserver the steps will be different but similar. However this is not explained here.
+
+h3. Using HTTPS
+
+h4. Virtual host configuration
+
+To use HTTPS, you must add a corresponding virtual host to the httpd. You can do this by copying the original
+non-HTTPS-enabled virtual host:
+
+<shell>
+cd /Node/apache/conf/sites-available
+cp cms.conf cms_ssl.conf
+</shell>
+
+Then adjust the <tt>VirtualHost</tt> directive to use the HTTPS port and add the <tt>mod_ssl</tt> configuration:
+
+<shell filename="/Node/apache/config/sites-available/cms_ssl.conf">
+<VirtualHost *:443>
+
+SSLEngine on
+SSLCertificateFile /Node/apache/conf/ssl/server.crt
+SSLCertificateKeyFile /Node/apache/conf/ssl/server.key
+
+SetEnvIf User-Agent ".*MSIE.*" nokeepalive ssl-unclean-shutdown
+</shell>
+
+h4. Apache configuration
+
+Activate the virtual host and <tt>mod_ssl</tt>:
+
+<shell>
+cd /Node/apache/config/sites-enabled/
+ln -s ../sites-available/cms_ssl.conf 010-cms_ssl.conf
+cd ../mods_enabled
+ln -s ../mods_available/ssl.load
+</shell>
+
+Create the <tt>/Node/apache/config/ssl</tt> directory and copy your certificate and key files there as mentioned in
+the virtual host configuration.
+
+INFO: If you don't have a commercial certificate yet and just want to test the HTTPS functionality you can also "generate
+a self-signed certificate":http://www.akadia.com/services/ssh_test_certificate.html.
+
+WARNING: If you use a commercial certificate, you must provide the complete certificate chain. You can do this by either adding the
+"<tt>SSLCACertificatePath</tt>":http://httpd.apache.org/docs/2.2/mod/mod_ssl.html#sslcacertificatepath directive
+or by using the "<tt>SSLCertificateChainFile</tt>":http://httpd.apache.org/docs/2.2/mod/mod_ssl.html#sslcertificatechainfile
+directive instead of <tt>SSLCertificateFile</tt>.
+
+h4. HTTPS only & Secure cookies
+
+If the only means of access to both the backend and the REST API is HTTPS, the <tt>secure_cookie</tt> feature can be enabled to improve security.
+
+To make sure everything works HTTPS only, you must check the following:
+
+* Java processes accessing the HTTPS port must trust the used certificate. (e.g. signed by a trusted authority or added to the JVM truststore)
+
+* The <tt>cn_local_server</tt> setting in one of the .yml files in `/cms/conf` is set to the HTTPS URL.
+
+* Put the certificate in PEM format into <tt>/usr/local/share/curl/curl-ca-bundle.crt</tt>
+
+* Your browsers must trust the certificate.
+
+h4. Restart
+
+Finally, restart Gentics CMS.
+
+WARNING: Currently active sessions must be logged in again or there might be some malfunctions.
+
+&nbsp;

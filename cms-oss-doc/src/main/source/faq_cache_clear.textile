@@ -1,0 +1,21 @@
+h2. How can i configure the cache clear behavior?
+
+endprologue.
+
+h3. Configuration
+
+The CACHECLEAR_THRESHOLD parameter can be used to change the cache clear behavior.
+
+Normally, the dirting process will clear the cache for modified object, one by one.
+
+This process can be very time consuming. The CACHECLEAR_THRESHOLD setting can be used to define a threshold upon which a global cache clear is invoked.
+Instead of multiple small cache clears the whole cache invocations will be cleared in one single step.
+
+It is suggested to experiment with this setting in order to determine the optimal value.
+
+<javascript filename="conf/*.yml">
+	# Define the threshold for the cache clear events.
+	# -1 means no global cache clear will be invoked. (Old behavior)
+	#  0 means to always clear the whole cache
+cacheclear_threshold: 10000
+</javascript>

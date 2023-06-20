@@ -1,0 +1,237 @@
+h2. Gentics CMS JavaScript API
+
+The Gentics CMS JavaScript API is a data-oriented (CRUD) JavaScript framework for
+Gentics CMS.
+
+It facilitates the loading and manipulation of Gentics CMS objects via the
+Rest API, without having to be concerned about transportation and
+authentication details in the application's control flow.
+
+This document describes some details of how the Gentics CMS JavaScript API works and how
+to use it effectively.
+
+endprologue.
+
+WARNING: In order to use the Gentics CMS JavaScript API you need to provide jQuery 1.5.1 or above.
+If you need support for Internet Explorer 7 don't use 1.7.1, as an error in this version
+prevents jQuery from working correctly.
+
+h3. Loading the library
+
+There are two main use cases for the library: Frontend Editing and
+Scripting with Gentics CMS backend objects. In any case you
+will need to define the BACKEND_PATH, which locates your
+Gentics CMS backend server:
+
+<javascript>
+GCN.settings.BACKEND_PATH="/[Proxy]/CNPortletapp";
+</javascript>
+
+NOTE: This path must be located on the same host as the page that
+includes the Gentics CMS JavaScript API. If the Gentics CMS backend is
+located on a different host, you will most likely need to use a Proxy
+Script to access it, as loading data using AJAX calls is only allowed on
+the same domain. In our example this script is referred to as
+[Proxy].
+
+An "example implementation":https://github.com/gentics/proxy-php is provided.
+
+NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the 
+"documentation for the GCNProxyServlet":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-servletfilters-gcnproxyservlet.html
+for further information.
+
+h4. Frontend editing
+
+The "Frontend Editing Guide":gcn_js_api_fe.html explains how to use
+Aloha and the Gentics CMS JavaScript API for frontend editing.
+
+h4. Scripting
+
+In other cases you just want to load the Gentics CMS JavaScript API without Aloha Editor.
+An example for this is if you intend to code an additional administrative
+interface that allows you to browse through folders and pages without being
+able to change their contents. In this case you just have to include the library.
+You can either load it from the server or copy it to your frontend and load
+it from there.
+
+<html>
+<script src="/[Proxy]/CNPortletapp/latest/gcnjsapi/bin/gcnjsapi.js"></script>
+</html>
+
+NOTE: Don't include the gcnjsapi.js on a page that loads the Aloha
+gcn-plugin (data-aloha-plugins="gcn/gcn") as that would load the
+gcnjsapi.js twice and may result in errors.
+
+h3. Library Versions
+
+There are three version of the Gentics CMS JavaScript API.
+
+* gcnjsapi/bin/gcnjsapi.js - Minified concatenated version 
+* gcnjsapi/dev/gcnjsapi.js - Unminified not concatenated version
+* gcnjsapi/debug/gcnjsapi.js - Unminified concatenated version
+
+h3. Usage
+
+The general rule of this control abstraction is that the return value of Gentics CMS JavaScript API
+methods are always *continuation objects* and not typical return
+values.
+
+For example:
+
+<javascript>var myPage = GCN.page(42);</javascript>
+
+In the above code, the variable `myPage` is not assigned a page but rather a
+continuation object.  This continuation object exposes the appropriate parts
+of the Gentics CMS JavaScript API for operating on page 42 and for querying for objects 
+contained in that page.
+
+Therefore, this would be an *incorrect* usage of the Library:
+
+<javascript>console.log(GCN.page(42).prop('name'));</javascript>
+
+The appropriate way to read the value of an object provided by the Gentics CMS JavaScript API
+requires that you use a callback like this:
+
+<javascript>
+GCN.page(42, function (page) {
+  console.log(page.prop('name'));
+})
+</javascript>
+
+The simple rule to keep in mind in this regard is that whenever you want to
+read a value of an object retrieved through the Gentics CMS JavaScript API, then you must
+do so through a callback.  The callback causes the object's data to be fetched
+from the server or from the in-memory cache and make its properties available in
+the object passed into the callback function as its only argument.
+
+h3. Caching
+
+Whenever the Gentics CMS JavaScript API is loading objects from the server it will automatically
+cache them for later actions. This resembles no problem as long as you are the only
+one working on that object. If you want to force the library to retrieve a fresh copy
+from the server you can reset the local object data by using the +clear()+ method.
+
+WARNING: calling +clear()+ on an object will also delete all the changes that have
+been applied but where not saved yet.
+
+<javascript>
+
+GCN.folder(42, function (folder) {
+	// [some magic going on here for a while]
+	
+	...
+	
+	// [wayyyyy later]
+	// now we need a fresh copy of the folder since
+	// someone might have changed it on the server
+	// this will clear the cache and reset *ANY* changes
+	// that have not been saved yet
+	folder.clear(); 
+	
+	// now fetch the folder once again to be good to go
+	GCN.folder(42, function(folder) {
+		// now we're good to go with our fresh copy
+		folder.prop('name', $('#foldername').val());
+		folder.save();
+	}); 
+});
+</javascript> 
+
+h3. Example Code Snippets
+
+This should give you a basic idea of what using the Gentics CMS JavaScript API should look like:
+
+<javascript>
+// Print all folders in a node.
+GCN.node(1).folders(function(folders) {
+  console.log(folders[0].prop('name'));
+});
+
+// Change the url of an image in a page.
+GCN.page(7).tag('splash_image', function(tag) {
+  var url = prompt('Please input a new image url');
+  if (url) {
+    tag.part('url', url).save();
+  }
+});
+</javascript>
+
+A little more advanced control flow:
+
+<javascript>
+var myPage;
+
+// Render for editing the `content` tag in page 1 in a
+// HTML element whose id is "main-content."
+function loadPage() {
+  myPage = GCN.page(1, function () {});
+  myPage.tag('content').edit( '#main-content' );
+}
+
+// Modify the page's tag and save the page.
+function savePage() {
+	myPage.save(function (page) {
+		console.log("Saved page " + page.prop("name"));
+	});
+}
+
+// on DOM ready
+jQuery(loadPage);
+
+// onUnload
+jQuery(window).bind('unload', savePage);
+</javascript>
+
+NOTE: Whenever the first callback is provided to any of the API methods, it is
+treated as a success handler.  It will be invoked when the method succeeds and
+will have passed to it, the requested object(s).  A second callback, if
+provided is treaded a custom override to the global error handler, and will
+only be invoked if the operation for whatever reason fails.
+
+NOTE: When fetching a an object or a collection of objects a
+<javascript>NOTFOUND</javascript> exception is thrown if a requested object is not found in
+the backend.  Should one not wish suppress such an error, the variant of the
+method with a "Maybe" suffix should be used.  Note however, that
+<javascript>"{object}Maybe"</javascript> methods are only available for methods that request a
+collection of objects.  eg: <javascript>pages</javascript>, <javascript>pagesMaybe</javascript>.
+
+h3. Control Abstraction
+
+The Gentics CMS JavaScript API favors the JavaScript promises pattern rather than the
+continuous passing style, although it facilitates both. This is why:
+
+The Gentics CMS JavaScript API abstracts Gentics CMS objects, like +pages+, +folders+, and
++tags+, into JavaScript objects, and provides methods to conveniently operate
+over these objects without worrying about how they are represented or
+transported between the client and the server.
+
+Because of the frequent transfer of object states between the client and the
+server, the control flow of an application using Gentics CMS as its remote data
+store will have to be very asynchronous if one is to avoid blocking the
+browser's execution with synchronous communication to the server.
+
+Using callbacks to work around this often forces programming to be done in the
+continuation passing style.  Continuation passing style, however, is error-prone and
+quickly becomes unwieldy with non-trivial application control flow.
+
+We want to avoid code that looks like this:
+
+<javascript>
+// pseudocode: ajax(request_object, callback)
+ajax(a, function() {
+  ajax(b(a.somedata), function() {
+    ajax(c(b.somedata), function() {
+      c.finish()
+    })
+  })
+})
+</javascript>
+
+To provide better control flow, the Gentics CMS JavaScript API provides a *fluent API* that
+facilitates chainable asynchronous methods.  If you are familiar with the
+concept of JavaScript promises, you will understand this control abstraction
+as similary kind of pattern.
+
+See these resources for an introduction to this approach:
+ * "Callbacks, Promises, and Coroutines (oh my!)":http://www.slideshare.net/domenicdenicola/callbacks-promises-and-coroutines-oh-my-the-evolution-of-asynchronicity-in-javascript
+ * "Surviving asynchronous programming in javascript":http://www.infoq.com/articles/surviving-asynchronous-programming-in-javascript

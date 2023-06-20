@@ -1,0 +1,28 @@
+h2. Resumable Publish Process
+
+Activating this feature will allow to resume publish processes, that were cancelled or failed due to errors.
+
+endprologue.
+
+h3. Configuration
+
+To enable resumable publish processes, add the following setting to the node.conf and restart the CMS.
+
+<javascript filename="conf/features.yml">
+feature:
+	resumable_publish_process: true
+</javascript>
+
+h3. Description
+
+To "resume" a cancelled or failed publish process means, that objects, that were successfully (and completely) published before the publish
+process stopped, do not have to be published again.
+
+An object is completely published if all of the following statements are true:
+
+* The object was written into a contentrepository with instant publishing and the transaction has been committed (if the object is published into a contentrepository at all).
+* The rendered content of the page has been written into the internal publish table and the transaction has been committed.
+* The dependencies of the object have been updated (and the transaction has been committed).
+
+When the feature is activated, all completely published objects will immediately be removed from the publish queue.
+This means that the number of objects to republish in the "content maintenance dialog":content_maintenance.html will continually decrease during a running publish process.

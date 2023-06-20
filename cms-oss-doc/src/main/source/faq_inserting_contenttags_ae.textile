@@ -1,0 +1,9 @@
+h2. Inserting Contenttags that use JavaScript with Aloha Editor
+
+Sometimes you might want to insert Contenttags into a page that will also inject JavaScript code into the page. A common example might be a gallery or a video player.
+
+endprologue.
+
+When inserting a new script tag into the source after the page has loaded the browser will refuse to evaluate the script code. Thus if you insert a gallery that makes use of JavaScript using Aloha Editor it won't work right away. Normally you would have to save the page and you gallery will work fine after the page has reloaded.
+
+To make it work right after insertion you have to implement a small workaround: bind to Aloha Editor's "gcn-block-handled" event, check for the tag that has been inserted, save and reload the page if it's a gallery tag. 

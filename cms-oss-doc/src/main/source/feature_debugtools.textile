@@ -1,0 +1,23 @@
+h2. Gentics CMS Debug Tools
+
+This page will explain the usage of the Debug Tools feature.
+
+endprologue.
+
+h3. Overview
+
+The Debug Tools help the end users to report problems with a single click including technical details. It can be used also to clear local data in the browser (eg.: Cookies, Local Storage, Cache, etc...) to solve some issues. This feature should be used when an issue occurs in the CMS to provide as much details as possible about the problem.
+
+!{width:696px}images/gcmsui/feature_debugtools.png!
+
+h3. Usage
+
+WARNING: You should always generate a report when a problem occurs before clearing local data! If you clear your local data before generating a report you cannot provide useful details about the issue to our support team.
+
+Whenever you are using the Gentics CMS (in new UI), and something goes wrong, just press the following keyboard shortcut: @CTRL + ALT + G D@. (Keep pressing @CTRL@ and @ALT@, then press @G@ then @D@). Then follow the instructions below:
+
+* Create a report when a problem occurs. The report will be saved as a file on your device.
+* Clear local data of the application on your browser. After logging in again, please check if the problem persists.
+* Submit the report to support@gentics.com with a description of the problem.
+
+_The report contains information about the current state of the application, some of which is stored locally in your browser, and information about the browser & operating system used._

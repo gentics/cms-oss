@@ -1,0 +1,40 @@
+h2. SEO URLs
+
+In order to generate URLs which are more friendly to search engines, it is possible to
+* Omit template specific extensions for pages (e.g. @startpage@ instead of @startpage.html@)
+* Place the language code in the path instead of in the filename for pages (e.g. @/en/news/article.html@ instead of @/news/article.en.html@)
+* Translate the publish path into the pages language (e.g. @/de/neues/artikel@ as german translation of @/en/news/article@)
+
+endprologue.
+
+h3. Node settings
+
+h4. Omit page extension
+
+When the setting @Omit page extension@ is activated for a node, the template specific extension (e.g. @.html@) is not enforced when creating new pages
+or changing the filename of existing pages.
+
+NOTE: Changing this setting for a node that already contains pages does *not* change the filenames of pages. They need to be changed manually in such cases.
+
+h4. Page language code
+
+The setting @Page language code@ has three possible values:
+
+* @Filename@: The language code will be inserted into the filename when generating a new page or changing an existing page.
+* @Path@: The language code will be included in the publish path (as first segment).
+* @None@: No language code.
+
+NOTE: Changing this setting for a node that already contains pages does *not* change the filenames of pages, but will have an influence on the generated URLs.
+If a page e.g. contains the language code in the filename (@article.en.html@) and the setting is changed to @Path@, the filename will not change, but the language
+code will be included in the path, which could lead to a URL like @/en/news/article.en.html@.
+
+NOTE: The setting @Path@ to include the language code in the publish path will only work properly, when the node property @Publish Directory Segments@ is *not* activated.
+
+h3. Folder translations
+
+It is possible to translate the folder properties @Name@, @Description@ and @Directory@ into all languages, which are assigned to the Node. If no translation is available for
+a specific language, the "general" property is used as fallback.
+
+NOTE: Translation of folder properties is only supported with the new Editor UI.
+
+---

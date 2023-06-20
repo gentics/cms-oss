@@ -1,0 +1,51 @@
+h2. Configure Aloha Editor inside a template
+
+If Aloha Editor settings should be added to the template of a page, some extra care has to be taken in order
+to find the right place for that.
+
+endprologue.
+
+Custom settings for Aloha Editor have to be added _after_ the default settings and _before_ the script tags of Aloha Editor.
+
+In order to accomplish this, there are two placeholders that can be added to the template:
+* *&lt;aloha_settings&gt;* will be replaced by the default settings
+* *&lt;aloha_scripts&gt;* will be replaced by the scripts tags to load Aloha Editor
+
+NOTE: Aloha CSS files will be automatically added into the head tag of the HTML page.
+
+The following template shows an example of how to add custom settings:
+
+<shell filename="My Template">
+<html>
+<head>
+	<!-- Default Aloha Editor settings go here: -->
+	<aloha_settings>
+	
+	<!-- Custom settings for an Aloha Editor plugin -->
+	<script type="text/javascript">
+		Aloha.settings.plugins.image.minHeight = 5;
+	</script>
+
+	<!-- Aloha Editor script tags go here: -->
+	<aloha_scripts>
+
+</head>
+<body>
+	<h1>This is an example</h1>
+	<h2><node content></h2>
+</body>
+</html>
+</shell>
+
+WARNING: Changes in the Aloha.settings JSON Object will override the default configuration, so you
+need to take care to not unintentionally overwrite necessary settings. 
+
+The following example shows a *bad* configuration, because it will remove all configuration of all other plugins.
+
+<shell filename="My Template">
+Aloha.settings.plugins = {"image": {"minHeight": 5}}; 
+</shell>
+
+Overwriting the configuration like this will break the editing of the page in Gentics CMS,
+because editing depends on configuration of some Gentics CMS specific plugins.
+

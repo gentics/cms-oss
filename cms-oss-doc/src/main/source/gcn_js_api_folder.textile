@@ -1,0 +1,56 @@
+h2. Folder
+
+Working with folders
+
+endprologue.
+
+
+h3. Retrieving items from a folder
+
+Folders organize contents in a hierarchical structure so the most common action you might want to accomplish is to load items from a folder. Currently there are four methods that serve this purpose:
+
+* +FolderAPI.pages()+ 
+* +FolderAPI.folders()+
+* +FolderAPI.images()+
+* +FolderAPI.files()+
+
+All of those will work in a similar fashion by providing an array of found items to the success callback. If you want to build a list of pages it would look as follows:
+
+<javascript>
+GCN.folder(42).pages(function (pages) {
+	// pages is an array of PageAPI objects
+	// iterate over pages and print a list
+	for (var i=0; i<pages.length; i++) {
+		document.write(pages[i].prop('name'));
+	}
+});
+</javascript>
+
+h3. Checking permissions
+
+Checking permissions is vital to your fontend implementation. A common usecase would be to decide whether to show a "Create new page"-Button or not. This could be implemented as follows:
+
+<javascript>
+GCN.folder(4711, function (folder) {
+	// we'll only show the "Create page" button if
+	// the user has according privileges
+	if (folder.perm('createpage')) {
+		// your implementation goes here
+		$('#createpage').show();
+	}
+});
+</javascript>
+
+A neat trick can be used to show multiple permission-related buttons at once, as the +perm()+ method will return all available privileges when no permission name is passed:
+
+<javascript>
+GCN.folder(4711, function (folder) {
+	// load all permissions
+	var permissions = folder.perm();
+	
+	for (var i=0; i<permissions.length; i++) {
+		// activate various buttons
+		$('#' + permissions[i]).show();
+	}
+});
+</javascript> 

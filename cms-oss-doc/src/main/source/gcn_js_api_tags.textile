@@ -1,0 +1,113 @@
+h2. Gentics CMS JavaScript API
+
+Gentics CMS JavaScript API Tags
+
+endprologue.
+
+
+h3. Tag Containers
+
+Several objects in the Gentics CMS contain Tags.  These objects include
+folders, files, templates*, and pages.  Each one of these objects surfaces an
+API with the following additional methods +tag()+, +tags()+, +createTag()+, and
++removeTag()+.
+
+NOTE: *templates: Templates, at this moment, are not supported in the Gentics
+Content.Node JavaScript API.  Therefore working with templates tags is currently
+not possible.
+
+h4. Example: Listing tags of a folder
+
+<javascript>
+(function () {
+	// List the name of all tags in folder 7
+	GCN.folder(7).tags(function (tags) {
+		for (var i = 0; i < tags.length; i++) {
+			console.log(tags[i].prop('name'));
+		}
+	});
+}());
+</javascript>
+
+
+h3. Rendering Tags
+
+There are two ways in which tags can be rendered.  One way is via the +render()+
+method, and the other is via +edit()+.  The difference between these two
+functions is that +render()+ will render the tag as it would appear when the
+page is publish, whereas +edit()+  will render a tag in such a way that it will be
+useful for inline editing.
+
+NOTE: If Aloha Editor is available, editable tags which are rendered into the
+DOM through the +edit()+ method will automatically be initialized into Aloha
+Editables.
+
+h4. Example: Rendering a tag for editing
+
+<javascript>
+// Render two tags into the DOM
+GCN.page(42).tag('title').render('h2.content-header');
+GCN.page(42).tag('content').edit('#content-div');
+</javascript>
+
+In the above example, the 2 tags of *page 42* are rendered into the document.
+The *title* tag is rendered as it would appear when the page is published,
+whereas the *content* tag is rendered for editing.  This means that the
+*content* tag will be rendered with all necessary scaffolding elements to allow
+it to manipulated as an Aloha Editor Block.
+
+NOTE: If the content tag is an editable, the Gentics CMS JavaScript API
+will save any changes that are made to its content when page 42 is saved.
+
+NOTE: Any Gentics CMS link tags which are no longer found in the page
+during saving, will automatically be removed.
+
+By default, the tag will be rendered using the data currently stored in the backend
+database. If the tag was modified and not yet stored back, and the tag should be
+rendered using the modified data, the boolean flag +true+ has to be added to the
+method.
+
+h4. Example: Rendering preview of modified tag
+
+<javascript>
+GCN.page(42).tag('content').render(true, function(html) {
+	// html contains the rendered tag
+});
+</javascript>
+
+h3. Tag Parts
+
+Tags are constructed out of various *"parts"*.  Each part is of a given *type*,
+called a *parttype*, and holds a value that is appropriate for its kind.  These
+values can be simple primitive types like strings, numbers, and booleans; but
+they can also be more complex types: objects containing various properties.
+
+The Gentics CMS JavaScript API allows you to read any tag
+parts, and to write to some tag part.
+
+For a list of parttypes, values they hold, and what parts are writable, please
+see the API documentation for
+"TagAPI.parts()":gcnjsapi/jsdoc/symbols/TagParts.html.
+
+NOTE: Unlike tags, it is not possible to create new tag parts with the Gentics CMS JS
+API.  This is because a tag's parts are determined by the tag's *Tag Type*
+(construct).
+
+h4. Example: Modifying a tag's parts
+
+<javascript>
+	GCN.page(1).tag('link1', function (tag) {
+		tag.part('text', 'Home Page');
+		tag.part('url', 'http://www.gentics.com');
+		tag.parent().save();
+		console.log(tag.part('text') + ' links to: ' + tag.part('url'));
+	});
+</javascript>
+
+h4. Example: Modifying a MULTISELECT part
+<javascript>
+	GCN.folder(1).tag('participants', function (tag) {
+		tag.part('multiselect', ['tom', 'jerry']);
+		tag.parent().save();
+	});
+</javascript>

@@ -1,0 +1,55 @@
+h2. Devtools synchronization details
+
+This guide explains how objects are synchronized between the CMS and the filesystem with the help of the Devtools feature.
+
+endprologue.
+
+h3. Adding objects to packages
+
+Objects, that are added to a package will immediately be written to the filesystem (regardless of whether automatic synchronization is enabled or not).
+
+h3. Automatic synchronization
+
+Initially, after the CMS is started, the automatic synchronization is disabled.
+This means that changes of objects in the CMS will not be reflected in the filesystem and changes in the filesystem will not be reflected in the CMS.
+
+The automatic synchonization can be enabled in the UI by checking the checkbox @Automatic synchronization@ in the packages list.
+
+Automatic synchronization is enabled for the current user, which means that when the automatic synchronization mechanism changes objects in the CMS, this will
+be done on behalf that user (regarding edit locks, permissions and log entries). Automatic synchronization is always enabled/disabled for _all_ packages.
+
+The following table shows the relationship between _initiating actions_, _triggered actions_ and _automatic synchronization_:
+
+|_. _Initiating action_                           |_. _Triggered action_                      |_. _Depends on autosync_ |
+|_. Create package in CMS                         | Create package directory in fs            | No                      |
+|_. Delete package in CMS                         | Delete package directory structure in fs  | No                      |
+|_. Add object to package                         | Write object to fs                        | No                      |
+|_. Remove object from package                    | Delete object directory in fs             | No                      |
+|_. Change object¹ in CMS                         | Write object to fs                        | Yes                     |
+|_. Delete object¹ in CMS                         | Delete object directory in fs             | Yes                     |
+|_. Update file in fs                             | Modify object in the CMS                  | Yes                     |
+|_. Create (consistent) file structure for object | Modify/create object in the CMS           | Yes                     |
+|_. Remove object files/directory in fs           | No triggered action                       | No                      |
+|_. Remove package directory structure in fs      | No triggered action                       | No                      |
+
+NOTE: Initiating actions marked with ¹ only trigger actions, if the object acted upon is already part of a main package
+(but not, if the object is only part of a sub package).
+
+h3. Objects in multiple packages
+
+It is possible to add the same object to multiple packages. When automatic synchronization is enabled and the object is changed in the CMS, the object will
+be synchronized with _all_ packages it is part of.
+
+h3. Trigger chain reactions
+
+With the automatic synchronization enabled, some actions might trigger other actions which then become the "initiating" actions and trigger other actions themselves.
+
+Examples:
+* An object is changed in one package, automatically synchronized into the CMS and then automatically synchronized to other packages.
+* The @gentics_structure.json@ file of a datasource is changed to contain a new entry (without specification of a global ID). The datasource is automatically synchronized into the CMS,
+which will create a global ID for the new entry. Then the datasource is automatically synchronized back into the filesystem, which will change the @gentics_structure.json@ file to contain
+the global ID.
+
+h3. Manual synchronization
+
+Besides the automatic synchronization it is also possible to synchronize a single package manually either from the filesystem into the CMS or the other direction.

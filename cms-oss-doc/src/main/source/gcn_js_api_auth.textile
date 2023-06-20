@@ -1,0 +1,121 @@
+h2. Gentics CMS JavaScript API
+
+Gentics CMS JS API Authentication
+
+endprologue.
+
+
+h3. authentication-required
+
+Read and write operations to Gentics CMS objects that reside on the server
+require an authenticated session.  An +authentication-required+ message is
+published when a valid session is not available while attempting to carry out
+such operations that require an authenticated request to the Gentics CMS
+back-end.
+
+The handler  will receive two callback functions: +proceed+ and +cancel+, which
+allow the control of the program to be branched towards continuing the
+interrupted process once authentication has been established, or canceling the
+operation if authentication could to be accomplished (eg: when a login attempt
+fails).
+
+h4. Example
+
+<javascript>
+GCN.sub('authentication-required', function (proceed, cancel) {
+	var user = prompt('Username:');
+	var pass = prompt('Password:');
+
+	GCN.login(user, pass, function(success, data) {
+		if (success) {
+			proceed();
+		} else {
+			cancel();
+		}
+	});
+});
+</javascript>
+
+The handler registered via +authentication-required+ would typically invoke the
++login()+ method with appropriate credentials to attempt to log into the the
+Gentics CMS back-end.
+
+
+h3. login()
+
+The +login()+ function is used to log into Gentics CMS. The
+function has three parameters: +username+,
++password+, a +success+ callback, and an optional
++error+ callback.
+
+h4. success
+
+The +success+ callback function will be invoked once the login
+request has been made. It receives a boolean as its first argument, to indicate
+whether or not the login attempt succeeded.  The second argument is an object
+that contains the necessary data depending on the success of the login attempt.
+If the login attempt did succeed, this data object will contain a
++user+ property, otherwise it will contain an +error+
+property which holds a Gentics CMS error object.
+
+h4. error
+
+The optional +error+ callback function can be used to handle ajax
+errors when the login request could not be made.  It receives a Gentics CMS error
+object as its only argument.  If this handler returns +false+, the
+error will not be propagated to the global +onError+ handler.
+
+h4. Example
+
+<javascript>
+GCN.login('John', 'Doe', function(success, data ) {
+	if (success) {
+		alert('Hello, ' + data.user.firstName + '!');
+	} else {
+		alert('Login failed: ' + data.error.toString());
+	}
+}, function(error) {
+	alert('Log in could not be accomplished. ' + error.toString());
+});
+</javascript>
+
+
+h3. logout()
+
+Logs the user out of the current Gentics CMS session and destroys the session
+data that is stored by the Gentics CMS JavaScript API.  The +logout+ function has two
+parameters: the first is a callback that will be invoked once the logout
+request is completed.  This handler takes two arguments:
++success+, and +error+.  The +success+
+argument is a boolean that indicates whether or not the logout request
+succeeded.  If logout fails, an extra +error+ object is returned.
+This object is the Gentics CMS error object. 
+
+The second argument that the +logout+ function takes, is an
+optional error handler.  This callback is invoked when an ajax transport error
+occurs that prevents request from being accomplished.  
+
+h4. Example
+
+<javascript>
+GCN.logout(function(success, error) {
+	if (success) {
+		// error is `null'
+		alert('Logout was successful.');
+	} else {
+		alert('Logout failed. ' + error.toString());
+	}
+});
+</javascript>
+
+
+h3. setSid()
+
+Allows the session id to be set manually.  This function takes one argument:
+the +sid+ to be set.
+
+
+h3. usingSSO
+
+A flag indicating whether credential login, or single-signon is to be used for
+authentication.

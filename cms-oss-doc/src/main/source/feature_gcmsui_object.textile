@@ -1,0 +1,146 @@
+h2. GCMS UI Object Overview
+
+The GCMS UI object provides access to some of the GCMS UI functionality from within editor and tagfill IFrames.
+
+endprologue.
+
+h3. TypeScript definition of the GCMSUI interface
+
+In editor and tagfill IFrames a global object for communicating with GCMS UI is available.
+It is available as *window.GCMSUI* and has the following TypeScript interface definition:
+
+<shell>
+interface GCMSUI {
+/**
+ * Executes the pre-load script in the context of the IFrame.
+ * This method is called by the code inside the IFrame when the `DOMContentLoaded` event is fired.
+*/
+runPreLoadScript: () => void;
+
+/**
+ * Executes the post-load script in the context of the IFrame.
+ * This method is called by the code inside the IFrame when the `load` event is fired.
+*/
+runPostLoadScript: () => void;
+
+/**
+ * Opens the repository browser window.
+ * Returns Promise which resolves to `ItemInNode | TagInContainer` if `selectMultiple` is false and
+ * to `(ItemInNode | TagInContainer)[]` if `selectMultiple` is true.
+ * The Promise resolves to null if user clicks on cancel button.
+*/
+openRepositoryBrowser: (options: RepositoryBrowserOptions) => Promise<(ItemInNode | TagInContainer) | (ItemInNode | TagInContainer)[]>;
+
+/**
+ * The URL of the styles of the GCMS UI.
+*/
+gcmsUiStylesUrl: string;
+
+/** An object containing useful information about the current state of the UI */
+appState: ExposedPartialState;
+
+/** Registers a callback which is invoked whenever the contents of the appState change */
+onStateChange: (handler: StateChangedHandler) => void;
+
+/** Paths to various endpoints in use by the UI */
+paths: {
+    apiBaseUrl: string;
+    alohapageUrl: string;
+    contentnodeUrl: string;
+    imagestoreUrl: string;
+};
+
+/**
+ * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+ * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+ * the documentation, e.g. `/folder/create`.
+*/
+restRequestGET: (endpoint: string, params?: object) => Promise<object>;
+
+/**
+ * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+ * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+ * the documentation, e.g. `/folder/create`.
+*/
+restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
+
+/**
+ * Tells the editor whether the page content has been modified. When set to `true`, the
+ * "save" button will be enabled.
+*/
+setContentModified: (modified: boolean) => void;
+
+/**
+ * Opens the image editor for the specified image.
+ * @returns a promise, which will resolve to either the edited image
+ * (this may be a copy of the original image as well) or to void if the
+ * user canceled the edit or an error occurred.
+*/
+editImage: (nodeId: number, imageId: number) => Promise<Image | void>;
+
+callDebugTool: () => void;
+
+/**
+ * Opens a tag editor for the specified tag.
+ * Based on the configuration of the TagType, either the GenticsTagEditor or
+ * a custom tag editor is used.
+ *
+ * @param tag The tag to be edited - the property tag.tagType must be set.
+ * @param context The current context.
+ * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
+ * and when the user clicks Cancel, rejects.
+*/
+openTagEditor: (tag: Tag, tagType: TagType, page: Page) => Promise<Tag>;
+}
+</shell>
+
+We will now explain few functions better to understand how to use them.
+
+h3. Method to open the Repository Browser
+
+<shell>
+ GCMSUI.openRepositoryBrowser(options)
+    .then(page => useSelectedPage(page));
+</shell>
+
+This method opens a repository browser window that allows selecting items / an item from multichannelling nodes and their subfolders.
+It can be used for single or multiple selection and limit the type of the allowed selection.
+
+All possible options:
+<shell>
+allowedSelection: ['file', 'image'], // valid options:  'page' | 'folder' | 'image' | 'file' | 'template' | 'contenttag' | 'templatetag' | 'form'
+multiple: true, // optional, default: false
+startNode: 7, // optional, default: current Node
+startFolder: 10, // optional, default current Folder
+onlyInCurrentNode: true, // optional, default false
+title: 'Select a file or image that should be linked in the article', // optional, default text will be displayed
+submitLabel: 'Add to article' // optional, default text will be displayed
+</shell>
+
+The method returns a Promise, which resolves to the selected item if *selectMultiple* is false and to an array of selected items if *selectMultiple* is true.
+If user clicks on the cancel button, the promise neither resolves nor rejects.
+
+h3. Method to open the Image editor
+
+<shell>
+GCMSUI.editImage(nodeId, imageId)
+</shell>
+
+This method opens the image editor for the specified image.
+
+The method returns a promise, which will resolve to either the edited image (this may be a copy of the original image as well) or to void if the user canceled the edit or an error occurred.
+
+h3. Method to open the Tag Editor
+
+<shell>
+GCMSUI.openTagEditor(tag, tagType, page);
+</shell>
+
+This method opens a tag editor for the specified tag.
+Based on the configuration of the TagType, either the GenticsTagEditor or a custom tag editor is used.
+
+The method returns a promise, which when the user clicks *OK*, resolves and returns a copy of the edited tag and when the user clicks *Cancel*, rejects.
+
+
+
+

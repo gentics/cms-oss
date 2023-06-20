@@ -1,0 +1,198 @@
+h2. Gentics CMS Integration Plugin
+
+The Aloha Editor Gentics CMS Integration Plugin allows Gentics CMS to use Aloha Editor for editing page contents.
+
+endprologue.
+
+h3. Description
+
+Settings are provided automatically and must not be changed by implementation. The plugin will also place tagicons in the content if contenttags are used.
+Also, delete icons are provided, which makes it possible to remove a contenttag from a page.
+
+If a tagicon is clicked, a Gentics CMSs Tagfill dialog is opened in a lightbox allowing you to update a contenttag's contents.
+If a delete icon is clicked the corresponding contenttag will be removed from the page and its underlying data model.
+If contenttags are removed by any other means (e.g. selecting and deleting them using the Del key on the keyboard) they will be removed from the contents, but not from the page's data model.
+
+NOTE: If you use the Tagfill dialog to paste HTML contents from Microsoft Word, another webpage or even code you created or modified yourself, Aloha Editor will not be able to filter and clean them. Your HTML code will be inserted directly into the editable and may lead to undesired results.
+
+h3. Configuration
+
+The tag insert buttons within the insert tag can be configured per editable. A whitelist configuration is used to show/hide specific tag insert options. The whitelist uses the tagtype keyword to filter the buttons/menu. This enables the system administrator to further define which tags options can be used for editors.
+
+Example configuration:
+<javascript filename="conf/*.yml">
+aloha_settings_node:
+  "1":
+    plugins:
+      gcn:
+        config:
+		  # this resembles the default configuration of available
+		  # constructs for all editables
+          tagtypeWhitelist:
+            - link
+            - wikilink
+            - formspace
+            - htmllang
+            - myuncategorizedtagtype
+		# if you want to have a specific set of constructs,
+		# you have to configure it using the "editables" key
+        editables:
+		  "#customEditableId":
+		    tagtypeWhitelist: []
+		  ".header":
+		    tagtypeWhitelist:
+		      - link
+		      - seitentag
+		      - download
+		      - upload
+		  "#GENTICS_METAEDITABLE_page_name":
+		    tagtypeWhitelist:
+		      - fileurl
+		      - breadcrumb
+		      - lswitch
+</javascript>
+
+h3. Integration with Aloha Editor Blocks
+
+The Gentics CMS Integration Plugin depends on the
+"Aloha Editor Blocks Plugin":http://www.aloha-editor.org/guides/plugin_block.html
+to create Tagicons and make them draggable. For each tag
+a draghandle will be inserted, which is wrapped in a +span+ tag.
+Here's an example:
+
+<html>
+<div id="GENTICS_BLOCK_773"
+	 class="GENTICS_block
+			aloha-block
+			aloha-block-GCNBlock"
+	 contenteditable="false"
+	 data-aloha-block-type="GCNBlock"
+	 data-gcn-tagname="[tagname]"
+	 data-gcn-tagid="4711"
+	 data-gcn-pageid="42"
+	 data-gcn-editicon="[icon src]"
+	 data-gcn-deleteicon="[icon src]"
+	 data-alohablocktype="GCNBlock"
+	 data-gcntagname="[tagname]">
+	<span class="aloha-block-handle
+				 aloha-block-draghandle
+				 aloha-editicons
+				 aloha-block-draghandle-blocklevel"
+		  style="display: none; ">
+		<button class="gcn-tagicon-edit">
+			<img src="..." draggable="false">
+		</button>
+		<button class="gcn-tagicon-delete">
+			<img src="..." draggable="false">
+		</button>
+	</span>
+	[tag contents...]
+</div>
+</html>
+
+There are various data attributes attached to the block
+
+|_.Attribute			|_.Description              |
+|data-gcn-tagname		|Contains the name of the contenttag|
+|data-gcn-tagid			|Contains the id of the contenttag|
+|data-gcn-pageid		|Contains the id of the contenttags page|
+|data-gcn-editicon		|Contains the image source of the appropriate edit icon|
+|data-gcn-deleteicon	|Contains the image source of the delete icon|
+
+
+h3. Page Object Handlers
+
+WARNING: addPageObjectHandler() is deprecated!  Please use
+<code>GCN.sub('page.before-saved', ...)</code>
+and
+<code>GCN.sub('page.before-published', ...)</code>
+instead.  See the Gentics CMS JS API documentation for more information on how to use
+these events.  See also the example below.
+
+<javascript>
+GCN.sub('page.before-saved', function (page) {
+	// Create a fork copy of `page` on which to make asynchronous
+	// modifications that we will later merge back into `page`.  Meanwhile
+	// all further processing of queued calls in `page` is halted until
+	// `fork` is merged back into it.  This will halt the saving process
+	// also.
+	var fork = page._fork();
+
+	// Asynchronously fetch all tags in the page.
+	fork.tags(function (tags) {
+		for (var i = 0; i < tags.lenth; i++) {
+			// Add " tag" to the name each tag.
+			// ie: "image" becomes "image tag"
+			tag.prop('name', tag.prop('name') + ' tag');
+		}
+
+		// Merge the changes done in `fork` back into is original object
+		// `page` and release `page` to continue processing all queued calls.
+		// This will cause the saving process to resume.
+		fork._merge();
+	});
+});
+</javascript>
+
+Page object handlers allow you to intercept the page during the save process so
+that you can operate on the page or make operations that depend on the state
+of the page before the page's data is sent to the server to be saved.
+
+h4. Registering a page object handler
+
+<javascript>
+Aloha.GCN.addPageObjectHandler(function (page) {
+	console.log(page.prop('name'));
+});
+</javascript>
+
+h4. Things to take note of when using page object handlers
+
+* As of now it is not possible to remove a registered page object handler once
+  it has been subscribed.
+* The execution context of each page object handler callback will be the
+  instance of the Gentics CMS Intergration Plugin.
+* The page object you receive in the handler function allows you to inspect
+  exactly what data  will be sent to the server during the save process (unlike
+  in the legacy plugin, not all of the pages data is send during saving, but
+  only the data that reflects the unsaved changes to the page).  This
+  introspection can be done using <code>page.json()</code>.  Beware, however,
+  that the returned object is only useful for introspection and not for
+  reflection.  IE: Changing properties of the object returned by
+  <code>page.json()</code> will not mutate the page object itself, this must
+  done via the page object's API.
+
+h3. API Methods
+
+h4. appendBlock()
+
+@appendBlock()@ allows one to properly insert a rendered tag into the DOM and
+have any blocks and editables in the inserted content be automatically activated
+for editing with Aloha Editor.
+
+@appendBlock()@ will append the HTML designating a Gentics CMS tag (as given by
+the data parameter) to a jQuery selector and will render it for editing by
+decorating contained blocks with editing icons and initializing editables.
+
+@appendBlock()@ takes four arguments in the following order:
+* *selector (jQuery.&lt;HTMLElement&gt;|HTMLElement|string)* -
+  The HTML element to which the information is appended.
+* *tag ("TagAPI":gcnjsapi/jsdoc/symbols/TagParts.html)* -
+  The tag object for which the data was fetched.
+* *data (object)* -
+  The content data to be rendered for editing. This object should be the
+  response that is returned by a REST-API render call.
+* *callback (function)* -
+  An optional function to be called after decorating blocks.
+
+h5. appendBlock() Example
+<javascript>
+Aloha.ready(function () {
+	Aloha.require(['gcn/gcn-plugin'], function (plugin) {
+		plugin.page.createTag('image').edit(function (html, tag, data) {
+			plugin.appendBlock('.aloha-editable:first', tag, data);
+		});
+	});
+});
+</javascript>
+

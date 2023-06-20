@@ -1,0 +1,46 @@
+h2. Diff Resource
+
+The Diff Resource can be used to render the diff between two HTML contents.
+
+endprologue.
+
+h3. Diff html
+
+Render the diff in HTML format.
+
+<javascript>
+POST /CNPortletapp/rest/diff/html
+{
+  content1: ..,
+  content2: ..,
+  ignoreRegex: ..,
+  changeTemplate: ..,
+  insertTemplate: ..,
+  removeTemplate: ..,
+  wordsBefore: ..,
+  wordsAfter: ..
+}
+</javascript>
+
+| Name | Description | Defaultvalue |
+| content1 | First content to diff | - |
+| content2 | Second content to diff | - |
+| ignoreRegex | Regex for content, which shall be ignored | (empty) |
+| changeTemplate | Template for rendering changes | <del>$remove</del><ins>$insert</ins> |
+| insertTemplate | Template for rendering insertions | <ins>$insert</ins> |
+| removeTemplate | Template for rendering removals | <del>$remove</del> |
+| wordsBefore | Number of words before the change to be rendered in $before | 10 |
+| wordsAfter | Number of words after the change to be rendered in $after |  10 |
+
+
+Parameters for the diff Request
+
+| Name | Description |
+| insert | Inserted content. This Placeholder is used for changes and insertions |
+| remove | Removed content. This Placeholder is used for changes and removals |
+| before | Content right before the change |
+| after | Content right after the change |
+
+Placeholders in templates for rendering diffs
+
+Render the diff in the source.

@@ -1,0 +1,18 @@
+h2. How to use the Oracle MySQL instead of the MariaDB JDBC connector
+
+endprologue.
+
+The <a href="https://dev.mysql.com/downloads/connector/j/" target="_blank">Oracle MySQL</a> and the <a href="https://mariadb.com/kb/en/library/about-mariadb-connector-j/" target="_blank">MariaDB JDBC</a> connectors are already included in the CMS package.
+
+Since version 5.29.0, <a href="https://mariadb.com/kb/en/library/about-mariadb-connector-j/" target="_blank">MariaDB Connector/J</a> is the default connector for MySQL.
+However you can change the following setting to let the CMS use the <a href="https://dev.mysql.com/downloads/connector/j/" target="_blank">Oracle MySQL JDBC connector</a> instead by setting the environment variable @NODE_DB_DRIVER_CLASS@, the Java system property @com.gentics.contentnode.db.driverClass@ or the following setting in a .yml configuration file:
+
+<shell filename="conf/*.yml>
+db:
+	settings:
+		driverClass: "com.mysql.jdbc.Driver"
+</shell>
+
+Read the "documentation for ContentRepositories":admin_contentrepositories.html to do the same for ContentRepositories.
+
+

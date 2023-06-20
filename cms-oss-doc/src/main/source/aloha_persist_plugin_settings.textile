@@ -1,0 +1,96 @@
+h2. Persisting Aloha Editor plugin settings on pages
+
+This page describes how to persist Aloha Editor plugin settings by using a page object property. We will use the numerated-headers plugin to demonstrate how the state of the numerated-headers plugin can be saved within an objecttag. The guide will walk you through the process of:
+
+* enabling the numerated headers plugin
+* creating an object property to store Aloha Editor settings
+* embedding the object property in a template
+* adding an implementation that will update the Aloha Settings
+
+endprologue.
+
+h3. Enabling the numerated headers plugin
+
+In order to use the numerated headers plugin you have to enable it in your +node.conf+
+
+<javascript filename="conf/*.yml">
+custom_aloha_plugins:
+  - "extra/numerated-headers"
+</javascript>
+
+h3. Create an object property to store Aloha Editor settings
+
+Before creating a new object property to store our settings we will need to create a new Tagtype called "alohasettings", composed of three parts:
+
+|_. Parttype |_. Keyword |_. Visibility |_. Description |
+| +Velocity+ | - | visible | used to render velocity |
+| +HTML/long+ | alohasettings | hidden | will store our settings |
+| +HTML/long+ | template | hidden | will render the settings |
+
+Fill the +template+ part with the following code
+
+<javascript filename="template">
+#if ($cms.rendermode.edit)##
+<script type="text/javascript">
+<node alohasettings>
+</script>
+#end##
+</javascript>
+
+In the next step create a new object property for pages, that will use our newly created Tagtype "alohasettings". We will call the object property "alohasettings" too.
+
+h3. Embedding the object property in a template
+
+In order to modify Aloha Editor settings in a page you will need "manually place the Aloha Editor script and settings tags":aloha_gcn_conf_inside_template.html. The following template code will render the default Aloha Editor settings, then extend them with your Aloha Editor settings and finally include the Aloha Editor script tag itself:
+
+<html>
+...
+<body>
+	...
+	<aloha_settings>
+	<node object.alohasettings>
+	<aloha_scripts>
+</body>
+...
+</html>
+
+INFO: Please note that we put our +alohasettings+ object tag right in between the default Aloha Editor settings and the Aloha Editor script tag. This way the settings are changed before Aloha Editor is initialized.
+
+h3. Persisting our changes to the object property
+
+In the last step you will learn how to persist a plugin setting to the object property by making use of the "Gentics CMS JS API":gcn_js_api_overview.html.
+
+When +Aloha Editor+ has finished initialization, we will bind to the +smart-content-changed+-Event to update changes to the settings. As soon as the event is triggered we will use the Gentics CMS JS API to load the +object.alohasettings+ tag from the page and write our updated settings. The changes will then be persisted to the server when the user saves the page.
+
+<javascript>
+// Aloha Editor needs to be initialized before we can...
+Aloha.ready(function() {
+	// bind to the smart-content-changed event
+	Aloha.bind('aloha-smart-content-changed', function () {
+			// fetch the object property
+			Aloha.GCN.page.tag('object.alohasettings',
+				function(alohaSettings) {
+					// an object property needs to be activated
+					// manually - so we make sure it is active
+					alohaSettings.prop('active', true);
+					// the smart-content-changed event might
+					// be triggered without an active editable
+					if (Aloha.activeEditable) {
+						// update the part...
+						alohaSettings.part('alohasettings',
+							'Aloha.settings.plugins["numerated-headers"]' +
+							' = { config: { numeratedactive : ' +
+							// ... with the current state of the
+							// numerated-headers plugin
+							Aloha.activeEditable.obj
+								.attr('aloha-numerated-headers') + ' }};');
+					}
+				});
+		});
+	});
+});
+</javascript>
+
+NOTE: When using this implementation you want to put it inside a velocity tag checking for +$cms.rendermode.edit+.
+
+Now, changing the state of the numerated-headers plugin will be persisted to the pages +object.alohasettings+ object property whenever the user saves the page.

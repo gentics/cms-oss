@@ -1,0 +1,51 @@
+h2. How can i raise the upload limit for files and images?
+
+endprologue.
+
+It is necessary to modify the node.conf to raise the upload limit for files and images within Gentics CMS.
+
+h3. Change maximum filesize
+
+The setting `max_filesize` needs to be changed to the desired size.
+
+<shell filename="conf/*.yml">
+max_filesize: "64M"
+</shell>
+
+h3. Disable maximum filesize for specific groups
+
+It is also possible to disable the maximum filesize for specific groups.
+
+<shell filename="conf/*.yml">
+# groups without MAX_FILESIZE
+# the configuration may be based on group IDs or names
+no_max_filesize:
+  - "Node Super Admin"
+  - "Editor"
+</shell>
+
+WARNING: Users of the specified groups will be able to upload extremely large files, which can cause problems, e.g. during the publish process.
+
+h3. Restart
+
+Restart the CMS or reload the config via the content maintenance module for the changes to take effect.
+
+h3. Publishing of larger files
+
+h4. Filesystem publishing
+
+During the publish process, files will be linked (standard) or copied into the publish directory. This works with files of any size.
+
+h4. Content repository publishing
+
+When publishing files into a content repository, it might be necessary to increase the setting "max_allowed_packet" in the MySQL configuration of the target MySQL server (where the content repository is). If the setting is too low, the publishing process will fail and you will get a "com.mysql.jdbc.PacketTooBigException: Packet for query is too large"-error in the gentics.log.
+The setting should be at least twice the value of the maximum filesize, because the content will be escaped during transfer.
+It might also be necessary to incrase the JVMs memory size.
+
+h3. Import
+
+For raising the maximum filesize for the file upload of imports you have to change the settings "post_max_size" & "upload_max_filesize" in php.ini.
+
+h3. CRSync - File synchronization
+
+See: "CRSync - file synchronization":admin_crsync.html#file-synchronization

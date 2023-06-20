@@ -1,0 +1,753 @@
+h2. New Tag Editor
+
+A new implementation of the Tagfill dialog in the new UI with better styling and well defined extension possibilities.
+
+endprologue.
+
+!{width:696px}images/gcmsui/feature_new_tag_editor.png!
+
+h3. Configuration
+
+This feature needs to be enabled in the CMS configuration and for each node using the old UI. First enable the
+feature in a CMS configuration file and reload the configuration from the old CMS UI.
+
+<shell filename="conf/features.yml">
+feature:
+  new_tageditor: true
+</shell>
+
+Then right click on each node, where you want to use the new tag editor, select "Features", and check the box for the "New Tageditor".
+
+
+h3. Exclusion of TagTypes with CustomForm TagParts
+
+Custom Form TagParts are not supported by the new tag editor, instead it supports well defined extension mechanisms. As long as a TagType relies on a custom form TagPart,
+it should be excluded from opening with the new tag editor. This can be done in the properties of the TagType.
+
+
+h3. Hiding TagParts
+
+A common use case for custom form TagParts was to hide certain TagParts in the tagfill. In the new tag editor a TagPart can be hidden by checking its "Hidden in editor" property.
+
+
+h3. Extension Mechanisms
+
+Instead of custom form TagParts, the new tag editor provides two well defined extension mechanisms, "custom TagProperty editors":#custom-tagproperty-editor and
+"custom tag editors":#custom-tag-editor. Each of these can be realized as a simple .html file with JavaScript or as an elaborate
+Angular or React app. You only need to package it as "static files in a DevTool package":devtools_overview.html#static-files in order to deploy the custom editor to
+the CMS server.
+
+Each custom tag property editor or custom tag editor needs to implement a specific interface to be integrated into the tag editor. The interfaces are provided on this page
+in their original TypeScript versions, but you can of course implement them with plain JavaScript as well. We will soon publish an npm package with the interfaces for the
+custom editors and the model types. If you want to get started already, please copy the definitions from this page or for the model types, please refer to the
+"data types":https://www.gentics.com/Content.Node/guides/restapi/data.html used in the REST API.
+
+Both custom editor types rely on these common model type interfaces in addition to the REST API model types:
+
+<shell>
+/**
+ * Describes the value of a TagPart in a Tag.
+ * This interface contains only the properties, which are always present.
+ * The other properties depend on the TagPropertyType (https://www.gentics.com/Content.Node/guides/restapi/json_Type_Property.html ).
+ * For a list of all properties see: https://www.gentics.com/Content.Node/guides/restapi/json_Property.html
+ */
+export interface TagProperty {
+  id: number;
+  partId: number;
+  type: TagPropertyType;
+}
+
+/** Maps keys to their respective TagProperties in a Tag. */
+export interface TagPropertyMap {
+  [key: string]: TagProperty;
+}
+
+/**
+ * Represents a Tag in a page or template or an object property.
+ * See https://www.gentics.com/Content.Node/guides/restapi/json_Tag.html
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  constructId: number;
+  active: boolean;
+  type: TagTypeType;
+
+  /** Properties of the tag (representing the values in Gentics CMS) */
+  properties: TagPropertyMap;
+}
+
+/** An extension of Tag (see docs in REST API) with properties needed by the TagEditor */
+export interface EditableTag extends Tag {
+  /**
+   * The TagType, of which this tag is an instance.
+   * This property is not part of the REST model and only used internally by the TagEditor.
+   * The TagType interface corresponds to the Construct type of the REST API data model
+   * (see https://www.gentics.com/Content.Node/guides/restapi/json_Construct.html )
+   */
+  tagType: TagType;
+}
+
+/** Describes the current context, in which a TagEditor is operating. */
+export interface TagEditorContext {
+
+  /** The page, to which the tag belongs (set when editing a content tag or an object property of a page). */
+  page?: Page;
+
+  /** The folder, to which the tag belongs (set when editing an object property of a folder). */
+  folder?: Folder;
+
+  /** The image, to which the tag belongs (set when editing an object property of an image). */
+  image?: Image;
+
+  /** The file, to which the tag belongs (set when editing an object property of a file). */
+  file?: File;
+
+  /** The node from which the page/folder/image/file, to which the tag belongs, has been opened. */
+  node: Node;
+
+  /** The Tag being edited. */
+  editedTag: EditableTag;
+
+  /** If true, the tag may not be modified - its data should be displayed only. */
+  readOnly: boolean;
+
+  /** The TagValidator that can be used to validate the values of the TagProperties. */
+  validator: TagValidator;
+
+  /**
+   * The ID of the current GCMS REST API session.
+   * This is provided in case a custom TagEditor or TagPropertyEditor needs to use the REST API.
+   */
+  sid: number;
+
+  /**
+   * Used in custom TagEditors and custom TagPropertyEditors to obtain translations of
+   * i18n keys that come from the GCMS UI.
+   */
+  translator: Translator;
+
+  /** The parts of the context, which may change while the tag editor is displayed. */
+  variableContext: Observable<VariableTagEditorContext>;
+
+  /** Additional services provided by the GCMS UI. */
+  gcmsUiServices: GcmsUiServices;
+
+  /**
+   * Creates a clone of this TagEditorContext.
+   *
+   * All properties will be deep copies, except for sid and translator (which are immutable) and variableContext,
+   * which will be an observable that is connected to the original observable,
+   * such that the cloned context's obervable emits whenever the observable
+   * of the original context emits.
+   */
+  clone(): TagEditorContext;
+}
+
+/** Contains the parts of the context, which may change while the tag editor is displayed. */
+export interface VariableTagEditorContext {
+
+  /** The current UI language. */
+  uiLanguage: string;
+
+}
+
+/**
+ * Additional services provided by the GCMS UI.
+ * For example, services for opening the repository browser and the image editor.
+ */
+export interface GcmsUiServices {
+
+  /** Method for opening the Repository Browser. */
+  openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
+
+  /** Method for opening the Image Editor. */
+  openImageEditor(options: { nodeId: number, imageId: number }): Promise<Image | void>;
+
+}
+
+/**
+ * This should be used in custom TagEditors and custom TagPropertyEditors
+ * to obtain translations for i18n keys that come from the GCMS UI.
+ */
+export interface Translator {
+
+  /**
+   * Gets the translated value(s) of the specified i18n key(s) for the currently active UI language.
+   * This method works like TranslateService.get() of ngx-translate (https://github.com/ngx-translate/core#methods ).
+   *
+   * @returns An Observable with the translated value(s). This observable will emit whenever the
+   * current languages changes.
+   */
+  get(key: string|Array<string>, interpolateParams?: Object): Observable<string|Object>;
+
+  /**
+   * Gets the translated value(s) of the specified i18n key(s) for the currently active UI language.
+   * This method works like TranslateService.instant() of ngx-translate (https://github.com/ngx-translate/core#methods ).
+   *
+   * This method only returns the translation for the currently selected language. It is recommended to use
+   * the get() method instead, which will return an observable that reacts to language changes.
+   */
+  instant(key: string|Array<string>, interpolateParams?: Object): string|Object;
+
+}
+
+/** Interface used for validating the properties of an EditableTag. */
+export interface TagValidator {
+
+  /**
+   * Validates the specified TagProperty with the TagPropertyValidator registered for it.
+   * Returns the ValidationResult returned by the TagPropertyValidator or null if no TagPropertyValidator
+   * is registered for the TagProperty.
+   */
+  validateTagProperty(property: TagProperty): ValidationResult;
+
+  /** Clones this TagValidator instance. */
+  clone(): TagValidator;
+}
+
+/** The result of validating a TagProperty against the constraints defined in the corresponding TagPart. */
+export interface ValidationResult {
+
+  /** True if the TagProperty has a value. */
+  isSet: boolean;
+
+  /**
+   * True if the value of the TagProperty is valid.
+   *
+   * A TagProperty is valid if:
+   * - it has a value set and that value passes validation or
+   * - it has no value set and it is a non-mandatory property.
+   */
+  success: boolean;
+
+  /**
+   * The i18n string of the error message in case the validation was not successful.
+   *
+   * This message must be translated using the TagEditorContext.translator if operating in a
+   * custom TagEditor or custom TagPropertyEditor. Inside the GCMS UI the normal translateService or
+   * i18n pipe can be used.
+   */
+  errorMessage?: string;
+}
+
+/**
+ * A map of possibly multiple validation results.
+ *
+ * multiValidationResult['propA'] is the ValidationResult for the TagProperty with the key 'propA'.
+ */
+export interface MultiValidationResult {
+  [key: string]: ValidationResult;
+}
+</shell>
+
+
+h4. Custom TagProperty Editor
+
+If you need to customize the editing process of a single TagPart, you can provide a custom TagProperty editor for it. Just deploy it in a DevTool package and
+set the URL, at which the main .html file will be available in the field "URL for external Component Editor" in the properties of the respective TagPart.
+
+Each custom TagProperty Editor needs to implement the @CustomTagPropertyEditor@ interface. It will be loaded inside an IFrame as part of the TagEditor.
+In order for the TagEditor to be able to communicate with the CustomTagPropertyEditor, the global @window.GcmsCustomTagPropertyEditor@ variable
+has to be set to the instance of the @CustomTagPropertyEditor@ by the time the @load@ event of the IFrame window fires.
+<shell filename="tag-property-editor.ts">
+/**
+ * The onChange function that a TagPropertyEditor needs to call when the user changes the TagProperty assigned to the editor.
+ *
+ * In response to user input a TagPropertyEditor may also change other TagProperties.
+ * All changed TagProperties have to be passed to the onChange function.
+ *
+ * onChange returns the validation results for the changed TagProperties.
+ *
+ * onChange must not be called from within TagPropertyEditor.writeValues().
+ */
+export type TagPropertiesChangedFn = (changes: Partial<TagPropertyMap>) => MultiValidationResult;
+
+/**
+ * Base interface for a TagPropertyEditor (i.e., a component for editing a single TagProperty).
+ *
+ * The initialization of a TagPropertyEditor occurs as follows:
+ * 1. ngOnInit()
+ * 2. initTagPropertyEditor()
+ * 3. registerOnChange()
+ *
+ * Whenever the user changes the TagProperty assigned to this editor (which may cause the editor to change
+ * other TagProperties as well), the TagPropertyEditor has to call the TagPropertiesChangedFn to inform the
+ * TagEditor about the changes. The TagEditor will then validate the changes and make the onChange function
+ * return the validation results.
+ * During the execution of the onChange function the TagEditor copies all valid changes to a partial
+ * TagPropertyMap and communicates them to all other TagPropertyEditors through their writeChangedValues() method.
+ * The source TagPropertyEditor does not get a writeChangedValues() call.
+ *
+ * The decision for the appropriate times to call the TagPropertiesChangedFn is up to each TagPropertyEditor,
+ * but the TagPropertiesChangedFn must be called at the latest when the TagPropertyEditor component loses focus.
+ *
+ * The TagPropertyEditor may perform tag validation by itself as well. This must however, not influence the calls
+ * to the TagPropertiesChangedFn, i.e. user input values that fail validation must also be passed to it, so that
+ * the TagEditor knows that the currently displayed value is invalid.
+ *
+ * All objects passed to any of the methods of the TagPropertyEditor interface are deep copies created by the TagEditor,
+ * so they may be safely modified by the TagPropertyEditor.
+ */
+export interface TagPropertyEditor {
+
+  /**
+   * Initializes the TagPropertyEditor.
+   *
+   * This method should perform necessary initialization and store the objects for later reference.
+   * At this point the TagPropertyEditor needs to store and process all TagProperties that it is interested in.
+   *
+   * Since the tag object passed to this method contains all TagProperties as they were received from the CMS,
+   * some of the TagProperties may contain values, which would be considered invalid by a TagPropertyValidator
+   * (e.g., mandatory properties, which are not set).
+   *
+   * @param tagPart The part of the tag that this TagPropertyEditor is responsible for.
+   * @param tag The Tag that is being edited.
+   * @param context The current TagEditorContext.
+   */
+  initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagProperty, context: TagEditorContext): void;
+
+  /**
+   * Registers the callback that needs to be called whenever the TagPropertyEditor changes any of the TagProperties.
+   */
+  registerOnChange(fn: TagPropertiesChangedFn): void;
+
+  /**
+   * This method is called whenever another TagPropertyEditor changes some TagProperty (by calling the TagPropertiesChangedFn),
+   * such that each TagPropertyEditor can see the changes and react if needed. All changes passed to this method have passed
+   * validation by a TagPropertyValidator (invalid changes are filtered out by the TagEditor).
+   *
+   * Important: The TagPropertiesChangedFn must not be called from within the writeValues() method,
+   * since two TagPropertyEditors doing this could cause an infinite writeValues() - onChange() - writeValues() - onChange() loop.
+   *
+   * @param values A map of all TagProperties that were changed and are valid.
+   */
+  writeChangedValues(values: Partial<TagPropertyMap>): void;
+
+}
+
+/**
+ * This function needs to be called by a CustomTagPropertyEditor or CustomTagEditor whenever its size changes.
+ * This is necessary, because it is loaded in an IFrame.
+ */
+export type CustomEditorSizeChangedFn = (newSize: {width?: number, height?: number}) => void;
+
+/**
+ * Base interface for a custom TagPropertyEditor (a TagProperty editor that is loaded inside an IFrame within the Gentics Tag Editor).
+ *
+ * By the time the `load` event of the IFrame window fires, the global `window.GcmsCustomTagPropertyEditor` variable
+ * has to be set to the instance of the `CustomTagPropertyEditor`.
+ *
+ * The IFrame element has the `data-gcms-ui-styles` set to a URL from which the basic styles
+ * of the GCMS UI can be loaded. The URL can be accessed via `window.frameElement.dataset.gcmsUiStyles`.
+ * Loading these styles is optional.
+ */
+export interface CustomTagPropertyEditor extends TagPropertyEditor {
+
+  /**
+   * Registers the callback that needs to be called whenever the editor's size changes.
+   */
+  registerOnSizeChange(fn: CustomEditorSizeChangedFn): void;
+
+}
+</shell>
+
+
+h4. Example Custom TagProperty Editor
+
+The following is the code of an .html file that contains a simple custom TagProperty editor, which will simply display the entire TagProperty
+serialized as JSON and send the updated value to the TagEditor whenever the textarea loses focus.
+
+<shell filename="tag-prop-editor-example.html">
+<html>
+<body>
+  <script>
+    (function() {
+
+      JsonTagPropertyEditor = function() {
+
+        let _tagPart;
+        let _tagProperty;
+        let _onChangeFn;
+
+        /**
+         * Initializes the TagPropertyEditor.
+         *
+         * This method should perform necessary initialization and store the objects for later reference.
+         * At this point the TagPropertyEditor needs to store and process all TagProperties that it is interested in.
+         *
+         * Since the tag object passed to this method contains all TagProperties as they were received from the CMS,
+         * some of the TagProperties may contain values, which would be considered invalid by a TagPropertyValidator
+         * (e.g., mandatory properties, which are not set).
+         *
+         * @param tagPart The part of the tag that this TagPropertyEditor is responsible for.
+         * @param tag The Tag that is being edited.
+         * @param context The current TagEditorContext.
+         */
+        this.initTagPropertyEditor = function (tagPart, tag, tagProperty, context) {
+          _tagPart = tagPart;
+          updateTagProperty(tagProperty);
+          const txtElement = document.getElementById('txtJson');
+
+          txtElement.addEventListener('blur', function (event) {
+            onUserChange();
+          });
+        }
+
+        /**
+         * Registers the TagPropertiesChangedFn that needs to be called whenever the TagPropertyEditor changes any of the TagProperties.
+         */
+        this.registerOnChange = function(fn) {
+          _onChangeFn = fn;
+        }
+
+        /**
+         * This method is called whenever another TagPropertyEditor changes some TagProperty (by calling the TagPropertiesChangedFn),
+         * such that each TagPropertyEditor can see the changes and react if needed. All changes passed to this method have passed
+         * validation by a TagPropertyValidator (invalid changes are filtered out by the TagEditor).
+         *
+         * Important: The TagPropertiesChangedFn must not be called from within the writeValues() method,
+         * since two TagPropertyEditors doing this could cause an infinite writeValues() - onChange() - writeValues() - onChange() loop.
+         *
+         * @param values A map of all TagProperties that were changed and are valid.
+         */
+        this.writeChangedValues = function(values) {
+          // We only care about changes to the TagProperty that this editor is responsible for.
+          const tagProp = values[_tagPart.keyword];
+          if (tagProp) {
+            updateTagProperty(tagProp);
+          }
+        }
+
+        /**
+         * Registers the callback that needs to be called whenever the editor's size changes.
+         */
+        this.registerOnSizeChange = function(onSizeChangeFn) {
+          let prevSize = {
+            width: document.documentElement.clientWidth,
+            height: Math.max(document.documentElement.clientHeight, 200)
+          };
+          onSizeChangeFn(prevSize);
+
+          // This is just a very quick way of updating the size by polling.
+          // Using clientHeight does not allow the editor to shrink again.
+          // Maybe this can be done better in a production editor.
+          setInterval(function() {
+            const newSize = {
+              width: document.documentElement.clientWidth,
+              height: document.documentElement.clientHeight
+            };
+            if (newSize.width !== prevSize.width || newSize.height !== prevSize.height) {
+              prevSize = newSize;
+              onSizeChangeFn(newSize);
+            }
+          }, 500);
+        }
+
+        /**
+         * Used to update the currently edited TagProperty with external changes.
+         */
+        updateTagProperty = function(newValue) {
+          _tagProperty = newValue;
+          document.getElementById('txtJson').innerText = JSON.stringify(_tagProperty, '', '    ');
+        }
+
+        /**
+         * Updates the tagProperty with changes made by the user and calls onChangeFn().
+         */
+        onUserChange = function() {
+          const json = document.getElementById('txtJson').value;
+          _tagProperty = JSON.parse(json);
+
+          if (_onChangeFn) {
+            const changes = {};
+            changes[_tagPart.keyword] = _tagProperty;
+            _onChangeFn(changes);
+          }
+        }
+
+        return this;
+      }
+
+      // The window.GcmsCustomTagPropertyEditor needs to be set, so that the TagEditor
+      // can find the custom TagPropertyEditor.
+      window.GcmsCustomTagPropertyEditor = new JsonTagPropertyEditor();
+
+      // Load the GCMS UI styles (optional).
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = window.frameElement.dataset.gcmsUiStyles;
+      document.body.appendChild(link);
+    })();
+
+  </script>
+
+  <textarea id="txtJson" style="width: 100%; height: 200px;"></textarea>
+
+</body>
+</html>
+</shell>
+
+
+h4. Custom Tag Editor
+
+If you need to customize the editing process of multiple TagParts or don't want to use the default tag editor at all, you can create a custom TagEditor.
+Just deploy it in a DevTool package and set the URL, at which the main .html file will be available in the field "URL for external Tag Editor"
+in the properties of the respective Tagtype.
+
+Each custom TagEditor needs to implement the @CustomTagEditor@ interface. It will be loaded instead of the default TagEditor, inside an IFrame.
+By the time the @load@ event of the IFrame window fires, the @window.GcmsCustomTagEditor@ needs to be set, so that the GCMS UI can find the custom TagEditor.
+<shell filename="tag-property-editor.ts">
+/** Base interface for a TagEditor. */
+export interface TagEditor {
+
+  /**
+   * Opens the TagEditor to edit the specified tag, while reporting every change via `changeFn`.
+   *
+   * Whenever a TagProperty is changed, the entire `TagPropertyMap` must be passed to `changeFn` to inform
+   * the parent component of the changes. It is up to the TagEditor to decide when a change is 'complete' and
+   * needs to be reported, e.g., when the user types in an input field, the TagEditor may decide whether
+   * to report a change on every keystroke or only after the user has finished typing.
+   *
+   * In this mode the TagEditor must not display any OK/Cancel button, since this will be handled
+   * by the parent component.
+   *
+   * @param tag The tag that should be edited.
+   * @param context The `TagEditorContext` that provides further information about the tag.
+   * @param changeFn This function must be called with the entire `TagPropertyMap` of the tag whenever a change
+   * has been made. If the current tag state is invalid, `null` may be used instead of the `TagPropertyMap`.
+   */
+  editTagLive(tag: EditableTag, context: TagEditorContext, onChangeFn: (tagProperties: TagPropertyMap | null) => void): void;
+
+  /**
+   * Opens the TagEditor for editing the specified tag.
+   *
+   * This method is optional for a `CustomTagEditor` and may be omitted. In that case
+   * the parent component will implement this method using `editTagLive()`.
+   *
+   * @param tag The tag that should be edited.
+   * @param context The `TagEditorContext` that provides further information about the tag.
+   * @returns A Promise, which will be resolved with the modified tag if the user clicks the OK button
+   * or which will be rejected if the user clicks Cancel button.
+   */
+  editTag?(tag: EditableTag, context: TagEditorContext): Promise<EditableTag>;
+
+}
+
+/**
+ * This function needs to be called by a CustomTagPropertyEditor or CustomTagEditor whenever its size changes.
+ * This is necessary, because it is loaded in an IFrame.
+ */
+export type CustomEditorSizeChangedFn = (newSize: {width?: number, height?: number}) => void;
+
+/**
+ * Base interface for a custom TagEditor (a TagEditor that is loaded inside an IFrame by CustomTagEditorHost).
+ *
+ * By the time the `load` event of the IFrame window fires, the global `window.GcmsCustomTagEditor` variable
+ * has to be set to the instance of the custom `TagEditor`.
+ *
+ * The IFrame element has the `data-gcms-ui-styles` set to a URL from which the basic styles
+ * of the GCMS UI can be loaded. The URL can be accessed via `window.frameElement.dataset.gcmsUiStyles`.
+ * Loading these styles is optional.
+ */
+export interface CustomTagEditor extends TagEditor {
+
+  /**
+   * Registers the callback that needs to be called whenever the editor's size changes.
+   */
+  registerOnSizeChange(fn: CustomEditorSizeChangedFn): void;
+
+}
+</shell>
+
+
+h4. Example Custom Tag Editor
+
+The following is the code of an .html file that contains a simple custom tag editor, which will simply display the entire Tag
+serialized as JSON.
+
+<shell filename="tag-editor-example.html">
+<html>
+<body>
+  <!--
+    IE11 requires a polyfill to support Promises.
+    Promise polyfill used here: https://www.npmjs.com/package/promise-polyfill
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"></script>
+  <script>
+    (function() {
+
+      JsonTagEditor = function() {
+
+        let _editableTag;
+        let _context;
+        let _resolveFn;
+        let _rejectFn;
+        let _onChangeFn;
+
+        /**
+         * Opens the TagEditor for editing the specified tag.
+         * @returns A Promise, which will be resolved with the modified tag if the user clicks the OK button
+         * or which will be rejected if the user clicks Cancel button.
+         */
+        this.editTag = function(editableTag, context) {
+          _editableTag = editableTag;
+          _context = context;
+          return new Promise(function(resolve, reject) {
+            _resolveFn = resolve;
+            _rejectFn = reject;
+            init();
+          });
+        };
+
+        /**
+         * Opens the TagEditor to edit the specified tag, while reporting every change via `changeFn`.
+         *
+         * Whenever a TagProperty is changed, the entire `TagPropertyMap` must be passed to `changeFn` to inform
+         * the parent component of the changes. It is up to the TagEditor to decide when a change is 'complete' and
+         * needs to be reported, e.g., when the user types in an input field, the TagEditor may decide whether
+         * to report a change on every keystroke or only after the user has finished typing.
+         *
+         * In this mode the TagEditor must not display any OK/Cancel button, since this will be handled
+         * by the parent component.
+         */
+        this.editTagLive = function(editableTag, context, onChangeFn) {
+          _editableTag = editableTag;
+          _context = context;
+          _onChangeFn = onChangeFn;
+          document.getElementById('footer').classList.add('hidden');
+          document.getElementById('validation-results-container').classList.add('hidden'); // The validation button is part of the footer, that's why we hide the example results here
+          init();
+        };
+
+        /**
+         * Registers the callback that needs to be called whenever the editor's size changes.
+         */
+        this.registerOnSizeChange = function(onSizeChangeFn) {
+          let prevSize = {
+            width: document.documentElement.clientWidth,
+            height: Math.max(document.documentElement.clientHeight, 200)
+          };
+          onSizeChangeFn(prevSize);
+
+          // This is just a very quick way of updating the size by polling.
+          // Using clientHeight does not allow the editor to shrink again.
+          // Maybe this can be done better in a production editor.
+          setInterval(function() {
+            const newSize = {
+              width: document.documentElement.clientWidth,
+              height: document.documentElement.clientHeight
+            };
+            if (newSize.width !== prevSize.width || newSize.height !== prevSize.height) {
+              prevSize = newSize;
+              onSizeChangeFn(newSize);
+            }
+          }, 500);
+        }
+
+        this.validateTag = function() {
+          const resultsContainer = document.getElementById('validation-results');
+          let tag;
+          try {
+            tag = parseChanges();
+          } catch (ex) {
+            resultsContainer.innerText = ex.toString();
+            return;
+          }
+
+          const validationResults = validateChanges(tag.properties);
+          resultsContainer.innerText = JSON.stringify(validationResults, '', '    ');
+        };
+
+        this.onTextChange = function() {
+          if (!_onChangeFn) {
+            return;
+          }
+          var tagProperties;
+          try {
+            var tag = parseChanges();
+            tagProperties = tag.properties;
+          } catch(ex) {
+            tagProperties = null;
+          }
+          _onChangeFn(tagProperties);
+        };
+
+        this.onOkClick = function() {
+          let tag;
+          try {
+            tag = parseChanges();
+          } catch(ex) {
+            alert('Error parsing JSON.');
+            console.error(ex);
+            return;
+          }
+          _resolveFn(tag);
+        };
+
+        this.onCancelClick = function() {
+          _rejectFn();
+        };
+
+        validateChanges = function(tagProperties) {
+          const keys = Object.keys(tagProperties);
+          return keys.map(function (key) {
+            const tagProp = tagProperties[key];
+            return _context.validator.validateTagProperty(tagProp);
+          });
+        }
+
+        init = function() {
+          const txtElement = document.getElementById('txtJson');
+          txtElement.value = JSON.stringify(_editableTag, '', '    ');
+        };
+
+        parseChanges = function() {
+          const tagJson = document.getElementById('txtJson').value;
+          return JSON.parse(tagJson);
+        }
+
+        return this;
+      }
+
+      // The window.GcmsCustomTagEditor needs to be set, so that the GCMS UI
+      // can find the custom TagEditor.
+      window.GcmsCustomTagEditor = new JsonTagEditor();
+
+      // Load the GCMS UI styles (optional).
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = window.frameElement.dataset.gcmsUiStyles;
+      document.body.appendChild(link);
+    })();
+
+  </script>
+
+  <style>
+    .footer button {
+      float: right;
+      margin: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+
+  <div>
+    <textarea id="txtJson" oninput="GcmsCustomTagEditor.onTextChange()" style="width: 100%; height: 200px;"></textarea>
+  </div>
+
+  <div id="validation-results-container">
+    <span><b>Validation Results:</b></span>
+    <pre id="validation-results"></pre>
+  </div>
+
+  <div id="footer" class="footer">
+    <button type="button" onclick="GcmsCustomTagEditor.onOkClick()">OK</button>
+    <button type="button" onclick="GcmsCustomTagEditor.onCancelClick()">Cancel</button>
+    <button type="button" onclick="GcmsCustomTagEditor.validateTag()">Validate Tag</button>
+  </div>
+
+</body>
+</html>
+</shell>

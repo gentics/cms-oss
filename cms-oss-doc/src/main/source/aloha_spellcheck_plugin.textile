@@ -1,0 +1,48 @@
+h2. Spellcheck plugin
+
+The Aloha Editor Spellcheck Plugin allows the use of the "LanguageTool":https://languagetool.org/ proofreading service.
+
+endprologue.
+
+h3. Installation
+
+The plugin requires the LanguageTool to be available under the relative URL @/spelling@.
+
+When the LanguageTool is installed on the same server and is configured to listen to port 8010, the API can be made accessible by adding the following configuration to the
+Apache Web Server configuration:
+
+<shell>
+# Forward calls to the spellchecker service
+ProxyPass /spelling http://localhost:8010/v2
+</shell>
+
+h3. Configuration
+
+In the plugin configuration the languages to check against can be specified and certain rules of the spellchecker can be disabled.
+
+h4. Languages
+
+The Gentics CMS uses two letter language codes like <code>en</code> or <code>de</code>, whereas LanguageTool uses language codes that include country specific variants like <code>en-US</code> or <code>de-AT</code>. The <code>languageCodes</code> setting is a map which specifies which concrete language variant should be used for a given language. When the current page uses a language, for which no such mapping is present, the list of available languages will be loaded from the LanguageTool instance and the first match will be used.
+
+When there is still no mapping available after loading the list from LanguageTool, the value of the setting <code>defaultLanguage</code> will be used. Note that spellchecking will not work as expected, when this value is not a <code>longCode</code> supported by LanguageTool (a list of languages is available in "JSON format":https://languagetool.org/api/v2/languages.
+
+h4. Disabling rules
+
+LanguageTool will also perform certain grammatical and style checks. The setting <code>disabledRules</code> is a comma separated list of rule names which should be ignored. A list of all rules can be found at the "LanguageTool community page":https://community.languagetool.org/rule/list.
+
+h4. Example
+
+With this configuration the spellcheck plugin will use the austrian german and US english variants for german and english pages respectively. When no mapping is available for the current page language US english will be used.
+
+Furthermore the rules to warn about unpaired brackets (which would match smileys for example) and consecutive sentences beginning with the same word are disabled.
+
+<javascript>
+Aloha.settings.plugins.spellcheck = {
+	languageCodes: {
+		de: 'de-AT',
+		en: 'en-US'
+	},
+	defaultLanguage: 'en-US',
+	disabledRules: 'EN_UNPAIRED_BRACKETS,ENGLISH_WORD_REPEAT_BEGINNING_RULE'
+}
+</javascript>

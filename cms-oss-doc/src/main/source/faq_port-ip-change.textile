@@ -1,0 +1,33 @@
+h2. Where can i configure Network Ports a IPs?
+
+endprologue.
+
+By default Gentics CMS listens on all network devices on port 8080. There are some scenaries in which it might be desirable to change the port. This overview will list all files that can be changed in order to achive the custom configuration.
+
+h3. CMS settings
+
+The port running Gentics CMS is configured via the environment variable @HTTP_PORT@, the Java system property @com.gentics.contentnode.http.port@ or in a .yml configuration file:
+
+<javascript filename="conf/*.yml">
+server:
+	port: 8080
+</javascript>
+
+h3. Database settings
+
+h4. CMS Database
+
+Host and port for the CMS database are configured via the environment variables @NODE_DB_HOST@ and @NODE_DB_PORT@, the Java system properties @com.gentics.contentnode.db.host@ and @com.gentics.contentnode.db.port@ or in a .yml configuration file:
+
+<javascript filename="conf/*.yml">
+db:
+	settings:
+		host: "localhost"
+		port: 3306
+</javascript>
+
+/Node/etc/node.conf:
+
+h4. ContentRepository Databases
+
+The ContentRepository Databases can be configured using the Gentics CMS admin UI in the Contentrepositories module.

@@ -1,0 +1,29 @@
+h2. Editor and Administration User Interfaces
+
+The Editor User Interface and the Administration User Interface are deliberately designed as two separate applications. They serve different target groups with different tasks and needs.
+The Editor User Interface is designed for editors and content managers, respectively. Everything revolves around the content that you can dive into immediately and without any detours.
+Projects, folders, pages, files and pictures are the main actors of the Editor User Interface.
+
+Meanwhile, the Administration User Interface supports a wide range of target groups with partially overlapping tasks in all administrative matters related to the actual content.
+
+endprologue.
+
+h3. The Gentics CMS Editor User Interface
+
+Gentics CMS comes with a user interface that supports editors with an easy to use authoring environment that specifically focuses on the task of creating an managing content.
+Typically, the Editor User Interface is the default user interface when accessing your CMS installation. It can be reached at ??https://genticscms.yourdomain.com/editor??.
+
+!{width:696px}images/gcmsui/editor-user-interface-genticscms.png(The Gentics CMS Editor User Interface for creating and managing content)!
+
+h3. The Gentics CMS Administration User Interface
+
+The Administration User Interface is the place to go for setting up and configuring CMS projects.
+It comes with a bunch of administrative and maintenance modules that help project managers, developers and operators in their daily work with Gentics CMS:
+
+* Project Managers & Power Content Managers - linking templates, user and group management, partly controlling jobs related to the publication of content.
+* Developers - Development around templates & tag types, deployments
+* Administrators and operations - configuration, maintenance, deployments
+
+!{width:696px}images/gcmsui/administration-user-interface-genticscms.png(The Gentics CMS Administration User Interface)!
+
+The Administration User Interface can be reached at ??https://genticscms.yourdomain.com/admin??. Additionally, it is linked in the Editor User Interface's tools menu.

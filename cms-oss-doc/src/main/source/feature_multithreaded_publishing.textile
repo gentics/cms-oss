@@ -1,0 +1,76 @@
+h2. Multithreaded Publishing
+
+The Feature multithreaded publishing allows using multiple cores for the publish process to reduce overall publishing times.
+
+endprologue.
+
+h3. Configuration
+
+The feature can be activated like this
+
+<javascript filename="conf/features.yml">
+feature:
+	multithreaded_publishing: true
+</javascript>
+
+and the thread limit can be configured here:
+
+<javascript filename="conf/*.yml">
+config
+  loadbalancing:
+    threadlimit: 2
+</javascript>
+
+Currently, the publish process will always use the configured number of threads for rendering pages, independent from the overall system load.
+
+NOTE: Currently, only one phase of the publish process - rendering of pages - is using multiple threads, when multithreaded publishing is activated.
+
+Find the article about the "publish process":publish_process.html for further details.
+
+h3. Performance enhancements when rendering pages
+
+While rendering pages, loading the dependencies and preparing the data of the pages to be published will be done in batches, to reduce the number of necessary SQL statements (which will increase the overall publishing performance).
+The size of these batches can be configured with the following swetting (the default value is 100):
+
+<javascript filename="conf/*.yml">
+# Setting higher numbers will increase the memory consumption, lower numbers will increase the number of SQL statements.
+multithreaded_publishing:
+  preparedeps: 100
+</javascript>
+
+h3. Publishing pages into Content Repositories
+
+Writing pages into the Content Repository is done in a separate thread for each Content Repository. There is a job queue for each Content Repository, that is filled with jobs (one job for each page to be written) and processed by the separate thread.
+In order to minimize the number of SQL statements necessary to write the objects into the Content Repository, the jobs are grouped and the data from the Content Repository will be read for each group in combined statements.
+The default group size is 100, but can be changed (see below).
+
+Additionally, the queue has a limit for the total number of jobs, so that it will not grow too big and occupy too much memory, when writing pages into the Content Repository is slower than the threads that render the pages.
+The default queue limit is 1000. but also can be changed (see below).
+
+<javascript filename="conf/*.yml">
+multithreaded_publishing:
+  groupsize: 100
+  queuelimit: 1000
+</javascript>
+
+A higher value for the group size means viewer SQL statements, but higher memory consumption.
+
+h4. Publishing pages into Multichannelling aware Content Repositories
+
+Multichannelling aware Content Repositories allow writing objects into the DB in batches. All SQL statements necessary to write the whole batch of objects into the MCCR will be executed
+together in a very efficient way, which improves the performance of publishing into the MCCR.
+
+The batchsize can be configured with the following setting:
+
+<javascript filename="conf/*.yml">
+multithreaded_publishing:
+  batchsize: 100
+</javascript>
+
+NOTE: Setting the batchsize higher than the groupsize does not make any sense, because the groups will be subdivided into batches. Batches can never contain more objects than groups.
+
+NOTE: For Content Repositories, that have instant publishing enabled, all objects within the same batch will be written into the MCCR in the same transaction. While the transaction is in use
+all other write operations into the same MCCR (induced by user interactions) will have to wait, which could lead to timeouts. It is therefore recommended to not set the batchsize too high.
+
+The default value for the batchsize is 1, which completely disables batching of SQL statements. For Content Repositories with instant publishing, this will result in minimal time for single transactions,
+but in overall longest publishing times.

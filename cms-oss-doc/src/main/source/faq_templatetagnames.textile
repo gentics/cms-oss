@@ -1,0 +1,12 @@
+h2. What template tag names are supported?
+
+endprologue.
+
+h3. Limitations
+
+Template tags with non ASCCI characters in the name may cause problems when being used within a tagmap entry. The mapname of a tagmap entry will be resolved. Characters like "-" or "+" will be evaluate like arithmetic operators. It is therefore suggested to not use such characters.
+
+Example:
+<shell>
+	<node name-of-the-tag>
+</shell>

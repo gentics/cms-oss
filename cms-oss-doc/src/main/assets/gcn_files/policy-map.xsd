@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="policyMap" type="policyMapModel"/>
+
+  <xs:complexType name="node" abstract="true">
+    <xs:complexContent>
+      <xs:extension base="nodeModel">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="nodeModel">
+    <xs:all>
+      <xs:element name="default" type="policyRef" minOccurs="0"/>
+      <xs:element name="fileDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="fileName" type="policyRef" minOccurs="0"/>
+      <xs:element name="folderDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="folderName" type="policyRef" minOccurs="0"/>
+      <xs:element name="mimeType" type="policyRef" minOccurs="0"/>
+      <xs:element name="pageDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="pageLanguage" type="policyRef" minOccurs="0"/>
+      <xs:element name="pageName" type="policyRef" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="policyRef">
+    <xs:complexContent>
+      <xs:extension base="xmlRef">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="xmlRef" abstract="true">
+    <xs:sequence/>
+    <xs:attribute name="ref" type="xs:IDREF" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="partType">
+    <xs:complexContent>
+      <xs:extension base="partTypeModel">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="partTypeModel">
+    <xs:complexContent>
+      <xs:extension base="policyGroupRef">
+        <xs:sequence/>
+        <xs:attribute name="typeId" type="xs:int" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyGroupRef">
+    <xs:complexContent>
+      <xs:extension base="xmlRef">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyMap" abstract="true">
+    <xs:complexContent>
+      <xs:extension base="policyMapModel">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyMapModel">
+    <xs:sequence>
+      <xs:element name="inputChannels" type="inputChannels"/>
+      <xs:element name="policyGroups">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="policyGroup" type="policyGroup" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="policies">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="antiSamy" type="antiSamyPolicy"/>
+              <xs:element name="attribute" type="attributePolicy"/>
+              <xs:element name="passThrough" type="passThroughPolicy"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="inputChannels">
+    <xs:sequence>
+      <xs:element name="contentAdmin" type="contentAdminWrapper"/>
+      <xs:element name="nodes" type="nodeWrapper"/>
+      <xs:element name="default" type="policyRef" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="contentAdminWrapper">
+    <xs:all>
+      <xs:element name="bundleDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="bundleName" type="policyRef" minOccurs="0"/>
+      <xs:element name="bundleSecret" type="policyRef" minOccurs="0"/>
+      <xs:element name="fsPath" type="policyRef" minOccurs="0"/>
+      <xs:element name="groupDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="groupName" type="policyRef" minOccurs="0"/>
+      <xs:element name="hostName" type="policyRef" minOccurs="0"/>
+      <xs:element name="nodeDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="nodeName" type="policyRef" minOccurs="0"/>
+      <xs:element name="partTypes" type="partTypesWrapper"/>
+      <xs:element name="roleDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="roleName" type="policyRef" minOccurs="0"/>
+      <xs:element name="userDescription" type="policyRef" minOccurs="0"/>
+      <xs:element name="userEmail" type="policyRef" minOccurs="0"/>
+      <xs:element name="userFirstLastName" type="policyRef" minOccurs="0"/>
+      <xs:element name="userMessage" type="policyRef" minOccurs="0"/>
+      <xs:element name="userName" type="policyRef" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="partTypesWrapper">
+    <xs:sequence>
+      <xs:element name="partType" type="partType" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="default" type="policyGroupRef" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="nodeWrapper">
+    <xs:sequence>
+      <xs:element name="node" type="identifiedNode" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="default" type="nodeImpl"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="identifiedNode">
+    <xs:complexContent>
+      <xs:extension base="nodeImpl">
+        <xs:sequence/>
+        <xs:attribute name="localId" type="xs:int" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="nodeImpl">
+    <xs:complexContent>
+      <xs:extension base="node">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyGroup">
+    <xs:complexContent>
+      <xs:extension base="policyGroupModel">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyGroupModel">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="policy" type="policyRef"/>
+        <xs:element name="default" type="defaultPolicyRef"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="defaultPolicyRef">
+    <xs:complexContent>
+      <xs:extension base="policyRef">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="antiSamyPolicy">
+    <xs:complexContent>
+      <xs:extension base="policy">
+        <xs:sequence/>
+        <xs:attribute name="policyFile" type="xs:string"/>
+        <xs:attribute name="domMode" type="xs:boolean"/>
+        <xs:attribute name="outerElement" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policy" abstract="true">
+    <xs:complexContent>
+      <xs:extension base="policyModel">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="policyModel">
+    <xs:sequence/>
+    <xs:attribute name="convertNodeTags" type="xs:boolean"/>
+    <xs:attribute name="displayName" type="xs:string"/>
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+    <xs:attribute name="uri" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="attributePolicy">
+    <xs:complexContent>
+      <xs:extension base="antiSamyPolicy">
+        <xs:sequence>
+          <xs:element name="occursIn" type="occursIn"/>
+        </xs:sequence>
+        <xs:attribute name="ignoreNodeTags" type="xs:boolean"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="occursIn">
+    <xs:sequence/>
+    <xs:attribute name="element" type="xs:string" use="required"/>
+    <xs:attribute name="attribute" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="passThroughPolicy">
+    <xs:complexContent>
+      <xs:extension base="policy">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="policies">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PARANOID_POLICY"/>
+      <xs:enumeration value="ANY_URI_POLICY"/>
+      <xs:enumeration value="ANY_CONTENT_POLICY"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+

@@ -1,0 +1,47 @@
+h2. Usage of OpenAPI v3.0 specification for Gentics CMS REST API
+
+It is now possible to generate REST clients for Gentics CMS REST API using the "OpenAPI":https://github.com/OAI/OpenAPI-Specification specification. As the specification is generated directly from the API provided by Gentics CMS, the possibilities of the clients, generated upon the specification, are identical to the ones from the "REST API":rest_general.html.
+
+endprologue.
+
+h3. Specification location
+
+The specification can be found at http://yourcmshost/CNPortletapp/openapi.yaml or http://yourcmshost/CNPortletapp/openapi.json, in the YAML and JSON formats, respectively.
+
+h3. Client code generation
+
+In addition to the official "OpenAPI client generator":https://github.com/OpenAPITools/openapi-generator, it is possible to use any other generator of your favor. Please follow the generation instructions of the selected generator. The instruction for the official OpenAPI client generator can be found "here":https://github.com/OpenAPITools/openapi-generator#2---getting-started .
+
+h3. Important notice on authentication
+
+Due to the limitations of the "supported security schemes":https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#securitySchemeObject some extra actions are required to make the authentication mechanism of Gentics CMS REST API working. 
+
+h4. Filling out Session ID value
+
+It is important to fill the +session id+ value into the generated client, in order to proceed with the usage of the API methods, that require authentication. The session id is obtained as a result of a successful login. 
+
+Below is an example of setting the session id, taken from the plain username/password login, into the generated Angular Typescript client, and using it afterwards for getting the information about the current user:
+
+<javascript>
+  constructor(
+    private gcms: GcmsApiService,
+  ) {
+    // Setting the REST API endpoint
+    this.gcms.configuration.basePath = environment.gcmsApiBase;
+  }
+  // ...
+  // Logging in
+  this.gcms.login(
+    null, { login: "mylogin", password: "mypassword" }
+  ).toPromise().then(
+    ret => { 
+      // Setting the session id
+      if (!this.gcms.configuration.apiKeys) this.gcms.configuration.apiKeys = {};
+      this.gcms.configuration.apiKeys["sid"] = ret.sid;   
+      // Executing a getMe() call 
+      return this.gcms.getMe().toPromise();
+    }
+  ).then(ret => {
+    console.log(ret);
+  });
+</javascript>

@@ -1,0 +1,82 @@
+h2. Mandatory Tags
+
+Mandatory Tags allow implementers to specify *ContentTags* and *ObjectTags* that
+must have their Tag Parts filled with their correct required values before the
+page can be published.
+
+endprologue.
+
+
+h3. When would I want to use mandatory tags?
+
+When ContentTags are automatically created for a page that is opened for
+editing, these tags will contain default values, but these values may not be
+suitable to be published.  The rational behind having mandatory Tags is to allow
+implementers to ensure that an editor must explicitly populate any such tags so
+that their default values will be replaced with appropriate values before a page
+can be published.
+
+NOTE: TemplateTags and ObjectTags are the only tags that can be flagged as
+	  "mandatory" or "required" because it is from these that ContentTags are
+	  automatically generated from them (as needed) when a page is opened for
+	  editing.
+
+
+h3. How do I configure mandatory tags?
+
+You will need a TagType that contains one or more tag part type that is both
+"required" and "editable".  You can then choose from among the configured
+regular expressions, as the constraint against which the value of this part type
+will be validated.
+
+!images/gcn_dialogs/mandatory_tags_parttype.png!
+
+Including a tag of your TagType in a template then allows you to define whether
+or not the the values for the part types of this tag must meet the requirements
+specified by the TagType's parts before the page can be saved.
+
+NOTE: Only tags that are editable on the page object can be set to be
+	  mandatory.  If it were possible to mark a readonly tag as mandatory, it
+	  would effectively prevent the page from being published (a catch-22)!
+
+!images/gcn_dialogs/mandatory_tags_definition.png!
+
+You can also define a mandatory tag by simply setting any page object tag as
+"required".
+!images/gcn_dialogs/mandatory_tags_object_props.png!
+
+
+h3. What happens when I publish a page with mandatory tags?
+
+When an attempt is made to publish a page, that page will be checked to see if
+it contains any ContentTags that were generated from TemplateTags or ObjectTags.
+Any of these ContentTags will be checked to see if they have been marked as
+mandatory or required.  Any such tag that is found will have it parts validated
+according to any constraints determined by the Tag Construct from which they are
+based.
+
+If all parts of all mandatory tags pass validation, the page is published.  If
+any of the parts contains invalid or missing data, the publish attempt will fail
+with a <code>INVALIDDATA</code> error:
+
+NOTE: The presence of incomplete mandatory tags does not affect saving; it is
+	  entirely valid to save an unfinished page that contains incomplete
+	  mandatory tags.
+
+
+h3. How do mandatory tag affect import/export?
+
+Mandatory tags are imported and exported just like other content node objects.
+Take note that any published pages that are imported, will remain as they are in
+their publish state.  None of the mandatory tag configuration in the system in
+which the pages are placed will affect the page until an attempt is made to
+republish the page in the Node into which it are imported.
+
+
+h3. Does changing mandatory tag settings affect already published pages?
+
+Pages that have been published will remain as they are -- even if one of their
+tags is changed to be mandatory.  However, if a published page has one of its
+tags changed to be mandatory, that page will no longer be able to be published
+until the tag has had its tag parts populated with any required values, or until
+the tag is set back to be non-mandatory.

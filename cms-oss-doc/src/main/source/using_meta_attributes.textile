@@ -1,0 +1,277 @@
+h2. Using meta attributes
+
+Here you learn about the various ways to use meta attributes in Gentics CMS. 
+
+endprologue.
+
+NOTE: If you're just looking for a compiled list of meta attributes head over to the "List of meta attributes":meta_attributes.html
+
+h3. Syntax
+
+h4. Node-Style
+
+The Node-style syntax is available in pages, templates and tags. When the rendered attribute
+is a tag, it will be rendered with the appropriate icons.
+
+WARNING: Rendering tags in edit mode via the Node-Style syntax can cause problems, if the template contains "@<@" or "@>@" characters (for example @<?php ... ?>@). Consider using the @#gtx_edit@ "render directive":impl_using_velocity.html#render-directives.
+
+<shell filename="Example: print the page name">
+  <node page.name>
+ </shell>
+
+h4. Velocity-Style (VTL-Style)
+
+WARNING: Rendering tags with the plain Velocity-Style syntax will *not* generate tag icons. Use the @#gtx_edit@ "render directive":impl_using_velocity.html#render-directives to render tags in edit mode.
+
+VTL stands for "Velocity Template Language" and stands for the syntax of "Velocity" (a template language) -
+see "Velocity part type":gcn_part_types.html#velocity-part-type and
+"Using Velocity in Tagtypes":impl_using_velocity.html for details.
+
+<shell filename="Example: print the page name">
+	$cms.page.name
+</shell>
+
+WARNING: If a Tagtype contains a part names "class" Velocity syntax cannot be used to resolve its value because it would just return the Tagtypes Java class. Use @getProperty@ as a workaround.
+
+<shell filename="Example: accessing a part named class">
+## won't work as expected will just return a Java class
+$cms.tag.parts.class
+
+## this will work as expected
+$cms.tag.parts.getProperty("class")
+</shell>
+
+h4. Tagmap-Style
+
+The Gentics CMS Tagmap requires no special syntax - you can access the properties directly.
+
+<shell filename="Example: print the page name">
+	page.name
+</shell>
+
+NOTE: This syntax is only available in the Tagmap editor in the field "tagname".
+
+h4. Resolving properties
+
+You can chain properties together using a dot-syntax to traverse through linked objects
+<shell filename="Example: display lastname of the folders creator">
+  <node page.folder.creator.lastname> // Node-Style
+  $cms.page.folder.creator.lastname // VTL-Style
+  page.folder.creator.lastname // Tagmap-Style
+</shell>
+
+h3. Baseobjects
+
+These are the base objects that can be used in the CMS, along with examples on how they can be accessed and in which contexts they are made available.
+
+|_. Object |_. Velocity example |_. Node-Style Example |_. Availability |
+| "page":#page | $cms.page.name | &lt;node page.name&gt; | page |
+| "template":#template | $cms.template.id | &lt;node template.id&gt; | page, template |
+| "file":#file | $cms.file.name | &lt;node file.name&gt; | file |
+| "folder":#folder | $cms.folder.name | &lt;node folder.name&gt; | folder, file, page |
+| "node":#node | $cms.node.host | &lt;node node.host&gt; | file, folder, page, tag, template |
+| "object":#object | $cms.object.startpage | &lt;node object.startpage&gt; | file, folder, page |
+| "rendermode":#rendermode | $cms.rendermode | N/A | file, folder, page, tag, template |
+| "imps":#imps | $cms.imps.string | N/A | file, folder, page, tag, template |
+| "tag":#tag | $cms.tag.parts.url | &lt;node url&gt; | tag |
+
+h4. Page
+
+NOTE: Access the list of "page meta attributes":meta_attributes.html#page from the "list of meta attributes":meta_attributes.html page.
+
+The actual pageobject is only available in pagecontext (pages, pageurl's, page overviews, pagetags).
+
+<shell filename="Example: render the publish date">
+	<node page.publishdate> // Node-Style
+	$cms.page.publishdate // VTL-Style
+</shell>
+
+A very common use case is to check whether a page exists using a Velocity if-statement.
+
+<shell filename="Example: check if a page exists">
+## bad - the whole page will be rendered
+#if("$cms.page.languageset.pages.en" != "")
+<a href="$cms.page.languageset.pages.en.url">English</a>
+#end
+
+WARNING: When checking if pages exists in Velocity if-statements it's best to always check for page ids rather than checking for the page itself, as any direct invocation of a page object will render the page. This is rather costly if you just want to check if a page exists.
+
+## good - best performance
+#if($cms.page.languageset.pages.en.id)
+<a href="$cms.page.languageset.pages.en.url">English</a>
+#end
+</shell>
+
+h4. Template
+
+NOTE: Access the list of "template meta attributes":meta_attributes.html#template from the "list of meta attributes":meta_attributes.html page.
+
+The basic object applies to the actual template and provides the access for some properties of the template.
+
+<shell filename="Example: resolve the template id">
+	Node Style: <node template.id>
+	VTL Style: $cms.template.id
+</shell>
+
+
+h4. Folder
+
+NOTE: Access the list of "folder meta attributes":meta_attributes.html#folder from the "list of meta attributes":meta_attributes.html page.
+
+The basic object offers information about the folder.
+
+<shell filename="Example: resolve the folder name">
+Node Style: <node folder.name> 
+VTL Style: $cms.folder.name
+</shell>
+
+
+h4. File
+
+NOTE: Access the list of "file meta attributes":meta_attributes.html#file from the "list of meta attributes":meta_attributes.html page.
+
+This basic object is not available page context, but in context of object properties and overviews.
+
+<shell filename="Example: output the filename">
+Node Style: <node file.name> 
+VTL Style: $cms.file.name
+</shell>
+
+h4. Node
+
+NOTE: Access the list of "node meta attributes":meta_attributes.html#node from the "list of meta attributes":meta_attributes.html page.
+
+This basic object applies access to information of the actual node.
+
+<shell filename="Example: output the hostname">
+Node Style: <node node.host> 
+VTL Style: $cms.node.host
+</shell>
+
+
+h4. Object
+
+Applies access to the object properties of the actual object.
+
+<shell filename="Example: access object property color of the page">
+$cms.page.object.color
+</shell>
+
+If an object property is not found on the current object a fallback mechanism will be triggered.
+
+# when using a page object Gentics CMS will try to resolve the object property from the template ($cms.template.object.color)
+# if not successful resolving will continue with the folder object ($cms.folder.object.color)
+
+h4. Tag
+
+NOTE: Access the list of "tag meta attributes":meta_attributes.html#tag from the "list of meta attributes":meta_attributes.html page.
+
+This basic object applies access to information of a tag in a page.
+
+<shell filename="Example: access a tags name">
+Node Style: <node [TAGNAME].name> 
+Node Style: <node tag.name> 
+VTL Style: $cms.page.tags.TAGNAME.name
+</shell>
+
+h4. Rendermode
+
+NOTE: Rendermode is *only available when using velocity syntax*. Access the list of "rendermode meta attributes":meta_attributes.html#rendermode from the "list of meta attributes":meta_attributes.html page.
+
+This basic object applies access to information of the actual node during rendering with velocity.
+
+<shell filename="Example: Output publish status">
+VTL Style: $cms.rendermode.publish
+</shell>
+
+h4. Imps
+
+NOTE: Access the list of "imps meta attributes":meta_attributes.html#imps from the "list of meta attributes":meta_attributes.html page.
+
+This basic object allows access to information of velocity imps.
+
+<shell filename="Example: accessing the velocity string imp">
+$cms.imps.string
+</shell>
+
+Velocity GenericTools contains a collection of reusable and well documented tools and utility classes of general interest to Velocity users. These classes and tools have no dependency on the VelocityView or VelocityStruts sub-projects. The tools may be used as you would any other POJO ("plain old java object").
+
+h3. Childobjects
+
+Child objects are only available from the context of a base object.
+
+h4. Language
+
+NOTE: Access the list of "language meta attributes":meta_attributes.html#language from the "list of meta attributes":meta_attributes.html page.
+
+This property allows you to access information related to the current page language as well as other language variants of the page.
+
+<shell filename="Example: print language code of page"> 
+Node Style: <node page.language.code> 
+VTL Style: $cms.page.language.code
+</shell>
+
+h4. Pagetag/Templatetag Parttype
+
+NOTE: Access the list of "Pagetag/Templatetag Parttype meta attributes":meta_attributes.html#pagetag-templatetag-parttype from the "list of meta attributes":meta_attributes.html page.
+
+This object is used to access information of page- or templatetags.
+
+<shell filename="Example: access tagid from tag linked via a pagetag">
+$cms.page.tags.pagetag.tag.id
+</shell> 
+
+h4. Text Parttypes
+
+NOTE: Access the list of "Text Parttypes meta attributes":meta_attributes.html#text-parttypes from the "list of meta attributes":meta_attributes.html page.
+
+The following Text Parttypes are available for use. Some Parttypes will modify you textual contents as described:
+
+|_. Parttype |_. Modification |
+| Text Short | none |
+| Text | Linebreaks (\n) will be replaced by +<br />+ tags |
+| Text/HTML |/2. These Parttypes will remove all trailing whitespaces and replace all linebreaks by newline characters (+\n+). In the next step the following HTML tags will have a +<br />+ tag appended to them: +<b>+, +<strong>+, +<i>+, +<font>+, +<div>+, +<span>+ and +<br>+.  |
+| Text/HTML Long |
+| HTML |/2. none |
+| HTML Long |
+
+WARNING: We strongly suggest not to use +Text/HTML+ and +Text/HTML Long+ Parttypes in your implementation as their replacing behaviour will confuse implementers and editors. Those parttypes are only available for legacy support.
+
+h4. Markuplanguage
+
+NOTE: Access the list of "markuplanguage meta attributes":meta_attributes.html#markuplanguage from the "list of meta attributes":meta_attributes.html page.
+
+The markuplanguage attribute allows you to access the markuplanguage setting of a template.
+
+<shell filename="Example: ouput the name of the markuplanguage">
+Node Style: <node page.template.ml.name>
+VTL Style: $cms.page.template.ml.name
+</shell>
+
+h4. User
+
+NOTE: Access the list of "user meta attributes":meta_attributes.html#user from the "list of meta attributes":meta_attributes.html page.
+
+<shell filename="Example: ouput the pages creators lastname">
+Node Style: <node page.creator.lastname>
+VTL Style: $cms.page.creator.lastname
+</shell>
+
+h4. Overview Template
+
+NOTE: Access the list of "overview templates meta attributes":meta_attributes.html#overview-template from the "list of meta attributes":meta_attributes.html page.
+
+Overview templates are used in overview parttypes. They use a special syntax. Inside an overview you have access to the object that is currently listed as well as some meta properties.
+
+<shell filename="Example: list of pages with numbering">
+<node ds_pageoverview>
+<!-- 
+	will generate output like
+	<p>News Page (1/12)</p>
+	<p>Another Page (2/12)</p>
+	<p>Third Page (3/12)</p>
+	...
+-->
+<p><node page.name> (<node ds.nr>/<node ds.count>)</p>
+</node ds_pageoverview>
+</shell>

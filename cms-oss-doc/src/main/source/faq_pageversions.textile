@@ -1,0 +1,52 @@
+h2. When are page versions created?
+
+endprologue.
+
+h3. Numbering of page versions
+
+Page version numbers are constructed like _[Major Version].[Minor Version]_. The very first page version number is _0.1_.
+Whenever a new *unpublished* version is created, the minor version number is increased (e.g. _0.2_, _0.3_, ...).
+
+When the page is published, a new major version is created. If the last unpublished version was _0.8_, the published version will get the version number _1.0_.
+After _3.27_, the next published version would be _4.0_ and so on.
+
+h3. Actions that will create a new page version
+
+* Creating a page. This will create the initial version _0.1_
+* Manually triggering "save" for a page (from the menu or the assistent frame)
+* Publishing a page
+* Requesting, that a page is published (sending it to the queue)
+* Start editing a page, that was modified since the last version, but not _saved_ or _published_ by the last editor.
+
+NOTE: If a user modifies a page, without performing any of the above actions, the page will remain locked for this user,
+even if the browser window is closed. This lock is automatically lifted after a configurable time (default is 10 minutes),
+which will make this page editable by other users. If another (or the same) user starts editing the page again (after the left over
+lock was lifted in between), this is considered to be a new editing process, and therefore, a page version will be created to mark the
+state of the page at the beginning of this new edit process.
+
+h3. Actions that will *not* create a new page version
+
+* Automatic saving during editing with Aloha Editor, e.g. when the tagfill dialog is opened.
+* Creating new tags using Aloha Editor (although those tags will instantly be saved).
+* Modifying a tag's content using the tagfill dialog.
+* Modifying object properties.
+
+NOTE: Generally speaking, as long as the page remains locked for the editor, no new page version is created.
+The only exception is _cancelling_ the page from the page menu, when using Aloha Editor. Cancelling will raise the lock,
+but restore the last page version, not create a new one.
+
+h3. Cancelling a page
+
+If a user cancels editing a page, the last page version will be restored. This is the version of the page, when the user
+gathered the editing lock of the page.
+
+h3. Versioned publishing
+
+Gentics CMS will make sure that pages dependant of one another will only use published versions of contents for display. Eg. using a page 'News Article' in an overview contained in page 'Recent News' will tie those pages together by dependencies. When one editor changes the page 'News Article' (eg. the page title to 'Very Important News Article') *whithout* publishing the page (he might want to do additional changes) the 'Recent News' page will still use the old version of the page named 'News Article'. As soon as 'Very Important News Article' is published the overview will be updated accordingly and use the new version.
+
+NOTE: Versioned publishing is default behaviour. In rare cases you might want to always refer to the most recent version of a page, even if it has not been published yet. See the example below.
+
+<shell filename="conf/features.yml">
+feature:
+	disable_versioned_publishing: true
+</shell>

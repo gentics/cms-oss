@@ -1,0 +1,7 @@
+h2. Which zoom settings are supported by Gentics CMS?
+
+endprologue.
+
+For an optimal result set your OS and Browser zoom settings to 100%. 
+Other settings may cause disproportional rendering and interfere with
+displaying the backend.

@@ -1,0 +1,165 @@
+h2. Folder load
+
+endprologue.
+
+
+Load the given folder.
+<javascript>
+GET /CNPortletapp/rest/folder/load/{id}
+</javascript>
+
+h3. Folder save
+
+Save the given folder
+
+<javascript>
+POST /CNPortletapp/rest/folder/save/{id}
+{
+  "folder" : ...;
+}
+</javascript>
+
+h3. Folder getFolders
+
+Get the folders in a given startfolder
+
+<javascript>
+GET /CNPortletapp/rest/folder/getFolders/{id}
+</javascript>
+
+| Name | Description | Defaultvalue |
+| id | ID of the folder | - |
+| skipCount | Number of folders to be skipped (paging) | 0 |
+| maxItems | maximum Number of folders to be returned (paging) -1 for no restriction | -1 |
+| recursive | TRUE for also getting the subfolders of the folders. Note; subfolders will be sorted but not be restricted (no paging) | FALSE |
+| sortby | Name of the sorted attribute. Folders can be sorted by edate and name | name |
+| sortorder | Sorting order | asc |
+
+Parameters for /CNPortletapp/rest/folder/getFolders/{id}
+
+h3. Folder getPages
+
+Get the pages in the given folder
+
+<javascript>
+GET /CNPortletapp/rest/folder/getPages/{id}?params...
+</javascript>
+
+Parameters:
+
+| Name  | Description | Defaultvalue |
+| id | ID of the (Start)folder | - |
+| skipCount | Number of pages to be skipped (paging) | 0 |
+| maxItems | maximum Number of pages to be returned (paging). -1 for no restriction | -1 |
+| nodeId | node ID of the channel (for multichanneling) | null |
+| template | TRUE when template information shall be returned | FALSE |
+| folder | TRUE when folder information shall be returned | FALSE |
+| langvars | TRUE when language variants of pages shall be returned | FALSE |
+| language | language of the returned pages (language fallback will be done, when language not found and langfallback set to TRUE) | null |
+| langfallback | TRUE when language fallback shall be done (only if a language was given), FALSE if pages that do not have the requested language shall be omitted | TRUE |
+| search | Search String to search for pages | null |
+| recursive | TRUE when pages shall also be fetched from subfolders | FALSE |
+| sortby | Name of the sorted attribute. Pages can be sorted by name, edate, filename, tname and folder | name |
+| sortorder | sorting order | asc |
+| iseditor | TRUE when only pages last edited by the user shall be returned | FALSE |
+| iscreator | TRUE when only pages created by the user shall be returned | FALSE |
+| ispublisher | TRUE when only pages published by the user shall be returned | FALSE |
+| status | List of page stati to restrict the returned pages. Allowed values are: published, edited, offline, queue, timeframe | - |
+| timedue | If set to != 0, only pages that will change their state due to timemanagement in the next [timedue] seconds will be returned | 0 |
+| wfown | TRUE when only pages currently "owned" by the user due to a publish workflow shall be returned | FALSE |
+| wfwatch | TRUE when only pages currently watched by the user due to a publish workflow shall be returned | FALSE |
+| insync | TRUE to filter pages which are insync with their respective master page. FALSE to only return pages which are not synchronized with their parent page. Automatically sets  translationstatus to TRUE. | - |
+| translationstatus | TRUE will include object containing information about the status of each page with its translation master | FALSE |
+
+Parameters for /CNPortletapp/rest/folder/getPages/{id}
+
+h3. Folder getFiles
+
+Get the files in the given folder.
+
+<javascript>
+GET /CNPortletapp/rest/folder/getFiles/{id}
+</javascript>
+
+| Name | Description | Defaultvalue |
+| id | ID of the (start)folder | - |
+| nodeId | node ID of the channel (for multichanneling)  | null |
+| search | Search String to search files | null |
+|recursive | TRUE when files shall also be fetched from the subfolders | FALSE |
+| sortby | Name of the property to sort. Files can be sorted by name, edate, size, type and folder | name |
+|sortorder | sorting order | asc |
+
+Parameters for /CNPortletapp/rest/folder/getFiles/{id}
+
+h3. Folder getImages
+
+Get the images in the given folder
+
+<javascript>
+GET /CNPortletapp/rest/folder/getImages/{id}
+</javascript>
+
+| Name | Description | Defaultvalue |
+| id | ID of the (start)folder  | null |
+| nodeId | node ID of the channel (for multichanneling)   | null |
+| search | Search string to search images | null |
+| recursive | TRUE when images shall also be fetched from the subfolders | FALSE |
+| sortby | Name of the property to sort. Images can be sorted by name, edate, size, type and folder | name |
+| sortorder | sorting order | asc |
+
+Parameters for /CNPortletapp/rest/folder/getImages/{id}
+
+h3. Folder create
+
+Create a new folder, eventually with a startpage.
+
+<javascript>
+POST /CNPortletapp/rest/folder/create
+{
+  motherId: ..,
+  name: ..,
+  publishDir: ..,
+  description: ..,
+  startpage: ..,
+  templateId: ..,
+  language: ..,
+  failOnDuplicate: ..
+}
+</javascript>
+
+| Name | Description | Defaultvalue |
+| motherId  | ID of the mother folder | - |
+| name | Name of the new folder | - |
+| publishDir | Publish directory. | / |
+| description | Description | - |
+| startpage | TRUE when a startpage shall be created | FALSE |
+| templateId | ID of the template for the startpage | - |
+| language | Language code of the new startpage | - |
+| failOnDuplicate | If set to TRUE, creation of the folder will fail, if a folder with that name already exists in the mother folder (the request will return the found folder). If FALSE, the name of the folder with be made unique by adding a number. | FALSE |
+
+Parameters for /CNPortletapp/rest/folder/create
+
+h3. Folder privileges
+
+Get the privileges on the given folder
+<javascript>
+GET /CNPortletapp/rest/folder/privileges/{id}
+</javascript>
+
+| Name | Description |
+| viewfolder | Permission to view this folder |
+| createfolder | Permission to create subfolders |
+| updatefolder | Permission to update this folder |
+| deletefolder | Permission to delete this folder |
+| viewpage | Permission to view pages/images/files in the folder |
+| createpage | Permission to create pages/images/files in the folder |
+| updatepage | Permission to update pages/images/files in the folder |
+| deletepage | Permission to delete pages/images/files in the folder |
+| publishpage | Permission to publish pages in the folder |
+| viewtemplate | Permission to view templates in the folder |
+| createtemplate | Permissions to create templates in the folder |
+| linktemplate | Permission to link templates to the folder |
+| updatetemplate | Permission to update templates linked to the folder |
+| deletetemplate | Permission to unlink templates from the folder |
+
+Permission values are returned by /CNPortletapp/rest/folder/privileges 

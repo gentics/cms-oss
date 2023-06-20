@@ -1,0 +1,89 @@
+h2. Gentics CMS Fileuploaders
+
+At the time of writing, there are three different file uploaders. This page explains the differences between each file uploader.
+
+endprologue.
+
+h3. Overview
+
+| *Name / Info* | *Standard fileuploader* | *gcnfileupload-plugin* |
+| Used in | New file / File properties / Tagfill dialog | Aloha Editor |
+| Multi-file | Yes | No |
+| Drag & drop | Yes (HTML5 browsers) | Minimal (browser dependent) |
+| Backend technology | Gentics CMS REST API | Gentics CMS REST API |
+| Frontend technology | Dynamic (HTML5, Flash, Google Gears, Silverlight, HTML4) | Javascript |
+| "FUM":impl_fum.html | Yes | Yes |
+
+h4. Image detection
+
+All images that have a mimetype starting with "image/" (eg.: image/jpeg) will be recognized as image and appear in the image list of a folder after uploading. Before Gentics CMS 5.19.0, only JPG, PNG, GIF, ICO and BMP images were recognized as images and displayed in the image list. Their mimetype for other images was set to "application/octet-stream" after upload.
+
+h4. Mimetype detection
+
+The mimetype detection is done based on the file content by the Java library "Apache Tika".
+Container formats like Microsoft .docx are supported and resolved to "application/vnd.openxmlformats-officedocument.wordprocessingml.document" instead of "application/zip" (the main mimetype of .docx).
+Additionally, if the content based mimetype detection fails for a file, the mimetype is determined by the files extension, based on Javas mime.types mapping.
+
+h3. General settings
+
+You can enforce a max filesize for uplading files:
+
+<shell filename="conf/*.yml">
+max_filesize: "64MB"
+</shell>
+
+See "How can i raise the upload limit for files and images?":faq_uploadlimit.html for more information.
+
+h4. JPG / CMYK
+
+Images using the color model <a href="http://en.wikipedia.org/wiki/CMYK_color_model" target="_blank">CMYK</a> are supported by the Gentics Image Store, however be in mind that older browsers (ie.: IE 6-8, FF2) do not support them.
+
+INFO: Due to Gentics CMS using a generic color profile for CMYK, the image colors might be slightly different after resizing/cropping with the Gentics Image Store or the Image manipulator.
+
+h3. FUM (File Uploader Manipulator)
+
+The FUM is a user-API that allows intercepting the file upload process.
+This enables a custom implementation to modify the uploaded data or check it and possible reject the upload.
+Possible applications include video conversion and virus checks.
+
+"More Info":impl_fum.html
+
+h3. Allowed characters
+
+<shell>
+a-z A-Z 0-9 _ , . - ( ) [ ] { } $
+</shell>
+
+All other characters will be automatically replaced with underscores with the exception of the following characters, which are replaced as follows:
+
+<shell>
+ö = oe    Ö = Oe
+ü = ue    Ü = Ue
+ä = ae    Ä = Ae
+ß = ss
+</shell>
+
+The total character limit for a filename is 64 characters. Any longer filename will be trimmed to the maximum length of 64 characters.
+
+NOTE: For characters custom replacements see "Sanitize names":feature_sanitize_name.html.
+
+h3. Default Upload Folders
+
+It is possible to define default upload folders for images and files (separately) per node in the node properties dialog.
+
+The default upload folders will be used
+* When a user creates a new image/file out of the tagfill dialog (when filling a part of type _URL (File)_ or _URL (image)_.
+* When a user uploads a new image/file using Aloha Editor (while setting a link).
+
+The default upload folders will *not* be used
+* When a user uploads files/images in the tagfill dialog using a part of type _Folder (Upload)_.
+* When a user creates a new image/file in the backend after selecting a specific folder and clicking on New|Image or New|File in the main menu.
+
+h3. Maximum dimension in pixel
+
+The allowed maximum size of an uploaded image (in pixel) can be set with the following configuration parameter:
+
+<shell filename="conf/*.yml">
+# The default maximum dimensions are 4000x4000
+image_maxdimensions: "4000x4000"
+</shell>

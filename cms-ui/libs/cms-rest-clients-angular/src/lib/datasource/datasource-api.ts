@@ -111,6 +111,12 @@ export class DataSourceApi {
      * Get a list of constructs.
      */
     getConstructs(datasourceId: string | number, options?: DataSourceConstructListOptions): Observable<DataSourceConstructListResponse> {
+        if (options?.sort) {
+            const copy: any = {...options };
+            copy.sort = stringifyPagingSortOptions(copy.sort);
+            options = copy;
+        }
+
         return this.apiBase.get(`datasource/${datasourceId}/constructs`, options);
     }
 

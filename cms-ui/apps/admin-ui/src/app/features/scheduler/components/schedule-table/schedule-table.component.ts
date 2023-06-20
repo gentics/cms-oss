@@ -29,7 +29,7 @@ const DEACTIVATE_SCHEDULE_ACTION = 'deactivateSchedule';
     templateUrl: './schedule-table.component.html',
     styleUrls: ['./schedule-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, ScheduleBO> implements OnInit {
 
     @Output()
@@ -112,8 +112,14 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
     public override ngOnInit(): void {
         super.ngOnInit();
 
-        this.subscriptions.push(interval(10_000).pipe(
-            startWith(null),
+        this.subscriptions.push(combineLatest([
+            interval(10_000).pipe(
+                startWith(null),
+            ),
+            this.loadTrigger.asObservable().pipe(
+                startWith(null),
+            ),
+        ]).pipe(
             tap(() => {
                 this.loadingSchedulerStatus = true;
                 this.changeDetector.markForCheck();

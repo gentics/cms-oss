@@ -7,6 +7,7 @@ import {
     Input,
     OnChanges,
     OnDestroy,
+    OnInit,
     Output,
     Renderer2,
     SimpleChanges,
@@ -69,7 +70,7 @@ export const CURSOR_STYLE_CLASS = 'gtx-split-view-container-resizing';
     templateUrl: './split-view-container.component.html',
     styleUrls: ['./split-view-container.component.scss'],
 })
-export class SplitViewContainerComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class SplitViewContainerComponent implements AfterViewInit, OnInit, OnChanges, OnDestroy {
 
     /**
      * Tells if a panel is opened on the right side in the split view.

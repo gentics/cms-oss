@@ -46,7 +46,9 @@ public class StagedOverview extends StagingBase {
 
 	/**
 	 * List of the id's of the selected items
+	 * @deprecated contains non-portable internal IDs, kept for backwards compatibility
 	 */
+	@Deprecated
 	private List<Integer> selectedItemIds;
 
 	/**
@@ -138,17 +140,21 @@ public class StagedOverview extends StagingBase {
 
 	/**
 	 * Get selected indices.
+	 * @deprecated contains non-portable internal IDs, kept for backwards compatibility
 	 * @return
 	 */
+	@Deprecated
 	public List<Integer> getSelectedItemIds() {
 		return selectedItemIds;
 	}
 
 	/**
 	 * Set selected indices.
+	 * @deprecated contains non-portable internal IDs, kept for backwards compatibility
 	 * 
 	 * @param selectedItemIds
 	 */
+	@Deprecated
 	public void setSelectedItemIds(List<Integer> selectedItemIds) {
 		this.selectedItemIds = selectedItemIds;
 	}

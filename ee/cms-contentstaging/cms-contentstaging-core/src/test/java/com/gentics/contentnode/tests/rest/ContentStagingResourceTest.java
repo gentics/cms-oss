@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
@@ -14,6 +15,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createUserGroup;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createformDataBodyPart;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
@@ -21,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import com.gentics.contentnode.etc.Feature;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,6 +61,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyTrx;
 import com.gentics.contentnode.factory.SessionToken;
@@ -75,10 +77,12 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
+import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
@@ -86,6 +90,8 @@ import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.model.Overview.ListType;
+import com.gentics.contentnode.rest.model.Overview.OrderBy;
 import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
@@ -107,6 +113,7 @@ import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
+import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -221,9 +228,19 @@ public class ContentStagingResourceTest {
 			p.setFolderId(node2.getFolder().getId());
 			p.setTemplateId(template.getId());
 			p.setName("Page 2");
-			p.getContent().addContentTag(bothNodeConstructId);
 			p.getContent().addContentTag(node1ConstructId);
+			p.getContent().addContentTag(bothNodeConstructId);
 		}));
+		page2 = execute(p -> update(p, upd -> {
+			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();
+			overview.setObjectType(Page.TYPE_PAGE);
+			overview.setSelectionType(Overview.SELECTIONTYPE_SINGLE);
+			overview.setMaxObjects(3);
+			overview.setRecursion(true);
+			overview.setOrderKind(Overview.ORDER_NAME);
+			overview.setOrderWay(Overview.ORDERWAY_ASC);
+			OverviewHelper.addOverviewEntriesToOverview(overview, List.of(page1.getId()));
+		}), page2);
 
 		folder1 = supply(() -> create(Folder.class, f -> {
 			f.setMotherId(node1.getFolder().getId());

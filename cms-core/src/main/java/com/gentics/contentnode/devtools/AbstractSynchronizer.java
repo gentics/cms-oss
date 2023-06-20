@@ -988,17 +988,17 @@ public abstract class AbstractSynchronizer <T extends SynchronizableNodeObject, 
 			Class<? extends NodeObject> clazz = getSelectionClass(from.getSelectType(), from.getListType());
 
 			if (from.getSelection() != null) {
-				if (to.getSelectedItemIds() != null) {
-					to.setSelectedItemIds(Flowable.fromIterable(from.getSelection()).map(item -> {
-						return ObjectTransformer.getInt(getLocalId(clazz, item.getId()), 0);
-					}).filter(id -> id > 0).toList().blockingGet());
-				} else if (to.getSelectedNodeItemIds() != null) {
+				if (to.getSelectedNodeItemIds() != null) {
 					to.setSelectedNodeItemIds(Flowable.fromIterable(from.getSelection()).map(item -> {
 						int nodeId = ObjectTransformer.getInt(getLocalId(Node.class, item.getNodeId()), 0);
 						int id = ObjectTransformer.getInt(getLocalId(clazz, item.getId()), 0);
 						return new NodeIdObjectId(nodeId, id);
 					}).filter(item -> item.getObjectId() > 0).toList().blockingGet());
-				}
+				} else if (to.getSelectedItemIds() != null) {
+					to.setSelectedItemIds(Flowable.fromIterable(from.getSelection()).map(item -> {
+						return ObjectTransformer.getInt(getLocalId(clazz, item.getId()), 0);
+					}).filter(id -> id > 0).toList().blockingGet());
+				} 
 			}
 		}
 		return to;

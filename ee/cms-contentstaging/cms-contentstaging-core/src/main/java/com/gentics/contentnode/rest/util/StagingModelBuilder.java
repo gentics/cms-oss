@@ -353,9 +353,7 @@ public class StagingModelBuilder {
 				StagedNodeIdObjectId id = new StagedNodeIdObjectId();
 				NodeObject object = entry.getObject();
 				id.setObjectId(object.getGlobalId().toString());
-				if (entry.getNodeId() > 0) {
-					id.setNodeId(t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString());
-				}
+				id.setNodeId(entry.getNodeId() > 0 ? t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString() : null);
 				selectedObjects.add(id);
 			}
 

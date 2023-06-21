@@ -37,6 +37,10 @@ export class DateTimePickerModal extends BaseModal<number> {
         super();
     }
 
+    updateTimestamp(timestamp: number): void {
+        this.timestamp = timestamp;
+    }
+
     okayClicked(): void {
         this.closeFn(this.timestamp);
     }

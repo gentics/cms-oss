@@ -39,7 +39,7 @@ export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> 
             active: true,
             parallel: false,
             notificationEmail: [],
-        }, [Validators.required, createNestedControlValidator()]);
+        }, [createNestedControlValidator()]);
     }
 
     public ngOnDestroy(): void {
@@ -62,6 +62,9 @@ export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> 
         this.changeDetector.markForCheck();
 
         this.subscription = this.entityOperations.create(this.form.value).subscribe(created => {
+            this.form.enable({ emitEvent: false });
+            this.loading = false;
+            this.changeDetector.markForCheck();
             this.closeFn(created);
         }, error => {
             this.notifications.show({
@@ -70,7 +73,6 @@ export class CreateScheduleModalComponent extends BaseModal<ScheduleBO | false> 
                     errorMessage: error.message,
                 },
             });
-        }, () => {
             this.form.enable({ emitEvent: false });
             this.loading = false;
             this.changeDetector.markForCheck();

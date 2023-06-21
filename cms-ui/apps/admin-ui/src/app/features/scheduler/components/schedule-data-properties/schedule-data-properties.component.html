@@ -16,8 +16,11 @@
         >
             <gtx-date-time-picker
                 *ngIf="form.get('startTimestamp').enabled"
-                [label]="'scheduler.startTimestamp' | i18n"
-                [clearable]="true"
+                [label]="('scheduler.startTimestamp' | i18n) + (form?.value?.type === ScheduleType.ONCE ? '*' : '')"
+                [clearable]="form?.value?.type !== ScheduleType.ONCE"
+                [required]="form?.value?.type === ScheduleType.ONCE"
+                [min]="dateMin"
+                [max]="dateMax"
                 [displaySeconds]="false"
                 formControlName="startTimestamp"
             ></gtx-date-time-picker>
@@ -29,6 +32,8 @@
                 [label]="'scheduler.endTimestamp' | i18n"
                 [clearable]="true"
                 [displaySeconds]="false"
+                [min]="dateMin"
+                [max]="dateMax"
                 formControlName="endTimestamp"
             ></gtx-date-time-picker>
         </div>

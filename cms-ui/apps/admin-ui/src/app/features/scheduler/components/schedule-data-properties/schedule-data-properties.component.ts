@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import { FollowUpScheduleData, IntervalScheduleData, ScheduleData, ScheduleType } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { dateInYears, generateFormProvider } from '@gentics/ui-core';
 import { pick } from 'lodash';
 
 @Component({
@@ -15,6 +15,14 @@ import { pick } from 'lodash';
 export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<ScheduleData> implements OnInit {
 
     readonly ScheduleType = ScheduleType;
+    public dateMin: Date;
+    public dateMax: Date;
+
+    public override ngOnInit(): void {
+        this.dateMin = dateInYears(-1);
+        this.dateMax = dateInYears(2);
+        super.ngOnInit();
+    }
 
     @Input()
     public scheduleBlacklist: number[] = [];
@@ -33,6 +41,7 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
         const options = { emitEvent: !!loud };
 
         const startCtl = this.form.get('startTimestamp');
+        startCtl.clearValidators();
         const endCtl = this.form.get('endTimestamp');
         const intervalCtl = this.form.get('interval');
         const followCtl = this.form.get('follow');
@@ -54,11 +63,13 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
 
             case ScheduleType.ONCE:
                 startCtl.enable(options);
+                startCtl.setValidators(Validators.required);
                 endCtl.disable(options);
                 intervalCtl.disable(options);
                 followCtl.disable(options);
                 break;
 
+            default:
             case ScheduleType.MANUAL:
                 startCtl.disable(options);
                 endCtl.disable(options);

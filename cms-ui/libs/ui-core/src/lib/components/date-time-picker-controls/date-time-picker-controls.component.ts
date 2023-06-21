@@ -30,6 +30,8 @@ import { generateFormProvider } from '../../utils';
 
 // http://ecma-international.org/ecma-262/5.1/#sec-15.9.1.1
 const MAX_DATE_MILLISECONDS = 8640000000000000;
+// On default, only show 200 years in each direction
+const MAX_YEAR_RANGE = 200;
 
 type TimeUnit = 'hours' | 'minutes' | 'seconds';
 
@@ -95,7 +97,7 @@ export class DateTimePickerControlsComponent
 
     /** Container instance to where rome is getting bound to. */
     @ViewChild('calendarContainer', { static: true })
-    protected calendarContainer: ElementRef;
+    protected calendarContainer: ElementRef<Element>;
 
     /** The order of how the date is supposed to be displayed. */
     public dateOrder: 'dmy' | 'ymd' | 'mdy' = 'mdy';
@@ -141,17 +143,19 @@ export class DateTimePickerControlsComponent
         }
 
         this.setupProviderChangeHook();
-        this.onRangeChange();
+        this.convertRanges();
+        this.initializeTimestamp();
+        this.updateYears();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
-        if ('min' in changes || 'max' in changes) {
+        if ((changes.min && !changes.min.firstChange) || (changes.max && !changes.max.firstChange)) {
             this.convertRanges();
             this.onRangeChange();
         }
-        if (changes['formatProvider'] && !changes['formatProvider'].firstChange) {
+        if (changes.formatProvider && !changes.formatProvider.firstChange) {
             this.setupProviderChangeHook();
         }
     }
@@ -160,7 +164,7 @@ export class DateTimePickerControlsComponent
      * Initialize the Rome widget instance.
      */
     ngAfterViewInit(): void {
-        let calendarEl: Element = this.calendarContainer.nativeElement;
+        const calendarEl = this.calendarContainer.nativeElement;
 
         this.calendarInstance = rome(calendarEl, this.getRomeConfig()).on('data', () => {
             this.momentValue = this.calendarInstance.getMoment();
@@ -183,6 +187,37 @@ export class DateTimePickerControlsComponent
         }
     }
 
+    protected initializeTimestamp(): void {
+        if (this.value != null && this.value !== 0) {
+            return;
+        }
+
+        const now = new Date().getTime();
+
+        // Check if the timestamp is out of (min/max) bounds.
+        if (this.min != null) {
+            const minTime = this.min.getTime();
+            if (now < minTime) {
+                this.updateMomentValue(minTime / 1000);
+                this.triggerChange(this.getUnixTimestamp());
+                return;
+            }
+        }
+
+        if (this.max != null) {
+            const maxTime = this.max.getTime();
+            if (now > maxTime) {
+                this.updateMomentValue(maxTime / 1000);
+                this.triggerChange(this.getUnixTimestamp());
+                return;
+            }
+        }
+
+        // If it's inbounds, we can set the timestamp
+        this.updateMomentValue(now / 1000);
+        this.triggerChange(this.getUnixTimestamp());
+    }
+
     protected onValueChange(force = false): void {
         const timestamp = Number(this.value);
 
@@ -191,6 +226,10 @@ export class DateTimePickerControlsComponent
             return;
         }
 
+        this.updateMomentValue(timestamp);
+    }
+
+    protected updateMomentValue(timestamp: number): void {
         this.momentValue = momentjs.unix(timestamp);
         this.updateInternalValues();
     }
@@ -212,33 +251,50 @@ export class DateTimePickerControlsComponent
         }
 
         if (typeof value === 'object') {
-            return value;
+            if (value instanceof Date && value.toString() !== 'Invalid Date') {
+                return value;
+            }
+            return null;
         }
 
         return new Date(value);
     }
 
-    protected onRangeChange(): void {
+    protected updateYears(): void {
         // Default min/max with proper values
-        const min = this.min instanceof Date ? this.min : new Date(-MAX_DATE_MILLISECONDS);
-        const max = this.max instanceof Date ? this.max : new Date(MAX_DATE_MILLISECONDS);
+        const minSet = this.min != null;
+        const maxSet = this.max != null;
 
-        // We don't want a date select which is stupidly long
-        const MAX_YEAR_RANGE = 200;
+        const min = this.min || new Date(-MAX_DATE_MILLISECONDS);
+        const max = this.max || new Date(MAX_DATE_MILLISECONDS);
 
         let minYear = min.getFullYear();
         let maxYear = max.getFullYear();
-        const thisYear = new Date().getFullYear();
 
-        if (MAX_YEAR_RANGE < maxYear - minYear) {
-            minYear = thisYear - Math.floor(MAX_YEAR_RANGE / 2);
-            maxYear = thisYear + Math.floor(MAX_YEAR_RANGE / 2);
+        /*
+         * We don't want a date select which is stupidly long when no
+         * ranges are provided. Therefore limit it to 200 years +- from now.
+         */
+        if (!minSet && !maxSet) {
+            const thisYear = new Date().getFullYear();
+
+            if (MAX_YEAR_RANGE < maxYear - minYear) {
+                minYear = thisYear - Math.floor(MAX_YEAR_RANGE / 2);
+                maxYear = thisYear + Math.floor(MAX_YEAR_RANGE / 2);
+            }
         }
 
         this.years = [];
         for (let year = minYear; year <= maxYear; year ++) {
             this.years.push(year);
         }
+    }
+
+    protected onRangeChange(): void {
+        this.updateYears();
+
+        const min = this.min || new Date(-MAX_DATE_MILLISECONDS);
+        const max = this.max || new Date(MAX_DATE_MILLISECONDS);
 
         if (this.calendarInstance) {
             // Reinstate rome with the new min/max settings
@@ -383,7 +439,7 @@ export class DateTimePickerControlsComponent
         const localeStrings = this.formatProvider.strings;
         const momentLocales = DateTimePickerControlsComponent.momentLocales;
 
-        for (let [strings, locale] of momentLocales) {
+        for (const [strings, locale] of momentLocales) {
             if (strings === localeStrings) {
                 return locale;
             }

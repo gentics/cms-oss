@@ -7,7 +7,7 @@
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
 
-<div *ngIf="(sorting && nodeId)|| (!sorting && !hideActions)" class="entity-table-actions-bar">
+<div *ngIf="(sorting && nodeId)|| !sorting" class="entity-table-actions-bar">
     <gtx-button
         *ngIf="!hideActions && !sorting"
         class="table-action-button"
@@ -31,6 +31,18 @@
         (click)="handleNodeLanguageAssignment()"
     >
         <icon left>add</icon> {{ 'shared.assign_languages_to_node' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        *ngIf="!sorting"
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 

@@ -12,22 +12,22 @@
         class="table-action-button"
         flat
         size="small"
-        type="primary"
-        [disabled]="disabled"
-        (click)="reloadItems()"
-    >
-        <icon left>sync</icon> {{ 'shared.reload' | i18n }}
-    </gtx-button>
-
-    <gtx-button
-        class="table-action-button"
-        flat
-        size="small"
         type="alert"
         [disabled]="disabled"
         (click)="deleteAll()"
     >
         <icon left>delete_forever</icon> {{ 'contentmaintenance.delete_all' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 

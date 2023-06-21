@@ -20,6 +20,10 @@
 
     .table-action-button + .table-action-button {
         margin-left: 0.5rem;
+
+        &.reload-button {
+            margin-left: auto;
+        }
     }
 }
 

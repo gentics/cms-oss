@@ -1,7 +1,7 @@
 import { DevToolPackageBO } from '@admin-ui/common';
 import { DevToolPackageTableLoaderOptions, DevToolPackageTableLoaderService, I18nService, PackageOperations, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, combineLatest, interval } from 'rxjs';
@@ -21,7 +21,7 @@ const UNASSIGN_FROM_NODE_ACTION = 'unassignFromNode';
 })
 export class DevToolPackageTableComponent
     extends BaseEntityTableComponent<Package, DevToolPackageBO, DevToolPackageTableLoaderOptions>
-    implements OnChanges {
+    implements OnInit, OnChanges {
 
     @Input()
     public nodeId: number;
@@ -115,13 +115,16 @@ export class DevToolPackageTableComponent
             interval(60_000).pipe(
                 startWith(null),
             ),
+            this.loadTrigger.asObservable().pipe(
+                startWith(null),
+            ),
         ]).pipe(
             filter(([allow]) => allow),
-            debounceTime(1_000),
             tap(() => {
                 this.syncLoading = true;
                 this.changeDetector.markForCheck();
             }),
+            debounceTime(1_000),
             switchMap(() => this.operations.getSyncState()),
         ).subscribe(res => {
             this.syncEnabled = res.enabled;

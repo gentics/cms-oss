@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { getValueByPath } from '@gentics/ui-core';
+import { getValueByPath } from '../../utils';
 
 @Pipe({
     name: 'gtxValuePath',

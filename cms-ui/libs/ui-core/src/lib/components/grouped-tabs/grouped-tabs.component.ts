@@ -152,7 +152,7 @@ export class GroupedTabsComponent
             this.tabGroups.changes,
         ]).pipe(
             switchMap(([tabPanes, tabGroups]: [QueryList<TabPaneComponent>, QueryList<TabGroupComponent>]) => {
-                let allChanges = [
+                const allChanges = [
                     tabPanes.changes.pipe(startWith(tabPanes)),
                     tabGroups.changes.pipe(startWith(tabGroups)),
                 ];
@@ -197,7 +197,7 @@ export class GroupedTabsComponent
     }
 
     collectTabs(): void {
-        let tabs = Array<TabPaneComponent | TabGroupComponent>();
+        const tabs = Array<TabPaneComponent | TabGroupComponent>();
 
         // Collect all the available tabs and groups
         this.tabPanes.map(item => {
@@ -220,7 +220,7 @@ export class GroupedTabsComponent
         if (this.pure) {
             setTimeout(() => this.setActiveTab());
         } else {
-            let activeTabs = this.tabPanes.filter(tab => tab.active);
+            const activeTabs = this.tabPanes.filter(tab => tab.active);
 
             // if there is no active tab set, activate the first
             if (activeTabs.length === 0) {
@@ -234,7 +234,7 @@ export class GroupedTabsComponent
      */
     setActiveTab(): void {
         if (this.tabPanes) {
-            let tabToActivate = this.tabPanes.filter(t => t.id === this.activeId)[0];
+            const tabToActivate = this.tabPanes.filter(t => t.id === this.activeId)[0];
             if (tabToActivate) {
                 this.setAsActive(tabToActivate);
             }
@@ -269,7 +269,7 @@ export class GroupedTabsComponent
     tabsHeight(group: TabGroupComponent): number {
         if (this.elementRef && group.expand) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            let body: HTMLOListElement = this.elementRef.nativeElement.querySelector(`li#${group.uniqueId} div.collapsible-body > ul`);
+            const body: HTMLOListElement = this.elementRef.nativeElement.querySelector(`li#${group.uniqueId} div.collapsible-body > ul`);
 
             if (body) {
                 // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
@@ -281,12 +281,19 @@ export class GroupedTabsComponent
     }
 
     public setAsActive(tab: TabPaneComponent): void {
-        this.tabPanes.toArray().forEach(tab => tab.active = false);
+        this.tabPanes.toArray().forEach(tab => {
+            tab.active = false;
+            tab.changeDetector.markForCheck();
+        });
         this.tabGroups.map(group => {
             if (group.tabs.some(currentTab => currentTab === tab)) {
                 group.expand = true;
             }
         });
+
         tab.active = true;
+        tab.changeDetector.markForCheck();
+
+        this.changeDetector.markForCheck();
     }
 }

@@ -84,7 +84,7 @@ describe('FolderStateModule', () => {
     }
 
     it('sets the correct initial state', () => {
-        expect(state.now.folder).toEqual({
+        const expectedState: FolderState = {
             folders: emptyItemInfo,
             forms: emptyItemInfo,
             pages: emptyItemInfo,
@@ -110,6 +110,7 @@ describe('FolderStateModule', () => {
             searchFiltersValid: false,
             searchFiltersVisible: false,
             breadcrumbs: emptyItemInfo,
+            nodesLoaded: false,
             channelSyncReport: {
                 folders: [],
                 forms: [],
@@ -119,7 +120,8 @@ describe('FolderStateModule', () => {
                 templates: [],
                 fetching: false,
             },
-        } as FolderState);
+        };
+        expect(state.now.folder).toEqual(expectedState);
     });
 
     it('copyItemStart works', () => {

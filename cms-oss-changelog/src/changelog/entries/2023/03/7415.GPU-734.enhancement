@@ -1,0 +1,1 @@
+A new admin endpoint was added to batch delete dirt queue entries with a time based filter as well as a filter based on the state.

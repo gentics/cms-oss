@@ -1890,8 +1890,10 @@ public class FileFactory extends AbstractFactory {
 		// lead to the creation of a new contentfile record.
 		newFile.setId(null);
 
+		Node channel = orgFile.getChannel();
+
 		// set the channel info (create a new master object)
-		newFile.setChannelInfo(0, 0);
+		newFile.setChannelInfo(channel != null ? channel.getId() : 0, 0);
 
 		if (newFileName != null) {
 			newFile.setName(newFileName);

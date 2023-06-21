@@ -95,6 +95,16 @@ module.exports = {
         '@typescript-eslint/naming-convention': [
             'warn',
             {
+                selector: ['variable'],
+                modifiers: ['unused'],
+                format: ['camelCase'],
+                custom: {
+                    match: true,
+                    regex: '^_?.*$',
+                },
+                leadingUnderscore: 'require',
+            },
+            {
                 selector: ['enumMember'],
                 format: ['UPPER_CASE'],
             },
@@ -175,8 +185,10 @@ module.exports = {
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unused-expressions': 'error',
         '@typescript-eslint/no-unused-vars': ['warn', {
-            argsIgnorePattern: '_',
-            args: 'none',
+            varsIgnorePattern: '^_',
+            argsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+            caughtErrors: 'none',
         }],
         '@typescript-eslint/no-use-before-define': 'warn',
         '@typescript-eslint/no-var-requires': 'off',

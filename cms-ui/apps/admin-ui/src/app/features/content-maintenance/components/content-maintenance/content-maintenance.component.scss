@@ -5,6 +5,7 @@
 .gtx-sync-setter {
     display: flex;
     justify-content: space-between;
+    margin-top: 0.75rem;
 
     & > .input-container {
         display: flex;
@@ -28,4 +29,6 @@ gtx-tabs {
     height: 100%;
     width: 100%;
     overflow: auto;
+    margin: 0;
+    display: flex;
 }

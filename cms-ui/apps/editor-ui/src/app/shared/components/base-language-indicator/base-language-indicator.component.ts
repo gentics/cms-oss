@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, Input, Output, SimpleChange } from '@angular/core';
+import { Directive, EventEmitter, Input, Output, SimpleChange, OnInit, OnChanges, OnDestroy } from '@angular/core';
 import { ItemLanguageClickEvent, UIMode } from '@editor-ui/app/common/models';
 import { Form, ItemListRowMode, Language, Normalized, Page, StagedItemsMap } from '@gentics/cms-models';
 import { BehaviorSubject, Observable, Subject, combineLatest } from 'rxjs';
@@ -6,7 +6,8 @@ import { first, map, mergeMap, takeUntil } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 @Directive()
-export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> | Form<Normalized>> {
+export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> | Form<Normalized>>
+    implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
 

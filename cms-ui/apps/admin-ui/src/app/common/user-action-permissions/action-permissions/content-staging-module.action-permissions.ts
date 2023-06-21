@@ -52,4 +52,15 @@ export const CONTENT_STAGING_MODULE_ACTION_PERMISSIONS: SingleModuleUserActionPe
         ],
     },
 
+    modifyContentPackageContent: {
+        typePermissions: [
+            {
+                type: AccessControlledType.CONTENT_STAGING_ADMIN,
+                permissions: [
+                    GcmsPermission.READ,
+                    GcmsPermission.MODIFY_CONTENT,
+                ],
+            },
+        ],
+    },
 };

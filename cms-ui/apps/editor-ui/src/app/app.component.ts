@@ -88,6 +88,7 @@ export class AppComponent implements OnInit {
     nodeRootLink$: Observable<any>;
     keycloakSignOut$: Observable<boolean>;
     toolLinkcheckerAvailable$: Observable<boolean>;
+
     userSid: number;
     activeNode: Node;
     userMenuOpened = false;

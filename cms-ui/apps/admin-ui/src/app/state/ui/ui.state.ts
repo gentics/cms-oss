@@ -24,8 +24,9 @@ import {
     SetUILanguage,
     SetUISettings,
     SetUIVersion,
+    SetUserSettingAction,
     SetUsersnapSettings,
-    SwitchEditorTab
+    SwitchEditorTab,
 } from './ui.actions';
 
 export interface UIStateModel {
@@ -47,14 +48,16 @@ export interface UIStateModel {
 
 export interface UIUserStateSettings {
     [userId: number]: UIStateSettings
-};
+}
 
 export interface UIStateSettings {
     uiLanguage?: GcmsUiLanguage;
+    pollContentMaintenance?: boolean;
 }
 
 export const INITIAL_USER_SETTINGS: UIStateSettings = {
     uiLanguage: FALLBACK_LANGUAGE,
+    pollContentMaintenance: false,
 };
 
 export const INITIAL_UI_STATE = defineInitialState<UIStateModel>({
@@ -212,6 +215,23 @@ export class UIStateModule {
     switchEditorTab(ctx: StateContext<UIStateModel>, action: SwitchEditorTab): void {
         ctx.setState(patch({
             editorTab: action.tabId,
+        }));
+    }
+
+    @ActionDefinition(SetUserSettingAction)
+    handleSetUserSettingAction<T extends keyof UIStateSettings>(ctx: StateContext<UIStateModel>, action: SetUserSettingAction<T>): void {
+        const auth = this.appState.now.auth;
+
+        if (!auth.isLoggedIn || !auth.currentUserId) {
+            return;
+        }
+
+        ctx.setState(patch({
+            settings: patch<UIUserStateSettings>({
+                [auth.currentUserId]: patch({
+                    [action.setting]: action.value,
+                }),
+            }),
         }));
     }
 }

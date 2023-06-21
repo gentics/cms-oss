@@ -31,6 +31,7 @@ export type GtxIcon =
     'export' |
     'search-index-maintenance' |
     'logs' |
+    'datasource' |
     'scheduler' |
     'content-admin' |
     'object-properties' |
@@ -52,11 +53,14 @@ export type GtxIcon =
     'content-repositories' |
     'packages' |
     'cr-fragments' |
+    'crfragment' |
     'template-management' |
     'tools' |
     'boolean-true' |
     'boolean-false' |
     'unspecified' |
+    'publish_done' |
+    'publish_start' |
     string;
 
 interface IconDefinition {
@@ -452,6 +456,24 @@ export const ICON_DEFINITIONS: Index<GtxIcon, IconDefinition> = {
     },
     'boolean-false': {
         matIconPrimary: 'clear',
+        matIconSecondary: null,
+    },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    publish_done: {
+        matIconPrimary: 'calendar_today',
+        matIconSecondary: 'check_circle',
+    },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    publish_start: {
+        matIconPrimary: 'calendar_today',
+        matIconSecondary: 'play_circle',
+    },
+    datasource: {
+        matIconPrimary: 'view_list',
+        matIconSecondary: null,
+    },
+    crfragment: {
+        matIconPrimary: 'dns',
         matIconSecondary: null,
     },
 

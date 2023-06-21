@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { UIMode } from '@editor-ui/app/common/models';
 import { EditorPermissions, Folder, FolderPermissions, StagedItemsMap, TemplatePermissions } from '@gentics/cms-models';
 import { ContextMenuOperationsService } from '../../providers/context-menu-operations/context-menu-operations.service';
@@ -11,9 +11,9 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     selector: 'folder-context-menu',
     templateUrl: './folder-context-menu.component.html',
     styleUrls: ['./folder-context-menu.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
-export class FolderContextMenuComponent {
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FolderContextMenuComponent implements OnChanges {
 
     readonly UIMode = UIMode;
 

@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Language } from '@gentics/cms-models';
+import { isEqual } from 'lodash-es';
 import { combineLatest } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
-import { map, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, mergeMap, publishReplay, refCount } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { PageLanguageIndicatorComponent } from '../page-language-indicator/page-language-indicator.component';
 
@@ -44,26 +45,50 @@ export class PageLanguageIndicatorCurrentComponent extends PageLanguageIndicator
         super.ngOnInit();
 
         // get page translation of current language
-        this.displayLanguage$ = combineLatest([this.item$, this.itemLanguages$, this.currentLanguage$]).pipe(
-            map(([page, pageLanguages, currentLanguage]) => pageLanguages[page.id] || currentLanguage || {} as Language)
+        this.displayLanguage$ = combineLatest([
+            this.item$.pipe(
+                map(page => page.language),
+                distinctUntilChanged(isEqual),
+            ),
+            this.itemLanguages$.pipe(
+                distinctUntilChanged(isEqual),
+            ),
+            this.currentLanguage$.pipe(
+                distinctUntilChanged(isEqual),
+            ),
+        ]).pipe(
+            map(([currentPageLanguage, pageLanguages, currentLanguage]: [string, Language[], Language]) => {
+                if (pageLanguages?.length > 0) {
+                    const found = pageLanguages.find(lang => lang.code === currentPageLanguage);
+                    if (found) {
+                        return found;
+                    }
+                }
+                return currentLanguage || {} as Language;
+            }),
+            publishReplay(1),
+            refCount(),
+        );
+
+        const langPublished$ = this.displayLanguage$.pipe(
+            filter(lang => !!lang),
+            mergeMap(lang => this.statePublished$(lang.code)),
         );
 
         // get if page translation is published
-        this.displaySingleLanguagePublished$ = combineLatest([this.isMultiLanguage$, this.displayLanguage$]).pipe(
-            map(([isMultiLanguage, displayLanguage]) => {
-                return displayLanguage && this.statePublished$(displayLanguage.code)
-                    .pipe(map(statePublished => !isMultiLanguage && statePublished === true));
-            }),
-            switchMap(displaySingleLanguagePublished => displaySingleLanguagePublished),
+        this.displaySingleLanguagePublished$ = combineLatest([
+            this.isMultiLanguage$,
+            langPublished$,
+        ]).pipe(
+            map(([isMultiLanguage, langPublished]) => !isMultiLanguage && langPublished),
         );
 
         // get if page translation is not published
-        this.displaySingleLanguageUnpublished$ = combineLatest([this.isMultiLanguage$, this.displayLanguage$]).pipe(
-            map(([isMultiLanguage, displayLanguage]) => {
-                return displayLanguage && this.statePublished$(displayLanguage.code)
-                    .pipe(map(statePublished => !isMultiLanguage && statePublished === false));
-            }),
-            switchMap(displaySingleLanguageUnpublished => displaySingleLanguageUnpublished),
+        this.displaySingleLanguageUnpublished$ = combineLatest([
+            this.isMultiLanguage$,
+            langPublished$,
+        ]).pipe(
+            map(([isMultiLanguage, langPublished]) => !isMultiLanguage && !langPublished),
         );
     }
 }

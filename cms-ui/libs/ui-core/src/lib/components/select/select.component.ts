@@ -9,12 +9,13 @@ import {
     Input,
     Output,
     QueryList,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
+import { isEqual } from 'lodash-es';
 import { IncludeToDocs, KeyCode } from '../../common';
 import { SelectOptionGroupDirective } from '../../directives/select-option-group/option-group.directive';
 import { SelectOptionDirective } from '../../directives/select-option/option.directive';
-import { generateFormProvider } from '../../utils';
+import { generateFormProvider, getValueByPath } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
 import { DropdownListComponent } from '../dropdown-list/dropdown-list.component';
@@ -55,6 +56,12 @@ type SingleOrArray<T> = T | T[];
 export class SelectComponent
     extends BaseFormElementComponent<SingleOrArray<string | number>>
     implements AfterViewInit, AfterContentInit {
+
+    /**
+     * Path to the id of the object (if objects are used as options).
+     */
+    @Input()
+    public idPath: string | symbol | (string | symbol)[] = null;
 
     /**
      * Sets the select box to be auto-focused. Handled by `AutofocusDirective`.
@@ -173,7 +180,7 @@ export class SelectComponent
             this.valueArray = this.value;
         }
 
-        let selectOptions: SelectOptionDirective[] = [];
+        const selectOptions: SelectOptionDirective[] = [];
         if (this.selectOptions) {
             selectOptions.push(...this.selectOptions.toArray());
         }
@@ -184,12 +191,33 @@ export class SelectComponent
         }
 
         if (selectOptions) {
-            let tmp = selectOptions.filter(option => this.valueArray.includes(option.value));
+            let tmp = selectOptions.filter(option => {
+                for (const selectedValue of this.valueArray) {
+                    return this.isSame(selectedValue, option.value);
+                }
+                return false;
+            });
             if (!this.multiple && tmp.length > 1) {
                 tmp = tmp.slice(0, 1);
             }
             this.selectedOptions = tmp;
         }
+
+        this.updateViewValue();
+    }
+
+    private isSame(value1: any, value2: any): boolean {
+        if ((value1 == null && value2 != null) || (value1 != null && value2 == null)) {
+            return false;
+        }
+        if (typeof value1 === 'object' && typeof value2 === 'object') {
+            if (this.idPath != null) {
+                return getValueByPath(value1, this.idPath) === getValueByPath(value2, this.idPath);
+            }
+            return isEqual(value1, value2);
+        }
+
+        return value1 === value2;
     }
 
     override triggerChange(value: SingleOrArray<string | number>): void {
@@ -273,7 +301,9 @@ export class SelectComponent
     }
 
     isSelected(option: SelectOptionDirective): boolean {
-        return -1 < this.selectedOptions.indexOf(option);
+        return this.selectedOptions.findIndex(selected => {
+            return this.isSame(option.value, selected.value);
+        }) > -1;
     }
 
     deselect(): void {
@@ -299,22 +329,23 @@ export class SelectComponent
      * Given a SelectOption, returns the position in the 2D selectedIndex array.
      */
     private getIndexFromSelectOption(selected: SelectOptionDirective): SelectedSelectOption {
-        if (selected) {
-            let selectedGroup = 0;
-            let selectedOption = 0;
-            for (let i = 0; i < this.optionGroups.length; i++) {
-                const group = this.optionGroups[i];
-                selectedGroup = i;
-                for (let j = 0; j < group.options.length; j++) {
-                    const option = group.options[j];
-                    selectedOption = j;
-                    if (option === selected) {
-                        return [selectedGroup, selectedOption];
-                    }
+        if (!selected) {
+            return [0, 0];
+        }
+
+        let selectedGroup = 0;
+        let selectedOption = 0;
+
+        for (let i = 0; i < this.optionGroups.length; i++) {
+            const group = this.optionGroups[i];
+            selectedGroup = i;
+            for (let j = 0; j < group.options.length; j++) {
+                const option = group.options[j];
+                selectedOption = j;
+                if (option === selected) {
+                    return [selectedGroup, selectedOption];
                 }
             }
-        } else {
-            return [0, 0];
         }
     }
 
@@ -373,7 +404,9 @@ export class SelectComponent
         if (!this.multiple) {
             this.selectedOptions = [];
         }
-        let index = this.selectedOptions.indexOf(option);
+        const index = this.selectedOptions.findIndex(selected => {
+            return this.isSame(selected.value, option.value);
+        });
         if (-1 < index) {
             // de-select the existing option
             this.selectedOptions.splice(index, 1);

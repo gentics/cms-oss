@@ -1,34 +1,29 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { coerceToBoolean } from '../../utils';
 
 @Directive({
     selector: 'gtx-option',
 })
-export class SelectOptionDirective {
+export class SelectOptionDirective implements OnChanges {
 
     @Input()
-    icon: string;
+    public icon: string;
 
     @Input()
-    set value(value: any) {
-        this._value = value;
-    }
-    get value(): any {
-        return this._value;
-    }
+    public value: any;
 
     @Input()
-    set disabled(value: boolean) {
-        this._disabled = coerceToBoolean(value);
-    }
-    get disabled(): boolean {
-        return this._disabled;
-    }
+    public disabled: boolean;
 
-    private _value: any;
-    private _disabled: any;
+    constructor(
+        public elementRef: ElementRef<HTMLElement>,
+    ) {}
 
-    constructor(public elementRef: ElementRef) {}
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.disabled) {
+            this.disabled = coerceToBoolean(this.disabled);
+        }
+    }
 
     /**
      * Returns the value of the option as displayed in the view, i.e. a string representation.
@@ -41,10 +36,11 @@ export class SelectOptionDirective {
         if (!this.isPrimitive(this.value)) {
             return '[Object]';
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         return this.value.toString();
     }
 
     private isPrimitive(value: any): boolean {
-        return value !== null && (typeof value !== 'function' && typeof value !== 'object');
+        return value != null && (typeof value !== 'function' && typeof value !== 'object');
     }
 }

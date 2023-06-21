@@ -53,6 +53,12 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     public form: UntypedFormGroup;
 
+    /**
+     * Internal flag if the form should setup the value changes only after the first configuration.
+     * This ignores the change performed by the first configuration and doesn't trigger a change for it (if any would occur).
+     */
+    protected delayedSetup = false;
+
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', true]);
@@ -74,11 +80,19 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         // when this is done a tick later. No idea why.
         setTimeout(() => {
             this.form.updateValueAndValidity();
+            if (this.delayedSetup) {
+                this.setupFormSubscription();
+            }
             this.form.markAsPristine();
         });
 
+        if (!this.delayedSetup) {
+            this.setupFormSubscription();
+        }
         this.changeDetector.markForCheck();
+    }
 
+    protected setupFormSubscription(): void {
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
@@ -114,7 +128,6 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.initialValue = false;
             this.initialValueChange.emit(false);
         }));
-
     }
 
     // Override to fix the typings
@@ -166,5 +179,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         } else {
             this.form.enable({ emitEvent: false });
         }
+    }
+
+    /**
+     * Simple event handler which may be used for nested properties components
+     * to properly handle/forward the initialValue flag.
+     */
+    public updateInitialValueFlag(value: boolean): void {
+        this.initialValue = value;
+        this.initialValueChange.emit(value);
     }
 }

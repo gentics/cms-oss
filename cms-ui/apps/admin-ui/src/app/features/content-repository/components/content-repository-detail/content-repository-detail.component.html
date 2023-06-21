@@ -61,7 +61,7 @@
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-textarea
                         class="gtx-logs-container"
-                        [value]="currentEntity?.dataCheckResult"
+                        [value]="(currentEntity?.dataCheckResult || '').trim()"
                         [disabled]="true"
                     ></gtx-textarea>
                 </div>
@@ -82,7 +82,7 @@
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-textarea
                         class="gtx-logs-container"
-                        [value]="currentEntity?.checkResult"
+                        [value]="(currentEntity?.checkResult || '').trim()"
                         [disabled]="true"
                     ></gtx-textarea>
                 </div>

@@ -281,11 +281,14 @@ public class StagingModelBuilder {
 			}
 			List<StagedNodeIdObjectId> overviewEntries = stagedOverview.getSelectedNodeItemIds();
 			List<NodeIdObjectId> selectedObjects = new ArrayList<>(overviewEntries.size());
+			List<Integer> selectedItemIds = new ArrayList<>(overviewEntries.size());
 
 			for (StagedNodeIdObjectId entry : overviewEntries) {
-				int nodeId = org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId()) ? t.getLocalId(Node.class, entry.getNodeId(), onReferenceNotFound) : 0;
-				int objectId = t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound);
-				selectedObjects.add(new NodeIdObjectId(nodeId, objectId));
+				if (org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId())) {
+					selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound)));
+				} else {
+					selectedItemIds.add(t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound));
+				}
 			}
 
 			// if the sortorder is DESC, we will reverse the order of the entries
@@ -295,6 +298,7 @@ public class StagingModelBuilder {
 				Collections.reverse(selectedObjects);
 			}
 			restOverview.setSelectedNodeItemIds(selectedObjects);
+			restOverview.setSelectedItemIds(selectedItemIds);
 		} else if (stagedOverview.getSelectedItemIds() != null && stagedOverview.getSelectedItemIds().size() > 0) {
 			restOverview.setSelectedItemIds(stagedOverview.getSelectedItemIds());
 		}

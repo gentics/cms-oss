@@ -1050,11 +1050,11 @@ public class Publisher implements Runnable {
 			cnMapPublisher.publishObjects(renderResult);
 			contentMapPublishPhase.done();
 
-			// set all files/folders to be published
-			PublisherInfo publisherInfo = MBeanRegistry.getPublisherInfo();
-
-			publisherInfo.publishedAllFiles();
-			publisherInfo.publishedAllFolders();
+//			// set all files/folders to be published
+//			PublisherInfo publisherInfo = MBeanRegistry.getPublisherInfo();
+//
+//			publisherInfo.publishedAllFiles();
+//			publisherInfo.publishedAllFolders();
 
 			return cnMapPublisher;
 		} catch (NodeException e) {

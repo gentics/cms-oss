@@ -109,6 +109,7 @@ import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.resolving.StackResolver;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
@@ -531,7 +532,8 @@ public class PageFactory extends AbstractFactory {
 				}
 
 				t.addTransactional(new TransactionalTriggerEvent(p,
-						new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), "") },
+						new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
+								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
 						Events.DELETE | Events.WASTEBIN));
 			}
 
@@ -4533,7 +4535,8 @@ public class PageFactory extends AbstractFactory {
 				pageIds.add(page.getId());
 				deletedPages.put(page.getId(), page);
 				ActionLogger.logCmd(ActionLogger.DEL, Page.TYPE_PAGE, page.getId(), null, "Page.delete()");
-				Events.trigger(page, new String[] { ObjectTransformer.getString(page.getFolder().getNode().getId(), "")}, Events.DELETE);
+				Events.trigger(page, new String[] { ObjectTransformer.getString(page.getFolder().getNode().getId(), ""),
+						MeshPublisher.getMeshUuid(page), MeshPublisher.getMeshLanguage(page) }, Events.DELETE);
 
 				// if the folder is a localized copy, it was hiding other folders (which are now "created")
 				if (!page.isMaster()) {

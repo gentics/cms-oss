@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -112,6 +113,12 @@ public class DBTestContext extends TestWatcher {
 	public final static String DEFAULT_CONFIG_NAME = "default_test_config.yml";
 
 	public final int DEFAULT_MAX_WAIT = 240;
+
+	/**
+	 * Name of the environment variable, which could contain a comma separated list
+	 * of features, that need to be activated when running tests
+	 */
+	public final static String ENV_TEST_FEATURES = "CMS_TEST_FEATURES";
 
 	protected ContentNodeTestContext context;
 
@@ -311,8 +318,17 @@ public class DBTestContext extends TestWatcher {
 	 * @throws NodeException
 	 */
 	protected void setFeatures(GCNFeature featureAnnotation) throws NodeException {
+		NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
+		Optional.ofNullable(System.getenv(ENV_TEST_FEATURES)).ifPresent(env -> {
+			for (String name : env.split(",")) {
+				Feature feature = Feature.getByName(org.apache.commons.lang3.StringUtils.trim(name));
+				if (feature != null) {
+					prefs.setFeature(feature, true);
+				}
+			}
+		});
+
 		if (featureAnnotation != null) {
-			NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
 			for (Feature feature : featureAnnotation.set()) {
 				if (!feature.isAvailable()) {
 					throw new NodeException(String.format("Feature %s is not available", feature.getName()));

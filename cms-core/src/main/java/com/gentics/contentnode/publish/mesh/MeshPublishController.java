@@ -17,7 +17,6 @@ import javax.management.StandardMBean;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.TaskQueueSize;
 import com.gentics.contentnode.factory.Transaction;
@@ -25,15 +24,12 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Node;
-import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.publish.CNWorkPhase;
 import com.gentics.contentnode.publish.PublishController;
-import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishWorkPhaseConstants;
 import com.gentics.contentnode.publish.SimplePublishInfo;
 import com.gentics.contentnode.publish.WorkPhaseHandler;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.IWorkPhase;
 import com.gentics.mesh.MeshStatus;
 
@@ -402,21 +398,9 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	public void removeOfflineObjects() throws NodeException {
 		state = State.removeOfflineObjects;
-		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-		int prepareThreshold = ObjectTransformer.getInt(
-				prefs.getProperty("mesh.prepareThreshold"),
-				MeshPublisher.DEFAULT_PREPARE_THRESHOLD);
 		try (WorkPhaseHandler phase = new WorkPhaseHandler(offlinePhase)) {
 			for (MeshPublisher mp : publishers) {
-				mp.checkObjectConsistency(true, true, (node, objType) -> {
-					if (node == null) {
-						return true;
-					}
-					Transaction t = TransactionManager.getCurrentTransaction();
-					Class<? extends NodeObject> objectClass = t.getClass(objType);
-					return !PublishQueue.getRemovedObjectIds(objectClass, true, node).isEmpty()
-							|| (prepareThreshold > 0 && PublishQueue.countDirtedObjects(objectClass, true, node) >= prepareThreshold);
-				});
+				mp.checkObjectConsistency(true, true);
 				phase.work();
 			}
 		}

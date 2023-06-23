@@ -46,6 +46,7 @@ import com.gentics.contentnode.object.NodeObjectInFolder;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.PublishableNodeObject;
 import com.gentics.contentnode.object.PublishableNodeObjectInFolder;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.response.PublishQueueCounts;
 import com.gentics.contentnode.rest.model.response.admin.ObjectCount;
 import com.gentics.lib.db.SQLExecutor;
@@ -78,6 +79,8 @@ public class PublishQueue {
 	 * channelId -> Map(objectType -> Map(Ids -> Set(attribute names)))
 	 */
 	protected static ThreadLocal<Map<Integer, Map<Integer, Map<Integer, Set<String>>>>> dependencyDirting = new ThreadLocal<>();
+
+	protected final static List<Action> REMOVING_ACTIONS = Arrays.asList(Action.DELETE, Action.REMOVE, Action.OFFLINE, Action.HIDE);
 
 	/**
 	 * Initialize fast dependency dirting by preparing the threadlocal dependencyDirting map
@@ -727,6 +730,77 @@ public class PublishQueue {
 		return objIds;
 	}
 
+	public static <T extends NodeObject> Map<Integer, Set<String>> getObjectIdsWithAttributes(final Class<T> clazz, final boolean forPublish,
+			final Node node, final Action... action) throws NodeException {
+		final Map<Integer, Set<String>> objIds = new HashMap<>();
+
+		TransactionManager.execute(new TransactionManager.Executable() {
+			public void execute() throws NodeException {
+				Transaction t = TransactionManager.getCurrentTransaction();
+				final int objType = t.getTType(clazz);
+				StringBuilder sql = new StringBuilder(
+						"SELECT pq.obj_id, pqa.name FROM publishqueue pq LEFT JOIN publishqueue_attribute pqa ON pq.id = pqa.publishqueue_id WHERE pq.obj_type = ?");
+				if (action.length > 0) {
+					sql.append(" AND pq.action IN (").append(StringUtils.repeat("?", action.length, ",")).append(")");
+				}
+
+				if (forPublish) {
+					sql.append(" AND pq.publish_flag = ?");
+				}
+				if (node != null) {
+					sql.append(" AND pq.channel_id = ?");
+				}
+				DBUtils.executeStatement(sql.toString(), new SQLExecutor() {
+					@Override
+					public void prepareStatement(PreparedStatement stmt) throws SQLException {
+						int pCounter = 1;
+
+						stmt.setInt(pCounter++, objType); // obj_type = ?
+
+						if (action.length > 0) {
+							for (Action a : action) {
+								stmt.setString(pCounter++, a.toString()); // action IN (?)
+							}
+						}
+
+						if (forPublish) {
+							stmt.setInt(pCounter++, 1); // publish_flag = ?
+						}
+						if (node != null) {
+							stmt.setInt(pCounter++, ObjectTransformer.getInt(node.getId(), 0)); // channel_id = ?
+						}
+					}
+
+					@Override
+					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+						while (rs.next()) {
+							int objId = rs.getInt("obj_id");
+							String name = rs.getString("name");
+							if (name == null) {
+								// dirt entries without attribute name dirt the
+								// whole object (overwriting attribute specific
+								// dirts, if any were found before)
+								objIds.put(objId, null);
+							} else if (!objIds.containsKey(objId)) {
+								// new dirt entry with an attribute name: dirt the single attribute
+								objIds.put(objId, new HashSet<>(Arrays.asList(name)));
+							} else {
+								// the object is already dirted, if it was dirted without attribute name (as a whole)
+								// we leave it that way (ignore the current entry)
+								// otherwise, we add the dirted attribute to the attributes dirted before
+								Set<String> set = objIds.get(objId);
+								if (set != null) {
+									set.add(name);
+								}
+							}
+						}
+					}
+				});
+			}
+		});
+		return objIds;
+	}
+
 	/**
 	 * Get the offline pages that are handled in this publish run
 	 * @param executor SQLExecutor instance
@@ -892,6 +966,17 @@ public class PublishQueue {
 			if (objType == ImageFile.TYPE_IMAGE) {
 				objType = File.TYPE_FILE;
 			}
+
+			if (attributes.length == 0 && REMOVING_ACTIONS.contains(action)) {
+				// TODO comment
+				if (MeshPublisher.supportsAlternativeLanguages(object)) {
+					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object) };
+				} else {
+					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object),
+							"language:" + MeshPublisher.getMeshLanguage(object) };
+				}
+			}
+
 			Entry entry = dirtObject(objType, ObjectTransformer.getInt(object.getId(), 0), action, cId, true, attributes);
 			if (entry != null) {
 				entries.add(entry);

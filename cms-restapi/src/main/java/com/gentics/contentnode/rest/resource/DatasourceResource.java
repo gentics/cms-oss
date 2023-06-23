@@ -18,6 +18,7 @@ import com.gentics.contentnode.rest.model.response.DatasourceEntryListResponse;
 import com.gentics.contentnode.rest.model.response.DatasourceEntryResponse;
 import com.gentics.contentnode.rest.model.response.DatasourceLoadResponse;
 import com.gentics.contentnode.rest.model.response.PagedDatasourceListResponse;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -113,6 +114,7 @@ public interface DatasourceResource {
 	 * @param sorting sort parameters
 	 * @param filter filter parameter
 	 * @param paging paging parameters
+	 * @param embed optionally embed the referenced objects (category)
 	 * @return response containing a list of constructs using the datasource
 	 * @throws Exception
 	 */
@@ -123,7 +125,7 @@ public interface DatasourceResource {
 		@ResponseCode(code = 404, condition = "Datasource {id} does not exist.")
 	})
 	ConstructList constructs(@PathParam("id") String id, @BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging) throws Exception;
+			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws Exception;
 
 	/**
 	 * List entries of a datasource

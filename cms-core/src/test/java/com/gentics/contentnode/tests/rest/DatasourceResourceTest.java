@@ -307,7 +307,7 @@ public class DatasourceResourceTest {
 
 		operate(() -> PermHandler.setPermissions(Construct.TYPE_CONSTRUCT, Arrays.asList(group), PermHandler.EMPTY_PERM));
 		ConstructList constructs = assertRequiredPermissions(group, user,
-				() -> new DatasourceResourceImpl().constructs(Integer.toString(datasourceId), null, null, null),
+				() -> new DatasourceResourceImpl().constructs(Integer.toString(datasourceId), null, null, null, null),
 				Triple.of(PermHandler.TYPE_ADMIN, 1, PermHandler.PERM_VIEW),
 				Triple.of(PermHandler.TYPE_CONADMIN, 1, PermHandler.PERM_VIEW),
 				Triple.of(Datasource.TYPE_DATASOURCE, 1, PermHandler.PERM_VIEW));
@@ -320,7 +320,7 @@ public class DatasourceResourceTest {
 		operate(() -> PermHandler.setPermissions(Construct.TYPE_CONSTRUCTS_INTEGER, Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
 		try (Trx trx = new Trx(user)) {
-			constructs = new DatasourceResourceImpl().constructs(Integer.toString(datasourceId), null, null, null);
+			constructs = new DatasourceResourceImpl().constructs(Integer.toString(datasourceId), null, null, null, null);
 			trx.success();
 		}
 
@@ -331,7 +331,7 @@ public class DatasourceResourceTest {
 	@Test
 	@Expected(ex = EntityNotFoundException.class, message = "Die Datenquelle '4711' wurde nicht gefunden.")
 	public void testGetConstructsUnknown() throws NodeException {
-		operate(() -> new DatasourceResourceImpl().constructs(Integer.toString(4711), null, null, null));
+		operate(() -> new DatasourceResourceImpl().constructs(Integer.toString(4711), null, null, null, null));
 	}
 
 	@Test

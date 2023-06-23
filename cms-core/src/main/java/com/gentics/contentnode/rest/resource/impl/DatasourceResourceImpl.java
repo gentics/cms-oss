@@ -58,6 +58,7 @@ import com.gentics.contentnode.rest.model.response.PagedDatasourceListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.DatasourceResource;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -198,7 +199,7 @@ public class DatasourceResourceImpl implements DatasourceResource {
 	@Path("/{id}/constructs")
 	@Override
 	public ConstructList constructs(@PathParam("id") String id, @BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging) throws NodeException {
+			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			com.gentics.contentnode.object.Datasource datasource = MiscUtils
 					.load(com.gentics.contentnode.object.Datasource.class, id);
@@ -214,6 +215,7 @@ public class DatasourceResourceImpl implements DatasourceResource {
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
 					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "keyword", "description", "category"))
 					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "keyword", "description", "category"))
+					.embed(embed, "category", com.gentics.contentnode.object.Construct.EMBED_CATEGORY)
 					.page(paging).to(new ConstructList());
 
 			trx.success();

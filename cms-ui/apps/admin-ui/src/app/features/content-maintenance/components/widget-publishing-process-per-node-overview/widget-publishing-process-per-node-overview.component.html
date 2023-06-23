@@ -7,15 +7,15 @@
         <ng-container *ngFor="let statusKey of ['toPublish', 'delayed']">
             <table class="gtx-table-publishqueue">
                 <tr class="gtx-header-row">
-                    <th width="60%">{{ 'shared.' + statusKey | i18n }}:</th>
+                    <th class="column-name">{{ 'shared.' + statusKey | i18n }}:</th>
 
-                    <th class="gtx-cell-value" width="20%">
+                    <th class="column-amount gtx-cell-value">
                         <div class="gtx-cell-value-inner">
                             {{ state[statusKey + 'Total'] }}
                         </div>
                     </th>
 
-                    <th width="20%"></th>
+                    <th class="column-percent"></th>
                 </tr>
 
                 <ng-container *ngFor="let node of state.nodes">
@@ -24,7 +24,7 @@
                         *ngIf="node[statusKey].amount > 0"
                         class="gtx-data-row"
                     >
-                        <td class="gtx-data-row-cell" width="60%">
+                        <td class="column-name gtx-data-row-cell">
                             <div class="gtx-data-row-cell-container">
                                 <span [class.disable-publish-true]="node.disablePublish">
                                     {{ node.name }}
@@ -37,13 +37,13 @@
                             </div>
                         </td>
 
-                        <td class="gtx-cell-value" width="20%">
+                        <td class="column-amount gtx-cell-value">
                             <div class="gtx-cell-value-inner">
                                 {{ node[statusKey].amount }}
                             </div>
                         </td>
 
-                        <td class="gtx-cell-value" width="20%">
+                        <td class="column-percent gtx-cell-value">
                             <div class="gtx-cell-value-inner percentage">
                                 {{ node[statusKey].percentage.toFixed(1) + ' %' }}
                             </div>

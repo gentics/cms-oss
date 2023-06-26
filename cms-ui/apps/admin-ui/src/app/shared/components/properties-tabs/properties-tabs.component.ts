@@ -12,8 +12,6 @@ export class PropertiesTabsComponent implements OnChanges {
     @Input()
     public items: (Tab | TabGroup)[] = [];
 
-    itemsMap: { [id: string]: Tab | TabGroup } = {};
-
     @Input()
     public selectedTab?: string;
 
@@ -22,6 +20,8 @@ export class PropertiesTabsComponent implements OnChanges {
 
     @Output()
     public groupToggle = new EventEmitter<{ id: string, expanded: boolean }>();
+
+    public itemsMap: { [id: string]: Tab | TabGroup } = {};
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.items) {

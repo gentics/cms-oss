@@ -53,6 +53,8 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     public ngOnInit(): void {
+        super.ngOnInit();
+
         this.subscriptions.push(this.route.paramMap.pipe(
             map(params => params.get(NODE_ID_PARAM)),
             distinctUntilChanged(),

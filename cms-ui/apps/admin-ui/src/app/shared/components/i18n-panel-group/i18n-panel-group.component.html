@@ -7,12 +7,12 @@
         wrap
         statusIcons
         [activeId]="activeLanguage?.id"
+        (tabChange)="setActiveLanguage($event)"
     >
         <gtx-tab-pane
             *ngFor="let language of languages"
             [id]="language?.id"
             [readonly]="disabled"
-            (select)="setActiveLanguage($event)"
         >
             <ng-template gtx-tab-label>
                 <div

@@ -31,6 +31,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
@@ -877,7 +878,11 @@ public class ModelBuilder {
 		restTag.setInheritable(nodeTag.isInheritable());
 		restTag.setRequired(nodeTag.isRequired());
 		restTag.setSortOrder(sortOrder);
-		restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
+		// temporarily disable publish cache, because checking permissions on an objecttag might try to load the container object, which - when publish cache is enabled - will get the REST model
+		// of the object, including its object tags. this would lead to endless recursions
+		try (PublishCacheTrx pCacheTrx = new PublishCacheTrx(false)) {
+			restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
+		}
 		return restTag;
 	}
 

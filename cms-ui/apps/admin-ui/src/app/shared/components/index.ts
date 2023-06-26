@@ -1,6 +1,6 @@
 export * from './accordion/accordion.component';
-export * from './assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 export * from './assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
+export * from './assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 export * from './assign-entity-to-package-modal/assign-entity-to-package-modal.component';
 export * from './assign-group-to-users-modal/assign-group-to-users-modal.component';
 export * from './assign-node-restriction-to-object-properties-modal/assign-node-restriction-to-object-properties-modal.component';
@@ -58,8 +58,8 @@ export * from './sidebar-item-group/sidebar-item-group.component';
 export * from './sidebar-item/sidebar-item.component';
 export * from './split-view-router-outlet/split-view-router-outlet.component';
 export * from './tag-editor-wrapper/tag-editor-wrapper.component';
-export * from './tag-map-entry-table/tag-map-entry-table.component';
 export * from './tag-map-entry-properties/tag-map-entry-properties.component';
+export * from './tag-map-entry-table/tag-map-entry-table.component';
 export * from './template-folder-link-trable/template-folder-link-trable.component';
 export * from './template-table/template-table.component';
 export * from './user-table/user-table.component';
@@ -67,4 +67,3 @@ export * from './widget-publishing-process';
 export * from './widget-publishing-process-total';
 export * from './wizard-modal/wizard-modal.component';
 export * from './wizard/wizard.component';
-

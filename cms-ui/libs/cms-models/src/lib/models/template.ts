@@ -1,5 +1,5 @@
 import { MarkupLanguage } from './markup-language';
-import { InstancePermissionItem, InstancePermissionMap, SingleInstancePermissionType } from './permissions';
+import { InstancePermissionItem } from './permissions';
 import { ObjectTag, TemplateTag } from './tag';
 import { DefaultModelType, IndexByKey, ModelType, Normalizable, NormalizableEntity, Raw } from './type-util';
 import { User } from './user';

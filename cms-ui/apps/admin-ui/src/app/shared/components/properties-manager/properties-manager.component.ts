@@ -1,6 +1,17 @@
 import { Tab, TabGroup } from '@admin-ui/common';
 import { SelectState } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, TemplateRef } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    OnChanges,
+    OnInit,
+    Output,
+    SimpleChanges,
+    TemplateRef,
+} from '@angular/core';
 import { Feature, ICON_MAPPING, Tag, TagEditorChange } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';

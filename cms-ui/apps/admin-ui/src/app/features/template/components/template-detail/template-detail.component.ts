@@ -48,6 +48,7 @@ export class TemplateDetailComponent
 
     /** form of tab 'Properties' */
     public fgProperties: UntypedFormControl;
+    public entityIsClean = true;
 
     public node: Node<Raw>;
 
@@ -127,6 +128,7 @@ export class TemplateDetailComponent
             this.currentEntity = (this.appState.now.entity.template || {})[currentEntity.id];
             // fill form with entity property values
             this.fgPropertiesUpdate(this.currentEntity);
+            this.entityIsClean = true;
             this.changeDetectorRef.markForCheck();
         });
 
@@ -177,6 +179,7 @@ export class TemplateDetailComponent
             detailLoading(this.appState),
             discard((updated: TemplateBO<Raw>) => {
                 this.currentEntity = updated;
+                this.entityIsClean = true;
                 this.fgProperties.markAsPristine();
                 this.tableLoader.reload();
             }),

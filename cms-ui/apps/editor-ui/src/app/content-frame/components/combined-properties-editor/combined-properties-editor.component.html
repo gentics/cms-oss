@@ -2,7 +2,13 @@
 
     <!-- The tabs need to be pure, because we need to be able to cancel the navigation if a user doesn't want to discard the changes. -->
     <ng-container *ngIf="objectPropertiesGroupedDelayed$ | async">
-        <gtx-grouped-tabs class="properties-tabs" pure wrap statusIcons [activeId]="activeTabId$ | async">
+        <gtx-grouped-tabs
+            class="properties-tabs"
+            pure
+            wrap
+            statusIcons
+            [activeId]="activeTabId$ | async"
+        >
             <gtx-tab-pane
                 hideStatusIcon
                 [id]="ITEM_PROPERTIES_TAB"

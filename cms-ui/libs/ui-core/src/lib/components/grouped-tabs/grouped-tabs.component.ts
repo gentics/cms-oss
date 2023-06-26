@@ -176,12 +176,12 @@ export class GroupedTabsComponent
         );
 
         this.subscriptions.push(tabChanges.subscribe(() => {
-            this.collectTabs();
+            this.collectTabs(true);
         }));
 
         this.tabPanes.notifyOnChanges();
         this.tabGroups.notifyOnChanges();
-        this.collectTabs();
+        this.collectTabs(true);
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -196,7 +196,7 @@ export class GroupedTabsComponent
         return this.tabPanes.filter(tab => tab.active === true)[0];
     }
 
-    collectTabs(): void {
+    collectTabs(activate: boolean = false): void {
         const tabs = Array<TabPaneComponent | TabGroupComponent>();
 
         // Collect all the available tabs and groups
@@ -212,20 +212,22 @@ export class GroupedTabsComponent
         });
 
         // Activates the first tab if there are no active currently
-        this.preActivateTab();
+        if (activate) {
+            this.preActivateTab();
+        }
         this.tabs$.next(tabs);
     }
 
     preActivateTab(): void {
         if (this.pure) {
-            setTimeout(() => this.setActiveTab());
-        } else {
-            const activeTabs = this.tabPanes.filter(tab => tab.active);
+            this.setActiveTab();
+            return;
+        }
+        const activeTabs = this.tabPanes.filter(tab => tab.active);
 
-            // if there is no active tab set, activate the first
-            if (activeTabs.length === 0) {
-                this.tabPanes.first.active = true;
-            }
+        // if there is no active tab set, activate the first
+        if (activeTabs.length === 0) {
+            this.setAsActive(this.tabPanes.first);
         }
     }
 
@@ -235,9 +237,7 @@ export class GroupedTabsComponent
     setActiveTab(): void {
         if (this.tabPanes) {
             const tabToActivate = this.tabPanes.filter(t => t.id === this.activeId)[0];
-            if (tabToActivate) {
-                this.setAsActive(tabToActivate);
-            }
+            this.setAsActive(tabToActivate);
         }
     }
 
@@ -250,10 +250,9 @@ export class GroupedTabsComponent
         }
         if (!this.pure) {
             this.setAsActive(tab);
-            this.tabChange.emit(tab.id);
-        } else {
-            tab.select.emit(tab.id);
         }
+        tab.select.emit(tab.id);
+        this.tabChange.emit(tab.id);
     }
 
     /**
@@ -280,20 +279,26 @@ export class GroupedTabsComponent
         return 0;
     }
 
-    public setAsActive(tab: TabPaneComponent): void {
+    public setAsActive(tabToActivate?: TabPaneComponent): void {
         this.tabPanes.toArray().forEach(tab => {
-            tab.active = false;
+            if (tabToActivate != null) {
+                tab.active = tab.id === tabToActivate.id;
+            } else {
+                tab.active = false;
+            }
             tab.changeDetector.markForCheck();
         });
-        this.tabGroups.map(group => {
-            if (group.tabs.some(currentTab => currentTab === tab)) {
-                group.expand = true;
-            }
-        });
 
-        tab.active = true;
-        tab.changeDetector.markForCheck();
+        if (tabToActivate != null) {
+            this.tabGroups.map(group => {
+                if (group.tabs.some(currentTab => currentTab === tabToActivate)) {
+                    group.expand = true;
+                }
+            });
+        }
 
         this.changeDetector.markForCheck();
+
+        this.collectTabs();
     }
 }

@@ -121,12 +121,12 @@
                         [label]="'editor.item_localized_mail_custom' | i18n"
                         [disabled]="disabled"
                         [value]="true"
-                        (change)="setRadioState('useEmailPageTemplate', true)">
-                    </gtx-radio-button>
+                        (change)="setRadioState('useEmailPageTemplate', true)"
+                    ></gtx-radio-button>
 
                     <div
                         class="confirmation-page-setting"
-                            [ngClass]="{
+                        [ngClass]="{
                             'confirmation-page-setting--active': !!useEmailPageTemplate,
                             'confirmation-page-setting--inactive': !useEmailPageTemplate
                         }"
@@ -148,8 +148,8 @@
                         [label]="'editor.item_localized_mail_temp' | i18n"
                         [disabled]="disabled"
                         [value]="false"
-                        (change)="setRadioState('useEmailPageTemplate', false)">
-                    </gtx-radio-button>
+                        (change)="setRadioState('useEmailPageTemplate', false)"
+                    ></gtx-radio-button>
 
                     <div
                         class="confirmation-page-setting"
@@ -162,6 +162,8 @@
                             [language]="activeFormLanguageCode$ | async"
                             [availableLanguages]="properties.languages"
                             [disabled]="disabled || !!useEmailPageTemplate"
+                            (change)="setEmailTemplateOption($event)"
+                            formControlName="mailtemp_i18n"
                         >
                             <gtx-option
                                 *ngFor="let option of formPropertiesConfiguration.admin_mail_options"
@@ -184,6 +186,8 @@
                 ></gtx-i18n-input>
             </ng-template>
         </ng-container>
+
+        <hr/>
 
         <ng-container gtx-radio-group formControlName="useInternalSuccessPage">
             <gtx-radio-button

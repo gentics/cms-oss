@@ -2210,10 +2210,8 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage);
 			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage);
 			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage, withSemaphore);
 		}
 	}

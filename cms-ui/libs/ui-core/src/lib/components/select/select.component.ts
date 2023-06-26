@@ -193,7 +193,9 @@ export class SelectComponent
         if (selectOptions) {
             let tmp = selectOptions.filter(option => {
                 for (const selectedValue of this.valueArray) {
-                    return this.isSame(selectedValue, option.value);
+                    if (this.isSame(selectedValue, option.value)) {
+                        return true;
+                    }
                 }
                 return false;
             });

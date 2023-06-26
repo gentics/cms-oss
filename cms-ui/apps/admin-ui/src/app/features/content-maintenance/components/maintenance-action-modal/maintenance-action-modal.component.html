@@ -11,7 +11,7 @@
         >
             <div class="columns medium-6 small-12">
                 <gtx-select
-                    [label]="'contentmaintenance.types' | i18n"
+                    [label]="('contentmaintenance.types' | i18n) + ' *'"
                     [multiple]="true"
                     [required]="true"
                     [selectAll]="true"
@@ -27,7 +27,6 @@
                     <gtx-select
                         [label]="'contentmaintenance.contentRepositories' | i18n"
                         [multiple]="true"
-                        [required]="true"
                         [selectAll]="true"
                         formControlName="contentRepositories"
                     >

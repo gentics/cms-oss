@@ -116,12 +116,11 @@
             ></gtx-i18n-input>
 
             <ng-container *ngIf="formPropertiesConfiguration.admin_mail_options; else noAdminMailOptions">
-                <ng-container gtx-radio-group formControlName="useEmailPageTemplate">
+                <gtx-radio-group formControlName="useEmailPageTemplate">
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_custom' | i18n"
                         [disabled]="disabled"
                         [value]="true"
-                        (change)="setRadioState('useEmailPageTemplate', true)"
                     ></gtx-radio-button>
 
                     <div
@@ -136,8 +135,8 @@
                             [displayValue]="emailTemplatePageDisplayValue$ | async"
                             [disabled]="disabled || !useEmailPageTemplate"
                             (clear)="setEmailTemplatePage(null)"
-                            (browse)="browseForEmailTemplatePage()">
-                        </browse-box>
+                            (browse)="browseForEmailTemplatePage()"
+                        ></browse-box>
 
                         <div class="browse-box__breadcrumbs" *ngIf="breadcrumbs.emailTemplatePage">
                             {{ 'tag_editor.selected_folder' | i18n }}: {{ breadcrumbs.emailTemplatePage }}
@@ -148,7 +147,6 @@
                         [label]="'editor.item_localized_mail_temp' | i18n"
                         [disabled]="disabled"
                         [value]="false"
-                        (change)="setRadioState('useEmailPageTemplate', false)"
                     ></gtx-radio-button>
 
                     <div
@@ -173,7 +171,7 @@
                             </gtx-option>
                         </gtx-i18n-select>
                     </div>
-                </ng-container>
+                </gtx-radio-group>
             </ng-container>
 
             <ng-template #noAdminMailOptions>

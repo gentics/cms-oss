@@ -36,14 +36,14 @@ export class RadioGroupDirective implements ControlValueAccessor {
     }
 
     remove(radio: RadioButtonComponent): void {
-        let pos: number = this.radioButtons.indexOf(radio);
+        const pos: number = this.radioButtons.indexOf(radio);
         if (pos >= 0) {
             this.radioButtons.splice(pos, 1);
         }
     }
 
     radioSelected(selected?: RadioButtonComponent): void {
-        for (let radio of this.radioButtons) {
+        for (const radio of this.radioButtons) {
             if (radio !== selected) {
                 radio.writeValue(selected ? selected.value : null);
             }
@@ -53,25 +53,26 @@ export class RadioGroupDirective implements ControlValueAccessor {
         // ngModel value, we will cause "changed after checked" errors in dev mode.
         setTimeout(() => {
             this.onChange(selected ? selected.value : null);
+            this.onTouched();
         });
     }
 
     writeValue(value: any): void {
         this.writtenValue = value;
 
-        for (let radio of this.radioButtons) {
+        for (const radio of this.radioButtons) {
             radio.writeValue(value);
         }
     }
 
-    registerOnChange(fn: Function): void {
+    registerOnChange(fn: () => any): void {
         this.onChange = fn;
     }
 
-    registerOnTouched(fn: Function): void {
+    registerOnTouched(fn: (value?: any) => any): void {
         this.onTouched = fn;
     }
 
-    private onTouched: Function = () => { };
-    private onChange: Function = (_: any) => { };
+    private onTouched: () => any = () => { };
+    private onChange: (value?: any) => any = () => { };
 }

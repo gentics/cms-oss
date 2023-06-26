@@ -273,7 +273,7 @@
             class="form-editor"
             [form]="currentItem"
             [activeUiLanguageCode]="activeUiLanguageCode$ | async"
-            [activeContentLanguageCode]="activeFormLanguageCode$ | async"
+            [activeContentLanguageCode]="itemLanguage?.code"
             [formEditMode]="editMode"
             (formModified)="currentItem = $event; setContentModified(true, false)"
             (validityChange)="setItemValidity($event)"

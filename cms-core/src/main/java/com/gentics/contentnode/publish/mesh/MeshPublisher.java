@@ -606,12 +606,12 @@ public class MeshPublisher implements AutoCloseable {
 	/**
 	 * Map containing the IDs of all objects, which were written to Mesh during the publish process (per nodeId and objectType)
 	 */
-	protected Map<Integer, Map<Integer, Set<Integer>>> written = new HashMap<>();
+	protected Map<Integer, Map<Integer, Set<Integer>>> written = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * Map containing the IDs of all objects, which were already checked and are known to be missing in Mesh (per nodeId and objectType)
 	 */
-	protected Map<Integer, Map<Integer, Set<Integer>>> missing = new HashMap<>();
+	protected Map<Integer, Map<Integer, Set<Integer>>> missing = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * Lambda that handles errors
@@ -3413,10 +3413,10 @@ public class MeshPublisher implements AutoCloseable {
 			});
 		}).map(optionalResponse -> {
 			if (optionalResponse.isPresent()) {
-				written.computeIfAbsent(nodeId, k -> new HashMap<>()).computeIfAbsent(object.getTType(), k -> new HashSet<>()).add(id);
+				getWrittenSet(nodeId, object.getTType()).add(id);
 				return true;
 			} else {
-				missing.computeIfAbsent(nodeId, k -> new HashMap<>()).computeIfAbsent(object.getTType(), k -> new HashSet<>()).add(id);
+				getMissingSet(nodeId, object.getTType()).add(id);
 				return false;
 			}
 		}).blockingGet();
@@ -3603,13 +3603,36 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param task write task
 	 */
 	protected void setWritten(WriteTask task) {
-		written.computeIfAbsent(task.nodeId, k -> new HashMap<>())
-			.computeIfAbsent(task.objType, k -> new HashSet<>()).add(task.objId);
+		getWrittenSet(task.nodeId, task.objType).add(task.objId);
 		Set<Integer> missingSet = missing.getOrDefault(task.nodeId, Collections.emptyMap())
 			.getOrDefault(task.objType, Collections.emptySet());
 		if (!missingSet.isEmpty()) {
 			missingSet.remove(task.objId);
 		}
+	}
+
+	/**
+	 * Get the modifiable set containing IDs of objects, which were already written to Mesh for the nodeId and objType.
+	 * If the set does not yet exist, create it
+	 * @param nodeId node ID
+	 * @param objType object type
+	 * @return set of IDs
+	 */
+	protected Set<Integer> getWrittenSet(int nodeId, int objType) {
+		return written.computeIfAbsent(nodeId, k -> Collections.synchronizedMap(new HashMap<>()))
+				.computeIfAbsent(objType, k -> Collections.synchronizedSet(new HashSet<>()));
+	}
+
+	/**
+	 * Get the modifiable set containing IDs of objects, which are known to be missing in Mesh for the nodeId and objType.
+	 * If the set does not yet exist, create it
+	 * @param nodeId node ID
+	 * @param objType object type
+	 * @return set of IDs
+	 */
+	protected Set<Integer> getMissingSet(int nodeId, int objType) {
+		return missing.computeIfAbsent(nodeId, k -> Collections.synchronizedMap(new HashMap<>()))
+				.computeIfAbsent(objType, k -> Collections.synchronizedSet(new HashSet<>()));
 	}
 
 	/**

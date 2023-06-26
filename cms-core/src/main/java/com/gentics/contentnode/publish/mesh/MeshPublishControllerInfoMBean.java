@@ -17,6 +17,18 @@ public interface MeshPublishControllerInfoMBean {
 	int getPostponedWriteTasks();
 
 	/**
+	 * Get number of remaining write tasks
+	 * @return number of remaining tasks
+	 */
+	int getRemainingWriteTasks();
+
+	/**
+	 * Get number of total write tasks
+	 * @return number of total tasks
+	 */
+	int getTotalWriteTasks();
+
+	/**
 	 * Get number of remaining render tasks
 	 * @return number of remaining tasks
 	 */

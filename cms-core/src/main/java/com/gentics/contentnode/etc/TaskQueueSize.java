@@ -10,6 +10,11 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class TaskQueueSize {
 	/**
+	 * "limit" of the taskqueue
+	 */
+	protected int limit = 0;
+
+	/**
 	 * Number of scheduled tasks
 	 */
 	protected AtomicInteger scheduledTasks = new AtomicInteger(0);
@@ -30,12 +35,34 @@ public class TaskQueueSize {
 	final protected Condition empty = lock.newCondition();
 
 	/**
+	 * Not Full condition
+	 */
+	final protected Condition notFull = lock.newCondition();
+
+	/**
+	 * Create instance without limit
+	 */
+	public TaskQueueSize() {
+	}
+
+	/**
+	 * Create instance with the given limit
+	 * @param limit limit
+	 */
+	public TaskQueueSize(int limit) {
+		this.limit = limit;
+	}
+
+	/**
 	 * Increase the number of scheduled tasks
 	 */
 	public void schedule() {
 		lock.lock();
 		try {
 			scheduledTasks.incrementAndGet();
+			if (isNotFull()) {
+				notFull.signal();
+			}
 		} finally {
 			lock.unlock();
 		}
@@ -49,8 +76,11 @@ public class TaskQueueSize {
 		try {
 			finishedTasks.incrementAndGet();
 
-			if (getRemainingTasks() == 0) {
+			if (isEmpty()) {
 				empty.signal();
+			}
+			if (isNotFull()) {
+				notFull.signal();
 			}
 		} finally {
 			lock.unlock();
@@ -64,10 +94,26 @@ public class TaskQueueSize {
 	public void awaitEmpty() throws InterruptedException {
 		lock.lock();
 		try {
-			if (getRemainingTasks() == 0) {
+			if (isEmpty()) {
 				return;
 			}
 			empty.await();
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	/**
+	 * Wait, until all the task queue is not null
+	 * @throws InterruptedException
+	 */
+	public void awaitNotFull() throws InterruptedException {
+		lock.lock();
+		try {
+			if (isNotFull()) {
+				return;
+			}
+			notFull.await();
 		} finally {
 			lock.unlock();
 		}
@@ -103,5 +149,25 @@ public class TaskQueueSize {
 	 */
 	public boolean isBusy() {
 		return getRemainingTasks() > 0;
+	}
+
+	/**
+	 * Check whether the task queue is empty
+	 * @return true for empty
+	 */
+	public boolean isEmpty() {
+		return getRemainingTasks() == 0;
+	}
+
+	/**
+	 * Check whether the task queue is not considered full
+	 * @return true for not full
+	 */
+	public boolean isNotFull() {
+		if (limit > 0) {
+			return getRemainingTasks() < limit;
+		} else {
+			return true;
+		}
 	}
 }

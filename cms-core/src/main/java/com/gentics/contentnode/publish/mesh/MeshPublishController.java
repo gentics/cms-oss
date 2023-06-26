@@ -120,7 +120,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	/**
 	 * Tracker for the render tasks
 	 */
-	protected TaskQueueSize renderTasks = new TaskQueueSize();
+	protected TaskQueueSize renderTasks = new TaskQueueSize(MeshPublisher.TASKQUEUE_SIZE * 2);
 
 	/**
 	 * Tracker for the write tasks
@@ -251,9 +251,15 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	/**
 	 * Either run the render task synchronously (for instant publishing), or asynchonously (for publish process)
 	 * @param renderTask render task
+	 * @throws NodeException 
 	 */
-	protected void runRenderTask(Runnable renderTask) {
+	protected void runRenderTask(Runnable renderTask) throws NodeException {
 		if (publishProcess) {
+			try {
+				renderTasks.awaitNotFull();
+			} catch (InterruptedException e) {
+				throw new NodeException("Error while waiting for a place in the render task queue", e);
+			}
 			renderTasks.schedule();
 			rendererThreadPool.submit(renderTask);
 		} else {
@@ -530,6 +536,16 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	@Override
 	public int getPostponedWriteTasks() {
 		return publishers.stream().mapToInt(mp -> mp.postponedTasks.size()).sum();
+	}
+
+	@Override
+	public int getRemainingWriteTasks() {
+		return writeTasks.getRemainingTasks();
+	}
+
+	@Override
+	public int getTotalWriteTasks() {
+		return writeTasks.getTotalTasks();
 	}
 
 	@Override

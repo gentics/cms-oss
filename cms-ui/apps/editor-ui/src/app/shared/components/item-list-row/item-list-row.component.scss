@@ -82,6 +82,10 @@ gtx-contents-list-item {
                 color: $gtx-color-primary;
             }
 
+            .item-name-router-link {
+                cursor: pointer;
+            }
+
             ::ng-deep .hl-pipe {
                 background-color: rgba(255, 236, 10, 0.18);
                 border-bottom: 2px solid transparentize($gcms-color-highlight, 0.4);

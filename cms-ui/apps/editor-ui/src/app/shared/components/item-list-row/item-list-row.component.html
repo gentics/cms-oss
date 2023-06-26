@@ -53,7 +53,7 @@
                     <a
                         href=""
                         class="item-name-only item-name-router-link"
-                        [routerLink]="item | routerCommandsForItem"
+                        [routerLink]="isModeSelect() ? null : (item | routerCommandsForItem)"
                         [title]="item?.description"
                         [innerHTML]="item?.name | highlight:filterTerm"
                         (click)="itemClicked($event, item)"

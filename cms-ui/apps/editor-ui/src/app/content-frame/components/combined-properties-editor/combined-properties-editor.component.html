@@ -1,4 +1,4 @@
-<ng-container *ngIf="item">
+<div *ngIf="item" class="properties-editor-wrapper">
 
     <!-- The tabs need to be pure, because we need to be able to cancel the navigation if a user doesn't want to discard the changes. -->
     <ng-container *ngIf="objectPropertiesGroupedDelayed$ | async">
@@ -51,13 +51,13 @@
                             <gtx-tooltip
                                 #propTooltip
                                 class="object-property-tooltip"
-                                [position]="isMobile() ? 'bottom' : 'right'"
-                                [align]="'top'"
+                                [position]="'bottom'"
+                                [align]="'bottom'"
                                 [type]="'light'"
                             >
                                 <div class="property-tab" gtx-tooltip-trigger>
                                     <icon class="property-tab-icon" left>{{ objProp.tagType | tagTypeIcon }}</icon>
-                                    <icon *ngIf="isMobile()" class="property-tab-mobile" left (click)="toggleDescription(propTooltip)">info</icon>
+                                    <icon class="property-tab-mobile" left (click)="toggleDescription(propTooltip)">info</icon>
                                     <span class="property-tab-label">{{ objProp | objTagName }}</span>
                                 </div>
 
@@ -74,93 +74,95 @@
         </gtx-grouped-tabs>
     </ng-container>
 
-    <hr />
+    <div class="properties-content">
+        <!-- All of this content should be moved to a dedicated component -->
+        <div class="item-properties" *ngIf="(activeTabId$ | async) === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item">
+            <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | i18n }}</h2>
 
-    <div class="item-properties" *ngIf="(activeTabId$ | async) === ITEM_PROPERTIES_TAB && (itemProperties$ | async)?.item">
-        <h2 class="item-properties-heading">{{ 'editor.general_properties_label' | i18n }}</h2>
-        <properties-editor *ngIf="(itemProperties$ | async) as itemProps"
-            [item]="itemProps.item"
-            [nodeId]="currentNode?.id"
-            [templates]="itemProps.templates"
-            [languages]="itemProps.languages">
-        </properties-editor>
-    </div>
+            <properties-editor
+                *ngIf="(itemProperties$ | async) as itemProps"
+                [item]="itemProps.item"
+                [nodeId]="currentNode?.id"
+                [templates]="itemProps.templates"
+                [languages]="itemProps.languages">
+            </properties-editor>
+        </div>
 
-    <div class="form-reports" *ngIf="(activeTabId$ | async) === ITEM_REPORTS_TAB">
-        <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | i18n }}</h2>
-        <form-reports-list [form]="item"></form-reports-list>
-    </div>
+        <div class="form-reports" *ngIf="(activeTabId$ | async) === ITEM_REPORTS_TAB">
+            <h2 class="form-reports-heading">{{ 'editor.form_reports_label' | i18n }}</h2>
+            <form-reports-list [form]="item"></form-reports-list>
+        </div>
 
-    <div class="item-tag-list" *ngIf="(activeTabId$ | async) === ITEM_TAG_LIST_TAB">
-        <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | i18n }}</h2>
+        <div class="item-tag-list" *ngIf="(activeTabId$ | async) === ITEM_TAG_LIST_TAB">
+            <h2 class="item-tag-list-heading">{{ 'editor.tag_list_label' | i18n }}</h2>
 
-        <ng-container *ngIf="itemWithContentTags$ | async as itemWithContentTag">
-            <div class="item-tag item-tag-head">
-                <gtx-checkbox
-                    [ngModel]="isContentTagSelectedAll(itemWithContentTag.properties)"
-                    (ngModelChange)="toggleAllContentTagSelected(itemWithContentTag.properties)"
-                    ></gtx-checkbox>
-                <span>{{ 'editor.tagname_label' | i18n }}</span>
-                <span>{{ 'editor.tagtype_label' | i18n }}</span>
-                <span class="tag-actions">
-                    <icon
-                        *ngIf="(selectedContentTags$ | async).length > 0"
-                        (click)="deleteSelectedContentTags(itemWithContentTag.item, itemWithContentTag.properties)"
-                    >delete</icon>
-                </span>
-            </div>
-
-            <div class="item-tag" *ngFor="let tagElement of itemWithContentTag.properties">
-                <icon-checkbox
-                    [icon]="tagElement.construct | tagTypeIcon"
-                    [selected]="isContentTagSelected(tagElement)"
-                    (change)="toggleSelectContentTag(tagElement, $event)"
-                ></icon-checkbox>
-                <span
-                    class="tag-name"
-                    (click)="openContentTag(itemWithContentTag.item, tagElement)"
-                >
-                    {{ tagElement.name }} <detail-chip>ID: {{ tagElement.id }}</detail-chip>
-                </span>
-                <span>{{ tagElement.construct.name }}</span>
-                <span class="tag-actions">
-                    <icon (click)="deleteContentTag(itemWithContentTag.item, tagElement)">delete</icon>
-                </span>
-            </div>
-        </ng-container>
-
-        <tag-editor-overlay-host #taglistOverlayHost [class.active]="taglistOverlayHost.isVisible"></tag-editor-overlay-host>
-    </div>
-
-    <div
-        #objPropWrapper
-        *ngIf="activeTabObjectProperty$ | async as activeTabObjProp"
-        class="object-property"
-        [class.has-editing-permission]="canSave"
-    >
-        <div class="tag-editor">
-            <div
-                class="tag-wrapper"
-                [class.disabled]="isDisabled"
-                [class.nonActive]="!editedObjectProperty?.active"
-                [class.tagfillLightEnabled]="(tagfillLightState$ | async)"
-            >
-                <div *ngIf="!(tagfillLightState$ | async)" class="activate-obj-prop">
+            <ng-container *ngIf="itemWithContentTags$ | async as itemWithContentTag">
+                <div class="item-tag item-tag-head">
                     <gtx-checkbox
-                        [label]="'editor.obj_prop_active_label' | i18n"
-                        [checked]="editedObjectProperty?.active"
-                        [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
-                        (change)="toggleDisplayContent()"
+                        [ngModel]="isContentTagSelectedAll(itemWithContentTag.properties)"
+                        (ngModelChange)="toggleAllContentTagSelected(itemWithContentTag.properties)"
                     ></gtx-checkbox>
+                    <span>{{ 'editor.tagname_label' | i18n }}</span>
+                    <span>{{ 'editor.tagtype_label' | i18n }}</span>
+                    <span class="tag-actions">
+                        <icon
+                            *ngIf="(selectedContentTags$ | async).length > 0"
+                            (click)="deleteSelectedContentTags(itemWithContentTag.item, itemWithContentTag.properties)"
+                        >delete</icon>
+                    </span>
                 </div>
 
-                <tag-editor-host *ngIf="activeTabObjProp.tag.tagType; else tagTypeLoadError"></tag-editor-host>
-            </div>
+                <div class="item-tag" *ngFor="let tagElement of itemWithContentTag.properties">
+                    <icon-checkbox
+                        [icon]="tagElement.construct | tagTypeIcon"
+                        [selected]="isContentTagSelected(tagElement)"
+                        (change)="toggleSelectContentTag(tagElement, $event)"
+                    ></icon-checkbox>
+                    <span
+                        class="tag-name"
+                        (click)="openContentTag(itemWithContentTag.item, tagElement)"
+                    >
+                        {{ tagElement.name }} <detail-chip>ID: {{ tagElement.id }}</detail-chip>
+                    </span>
+                    <span>{{ tagElement.construct.name }}</span>
+                    <span class="tag-actions">
+                        <icon (click)="deleteContentTag(itemWithContentTag.item, tagElement)">delete</icon>
+                    </span>
+                </div>
+            </ng-container>
 
-            <ng-template #tagTypeLoadError>
-                <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
-            </ng-template>
+            <tag-editor-overlay-host #taglistOverlayHost [class.active]="taglistOverlayHost.isVisible"></tag-editor-overlay-host>
+        </div>
+
+        <div
+            #objPropWrapper
+            *ngIf="activeTabObjectProperty$ | async as activeTabObjProp"
+            class="object-property"
+            [class.has-editing-permission]="canSave"
+        >
+            <div class="tag-editor">
+                <div
+                    class="tag-wrapper"
+                    [class.disabled]="isDisabled"
+                    [class.nonActive]="!editedObjectProperty?.active"
+                    [class.tagfillLightEnabled]="(tagfillLightState$ | async)"
+                >
+                    <div *ngIf="!(tagfillLightState$ | async)" class="activate-obj-prop">
+                        <gtx-checkbox
+                            [label]="'editor.obj_prop_active_label' | i18n"
+                            [checked]="editedObjectProperty?.active"
+                            [disabled]="!(itemPermissions.edit) || (editedObjectProperty?.readOnly)"
+                            (change)="toggleDisplayContent()"
+                        ></gtx-checkbox>
+                    </div>
+
+                    <tag-editor-host *ngIf="activeTabObjProp.tag.tagType; else tagTypeLoadError"></tag-editor-host>
+                </div>
+
+                <ng-template #tagTypeLoadError>
+                    <span>{{ 'editor.properties_error_loading_tagtype' | i18n }}</span>
+                </ng-template>
+            </div>
         </div>
     </div>
-
-</ng-container>
+</div>

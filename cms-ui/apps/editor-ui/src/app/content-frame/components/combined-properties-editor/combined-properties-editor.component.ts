@@ -32,7 +32,7 @@ import {
     SaveErrorAction,
     SaveSuccessAction,
     SetOpenObjectPropertyGroupsAction,
-    StartSavingAction
+    StartSavingAction,
 } from '@editor-ui/app/state';
 import {
     TagEditorHostComponent,
@@ -62,8 +62,7 @@ import {
     Tags,
     Template,
     TemplateFolderListRequest,
-    TemplateListRequest,
-    noItemPermissions
+    noItemPermissions,
 } from '@gentics/cms-models';
 import {
     GroupedTabsComponent,
@@ -116,7 +115,7 @@ const OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label
     templateUrl: './combined-properties-editor.component.html',
     styleUrls: ['./combined-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 
     /** The item, whose properties should be edited. */
@@ -188,7 +187,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         private navigationService: NavigationService,
         private permissionService: PermissionService,
         private tagEditorService: TagEditorService,
-        private _element: ElementRef,
+        private elementRef: ElementRef<HTMLElement>,
         private modalService: ModalService,
         private i18n: I18nService,
     ) {}
@@ -438,7 +437,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ],
         })
             .then(dialog => dialog.open())
-            .then(result => this.folderActions.updateItemObjectProperties(
+            .then(() => this.folderActions.updateItemObjectProperties(
                 item.type,
                 item.id,
                 {},
@@ -491,24 +490,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
     }
 
-    /**
-     * Returns if it's mobile device.
-     */
-    isMobile(): boolean {
-        if ((/Android/i.exec(navigator.userAgent))
-            || (/webOS/i.exec(navigator.userAgent))
-            || (/iPhone/i.exec(navigator.userAgent))
-            || (/iPad/i.exec(navigator.userAgent))
-            || (/iPod/i.exec(navigator.userAgent))
-            || (/BlackBerry/i.exec(navigator.userAgent))
-            || (/Windows Phone/i.exec(navigator.userAgent))
-        ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     markContentAsModifiedInState(modified: boolean): void {
         this.appState.dispatch(new MarkContentAsModifiedAction(modified));
     }
@@ -518,12 +499,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     private scrollToRight(): void {
-        const container = (this._element.nativeElement as HTMLElement);
-
+        const container = this.elementRef.nativeElement;
         container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
     }
 
-    tabGroupToggled(event: any, name: string): void {
+    tabGroupToggled(event: { id: string, expand: boolean }, name: string): void {
         if (event.expand) {
             this.appState.dispatch(new AddExpandedTabGroupAction(name));
         } else {
@@ -536,7 +516,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const objectProperties: ObjectTag[] = [];
         if (item && item.type !== 'node' && item.type !== 'channel' && (item as ItemWithObjectTags).tags) {
             const itemWithTags = item as ItemWithObjectTags;
-            for (let key of Object.keys(itemWithTags.tags)) {
+            for (const key of Object.keys(itemWithTags.tags)) {
                 const tag = itemWithTags.tags[key];
                 if (tag.type === 'OBJECTTAG') {
                     objectProperties.push(tag as ObjectTag);
@@ -551,7 +531,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const contentTagList: Tag[] = [];
         if (item && item.type === 'page' && (item ).tags) {
             const itemWithTags = item ;
-            for (let key of Object.keys(itemWithTags.tags)) {
+            for (const key of Object.keys(itemWithTags.tags)) {
                 const tag = itemWithTags.tags[key];
                 if (tag.type === 'CONTENTTAG') {
                     contentTagList.push(tag );

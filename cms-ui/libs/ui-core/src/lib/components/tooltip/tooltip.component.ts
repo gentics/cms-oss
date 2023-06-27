@@ -118,7 +118,7 @@ export class TooltipComponent implements OnInit, OnChanges, AfterViewInit, OnDes
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.position || changes.align || changes.type) {
+        if (changes.position || changes.mobilePosition || changes.align || changes.type) {
             this.updateWrapperContent();
         }
     }

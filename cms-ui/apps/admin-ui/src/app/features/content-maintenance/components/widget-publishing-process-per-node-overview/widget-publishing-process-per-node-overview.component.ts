@@ -1,10 +1,9 @@
 import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
-import { AdminOperations, ErrorHandler } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
+import { AdminOperations, ErrorHandler, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ContentMaintenanceType, Node, PublishInfo, PublishObjectsCount, PublishQueue, Raw } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
-import { BehaviorSubject, Observable, Subscription, forkJoin, timer } from 'rxjs';
+import { BehaviorSubject, Subscription, forkJoin, timer } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, startWith, switchMap, tap } from 'rxjs/operators';
 
 interface WidgetPublishingProcessPerNodeComponentState {
@@ -71,9 +70,6 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
 
     private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
 
-    /** All nodes currently existing in global app state */
-    allNodes$: Observable<Node<Raw>[]>;
-
     /** information of the current publish process per node */
     infoStatsPerNodeData$ = new BehaviorSubject<PublishQueue>(null);
 
@@ -122,14 +118,12 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
 
     constructor(
         private adminOps: AdminOperations,
-        private nodeDataService: NodeDataService,
+        private nodeOps: NodeOperations,
         private errorHandler: ErrorHandler,
         private changeDetectorRef: ChangeDetectorRef,
     ) { }
 
     ngOnInit(): void {
-        this.allNodes$ = this.nodeDataService.watchAllEntities();
-
         const intervall$ = this.syncIntervall$.asObservable().pipe(
             distinctUntilChanged(isEqual),
             switchMap(milliseconds => timer(0, milliseconds)),
@@ -147,7 +141,7 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
             switchMap(() => forkJoin([
                 this.adminOps.getPublishInfo(),
                 this.adminOps.getPublishQueue(),
-                this.allNodes$,
+                this.nodeOps.getAll(),
             ])),
             catchError(error => this.errorHandler.catch(error)),
         ).subscribe(([info, queue, allNodeEntities]: [PublishInfo, PublishQueue, Node<Raw>[]]) => {

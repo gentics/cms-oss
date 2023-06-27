@@ -43,5 +43,15 @@
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
+    },
+    "/images": {
+        "target": "http://cms.localhost.gentics.com",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/internal": {
+        "target": "http://cms.localhost.gentics.com",
+        "secure": false,
+        "changeOrigin": true
     }
 }

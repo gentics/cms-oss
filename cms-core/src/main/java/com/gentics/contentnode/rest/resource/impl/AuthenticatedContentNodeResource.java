@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -583,41 +584,43 @@ public abstract class AuthenticatedContentNodeResource extends AbstractContentNo
 	 * This method should only be used to retrieve the total count for files and
 	 * images. Pages have another page specific count method.
 	 *
-	 * @param fileIds
-	 *            Element ids
+	 * @param masterMap map of master ids to original ids
 	 * @param type
 	 *            Element type
 	 * @param nodeId
 	 *            Node id which will be used to retrieve affected element ids
 	 * @return Rest response which contains the total usage info
 	 */
-	protected TotalUsageResponse getTotalUsageInfo(List<Integer> fileIds, int type, Integer nodeId) throws NodeException {
+	protected TotalUsageResponse getTotalUsageInfo(Map<Integer, Integer> masterMap, int type, Integer nodeId) throws NodeException {
 
 		TotalUsageResponse response = new TotalUsageResponse();
 
-		for (Integer fileId : fileIds) {
+		for (Map.Entry<Integer, Integer> entry : masterMap.entrySet()) {
+			int masterId = entry.getKey();
+			int originalId = entry.getValue();
+
 			TotalUsageInfo info = new TotalUsageInfo();
 			// Folders
-			Set<Integer> usingFolderIds = getFolderUsageIds(Arrays.asList(fileId), type);
+			Set<Integer> usingFolderIds = getFolderUsageIds(Arrays.asList(masterId), type);
 			info.setFolders(usingFolderIds.size());
 
 			// Pages
-			Set<Integer> usingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(fileId), type, PageUsage.GENERAL, nodeId);
+			Set<Integer> usingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(masterId), type, PageUsage.GENERAL, nodeId);
 			info.setPages(usingPageIds.size());
 
 			// Templates
-			Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(fileId), type, nodeId);
+			Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(masterId), type, nodeId);
 			info.setTemplates(usingTemplateIds.size());
 
 			// Images
-			Set<Integer> usingImageIds = getFileUsageIds(Arrays.asList(fileId), type, nodeId, true);
+			Set<Integer> usingImageIds = getFileUsageIds(Arrays.asList(masterId), type, nodeId, true);
 			info.setImages(usingImageIds.size());
 
 			// Files
-			Set<Integer> usingFileIds = getFileUsageIds(Arrays.asList(fileId), type, nodeId, false);
+			Set<Integer> usingFileIds = getFileUsageIds(Arrays.asList(masterId), type, nodeId, false);
 			info.setFiles(usingFileIds.size());
 			info.setTotal(usingFolderIds.size() + usingPageIds.size() + usingTemplateIds.size() + usingImageIds.size() + usingFileIds.size());
-			response.getInfos().put(fileId, info);
+			response.getInfos().put(originalId, info);
 		}
 		response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
 		return response;

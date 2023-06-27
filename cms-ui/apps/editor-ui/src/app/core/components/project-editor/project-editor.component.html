@@ -4,7 +4,7 @@
     noswipe
     [class.focusMode]="focusMode$ | async"
     [class.rightPanelFocused]="editorFocused$ | async"
-    [style.top]="headerHeight$ | async"
+    [style.--gtx-view-top]="headerHeight$ | async"
     [initialSplit]="35"
     [rightPanelVisible]="editorOpen$ | async"
     [focusedPanel]="(editorFocused$ | async) ? 'right' : 'left'"

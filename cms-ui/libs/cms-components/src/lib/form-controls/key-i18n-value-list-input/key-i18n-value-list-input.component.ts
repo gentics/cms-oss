@@ -1,5 +1,15 @@
 import { ChangeDetectionStrategy, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewEncapsulation } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, UntypedFormArray, UntypedFormBuilder, UntypedFormGroup, NG_VALIDATORS, NG_VALUE_ACCESSOR, ValidationErrors, Validator } from '@angular/forms';
+import {
+    AbstractControl,
+    ControlValueAccessor,
+    UntypedFormArray,
+    UntypedFormBuilder,
+    UntypedFormGroup,
+    NG_VALIDATORS,
+    NG_VALUE_ACCESSOR,
+    ValidationErrors,
+    Validator,
+} from '@angular/forms';
 import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -42,9 +52,9 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
 
     i18nArray = new UntypedFormArray([]);
 
-    private _onChange: (_: any) => void;
-    _onTouched: any;
-    private _onValidatorChange: () => void;
+    private cvaChange: (_: any) => void;
+    cvaTouch: any;
+    private validationChange: () => void;
 
     // private i18nData: CmsFormElementKeyI18nValuePair[];
     private valueChangesSubscription: Subscription;
@@ -56,16 +66,16 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
 
     ngOnInit(): void {
         this.valueChangesSubscription = this.i18nArray.valueChanges.subscribe((value: CmsFormElementKeyI18nValuePair[]) => {
-            if (this._onChange) {
-                this._onChange(value);
+            if (this.cvaChange) {
+                this.cvaChange(value);
             }
         });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.language || changes.availableLanguages) {
-            if (this._onValidatorChange) {
-                this._onValidatorChange();
+            if (this.validationChange) {
+                this.validationChange();
             }
         }
     }
@@ -90,11 +100,11 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     registerOnChange(fn: (_: any) => void): void {
-        this._onChange = fn;
+        this.cvaChange = fn;
     }
 
     registerOnTouched(fn: any): void {
-        this._onTouched = fn;
+        this.cvaTouch = fn;
     }
 
     setDisabledState?(isDisabled: boolean): void {
@@ -122,13 +132,13 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     registerOnValidatorChange?(fn: () => void): void {
-        this._onValidatorChange = fn;
+        this.validationChange = fn;
     }
 
     add(): void {
         this.i18nArray.push(this.formBuilder.group({
             key: [''],
-            valueI18n: [{}],
+            value_i18n: [{}],
         }));
     }
 
@@ -137,7 +147,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     sortList(e: ISortableEvent): void {
-        let newArray = e.sort(this.i18nArray.value);
+        const newArray = e.sort(this.i18nArray.value);
         this.i18nArray.clear();
         newArray.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
             return this.formBuilder.group({
@@ -156,18 +166,18 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     private validateRequired(control: AbstractControl): ValidationErrors {
 
         /**
-         * if there is no i18n array, then
-         *  - there is a required error, iff the value is required in the current language
+         * if there is no i18n array, then there is a required error,
+         * if the value is required in the current language
          */
-         if (!this.i18nArray) {
+        if (!this.i18nArray) {
             if (this.requiredInCurrentLanguage) {
                 return { requiredInCurrentLanguage: true };
             }
         }
 
         /**
-         * if the i18n array has length 0, then
-         *  - there is a required error, iff the value is required in the current language
+         * if the i18n array has length 0, then there is a required error,
+         * if the value is required in the current language
          */
         if (this.i18nArray.length === 0) {
             if (this.requiredInCurrentLanguage) {
@@ -178,11 +188,11 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         const value: CmsFormElementKeyI18nValuePair[] = this.i18nArray.value;
 
         // relying on errors on children is not possible, since error state will not sync up
-        for (let keyI18nValuePair of value) {
+        for (const keyI18nValuePair of value) {
 
             /**
-             * if there is no key in the current language, then
-             *  - there is a required error, iff the value is required in the current language
+             * if there is no key in the current language, then there is a required error,
+             * if the value is required in the current language
              */
             if (typeof keyI18nValuePair.key === 'string' && keyI18nValuePair.key.length === 0) {
                 if (this.requiredInCurrentLanguage) {
@@ -191,8 +201,8 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
             }
 
             /**
-             * if there is no value in the current language, then
-             *  - there is a required error, iff the value is required in the current language
+             * if there is no value in the current language, then there is a required error,
+             * if the value is required in the current language
              */
             if (!this.valuePresent(keyI18nValuePair.value_i18n)) {
                 if (this.requiredInCurrentLanguage) {
@@ -208,7 +218,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         const value: CmsFormElementKeyI18nValuePair[] = this.i18nArray.value;
 
         // relying on errors on children is not possible, since error state will not sync up
-        for (let keyI18nValuePair of value) {
+        for (const keyI18nValuePair of value) {
             if (this.i18nValueIsUntranslated(keyI18nValuePair.value_i18n)) {
                 this.isTranslated = false;
                 return { untranslated: true };
@@ -222,51 +232,46 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     private i18nValueIsUntranslated(i18nValue: CmsFormElementI18nValue<string>): boolean {
 
         /**
-         * if there is no i18n value, then
-         *  - there cannot be a translation error
+         * if there is no i18n value, then there cannot be a translation error
          */
         if (!i18nValue) {
             return false;
         }
 
         /**
-         * if there are no available languages, then
-         *  - there cannot be a translation error
+         * if there are no available languages, then there cannot be a translation error
          */
         if (!this.availableLanguages) {
             return false;
         }
 
         /**
-         * if there is a value in the current language, then
-         *  - there is no translation error
+         * if there is a value in the current language, then there is no translation error
          */
         if (this.valuePresent(i18nValue)) {
             return false;
         }
 
         /**
-         * if there there are no other available languages, then
-         *  - there is no translation error
+         * if there there are no other available languages, then there is no translation error
          */
         if (this.availableLanguages.length < 1) {
             return false;
         }
 
         /**
-         * if any other language has this value set (and the current one does not), then
-         *  - there is translation error
+         * if any other language has this value set (and the current one does not), then there is translation error
          */
         const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
         const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(i18nValue, language));
         if (languagesOfAvailableTranslations.length > 0) {
             return true;
-        };
+        }
 
         return false;
     }
 
-    stopPropagation(event: any): void {
+    stopPropagation(event: Event): void {
         event.stopPropagation();
     }
 
@@ -278,8 +283,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         this.duplicateKeys = [];
 
         /**
-         * if there are two keys with the same name, then
-         *  - there is a duplicated keys error
+         * if there are two keys with the same name, then there is a duplicated keys error
          */
         for (let i = 0; i < keys.length; i++) {
             for (let j = i + 1; j < keys.length; j++) {

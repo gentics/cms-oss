@@ -1,5 +1,9 @@
 @import 'variables';
 
+:host {
+    position: relative;
+}
+
 .breadcrumbs-container {
     display: flex;
     justify-content: space-between;
@@ -72,9 +76,10 @@ folder-context-menu {
 
 // On small screen widths or in focus mode, expand edit mode to the full screensize
 gtx-split-view-container.split-view-container::ng-deep {
+    --gtx-view-top: 0;
     background-color: white;
     position: absolute;
-    top: $header-area-height;
+    top: 0;
     left: 0;
     right: 0;
     bottom: 0;
@@ -82,6 +87,7 @@ gtx-split-view-container.split-view-container::ng-deep {
         z-index $gtx-animation-duration step-end;
     will-change: top, z-index;
     z-index: 0;
+    height: 100% !important;
 
     .left-panel,
     .right-panel {

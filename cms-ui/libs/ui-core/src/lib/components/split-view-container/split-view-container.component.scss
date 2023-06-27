@@ -1,8 +1,11 @@
 @import '../../../styles/base-import';
 
 :host {
+    --gtx-view-top: 0px;
     box-sizing: border-box;
     display: block;
+    top: var(--gtx-view-top);
+    height: calc(100% - var(--gtx-view-top));
 
     > .slideable {
         @include z-depth-1;

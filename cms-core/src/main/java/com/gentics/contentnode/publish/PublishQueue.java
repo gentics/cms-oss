@@ -730,6 +730,16 @@ public class PublishQueue {
 		return objIds;
 	}
 
+	/**
+	 * Get the dirted objects with attributes
+	 * @param <T> type of the object class
+	 * @param clazz object class
+	 * @param forPublish true to get objects marked for the publish process
+	 * @param node node, for which the objects are dirted
+	 * @param action list of dirt actions to include
+	 * @return map of object IDs to sets of attributes
+	 * @throws NodeException
+	 */
 	public static <T extends NodeObject> Map<Integer, Set<String>> getObjectIdsWithAttributes(final Class<T> clazz, final boolean forPublish,
 			final Node node, final Action... action) throws NodeException {
 		final Map<Integer, Set<String>> objIds = new HashMap<>();

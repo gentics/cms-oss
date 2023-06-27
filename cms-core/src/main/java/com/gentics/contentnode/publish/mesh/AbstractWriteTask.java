@@ -77,6 +77,11 @@ abstract class AbstractWriteTask {
 	 */
 	public abstract void reportDone();
 
+	/**
+	 * Get the node object of this write task
+	 * @return node object
+	 * @throws NodeException
+	 */
 	public NodeObject getNodeObject() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
@@ -84,6 +89,12 @@ abstract class AbstractWriteTask {
 		}
 	}
 
+	/**
+	 * Get the language variant of the node object in the given language (or null)
+	 * @param language language
+	 * @return language variant or null
+	 * @throws NodeException
+	 */
 	public NodeObject getLanguageVariant(String language) throws NodeException {
 		NodeObject nodeObject = getNodeObject();
 		if (nodeObject == null) {
@@ -95,7 +106,6 @@ abstract class AbstractWriteTask {
 				return page.getLanguageVariant(language);
 			}
 		} else {
-			// TODO other object types
 			return null;
 		}
 	}

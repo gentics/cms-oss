@@ -2508,6 +2508,16 @@ public class MeshPublisher implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * Generate the write task for the given scheduled object
+	 * @param node node
+	 * @param project mesh project
+	 * @param scheduled scheduled object
+	 * @param meshObject mesh object
+	 * @param dependencies optional dependencies
+	 * @return write task
+	 * @throws NodeException
+	 */
 	protected WriteTask generateWriteTask(Node node, MeshProject project, Scheduled scheduled, MeshObject meshObject, List<Dependency> dependencies) throws NodeException {
 		NodeObjectWithAttributes<? extends NodeObject> o = scheduled.get();
 		int nodeId = node.getId();

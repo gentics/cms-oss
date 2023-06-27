@@ -64,6 +64,11 @@ public final class MeshPublishUtils {
 		}
 	}
 
+	/**
+	 * Get the optional message response from the throwable
+	 * @param t throwable
+	 * @return optional message response
+	 */
 	public static Optional<GenericMessageResponse> getResponse(Throwable t) {
 		if (t instanceof MeshRestClientMessageException) {
 			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
@@ -75,6 +80,11 @@ public final class MeshPublishUtils {
 		}
 	}
 
+	/**
+	 * Get the optional conflicting node as pair of uuid and language, if the throwable is a conflict
+	 * @param t throwable
+	 * @return optional conflicting node
+	 */
 	public static Optional<Pair<String, String>> getConflictingNode(Throwable t) {
 		if (isConflict(t)) {
 			return getResponse(t).flatMap(resp -> {

@@ -174,18 +174,34 @@ public class DummyObject extends AbstractContentObject implements LocalizableNod
 		return null;
 	}
 
+	/**
+	 * Get the mesh uuid
+	 * @return mesh uuid
+	 */
 	public String getMeshUuid() {
 		return meshUuid;
 	}
 
+	/**
+	 * Set the mesh uuid
+	 * @param meshUuid mesh uuid
+	 */
 	public void setMeshUuid(String meshUuid) {
 		this.meshUuid = meshUuid;
 	}
 
+	/**
+	 * Get the mesh language
+	 * @return mesh language
+	 */
 	public String getMeshLanguage() {
 		return meshLanguage;
 	}
 
+	/**
+	 * Set the mesh language
+	 * @param meshLanguage mesh language
+	 */
 	public void setMeshLanguage(String meshLanguage) {
 		this.meshLanguage = meshLanguage;
 	}

@@ -24,24 +24,36 @@
 
 .breadcrumbs-container {
     display: flex;
-    background: #fff;
-    justify-content: space-between;
     flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: flex-start;
+
+    background: #fff;
     max-width: 100%;
     width: 100%;
-    margin: 0.5rem 0;
+    margin: 0;
+    padding: 0.5rem 0;
     position: sticky;
     top: 0;
     z-index: 1;
 
-    node-selector {
+    .node-selector {
         flex: 0 0 auto;
-        margin: 0 0 auto 0.55rem;
+        margin: 0 0 auto 1rem;
         height: 26px;
     }
 
     .breadcrumbs {
         flex: 1 1 auto;
+
+        &::before {
+            display: none;
+        }
+    }
+
+    .staging-mode-leaver {
+        flex: 0 0 auto;
+        margin: auto 0.75rem;
     }
 
     gtx-breadcrumbs::ng-deep {
@@ -291,39 +303,11 @@
 
 .title {
     display: flex;
+    padding-top: 0.5rem;
 }
 
 gtx-progress-bar::ng-deep {
     top: unset;
-}
-
-.breadcrumbs-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    background: #fff;
-    justify-content: flex-start;
-    max-width: 100%;
-    width: 100%;
-    padding: 0.5rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-
-    .node-selector {
-        flex: 0 0 auto;
-        margin: 0 0 auto 1rem;
-        height: 26px;
-    }
-
-    .breadcrumbs::before {
-        display: none;
-    }
-
-    .staging-mode-leaver {
-        flex: 0 0 auto;
-        margin: auto 0.75rem;
-    }
 }
 
 .border-container {
@@ -334,13 +318,6 @@ gtx-progress-bar::ng-deep {
 
     &.search-active {
         top: 0px;
-    }
-}
-
-@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-    .breadcrumbs-container {
-        top: 60px !important;
-        margin-bottom: 40px;
     }
 }
 

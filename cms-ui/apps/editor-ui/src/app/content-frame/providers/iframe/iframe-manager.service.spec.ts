@@ -331,15 +331,6 @@ describe('IFrameManager', () => {
             });
         }));
 
-        it('edit image', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'imageEditor');
-            editorState.itemType = 'image';
-            editorState.editMode = 'edit';
-            iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(currentItem.id, currentItem.folderId);
-            });
-        }));
-
         it('edit item-properties', waitForAsync(() => {
             editorState.nodeId = 1;
             editorState.editMode = 'editProperties';

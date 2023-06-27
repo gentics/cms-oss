@@ -79,9 +79,6 @@ export interface CNWindow extends CNParentWindow {
     // Repository Browser
     MiniBrowser?: MiniBrowser;
 
-    /** Called inside the editor frame to open a file picker in a popup window */
-    hopedit(url: string, w: number, h: number): void;
-
     /** Called inside the editor frame when a page is loading / being saved */
     progress?(myframe: any, doc: Document, url: string): void;
 

@@ -894,8 +894,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     expect(folderActions.updateItemObjectProperties).toHaveBeenCalledWith(
                         'folder', mockFolder.id, expectedSavedTag, { showNotification: false, fetchForUpdate: true, fetchForConstruct: true }, undefined,
                     );
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill.calls.argsFor(0)[0]).toEqual(tagId);
 
                     expect(state.now.editor).toEqual(jasmine.objectContaining({
                         objectPropertiesModified: true,
@@ -930,7 +928,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     expect(iFrameWrapperComp.srcUrl).toEqual('about:blank');
 
                     expect(folderActions.updateItemObjectProperties).not.toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).not.toHaveBeenCalled();
                     expect(i18nNotificationService.show).toHaveBeenCalledTimes(1);
 
                     expect(state.now.editor).toEqual(jasmine.objectContaining({
@@ -953,11 +950,6 @@ describe('CombinedPropertiesEditorComponent', () => {
 
                     testComponent.item = mockPage;
                     multiDetectChanges(fixture, 2);
-
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledWith(
-                        editedObjProp.id, mockPage.id, mockPage.folderId, mockNode.id, 'page', false,
-                    );
                 }),
             );
 
@@ -974,11 +966,6 @@ describe('CombinedPropertiesEditorComponent', () => {
 
                     testComponent.item = mockPage;
                     multiDetectChanges(fixture, 2);
-
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledWith(
-                        editedObjProp.id, mockPage.id, mockPage.folderId, mockNode.id, 'page', true,
-                    );
                 }),
             );
 
@@ -1600,7 +1587,6 @@ class MockCustomScriptHostService {
 }
 
 class MockResourceUrlBuilderService {
-    objectPropertyTagfill = jasmine.createSpy('objectPropertyTagfill').and.returnValue(OLD_TAGFILL_URL);
 }
 
 class MockI18nNotification {

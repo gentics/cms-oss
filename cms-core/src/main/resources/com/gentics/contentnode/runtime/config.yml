@@ -555,6 +555,7 @@ cn_versionage: 12
 cn_keeplogs: 12
 keep_inbox_messages: 12
 feature:
+  mesh_contentrepository: true
   dirt2: true
   user_debug: true
   import2: true

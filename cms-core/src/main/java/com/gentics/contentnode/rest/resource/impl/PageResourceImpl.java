@@ -26,9 +26,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
@@ -2895,16 +2897,19 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 		try {
 			TotalUsageResponse response = new TotalUsageResponse();
-			pageIds = getMasterPageIds(pageIds);
-			for(Integer pageId : pageIds) {
+			Map<Integer, Integer> masterMap = mapMasterPageIds(pageIds);
+			for (Entry<Integer, Integer> entry : masterMap.entrySet()) {
+				int masterPageId = entry.getKey();
+				int originalPageId = entry.getValue();
+
 				TotalUsageInfo info = new TotalUsageInfo();
-				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.GENERAL, nodeId);
-				Set<Integer> pageVariantIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.VARIANT, nodeId);
-				Set<Integer> pageTagIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.TAG, nodeId);
-				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, nodeId);
+				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.GENERAL, nodeId);
+				Set<Integer> pageVariantIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.VARIANT, nodeId);
+				Set<Integer> pageTagIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.TAG, nodeId);
+				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, nodeId);
 				info.setTotal(referencingPageIds.size() + pageVariantIds.size() + pageTagIds.size() + usingTemplateIds.size());
 				info.setPages(info.getTotal());
-				response.getInfos().put(pageId, info);
+				response.getInfos().put(originalPageId, info);
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
 			return response;
@@ -2914,6 +2919,29 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + pageIds.size() + " pages" + e.getLocalizedMessage()));
 		}
+	}
+
+	/**
+	 * For every page in the list, get the id of the master page (or the page itself, if it is a master page or multichannelling is not activated)
+	 * @param pageId list of page ids
+	 * @return map of master page ids to the given ids
+	 * @throws NodeException
+	 */
+	protected Map<Integer, Integer> mapMasterPageIds(List<Integer> pageId) throws NodeException {
+		Transaction t = getTransaction();
+		if (!t.getNodeConfig().getDefaultPreferences().isFeature(
+				Feature.MULTICHANNELLING)) {
+			return pageId.stream().collect(Collectors.toMap(java.util.function.Function.identity(), java.util.function.Function.identity()));
+		}
+		List<Page> pages = t.getObjects(Page.class, pageId);
+		Map<Integer, Integer> masterMap = new HashMap<>(pageId.size());
+		for (Page page : pages) {
+			Integer id = ObjectTransformer.getInteger(page.getMaster().getId(), null);
+			if (id != null && !masterMap.containsKey(id)) {
+				masterMap.put(id, page.getId());
+			}
+		}
+		return masterMap;
 	}
 
 	/*

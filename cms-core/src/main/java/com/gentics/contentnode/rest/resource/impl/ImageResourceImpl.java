@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
@@ -948,8 +951,8 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 		}
 
 		try {
-			imageId = getMasterImageIds(imageId);
-			return getTotalUsageInfo(imageId, ContentFile.TYPE_IMAGE, nodeId);
+			Map<Integer, Integer> masterMap = mapMasterImageIds(imageId);
+			return getTotalUsageInfo(masterMap, ContentFile.TYPE_IMAGE, nodeId);
 		} catch (Exception e) {
 			logger.error("Error while getting total usage info for " + imageId.size() + " images", e);
 			I18nString message = new CNI18nString("rest.general.error");
@@ -957,6 +960,34 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + imageId.size() + " images" + e.getLocalizedMessage()));
 		}
+	}
+
+	/**
+	 * For every image in the list, get the id of the master image (or the image
+	 * itself, if it is a master page or multichannelling is not activated)
+	 *
+	 * @param imageId
+	 *            list of image ids
+	 * @return list of master image ids
+	 * @throws NodeException
+	 */
+	protected Map<Integer, Integer> mapMasterImageIds(List<Integer> imageId) throws NodeException {
+		Transaction t = getTransaction();
+
+		if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
+			return imageId.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
+		}
+		List<ImageFile> images = t.getObjects(ImageFile.class, imageId);
+		Map<Integer, Integer> masterMap = new HashMap<>(imageId.size());
+
+		for (ImageFile image : images) {
+			Integer id = ObjectTransformer.getInteger(image.getMaster().getId(), null);
+
+			if (id != null && !masterMap.containsKey(id)) {
+				masterMap.put(id, image.getId());
+			}
+		}
+		return masterMap;
 	}
 
 	/*

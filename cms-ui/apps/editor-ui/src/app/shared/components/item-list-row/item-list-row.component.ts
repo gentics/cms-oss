@@ -181,6 +181,9 @@ export class ItemListRowComponent implements OnInit {
      */
     itemClicked(e: MouseEvent, item: Item): void {
         e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
         this.itemClick.emit(item);
         // do nothing if in SELECT mode or if in STAGING mode
         if (this.isModeSelect() || this.isModeStaging()) {

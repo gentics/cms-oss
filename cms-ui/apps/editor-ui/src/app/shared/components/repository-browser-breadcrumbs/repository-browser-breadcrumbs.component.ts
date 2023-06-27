@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { Folder, Node, Page, Template } from '@gentics/cms-models';
 import { IBreadcrumbLink } from '@gentics/ui-core';
 import { Observable, Subject } from 'rxjs';
@@ -14,21 +14,27 @@ import { BreadcrumbsService } from '../../providers/breadcrumbs.service';
     selector: 'repository-browser-breadcrumb',
     templateUrl: './repository-browser-breadcrumbs.component.html',
     styleUrls: ['./repository-browser-breadcrumbs.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
-export class RepositoryBrowserBreadcrumbs implements OnInit {
-    @Input() set parents(parents: (Folder | Page | Template)[]) {
-        const breadcrumbLinks = (parents || []).map(parent => ({
-            item: parent,
-            text: parent.name,
-        }));
-        this.breadcrumbLinks$.next(breadcrumbLinks);
-    }
-    @Input() nodes: Node[];
-    @Input() hasFavourites: boolean;
-    @Input() canChangeNode = true;
-    @Output() changeNode = new EventEmitter<Node | 'favourites'>();
-    @Output() changeParent = new EventEmitter<Node | Folder | Page | Template>();
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class RepositoryBrowserBreadcrumbs implements OnInit, OnChanges {
+
+    @Input()
+    parents: (Folder | Page | Template)[] = [];
+
+    @Input()
+    nodes: Node[];
+
+    @Input()
+    hasFavourites: boolean;
+
+    @Input()
+    canChangeNode = true;
+
+    @Output()
+    changeNode = new EventEmitter<Node | 'favourites'>();
+
+    @Output()
+    changeParent = new EventEmitter<Node | Folder | Page | Template>();
 
     multilineExpanded$: Observable<boolean>;
     breadcrumbs$: Observable<IBreadcrumbLink[]>;
@@ -47,6 +53,16 @@ export class RepositoryBrowserBreadcrumbs implements OnInit {
             withLatestFrom(this.multilineExpanded$),
             map(([breadcrumbs, isMultilineExpanded]) => !isMultilineExpanded ? this.breadcrumbsService.addTooltip(breadcrumbs) : breadcrumbs),
         );
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.parents) {
+            const breadcrumbLinks = (this.parents || []).map(parent => ({
+                item: parent,
+                text: parent.name,
+            }));
+            this.breadcrumbLinks$.next(breadcrumbLinks);
+        }
     }
 
     expandedChanged(multilineExpanded: boolean): void {

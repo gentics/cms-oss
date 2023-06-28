@@ -94,11 +94,10 @@ export class ResourceUrlBuilder {
      */
     comparePageLanguages(nodeId: number, pageId: number, languageVariantId: number): string {
         const params = this.createParamsString({
-            nodeId,
-            languageId: languageVariantId,
+            otherPageId: languageVariantId,
+            nodeId: nodeId,
         });
-
-        return `${API_BASE_URL}/page/${pageId}/compareLanguage?${params}`;
+        return `${API_BASE_URL}/page/diff/${pageId}?${params}`;
     }
 
     /**
@@ -106,11 +105,10 @@ export class ResourceUrlBuilder {
      */
     previewPageVersion(nodeId: number, pageId: number, versionTimestamp: number): string {
         const params = this.createParamsString({
-            nodeId,
             version: versionTimestamp,
+            nodeId: nodeId,
         });
-
-        return `${API_BASE_URL}/page/${pageId}/preview?${params}`;
+        return `${API_BASE_URL}/page/render/content/${pageId}?${params}`;
     }
 
     /**
@@ -118,13 +116,12 @@ export class ResourceUrlBuilder {
      */
     comparePageVersions(nodeId: number, pageId: number, oldTimestamp: number, newTimestamp: number): string {
         const params = this.createParamsString({
-            nodeId,
-            firstDate: oldTimestamp,
-            secondDate: newTimestamp,
-            compareSources: false,
+            old: oldTimestamp,
+            new: newTimestamp,
+            nodeId: nodeId,
+            source: false,
         });
-
-        return `${API_BASE_URL}/page/${pageId}/compareVersions?${params}`;
+        return `${API_BASE_URL}/page/diff/versions/${pageId}?${params}`;
     }
 
     /**
@@ -132,13 +129,12 @@ export class ResourceUrlBuilder {
      */
     comparePageVersionSources(nodeId: number, pageId: number, oldTimestamp: number, newTimestamp: number): string {
         const params = this.createParamsString({
-            nodeId,
-            firstDate: oldTimestamp,
-            secondDate: newTimestamp,
-            compareSources: true,
+            old: oldTimestamp,
+            new: newTimestamp,
+            nodeId: nodeId,
+            source: true,
         });
-
-        return `${API_BASE_URL}/page/${pageId}/compareVersions?${params}`;
+        return `${API_BASE_URL}/page/diff/versions/${pageId}?${params}`;
     }
 
     /**

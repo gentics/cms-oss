@@ -127,7 +127,7 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             const label: HTMLElement = fixture.nativeElement.querySelector('label');
 
-            expect(label.innerText).toBe('testLabel');
+            expect(label.textContent).toBe('testLabel');
         },
         ),
     );
@@ -186,7 +186,7 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
-            expect(viewValue.innerText).toContain('Bar');
+            expect(viewValue.textContent).toContain('Bar');
 
             tick(1000);
         }),
@@ -198,7 +198,7 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('li.selected')).nativeElement;
-            expect(viewValue.innerText).toContain('Bar');
+            expect(viewValue.textContent).toContain('Bar');
 
             tick(1000);
         }),
@@ -218,7 +218,7 @@ describe('SelectComponent', () => {
 
             const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value > div')).nativeElement;
 
-            expect(viewValue.innerText).toBe('');
+            expect(viewValue.textContent).toBe('');
 
             tick(1000);
         }),
@@ -301,11 +301,12 @@ describe('SelectComponent', () => {
 
     it('emits "change" when a list item is clicked (multiple select)',
         componentTest(() => TestComponent, `
-            <gtx-select multiple="true" [value]="[value]" (valueChange)="onChange($event)">
+            <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
                 <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
+            fixture.componentInstance.value = ['Bar'];
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
@@ -319,17 +320,17 @@ describe('SelectComponent', () => {
 
             listItems[2].click();
             tick();
-            expect(onChange.calls.argsFor(1)[0]).toEqual(['Bar', 'Foo', 'Baz']);
+            expect(onChange.calls.argsFor(1)[0]).toEqual(['Foo', 'Bar', 'Baz']);
         },
         ),
     );
 
     it('emits "change" with an empty array when a multiselect has no selected options',
         componentTest(() => TestComponent, `
-                <gtx-select multiple="true" [value]="[value]" (valueChange)="onChange($event)">
-                    <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                </gtx-select>
-                <gtx-overlay-host></gtx-overlay-host>`,
+            <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
+                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+            </gtx-select>
+            <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
             fixture.detectChanges();
             tick();
@@ -346,35 +347,53 @@ describe('SelectComponent', () => {
     );
 
     it('updates options when the gtx-options elements change',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.innerText.trim());
+            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
             instance.options.push('Quux');
             fixture.detectChanges();
+            tick(100);
+            await fixture.whenRenderingDone();
+            tick(100);
+            fixture.detectChanges();
+            await fixture.whenRenderingDone();
+            tick(100);
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
-            tick(1000);
         },
         ),
     );
 
     it('updates options when the gtx-options elements change asynchronously',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.innerText.trim());
+            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            setTimeout(() => instance.options.push('Quux'), 500);
+            const tmp = new Promise<void>((r => {
+                setTimeout(() => {
+                    instance.options.push('Quux');
+                    fixture.detectChanges();
+                    fixture.whenRenderingDone().then(() => r());
+                }, 500);
+            }));
             tick(500);
 
             fixture.detectChanges();
-            expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
+            await fixture.whenRenderingDone();
+            await tmp;
             tick(1000);
+
+            fixture.detectChanges();
+            await fixture.whenRenderingDone();
+            tick(1000);
+
+            expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
         },
         ),
     );
@@ -733,11 +752,17 @@ describe('SelectComponent', () => {
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 instance.testForm.reset({ test: 'Bar' }, { emitEvent: false });
+
                 fixture.detectChanges();
-                tick();
-                const displayedText: string = fixture.nativeElement.querySelector('.view-value').innerText;
+                tick(100);
+                await fixture.whenRenderingDone();
+                fixture.detectChanges();
+                tick(100);
+                await fixture.whenRenderingDone();
+
+                const displayedText: string = fixture.nativeElement.querySelector('.view-value').textContent;
                 expect(displayedText).toContain('Bar');
             },
             ),
@@ -754,11 +779,17 @@ describe('SelectComponent', () => {
                 </gtx-select>
             </form>
             <gtx-overlay-host></gtx-overlay-host>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 instance.testForm.reset({ test: 3 }, { emitEvent: false });
+
                 fixture.detectChanges();
-                tick();
-                const displayedText: string = fixture.nativeElement.querySelector('.view-value').innerText;
+                tick(100);
+                await fixture.whenRenderingDone();
+                fixture.detectChanges();
+                tick(100);
+                await fixture.whenRenderingDone();
+
+                const displayedText: string = fixture.nativeElement.querySelector('.view-value').textContent;
                 expect(displayedText).toContain('Three');
             },
             ),
@@ -840,9 +871,9 @@ describe('SelectComponent', () => {
 @Component({
     template: `
         <gtx-select
-            (blur)="onBlur($event)"
-            (change)="onChange($event)"
             [value]="value"
+            (blur)="onBlur($event)"
+            (valueChange)="onChange($event)"
         >
             <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
         </gtx-select>
@@ -851,7 +882,7 @@ describe('SelectComponent', () => {
 })
 class TestComponent {
 
-    value = 'Bar';
+    value: string | string[] = 'Bar';
     multiValue: string[] = ['Bar', 'Baz'];
     ngModelValue = 'Bar';
     placeholder = 'More...';

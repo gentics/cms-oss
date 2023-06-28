@@ -50,7 +50,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
      * Sets the maximum number of characters permitted.
      */
     @Input()
-    public maxlength: number;
+    public maxlength: number | null = null;
 
     /**
      * A placeholder text to display when the control is empty.
@@ -117,7 +117,10 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         super.ngOnChanges(changes);
 
         if (changes.maxlength) {
-            this.maxlength = Number.isInteger(this.maxlength) && this.maxlength > 0 ? this.maxlength : null;
+            this.maxlength = Number(this.maxlength);
+            if (!Number.isFinite(this.maxlength) || this.maxlength < 1) {
+                this.maxlength = null;
+            }
         }
     }
 

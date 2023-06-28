@@ -14,7 +14,7 @@
     [disabled]="disabled"
     [readonly]="readonly"
     [required]="required"
-    [value]="value"
+    [value]="value || ''"
 
     (input)="textAreaInputHandler($event)"
     (blur)="triggerTouch()"

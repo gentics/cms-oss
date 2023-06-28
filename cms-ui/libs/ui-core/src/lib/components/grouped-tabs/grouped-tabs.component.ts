@@ -282,7 +282,9 @@ export class GroupedTabsComponent
     public setAsActive(tabToActivate?: TabPaneComponent): void {
         this.tabPanes.toArray().forEach(tab => {
             if (tabToActivate != null) {
-                tab.active = tab.id === tabToActivate.id;
+                tab.active = tab.id == null && tabToActivate.id == null
+                    ? tab === tabToActivate
+                    : tab.id === tabToActivate.id;
             } else {
                 tab.active = false;
             }
@@ -291,7 +293,10 @@ export class GroupedTabsComponent
 
         if (tabToActivate != null) {
             this.tabGroups.map(group => {
-                if (group.tabs.some(currentTab => currentTab === tabToActivate)) {
+                if (group.tabs.some(currentTab => currentTab.id == null && tabToActivate.id == null
+                    ? currentTab === tabToActivate
+                    : currentTab.id === tabToActivate.id,
+                )) {
                     group.expand = true;
                 }
             });

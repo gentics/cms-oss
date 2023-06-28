@@ -35,6 +35,32 @@ const MAX_YEAR_RANGE = 200;
 
 type TimeUnit = 'hours' | 'minutes' | 'seconds';
 
+function asCleanNumber(value: any): number {
+    if (value == null) {
+        return 0;
+    }
+    value = Number(value);
+    if (!Number.isFinite(value)) {
+        return 0;
+    }
+    return value;
+}
+
+function toDate(value: null | Date | number | string): Date | null {
+    if (value == null) {
+        return null;
+    }
+
+    if (typeof value === 'object') {
+        if (value instanceof Date && value.toString() !== 'Invalid Date') {
+            return value;
+        }
+        return null;
+    }
+
+    return new Date(value);
+}
+
 /**
  * The controls (calendar view, year & time inputs) powering the `DateTimePicker` component
  * Can be used as a stand-alone component.
@@ -144,6 +170,8 @@ export class DateTimePickerControlsComponent
 
         this.setupProviderChangeHook();
         this.convertRanges();
+        // Cleanup the value
+        this.value = asCleanNumber(this.value);
         this.initializeTimestamp();
         this.updateYears();
     }
@@ -188,10 +216,14 @@ export class DateTimePickerControlsComponent
     }
 
     protected initializeTimestamp(): void {
-        if (this.value != null && this.value !== 0) {
+        // Only initialize the value if there is none set yet
+        if (this.value !== 0) {
+            this.updateMomentValue(this.value);
             return;
         }
 
+        // Set the current value to now, as we want to provide a senseful default.
+        // Perform checks if `now` would be in range and clamp it accordingly.
         const now = new Date().getTime();
 
         // Check if the timestamp is out of (min/max) bounds.
@@ -219,7 +251,7 @@ export class DateTimePickerControlsComponent
     }
 
     protected onValueChange(force = false): void {
-        const timestamp = Number(this.value);
+        const timestamp = asCleanNumber(this.value);
 
         // If the value is actually the same, then we don't need a change
         if (!force && this.getUnixTimestamp() === timestamp) {
@@ -227,6 +259,7 @@ export class DateTimePickerControlsComponent
         }
 
         this.updateMomentValue(timestamp);
+        this.updateCalendarOptions();
     }
 
     protected updateMomentValue(timestamp: number): void {
@@ -241,23 +274,14 @@ export class DateTimePickerControlsComponent
     }
 
     protected convertRanges(): void {
-        this.min = this.toDate(this.min);
-        this.max = this.toDate(this.max);
+        this.min = toDate(this.min);
+        this.max = toDate(this.max);
     }
 
-    protected toDate(value: null | Date | number | string): Date | null {
-        if (value == null) {
-            return null;
+    protected updateCalendarOptions(): void {
+        if (this.calendarInstance) {
+            this.calendarInstance.options(this.getRomeConfig());
         }
-
-        if (typeof value === 'object') {
-            if (value instanceof Date && value.toString() !== 'Invalid Date') {
-                return value;
-            }
-            return null;
-        }
-
-        return new Date(value);
     }
 
     protected updateYears(): void {
@@ -296,10 +320,7 @@ export class DateTimePickerControlsComponent
         const min = this.min || new Date(-MAX_DATE_MILLISECONDS);
         const max = this.max || new Date(MAX_DATE_MILLISECONDS);
 
-        if (this.calendarInstance) {
-            // Reinstate rome with the new min/max settings
-            this.calendarInstance.options(this.getRomeConfig());
-        }
+        this.updateCalendarOptions();
 
         // If the current value would be out of range, limit it and trigger a change
         if (this.momentValue.isBefore(min)) {
@@ -317,7 +338,7 @@ export class DateTimePickerControlsComponent
         const romeConfig: any = {
             appendTo: this.calendarContainer.nativeElement,
             time: false,
-            initialValue: this.value,
+            initialValue: this.momentValue,
         };
         if (this.min) {
             romeConfig.min = this.min;
@@ -397,7 +418,7 @@ export class DateTimePickerControlsComponent
         return this.momentValue.format(formatString);
     }
 
-    protected getUnixTimestamp(): number {
+    public getUnixTimestamp(): number {
         return this.momentValue.unix();
     }
 

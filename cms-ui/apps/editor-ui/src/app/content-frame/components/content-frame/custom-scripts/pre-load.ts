@@ -40,7 +40,6 @@ export class PreLoadScript {
         this.trackWhenObjectPropertyPagesAreLoading();
         this.showLanguageWhenComparingLanguages();
         this.hideSyncScrollTextWhenComparingLanguages();
-        this.patchTagFillFilePicker();
         this.overrideUploadsFromGCNFileUploadPlugin();
         this.patchMiniBrowserToUseNewRepositoryBrowser();
         this.patchLinkBrowserPluginToUseNewRepositoryBrowser();
@@ -205,54 +204,6 @@ export class PreLoadScript {
         if (syncScrollCheckbox) {
             this.document.body.classList.add('gcms-hide-syncscroll');
         }
-    }
-
-    /**
-     * When user picks an image/file in the tag fill dialog, a global "hopedit" function is called.
-     * We patch it to use our own file upload which will add the uploaded file in the app state.
-     */
-    patchTagFillFilePicker(): void {
-        this.pollUntilAvailable(window => window.hopedit, () => {
-            this.window.hopedit = (url: string) => this.tagfillWantsToOpenFilePicker(url);
-        });
-    }
-
-    tagfillWantsToOpenFilePicker(url: string): void {
-        if (this.filePickerSubscription) {
-            this.filePickerSubscription.unsubscribe();
-            this.filePickerSubscription = null;
-        }
-
-        let matches = url.match(/type=([a-zA-Z]+)/);
-        const type: 'image' | 'file' = matches[1] && matches[1] === 'img' ? 'image' : 'file';
-        const tagFillForm = this.document.tagfill;
-
-        // Depending on the form which is triggering the picker, a certain form field must be
-        // specified into which the selected file will be placed after it is selected & uploaded.
-        // This field name must be passed as a query parameter when making the post request.
-        matches = url.match(/new_mnbr(?:=|%3D)(f_p\d+_a)/);
-        const fieldToUpdate = matches[1];
-
-        // Serialize the values of the tagfill form
-        const postParams: any = {};
-        Array.prototype.forEach.call(tagFillForm.elements, (element: HTMLInputElement) => {
-            const inputType = element.getAttribute('type');
-            if (inputType === 'checkbox' || inputType === 'radio') {
-                // the value of a checkbox / radio button should only be serialized if it is checked.
-                if (element.checked) {
-                    postParams[element.name] = element.value;
-                }
-            } else {
-                postParams[element.name] = element.value;
-            }
-        });
-
-        this.filePickerSubscription = this.scriptHost.openFilePicker(type)
-            .mergeMap(files => this.scriptHost.uploadForCurrentItem(type, files))
-            .subscribe(uploadedFiles => {
-                const url = this.scriptHost.buildForwardUrlAfterTagfillFileUpload(uploadedFiles, fieldToUpdate, tagFillForm.action);
-                this.postFormToUrl(url, postParams);
-            });
     }
 
     overrideUploadsFromGCNFileUploadPlugin(): void {

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
 import { CUSTOMER_CONFIG_PATH } from '@editor-ui/app/common/config/config';
-import { ALOHAPAGE_URL, API_BASE_URL, CONTENTNODE_URL, IMAGESTORE_URL } from '@editor-ui/app/common/utils/base-urls';
+import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@editor-ui/app/common/utils/base-urls';
 import { deepEqual } from '@editor-ui/app/common/utils/deep-equal';
 import { ApiBase } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -20,7 +20,7 @@ import {
     RepositoryBrowserOptions,
     StateChangedHandler,
     Tag,
-    TagType
+    TagType,
 } from '@gentics/cms-models';
 import { of as observableOf, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
@@ -32,6 +32,7 @@ import { CustomScriptHostService } from '../custom-script-host/custom-script-hos
 const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
 type ZoneType = any;
+// eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
 
 // Why?
@@ -65,12 +66,13 @@ export class CustomerScriptService implements OnDestroy {
         private repositoryBrowserClient: RepositoryBrowserClient,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.customerScriptZone = Zone.root.fork({
             name: 'customerScript',
             onHandleError(): boolean {
                 console.warn('Customer script threw an error:');
                 return true;
-            }
+            },
         });
 
         const iFrameStylesStr = IFRAME_STYLES && IFRAME_STYLES.default ? IFRAME_STYLES.default : IFRAME_STYLES;
@@ -99,11 +101,12 @@ export class CustomerScriptService implements OnDestroy {
             map(script => {
                 if (script) {
                     // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
+                    // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
                     return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
                 } else {
                     return null;
                 }
-            })
+            }),
         ).subscribe(script => this.customerScript = script);
     }
 
@@ -114,9 +117,10 @@ export class CustomerScriptService implements OnDestroy {
         if (this.customerScript) {
             const moduleObject = { exports: {} as any };
             try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 this.customerScript.call(window, moduleObject, moduleObject.exports, window, document);
             } catch (err) {
-                console.warn(`Customer script could not be parsed:`);
+                console.warn('Customer script could not be parsed:');
                 throw err;
             }
 
@@ -129,6 +133,7 @@ export class CustomerScriptService implements OnDestroy {
             }
 
             if (typeof this.entryPoint === 'function') {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 this.customerScriptZone.runGuarded(() => {
                     this.entryPoint.call(window, window.GCMSUI);
                 });
@@ -187,7 +192,7 @@ export class CustomerScriptService implements OnDestroy {
         window.addEventListener('unload', onUnload);
 
         subscription = this.state.select(state => this.mapToPartialState(state)).pipe(
-            distinctUntilChanged(deepEqual)
+            distinctUntilChanged(deepEqual),
         ).subscribe(state => {
             if (typeof stateChangedHandler === 'function') {
                 stateChangedHandler(state);
@@ -207,14 +212,13 @@ export class CustomerScriptService implements OnDestroy {
             paths: {
                 apiBaseUrl: API_BASE_URL,
                 alohapageUrl: ALOHAPAGE_URL,
-                contentnodeUrl: CONTENTNODE_URL,
-                imagestoreUrl: IMAGESTORE_URL
+                imagestoreUrl: IMAGESTORE_URL,
             },
             restRequestGET,
             restRequestPOST,
             setContentModified(modified: any): void {
                 if (typeof modified !== 'boolean') {
-                    console.warn(`setContentModified expects a boolean value as its argument`);
+                    console.warn('setContentModified expects a boolean value as its argument');
                     return;
                 }
                 scriptHost.setContentModified(!!modified);
@@ -223,7 +227,7 @@ export class CustomerScriptService implements OnDestroy {
                 return this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId });
             },
             callDebugTool: gcmsui_debugTool,
-            openTagEditor
+            openTagEditor,
         };
 
         window.GCMSUI = gcmsUi;
@@ -244,7 +248,7 @@ export class CustomerScriptService implements OnDestroy {
             sid: state.auth.sid,
             uiLanguage: state.ui.language,
             uiVersion: state.ui.uiVersion,
-            userId: state.auth.currentUserId
+            userId: state.auth.currentUserId,
         };
     }
 

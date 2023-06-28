@@ -161,13 +161,6 @@ export class CustomScriptHostService {
         return pickedFiles$;
     }
 
-
-    /** Returns the URL a tagfill iframe must redirect to after uploading a file. */
-    buildForwardUrlAfterTagfillFileUpload(files: FileModel | FileModel[], fieldToUpdate: string, formActionUrl: string): string {
-        const lastFileId = Array.isArray(files) ? files[files.length - 1].id : files.id;
-        return this.resourceUrlBuilder.useFileInTagFill(lastFileId, fieldToUpdate, formActionUrl);
-    }
-
     /** Uploads to the correct folder, e.g. the default folder of the node, the folder of the current page, ... */
     uploadForCurrentItem(type: 'image' | 'file', files: File[]): Observable<FileModel[]> {
         const currentNode = this.contentFrame.currentNode;

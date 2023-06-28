@@ -9,13 +9,13 @@ import {
     ViewChild,
 } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { timer as observableTimer } from 'rxjs';
 import { take, tap } from 'rxjs/operators';
 import { IModalInstance, IModalOptions } from '../../common/modal';
-import { Icon } from '../../directives/icon/icon.directive';
+import { IconDirective } from '../../directives/icon/icon.directive';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
@@ -26,7 +26,7 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
 import { DynamicModal } from '../dynamic-modal/dynamic-modal.component';
 import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
-import { DateTimePicker } from './date-time-picker.component';
+import { DateTimePickerComponent } from './date-time-picker.component';
 
 const TEST_TIMESTAMP = 1457971763;
 
@@ -41,10 +41,10 @@ describe('DateTimePicker:', () => {
             imports: [FormsModule, ReactiveFormsModule],
             declarations: [
                 ButtonComponent,
-                DateTimePicker,
+                DateTimePickerComponent,
                 DateTimePickerModal,
                 DynamicModal,
-                Icon,
+                IconDirective,
                 InputComponent,
                 MockDateTimePickerControls,
                 OnPushTestComponent,
@@ -71,7 +71,7 @@ describe('DateTimePicker:', () => {
         componentTest(() => TestComponent, '<gtx-date-time-picker label="test"></gtx-date-time-picker>',
             fixture => {
                 fixture.detectChanges();
-                let label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
+                const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
 
                 expect(label.innerText.trim()).toBe('test');
             },
@@ -115,10 +115,10 @@ describe('DateTimePicker:', () => {
 
         it('defaults to the current time if "timestamp" is not set',
             componentTest(() => TestComponent, fixture => {
-                let now = Math.floor(Date.now() / 1000);
+                const now = Math.floor(Date.now() / 1000);
                 openDatepickerModal(fixture);
                 expect(modalService.lastLocals).toBeDefined();
-                let timestamp: number = modalService.lastLocals['timestamp'];
+                const timestamp: number = modalService.lastLocals['timestamp'];
                 expect(timestamp).toBeCloseTo(now, 1);
             }),
         );
@@ -306,7 +306,7 @@ describe('DateTimePicker:', () => {
                 <gtx-overlay-host></gtx-overlay-host>`,
         (fixture, instance) => {
             instance.onChange = jasmine.createSpy('onChange');
-            let modal = openDatepickerModal(fixture);
+            const modal = openDatepickerModal(fixture);
             const mockControls: MockDateTimePickerControls = fixture.debugElement
                 .query(By.directive(MockDateTimePickerControls)).componentInstance;
 
@@ -322,7 +322,7 @@ describe('DateTimePicker:', () => {
 
         it('changes the displayed date when a new date is selected',
             confirmTest(fixture => {
-                let nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+                const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.value.trim()).toEqual('03/09/2016, 5:09:23 PM');
             }),
         );
@@ -365,7 +365,7 @@ describe('DateTimePicker:', () => {
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
-                let modal = openDatepickerModal(fixture);
+                const modal = openDatepickerModal(fixture);
                 expect(modalService.lastLocals['timestamp']).toBe(TEST_TIMESTAMP, 'local not set');
 
                 const mockControls: MockDateTimePickerControls = fixture.debugElement
@@ -440,12 +440,12 @@ describe('DateTimePicker:', () => {
                 <gtx-date-time-picker [(ngModel)]="testModel">
                 </gtx-date-time-picker>`,
             (fixture, instance) => {
-                let format = formatProvider.format = jasmine.createSpy('format').and.returnValue('formatted date');
+                const format = formatProvider.format = jasmine.createSpy('format').and.returnValue('formatted date');
                 fixture.detectChanges();
                 tick();
                 fixture.detectChanges();
 
-                let nativeInput = fixture.nativeElement.querySelector('input');
+                const nativeInput = fixture.nativeElement.querySelector('input');
 
                 expect(format).toHaveBeenCalledTimes(1);
                 expect(nativeInput.value).toBe('formatted date');
@@ -481,7 +481,7 @@ describe('DateTimePicker:', () => {
                 fixture.detectChanges();
                 tick();
 
-                let nativeInput = fixture.nativeElement.querySelector('input');
+                const nativeInput = fixture.nativeElement.querySelector('input');
                 expect(nativeInput.value).toBe('date in first format');
 
                 tick(1000);
@@ -527,13 +527,13 @@ describe('DateTimePicker:', () => {
 function openDatepickerModal(fixture: ComponentFixture<TestComponent>): { instance: DateTimePickerModal, query: (selector: string) => HTMLElement } {
 
     fixture.detectChanges();
-    let nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    const nativeInput: HTMLInputElement = fixture.nativeElement.querySelector('input');
     nativeInput.click();
     tick();
     fixture.detectChanges();
 
-    let instance = modalService.lastModal.instance as DateTimePickerModal;
-    let query = (selector: string): HTMLElement => modalService.lastModal.element.querySelector(selector) ;
+    const instance = modalService.lastModal.instance as DateTimePickerModal;
+    const query = (selector: string): HTMLElement => modalService.lastModal.element.querySelector(selector) ;
     return { instance, query };
 }
 
@@ -549,8 +549,8 @@ class TestComponent {
     testForm: UntypedFormGroup = new UntypedFormGroup({
         test: new UntypedFormControl(TEST_TIMESTAMP),
     });
-    @ViewChild(DateTimePicker, { static: true })
-    pickerInstance: DateTimePicker;
+    @ViewChild(DateTimePickerComponent, { static: true })
+    pickerInstance: DateTimePickerComponent;
 
     onChange = jasmine.createSpy('onChange');
     onClear = jasmine.createSpy('onClear');

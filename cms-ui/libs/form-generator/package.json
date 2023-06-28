@@ -1,13 +1,13 @@
 
 {
     "name": "@gentics/form-generator",
-    "version": "6.0.0-beta.0",
+    "version": "6.0.0-SNAPSHOT",
     "dependencies": {},
     "peerDependencies": {
-        "@angular/animations": ">=14.0.7",
-        "@angular/common": ">=14.0.7",
-        "@angular/core": ">=14.2.12",
-        "@angular/forms": ">=14.0.7",
+        "@angular/animations": "15.2.5",
+        "@angular/common": "15.2.5",
+        "@angular/core": "15.2.5",
+        "@angular/forms": "15.2.5",
         "@gentics/cms-components": "^6.0.0",
         "@gentics/cms-models": "^6.0.0",
         "lodash-es": "^4.17.15",

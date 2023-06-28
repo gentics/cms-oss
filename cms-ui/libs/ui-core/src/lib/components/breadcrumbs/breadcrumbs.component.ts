@@ -15,9 +15,9 @@ import {
     ViewChildren,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { coerceInstance } from '@gentics/ui-core';
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { coerceInstance } from '../../utils';
 
 export interface IBreadcrumbLink {
     href?: string;

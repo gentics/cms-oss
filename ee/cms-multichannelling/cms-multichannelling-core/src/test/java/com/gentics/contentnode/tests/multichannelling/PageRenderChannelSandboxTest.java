@@ -83,7 +83,7 @@ public class PageRenderChannelSandboxTest extends AbstractMultichannellingSandbo
 
 		// Render the page
 		PageRenderResponse renderResponse = pageResource.render(
-				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false);
+				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 		// Check the results
 		assertEquals("Check the rendered content", "false\n" + MASTER_ID + "\nfalse\nfalse", renderResponse.getContent());
@@ -105,7 +105,7 @@ public class PageRenderChannelSandboxTest extends AbstractMultichannellingSandbo
 
 		// Render the page
 		renderResponse = pageResource.render(
-				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false);
+				page.getId().toString(), channelId, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 		// Check the results
 		assertEquals("Check the rendered content", "true\n" + MASTER_ID + "\ntrue\ntrue", renderResponse.getContent());

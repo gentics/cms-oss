@@ -73,7 +73,7 @@ import io.vertx.core.json.JsonObject;
 /**
  * SearchResource implementation
  */
-@Produces({ "application/json; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/elastic")
 @Authenticated
 @RequiredFeature(Feature.ELASTICSEARCH)

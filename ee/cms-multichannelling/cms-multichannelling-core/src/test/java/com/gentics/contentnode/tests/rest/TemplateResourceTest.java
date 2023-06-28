@@ -24,37 +24,14 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRes
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.gentics.contentnode.rest.model.ObjectProperty;
-import com.gentics.contentnode.rest.model.response.TagList;
-import com.gentics.contentnode.rest.model.response.TagListResponse;
-import com.gentics.contentnode.rest.resource.impl.ObjectPropertyResourceImpl;
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.Operator;
-import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.exception.EntityInUseException;
+import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
@@ -77,12 +54,14 @@ import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.TemplateInNode;
 import com.gentics.contentnode.rest.model.request.LinkRequest;
 import com.gentics.contentnode.rest.model.request.LocalizeRequest;
+import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.request.TemplateCopyRequest;
 import com.gentics.contentnode.rest.model.request.TemplateCreateRequest;
 import com.gentics.contentnode.rest.model.request.TemplateSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.PagedFolderListResponse;
 import com.gentics.contentnode.rest.model.response.PagedTemplateListResponse;
+import com.gentics.contentnode.rest.model.response.TagList;
 import com.gentics.contentnode.rest.model.response.TemplateInNodeResponse;
 import com.gentics.contentnode.rest.model.response.TemplateListResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
@@ -90,6 +69,7 @@ import com.gentics.contentnode.rest.resource.TemplateResource;
 import com.gentics.contentnode.rest.resource.impl.MCTemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.TemplateResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.EditableParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.LegacyFilterParameterBean;
@@ -105,6 +85,24 @@ import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.tests.utils.Expected;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Test cases for usage of the {@link TemplateResource}
@@ -534,9 +532,43 @@ public class TemplateResourceTest {
 			assertThat(tmpl.getTemplateTag(tagName)).isNotNull()
 				.hasFieldOrPropertyWithValue("constructId", constructId)
 				.hasFieldOrPropertyWithValue("enabled", true)
-				.hasFieldOrPropertyWithValue("name", tagName);
+				.hasFieldOrPropertyWithValue("name", tagName)
+				.hasFieldOrPropertyWithValue("isPublic", true)
+				.hasFieldOrPropertyWithValue("mandatory", false);
 			assertThat(tmpl.getTemplateTag(tagName).getValues().getByKeyname("text")).isNotNull().hasFieldOrPropertyWithValue("valueText", "After update");
 		}, template);
+
+		consume(testUser, tmpl -> {
+			com.gentics.contentnode.rest.model.Template model = new com.gentics.contentnode.rest.model.Template();
+			com.gentics.contentnode.rest.model.TemplateTag tagModel = new com.gentics.contentnode.rest.model.TemplateTag();
+			tagModel.setConstructId(constructId);
+			tagModel.setName(tagName);
+			tagModel.setEditableInPage(false);
+			tagModel.setMandatory(true);
+
+			Map<String, com.gentics.contentnode.rest.model.TemplateTag> templateTags = new HashMap<>();
+
+			templateTags.put(tagName, tagModel);
+			model.setTemplateTags(templateTags);
+
+			TemplateSaveRequest request = new TemplateSaveRequest();
+
+			request.setTemplate(model);
+
+			assertResponseCodeOk(new TemplateResourceImpl().update(tmpl.getId().toString(), request));
+		}, template);
+
+		TagList tags = execute(
+			tmpl -> new TemplateResourceImpl().listTags(tmpl.getId().toString(), new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean(), new EmbedParameterBean()),
+			template);
+
+		assertThat(tags.getItems())
+			.as("Loaded template tags")
+			.hasSize(1);
+		assertThat(tags.getItems().get(0))
+			.as("Template tag")
+			.hasFieldOrPropertyWithValue("editableInPage", false)
+			.hasFieldOrPropertyWithValue("mandatory", true);
 	}
 
 	@Test
@@ -686,6 +718,20 @@ public class TemplateResourceTest {
 
 	@Test
 	public void testTemplateList() throws NodeException {
+		doTestTemplateList(Arrays.asList(node.getId(), otherNode.getId()), false, Arrays.asList(node.getId(), otherNode.getId()));
+	}
+
+	@Test
+	public void testTemplateListWithoutNodeIds() throws NodeException {
+		doTestTemplateList(Collections.emptyList(), false, Arrays.asList(node.getId(), otherNode.getId(), channel.getId()));
+	}
+
+	@Test
+	public void testTemplateListWithoutNodeIdsAndReduce() throws NodeException {
+		doTestTemplateList(Collections.emptyList(), true, Arrays.asList(node.getId(), otherNode.getId(), channel.getId()));
+	}
+
+	private void doTestTemplateList(List<Integer> nodeIds, boolean reduce, List<Integer> expectedNodeIds) throws NodeException {
 		Template template = supply(() -> createTemplate(folder, "Template"));
 
 		update(otherNode, n -> n.addTemplate(template));
@@ -693,25 +739,57 @@ public class TemplateResourceTest {
 		setNodePermissions(PermHandler.PERM_VIEW);
 		setFolderPermissions(PermHandler.PERM_VIEW, PermHandler.PERM_TEMPLATE_VIEW);
 		TemplateInNodeResponse response = supply(testUser, () -> {
-			return new TemplateResourceImpl().list(Arrays.asList(Integer.toString(node.getId()), Integer.toString(otherNode.getId())),
-					new FilterParameterBean(),
-					new SortParameterBean(),
-					new PagingParameterBean(),
-					new PermsParameterBean());
+			return new TemplateResourceImpl().list(nodeIds.stream().map(Object::toString).collect(Collectors.toList()),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
+				new PermsParameterBean().setPerms(true),
+				new TemplateListParameterBean().setReduce(reduce));
 		});
 
 		// prepare sorted list of node names
 		List<String> sortedNodeNames = supply(() -> Arrays.asList(node.getFolder().getName(), otherNode.getFolder().getName()));
 		Collections.sort(sortedNodeNames);
 
-		TemplateInNode templateInNode = supply(() -> templateInNode(template.getId(), node.getId(), sortedNodeNames));
-		TemplateInNode templateInOtherNode = supply(() -> templateInNode(template.getId(), otherNode.getId(), sortedNodeNames));
+		List<TemplateInNode> expected = new ArrayList<>();
+
+		for (Integer nodeId : expectedNodeIds) {
+			expected.add(supply(() -> templateInNode(template.getId(), nodeId, sortedNodeNames)));
+		}
 
 		// sort assigned node names in response
 		response.getItems().stream().forEach(t -> Collections.sort(t.getAssignedNodes()));
 
-		assertThat(response.getItems()).as("Templates per node").usingElementComparatorOnFields("id", "nodeId", "assignedNodes")
-				.containsOnly(templateInNode, templateInOtherNode);
+		assertThat(response.getPerms().get(template.getId()))
+			.as("Test user permissions")
+			.containsExactly(Permission.view);
+
+		if (reduce) {
+			assertThat(response.getItems())
+				.as("Templates per node")
+				.usingElementComparatorOnFields("id", "nodeId", "assignedNodes")
+				.hasSize(1)
+				.isSubsetOf(expected);
+		} else {
+			assertThat(response.getItems())
+				.as("Templates per node")
+				.usingElementComparatorOnFields("id", "nodeId", "assignedNodes")
+				.containsOnlyElementsOf(expected);
+		}
+
+		// Check again with system user if all permissions are set.
+		response = supply(() -> {
+			return new TemplateResourceImpl().list(nodeIds.stream().map(Object::toString).collect(Collectors.toList()),
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
+				new PermsParameterBean().setPerms(true),
+				new TemplateListParameterBean().setReduce(reduce));
+		});
+
+		assertThat(response.getPerms().get(template.getId()))
+			.as("System user permissions")
+			.containsExactlyInAnyOrder(Permission.view, Permission.edit, Permission.delete);
 	}
 
 	@Test
@@ -722,10 +800,11 @@ public class TemplateResourceTest {
 
 		supply(testUser, () -> {
 			return new TemplateResourceImpl().list(Arrays.asList(Integer.toString(node.getId()), Integer.toString(otherNode.getId())),
-					new FilterParameterBean(),
-					new SortParameterBean(),
-					new PagingParameterBean(),
-					new PermsParameterBean());
+				new FilterParameterBean(),
+				new SortParameterBean(),
+				new PagingParameterBean(),
+				new PermsParameterBean(),
+				new TemplateListParameterBean());
 		});
 	}
 

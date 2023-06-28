@@ -68,8 +68,8 @@ import com.gentics.lib.log.NodeLogger;
 
 import io.reactivex.Observable;
 
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/page")
 @Authenticated
 public class MCPageResourceImpl implements MCPageResource {

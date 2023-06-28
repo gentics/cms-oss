@@ -212,7 +212,7 @@ public class PageRenderSandboxTest {
 		// use the page resource to render the page
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, null, true, null, LinksType.frontend, false, false, false);
+			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, null, true, null, LinksType.frontend, false, false, false, 0);
 
 			// check the results
 			assertContent(StringUtils.readStream(getClass().getResourceAsStream("defaultContent.html")), renderResponse.getContent());
@@ -232,7 +232,7 @@ public class PageRenderSandboxTest {
 		// use the page resource to render the page
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, null, false, null, LinksType.frontend, false, false, false);
+			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, null, false, null, LinksType.frontend, false, false, false, 0);
 
 			// check the results
 			assertContent(StringUtils.readStream(getClass().getResourceAsStream("defaultContentReadOnly.html")), renderResponse.getContent());
@@ -252,7 +252,7 @@ public class PageRenderSandboxTest {
 		try (Trx trx = new Trx(user)) {
 			// use the page resource to render the page
 			PageResource pageResource = getPageResource();
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node page.url>", false, null, LinksType.frontend, false, false, false);
+			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node page.url>", false, null, LinksType.frontend, false, false, false, 0);
 
 			// check the results
 			assertContent("/Content.Node/aloha3.en.html", renderResponse.getContent());
@@ -326,7 +326,7 @@ public class PageRenderSandboxTest {
 	protected void renderFrontendPageAndAssert(PageResource pageResource, String pageId,
 			String template, String expectedContent) throws NodeException {
 		PageRenderResponse renderResponse = pageResource.render(pageId, null,
-				template, false, null, LinksType.frontend, false, false, false);
+				template, false, null, LinksType.frontend, false, false, false, 0);
 		this.assertResponseOK(renderResponse);
 
 		// check the results
@@ -415,7 +415,7 @@ public class PageRenderSandboxTest {
 	public void testRenderBackendLinks() throws Exception {
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node page.url>", false, null, LinksType.backend, false, false, false);
+			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node page.url>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("/alohapage?nodeid=5&language=2&sid=" + TransactionManager.getCurrentTransaction().getSession().getSessionId()
@@ -435,7 +435,7 @@ public class PageRenderSandboxTest {
 			// use the page resource to render the page
 			PageResource pageResource = getPageResource();
 			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "Page name:<node page.name>\n<node htmllive1>", true, null, LinksType.backend,
-					false, false, false);
+					false, false, false, 0);
 			// check the results
 			assertContent(StringUtils.readStream(getClass().getResourceAsStream("specialTemplateContent.html")), renderResponse.getContent());
 		}
@@ -480,7 +480,7 @@ public class PageRenderSandboxTest {
 			pageResource.setTransaction(TransactionManager.getCurrentTransaction());
 
 			// render the page
-			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false);
+			PageRenderResponse renderResponse = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("folder.name: " + f.getName() + "\n" + "folder.object.name_de: " + f.getName() + "\n"
@@ -519,7 +519,7 @@ public class PageRenderSandboxTest {
 
 		// render the page
 		try (Trx trx = new Trx(user)) {
-			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false);
+			PageRenderResponse renderResponse = getPageResource().render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 
 			// check the results
 			assertContent("page.name: " + otherPage.getName() + "\n" + "page.tags.shorty: " + folder.getName() + "\n" + "page.tags.shorty.parts.text: "
@@ -556,7 +556,7 @@ public class PageRenderSandboxTest {
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
 			assertContent("<div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n" + "</div>",
-					pageResource.render(PAGE_ID, null, "<node mixed>", false, null, LinksType.backend, false, false, false).getContent());
+					pageResource.render(PAGE_ID, null, "<node mixed>", false, null, LinksType.backend, false, false, false, 0).getContent());
 
 			// render the vtl tag
 			assertContent(
@@ -564,7 +564,7 @@ public class PageRenderSandboxTest {
 							+ "</div>\n" + "Node Notation (Part html): This is the output!\n" + "Node Notation (Part htmllive): This is the output!\n"
 							+ "Velocity (Tag): <div class=\"container\">\n" + "Live editable: This is the output!<br/>\n" + "Not live editable: This is the output!\n"
 							+ "</div>\n" + "Velocity (Part html): This is the output!\n" + "Velocity (Part htmllive): This is the output!",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false).getContent());
+							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0).getContent());
 			trx.success();
 		}
 	}
@@ -757,7 +757,7 @@ public class PageRenderSandboxTest {
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
 			PageRenderResponse rendered = pageResource.render(page.getId().toString(), ObjectTransformer.getInt(node.getId(), 0), null, false, "", LinksType.backend,
-					false, false, false);
+					false, false, false, 0);
 
 			assertEquals("Test", rendered.getContent());
 			trx.success();
@@ -850,13 +850,13 @@ public class PageRenderSandboxTest {
 			assertContent(
 					"cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n" + "cms.rendermode.preview: true\n"
 							+ "cms.rendermode.real: false\n" + "cms.rendermode.backend: true\n" + "cms.rendermode.frontend: false\n",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false).getContent());
+							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0).getContent());
 
 			// render the vtl tag (preview in frontend mode)
 			assertContent(
 					"cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n" + "cms.rendermode.preview: true\n"
 							+ "cms.rendermode.real: false\n" + "cms.rendermode.backend: false\n" + "cms.rendermode.frontend: true\n",
-							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.frontend, false, false, false).getContent());
+							pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.frontend, false, false, false, 0).getContent());
 
 			// render the vtl tag in edit mode (backend)
 			assertContent(
@@ -864,7 +864,7 @@ public class PageRenderSandboxTest {
 							+ "data-gcn-i18n-constructname=\"Velocity Code\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
 							+ tag.getId() + "\">cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: true\n"
 							+ "cms.rendermode.preview: false\n" + "cms.rendermode.real: false\n" + "cms.rendermode.backend: true\n" + "cms.rendermode.frontend: false\n</div>",
-							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false).getContent());
+							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false, 0).getContent());
 
 			// render the vtl tag in edit mode (backend)
 			assertContent(
@@ -872,7 +872,7 @@ public class PageRenderSandboxTest {
 							+ "data-gcn-i18n-constructname=\"Velocity Code\" class=\"aloha-block\" id=\"GENTICS_BLOCK_"
 							+ tag.getId() + "\">cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: true\n"
 							+ "cms.rendermode.preview: false\n" + "cms.rendermode.real: false\n" + "cms.rendermode.backend: false\n" + "cms.rendermode.frontend: true\n</div>",
-							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.frontend, false, false, false).getContent());
+							pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.frontend, false, false, false, 0).getContent());
 			trx.success();
 		}
 	}
@@ -899,14 +899,14 @@ public class PageRenderSandboxTest {
 		SystemUser editor = supply(t -> t.getObject(SystemUser.class, USER_EDITOR_ID));
 		try (Trx trx = new Trx(editor)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false);
+			PageRenderResponse response = pageResource.render(PAGE_ID, null, "<node vtl>", false, null, LinksType.backend, false, false, false, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
 			// render the vtl tag
 			assertContent("cms.rendermode.publish: false\n" + "cms.rendermode.live: false\n" + "cms.rendermode.edit: false\n"
 					+ "cms.rendermode.preview: true\n" + "cms.rendermode.real: false\n", response.getContent());
 
-			response = pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false);
+			response = pageResource.render(PAGE_ID, null, "<node vtl>", true, null, LinksType.backend, false, false, false, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
 			// render the vtl tag in edit mode
@@ -940,7 +940,7 @@ public class PageRenderSandboxTest {
 
 		try (Trx trx = new Trx(user)) {
 			PageResource pageResource = getPageResource();
-			PageRenderResponse response = pageResource.render(page.getId().toString(), null, "<node vtl>", false, null, LinksType.frontend, false, false, true);
+			PageRenderResponse response = pageResource.render(page.getId().toString(), null, "<node vtl>", false, null, LinksType.frontend, false, false, true, 0);
 			assertEquals("Check response code", ResponseCode.OK, response.getResponseInfo().getResponseCode());
 
 			// render the vtl tag
@@ -1456,7 +1456,7 @@ public class PageRenderSandboxTest {
 			prefs.setFeature("multichannelling", multichannelling);
 			PageResource pageResource = getPageResource();
 			PageRenderResponse renderedOverviewEn = pageResource.render(Integer.toString(overviewPage.getId()), null, null, false, null, LinksType.backend,
-					false, false, false);
+					false, false, false, 0);
 
 			assertResponseOK(renderedOverviewEn);
 			StringBuffer expectedOutput = new StringBuffer();

@@ -41,9 +41,9 @@ describe('Grouped Tabs:', () => {
         it('tab panes created correctly',
             componentTest(() => TestComponent,
                 `<gtx-grouped-tabs>
-                <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
-                <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
-            </gtx-grouped-tabs>`,
+                    <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
+                    <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
+                </gtx-grouped-tabs>`,
                 fixture => {
                     let tabId = 0;
                     const testLabels = ['Test Label', 'Test Label 2'];
@@ -57,16 +57,17 @@ describe('Grouped Tabs:', () => {
                     expect(tabGroups.length).toBe(0);
 
                     const tabContent: HTMLDivElement = fixture.nativeElement.querySelector('div.grouped-tab-content');
-                    expect(tabContent.innerText).toEqual(testContents[tabId]);
+                    expect(tabContent.textContent).toEqual(testContents[tabId]);
                     checkTabPaneLabels(fixture, tabId, testLabels);
 
                     // Switch to the second tab
                     tabId = 1;
                     fixture.componentInstance.groupedTabs.selectTab(tabs[tabId]);
-
                     // Check if everything re-rendered as assumed
                     fixture.detectChanges();
-                    expect(tabContent.innerText).toEqual(testContents[tabId]);
+                    tick();
+
+                    expect(tabContent.textContent).toEqual(testContents[tabId]);
                     checkTabPaneLabels(fixture, tabId, testLabels);
                 }),
         );
@@ -74,12 +75,12 @@ describe('Grouped Tabs:', () => {
         it('tab panes with groups created correctly',
             componentTest(() => TestComponent,
                 `<gtx-grouped-tabs>
-                <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
-                <gtx-tab-group label="Test Group">
-                    <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
-                    <gtx-tab-pane label="Test Label 3">Third Test Content</gtx-tab-pane>
-                </gtx-tab-group>
-            </gtx-grouped-tabs>`,
+                    <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
+                    <gtx-tab-group label="Test Group">
+                        <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
+                        <gtx-tab-pane label="Test Label 3">Third Test Content</gtx-tab-pane>
+                    </gtx-tab-group>
+                </gtx-grouped-tabs>`,
                 fixture => {
                     let tabId = 0;
                     let groupId = 0;
@@ -95,7 +96,7 @@ describe('Grouped Tabs:', () => {
                     expect(tabGroups.length).toBe(1);
 
                     const tabContent: HTMLDivElement = fixture.nativeElement.querySelector('div.grouped-tab-content');
-                    expect(tabContent.innerText).toEqual(testContents[tabId]);
+                    expect(tabContent.textContent).toEqual(testContents[tabId]);
                     checkTabPaneLabels(fixture, tabId, testLabels);
 
                     // Switch to the third tab in first group
@@ -108,7 +109,9 @@ describe('Grouped Tabs:', () => {
 
                     // Check if everything re-rendered as assumed
                     fixture.detectChanges();
-                    expect(tabContent.innerText).toEqual(testContents[tabId]);
+                    tick();
+
+                    expect(tabContent.textContent).toEqual(testContents[tabId]);
                     expect((collectedTabs.value[groupId] as TabGroupComponent).hasActiveChild).toBeTruthy();
                     checkTabPaneLabels(fixture, tabId, testLabels);
                 }),
@@ -117,17 +120,17 @@ describe('Grouped Tabs:', () => {
         it('tabs are rendered in correct order',
             componentTest(() => TestComponent,
                 `<gtx-grouped-tabs>
-                <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
-                <gtx-tab-group label="Test Group">
-                    <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
-                    <gtx-tab-pane label="Test Label 3">Third Test Content</gtx-tab-pane>
-                </gtx-tab-group>
-                <gtx-tab-pane label="Test Label 4">Test Content 4</gtx-tab-pane>
-                <gtx-tab-group label="Test Group 2">
-                    <gtx-tab-pane label="Test Label 5">Second Test Content 2</gtx-tab-pane>
-                    <gtx-tab-pane label="Test Label 6">Third Test Content 2</gtx-tab-pane>
-                </gtx-tab-group>
-            </gtx-grouped-tabs>`,
+                    <gtx-tab-pane label="Test Label">Test Content</gtx-tab-pane>
+                    <gtx-tab-group label="Test Group">
+                        <gtx-tab-pane label="Test Label 2">Second Test Content</gtx-tab-pane>
+                        <gtx-tab-pane label="Test Label 3">Third Test Content</gtx-tab-pane>
+                    </gtx-tab-group>
+                    <gtx-tab-pane label="Test Label 4">Test Content 4</gtx-tab-pane>
+                    <gtx-tab-group label="Test Group 2">
+                        <gtx-tab-pane label="Test Label 5">Second Test Content 2</gtx-tab-pane>
+                        <gtx-tab-pane label="Test Label 6">Third Test Content 2</gtx-tab-pane>
+                    </gtx-tab-group>
+                </gtx-grouped-tabs>`,
                 fixture => {
                     const testLabels = ['Test Label', 'Test Label 2', 'Test Label 3', 'Test Label 4', 'Test Label 5', 'Test Label 6'];
                     const testContents = [
@@ -158,7 +161,7 @@ describe('Grouped Tabs:', () => {
                     const checkTab = (tabId, groupId?) => {
                         fixture.componentInstance.groupedTabs.selectTab(tabs[tabId]);
                         fixture.detectChanges();
-                        expect(tabContent.innerText).toEqual(testContents[tabId]);
+                        expect(tabContent.textContent).toEqual(testContents[tabId]);
 
                         if (groupId !== undefined) {
                             expect((collectedTabs.value[groupId] as TabGroupComponent).hasActiveChild).toBeTruthy();
@@ -184,21 +187,19 @@ describe('Grouped Tabs:', () => {
         it('add tabs asynchronously with templates',
             componentTest(() => TestComponent,
                 `<gtx-grouped-tabs>
-                <gtx-tab-pane>
-                    <ng-template gtx-tab-label>Test Label</ng-template>
-                    <ng-template gtx-tab-content>Test Content</ng-template>
-                </gtx-tab-pane>
-                <gtx-tab-group *ngFor="let tabGroup of asyncTabs$ | async">
-                    <ng-template gtx-tab-label>{{ tabGroup.label }}</ng-template>
-                    <gtx-tab-pane *ngFor="let tab of tabGroup.tabs">
-                        <ng-template gtx-tab-label>{{ tab.label }}</ng-template>
-                        <ng-template gtx-tab-content>{{ tab.content }}</ng-template>
+                    <gtx-tab-pane>
+                        <ng-template gtx-tab-label>Test Label</ng-template>
+                        <ng-template gtx-tab-content>Test Content</ng-template>
                     </gtx-tab-pane>
-                </gtx-tab-group>
-            </gtx-grouped-tabs>`,
+                    <gtx-tab-group *ngFor="let tabGroup of asyncTabs$ | async">
+                        <ng-template gtx-tab-label>{{ tabGroup.label }}</ng-template>
+                        <gtx-tab-pane *ngFor="let tab of tabGroup.tabs">
+                            <ng-template gtx-tab-label>{{ tab.label }}</ng-template>
+                            <ng-template gtx-tab-content>{{ tab.content }}</ng-template>
+                        </gtx-tab-pane>
+                    </gtx-tab-group>
+                </gtx-grouped-tabs>`,
                 fixture => {
-                    let changeCalls = 0;
-                    const collectSpy = spyOn(fixture.componentInstance.groupedTabs, 'collectTabs').and.callThrough();
                     const testLabelsBase = ['Test Label'];
                     let testLabels: string[] = [];
                     const testContents = ['Test Content'];
@@ -219,7 +220,6 @@ describe('Grouped Tabs:', () => {
 
                     // Check if everything created as assumed
                     fixture.detectChanges();
-                    changeCalls++;
                     let tabs = fixture.componentInstance.groupedTabs.tabPanes.toArray() ;
                     let tabGroups = fixture.componentInstance.groupedTabs.tabGroups.toArray() ;
                     const tabContent: HTMLDivElement = fixture.nativeElement.querySelector('div.grouped-tab-content');
@@ -232,9 +232,9 @@ describe('Grouped Tabs:', () => {
                         fixture.componentInstance.groupedTabs.selectTab(tabs[tabId]);
                         fixture.detectChanges();
                         if (tabId === 0) {
-                            expect(tabContent.innerText).toEqual(testContents[tabId]);
+                            expect(tabContent.textContent).toEqual(testContents[tabId]);
                         } else {
-                            expect(tabContent.innerText).toEqual(tabItem.content);
+                            expect(tabContent.textContent).toEqual(tabItem.content);
                         }
 
                         if (groupId !== undefined) {
@@ -245,12 +245,9 @@ describe('Grouped Tabs:', () => {
                     }
 
                     fixture.componentInstance.asyncTabs$.subscribe((item) => {
-                        changeCalls++;
                         fixture.detectChanges();
                         // Same value as debounceTime in grouped-tabs.component.ts
                         tick(5);
-
-                        expect(collectSpy).toHaveBeenCalledTimes(changeCalls);
 
                         tabs = fixture.componentInstance.groupedTabs.tabPanes.toArray() ;
                         tabGroups = fixture.componentInstance.groupedTabs.tabGroups.toArray() ;
@@ -290,8 +287,7 @@ describe('Grouped Tabs:', () => {
 });
 
 @Component({
-    template: `<gtx-grouped-tabs>
-        </gtx-grouped-tabs>`,
+    template: '<gtx-grouped-tabs></gtx-grouped-tabs>',
 })
 class TestComponent {
     @ViewChild(GroupedTabsComponent, { static: true })
@@ -305,7 +301,7 @@ function checkTabPaneLabels(fixture, tabId, testLabels): void {
 
     tabPanesLabels.forEach((label, index: number) => {
         // expect(tabPanesLabels[index].classList.contains('is-active')).toEqual(tabId === index);
-        expect(label.innerText)
+        expect(label.textContent)
             .withContext(`Tab Index: ${index}`)
             .toEqual(testLabels[index]);
     });

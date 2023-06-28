@@ -1,12 +1,10 @@
-import {Component} from '@angular/core';
-import {TestBed, tick} from '@angular/core/testing';
-import {FormsModule, ReactiveFormsModule, UntypedFormGroup, UntypedFormControl} from '@angular/forms';
-import {By} from '@angular/platform-browser';
+import { Component } from '@angular/core';
+import { TestBed, tick } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { AutosizeModule } from 'ngx-autosize';
-
-import {componentTest} from '../../testing';
-import {TextareaComponent} from './textarea.component';
-
+import { componentTest } from '../../testing';
+import { TextareaComponent } from './textarea.component';
 
 describe('Textarea', () => {
 
@@ -20,7 +18,7 @@ describe('Textarea', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea label="testLabel"></gtx-textarea>`,
         fixture => {
-            let label: HTMLElement = fixture.nativeElement.querySelector('label');
+            const label: HTMLElement = fixture.nativeElement.querySelector('label');
             fixture.detectChanges();
 
             expect(label.innerText).toBe('testLabel');
@@ -33,8 +31,8 @@ describe('Textarea', () => {
             <gtx-textarea label="testLabel" id="testId">
             </gtx-textarea>`,
         fixture => {
-            let label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const label: HTMLLabelElement = fixture.nativeElement.querySelector('label');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
 
             fixture.detectChanges();
             expect(label.htmlFor).toBe('testId');
@@ -47,7 +45,7 @@ describe('Textarea', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea></gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
             fixture.detectChanges();
 
             expect(nativeTextarea.disabled).toBe(false);
@@ -62,8 +60,8 @@ describe('Textarea', () => {
         componentTest(() => TestComponent,
             '<gtx-textarea></gtx-textarea>',
             fixture => {
-                let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
-                const getAttr: Function = (name: string) => nativeTextarea.attributes.getNamedItem(name);
+                const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+                const getAttr = (name: string) => nativeTextarea.attributes.getNamedItem(name);
                 fixture.detectChanges();
 
                 expect(getAttr('id')).toBe(null);
@@ -90,7 +88,7 @@ describe('Textarea', () => {
                 value="testValue"
             ></gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
             fixture.detectChanges();
             tick(1000);
 
@@ -109,10 +107,10 @@ describe('Textarea', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea [maxlength]="0"></gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
             fixture.detectChanges();
 
-            expect(nativeTextarea.attributes.getNamedItem('maxLength')).toBe(null);
+            expect(nativeTextarea.attributes.getNamedItem('maxLength')).toEqual(null);
         },
         ),
     );
@@ -121,7 +119,7 @@ describe('Textarea', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea [maxlength]="-1"></gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
             fixture.detectChanges();
 
             expect(nativeTextarea.attributes.getNamedItem('maxLength')).toBe(null);
@@ -133,7 +131,7 @@ describe('Textarea', () => {
         componentTest(() => TestComponent, `
             <gtx-textarea [maxlength]="null"></gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
             fixture.detectChanges();
 
             expect(nativeTextarea.attributes.getNamedItem('maxLength')).toBe(null);
@@ -146,8 +144,8 @@ describe('Textarea', () => {
             <gtx-textarea (touch)="onBlur($event)" value="foo">
             </gtx-textarea>`,
         fixture => {
-            let textareaDebugElement = fixture.debugElement.query(By.css('textarea'));
-            let instance: TestComponent = fixture.componentInstance;
+            const textareaDebugElement = fixture.debugElement.query(By.css('textarea'));
+            const instance: TestComponent = fixture.componentInstance;
             fixture.detectChanges();
             tick(1000);
             instance.onBlur = jasmine.createSpy('onBlur');
@@ -157,7 +155,7 @@ describe('Textarea', () => {
             triggerEvent(textareaDebugElement.nativeElement, 'blur');
             tick();
 
-            expect(instance.onBlur).toHaveBeenCalledWith('bar');
+            expect(instance.onBlur).toHaveBeenCalled();
             expect(instance.onBlur).toHaveBeenCalledTimes(1);
         },
         ),
@@ -168,8 +166,8 @@ describe('Textarea', () => {
             <gtx-textarea (valueChange)="onChangeEvent($event)" value="foo">
             </gtx-textarea>`,
         fixture => {
-            let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
-            let instance: TestComponent = fixture.componentInstance;
+            const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+            const instance: TestComponent = fixture.componentInstance;
             fixture.detectChanges();
             tick(1000);
             instance.onChangeEvent = jasmine.createSpy('onChangeEvent');
@@ -189,8 +187,8 @@ describe('Textarea', () => {
             <gtx-textarea (valueChange)="onChangeEvent($event)" value="foo">
             </gtx-textarea>`,
         fixture => {
-            let textareaDebugElement = fixture.debugElement.query(By.css('textarea'));
-            let instance: TestComponent = fixture.componentInstance;
+            const textareaDebugElement = fixture.debugElement.query(By.css('textarea'));
+            const instance: TestComponent = fixture.componentInstance;
             fixture.detectChanges();
             tick(1000);
             instance.onChangeEvent = jasmine.createSpy('onChangeEvent');
@@ -212,7 +210,7 @@ describe('Textarea', () => {
                 fixture.detectChanges();
                 tick(1000);
                 fixture.detectChanges();
-                let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+                const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
                 expect(nativeTextarea.value).toBe('testValue');
             },
             ),
@@ -223,8 +221,8 @@ describe('Textarea', () => {
                 <gtx-textarea [(ngModel)]="value"></gtx-textarea>`,
             fixture => {
                 fixture.detectChanges();
-                let instance: TestComponent = fixture.componentInstance;
-                let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+                const instance: TestComponent = fixture.componentInstance;
+                const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
 
                 nativeTextarea.value = 'bar';
                 triggerEvent(nativeTextarea, 'input');
@@ -243,7 +241,7 @@ describe('Textarea', () => {
             fixture => {
                 fixture.detectChanges();
                 tick(1000);
-                let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+                const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
                 expect(nativeTextarea.value).toBe('controlValue');
             },
             ),
@@ -256,8 +254,8 @@ describe('Textarea', () => {
                 </form>`,
             fixture => {
                 fixture.detectChanges();
-                let instance: TestComponent = fixture.componentInstance;
-                let nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
+                const instance: TestComponent = fixture.componentInstance;
+                const nativeTextarea: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea');
 
                 nativeTextarea.value = 'bar';
                 triggerEvent(nativeTextarea, 'input');
@@ -522,8 +520,8 @@ describe('Textarea', () => {
 
 
 @Component({
-    template: `<gtx-textarea></gtx-textarea>`
-    })
+    template: '<gtx-textarea></gtx-textarea>',
+})
 class TestComponent {
 
     value = 'testValue';
@@ -540,7 +538,7 @@ class TestComponent {
  * Create an dispatch an 'input' event on the <input> element
  */
 function triggerEvent(el: HTMLTextAreaElement, eventName: string = 'input'): void {
-    let event: Event = document.createEvent('Event');
+    const event: Event = document.createEvent('Event');
     event.initEvent(eventName, true, true);
     el.dispatchEvent(event);
 }

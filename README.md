@@ -1,16 +1,15 @@
 <h1 align="center">
   <a href="https://getmesh.io">
-    <img src="https://getmesh.io/assets/gentics-mesh-logo.png" width="420" alt="Gentics Mesh" />
+    <img src="Gentics_CMS_Logo.png" width="420" alt="Gentics CMS" />
   </a>
 </h1>
 
-<h3 align="center">Gentics Mesh is your friendly, enterprise-grade, open-source headless CMS</h3>
+<h3 align="center">Gentics CMS is your friendly, enterprise-grade, open-source headless CMS</h3>
 
 <p align="center">
 To be honest, it’s more than that: it’s your application development platform
-to develop your websites, your IoT applications, your mobile apps, your smart
-devices and your digital signage solutions. With its best-in-class APIs, a
-complete feature list and great documentation, you’ll get your projects done
+to create your websites, your IoT applications, your mobile apps, your smart
+devices and your digital signage solutions. With its complete feature list and great documentation, you’ll get your projects done
 successfully in less time, no matter which technology you prefer.
 </p>
 
@@ -32,9 +31,6 @@ successfully in less time, no matter which technology you prefer.
  <a href="https://github.com/gentics/mesh/releases">
   <img src="https://img.shields.io/github/v/release/gentics/mesh?sort=semver" alt="Latest release" />
  </a>
- <a href="https://sonarcloud.io/dashboard?id=gentics_mesh">
-  <img src="https://sonarcloud.io/api/project_badges/measure?project=gentics_mesh&metric=alert_status" alt="Quality Gate Status" />
- </a>
  <a href="https://cla-assistant.io/gentics/mesh">
   <img src="https://cla-assistant.io/readme/badge/gentics/mesh" alt="CLA assistant" />
  </a>
@@ -42,47 +38,10 @@ successfully in less time, no matter which technology you prefer.
 
 <br />
 
-<p align="center">
-  <a href="https://getmesh.io/">
-    <img src="https://getmesh.io/assets/mesh-heroimg.png" alt="Gentics Mesh Screenshot" style="max-width: 80%" />
-  </a>
-</p>
-
-# Quick Start
-
-You can take a look at our demo application here:
-
-* https://demo.getmesh.io/demo for the website
-* https://demo.getmesh.io/mesh-ui for the CMS (login is admin/admin)
-
-If you want to run the demo locally on your machine, the fastest way to get
-started is using docker:
-
-```bash
-docker run -p 8080:8080 gentics/mesh-demo:latest
-```
-
-If you can't use docker, go to the [download
-page](https://getmesh.io/download/) and get the JAR file, which you can then
-execute from the command line with:
-
-```bash
-java -jar mesh-demo-v.v.v.jar
-```
-<!-- XXX replace latest and v.v.v with up-to-date version XXX -->
-
-Either way, now relax for a minute while the download and the initial database
-setup is performed. Then you can access the demo website locally at
-http://localhost:8080/demo and the CMS at http://localhost:8080/mesh-ui .
-
-Check out our [Getting Started Guide](https://getmesh.io/docs/getting-started/)
-for an explanation of the basic concepts of Gentics Mesh.
-
 # Table of Contents
 
 <!-- re-generate with https://github.com/ekalinin/github-markdown-toc -->
 
-   * [Quick Start](#quick-start)
    * [Table of Contents](#table-of-contents)
    * [Introduction](#introduction)
       * [What is a Headless CMS?](#what-is-a-headless-cms)
@@ -111,7 +70,7 @@ for an explanation of the basic concepts of Gentics Mesh.
 Traditional CMSes are "coupled", which means that the CMS also takes care of
 the presentation layer responsible for delivering the content to the
 clients. The content and the presentation are closely interlinked. Typically,
-content managers create and manage their content through tools like WYSIWYG
+content managers create and manage their content through tools like "What you see is what you get" (WYSIWYG)
 editors. The CMS then delivers the content according to the front-end delivery
 layer built into the CMS. Typically, a traditional CMS supports your websites
 but not much else.
@@ -139,7 +98,7 @@ interface that makes content editing and administration enjoyable. At the same
 time, we don’t lock you in: You choose the technology and programming language
 you want to implement your application with. You decide whether you want to
 host it locally or in the cloud. We don’t care if you’re a Windows, Linux or
-Mac guy or girl. Also, with its Apache license, you are free to use it, modify
+Mac guy or girl. Also, with its Apache 2.0 license, you are free to use it, modify
 it and improve it.
 
 What makes Gentics Mesh special over other headless CMSes is:
@@ -358,7 +317,7 @@ query webroot($path: String) {
 # Contributing to Gentics Mesh
 
 Please read our [Contributing Guidelines](https://getmesh.io/docs/contributing/) if you intend to contribute to the project. The guidelines will tell you the
-legal stuff, give you instructions on how to set up your IDE in order to build Gentics Mesh, and will tell you necessary knowledge to understand the codebase.
+legal information, give you instructions on how to set up your IDE in order to build Gentics Mesh, and will tell you necessary knowledge to understand the codebase.
 
 Gentics Mesh is currently split into two repositories:
 

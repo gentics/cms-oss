@@ -43,11 +43,11 @@
     "regexId" : 0
   } ],
   "category" : {
-    "globalId" : "A547.73812",
+    "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",
     "name" : {
-      "de" : "Development",
-      "en" : "Development"
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
     },
-    "sortOrder" : 5
+    "sortOrder" : 0
   }
 }

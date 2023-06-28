@@ -1,15 +1,15 @@
 import { Component, DebugElement, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { RadioGroup } from '../../directives/radio-group/radio-group.directive';
+import { RadioGroupDirective } from '../../directives/radio-group/radio-group.directive';
 import { componentTest } from '../../testing';
 import { RadioButtonComponent } from './radio-button.component';
 
 describe('RadioButton', () => {
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule],
-        declarations: [RadioButtonComponent, RadioGroup, TestComponent],
+        declarations: [RadioButtonComponent, RadioGroupDirective, TestComponent],
         teardown: { destroyAfterEach: false },
     }));
 
@@ -459,7 +459,7 @@ describe('RadioGroup', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
         imports: [FormsModule, ReactiveFormsModule],
-        declarations: [RadioButtonComponent, RadioGroup, TestComponent],
+        declarations: [RadioButtonComponent, RadioGroupDirective, TestComponent],
         teardown: { destroyAfterEach: false },
     }));
 

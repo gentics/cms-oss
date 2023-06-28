@@ -129,11 +129,11 @@ export class GroupedTabsComponent
 
     /** All of the defined tab panes. */
     @ContentChildren(TabPaneComponent, { descendants: true })
-    protected tabPanes: QueryList<TabPaneComponent>;
+    public tabPanes: QueryList<TabPaneComponent>;
 
     /** All of the defined groups of tab panes. */
     @ContentChildren(TabGroupComponent)
-    protected tabGroups: QueryList<TabGroupComponent>;
+    public tabGroups: QueryList<TabGroupComponent>;
 
     /** The tabs/tab-groups of this component */
     public tabs$ = new BehaviorSubject<Array<TabPaneComponent | TabGroupComponent>>([]);

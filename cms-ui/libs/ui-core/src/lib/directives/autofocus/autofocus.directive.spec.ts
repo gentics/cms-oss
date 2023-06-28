@@ -17,14 +17,14 @@ import { OverlayHostComponent } from '../../components/overlay-host/overlay-host
 import { RadioButtonComponent } from '../../components/radio-button/radio-button.component';
 import { ScrollMaskComponent } from '../../components/scroll-mask/scroll-mask.component';
 import { SearchBarComponent } from '../../components/search-bar/search-bar.component';
-import { Select } from '../../components/select/select.component';
+import { SelectComponent } from '../../components/select/select.component';
 import { TextareaComponent } from '../../components/textarea/textarea.component';
 import { ModalService } from '../../providers/modal/modal.service';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 import { componentTest } from '../../testing';
 import { DropdownTriggerDirective } from '../dropdown-trigger/dropdown-trigger.directive';
-import { Icon } from '../icon/icon.directive';
+import { IconDirective } from '../icon/icon.directive';
 import { AutofocusDirective } from './autofocus.directive';
 
 describe('Autofocus Directive', () => {
@@ -43,13 +43,13 @@ describe('Autofocus Directive', () => {
                 DropdownContentWrapperComponent,
                 DynamicModal,
                 FilePickerComponent,
-                Icon,
+                IconDirective,
                 InputComponent,
                 OverlayHostComponent,
                 RadioButtonComponent,
                 ScrollMaskComponent,
                 SearchBarComponent,
-                Select,
+                SelectComponent,
                 TestComponent,
                 TestModal,
                 TextareaComponent,
@@ -74,7 +74,7 @@ describe('Autofocus Directive', () => {
             <gtx-button label="first"></gtx-button>
             <gtx-button label="second" autofocus></gtx-button>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('button') as HTMLButtonElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('button') as HTMLButtonElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -90,7 +90,7 @@ describe('Autofocus Directive', () => {
             <gtx-checkbox label="first"></gtx-checkbox>
             <gtx-checkbox label="second" autofocus></gtx-checkbox>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -106,7 +106,7 @@ describe('Autofocus Directive', () => {
             <gtx-date-time-picker label="first"></gtx-date-time-picker>
             <gtx-date-time-picker label="second" autofocus></gtx-date-time-picker>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -122,7 +122,7 @@ describe('Autofocus Directive', () => {
             <gtx-file-picker label="first"></gtx-file-picker>
             <gtx-file-picker label="second" autofocus></gtx-file-picker>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -138,7 +138,7 @@ describe('Autofocus Directive', () => {
             <gtx-input label="first"></gtx-input>
             <gtx-input label="second" autofocus></gtx-input>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -154,7 +154,7 @@ describe('Autofocus Directive', () => {
             <gtx-radio-button label="first"></gtx-radio-button>
             <gtx-radio-button label="second" autofocus></gtx-radio-button>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -170,7 +170,7 @@ describe('Autofocus Directive', () => {
             <gtx-search-bar label="first"></gtx-search-bar>
             <gtx-search-bar label="second" autofocus></gtx-search-bar>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -187,7 +187,7 @@ describe('Autofocus Directive', () => {
             <gtx-input label="second" [autofocus]="boolProp"></gtx-input>`,
         (fixture, testComponent) => {
             testComponent.boolProp = true;
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -203,7 +203,7 @@ describe('Autofocus Directive', () => {
             <gtx-select label="first"></gtx-select>
             <gtx-select label="second" autofocus></gtx-select>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('gtx-select .select-input') as HTMLElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('gtx-select .select-input') as HTMLElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -218,7 +218,7 @@ describe('Autofocus Directive', () => {
             <gtx-textarea label="first"></gtx-textarea>
             <gtx-textarea label="second" autofocus></gtx-textarea>`,
         fixture => {
-            let [first, second] = fixture.nativeElement.querySelectorAll('textarea') as HTMLTextAreaElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('textarea') as HTMLTextAreaElement[];
             fixture.detectChanges();
             tick(50);
 
@@ -247,7 +247,7 @@ describe('Autofocus Directive', () => {
             fixture.detectChanges();
             tick(50);
 
-            let [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
+            const [first, second] = fixture.nativeElement.querySelectorAll('input') as HTMLInputElement[];
             expect(isFocused(first)).toBe(false);
             expect(isFocused(second)).toBe(true);
             expect(second.autofocus).toBe(true, 'autofocus attribute not set');
@@ -267,7 +267,7 @@ describe('Autofocus Directive', () => {
 
                     fixture.detectChanges();
                     tick(50);
-                    let [first, second] = Array.from(modal.element.querySelectorAll('input'));
+                    const [first, second] = Array.from(modal.element.querySelectorAll('input'));
 
                     expect(isFocused(first)).toBe(false);
                     expect(isFocused(second)).toBe(true);
@@ -287,7 +287,7 @@ describe('Autofocus Directive', () => {
             <div style="height: 9999px"></div>
             <gtx-input autofocus></gtx-input>`,
         fixture => {
-            let input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+            const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
 
             expect(isInView(input)).toBe(false);
             fixture.detectChanges();

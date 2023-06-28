@@ -153,7 +153,7 @@ public class InheritPageRenderChannelSandboxTest extends AbstractMultichannellin
 	 * @throws Exception
 	 */
 	private PageRenderResponse createRenderResponse(boolean tagmap, boolean inherited) throws Exception {
-		PageRenderResponse response = pageResource.render(localizedPage.getId().toString(), channelId, null, false, null, LinksType.frontend, tagmap, inherited, false);
+		PageRenderResponse response = pageResource.render(localizedPage.getId().toString(), channelId, null, false, null, LinksType.frontend, tagmap, inherited, false, 0);
 		assertResponseCode(response);
 		return response;
 	}

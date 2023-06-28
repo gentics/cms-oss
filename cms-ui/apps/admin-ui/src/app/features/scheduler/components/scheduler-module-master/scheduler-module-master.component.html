@@ -7,7 +7,7 @@
         [title]="'scheduler.schedules_tab' | i18n"
         (select)="setTabAsActive($event)"
     >
-        <gtx-schedule-master [autoRefresh]="true" (taskClick)="setTabAsActive(SchedulerModuleTabs.TASKS)"></gtx-schedule-master>
+        <gtx-schedule-master (taskClick)="setTabAsActive(SchedulerModuleTabs.TASKS)"></gtx-schedule-master>
     </gtx-tab>
 
     <gtx-tab

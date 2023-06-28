@@ -54,6 +54,7 @@ export class ObjectPropertyDetailComponent
 
     /** current entity value */
     currentEntity: ObjectPropertyBO<Raw>;
+    public entityIsClean = true;
 
     fgProperties: UntypedFormControl;
 
@@ -117,6 +118,7 @@ export class ObjectPropertyDetailComponent
             takeUntil(this.stopper.stopper$),
         ).subscribe((currentEntity: ObjectPropertyBO<Raw>) => {
             this.currentEntity = currentEntity;
+            this.entityIsClean = true;
             // fill form with entity property values
             this.formInit();
             this.changeDetectorRef.markForCheck();
@@ -137,7 +139,7 @@ export class ObjectPropertyDetailComponent
             descriptionI18n: this.fgProperties.value.descriptionI18n,
             type: this.fgProperties.value.type,
             constructId: this.fgProperties.value.constructId,
-            categoryId: this.fgProperties.value.categoryId,
+            categoryId: this.fgProperties.value.categoryId || 0,
             required: this.fgProperties.value.required,
             inheritable: this.fgProperties.value.inheritable,
             syncContentset: this.fgProperties.value.syncContentset,
@@ -149,6 +151,7 @@ export class ObjectPropertyDetailComponent
             detailLoading(this.appState),
             discard((updatedEntity: ObjectPropertyBO<Raw>) => {
                 this.currentEntity = updatedEntity;
+                this.entityIsClean = true;
                 this.entityData.reloadEntities();
                 this.tableLoader.reload();
                 this.formInit();

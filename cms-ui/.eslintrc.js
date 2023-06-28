@@ -18,7 +18,6 @@ module.exports = {
         'eslint-plugin-import',
         'eslint-plugin-jsdoc',
         '@angular-eslint/eslint-plugin',
-        'eslint-plugin-prefer-arrow',
         '@typescript-eslint',
     ],
     rules: {
@@ -76,10 +75,35 @@ module.exports = {
             },
         ],
         '@typescript-eslint/explicit-module-boundary-types': 'warn',
-        '@typescript-eslint/indent': 'error',
+        '@typescript-eslint/indent': [
+            'warn',
+            4,
+            {
+                SwitchCase: 1,
+                MemberExpression: 1,
+                ArrayExpression: 1,
+                ignoredNodes: [
+                    'FunctionExpression > .params[decorators.length > 0]',
+                    'FunctionExpression > .params > :matches(Decorator, :not(:first-child))',
+                    'ClassBody.body > PropertyDefinition[decorators.length > 0] > .key',
+                    'ClassDeclaration[superClass]',
+                    'ClassDeclaration[implements.length > 0]',
+                ],
+            },
+        ],
         '@typescript-eslint/member-ordering': 'off',
         '@typescript-eslint/naming-convention': [
             'warn',
+            {
+                selector: ['variable'],
+                modifiers: ['unused'],
+                format: ['camelCase'],
+                custom: {
+                    match: true,
+                    regex: '^_?.*$',
+                },
+                leadingUnderscore: 'require',
+            },
             {
                 selector: ['enumMember'],
                 format: ['UPPER_CASE'],
@@ -161,7 +185,10 @@ module.exports = {
         '@typescript-eslint/no-unsafe-return': 'off',
         '@typescript-eslint/no-unused-expressions': 'error',
         '@typescript-eslint/no-unused-vars': ['warn', {
-            argsIgnorePattern: '_',
+            varsIgnorePattern: '^_',
+            argsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+            caughtErrors: 'none',
         }],
         '@typescript-eslint/no-use-before-define': 'warn',
         '@typescript-eslint/no-var-requires': 'off',
@@ -185,7 +212,7 @@ module.exports = {
                 lib: 'always',
             },
         ],
-        '@typescript-eslint/unbound-method': 'error',
+        '@typescript-eslint/unbound-method': 'warn',
         '@typescript-eslint/unified-signatures': 'error',
         'arrow-parens': [
             'off',
@@ -219,12 +246,17 @@ module.exports = {
             'Undefined',
             'undefined',
         ],
+        indent: 'off',
         'id-match': 'error',
         'import/no-deprecated': 'warn',
-        'import/order': 'error',
+        'import/order': 'warn',
+        'import/no-nodejs-modules': 'error',
+        'import/no-mutable-exports': 'error',
+        'import/no-empty-named-blocks': 'warn',
         'jsdoc/check-alignment': 'error',
         'jsdoc/check-indentation': 'error',
-        'jsdoc/newline-after-description': 'error',
+        'jsdoc/check-param-names': 'error',
+        'jsdoc/check-property-names': 'error',
         'jsdoc/no-types': 'error',
         'linebreak-style': [
             'error',
@@ -279,6 +311,7 @@ module.exports = {
         'no-invalid-this': 'off',
         'no-multiple-empty-lines': 'off',
         'no-new-wrappers': 'error',
+        'no-prototype-builtins': 'off',
         'no-restricted-imports': [
             'error',
             'rxjs/Rx',
@@ -302,8 +335,6 @@ module.exports = {
             'error',
             'never',
         ],
-        'prefer-arrow/prefer-arrow-functions': 'off',
-        'prefer-const': 'off',
         'quote-props': [
             'error',
             'as-needed',

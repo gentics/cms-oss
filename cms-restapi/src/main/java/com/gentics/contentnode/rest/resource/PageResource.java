@@ -98,7 +98,6 @@ public interface PageResource extends AuthenticatedResource {
 	 */
 	@POST
 	@Path("/create")
-	@Produces("application/json")
 	PageLoadResponse create(PageCreateRequest request);
 
 	/**
@@ -356,6 +355,7 @@ public interface PageResource extends AuthenticatedResource {
 	 * @param tagmap true to also render the tagmap entries
 	 * @param inherited true to render the inherited content and properties
 	 * @param publish True to render in publish mode
+	 * @param versionTimestamp optional version timestamp for rendering a version of the page
 	 * @return response containing the rendered page and other important information
 	 */
 	@GET
@@ -368,17 +368,48 @@ public interface PageResource extends AuthenticatedResource {
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
-			@QueryParam("publish") @DefaultValue("false") boolean publish);
+			@QueryParam("publish") @DefaultValue("false") boolean publish,
+			@QueryParam("version") Integer versionTimestamp);
 
 	/**
 	 * Render the content of the given page in preview mode
 	 * @param id page ID
 	 * @param nodeId optional node ID
+	 * @param versionTimestamp optional version timestamp for rendering a version of the page
 	 * @return page content response
 	 */
 	@GET
 	@Path("/render/content/{id}")
-	Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId);
+	Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("version") Integer versionTimestamp);
+
+	/**
+	 * Render the difference between two versions of the page
+	 * @param id page ID
+	 * @param nodeId optional node ID
+	 * @param oldVersion old page version
+	 * @param newVersion new page version
+	 * @param source true to show the diff in the source code, otherwise the diff is shown in the html
+	 * @return page content response
+	 */
+	@GET
+	@Path("/diff/versions/{id}")
+	Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
+			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
+			@QueryParam("source") @DefaultValue("false") boolean source);
+
+	/**
+	 * Render the difference between the page and another page
+	 * @param id page ID
+	 * @param nodeId optional node ID
+	 * @param otherPageId ID of the other page
+	 * @param source true to show the diff in the source code, otherwise the diff is shown in the html
+	 * @return page content response
+	 */
+	@GET
+	@Path("/diff/{id}")
+	Response diffWithOtherPage(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
+			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
+			@QueryParam("source") @DefaultValue("false") boolean source);
 
 	/**
 	 * Render a tag preview for the posted page

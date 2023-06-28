@@ -68,9 +68,3 @@ $item-list-min-height: 63px;
 .sort-mode i {
     font-size: $gtx-font-size-small;
 }
-
-::ng-deep .page-language-toggle {
-    gtx-checkbox {
-        float: left;
-    }
-}

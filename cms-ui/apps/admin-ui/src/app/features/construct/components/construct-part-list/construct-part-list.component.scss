@@ -62,11 +62,9 @@ $gtx-table-tagparts-border-color: #ddd;
             }
 
             th, td, gtx-construct-part-properties {
-                max-height: 100rem;
-                line-height: auto;
                 overflow: hidden;
                 transition: all ease 0.15s;
-                padding-bottom: 2rem;
+                padding-bottom: 0.5rem;
                 padding-top: 0.3rem;
             }
 

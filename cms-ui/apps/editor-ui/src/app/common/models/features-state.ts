@@ -12,23 +12,6 @@ export type FeaturesInfo = { [key in Feature]: boolean };
  * since they reflect the keys used by the CMS.
  */
 export interface FeaturesState extends FeaturesInfo {
-    nice_urls: boolean;
-    elasticsearch: boolean;
-    always_localize: boolean;
-    recent_items: boolean;
-    focal_point_editing: boolean;
-    imagemanipulation2: boolean;
-    enable_image_upload_in_tagfill: boolean;
-    autocomplete_folder_path: boolean;
-    devtools: boolean;
-
-    /**
-     * If this feature is activated, it is allowed to define how the publish directories of objects in folders are constructed.
-     * I. e. in modal `CreateFolderModal` input `directory`'s string will be interpreted as an URL path segment to the publishing portal.
-     * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
-     */
-    pub_dir_segment: boolean;
-
     /**
      * Contains an array of activated features per node.
      */

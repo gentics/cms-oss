@@ -65,6 +65,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -157,7 +158,7 @@ import com.gentics.lib.util.ClassHelper;
 /**
  * NodeResource Implementation
  */
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("node")
 public class NodeResourceImpl extends AbstractContentNodeResource implements NodeResource {

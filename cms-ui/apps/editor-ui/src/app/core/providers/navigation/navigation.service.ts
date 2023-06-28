@@ -157,6 +157,10 @@ export class NavigationService {
         });
     }
 
+    navigateToNoNodes(): Promise<boolean> {
+        return this.router.navigate(['/no-nodes']);
+    }
+
     /**
      * Decode an object which was encoded by serializeOptions()
      */
@@ -224,5 +228,4 @@ export class NavigationService {
 
         return ['/editor', { outlets }];
     }
-
 }

@@ -21,3 +21,7 @@ export const DEFAULT_TOAST_OPTIONS: INotificationOptions = {
     delay: 3000,
     dismissOnClick: true,
 };
+
+export interface OpenedNotification {
+    dismiss: () => void;
+}

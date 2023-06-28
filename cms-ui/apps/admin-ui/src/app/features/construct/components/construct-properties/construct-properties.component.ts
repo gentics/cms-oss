@@ -11,9 +11,9 @@ import {
     OnChanges,
     OnInit,
     Output,
-    SimpleChange
+    SimpleChange,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     AccessControlledType,
@@ -26,10 +26,10 @@ import {
     Normalized,
     Raw,
     TagPart,
-    TagTypeBO
+    TagTypeBO,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 export interface ConstructPropertiesFormData {
@@ -38,13 +38,10 @@ export interface ConstructPropertiesFormData {
     keyword: string;
     icon: string;
     nodeIds: number[];
-    newEditor: boolean;
-    parts?: TagPart[],
     externalEditorUrl?: string;
     mayBeSubtag?: boolean;
     mayContainSubtags?: boolean;
     categoryId?: number;
-    categorySortorder?: number;
     autoEnable?: boolean;
 }
 
@@ -165,41 +162,29 @@ export class ConstructPropertiesComponent
         }
     }
 
-    protected createForm(): UntypedFormGroup {
+    protected createForm(): FormGroup {
         return new UntypedFormGroup({
             keyword: new UntypedFormControl(null, Validators.required),
             nameI18n: new UntypedFormControl({}, this.createNameValidator()),
             descriptionI18n: new UntypedFormControl({}),
             icon: new UntypedFormControl('', Validators.required),
             nodeIds: new UntypedFormControl([], Validators.required),
-            newEditor: new UntypedFormControl(true),
             externalEditorUrl: new UntypedFormControl(''),
             mayBeSubtag: new UntypedFormControl(false),
             mayContainSubtags: new UntypedFormControl(false),
             categoryId: new UntypedFormControl(null),
-            categorySortorder: new UntypedFormControl(null),
             autoEnable: new UntypedFormControl(false),
         }, { updateOn: 'change' });
     }
 
     protected configureForm(value: Partial<TagTypeBO<Normalized>>, loud: boolean = false): void {
         const options = { emitEvent: loud };
-        const categorySortCtl = this.form.get('categorySortorder');
-        const keywordCtl = this.form.get('keyword');
         const nodesIdCtl = this.form.get('nodeIds');
 
-        categorySortCtl.disable(options);
-        keywordCtl.disable(options);
         nodesIdCtl.disable(options);
-
-        // Only show the sorting, once a category has been selected
-        if (this.mode !== ConstructPropertiesMode.COPY && typeof value?.categoryId === 'number') {
-            categorySortCtl.enable(options);
-        }
 
         // Can only be edited when we create a new construct
         if (this.mode === ConstructPropertiesMode.CREATE || this.mode === ConstructPropertiesMode.COPY) {
-            keywordCtl.enable(options);
             nodesIdCtl.enable(options);
         }
     }
@@ -210,12 +195,10 @@ export class ConstructPropertiesComponent
             descriptionI18n: formData.descriptionI18n,
             keyword: formData.keyword,
             icon: formData.icon,
-            newEditor: formData.newEditor,
             externalEditorUrl: formData.externalEditorUrl,
             mayBeSubtag: formData.mayBeSubtag,
             mayContainSubtags: formData.mayContainSubtags,
             categoryId: formData.categoryId,
-            categorySortorder: formData.categorySortorder,
             autoEnable: formData.autoEnable,
         };
 
@@ -244,27 +227,27 @@ export class ConstructPropertiesComponent
             return;
         }
 
-        if (this.form) {
-            const cleanedValue: ConstructPropertiesFormData = {
-                nameI18n: this.value?.nameI18n ?? {},
-                descriptionI18n: this.value?.descriptionI18n ?? {},
-                keyword: this.value?.keyword || null,
-                icon: this.value?.icon || null,
-                nodeIds: this.value?.nodeIds || [],
-                newEditor: this.value?.newEditor || false,
-                externalEditorUrl: this.value?.externalEditorUrl || null,
-                mayBeSubtag: this.value?.mayBeSubtag || false,
-                mayContainSubtags: this.value?.mayContainSubtags || null,
-                categoryId: this.value?.categoryId || null,
-                categorySortorder: this.value?.categorySortorder || null,
-                autoEnable: this.value?.autoEnable || false,
-            };
-
-            this.form.setValue(cleanedValue, { emitEvent: false });
-            this.form.markAsPristine();
-            this.form.updateValueAndValidity();
-            this.changeDetector.markForCheck();
+        if (!this.form) {
+            return;
         }
+
+        const cleanedValue: ConstructPropertiesFormData = {
+            nameI18n: this.value?.nameI18n ?? {},
+            descriptionI18n: this.value?.descriptionI18n ?? {},
+            keyword: this.value?.keyword || null,
+            icon: this.value?.icon || null,
+            nodeIds: this.value?.nodeIds || [],
+            externalEditorUrl: this.value?.externalEditorUrl || null,
+            mayBeSubtag: this.value?.mayBeSubtag || false,
+            mayContainSubtags: this.value?.mayContainSubtags || null,
+            categoryId: this.value?.categoryId || null,
+            autoEnable: this.value?.autoEnable || false,
+        };
+
+        this.form.setValue(cleanedValue, { emitEvent: false });
+        this.form.markAsPristine();
+        this.form.updateValueAndValidity();
+        this.changeDetector.markForCheck();
     }
 
     /**

@@ -1,7 +1,7 @@
 import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, UsersnapSettings } from '@gentics/cms-models';
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
-import { UIStateSettings } from './ui.state';
+import type { UIStateSettings } from './ui.state';
 
 const UI: keyof AppState = 'ui';
 
@@ -97,4 +97,13 @@ export class SetUsersnapSettings {
 export class SwitchEditorTab {
     static readonly type = 'SwitchEditorTab';
     constructor(public tabId: string) {}
+}
+
+@ActionDeclaration(UI)
+export class SetUserSettingAction<T extends keyof UIStateSettings> {
+    static readonly type = 'SetUserSettingAction';
+    constructor(
+        public setting: T,
+        public value: UIStateSettings[T],
+    ) {}
 }

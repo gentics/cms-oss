@@ -1,9 +1,9 @@
-gtx-textarea.gtx-logs-container {
-    overflow: scroll;
+@import 'variables';
 
-    > ::ng-deep textarea {
-        margin: 0;
-        padding-bottom: 8rem;
-        color: #333;
+gtx-textarea.gtx-logs-container {
+    overflow: auto;
+
+    ::ng-deep textarea {
+        color: $gtx-color-off-black !important;
     }
 }

@@ -34,6 +34,7 @@ export interface FolderState {
     files: ItemsInfo;
     templates: ItemsInfo;
     nodes: ItemsInfo;
+    nodesLoaded: boolean;
     activeFolder: number;
     activeNode: number;
     activeNodeLanguages: ItemsInfo;

@@ -34,10 +34,10 @@ describe('FeaturesStateModule', () => {
 
         function mockFeaturesMap(allEnabled: boolean): GlobalFeaturesMap {
             return {
-                [Feature.always_localize]: allEnabled,
-                [Feature.elasticsearch]: allEnabled,
-                [Feature.nice_urls]: allEnabled,
-                [Feature.recent_items]: allEnabled,
+                [Feature.ALWAYS_LOCALIZE]: allEnabled,
+                [Feature.ELASTICSEARCH]: allEnabled,
+                [Feature.NICE_URLS]: allEnabled,
+                [Feature.RECENT_ITEMS]: allEnabled,
             };
         }
 
@@ -51,14 +51,14 @@ describe('FeaturesStateModule', () => {
         }
 
         it('enables a feature that has not been set yet', () => {
-            appState.dispatch(new SetGlobalFeature(Feature.nice_urls, true));
-            expectedState.global[Feature.nice_urls] = true;
+            appState.dispatch(new SetGlobalFeature(Feature.NICE_URLS, true));
+            expectedState.global[Feature.NICE_URLS] = true;
             expect(appState.now.features).toEqual(expectedState);
         });
 
         it('disables a feature that has not been set yet', () => {
-            appState.dispatch(new SetGlobalFeature(Feature.nice_urls, false));
-            expectedState.global[Feature.nice_urls] = false;
+            appState.dispatch(new SetGlobalFeature(Feature.NICE_URLS, false));
+            expectedState.global[Feature.NICE_URLS] = false;
             expect(appState.now.features).toEqual(expectedState);
         });
 
@@ -66,8 +66,8 @@ describe('FeaturesStateModule', () => {
             const allDisabled = mockFeaturesMap(false);
             mockState(allDisabled);
 
-            appState.dispatch(new SetGlobalFeature(Feature.always_localize, true));
-            expectedState.global[Feature.always_localize] = true;
+            appState.dispatch(new SetGlobalFeature(Feature.ALWAYS_LOCALIZE, true));
+            expectedState.global[Feature.ALWAYS_LOCALIZE] = true;
             expect(appState.now.features).toEqual(expectedState);
         });
 
@@ -75,8 +75,8 @@ describe('FeaturesStateModule', () => {
             const allEnabled = mockFeaturesMap(true);
             mockState(allEnabled);
 
-            appState.dispatch(new SetGlobalFeature(Feature.always_localize, false));
-            expectedState.global[Feature.always_localize] = false;
+            appState.dispatch(new SetGlobalFeature(Feature.ALWAYS_LOCALIZE, false));
+            expectedState.global[Feature.ALWAYS_LOCALIZE] = false;
             expect(appState.now.features).toEqual(expectedState);
         });
 
@@ -89,11 +89,11 @@ describe('FeaturesStateModule', () => {
                 features: {
                     node: {
                         [NODE_A]: {
-                            [NodeFeature.contentAutoOffline]: true,
-                            [NodeFeature.newTagEditor]: true,
+                            [NodeFeature.CONTENT_AUTO_OFFLINE]: true,
+                            [NodeFeature.ASSET_MANAGEMENT]: true,
                         },
                         [NODE_B]: {
-                            [NodeFeature.contentAutoOffline]: true,
+                            [NodeFeature.CONTENT_AUTO_OFFLINE]: true,
                         },
                     },
                 },
@@ -102,32 +102,32 @@ describe('FeaturesStateModule', () => {
         }
 
         it('sets features for a new node', () => {
-            appState.dispatch(new SetNodeFeatures(NODE_A, [NodeFeature.contentAutoOffline, NodeFeature.newTagEditor]));
+            appState.dispatch(new SetNodeFeatures(NODE_A, [NodeFeature.CONTENT_AUTO_OFFLINE, NodeFeature.ASSET_MANAGEMENT]));
 
             expectedState.node[NODE_A] = {
-                [NodeFeature.contentAutoOffline]: true,
-                [NodeFeature.newTagEditor]: true,
+                [NodeFeature.CONTENT_AUTO_OFFLINE]: true,
+                [NodeFeature.ASSET_MANAGEMENT]: true,
             };
             expect(appState.now.features).toEqual(expectedState);
         });
 
         it('sets features for a new node without affecting other nodes', () => {
             mockNodeFeaturesState();
-            appState.dispatch(new SetNodeFeatures(NODE_C, [NodeFeature.contentAutoOffline, NodeFeature.newTagEditor]));
+            appState.dispatch(new SetNodeFeatures(NODE_C, [NodeFeature.CONTENT_AUTO_OFFLINE, NodeFeature.ASSET_MANAGEMENT]));
 
             expectedState.node[NODE_C] = {
-                [NodeFeature.contentAutoOffline]: true,
-                [NodeFeature.newTagEditor]: true,
+                [NodeFeature.CONTENT_AUTO_OFFLINE]: true,
+                [NodeFeature.ASSET_MANAGEMENT]: true,
             };
             expect(appState.now.features).toEqual(expectedState);
         });
 
         it('replaces features for an existing node', () => {
             mockNodeFeaturesState();
-            appState.dispatch(new SetNodeFeatures(NODE_A, [NodeFeature.contentAutoOffline]));
+            appState.dispatch(new SetNodeFeatures(NODE_A, [NodeFeature.CONTENT_AUTO_OFFLINE]));
 
             expectedState.node[NODE_A] = {
-                [NodeFeature.contentAutoOffline]: true,
+                [NodeFeature.CONTENT_AUTO_OFFLINE]: true,
             };
             expect(appState.now.features).toEqual(expectedState);
         });

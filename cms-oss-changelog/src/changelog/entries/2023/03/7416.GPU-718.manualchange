@@ -1,0 +1,1 @@
+Change @RoleModel@ property @name@ and @description@ to type @String@ and add @nameI18n@, @descriptionI18n@ of type @Map@ respectively.

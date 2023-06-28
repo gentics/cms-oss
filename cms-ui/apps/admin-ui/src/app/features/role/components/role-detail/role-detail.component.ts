@@ -8,6 +8,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { createNestedControlValidator } from '@gentics/cms-components';
 import {
     AccessControlledType,
     AnyModelType,
@@ -18,20 +19,22 @@ import {
     Normalized,
     PagePrivileges,
     Raw,
+    Role,
     RoleBO,
     RolePermissions,
+    RoleUpdateRequest,
     TypePermissions,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { distinctUntilChanged, map, publishReplay, refCount, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { distinctUntilChanged, map, publishReplay, refCount, switchMap, takeUntil, tap, repeat, delay } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
 
 export enum RoleDetailTabs {
-    properties = 'properties',
-    pagePrivileges = 'pagePrivileges',
-    filePrivileges = 'filePrivileges',
+    PROPERTIES = 'properties',
+    PAGE_PRIVILEGES = 'pagePrivileges',
+    FILE_PRIVILEGES = 'filePrivileges',
 }
 
 // *************************************************************************************************
@@ -59,10 +62,11 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
     currentRolePermissions: RolePermissions;
 
     /** current languages */
+    public supportedLanguages$: Observable<Language[]>;
     private currentLanguagesSorted: Language[] = [];
 
     /** form of tab 'Properties' */
-    fgProperties: UntypedFormGroup;
+    fgProperties: UntypedFormControl;
     fgPropertiesSaveDisabled$: Observable<boolean>;
 
     /** form of tab 'Pages' */
@@ -76,7 +80,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
     fgFilePrivilegesSaveDisabled$: Observable<boolean>
 
     get isLoading(): boolean {
-        return this.currentEntity == null || !this.currentEntity.name || this.currentEntity.name === '';
+        return this.currentEntity == null || !this.currentEntity.nameI18n || this.currentEntity.name === '';
     }
 
     get activeFormTab(): FormTabHandle {
@@ -173,7 +177,13 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
             map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
-        this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
+        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+
+        this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route).pipe(
+            map((tabId: RoleDetailTabs) => !Object.values(RoleDetailTabs).includes(tabId) ? RoleDetailTabs.PROPERTIES : tabId),
+            repeat(1),
+            delay(10),
+        );
     }
 
     private initLanguageData(): void {
@@ -194,11 +204,11 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
      */
     private updateRole(): Promise<void> {
         // assemble payload with conditional properties
-        const role: Partial<RoleBO<Raw>> = {
-            id: this.currentEntity.id,
-            ...(this.fgProperties.value.name && { name: this.fgProperties.value.name }),
-            ...(this.fgProperties.value.description && { description: this.fgProperties.value.description }),
+        const role: RoleUpdateRequest = {
+            ...this.fgProperties.value,
+            id: Number(this.currentEntity.id),
         };
+
         return this.roleOperations.update(role.id, role).pipe(
             detailLoading(this.appState),
             tap((updatedRole: RoleBO<Raw>) => {
@@ -251,11 +261,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
      * Initialize form 'Properties'
      */
     protected fgPropertiesInit(): void {
-        this.fgProperties = new UntypedFormGroup({
-            name: new UntypedFormControl(''),
-            description: new UntypedFormControl(''),
-        });
-
+        this.fgProperties = new UntypedFormControl(cloneDeep(this.currentEntity), createNestedControlValidator());
         this.fgPropertiesSaveDisabled$ = createFormSaveDisabledTracker(this.fgProperties);
     }
 
@@ -286,10 +292,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
      * Set new value of form 'Properties'
      */
     protected fgPropertiesUpdate(role: RoleBO<Normalized | Raw>): void {
-        this.fgProperties.setValue({
-            name: role.name,
-            description: role.description,
-        });
+        this.fgProperties.setValue(cloneDeep(role));
         this.fgProperties.markAsPristine();
     }
 
@@ -365,13 +368,13 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         this.fgFilePrivilegesInit();
 
         this.tabHandles = {
-            [RoleDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [RoleDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateRole(),
             }),
-            [RoleDetailTabs.pagePrivileges]: new FormGroupTabHandle(this.fgPagePrivileges, {
+            [RoleDetailTabs.PAGE_PRIVILEGES]: new FormGroupTabHandle(this.fgPagePrivileges, {
                 save: () => this.updateRolePermissions('page'),
             }),
-            [RoleDetailTabs.filePrivileges]: new FormGroupTabHandle(this.fgFilePrivileges, {
+            [RoleDetailTabs.FILE_PRIVILEGES]: new FormGroupTabHandle(this.fgFilePrivileges, {
                 save: () => this.updateRolePermissions('file'),
             }),
         };

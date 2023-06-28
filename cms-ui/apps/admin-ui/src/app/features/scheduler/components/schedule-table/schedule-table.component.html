@@ -25,7 +25,7 @@
         flat
         size="small"
         type="success"
-        [disabled]="disabled || !canManageScheduler || schedulerRunning"
+        [disabled]="disabled || loadingSchedulerStatus || !canManageScheduler || schedulerRunning"
         (click)="handleSchedulerResume()"
     >
         <icon left>play_arrow</icon> {{ 'scheduler.resume_scheduler' | i18n }}
@@ -36,10 +36,21 @@
         flat
         size="small"
         type="warning"
-        [disabled]="disabled || !canManageScheduler || !schedulerRunning"
+        [disabled]="disabled || loadingSchedulerStatus || !canManageScheduler || !schedulerRunning"
         (click)="handleSchedulerPause()"
     >
         <icon left>pause</icon> {{ 'scheduler.suspend_scheduler' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 

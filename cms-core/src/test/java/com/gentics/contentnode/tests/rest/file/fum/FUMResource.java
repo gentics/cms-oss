@@ -3,6 +3,7 @@ package com.gentics.contentnode.tests.rest.file.fum;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Consumer;
@@ -13,7 +14,7 @@ import com.gentics.contentnode.rest.model.fum.FUMResponseStatus;
 /**
  * Resource for a fake FUM
  */
-@Produces({ "application/json; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("fum")
 public class FUMResource {
 	public final static String DENY_MSG = "This is the deny message";

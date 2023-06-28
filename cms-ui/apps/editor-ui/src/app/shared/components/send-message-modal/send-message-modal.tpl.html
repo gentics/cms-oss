@@ -1,11 +1,24 @@
 <div class="modal-title">
     <h5>{{ 'modal.send_message_title' | i18n }}</h5>
 </div>
+
 <div class="modal-content">
-    <send-message-form [users]="users$ | async" [groups]="groups$ | async">
-    </send-message-form>
+    <gtx-message-properties
+        [users]="users$ | async"
+        [groups]="groups$ | async"
+        [formControl]="form"
+    ></gtx-message-properties>
 </div>
+
 <div class="modal-footer">
-    <gtx-button flat type="secondary" (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
-    <gtx-button (click)="okayClicked()">{{ 'common.okay_button' | i18n }}</gtx-button>
+    <gtx-button
+        flat
+        type="secondary"
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        [disabled]="form.invalid"
+        (click)="okayClicked()"
+    >{{ 'common.okay_button' | i18n }}</gtx-button>
 </div>

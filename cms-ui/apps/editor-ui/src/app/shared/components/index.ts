@@ -52,7 +52,7 @@ export * from './repository-browser/repository-browser.component';
 export * from './ressource-proxy/ressource-proxy.component';
 export * from './search-suggestion-bar/search-suggestion-bar.component';
 export * from './search-suggestion/search-suggestion.component';
-export * from './send-message-form/send-message-form.component';
+export * from './message-properties/message-properties.component';
 export * from './send-message-modal/send-message-modal.component';
 export * from './sorting-modal/sorting-modal.component';
 export * from './start-page-icon/start-page-icon.component';

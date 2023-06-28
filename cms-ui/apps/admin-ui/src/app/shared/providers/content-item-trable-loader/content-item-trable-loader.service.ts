@@ -7,11 +7,21 @@ import { flatMap } from 'lodash-es';
 import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+type ListableEntityType = Exclude<ContentItemTypes, 'folder' | 'node' | 'channel'>;
+
+const ENTITY_TYPES: ListableEntityType[] = [
+    'file',
+    'form',
+    'image',
+    'page',
+    'template',
+];
+
 export interface ContentItemTrableLoaderOptions {
     includeRoot?: boolean;
     rootId?: number;
     selectable: ContentItemTypes[];
-    listable: Exclude<ContentItemTypes, 'folder' | 'node' | 'channel'>[];
+    listable: ListableEntityType[];
 }
 
 @Injectable()
@@ -21,6 +31,12 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         protected api: GcmsApi,
     ) {
         super();
+    }
+
+    protected loadEntityRow(entity: ContentItemBO, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO> {
+        return this.api.folders.getItem(entity.id, entity.type).pipe(
+            map(res => res[entity.type]),
+        )
     }
 
     protected loadEntityChildren(parent: ContentItemBO | null, options?: ContentItemTrableLoaderOptions): Observable<ContentItemBO[]> {
@@ -37,7 +53,10 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
                 map(res => res.folders),
             );
             if (parentId) {
-                loader = forkJoin([loader, ...options.listable.map(type => this.getTypedLoader(type, parentId))]).pipe(
+                const typeLoaders = (options.listable || [])
+                    .filter(type => ENTITY_TYPES.includes(type))
+                    .map(type => this.getTypedChildrenLoader(type, parentId));
+                loader = forkJoin([loader, ...typeLoaders]).pipe(
                     map(res => flatMap(res)),
                 );
             }
@@ -48,7 +67,7 @@ export class ContentItemTrableLoaderService extends BaseTrableLoaderService<Cont
         );
     }
 
-    protected getTypedLoader(type: ContentItemTypes, parentId?: number): Observable<ContentItem[]> {
+    protected getTypedChildrenLoader(type: ContentItemTypes, parentId?: number): Observable<ContentItem[]> {
         switch (type) {
             case 'folder':
                 return this.api.folders.getFolders(parentId).pipe(

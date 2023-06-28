@@ -23,7 +23,6 @@ import {
     AnyModelType,
     CmsI18nValue,
     DataSourceBO,
-    GtxI18nProperty,
     Language,
     MarkupLanguage,
     Normalized,
@@ -169,6 +168,8 @@ export class ConstructPartPropertiesComponent
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
 
+    protected override delayedSetup = true;
+
     constructor(
         changeDetector: ChangeDetectorRef,
         private dataSourceDataService: DataSourceDataService,
@@ -274,6 +275,11 @@ export class ConstructPartPropertiesComponent
     }
 
     protected configureForm(value: TagPart<AnyModelType>, loud: boolean = false): void {
+        // Don't do stuff if it's the initial change. Only perform the changes on item init
+        if (value === undefined) {
+            return;
+        }
+
         const options = { emitEvent: loud };
         // Disable the keyword control if it's not creating a new one
         const keywordCtl = this.form.get('keyword');
@@ -332,7 +338,7 @@ export class ConstructPartPropertiesComponent
                 defaultPropertyCtl.enable(options);
                 markupCtl.enable(options);
 
-            // tslint:disable-next-line: no-switch-case-fall-through
+            // eslint-disable-next-line no-fallthrough
             case TagPartType.Text:
             case TagPartType.TextShort:
                 defaultPropertyCtl.enable(options);
@@ -352,54 +358,19 @@ export class ConstructPartPropertiesComponent
             return null;
         }
 
-        const output: Partial<TagPart<Normalized>> = {
-            keyword: formData.keyword,
-            ...(formData.nameI18n && { nameI18n: formData.nameI18n }),
-
-            partOrder: formData.partOrder,
-            typeId: formData.typeId,
-            type: TagPartTypePropertyType[formData.typeId],
-            externalEditorUrl: formData.externalEditorUrl,
-
-            editable: formData.editable,
-            mandatory: formData.mandatory,
-            hidden: formData.hidden,
-            liveEditable: formData.liveEditable,
-            hideInEditor: formData.hideInEditor,
-
-            defaultProperty: formData.defaultProperty,
-        };
+        const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
             output.globalId = this.value?.globalId;
             output.id = this.value?.id;
             output.keyword = this.value?.keyword;
+            output.name = this.value?.name;
+            output.type = this.value?.type;
+        } else {
+            output.keyword = formData.keyword;
         }
 
-        switch (formData.typeId) {
-            case TagPartType.TextHtml:
-            case TagPartType.TextHtmlLong:
-            case TagPartType.Html:
-            case TagPartType.HtmlLong:
-                output.markupLanguageId = formData.markupLanguageId;
-
-            // tslint:disable-next-line: no-switch-case-fall-through
-            case TagPartType.Text:
-            case TagPartType.TextShort:
-                output.regex = TagPartValidatorConfigs[formData.regex];
-                break;
-
-            case TagPartType.SelectMultiple:
-            case TagPartType.SelectSingle:
-                output.selectSettings = formData.selectSettings || {} as SelectSetting;
-                break;
-
-            case TagPartType.Overview:
-                output.overviewSettings = formData.overviewSettings || {} as OverviewSetting;
-                break;
-        }
-
-        return output as TagPart<Normalized>;
+        return output;
     }
 
     protected onValueChange(): void {
@@ -423,15 +394,4 @@ export class ConstructPartPropertiesComponent
             });
         }
     }
-
-    setActiveI18nTab(languageId: number): void {
-        this.activeTabI18nLanguage = (this.supportedLanguages || []).find(l => l.id === languageId);
-    }
-
-    activeI18nTabValueExists(languageCode: string): boolean {
-        return [
-            this.form.get('nameI18n')?.value as GtxI18nProperty,
-        ].some(data => !!data?.[languageCode]);
-    }
-
 }

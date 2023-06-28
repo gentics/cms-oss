@@ -8,12 +8,12 @@ import {
 } from '@admin-ui/core';
 import { WizardService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap } from '@gentics/cms-models';
-import { ModalService, TableColumn } from '@gentics/ui-core';
-import { BaseEntityTableComponent } from '../base-entity-table/base-entity-table.component';
-
-const DELETE_ACTION = 'delete';
+import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 
 @Component({
     selector: 'gtx-node-table',
@@ -21,7 +21,7 @@ const DELETE_ACTION = 'delete';
     styleUrls: ['./node-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> implements OnInit {
+export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
 
     protected rawColumns: TableColumn<NodeBO>[] = [
         {
@@ -72,26 +72,30 @@ export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> i
         )
     }
 
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        this.applyActions([
-            {
-                id: DELETE_ACTION,
-                icon: 'delete',
-                label: this.i18n.instant('shared.delete'),
-                type: 'alert',
-                single: true,
-                multiple: true,
-                enabled: (item) => {
-                    if (!item) {
-                        return true;
-                    } else {
-                        const perms = (item?.[BO_PERMISSIONS] || []);
-                        return perms.includes(GcmsPermission.READ) && perms.includes(GcmsPermission.DELETE);
-                    }
-                },
-            },
-        ]);
+    protected override createTableActionLoading(): Observable<TableAction<NodeBO>[]> {
+        return combineLatest([
+            this.actionRebuildTrigger$,
+        ]).pipe(
+            map(() => {
+                return [
+                    {
+                        id: DELETE_ACTION,
+                        icon: 'delete',
+                        label: this.i18n.instant('shared.delete'),
+                        type: 'alert',
+                        single: true,
+                        multiple: true,
+                        enabled: (item) => {
+                            if (!item) {
+                                return true;
+                            } else {
+                                const perms = (item?.[BO_PERMISSIONS] || []);
+                                return perms.includes(GcmsPermission.READ) && perms.includes(GcmsPermission.DELETE);
+                            }
+                        },
+                    },
+                ];
+            }),
+        );
     }
 }

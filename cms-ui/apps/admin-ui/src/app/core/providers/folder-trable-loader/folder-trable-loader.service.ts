@@ -1,6 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, FolderBO } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS } from '@gentics/cms-models';
+import { Folder, GcmsPermission, INVERSE_GCMS_PERMISSIONS, Node } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -19,6 +19,12 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
         protected api: GcmsApi,
     ) {
         super();
+    }
+
+    protected loadEntityRow(entity: FolderBO, options?: FolderTrableLoaderOptions): Observable<FolderBO> {
+        return this.api.folders.getItem(entity.id, 'folder').pipe(
+            map(res => this.mapToBusinessObject(res.folder)),
+        );
     }
 
     protected loadEntityChildren(parent: FolderBO | null, options?: FolderTrableLoaderOptions): Observable<FolderBO[]> {
@@ -45,7 +51,7 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
     public mapToBusinessObject(folder: Folder): FolderBO {
         return {
             ...folder,
-            [BO_ID]: `${folder.id}${folder.channelId ? `_${folder.channelId}` : ''}`,
+            [BO_ID]: `${(folder as any as Node).folderId || folder.id}${folder.channelId > 0 ? `:${folder.channelId}` : ''}`,
             [BO_PERMISSIONS]: this.privilegesToPermissions(folder),
             [BO_DISPLAY_NAME]: folder.name,
         };
@@ -58,8 +64,12 @@ export class FolderTrableLoaderService extends BaseTrableLoaderService<Folder, F
             .filter(perm => !!perm);
     }
 
-    protected override mapToTrableRow(entity: FolderBO, parent?: TrableRow<FolderBO>): TrableRow<FolderBO> {
-        const mapped = super.mapToTrableRow(entity, parent);
+    protected override mapToTrableRow(
+        entity: FolderBO,
+        parent?: TrableRow<FolderBO>,
+        options?: FolderTrableLoaderOptions,
+    ): TrableRow<FolderBO> {
+        const mapped = super.mapToTrableRow(entity, parent, options);
         if (!entity.hasSubfolders) {
             mapped.hasChildren = false;
             mapped.loaded = true;

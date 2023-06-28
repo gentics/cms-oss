@@ -66,5 +66,13 @@
     "import_content_package_failed": {
         "en": "An error occurred while importing the Content Package \"{{packageName}}\"!\n{{errorMessage}}",
         "de": "Es ist ein Fehler beim importieren des Inhalt Pakets „{{packageName}}“ aufgetreten!\n{{errorMessage}}"
+    },
+    "start_import_message": {
+        "en": "Starting import of Content Package \"{{packageName}}\" ...",
+        "de": "Starte import des Inhalt Pakets „{{packageName}}“ ..."
+    },
+    "start_export_message": {
+        "en": "Starting export of Content Package \"{{packageName}}\" ...",
+        "de": "Starte export des Inhalt Pakets „{{packageName}}“ ..."
     }
 }

@@ -13,6 +13,7 @@ export * from './message-body/message-body.component';
 export * from './message-inbox/message-inbox.component';
 export * from './message-list/message-list.component';
 export * from './message-modal/message-modal.component';
+export * from './no-nodes/no-nodes.component';
 export * from './project-editor/project-editor.component';
 export * from './publish-queue-list/publish-queue-list.component';
 export * from './publish-queue-modal/publish-queue-modal.component';
@@ -22,4 +23,3 @@ export * from './tag-editor-route/tag-editor-route.component';
 export * from './users-list/users-list.component';
 export * from './wastebin-list/wastebin-list.component';
 export * from './wastebin-modal/wastebin-modal.component';
-

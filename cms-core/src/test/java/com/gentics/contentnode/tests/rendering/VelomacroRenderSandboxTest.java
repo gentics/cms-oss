@@ -196,7 +196,7 @@ public class VelomacroRenderSandboxTest {
 					PageResource resource = new PageResourceImpl();
 
 					PageRenderResponse renderResponse = resource.render(ObjectTransformer.getString(page.getId(), null), null, null, false, null,
-							LinksType.frontend, false, false, false);
+							LinksType.frontend, false, false, false, 0);
 					assertResponseOK(renderResponse);
 					assertEquals("Check rendered content", StringUtils.repeat(page.getTemplate().getName(), 10), renderResponse.getContent());
 				}

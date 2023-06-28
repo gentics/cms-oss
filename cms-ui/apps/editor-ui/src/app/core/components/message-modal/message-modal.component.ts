@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { Message, Node, Normalized } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { ApplicationStateService } from '../../../state';
 import { Api } from '../../providers/api/api.service';
@@ -10,27 +10,31 @@ import { MessageLink } from '../message-body';
 
 @Component({
     selector: 'message-modal',
-    templateUrl: './message-modal.tpl.html',
-    styleUrls: ['./message-modal.scss'],
+    templateUrl: './message-modal.component.html',
+    styleUrls: ['./message-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MessageModal implements IModalDialog {
-    @Input() message: Message<Normalized>;
+export class MessageModal extends BaseModal<MessageLink | void> {
+
+    @Input()
+    message: Message<Normalized>;
 
     nodes$: Observable<Node[]>;
     displayReplyInput = false;
-    sendMessageText: string;
+    sendMessageText = '';
 
-    constructor(private appState: ApplicationStateService,
-                private entityResolver: EntityResolver,
-                private api: Api,
-                private notification: I18nNotification) {
+    constructor(
+        private appState: ApplicationStateService,
+        private entityResolver: EntityResolver,
+        private api: Api,
+        private notification: I18nNotification,
+    ) {
+        super();
     }
 
     ngOnInit(): void {
         this.nodes$ = this.appState.select(state => state.folder.nodes.list)
             .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id)));
-
     }
 
     getFullName(userId: number): string {
@@ -42,33 +46,24 @@ export class MessageModal implements IModalDialog {
         this.api.messages.sendMessage(this.transformValuesForApi(this.sendMessageText, this.message.sender)).subscribe(() => {
             this.notification.show({
                 message: 'message.message_sent',
-                type: 'success'
+                type: 'success',
             });
         }, error => {
             this.notification.show({
                 message: 'message.message_sent_error',
                 type: 'alert',
-                delay: 5000
+                delay: 5000,
             });
+            console.error('Error while sending message response', error);
+        }, () => {
             this.closeFn();
-        }, () => this.closeFn()
-        );
+        });
     }
 
     transformValuesForApi(sendMessageText: string, recipient: number): any {
         return {
-            'message':  sendMessageText,
-            'toUserId': [recipient]
+            message:  sendMessageText,
+            toUserId: [recipient],
         };
     }
-
-    closeFn = (val?: MessageLink) => {};
-    cancelFn = (val?: any) => {};
-
-    registerCloseFn(close: (val?: MessageLink) => void): void {
-        this.closeFn = close;
-        this.cancelFn = () => this.closeFn();
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void { }
 }

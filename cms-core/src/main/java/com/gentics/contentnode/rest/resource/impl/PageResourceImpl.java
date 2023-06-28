@@ -26,9 +26,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
@@ -129,6 +131,7 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.ContentTagCreateRequest;
+import com.gentics.contentnode.rest.model.request.DiffRequest;
 import com.gentics.contentnode.rest.model.request.LinksType;
 import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
 import com.gentics.contentnode.rest.model.request.MultiPageAssignRequest;
@@ -152,6 +155,7 @@ import com.gentics.contentnode.rest.model.request.page.CreatedTag;
 import com.gentics.contentnode.rest.model.request.page.PageCopyRequest;
 import com.gentics.contentnode.rest.model.request.page.PageFilenameSuggestRequest;
 import com.gentics.contentnode.rest.model.request.page.TargetFolder;
+import com.gentics.contentnode.rest.model.response.DiffResponse;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.LegacyPageListResponse;
 import com.gentics.contentnode.rest.model.response.Message;
@@ -178,6 +182,7 @@ import com.gentics.contentnode.rest.model.response.TotalUsageResponse;
 import com.gentics.contentnode.rest.model.response.page.PageCopyResponse;
 import com.gentics.contentnode.rest.model.response.page.PageCopyResultInfo;
 import com.gentics.contentnode.rest.model.response.page.PageFilenameSuggestResponse;
+import com.gentics.contentnode.rest.resource.DiffResource;
 import com.gentics.contentnode.rest.resource.PageResource;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.InFolderParameterBean;
@@ -1727,10 +1732,23 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("links") @DefaultValue("backend") LinksType linksType,
 			@QueryParam("tagmap") @DefaultValue("false") boolean tagmap,
 			@QueryParam("inherited") @DefaultValue("false") boolean inherited,
-			@QueryParam("publish") @DefaultValue("false") boolean publish) {
+			@QueryParam("publish") @DefaultValue("false") boolean publish,
+			@QueryParam("version") Integer versionTimestamp) {
+		int version = ObjectTransformer.getInt(versionTimestamp, 0);
 		return render(id, nodeId, template, editMode, proxyprefix, linksType, tagmap, inherited, publish, editable -> {
 			if (editable) {
 				return getLockedPage(id, ObjectPermission.edit);
+			} else if (version > 0) {
+				Page page = getPage(id, ObjectPermission.view);
+				Page versionedPage = TransactionManager.getCurrentTransaction().getObject(Page.class, page.getId(), version);
+
+				if (versionedPage == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				} else {
+					return versionedPage;
+				}
 			} else {
 				return getPage(id, ObjectPermission.view);
 			}
@@ -1740,9 +1758,20 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@Override
 	@GET
 	@Path("/render/content/{id}")
-	public Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId) {
+	public Response renderContent(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId, @QueryParam("version") Integer versionTimestamp) {
 		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
 			Page page = getPage(id, ObjectPermission.view);
+
+			int version = ObjectTransformer.getInt(versionTimestamp, 0);
+			if (version > 0) {
+				page = TransactionManager.getCurrentTransaction().getObject(Page.class, page.getId(), version);
+
+				if (page == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				}
+			}
 
 			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false)) {
 				String content = page.render(new RenderResult());
@@ -1755,6 +1784,104 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		} catch (NodeException e) {
 			logger.error(String.format("Error while rendering content of page %s", id), e);
 			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/diff/versions/{id}")
+	public Response diffVersions(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
+			@QueryParam("old") @DefaultValue("0") int oldVersion, @QueryParam("new") @DefaultValue("0") int newVersion,
+			@QueryParam("source") @DefaultValue("false") boolean source) {
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			Page page = getPage(id, ObjectPermission.view);
+
+			String diff = renderDiff(source, () -> {
+				Page p = t.getObject(Page.class, page.getId(), oldVersion);
+				if (p == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				} else {
+					return p;
+				}
+			}, () -> {
+				Page p = t.getObject(Page.class, page.getId(), newVersion);
+				if (p == null) {
+					I18nString message = new CNI18nString("page.notfound");
+					message.setParameter("0", id.toString());
+					throw new EntityNotFoundException(message.toString());
+				} else {
+					return p;
+				}
+			});
+			return Response.status(Status.OK).type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8").entity(diff).build();
+		} catch (EntityNotFoundException e) {
+			return Response.status(Status.NOT_FOUND).build();
+		} catch (InsufficientPrivilegesException e) {
+			return Response.status(Status.FORBIDDEN).build();
+		} catch (NodeException e) {
+			logger.error(String.format("Error while rendering version diff for page %s", id), e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	@Override
+	@GET
+	@Path("/diff/{id}")
+	public Response diffWithOtherPage(@PathParam("id") String id, @QueryParam("nodeId") Integer nodeId,
+			@QueryParam("otherPageId") @DefaultValue("0") int otherPageId,
+			@QueryParam("source") @DefaultValue("false") boolean source) {
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			Page page = getPage(id, ObjectPermission.view);
+			Page otherPage = getPage(ObjectTransformer.getString(otherPageId, null), ObjectPermission.view);
+
+			String diff = renderDiff(source, () -> {
+				return page;
+			}, () -> {
+				return otherPage;
+			});
+			return Response.status(Status.OK).type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8").entity(diff).build();
+		} catch (EntityNotFoundException e) {
+			return Response.status(Status.NOT_FOUND).build();
+		} catch (InsufficientPrivilegesException e) {
+			return Response.status(Status.FORBIDDEN).build();
+		} catch (NodeException e) {
+			logger.error(String.format("Error while rendering version diff for page %s", id), e);
+			return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+
+	/**
+	 * Helper method to render the diff between two pages
+	 * @param source true to show diff in source code
+	 * @param firstPageSupplier supplier for the first page
+	 * @param secondPageSupplier supplier for the second page
+	 * @return diff
+	 * @throws NodeException
+	 */
+	protected String renderDiff(boolean source, Supplier<Page> firstPageSupplier, Supplier<Page> secondPageSupplier) throws NodeException {
+		Page firstPage = firstPageSupplier.supply();
+		Page secondPage = secondPageSupplier.supply();
+
+		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false)) {
+			String firstContent = firstPage.render(new RenderResult());
+			String secondContent = secondPage.render(new RenderResult());
+
+			DiffResource diffResource = new DiffResourceImpl();
+			DiffRequest request = new DiffRequest();
+			request.setContent1(firstContent);
+			request.setContent2(secondContent);
+
+			DiffResponse response = null;
+			if (source) {
+				response = diffResource.diffSource(request);
+			} else {
+				response = diffResource.diffHTML(request);
+			}
+
+			return response.getDiff();
 		}
 	}
 
@@ -2050,7 +2177,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Page page = getLockedPage(id, PermHandler.ObjectPermission.edit);
 
 		// render the tag to collect all "embedded" tags
-		PageRenderResponse renderResponse = render(sourceId, null, "<node " + tagname + ">", true, null, LinksType.backend, false, false, false);
+		PageRenderResponse renderResponse = render(sourceId, null, "<node " + tagname + ">", true, null, LinksType.backend, false, false, false, 0);
 		if (ResponseCode.OK.equals(renderResponse.getResponseInfo()
 				.getResponseCode())) {
 			Map<String, String> nameTranslation = new HashMap<String, String>();
@@ -2895,16 +3022,19 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 		try {
 			TotalUsageResponse response = new TotalUsageResponse();
-			pageIds = getMasterPageIds(pageIds);
-			for(Integer pageId : pageIds) {
+			Map<Integer, Integer> masterMap = mapMasterPageIds(pageIds);
+			for (Entry<Integer, Integer> entry : masterMap.entrySet()) {
+				int masterPageId = entry.getKey();
+				int originalPageId = entry.getValue();
+
 				TotalUsageInfo info = new TotalUsageInfo();
-				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.GENERAL, nodeId);
-				Set<Integer> pageVariantIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.VARIANT, nodeId);
-				Set<Integer> pageTagIds = MiscUtils.getPageUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, PageUsage.TAG, nodeId);
-				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(pageId), Page.TYPE_PAGE, nodeId);
+				Set<Integer> referencingPageIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.GENERAL, nodeId);
+				Set<Integer> pageVariantIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.VARIANT, nodeId);
+				Set<Integer> pageTagIds = MiscUtils.getPageUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, PageUsage.TAG, nodeId);
+				Set<Integer> usingTemplateIds = MiscUtils.getTemplateUsageIds(Arrays.asList(masterPageId), Page.TYPE_PAGE, nodeId);
 				info.setTotal(referencingPageIds.size() + pageVariantIds.size() + pageTagIds.size() + usingTemplateIds.size());
 				info.setPages(info.getTotal());
-				response.getInfos().put(pageId, info);
+				response.getInfos().put(originalPageId, info);
 			}
 			response.setResponseInfo(new ResponseInfo(ResponseCode.OK, "Successfully fetched total usage information"));
 			return response;
@@ -2914,6 +3044,29 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + pageIds.size() + " pages" + e.getLocalizedMessage()));
 		}
+	}
+
+	/**
+	 * For every page in the list, get the id of the master page (or the page itself, if it is a master page or multichannelling is not activated)
+	 * @param pageId list of page ids
+	 * @return map of master page ids to the given ids
+	 * @throws NodeException
+	 */
+	protected Map<Integer, Integer> mapMasterPageIds(List<Integer> pageId) throws NodeException {
+		Transaction t = getTransaction();
+		if (!t.getNodeConfig().getDefaultPreferences().isFeature(
+				Feature.MULTICHANNELLING)) {
+			return pageId.stream().collect(Collectors.toMap(java.util.function.Function.identity(), java.util.function.Function.identity()));
+		}
+		List<Page> pages = t.getObjects(Page.class, pageId);
+		Map<Integer, Integer> masterMap = new HashMap<>(pageId.size());
+		for (Page page : pages) {
+			Integer id = ObjectTransformer.getInteger(page.getMaster().getId(), null);
+			if (id != null && !masterMap.containsKey(id)) {
+				masterMap.put(id, page.getId());
+			}
+		}
+		return masterMap;
 	}
 
 	/*

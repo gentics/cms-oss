@@ -15,13 +15,13 @@ import {
     CmsFormElementInsertionInformation,
     CmsFormElementInsertionType,
     EditMode,
-    FormElementDropInformation,
-    FORM_ELEMENT_MIME_TYPE_TYPE
+    FORM_ELEMENT_MIME_TYPE_TYPE,
+    FormElementDropInformation
 } from '@gentics/cms-models';
 import { cloneDeep as _cloneDeep } from 'lodash';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import uuidv4 from 'uuidv4';
+import { newUUID } from '../../../common';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorService } from '../../providers';
 import { FormEditorElementComponent } from '../form-editor-element/form-editor-element.component';
@@ -215,7 +215,7 @@ export class FormEditorElementListComponent
         const newElement: CmsFormElementBO = _cloneDeep(element);
 
         // add unique id
-        newElement.globalId = uuidv4();
+        newElement.globalId = newUUID();
         // suggest name
         newElement.name = `${newElement.type}_${newElement.globalId.replace(
             /-/g,

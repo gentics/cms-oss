@@ -139,6 +139,9 @@ export class LinkTemplateModal implements IModalDialog, OnDestroy, OnInit {
             recursive,
         ).toPromise();
 
+        // refresh templates in state
+        await this.folderActions.getTemplates(this.folderId);
+
         this.isInProgressInternal$.next(false);
 
         if (result) {

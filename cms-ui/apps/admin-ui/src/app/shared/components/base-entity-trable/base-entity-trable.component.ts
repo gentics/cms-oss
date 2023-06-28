@@ -3,16 +3,16 @@ import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import {
-    coerceInstance,
     CoerceOption,
     FALLBACK_TABLE_COLUMN_RENDERER,
     TableAction,
     TableActionClickEvent,
     TableColumn,
     TrableRow,
+    TrableRowExpandEvent,
+    coerceInstance,
 } from '@gentics/ui-core';
-import { forkJoin, Observable, Subscription } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { Observable, Subscription, forkJoin } from 'rxjs';
 
 @Component({ template: '' })
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {
@@ -78,6 +78,11 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
             this.reload();
         }));
 
+        this.subscriptions.push(this.loader.refreshView$.subscribe(() => {
+            this.rows = [...this.rows];
+            this.changeDetector.markForCheck();
+        }));
+
         this.loadRootElements();
     }
 
@@ -89,41 +94,29 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
+    /**
+     * Function to reload the current trable.
+     * Simply reloads all currently loaded/visible rows, via `reloadRow` and waits for all to complete.
+     * Once it's done, re-assigns the rows to trigger a change detection for angular.
+     */
     public reload(): void {
-        const storeClone = { ...this.loader.flatStore };
-        this.loader.resetStore();
+        const loaders: Observable<TrableRow<O>>[] = [];
+        const options = this.createAdditionalLoadOptions();
 
-        this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).pipe(
-            switchMap(rootRows => {
-                if (!Array.isArray(rootRows)) {
-                    rootRows = [rootRows];
-                }
+        Object.values(this.loader.flatStore).forEach(row => {
+            loaders.push(this.loader.reloadRow(row, options));
+        });
 
-                const loadQueue: Observable<any>[] = [];
-
-                // Delete all root rows
-                Object.entries(storeClone).forEach(([id, row]) => {
-                    if (row.level === 0) {
-                        delete storeClone[id];
-                    } else if (row.loaded) {
-                        loadQueue.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()));
-                    }
-                });
-
-                return forkJoin(loadQueue).pipe(
-                    tap(() => {
-                        this.rows = rootRows as TrableRow<O>[];
-                        this.onLoad();
-                        this.changeDetector.markForCheck();
-                    }),
-                );
-            }),
-        )
+        this.subscriptions.push(forkJoin(loaders).subscribe(() => {
+            this.rows = [...this.rows];
+            this.onLoad();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     protected loadRootElements(): void {
         this.subscriptions.push(this.loader.loadRowChildren(null, this.createAdditionalLoadOptions()).subscribe(rows => {
-            this.rows = rows as TrableRow<O>[];
+            this.rows = rows;
             this.onLoad();
             this.changeDetector.markForCheck();
         }));
@@ -136,7 +129,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         }));
     }
 
-    public updateRowExpansion(event: { row: TrableRow<O>, expanded: boolean }): void {
+    public updateRowExpansion(event: TrableRowExpandEvent<O>): void {
         if (event.row) {
             event.row.expanded = event.expanded;
         }
@@ -144,11 +137,20 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
         this.changeDetector.markForCheck();
     }
 
-    public loadRow(row: TrableRow<O>): void {
-        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions()).subscribe(() => {
+    public reloadRow(row: TrableRow<O>): void {
+        this.subscriptions.push(this.loader.reloadRow(row, this.createAdditionalLoadOptions()).subscribe(() => {
             this.rows = [...this.rows];
-            this.onLoad();
             this.changeDetector.markForCheck();
+        }));
+
+        row.loading = true;
+        this.rows = [...this.rows];
+        this.changeDetector.markForCheck();
+    }
+
+    public loadRow(row: TrableRow<O>): void {
+        this.subscriptions.push(this.loader.loadRowChildren(row, this.createAdditionalLoadOptions(), true).subscribe(() => {
+            this.onLoad();
         }));
     }
 

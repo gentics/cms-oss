@@ -39,6 +39,7 @@
 		<module>cms-ui</module>
 		<module>cms-cache</module>
 		<module>cms-oss-server</module>
+		<module>cms-oss-changelog</module>
 
 		<!--
 		<module>static</module>
@@ -52,12 +53,12 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>1.4.61</alohaeditor.version>
+		<alohaeditor.version>1.5.0</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>16.09.2022</alohaeditor.date>
+		<alohaeditor.date>27.06.2023</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>1.10.0</mesh.version>
+		<mesh.version>1.10.8</mesh.version>
 		<mesh.forms.plugin.version>1.10.0</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->

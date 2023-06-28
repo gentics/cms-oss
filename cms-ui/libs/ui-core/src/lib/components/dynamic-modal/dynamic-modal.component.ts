@@ -1,20 +1,15 @@
 import {
-    AfterViewChecked,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
-    ComponentFactoryResolver,
     ComponentRef,
     HostListener,
     OnDestroy,
-    OnInit,
-    Renderer2,
     Type,
     ViewChild,
-    ViewContainerRef
+    ViewContainerRef,
 } from '@angular/core';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
 import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions } from '../../common';
-import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 
 /**
  * This is an internal component which is responsible for creating the modal dialog window and overlay.
@@ -23,44 +18,26 @@ import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
     selector: 'gtx-dynamic-modal',
     templateUrl: './dynamic-modal.component.html',
     styleUrls: ['./dynamic-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DynamicModal implements OnInit, OnDestroy, AfterViewChecked {
+export class DynamicModal implements OnDestroy {
 
     @ViewChild('portal', { read: ViewContainerRef, static: true })
     portal: ViewContainerRef;
 
-    isIE11: boolean;
-    dismissFn: Function;
+    dismissFn: () => any;
 
-    modalElementsHeight: number = 0;
-    visible: boolean = false;
+    visible = false;
     options: IModalOptions = DEFAULT_MODAL_OPTIONS;
 
-    private subscriptions = new Subscription();
     private cmpRef: ComponentRef<IModalDialog>;
     private openTimer: any;
-    private modalHeightEvents$: Subject<void> = new Subject();
 
     constructor(
-        private componentFactoryResolver: ComponentFactoryResolver,
-        private userAgent: UserAgentProvider,
-        private renderer: Renderer2
+        private changeDetector: ChangeDetectorRef,
     ) { }
 
-    ngOnInit(): void {
-        this.isIE11 = this.userAgent.isIE11;
-
-        if (this.isIE11) {
-            this.subscriptions.add(
-                this.modalHeightEvents$.pipe(debounceTime(100)).subscribe(() => {
-                    this.ie11FixContentHeight();
-                })
-            );
-        }
-    }
-
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
         clearTimeout(this.openTimer);
         if (this.cmpRef && this.cmpRef.destroy) {
             this.cmpRef.destroy();
@@ -75,8 +52,7 @@ export class DynamicModal implements OnInit, OnDestroy, AfterViewChecked {
      * Inject the component which will appear within the modal.
      */
     injectContent(component: Type<IModalDialog>): ComponentRef<IModalDialog> {
-        let factory = this.componentFactoryResolver.resolveComponentFactory(component);
-        this.cmpRef = this.portal.createComponent(factory);
+        this.cmpRef = this.portal.createComponent(component);
         return this.cmpRef;
     }
 
@@ -85,7 +61,10 @@ export class DynamicModal implements OnInit, OnDestroy, AfterViewChecked {
      */
     open(): void {
         clearTimeout(this.openTimer);
-        this.openTimer = setTimeout(() => this.visible = true, 50);
+        this.openTimer = setTimeout(() => {
+            this.visible = true;
+            this.changeDetector.markForCheck();
+        }, 50);
     }
 
     /**
@@ -115,60 +94,6 @@ export class DynamicModal implements OnInit, OnDestroy, AfterViewChecked {
     keyHandler(e: KeyboardEvent): void {
         if (e.which === 27 && this.options.closeOnEscape) {
             this.cancel();
-        }
-    }
-
-    /**
-     * IE11 Related fixes
-     */
-
-    /**
-     * Listen for browsers size changes, to notify IE for modal height change
-     */
-    @HostListener('window:resize')
-    onResize(): void {
-        if (this.isIE11) {
-            this.modalHeightEvents$.next();
-        }
-    }
-
-    /**
-     * Listen for content changes, to notify IE for modal height change
-     */
-    ngAfterViewChecked(): void {
-        if (this.isIE11 && this.cmpRef) {
-            // Trigger modalHeight event on view checks
-            let modalElements = Array.from(this.cmpRef.location.nativeElement.children as HTMLElement[]);
-            let currentModalElementsHeight = modalElements
-                .filter(element => element.className != this.options.modalBodyClass)
-                .map(element => {
-                    let styles = window.getComputedStyle(element);
-                    let margin = parseFloat(styles['marginTop']) +
-                        parseFloat(styles['marginBottom']);
-                    return element.offsetHeight + margin;
-                })
-                .reduce((heights: number, height: number): number => heights + height);
-
-            if (this.modalElementsHeight !== currentModalElementsHeight) {
-                this.modalElementsHeight = currentModalElementsHeight;
-                this.modalHeightEvents$.next();
-            }
-        }
-    }
-
-    /**
-     * Fixes modal body height for IE11
-     */
-    ie11FixContentHeight(): void {
-        if (this.isIE11 && this.cmpRef) {
-            let injectedElement = this.cmpRef.location.nativeElement as HTMLElement;
-            let modalBodyElement = injectedElement.getElementsByClassName(this.options.modalBodyClass)[0] as HTMLElement;
-
-            this.renderer.setStyle(
-                modalBodyElement,
-                'max-height',
-                `calc(70vh - ${this.modalElementsHeight}px)`
-            );
         }
     }
 }

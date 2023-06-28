@@ -150,11 +150,10 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             isAdmin$,
             productTools,
         ]).pipe(map(([language, contentStaging, wastebin, publishQueue, admin, otherTools]) => {
-            const buttons: ActionButton[][] = [];
-            let workButtons: ActionButton[] = [];
+            const buttons: ActionButton[] = [];
 
             if (contentStaging) {
-                workButtons.push({
+                buttons.push({
                     id: 'content-staging',
                     type: ActionButtonType.ACTION,
                     i18nLabel: 'editor.content_staging_label',
@@ -164,7 +163,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             }
 
             if (wastebin) {
-                workButtons.push({
+                buttons.push({
                     id: 'wastebin',
                     type: ActionButtonType.ACTION,
                     i18nLabel: 'editor.wastebin_label',
@@ -174,7 +173,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             }
 
             if (publishQueue) {
-                workButtons.push({
+                buttons.push({
                     id: 'publish-queue',
                     type: ActionButtonType.ACTION,
                     i18nLabel: 'editor.publish_queue_label',
@@ -183,14 +182,9 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
                 });
             }
 
-            if (workButtons.length > 0) {
-                buttons.push(workButtons);
-                workButtons = [];
-            }
-
             if (admin) {
                 // Put the admin-tool at the very beginning
-                workButtons.push({
+                buttons.push({
                     id: ADMIN_TOOL_KEY,
                     type: ActionButtonType.TOOL,
                     i18nLabel: 'editor.administration_tool_label',
@@ -203,21 +197,19 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             }
 
             if (Array.isArray(otherTools) && otherTools.length > 0) {
-                workButtons.push(...otherTools.map(tool => this.toolToButton(tool, language)));
-            }
-
-            if (workButtons.length > 0) {
-                buttons.push(workButtons);
-                workButtons = [];
+                buttons.push(...otherTools.map(tool => this.toolToButton(tool, language)));
             }
 
             if (buttons.length === 0) {
                 return null;
             }
 
+            buttons.forEach(btn => this.normalizeActionButton(btn));
+            buttons.sort((a, b) => a.label.localeCompare(b.label));
+
             return {
                 i18nLabel: 'editor.product_tools_label',
-                buttons,
+                buttons: [buttons],
             };
         }));
     }
@@ -230,11 +222,15 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             ),
         ]).pipe(
             map(([language, tools]) => {
-                const buttons = (tools || []).map(tool => this.toolToButton(tool, language));
+                const buttons: ActionButton[] = (tools || [])
+                    .map(tool => this.toolToButton(tool, language))
+                    .map(btn => this.normalizeActionButton(btn));
 
                 if (buttons.length === 0) {
                     return null;
                 }
+
+                buttons.sort((a, b) => a.label.localeCompare(b.label));
 
                 return {
                     i18nLabel: 'editor.custom_tools_label',
@@ -256,6 +252,19 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             newTab: tool.newtab ?? false,
         };
 
+        return btn;
+    }
+
+    protected normalizeActionButton(btn: ActionButton): ActionButton {
+        if (!btn.label) {
+            if (btn.i18nLabel) {
+                btn.label = this.i18n.translate(btn.i18nLabel);
+            }
+        }
+        if (!btn.label) {
+            btn.label = btn.id;
+        }
+
         // Determine the proper icon-type
         if (/^https?:\/\//.test(btn.icon)) {
             btn.iconType = ActionButtonIconType.URL;
@@ -263,7 +272,7 @@ export class ActionsSelectorComponent implements OnInit, OnDestroy {
             btn.iconType = ActionButtonIconType.FONT;
         } else {
             btn.iconType = ActionButtonIconType.TEXT;
-            btn.icon = ((btn.i18nLabel ? this.i18n.translate(btn.i18nLabel) : btn.label) || '').trim().substring(0, 1);
+            btn.icon = (btn.label || '').trim().substring(0, 1);
         }
 
         return btn;

@@ -97,7 +97,7 @@ export type ContentRepositoryBO = ContentRepository & BusinessObject;
 export type TagMapEntryBO = TagmapEntry & BusinessObject;
 export type ContentRepositoryFragmentBO = ContentRepositoryFragment & BusinessObject;
 export type ConstructBO = TagType & BusinessObject;
-export type ConstructCategoryBO = ConstructCategory & BusinessObject;
+export type ConstructCategoryBO = ConstructCategory & SortableBusinessObject;
 export type FolderBO = Folder & BusinessObject;
 export type PermissionsSetBO = PermissionsSet & BusinessObject & {
     group: Group,

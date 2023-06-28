@@ -18,10 +18,11 @@
                 <div class="gtx-entity-details-tab-content-body" *ngIf="fgProperties">
                     <div class="flex-row row">
                         <gtx-construct-properties
-                            class="properties small-12 medium-9"
+                            class="properties small-12"
                             [formControl]="fgProperties"
                             [supportedLanguages]="supportedLanguages$ | async"
                             [mode]="ConstructPropertiesMode.UPDATE"
+                            [(initialValue)]="entityIsClean"
                         ></gtx-construct-properties>
                     </div>
                 </div>
@@ -49,6 +50,7 @@
                     [supportedLanguages]="supportedLanguages$ | async"
                     [allowCreation]="true"
                     [formControl]="fgParts"
+                    [(initialValue)]="entityIsClean"
                 ></gtx-construct-part-list>
             </div>
         </gtx-tab>

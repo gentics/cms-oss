@@ -13,20 +13,17 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
+import { ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
-import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { PermissionService } from '@editor-ui/app/core/providers/permissions/permission.service';
-import { ResourceUrlBuilder } from '@editor-ui/app/core/providers/resource-url-builder/resource-url-builder';
-import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import {
     AddExpandedTabGroupAction,
     ApplicationStateService,
     ChangeTabAction,
-    EditorActionsService,
     FolderActionsService,
     MarkContentAsModifiedAction,
     MarkObjectPropertiesAsModifiedAction,
@@ -59,14 +56,12 @@ import {
     ItemWithObjectTags,
     Language,
     Node,
-    NodeFeature,
     ObjectTag,
     Page,
     Tag,
-    TagPropertyType,
     Tags,
     Template,
-    TemplateListRequest,
+    TemplateFolderListRequest,
     noItemPermissions,
 } from '@gentics/cms-models';
 import {
@@ -95,8 +90,6 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators';
-import { ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
-import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 
 
@@ -122,7 +115,7 @@ const OBJ_PROP_CATEGORY_OTHERS = 'editor.object_properties_category_others_label
     templateUrl: './combined-properties-editor.component.html',
     styleUrls: ['./combined-properties-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
 
     /** The item, whose properties should be edited. */
@@ -142,15 +135,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     objectPropertiesGrouped$: Observable<ObjectPropertiesCategory[]>;
     objectPropertiesGroupedDelayed$: Observable<ObjectPropertiesCategory[]>;
     activeTabObjectProperty$: Observable<{ item: ItemWithObjectTags, tag: EditableObjectTag }>;
-    useNewTagEditor$: Observable<boolean>;
-    disableTagList$: Observable<boolean>;
     itemProperties$: Observable<{
         item: ItemWithObjectTags | Node,
         languages: Language[],
         templates: Template[]
     }>;
-    oldTagfillUrl: string;
-    oldTagFillIFrameState = false;
     currentNode: Node;
 
     /** The constant for the tab with the item's (non object-) properties. */
@@ -180,12 +169,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     private item$ = new ReplaySubject<ItemWithObjectTags | Node>(1);
     editedObjectProperty: EditableObjectTag;
     private activeTabId: PropertiesTab;
-    private useNewTagEditor: boolean;
     private subscriptions = new Subscription();
 
     expandedState$: Observable<string[]>;
 
-    private oldTagFillStateFallbackTimeout: any;
     itemPermissions: ItemPermissions = noItemPermissions;
 
     selectedContentTags$ = new BehaviorSubject<number[]>([]);
@@ -194,18 +181,13 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         private api: Api,
         private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
-        private customScriptHostService: CustomScriptHostService,
-        private editorActions: EditorActionsService,
         private entityResolver: EntityResolver,
         private errorHandler: ErrorHandler,
         private folderActions: FolderActionsService,
-        private notification: I18nNotification,
         private navigationService: NavigationService,
         private permissionService: PermissionService,
-        private urlBuilder: ResourceUrlBuilder,
         private tagEditorService: TagEditorService,
-        private userSettings: UserSettingsService,
-        private _element: ElementRef,
+        private elementRef: ElementRef<HTMLElement>,
         private modalService: ModalService,
         private i18n: I18nService,
     ) {}
@@ -225,12 +207,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             map(state => state.nodeId),
             filter(nodeId => !!nodeId),
             distinctUntilChanged(isEqual),
-        );
-
-        const newTagEditorEnabledForCurrentNode$ = currNodeId$.pipe(
-            switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
-            filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.indexOf(NodeFeature.newTagEditor) !== -1),
         );
 
         this.itemWithObjectProperties$ = this.item$.pipe(
@@ -308,25 +284,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             refCount(),
         );
 
-        this.useNewTagEditor$ = newTagEditorEnabledForCurrentNode$.pipe(
-            switchMap(newTagEditorEnabled => combineLatest(
-                this.activeTabObjectProperty$.pipe(
-                    filter(objProp => !!objProp && !!objProp.tag.tagType),
-                ),
-                observableOf(newTagEditorEnabled),
-            )),
-            map(([objProp, newTagEditorEnabled]) =>
-                newTagEditorEnabled && objProp.tag.tagType.newEditor,
-            ),
-            distinctUntilChanged(isEqual),
-            publishReplay(1),
-            refCount(),
-        );
-
-        this.disableTagList$ = newTagEditorEnabledForCurrentNode$.pipe(
-            map(enabled => !enabled),
-        );
-
         this.itemProperties$ = this.item$.pipe(
             switchMap(item => this.loadItemFolder(item)),
             switchMap(itemAndFolder => this.loadLanguagesAndTemplates(itemAndFolder.item, itemAndFolder.folder)),
@@ -340,19 +297,15 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         );
 
         const currNodeSub = currNodeId$.subscribe(nodeId => this.currentNode = this.entityResolver.getNode(nodeId));
-        const useNewTagEditorSub = this.useNewTagEditor$.subscribe(useNewTagEditor => this.useNewTagEditor = useNewTagEditor);
         this.subscriptions.add(currNodeSub);
-        this.subscriptions.add(useNewTagEditorSub);
     }
 
     ngAfterViewInit(): void {
-        // This emits the current newTagEditorHost instance if useNewTagEditor is true or null if useNewTagEditor is false.
-        const tagEditorHost$ = combineLatest(
-            this.useNewTagEditor$,
+        // This emits the current TagEditorHost instance
+        const tagEditorHost$ = combineLatest([
             this.tagEditorHostList.changes.pipe(startWith(this.tagEditorHostList)),
-        ).pipe(
-            filter(([useNewTagEditor, queryList]) => !useNewTagEditor || queryList.length > 0),
-            map(([useNewTagEditor, queryList]) => useNewTagEditor ? queryList.first as TagEditorHostComponent : null),
+        ]).pipe(
+            map(([queryList]) => queryList.first as TagEditorHostComponent),
             distinctUntilChanged(isEqual),
         );
 
@@ -364,6 +317,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 this.loadItemPermissions(objProp.item),
                 tagEditorHost$,
             )),
+            filter(([,,host]) => host != null),
             tap(() => {
                 // Workaround: Trigger AfterContentInit Life-cycle hook to initialize active state of the tabs
                 if (this.propertiesTabs) {
@@ -371,17 +325,14 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 }
             }),
         );
+
         const editObjPropSub = objPropAndTagEditor$.subscribe(([objProp, itemPermissions, tagEditorHost]) => {
             // Update item permissions
             this.itemPermissions = itemPermissions;
-            if (tagEditorHost) {
-                this.oldTagfillUrl = null;
-                this.editObjectProperty(objProp.tag, objProp.item, tagEditorHost);
-            } else {
-                this.loadOldTagfill(objProp.tag, objProp.item);
-            }
+            this.editObjectProperty(objProp.tag, objProp.item, tagEditorHost);
             this.changeDetector.markForCheck();
         });
+
         this.subscriptions.add(editObjPropSub);
         this.tagEditorHostList.notifyOnChanges();
     }
@@ -402,8 +353,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     onTabChange(newTabId: string, readOnly: boolean = false): void {
-        clearTimeout(this.oldTagFillStateFallbackTimeout);
-
         this.navigationService
             .detailOrModal(this.currentNode.id, this.item.type, this.item.id, 'editProperties', {
                 openTab: 'properties',
@@ -415,25 +364,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         observableOf(null).pipe(
             delay(0),
         ).subscribe(() => this.scrollToRight());
-    }
-
-    onOldTagEditorIFrameLoad(state: boolean): void {
-        // If no permission to edit, remove focus from the iframe
-        if (this.canSave === false && document.activeElement && (document.activeElement as any).blur) {
-            (document.activeElement as HTMLIFrameElement).blur();
-        }
-
-        clearTimeout(this.oldTagFillStateFallbackTimeout);
-
-        this.oldTagFillIFrameState = state;
-
-        // If connection is slow, show the iframe after timeout
-        if (!this.oldTagFillIFrameState) {
-            this.oldTagFillStateFallbackTimeout = setTimeout(() => {
-                this.oldTagFillIFrameState = true;
-                this.changeDetector.markForCheck();
-            }, 1000);
-        }
     }
 
     toggleAllContentTagSelected(tags: Tag[]): void {
@@ -507,7 +437,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             ],
         })
             .then(dialog => dialog.open())
-            .then(result => this.folderActions.updateItemObjectProperties(
+            .then(() => this.folderActions.updateItemObjectProperties(
                 item.type,
                 item.id,
                 {},
@@ -560,24 +490,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
     }
 
-    /**
-     * Returns if it's mobile device.
-     */
-    isMobile(): boolean {
-        if ((/Android/i.exec(navigator.userAgent))
-            || (/webOS/i.exec(navigator.userAgent))
-            || (/iPhone/i.exec(navigator.userAgent))
-            || (/iPad/i.exec(navigator.userAgent))
-            || (/iPod/i.exec(navigator.userAgent))
-            || (/BlackBerry/i.exec(navigator.userAgent))
-            || (/Windows Phone/i.exec(navigator.userAgent))
-        ) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     markContentAsModifiedInState(modified: boolean): void {
         this.appState.dispatch(new MarkContentAsModifiedAction(modified));
     }
@@ -587,12 +499,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     private scrollToRight(): void {
-        const container = (this._element.nativeElement as HTMLElement);
-
+        const container = this.elementRef.nativeElement;
         container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
     }
 
-    tabGroupToggled(event: any, name: string): void {
+    tabGroupToggled(event: { id: string, expand: boolean }, name: string): void {
         if (event.expand) {
             this.appState.dispatch(new AddExpandedTabGroupAction(name));
         } else {
@@ -605,7 +516,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const objectProperties: ObjectTag[] = [];
         if (item && item.type !== 'node' && item.type !== 'channel' && (item as ItemWithObjectTags).tags) {
             const itemWithTags = item as ItemWithObjectTags;
-            for (let key of Object.keys(itemWithTags.tags)) {
+            for (const key of Object.keys(itemWithTags.tags)) {
                 const tag = itemWithTags.tags[key];
                 if (tag.type === 'OBJECTTAG') {
                     objectProperties.push(tag as ObjectTag);
@@ -620,7 +531,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         const contentTagList: Tag[] = [];
         if (item && item.type === 'page' && (item ).tags) {
             const itemWithTags = item ;
-            for (let key of Object.keys(itemWithTags.tags)) {
+            for (const key of Object.keys(itemWithTags.tags)) {
                 const tag = itemWithTags.tags[key];
                 if (tag.type === 'CONTENTTAG') {
                     contentTagList.push(tag );
@@ -707,11 +618,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     }
 
     private saveCurrentObjectProperty(options: SaveChangesOptions): Promise<void> {
-        if (this.useNewTagEditor) {
-            return this.saveObjectProperty(this.editedObjectProperty, options, true);
-        } else {
-            return this.saveCurrentObjectPropertyWithOldTagfill(options);
-        }
+        return this.saveObjectProperty(this.editedObjectProperty, options, true);
     }
 
     /**
@@ -765,50 +672,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
     }
 
-    /**
-     * Saves the currently edited object property using the old tagfill and then
-     * fetches the updated item and sets it as the current item.
-     */
-    private saveCurrentObjectPropertyWithOldTagfill(options: SaveChangesOptions): Promise<void> {
-        const itemType = this.item.type;
-        const saveRequest = this.customScriptHostService.saveObjectProperty()
-            .then(() => this.reloadItem(this.item as ItemWithObjectTags));
-        let ret: Promise<void>;
-
-        if (this.item.type === 'folder' && options.applyToSubfolders) {
-            ret = saveRequest.then(updatedItem => {
-                const updatedObjProp: EditableObjectTag = {
-                    ...updatedItem.tags[this.editedObjectProperty.name] as ObjectTag,
-                    tagType: this.editedObjectProperty.tagType,
-                };
-                return this.saveObjectProperty(updatedObjProp, options, true);
-            });
-        } else if (this.item.type === 'page' && options.applyToLanguageVariants) {
-            ret = saveRequest.then(updatedItem => {
-                const updatedObjProp: EditableObjectTag = {
-                    ...updatedItem.tags[this.editedObjectProperty.name] as ObjectTag,
-                    tagType: this.editedObjectProperty.tagType,
-                };
-
-                // Remove already updated page
-                options.applyToLanguageVariants = options.applyToLanguageVariants.filter(id => id !== this.item.id);
-                return this.saveObjectProperty(updatedObjProp, options, true);
-            });
-        } else {
-            ret = saveRequest.then(updatedItem => {
-                this.item = updatedItem;
-                this.changeDetector.markForCheck();
-                this.notification.show({
-                    type: 'success',
-                    message: 'message.updated_item',
-                    translationParams: { _type: itemType },
-                });
-            });
-        }
-
-        return ret.catch(error => this.errorHandler.catch(error));
-    }
-
     private loadFolderWithTags(item: ItemWithObjectTags | Node): Observable<ItemWithObjectTags | Node> {
         if (item && item.type === 'folder' && !item.tags) {
             return from(this.folderActions.getFolder(item.id, { construct: true, update: true }));
@@ -840,10 +703,10 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         languages: Language[],
         templates: Template[]
     }> {
-        return combineLatest(
+        return combineLatest([
             this.loadLanguages(folder),
             this.loadTemplates(folder),
-        ).pipe(
+        ]).pipe(
             map(([languages, templates]) => ({ item, languages, templates })),
         );
     }
@@ -871,9 +734,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             return observableOf(templates);
         }
 
-        const options: TemplateListRequest = {
+        const options: TemplateFolderListRequest = {
             nodeId: folder.nodeId,
-            pageSize: -1,
+            maxItems: -1,
             recursive: false,
         };
 
@@ -916,59 +779,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 this.markObjectPropertiesAsModifiedInState(true, false);
             }
         });
-    }
-
-    private loadOldTagfill(objProp: EditableObjectTag, item: ItemWithObjectTags): void {
-        const isReadOnly = this.checkIfReadOnly(objProp);
-
-        // If the objProp does not have an ID yet, the object property was defined after the item was created (the object tag is not in the DB yet).
-        // This is no problem when using the new tag editor, but for the old tagfill the ID is needed.
-        // Thus we save the item with the tag once (like the old UI) to store the tag in the DB to get its ID.
-        let objPropIdLoaded: Promise<void>;
-        if (typeof objProp.id === 'number') {
-            objPropIdLoaded = Promise.resolve();
-        } else {
-            if (!isReadOnly) {
-                objPropIdLoaded = this.saveObjectProperty(objProp, {}, false)
-                    .then(() => {
-                        item = this.item as ItemWithObjectTags;
-                        objProp = {
-                            ...objProp,
-                            ...item.tags[objProp.name] as ObjectTag,
-                        };
-                    });
-            } else {
-                objPropIdLoaded = Promise.reject();
-            }
-        }
-
-        objPropIdLoaded.then(() => {
-            this.editedObjectProperty = cloneDeep(objProp);
-            const wasActive = objProp.active;
-            const folderId = item.type !== 'folder' ? item.folderId : item.motherId;
-            const tagContainsOverview = objProp.tagType.parts.some(tagPart => tagPart.type === TagPropertyType.OVERVIEW);
-            this.oldTagfillUrl = this.urlBuilder.objectPropertyTagfill(objProp.id, item.id, folderId, this.currentNode.id, item.type, tagContainsOverview);
-            this.markObjectPropertiesAsModifiedInState(!wasActive && !isReadOnly, !isReadOnly);
-        }).catch(error => {
-            this.oldTagfillUrl = 'about:blank';
-            if (isReadOnly) {
-                this.notification.show({
-                    type: 'alert',
-                    message: 'editor.object_property_no_edit_permission',
-                });
-            } else {
-                this.errorHandler.catch(error);
-            }
-            this.markObjectPropertiesAsModifiedInState(false, false);
-        });
-    }
-
-    private reloadItem(item: ItemWithObjectTags): Promise<ItemWithObjectTags> {
-        return this.folderActions.getItem(
-            item.id,
-            item.type,
-            { nodeId: this.currentNode.id, construct: true, update: this.itemPermissions.edit },
-        ) as Promise<ItemWithObjectTags>;
     }
 
     private checkIfReadOnly(objProp: ObjectTag): boolean {

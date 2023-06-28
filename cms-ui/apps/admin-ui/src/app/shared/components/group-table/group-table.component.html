@@ -7,8 +7,9 @@
     (clear)="updateSearchQuery('')"
 ></gtx-search-bar>
 
-<div *ngIf="groupId && !hideActions" class="entity-table-actions-bar">
+<div class="entity-table-actions-bar">
     <gtx-button
+        *ngIf="groupId && !hideActions"
         class="table-action-button"
         flat
         size="small"
@@ -18,6 +19,17 @@
         (click)="handleCreateButton()"
     >
         <icon left>add</icon> {{ 'shared.create_new_sub_group_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 

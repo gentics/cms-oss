@@ -88,6 +88,7 @@ export class AppComponent implements OnInit {
     nodeRootLink$: Observable<any>;
     keycloakSignOut$: Observable<boolean>;
     toolLinkcheckerAvailable$: Observable<boolean>;
+
     userSid: number;
     activeNode: Node;
     userMenuOpened = false;
@@ -306,7 +307,7 @@ export class AppComponent implements OnInit {
             // check if at least one node has NodeFeature.linkChecker activated
             map(nodeFeatures => {
                 return Object.values(nodeFeatures).some(nodeFeaturesOfNode => {
-                    return nodeFeaturesOfNode.find(feature => feature === NodeFeature.linkChecker) ? true : false;
+                    return nodeFeaturesOfNode.find(feature => feature === NodeFeature.LINK_CHECKER) ? true : false;
                 });
             }),
         );

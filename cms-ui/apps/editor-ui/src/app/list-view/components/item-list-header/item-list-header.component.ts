@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges, Type } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, Type } from '@angular/core';
 import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
@@ -22,7 +22,7 @@ import {
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { PaginationInstance } from 'ngx-pagination';
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, filter, map, switchMap, take } from 'rxjs/operators';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -43,7 +43,7 @@ import { CreatePageModalComponent } from '../create-page-modal/create-page-modal
     styleUrls: ['./item-list-header.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ItemListHeaderComponent implements OnInit, OnChanges {
+export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
     readonly StagingMode = StagingMode;
@@ -67,6 +67,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     @Input()
     public nodeLanguages: Language[] = [];
 
+    // TODO: Check if this is somehow used? Doesn't seem like it
     @Input()
     public activeLanguage: Language;
 
@@ -110,14 +111,16 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     public stagingMap: StagedItemsMap;
 
     isCollapsed = false;
-    activeLanguage$: Observable<Language>;
-    basicSearchQueryActive$: Observable<boolean>;
-    elasticsearchQueryActive$: Observable<boolean>;
-    searchQueryActive$: Observable<boolean>;
+    wastebinEnabled = false;
+    folderLanguage: Language = null;
+    elasticsearchQueryActive = false;
+    searchQueryActive = false;
 
     private itemsInfo$: Observable<ItemsInfo>;
+    protected subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private appState: ApplicationStateService,
         private modalService: ModalService,
         private errorHandler: ErrorHandler,
@@ -129,38 +132,59 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
         private contextMenuOperations: ContextMenuOperationsService,
         private notifications: I18nNotification,
         private i18n: I18nService,
-    ) {
-        this.activeLanguage$ = this.appState.select(state => state.folder.activeLanguage).pipe(
-            map(langId => this.entityResolver.getLanguage(langId)),
-        );
-    }
+    ) {}
 
     ngOnInit(): void {
         this.itemsInfo$ = this.appState.select(state => state.folder)
             .map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]);
 
-        this.basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
+        const basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
             map(term => this.isValidString(term)),
         );
-        this.elasticsearchQueryActive$ = combineLatest([
-            this.appState.select(state => state.features[Feature.elasticsearch]),
+
+        const esQueryActive$ = combineLatest([
+            this.appState.select(state => state.features[Feature.ELASTICSEARCH]),
             this.appState.select(state => state.folder.searchFiltersVisible),
         ]).pipe(
             map(([elasticsearchFeatureEnabled, seearchQueryActive]) => elasticsearchFeatureEnabled && seearchQueryActive),
         );
 
-        this.searchQueryActive$ = combineLatest([
-            this.basicSearchQueryActive$,
-            this.elasticsearchQueryActive$,
+        this.subscriptions.push(this.appState.select(state => state.folder.activeLanguage).pipe(
+            map(langId => this.entityResolver.getLanguage(langId)),
+        ).subscribe(lang => {
+            this.folderLanguage = lang;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(esQueryActive$.subscribe(active => {
+            this.elasticsearchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
+            basicSearchQueryActive$,
+            esQueryActive$,
         ]).pipe(
             map(([basicSearchQueryActive, elasticsearchQueryActive]) => basicSearchQueryActive || elasticsearchQueryActive),
-        );
+        ).subscribe(active => {
+            this.searchQueryActive = active;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features.wastebin).subscribe(enabled => {
+            this.wastebinEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['selectedItems'] && !changes['selectedItems'].currentValue) {
             this.selectedItems = [];
         }
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     toggleSelectAll(selectAllItems: boolean): void {
@@ -284,29 +308,65 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     }
 
     /**
+     * Helper method to filter out deleted items and which shows a notification if
+     * no regular/not deleted item has been selected yet.
+     */
+    private getNotDeletedItems(): Item[] {
+        const validItems = this.selectedItems.filter(item => !EntityStateUtil.stateDeleted(item));
+        if (validItems.length !== 0) {
+            return validItems;
+        }
+
+        this.notifications.show({
+            message: 'editor.select_not_deleted_items',
+            translationParams: {
+                itemTypePlural: this.i18n.translate(`common.type_${this.itemType}s`),
+            },
+            type: 'warning',
+        });
+        return [];
+
+    }
+
+    /**
      * Copy the selected items to a different folder and clear the selection.
      */
     copySelected(): void {
-        this.contextMenuOperations.copyItems(this.itemType, this.selectedItems, this.activeNode.id);
+        const itemsToCopy = this.getNotDeletedItems();
+        if (itemsToCopy.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.copyItems(this.itemType, itemsToCopy, this.activeNode.id);
     }
 
     /**
      * Move the selected items to a different folder and clear the selection.
      */
     moveSelected(): void {
-        this.contextMenuOperations.moveItems(this.itemType, this.selectedItems, this.activeNode.id, this.currentFolderId);
+        const itemsToMove = this.getNotDeletedItems();
+        if (itemsToMove.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.moveItems(this.itemType, itemsToMove, this.activeNode.id, this.currentFolderId);
     }
 
     /**
      * Publish the selected pages and clear the selection.
      */
     publishSelected(type: FolderItemType): void {
+        const itemsToPublish = this.getNotDeletedItems();
+        if (itemsToPublish.length === 0) {
+            return;
+        }
+
         switch (type) {
             case 'page':
-                this.contextMenuOperations.publishPages(this.selectedItems as Page[]);
+                this.contextMenuOperations.publishPages(itemsToPublish as Page[]);
                 break;
             case 'form':
-                this.contextMenuOperations.publishForms(this.selectedItems as Form[]);
+                this.contextMenuOperations.publishForms(itemsToPublish as Form[]);
                 break;
             default:
                 throw new Error(`Behavior not defined for type: "${type}".`);
@@ -317,19 +377,29 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
      * Publish the selected pages and clear the selection.
      */
     publishLanguageVariantsSelected(): void {
-        this.contextMenuOperations.publishPages(this.selectedItems as Page[], true);
+        const itemsToPublish = this.getNotDeletedItems();
+        if (itemsToPublish.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.publishPages(itemsToPublish as Page[], true);
     }
 
     /**
      * Take the selected pages offline and clear the selection.
      */
     takeSelectedOffline(type: ItemType): void {
+        const itemsToTakeOffline = this.getNotDeletedItems();
+        if (itemsToTakeOffline.length === 0) {
+            return;
+        }
+
         switch (type) {
             case 'page':
-                this.contextMenuOperations.takePagesOffline(this.selectedItems as Page[]);
+                this.contextMenuOperations.takePagesOffline(itemsToTakeOffline as Page[]);
                 break;
             case 'form':
-                this.contextMenuOperations.takeFormsOffline(this.selectedItems as Form[]);
+                this.contextMenuOperations.takeFormsOffline(itemsToTakeOffline as Form[]);
                 break;
             default:
                 throw new Error(`Behavior not defined for type: "${type}".`);
@@ -340,14 +410,23 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
      * Take the selected items offline and clear the selection.
      */
     localizeSelected(): void {
-        this.contextMenuOperations.localizeItems(this.itemType, this.selectedItems as InheritableItem[], this.activeNode.id);
+        const itemsToBeLocalized = this.getNotDeletedItems();
+        if (itemsToBeLocalized.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.localizeItems(this.itemType, itemsToBeLocalized as InheritableItem[], this.activeNode.id);
     }
 
     /**
      * Delete the selected items and clear the selection.
      */
     deleteSelected(type: FolderItemType): void {
-        const itemsToBeDeleted = this.selectedItems.filter(item => !EntityStateUtil.stateDeleted(item));
+        const itemsToBeDeleted = this.getNotDeletedItems();
+        if (itemsToBeDeleted.length === 0) {
+            return;
+        }
+
         this.contextMenuOperations.deleteItems(type, itemsToBeDeleted, this.activeNode.id);
     }
 
@@ -355,8 +434,20 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
      * Restore the selected items and clear the selection.
      */
     restoreSelected(): void {
-        const itemsToBeDeleted = this.selectedItems.filter(item => EntityStateUtil.stateDeleted(item));
-        this.contextMenuOperations.restoreItems(itemsToBeDeleted);
+        const itemsToBeRestored = this.selectedItems.filter(item => EntityStateUtil.stateDeleted(item));
+        if (itemsToBeRestored.length === 0) {
+            this.notifications.show({
+                message: 'editor.select_deleted_items',
+                translationParams: {
+                    itemTypePlural: this.i18n.translate(`common.type_${this.itemType}s`),
+                },
+                type: 'warning',
+            });
+
+            return;
+        }
+
+        this.contextMenuOperations.restoreItems(itemsToBeRestored);
     }
 
     /**
@@ -405,14 +496,24 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
         this.userSettings.setSorting(type, sorting.sortBy, sorting.sortOrder);
     }
 
-    createVariationsClicked(pages: Page[]): void {
-        this.contextMenuOperations.createVariationsClicked(pages, this.activeNode.id);
+    createVariationsClicked(): void {
+        const pagesToCreateVariationsFrom = this.getNotDeletedItems();
+        if (pagesToCreateVariationsFrom.length === 0) {
+            return;
+        }
+
+        this.contextMenuOperations.createVariationsClicked(pagesToCreateVariationsFrom as Page[], this.activeNode.id);
     }
 
     async stageItems(mode: StagingMode): Promise<void> {
+        const itemsToStage = this.getNotDeletedItems();
+        if (itemsToStage.length === 0) {
+            return;
+        }
+
         let counter = 0;
 
-        for (const item of this.selectedItems) {
+        for (const item of itemsToStage) {
             let res: boolean;
             if (this.itemType === 'page') {
                 res = await this.contextMenuOperations.stagePageToCurrentPackage(item as Page, mode === StagingMode.ALL_LANGUAGES, false);
@@ -424,14 +525,14 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
             }
         }
 
-        if (counter === this.selectedItems.length) {
+        if (counter === itemsToStage.length) {
             if (counter === 1) {
                 this.notifications.show({
                     type: 'success',
                     message: 'editor.stage_item_success_message',
                     translationParams: {
                         itemType: this.i18n.translate(`common.type_${this.itemType}_article`),
-                        itemName: this.selectedItems[0].name,
+                        itemName: itemsToStage[0].name,
                     },
                 });
             } else {
@@ -440,7 +541,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
                     message: 'editor.stage_multiple_items_success_message',
                     translationParams: {
                         itemType: this.i18n.translate(`common.type_${plural[this.itemType]}`),
-                        amount: this.selectedItems.length,
+                        amount: itemsToStage.length,
                     },
                 });
             }
@@ -450,7 +551,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
                 message: 'editor.stage_multiple_items_partial_success_message',
                 translationParams: {
                     itemType: this.i18n.translate(`common.type_${plural[this.itemType]}`),
-                    amount: this.selectedItems.length,
+                    amount: itemsToStage.length,
                     count: counter,
                 },
             });
@@ -459,9 +560,14 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
     }
 
     async unstageItems(mode: StagingMode): Promise<void> {
+        const itemsToUnstage = this.getNotDeletedItems();
+        if (itemsToUnstage.length === 0) {
+            return;
+        }
+
         let counter = 0;
 
-        for (const item of this.selectedItems) {
+        for (const item of itemsToUnstage) {
             let res: boolean;
             if (this.itemType === 'page') {
                 res = await this.contextMenuOperations.unstagePageFromCurrentPackage(item as Page, mode === StagingMode.ALL_LANGUAGES, false);
@@ -473,14 +579,14 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
             }
         }
 
-        if (counter === this.selectedItems.length) {
+        if (counter === itemsToUnstage.length) {
             if (counter === 1) {
                 this.notifications.show({
                     type: 'success',
                     message: 'editor.unstage_item_success_message',
                     translationParams: {
                         itemType: this.i18n.translate(`common.type_${this.itemType}_article`),
-                        itemName: this.selectedItems[0].name,
+                        itemName: itemsToUnstage[0].name,
                     },
                 });
             } else {
@@ -489,7 +595,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
                     message: 'editor.unstage_multiple_items_success_message',
                     translationParams: {
                         itemType: this.i18n.translate(`common.type_${plural[this.itemType]}`),
-                        amount: this.selectedItems.length,
+                        amount: itemsToUnstage.length,
                     },
                 });
             }
@@ -499,7 +605,7 @@ export class ItemListHeaderComponent implements OnInit, OnChanges {
                 message: 'editor.unstage_multiple_items_partial_success_message',
                 translationParams: {
                     itemType: this.i18n.translate(`common.type_${plural[this.itemType]}`),
-                    amount: this.selectedItems.length,
+                    amount: itemsToUnstage.length,
                     count: counter,
                 },
             });

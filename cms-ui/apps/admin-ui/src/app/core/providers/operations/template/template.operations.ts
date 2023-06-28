@@ -68,6 +68,7 @@ export class TemplateOperations
         return this.api.template.getTemplates(options).pipe(
             map(res => applyInstancePermissions(res)),
             map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );
@@ -105,18 +106,24 @@ export class TemplateOperations
         return this.api.node.getNodes().pipe(
             map(res => res.items.map(node => node.id)),
             mergeMap(nodeIds => {
-                const requests = nodeIds.map(nodeId => this.getAllOfNode(nodeId, options));
+                const requests = nodeIds.map(nodeId => {
+                    const copy = { ...options };
+                    copy.nodeId = nodeId;
+                    return this.getAllOfNode(copy);
+                });
                 return forkJoin(requests).pipe(
+                    // eslint-disable-next-line prefer-spread
                     map(items => [].concat.apply([], items)),
                 );
             }),
         );
     }
 
-    getAllOfNode(nodeId: number, options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
-        return this.api.node.getNodeTemplates(nodeId, options).pipe(
+    getAllOfNode(options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
+        return this.api.template.getTemplates(options).pipe(
             map(res => applyInstancePermissions(res)),
             map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );

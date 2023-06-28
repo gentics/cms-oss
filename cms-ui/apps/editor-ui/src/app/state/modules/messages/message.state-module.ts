@@ -4,6 +4,7 @@ import { StateContext } from '@ngxs/store';
 import { patch } from '@ngxs/store/operators';
 import { NormalizedSchema } from 'normalizr';
 import { MessageState } from '../../../common/models';
+import { ApplicationStateService } from '../../providers';
 import { ActionDefinition, AppStateBranch, concatUnique } from '../../state-utils';
 import { AddEntitiesAction, SetMessageEntitiesAction, UpdateEntitiesAction } from '../entity/entity.actions';
 import {
@@ -13,7 +14,6 @@ import {
     MessagesReadAction,
     StartMessagesFetchingAction,
 } from './message.actions';
-import { ApplicationStateService } from '../../providers';
 
 const INITIAL_MESSAGES_STATE: MessageState = {
     fetching: false,
@@ -42,7 +42,7 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(MessagesFetchingSuccessAction)
-    handleMessagesFetchSuccessAction(ctx: StateContext<MessageState>, action: MessagesFetchingSuccessAction): void {
+    async handleMessagesFetchSuccessAction(ctx: StateContext<MessageState>, action: MessagesFetchingSuccessAction): Promise<void> {
         const state = ctx.getState();
         let newMessages: MessageFromServer[];
 
@@ -71,10 +71,10 @@ export class MessageStateModule {
             messagesMap[message.id] = message;
         }
 
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         if (!action.onlyUnread) {
-            ctx.dispatch(new SetMessageEntitiesAction(messagesMap));
+            await ctx.dispatch(new SetMessageEntitiesAction(messagesMap)).toPromise();
         } else {
             // When we update the unread only, then we need to append all ids instead of replacing them
             allMessageIds = concatUnique(state.all || [], allMessageIds);
@@ -98,7 +98,7 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(MessagesReadAction)
-    handleMessagesReadAction(ctx: StateContext<MessageState>, action: MessagesReadAction): void {
+    async handleMessagesReadAction(ctx: StateContext<MessageState>, action: MessagesReadAction): Promise<void> {
         const state = ctx.getState();
         const messageEntities = this.appState.now.entities.message;
         const hasChanges = action.messageIds?.length && action.messageIds.some(id => messageEntities[id]?.unread);
@@ -115,9 +115,9 @@ export class MessageStateModule {
             };
         }
 
-        ctx.dispatch(new UpdateEntitiesAction({
+        await ctx.dispatch(new UpdateEntitiesAction({
             message: diff,
-        }));
+        })).toPromise();
 
         const allReadIds = concatUnique(state.read || [], action.messageIds);
 

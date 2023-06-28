@@ -296,6 +296,8 @@ public class InstantPublisher {
 
 		try {
 			boolean needToRevealInherited = false;
+			// flag is set, if we should inform the publish process about the instant publishing of the object
+			boolean informPublishProcess = true;
 			List<Operator> operations = new ArrayList<>();
 			List<Consumer<MeshPublisher>> meshOperations = new ArrayList<>();
 			int nodeId = node.getId();
@@ -323,6 +325,7 @@ public class InstantPublisher {
 				if ((delete || offline) && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE)) {
 					// immediately remove the object from the contentmap
 					if (meshCr) {
+						informPublishProcess = false;
 						meshOperations.add(mp -> {
 							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
@@ -446,6 +449,7 @@ public class InstantPublisher {
 				} else if (Events.isEvent(eventMask, Events.DELETE) && !node.getFeatures().contains(Feature.DISABLE_INSTANT_DELETE) ) {
 					// immediately remove the object from the contentmap
 					if (meshCr) {
+						informPublishProcess = false;
 						meshOperations.add(mp -> {
 							mp.remove(mp.getProject(finalNode), finalNode, objType, MeshPublisher.getMeshUuid(finalObject), MeshPublisher.getMeshLanguage(finalObject));
 						});
@@ -508,7 +512,9 @@ public class InstantPublisher {
 					// cache consistency during a publish run
 					int timestamp = (int) (System.currentTimeMillis() / 1000);
 					contentMap.setLastMapUpdate(timestamp, Collections.singleton(node), false);
-					PublishController.instantPublished(object);
+					if (informPublishProcess) {
+						PublishController.instantPublished(object);
+					}
 					InstantCRPublishing.resetErrorCount(contentMap);
 					trx.setSuccess();
 				} catch (SQLException e) {
@@ -533,7 +539,9 @@ public class InstantPublisher {
 							log.error(String.format("Could not instantly publish into %s, which is not valid", cr));
 						}
 					}
-					PublishController.instantPublished(object);
+					if (informPublishProcess) {
+						PublishController.instantPublished(object);
+					}
 					meshPublishController.success();
 				}
 			}

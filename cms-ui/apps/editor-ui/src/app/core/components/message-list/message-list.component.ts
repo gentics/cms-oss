@@ -4,21 +4,35 @@ import { EntityResolver } from '../../providers/entity-resolver/entity-resolver'
 
 @Component({
     selector: 'message-list',
-    templateUrl: './message-list.tpl.html',
-    styleUrls: ['./message-list.scss'],
-
+    templateUrl: './message-list.component.html',
+    styleUrls: ['./message-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MessageList {
-    @Input() waitsForDeleteConfirmation: Message;
-    @Input() messages: Message[];
-    @Input() nodes: { id: number, name: string }[];
-    @Output() messageClick = new EventEmitter<Message>();
-    @Output() messageArchive = new EventEmitter<Message>();
-    @Output() messageDelete = new EventEmitter<Message>();
 
-    @Input() selected: number[] = [];
-    @Output() selectionChange = new EventEmitter<number[]>();
+    @Input()
+    waitsForDeleteConfirmation: Message;
+
+    @Input()
+    messages: Message[];
+
+    @Input()
+    nodes: { id: number, name: string }[];
+
+    @Output()
+    messageClick = new EventEmitter<Message>();
+
+    @Output()
+    messageArchive = new EventEmitter<Message>();
+
+    @Output()
+    messageDelete = new EventEmitter<Message>();
+
+    @Input()
+    selected: number[] = [];
+
+    @Output()
+    selectionChange = new EventEmitter<number[]>();
 
     constructor(private entityResolver: EntityResolver) { }
 
@@ -28,7 +42,7 @@ export class MessageList {
     }
 
     trackUnique(message: Message): string {
-        return message.id + '-' + (message.unread ? 'unread' : 'read');
+        return `${message.id}-${message.unread ? 'unread' : 'read'}`;
     }
 
     isSelected(item: Message): boolean {

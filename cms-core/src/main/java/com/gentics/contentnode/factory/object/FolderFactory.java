@@ -5718,7 +5718,7 @@ public class FolderFactory extends AbstractFactory {
 				public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 					while (rs.next()) {
 						String featureString = rs.getString("feature");
-						Feature feature = Feature.valueOf(featureString.toUpperCase());
+						Feature feature = Feature.getByName(featureString);
 
 						if (feature == null) {
 							if (logger.isDebugEnabled()) {

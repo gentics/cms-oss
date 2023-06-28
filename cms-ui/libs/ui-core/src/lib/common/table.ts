@@ -74,6 +74,13 @@ export interface TrableRow<T> extends TableRow<T> {
     loading?: boolean;
     /** The children of this element/row */
     children?: TrableRow<T>[];
+    /** The rows parent. */
+    parent?: TrableRow<T>;
+}
+
+export interface TrableRowExpandEvent<T> {
+    row: TrableRow<T>;
+    expanded: boolean;
 }
 
 /**
@@ -94,7 +101,7 @@ export interface TableAction<T> {
     /** If this action can be used for multiple items */
     multiple?: boolean;
     /** If the item is allowed for this action. */
-    enabled?: boolean | ((item?: T) => boolean);
+    enabled: boolean | ((item?: T) => boolean);
 }
 
 /**

@@ -2,6 +2,7 @@
     <div class="modal-title">
         <h5>{{ 'modal.create_user_title' | i18n }}</h5>
     </div>
+
     <div class="modal-content row">
         <gtx-tabs pure [activeId]="currentTab">
             <gtx-tab id="1" [title]="'shared.title_properties' | i18n">
@@ -15,14 +16,15 @@
                                 [label]="('shared.user_name' | i18n) + ' *'"
                                 [placeholder]="'shared.user_name' | i18n"
                                 formControlName="login"
-                            >
-                            </gtx-input>
+                            ></gtx-input>
+
                             <div class="gtx-validation-hints" *ngIf="login?.touched">
                                 <div *ngIf="login?.hasError('entityExists')">
                                     {{ 'modal.validation_user_already_exists' | i18n }}
                                 </div>
                             </div>
                         </div>
+
                         <div class="input-container small-12 medium-6 columns">
                             <gtx-input
                                 type="text"
@@ -32,9 +34,9 @@
                                 [label]="'shared.email' | i18n"
                                 [placeholder]="'shared.email' | i18n"
                                 formControlName="email"
-                            >
-                            </gtx-input>
+                            ></gtx-input>
                         </div>
+
                         <!-- Needed to prevent autocomplete in Firefox -->
                         <input type="text" name="firstName" value="" style="display: none">
                         <div class="input-container small-12 medium-6 columns">
@@ -45,9 +47,9 @@
                                 [label]="('shared.first_name' | i18n) + ' *'"
                                 [placeholder]="'shared.first_name' | i18n"
                                 formControlName="firstName"
-                            >
-                            </gtx-input>
+                            ></gtx-input>
                         </div>
+
                         <!-- Needed to prevent autocomplete in Firefox -->
                         <input type="text" name="lastName" value="" style="display: none">
                         <div class="input-container small-12 medium-6 columns">
@@ -58,9 +60,9 @@
                                 [label]="('shared.last_name' | i18n) + ' *'"
                                 [placeholder]="'shared.last_name' | i18n"
                                 formControlName="lastName"
-                            >
-                            </gtx-input>
+                            ></gtx-input>
                         </div>
+
                         <!-- Needed to prevent autocomplete in Firefox -->
                         <input type="password" name="password1" value="" style="display: none">
                         <div class="input-container small-12 medium-6 columns">
@@ -70,18 +72,22 @@
                                 type="password"
                                 formControlName="password1"
                             ></gtx-input>
+
                             <div class="gtx-validation-hints" *ngIf="password1?.touched">
                                 <div *ngIf="password1?.hasError('pattern')">
                                     {{ 'modal.validation_password_characters' | i18n }}
                                 </div>
+
                                 <div *ngIf="password1?.hasError('minlength')">
                                     {{ 'modal.validation_password_too_short' | i18n }}
                                 </div>
+
                                 <div *ngIf="password1?.hasError('maxlength')">
                                     {{ 'modal.validation_password_too_long' | i18n }}
                                 </div>
                             </div>
                         </div>
+
                         <!-- Needed to prevent autocomplete in Firefox -->
                         <input type="password" name="password2" value="" style="display: none">
                         <div class="input-container small-12 medium-6 columns">
@@ -91,6 +97,7 @@
                                 type="password"
                                 formControlName="password2"
                             ></gtx-input>
+
                             <div class="gtx-validation-hints" *ngIf="password2?.dirty">
                                 <div *ngIf="form?.hasError('passwordsDontMatch')">
                                     {{ 'modal.validation_passwords_must_match' | i18n }}
@@ -115,10 +122,16 @@
             </gtx-tab>
 
             <gtx-tab id="2" [title]="'shared.assign_user_to_groups' | i18n">
-                todo: group table
+                <gtx-group-table
+                    [selectable]="true"
+                    [showSearch]="true"
+                    [hideActions]="true"
+                    [(selected)]="userGroupIds"
+                ></gtx-group-table>
             </gtx-tab>
         </gtx-tabs>
     </div>
+
     <div class="modal-footer">
         <gtx-button
             *ngIf="tabIndexIsActive(2)"

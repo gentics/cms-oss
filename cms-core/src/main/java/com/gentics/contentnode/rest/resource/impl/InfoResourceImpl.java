@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource.impl;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -16,7 +17,7 @@ import com.gentics.contentnode.rest.resource.InfoResource;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/info")
 public class InfoResourceImpl implements InfoResource {
 	/**

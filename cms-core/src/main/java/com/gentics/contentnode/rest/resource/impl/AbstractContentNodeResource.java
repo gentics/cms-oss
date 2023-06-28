@@ -42,8 +42,8 @@ import com.gentics.lib.log.NodeLogger;
  * 
  * @author norbert
  */
-@Produces({ "application/json", "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+@Produces({MediaType.APPLICATION_JSON})
+@Consumes({MediaType.APPLICATION_JSON})
 public abstract class AbstractContentNodeResource {
 
 	public static final String ACNR_SELF = "AbstractContentNodeResource";

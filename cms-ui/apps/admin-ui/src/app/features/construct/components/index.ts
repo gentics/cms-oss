@@ -4,6 +4,7 @@ export * from './boolean-part-fill/boolean-part-fill.component';
 export * from './construct-category-detail/construct-category-detail.component';
 export * from './construct-category-master/construct-category-master.component';
 export * from './construct-category-properties/construct-category-properties.component';
+export * from './construct-category-sort-modal/construct-category-sort-modal.component';
 export * from './construct-category-table/construct-category-table.component';
 export * from './construct-detail/construct-detail.component';
 export * from './construct-master/construct-master.component';

@@ -1,0 +1,1 @@
+Adds resolution of missing references during synchronizing a devtools package from the filesystem. Any referenced object that are not yet present will be referenced correctly once they are created.

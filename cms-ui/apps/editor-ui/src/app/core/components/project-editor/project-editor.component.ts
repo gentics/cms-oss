@@ -8,8 +8,8 @@ import { ApplicationStateService, FocusEditorAction, FocusListAction } from '../
     selector: 'project-editor',
     templateUrl: './project-editor.component.html',
     styleUrls: ['./project-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class ProjectEditor implements OnInit {
 
     editorFocused$: Observable<boolean>;

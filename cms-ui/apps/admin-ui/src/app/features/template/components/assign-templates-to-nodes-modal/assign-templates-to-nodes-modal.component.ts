@@ -1,10 +1,10 @@
 import { TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, NodeOperations } from '@admin-ui/core';
-import { NodeDataService, TemplateDataService } from '@admin-ui/shared';
+import { I18nNotificationService, NodeOperations, NodeTableLoaderService } from '@admin-ui/core';
+import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, IndexById, Node, Raw, Template } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { forkJoin, Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -29,7 +29,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         protected changeDetector: ChangeDetectorRef,
         protected nodeData: NodeDataService,
         protected nodeOperations: NodeOperations,
-        protected templateData: TemplateDataService,
+        protected nodeTableLoader: NodeTableLoaderService,
         protected notification: I18nNotificationService,
     ) {
         super();
@@ -183,7 +183,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
             }
         }
 
-        this.templateData.reloadEntities();
+        this.nodeTableLoader.reload();
         this.loading = false;
         this.changeDetector.markForCheck();
         this.closeFn();

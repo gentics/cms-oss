@@ -53,12 +53,13 @@ export class TemplateDataService extends ExtendedEntityDataServiceBase<'template
         let loader: Observable<TemplateBO<Raw>[]>;
 
         if (options.nodeId) {
-            loader = this.entityOperations.getAllOfNode(options.nodeId, options);
+            loader = this.entityOperations.getAllOfNode(options);
         } else {
             loader = this.entityOperations.getAllOfAllNodes(options);
         }
 
         return loader.pipe(
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
         );
     }

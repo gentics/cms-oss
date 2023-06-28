@@ -140,12 +140,6 @@ export interface TagTypeBase<T extends ModelType> {
     /** The icon of the TagType (use `TagTypeIconPipe` for displaying it in a template). */
     icon: string;
 
-    /**
-     * True, if the new tag editor should be used for this TagType.
-     * Note that `NodeFeature.newTagEditor` must also be (independently) enabled for the current node.
-     */
-    newEditor: boolean;
-
     /** The list of TagParts of this TagType. */
     parts: TagPart[];
 

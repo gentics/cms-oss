@@ -1,31 +1,56 @@
 {
-    "/CNPortletapp": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
     "/rest": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     },
-    "/.Node": {
+    "/alohaeditor": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     },
-	"/static": {
+    "/alohapage": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     },
-    "/customplugins": {
+    "/gcnjsapi": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/images": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/GenticsImageStore": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/static": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     },
     "/customer-config": {
         "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/ct-link-checker": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/images": {
+        "target": "http://cms.localhost.gentics.com",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/internal": {
+        "target": "http://cms.localhost.gentics.com",
         "secure": false,
         "changeOrigin": true
     }

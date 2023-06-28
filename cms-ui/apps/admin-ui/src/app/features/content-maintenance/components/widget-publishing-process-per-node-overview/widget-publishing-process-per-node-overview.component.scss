@@ -32,7 +32,7 @@
 }
 
 .gtx-table-publishqueue {
-    display: block;
+    display: table;
     background-color: #f1f1f1;
     padding: 0.4rem 0.5rem;
 
@@ -43,10 +43,6 @@
     th, td {
         vertical-align: top;
         padding: 0;
-    }
-
-    .gtx-data-row td {
-        padding-top: 0.5rem;
     }
 
     .gtx-data-row-cell-container {
@@ -82,4 +78,20 @@
     height: 3px;
     width: 0;
     transition: width 0.2s;
+}
+
+.gtx-data-row,
+.gtx-header-row {
+    td,
+    th {
+        padding: 0.5rem 0.5rem 0 !important;
+    }
+}
+
+.column-name {
+    width: 60%;
+}
+
+.column-percent {
+    width: 74px;
 }

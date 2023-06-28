@@ -41,16 +41,16 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(AssigningUsersToPagesSuccessAction)
-    handleAssigningUsersToPagesSuccessAction(ctx: StateContext<PublishQueueState>, action: AssigningUsersToPagesSuccessAction): void {
+    async handleAssigningUsersToPagesSuccessAction(ctx: StateContext<PublishQueueState>, action: AssigningUsersToPagesSuccessAction): Promise<void> {
         const pageUpdates: { [id: number]: Partial<Page<Normalized>> } = {};
         for (let id of action.pageIds) {
             pageUpdates[id] = {
                 modified: true,
             };
         }
-        ctx.dispatch(new UpdateEntitiesAction({
+        await ctx.dispatch(new UpdateEntitiesAction({
             page: pageUpdates,
-        }));
+        })).toPromise();
         ctx.patchState({
             assigning: false,
         });
@@ -71,10 +71,13 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(PublishQueuePagesFetchingSuccessAction)
-    handlePublishQueueFetchingSuccessAction(ctx: StateContext<PublishQueueState>, action: PublishQueuePagesFetchingSuccessAction): void {
+    async handlePublishQueueFetchingSuccessAction(
+        ctx: StateContext<PublishQueueState>,
+        action: PublishQueuePagesFetchingSuccessAction,
+    ): Promise<void> {
         const normalized = normalize(action.pages, new schema.Array(pageSchema));
 
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch<PublishQueueState>({
             fetching: false,
@@ -92,10 +95,13 @@ export class PublishQueueStateModule {
     }
 
     @ActionDefinition(PublishQueueUsersFetchingSuccessAction)
-    handlePublishQueueUsersFetchingSuccessAction(ctx: StateContext<PublishQueueState>, action: PublishQueueUsersFetchingSuccessAction): void {
+    async handlePublishQueueUsersFetchingSuccessAction(
+        ctx: StateContext<PublishQueueState>,
+        action: PublishQueueUsersFetchingSuccessAction,
+    ): Promise<void> {
         const normalized = normalize(action.users, new schema.Array(userSchema));
 
-        ctx.dispatch(new AddEntitiesAction(normalized));
+        await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
 
         ctx.setState(patch<PublishQueueState>({
             fetching: false,

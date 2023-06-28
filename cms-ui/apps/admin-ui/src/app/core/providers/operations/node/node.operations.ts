@@ -83,7 +83,7 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
     /**
      * Creates a new `Node` and adds it to the `EntityState`.
      */
-    addNode(newNode: NodeCreateRequest): Observable<Node<Raw> | string> {
+    addNode(newNode: NodeCreateRequest): Observable<Node<Raw>> {
         return this.api.node.addNode(newNode).pipe(
             map(res => res.node),
             tap(node => this.entityManager.addEntity(this.entityIdentifier, node)),

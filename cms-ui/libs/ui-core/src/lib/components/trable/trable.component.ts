@@ -1,7 +1,27 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
-import { TrableRow } from '../../common';
+import { TrableRow, TrableRowExpandEvent } from '../../common';
 import { cancelEvent } from '../../utils';
 import { BaseTableComponent } from '../base-table/base-table.component';
+
+function createRowId(row: TrableRow<any>): string {
+    let id = row.id;
+    if (row.hash) {
+        id += `-${row.hash}`;
+    }
+
+    if (row.expanded && row.hasChildren && row.children?.length > 0) {
+        let childHash = ':';
+        for (let i = 0; i < row.children.length; i++) {
+            if (i > 0) {
+                childHash += ',';
+            }
+            childHash += createRowId(row.children[i]);
+        }
+        id += childHash;
+    }
+
+    return id;
+}
 
 /**
  * Trable (Tree-Table) which displays hierachical elements in a Table.
@@ -15,7 +35,7 @@ import { BaseTableComponent } from '../base-table/base-table.component';
     templateUrl: './trable.component.html',
     styleUrls: ['./trable.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-})
+    })
 export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
 
     /**
@@ -36,8 +56,9 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
     @Output()
     public loadRow = new EventEmitter<TrableRow<T>>();
 
+    /** Event which emits when a row is supposed to change the expansion flag. */
     @Output()
-    public rowExpand = new EventEmitter<{ row: TrableRow<T>, expanded: boolean }>();
+    public rowExpand = new EventEmitter<TrableRowExpandEvent<T>>();
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -62,11 +83,9 @@ export class TrableComponent<T> extends BaseTableComponent<T, TrableRow<T>> {
     }
 
     public override trackRow(index: number, row: TrableRow<T>): string {
-        let id = row.id;
-        if (row.hash) {
-            id += `-${row.hash}`;
-        }
-        id += `:${row.loaded ? '0' : '1'}:${row.expanded ? '0' : '1'}`;
+        let id = createRowId(row);
+        id += `:${row.loaded ? '0' : '1'}:${row.loading ? '0' : '1'}:${row.expanded ? '0' : '1'}`;
+
         return id;
     }
 }

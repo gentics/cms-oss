@@ -11,6 +11,7 @@
             maxlength="255"
             [label]="('construct.keyword' | i18n) + ' *'"
             [required]="true"
+            [readonly]="mode === ConstructPropertiesMode.UPDATE"
             formControlName="keyword"
         ></gtx-input>
 
@@ -62,19 +63,12 @@
         </gtx-select>
 
         <!-- categorySortorder -->
-        <gtx-input
+        <!-- <gtx-input
             *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('categorySortorder').enabled"
             type="number"
             [label]="'construct.categorySortorder' | i18n"
             formControlName="categorySortorder"
-        ></gtx-input>
-
-        <!-- newEditor -->
-        <gtx-checkbox
-            *ngIf="mode !== ConstructPropertiesMode.COPY"
-            formControlName="newEditor"
-            [label]="'construct.newEditor' | i18n"
-        ></gtx-checkbox>
+        ></gtx-input> -->
 
         <!-- mayBeSubtag -->
         <gtx-checkbox
@@ -100,57 +94,28 @@
     </div>
 
     <div *ngIf="supportedLanguages" class="input-container small-12 medium-6 columns">
+        <gtx-i18n-panel-group
+            *ngIf="supportedLanguages"
+            [languages]="supportedLanguages"
+            [invalidLanguages]="invalidLanguages"
+            [(activeLanguage)]="activeTabI18nLanguage"
+        >
+            <gtx-i18n-input
+                [label]="('common.name' | i18n) + ' *'"
+                formControlName="nameI18n"
+                [requiredInCurrentLanguage]="true"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="supportedLanguages"
+            ></gtx-i18n-input>
 
-        <h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
-
-        <div class="properties-editor-i18n">
-            <gtx-grouped-tabs
-                class="properties-tabs"
-                pure
-                wrap
-                statusIcons
-                [activeId]="activeTabI18nLanguage?.id"
-            >
-                <gtx-tab-pane
-                    *ngFor="let language of supportedLanguages"
-                    [id]="language?.id"
-                    (select)="setActiveI18nTab($event)"
-                    [readonly]="disabled"
-                    [inactive]="!activeI18nTabValueExists(language?.code)"
-                >
-                    <ng-template gtx-tab-label>
-                        <div
-                            class="language-pane-label"
-                            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
-                        >{{ language?.name }}</div>
-                    </ng-template>
-                </gtx-tab-pane>
-            </gtx-grouped-tabs>
-
-            <div
-                *ngIf="activeTabI18nLanguage?.code as activeLanguage"
-                class="tab-content"
-            >
-                <h3>{{ activeTabI18nLanguage?.name }}</h3>
-
-                <gtx-i18n-input
-                    *ngIf="form.get('nameI18n')"
-                    [label]="('common.name' | i18n) + ' *'"
-                    formControlName="nameI18n"
-                    [requiredInCurrentLanguage]="true"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
-
-                <gtx-i18n-input
-                    *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('descriptionI18n')"
-                    [label]="'common.description' | i18n"
-                    formControlName="descriptionI18n"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                ></gtx-i18n-input>
-            </div>
-        </div>
+            <gtx-i18n-input
+                *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('descriptionI18n')"
+                [label]="'common.description' | i18n"
+                formControlName="descriptionI18n"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="supportedLanguages"
+            ></gtx-i18n-input>
+        </gtx-i18n-panel-group>
     </div>
 
 </form>

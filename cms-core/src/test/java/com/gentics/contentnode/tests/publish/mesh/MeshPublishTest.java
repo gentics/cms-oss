@@ -106,7 +106,7 @@ public class MeshPublishTest {
 
 	/**
 	 * Setup static test data
-	 * 
+	 *
 	 * @throws NodeException
 	 */
 	@BeforeClass
@@ -885,6 +885,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Created node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.7f).hasFieldOrPropertyWithValue("y", 0.3f);
@@ -904,6 +908,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after update", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Updated node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.9f).hasFieldOrPropertyWithValue("y", 0.1f);
@@ -1086,5 +1094,38 @@ public class MeshPublishTest {
 					.isEqualTo(PublishInfo.RETURN_CODE_ERROR);
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that the nodes written to Mesh are "published"
+	 * @throws Exception
+	 */
+	@Test
+	public void testMeshNodeIsPublished() throws Exception {
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		operate(() -> {
+			assertObject("Published folder", mesh.client(), MESH_PROJECT_NAME, folder, true, node -> {
+				assertThat(node.getVersion()).as("Node Version").endsWith(".0");
+				assertThat(node.getAvailableLanguages()).as("Available languages").containsKey("en");
+				assertThat(node.getAvailableLanguages().get("en")).as("English version").hasFieldOrPropertyWithValue("published", true);
+			});
+		});
 	}
 }

@@ -65,7 +65,12 @@ export class ContentStagingActionsService {
     }
 
     async stageItem(item: StageableItem, pkg: string, recursive: boolean = false): Promise<void> {
-        await this.api.contentStaging.assignEntityToContentPackage(pkg, item.type, item.globalId, {
+        let type: StageableItem['type'] = item.type;
+        if ((item as any).type === 'node' || (item as any).type === 'channel') {
+            type = 'folder';
+        }
+
+        await this.api.contentStaging.assignEntityToContentPackage(pkg, type, item.globalId, {
             recursive: recursive,
         }).toPromise();
 
@@ -77,7 +82,12 @@ export class ContentStagingActionsService {
     }
 
     async unstageItem(item: StageableItem, pkg: string): Promise<void> {
-        await this.api.contentStaging.removeEntityFromContentPackage(pkg, item.type, item.globalId).toPromise();
+        let type: StageableItem['type'] = item.type;
+        if ((item as any).type === 'node' || (item as any).type === 'channel') {
+            type = 'folder';
+        }
+
+        await this.api.contentStaging.removeEntityFromContentPackage(pkg, type, item.globalId).toPromise();
         this.appState.dispatch(new RemoveContentStagingEntryAction(item.globalId));
     }
 }

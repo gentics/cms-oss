@@ -1,0 +1,132 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row"
+>
+    <div class="input-container small-12 medium-6 columns">
+
+        <!-- mapname -->
+        <gtx-input
+            formControlName="mapname"
+            type="text"
+            maxlength="255"
+            [label]="('tagmapEntry.mapname' | i18n) + ' *'"
+        ></gtx-input>
+
+        <!-- tagname -->
+        <gtx-input
+            formControlName="tagname"
+            type="text"
+            maxlength="255"
+            [label]="('tagmapEntry.tagname' | i18n) + ' *'"
+        ></gtx-input>
+
+        <gtx-select
+            formControlName="objType"
+            [label]="('tagmapEntry.objType' | i18n) + ' *'"
+            [clearable]="false"
+        >
+            <gtx-option *ngFor="let objectType of OBJECT_TYPES" [value]="objectType.id">{{ objectType.label | i18n }}</gtx-option>
+        </gtx-select>
+
+        <gtx-select
+            formControlName="attributeType"
+            [label]="('tagmapEntry.attributeType' | i18n) + ' *'"
+            [clearable]="false"
+        >
+            <gtx-option *ngFor="let attributeType of attributes" [value]="attributeType.id">{{ attributeType.label | i18n }}</gtx-option>
+        </gtx-select>
+
+        <!-- multivalue - boolean -->
+        <gtx-checkbox
+            formControlName="multivalue"
+            [label]="'tagmapEntry.multivalue' | i18n"
+        ></gtx-checkbox>
+
+        <!-- optimized - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('optimized').enabled"
+            formControlName="optimized"
+            [label]="'tagmapEntry.optimized' | i18n"
+        ></gtx-checkbox>
+
+        <!-- filesystem - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('filesystem').enabled"
+            formControlName="filesystem"
+            [label]="'tagmapEntry.filesystem' | i18n"
+        ></gtx-checkbox>
+    </div>
+
+    <div class="input-container small-12 medium-6 columns">
+
+        <!-- targetType select TagmapEntryPropertiesObjectType - required -->
+        <gtx-select
+            *ngIf="form.get('targetType').enabled"
+            formControlName="targetType"
+            [label]="('tagmapEntry.targettype' | i18n) + ' *'"
+            [clearable]="false"
+        >
+            <gtx-option *ngFor="let objectType of OBJECT_TYPES" [value]="objectType.id">{{ objectType.label | i18n }}</gtx-option>
+        </gtx-select>
+
+        <!-- foreignlinkAttribute - text - required -->
+        <gtx-input
+            *ngIf="form.get('foreignlinkAttribute').enabled"
+            formControlName="foreignlinkAttribute"
+            type="text"
+            maxlength="255"
+            [label]="('tagmapEntry.foreignlinkattribute' | i18n) + ' *'"
+        ></gtx-input>
+
+        <!-- foreignlinkAttributeRule - textarea - required -->
+        <gtx-textarea
+            *ngIf="form.get('foreignlinkAttributeRule').enabled"
+            formControlName="foreignlinkAttributeRule"
+            maxlength="200"
+            [label]="'tagmapEntry.foreignlinkattributerule' | i18n"
+        ></gtx-textarea>
+
+        <!-- elasticsearch - textarea -->
+        <gtx-textarea
+            *ngIf="form.get('elasticsearch').enabled"
+            formControlName="elasticsearch"
+            [label]="'tagmapEntry.elasticsearch' | i18n"
+        ></gtx-textarea>
+        <span
+            *ngIf="form.get('elasticsearch')?.hasError('errorIsInvalidJson')"
+            class="container-validator-errors"
+        >
+            {{ 'shared.error_is_invalid_json' | i18n }}
+        </span>
+
+        <!-- micronodeFilter - textarea -->
+        <gtx-textarea
+            *ngIf="form.get('micronodeFilter').enabled"
+            formControlName="micronodeFilter"
+            maxlength="200"
+            [label]="'tagmapEntry.micronodefilter' | i18n"
+        ></gtx-textarea>
+
+        <!-- urlfield - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('urlfield').enabled"
+            formControlName="urlfield"
+            [label]="'tagmapEntry.urlfield' | i18n"
+        ></gtx-checkbox>
+
+        <!-- segmentfield - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('segmentfield').enabled"
+            formControlName="segmentfield"
+            [label]="'tagmapEntry.segmentfield' | i18n"
+        ></gtx-checkbox>
+
+        <!-- displayfield - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('displayfield').enabled"
+            formControlName="displayfield"
+            [label]="'tagmapEntry.displayfield' | i18n"
+        ></gtx-checkbox>
+    </div>
+</form>

@@ -122,7 +122,7 @@ public class SchedulingTest {
 			.as("Due schedules (no executions)")
 			.containsExactlyInAnyOrder(everyMinute, everyHour, everyDay, everyWeek, everyMonth);
 
-		addExecutions(allSchedules, now.minusMonths(1), true);
+		addExecutions(allSchedules, now.minusWeeks(2), true);
 
 		List<SchedulerSchedule> dueSchedules = getDueSchedules(now);
 

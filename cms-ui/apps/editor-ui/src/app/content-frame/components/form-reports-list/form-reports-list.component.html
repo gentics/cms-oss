@@ -1,26 +1,59 @@
 <div class="wrapper">
     <gtx-progress-bar [for]="loading$"></gtx-progress-bar>
 
-    <div class="download-buttons">
-        <div [class.disabled]="isDisabledDownloadBinariesButton">
-            <a [class.disabled]="isDisabledDownloadBinariesButton" [href]="pathForBinaries" download>
-                <gtx-button
-                    class="primary-action"
-                    size="small"
-                    flat>
-                    {{ 'editor.form_reports_download_binaries_button' | i18n }}
-                </gtx-button>
-            </a>
+    <div *ngIf="!(loading$ | async) && !(loadingError$ | async)" class="download-buttons">
+        <div *ngIf="binaryStatus" class="download-group binaries-group">
+            <gtx-button
+                class="download-button"
+                size="small"
+                flat
+                [disabled]="!binaryStatus?.downloadReady"
+                (click)="downloadBinaries()"
+            >
+                <icon left>file_download</icon>{{ 'editor.form_reports_download_binaries_button' | i18n }}
+            </gtx-button>
+
+            <gtx-button
+                class="generate-button"
+                size="small"
+                flat
+                type="warning"
+                [disabled]="binaryStatus?.requestPending"
+                (click)="generateBinaryDownload()"
+            >
+                <icon left>build</icon>{{ 'editor.form_reports_generate_binary_button' | i18n }}
+            </gtx-button>
+
+            <div *ngIf="binaryStatus?.downloadReady" class="creation-date">
+                {{ 'editor.form_reports_binary_generated_at' | i18n: { date: (binaryStatus.downloadTimestamp | i18nDate:'dateTime' ) } }}
+            </div>
         </div>
-        <div [class.disabled]="isDisabledDownloadCsvButton">
-            <a [class.disabled]="isDisabledDownloadCsvButton" [href]="pathForCSV" download>
-                <gtx-button
-                    class="primary-action"
-                    size="small"
-                    flat>
-                    {{ 'editor.form_reports_download_csv_button' | i18n }}
-                </gtx-button>
-            </a>
+
+        <div *ngIf="exportStatus" class="download-group export-group">
+            <gtx-button
+                class="download-button"
+                size="small"
+                flat
+                [disabled]="!exportStatus?.downloadReady"
+                (click)="downloadExport()"
+            >
+                <icon left>file_download</icon>{{ 'editor.form_reports_download_csv_button' | i18n }}
+            </gtx-button>
+
+            <gtx-button
+                class="generate-button"
+                size="small"
+                flat
+                type="warning"
+                [disabled]="exportStatus?.requestPending"
+                (click)="generateExportDownload()"
+            >
+                <icon left>build</icon>{{ 'editor.form_reports_generate_csv_button' | i18n }}
+            </gtx-button>
+
+            <div *ngIf="exportStatus?.downloadReady" class="creation-date">
+                {{ 'editor.form_reports_csv_generated_at' | i18n: { date: (exportStatus.downloadTimestamp | i18nDate:'dateTime' ) } }}
+            </div>
         </div>
     </div>
 

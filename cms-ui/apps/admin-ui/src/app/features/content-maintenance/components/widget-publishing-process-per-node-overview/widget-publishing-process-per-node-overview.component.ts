@@ -1,11 +1,10 @@
 import { PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
-import { AdminOperations, ErrorHandler } from '@admin-ui/core';
-import { NodeDataService } from '@admin-ui/shared';
+import { AdminOperations, ErrorHandler, NodeOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ContentMaintenanceType, Node, PublishInfo, PublishObjectsCount, PublishQueue, Raw } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
-import { BehaviorSubject, Observable, Subscription, forkJoin, timer } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, Subscription, forkJoin, timer } from 'rxjs';
+import { catchError, distinctUntilChanged, filter, startWith, switchMap, tap } from 'rxjs/operators';
 
 interface WidgetPublishingProcessPerNodeComponentState {
     publishType: ContentMaintenanceType;
@@ -20,22 +19,15 @@ interface WidgetPublishingProcessPerNodeComponentStateNode {
     nodeId: number;
     name: string;
     disablePublish: boolean;
-    toPublish: {
-        amount: number;
-        percentage: number;
-    },
-    delayed: {
-        amount: number;
-        percentage: number;
-    },
-    published: {
-        amount: number;
-        percentage: number;
-    },
-    remaining: {
-        amount: number;
-        percentage: number;
-    },
+    toPublish: NodeState;
+    delayed: NodeState;
+    published: NodeState;
+    remaining: NodeState;
+}
+
+interface NodeState {
+    amount: number;
+    percentage: number;
 }
 
 const WIDGET_PUBLISHING_PROCESS_STATUS_KEYS = [
@@ -58,16 +50,15 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
 
     /** If TRUE node rows are selectable and component emits IDs on selection changed. */
     @Input()
-    selectable = false;
+    public selectable = false;
 
     /** node IDs selected in component */
     @Input()
-    selectedIds: number[] = [];
-
+    public selectedIds: number[] = [];
 
     /** If TRUE component polls and refreshs the data display in an intervall defined in `lifeSyncIntervall` */
     @Input()
-    lifeSyncEnabled = true;
+    public lifeSyncEnabled = true;
 
     /** Determines the amount of seconds between polling information. */
     @Input()
@@ -75,12 +66,9 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
 
     /** emits selected node IDs on checkbox clicked */
     @Output()
-    selectedIdsChange = new EventEmitter<number[]>();
+    public selectedIdsChange = new EventEmitter<number[]>();
 
     private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
-
-    /** All nodes currently existing in global app state */
-    allNodes$: Observable<Node<Raw>[]>;
 
     /** information of the current publish process per node */
     infoStatsPerNodeData$ = new BehaviorSubject<PublishQueue>(null);
@@ -124,21 +112,18 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
     ];
 
     /** If TRUE table is in loading state. */
-    tableIsLoading = true;
+    public tableIsLoading = true;
 
     private subscriptions: Subscription[] = [];
 
     constructor(
         private adminOps: AdminOperations,
-        private nodeDataService: NodeDataService,
+        private nodeOps: NodeOperations,
         private errorHandler: ErrorHandler,
         private changeDetectorRef: ChangeDetectorRef,
     ) { }
 
     ngOnInit(): void {
-
-        this.allNodes$ = this.nodeDataService.watchAllEntities();
-
         const intervall$ = this.syncIntervall$.asObservable().pipe(
             distinctUntilChanged(isEqual),
             switchMap(milliseconds => timer(0, milliseconds)),
@@ -147,13 +132,16 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
 
         // initialize data stream of node publish status info
         this.subscriptions.push(intervall$.pipe(
+            startWith(null),
             // start loading indicator
-            tap(() => this.tableIsLoading = true),
+            tap(() => {
+                this.tableIsLoading = true;
+            }),
             // request data
             switchMap(() => forkJoin([
                 this.adminOps.getPublishInfo(),
                 this.adminOps.getPublishQueue(),
-                this.allNodes$,
+                this.nodeOps.getAll(),
             ])),
             catchError(error => this.errorHandler.catch(error)),
         ).subscribe(([info, queue, allNodeEntities]: [PublishInfo, PublishQueue, Node<Raw>[]]) => {
@@ -255,10 +243,7 @@ export class WidgetPublishingProcessPerNodeOverviewComponent implements OnInit, 
         publishableEntityState: WidgetPublishingProcessPerNodeComponentState,
         currentNodeState: PublishObjectsCount,
         key: keyof PublishObjectsCount,
-    ): {
-        amount: number;
-        percentage: number;
-    } {
+    ): NodeState {
         // division by zero not allowed
         const percentageNew = publishableEntityState[`${key}Total`] > 0
             ? (currentNodeState[key] / publishableEntityState[`${key}Total`]) * 100

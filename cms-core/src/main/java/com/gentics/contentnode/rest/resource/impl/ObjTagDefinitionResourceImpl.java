@@ -22,6 +22,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -58,7 +59,7 @@ import com.gentics.lib.etc.StringUtils;
 /**
  * Resource for object property administration
  */
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/prop")
 public class ObjTagDefinitionResourceImpl {

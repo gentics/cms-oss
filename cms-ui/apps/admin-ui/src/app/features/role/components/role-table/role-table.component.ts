@@ -23,14 +23,12 @@ export class RoleTableComponent extends BaseEntityTableComponent<Role<Raw>, Role
             label: 'role.name',
             fieldPath: 'name',
             sortable: true,
-            mapper: (obj) => obj['de'],
         },
         {
             id: 'description',
             label: 'role.description',
             fieldPath: 'description',
             sortable: false,
-            mapper: (obj) => obj['de'],
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'role';

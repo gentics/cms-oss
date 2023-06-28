@@ -11,7 +11,7 @@ import { MessageService } from './message.service';
 describe('MessageService', () => {
 
     let appState: TestApplicationState;
-    let poller: MessageService;
+    let service: MessageService;
     let subscription: Subscription;
     let messageActions: MockMessageActions;
     let permissionsService: MockPermissionsService;
@@ -27,7 +27,7 @@ describe('MessageService', () => {
             ],
         });
 
-        poller = TestBed.get(MessageService);
+        service = TestBed.get(MessageService);
         appState = TestBed.get(ApplicationStateService);
         messageActions = TestBed.get(MessageActionsService);
         permissionsService = TestBed.get(PermissionService);
@@ -46,7 +46,7 @@ describe('MessageService', () => {
     });
 
     it('can be created', () => {
-        expect(poller).toBeTruthy();
+        expect(service).toBeTruthy();
         expect(messageActions).toBeTruthy('no MessageActions');
         expect(permissionsService).toBeTruthy('no PermissionService');
     });
@@ -55,25 +55,29 @@ describe('MessageService', () => {
 
         it('does not fetch messages if the user is not logged in', fakeAsync(() => {
             appState.mockState({ auth: { isLoggedIn: false } });
-            subscription = poller.poll(1, 1);
+            subscription = service.poll(1, 1);
             tick(20000);
 
             expect(messageActions.fetchAllMessages).not.toHaveBeenCalled();
             expect(messageActions.fetchUnreadMessages).not.toHaveBeenCalled();
+
+            discardPeriodicTasks();
         }));
 
         it('does not fetch messages if the user has no permissions', fakeAsync(() => {
             permissionsService.viewInbox$.next(false);
-            subscription = poller.poll(1, 1);
+            subscription = service.poll(1, 1);
             tick(20000);
 
             expect(messageActions.fetchAllMessages).not.toHaveBeenCalled();
             expect(messageActions.fetchUnreadMessages).not.toHaveBeenCalled();
+
+            discardPeriodicTasks();
         }));
 
         it('fetches messages once after an initial timeout', fakeAsync(() => {
-            subscription = poller.poll(5, 30);
-            tick(5000);
+            subscription = service.poll(5, 30);
+            tick(10000);
 
             expect(messageActions.fetchAllMessages).toHaveBeenCalledTimes(1);
             expect(messageActions.fetchUnreadMessages).toHaveBeenCalledTimes(0);
@@ -82,7 +86,7 @@ describe('MessageService', () => {
         }));
 
         it('fetches messages periodically after an interval', fakeAsync(() => {
-            subscription = poller.poll(5, 30);
+            subscription = service.poll(5, 30);
             tick(5000);
             expect(messageActions.fetchUnreadMessages).toHaveBeenCalledTimes(0);
 

@@ -51,6 +51,10 @@ export class TemplateApi {
             options = copy;
         }
 
+        if (typeof options?.nodeId === 'number') {
+            options.nodeId = [options.nodeId];
+        }
+
         return this.apiBase.get('template', options);
     }
 
@@ -87,6 +91,7 @@ export class TemplateApi {
 
     /**
      * Links multiple templates to multiple folders in one request.
+     *
      * @param request Request body which contains the info which templates and folders should be linked.
      * @returns A generic response
      */
@@ -106,6 +111,7 @@ export class TemplateApi {
 
     /**
      * Unlinks multiple templates from multiple folders in one request.
+     *
      * @param request Request body which contains the info which templates and folders should be unlinked.
      * @returns A generic response
      */

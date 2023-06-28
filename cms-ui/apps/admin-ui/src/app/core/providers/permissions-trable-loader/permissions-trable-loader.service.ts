@@ -26,6 +26,17 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
         super();
     }
 
+    protected loadEntityRow(entity: PermissionsSetBO, options?: PermissionsTrableLoaderOptions): Observable<PermissionsSetBO> {
+        return this.api.group.getGroupInstancePermissions(options.group.id, entity.type, entity.id).pipe(
+            map(res => {
+                entity.perms = res.perms;
+                entity.categorized = options.categorizer.categorizePermissions(res.perms);
+                entity.roles = res.roles;
+                return entity;
+            }),
+        )
+    }
+
     protected loadEntityChildren(parent: PermissionsSetBO | null, options?: PermissionsTrableLoaderOptions): Observable<PermissionsSetBO[]> {
         const loadOptions: GroupPermissionsListOptions = {};
         if (!parent) {
@@ -54,8 +65,16 @@ export class PermissionsTrableLoaderService extends BaseTrableLoaderService<Perm
         );
     }
 
-    protected override mapToTrableRow(entity: PermissionsSetBO, parent?: TrableRow<PermissionsSetBO>): TrableRow<PermissionsSetBO> {
-        const row = super.mapToTrableRow(entity, parent);
+    public override createRowHash(entity: PermissionsSetBO): string | null {
+        return new Date().toISOString();
+    }
+
+    protected override mapToTrableRow(
+        entity: PermissionsSetBO,
+        parent?: TrableRow<PermissionsSetBO>,
+        options?: PermissionsTrableLoaderOptions,
+    ): TrableRow<PermissionsSetBO> {
+        const row = super.mapToTrableRow(entity, parent, options);
         row.hasChildren = entity.children;
         row.loaded = !entity.children;
 

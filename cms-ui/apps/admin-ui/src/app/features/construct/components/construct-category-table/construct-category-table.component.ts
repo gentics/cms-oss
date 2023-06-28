@@ -1,13 +1,14 @@
-import { ConstructCategoryBO } from '@admin-ui/common';
+import { BO_NEW_SORT_ORDER, ConstructCategoryBO, createMoveActions } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
-import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
+import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, ConstructCategory, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ConstructCategoryTableLoaderService } from '../../providers';
+import { ConstructCategorySortModal } from '../construct-category-sort-modal/construct-category-sort-modal.component';
 
 @Component({
     selector: 'gtx-construct-category-table',
@@ -15,7 +16,7 @@ import { ConstructCategoryTableLoaderService } from '../../providers';
     styleUrls: ['./construct-category-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructCategoryTableComponent extends BaseEntityTableComponent<ConstructCategory, ConstructCategoryBO> {
+export class ConstructCategoryTableComponent extends BaseSortableEntityTableComponent<ConstructCategory, ConstructCategoryBO> {
 
     protected rawColumns: TableColumn<ConstructCategoryBO>[] = [
         {
@@ -24,8 +25,19 @@ export class ConstructCategoryTableComponent extends BaseEntityTableComponent<Co
             fieldPath: 'name',
             sortable: true,
         },
+        {
+            id: 'sortorder',
+            label: 'construct.categorySortorder',
+            fieldPath: BO_NEW_SORT_ORDER,
+            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+            mapper: (index: number) => index + 1,
+            sortable: true,
+            align: 'right',
+        },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'constructCategory';
+
+    public sortBy = 'sortorder';
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -48,11 +60,16 @@ export class ConstructCategoryTableComponent extends BaseEntityTableComponent<Co
         return combineLatest([
             this.actionRebuildTrigger$,
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('constructCategory.deleteCategoryInstance').typePermissions),
+            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('constructCategory.updateCategoryInstance').typePermissions),
         ]).pipe(
             map(([_, ...perms]) => perms),
-            map(([canDelete]) => {
-                const actions: TableAction<ConstructCategoryBO>[] = [
-                    {
+            map(([canDelete, canUpdate]) => {
+                const actions: TableAction<ConstructCategoryBO>[] = [];
+
+                if (this.sorting) {
+                    actions.push(...createMoveActions(this.i18n, canUpdate));
+                } else {
+                    actions.push({
                         id: DELETE_ACTION,
                         label: this.i18n.instant('construct_category.delete_category_singular'),
                         icon: 'delete',
@@ -60,11 +77,23 @@ export class ConstructCategoryTableComponent extends BaseEntityTableComponent<Co
                         multiple: true,
                         single: true,
                         enabled: canDelete,
-                    },
-                ];
+                    });
+                }
 
                 return actions;
             }),
         );
+    }
+
+    public async openSortModal(): Promise<void> {
+        const dialog = await this.modalService.fromComponent(ConstructCategorySortModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+        });
+        const didSort = await dialog.open();
+
+        if (didSort) {
+            this.reload();
+        }
     }
 }

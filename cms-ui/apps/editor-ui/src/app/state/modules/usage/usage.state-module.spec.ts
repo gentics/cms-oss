@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { File, Folder, Image, Page, Template, Usage } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { getExamplePageDataNormalized } from '../../../../testing/test-data.mock';
@@ -41,7 +41,7 @@ describe('UsageStateModule', () => {
         } as UsageState);
     });
 
-    it('fetchUsageStart works', () => {
+    it('fetchUsageStart works', fakeAsync(() => {
         appState.mockState({
             usage: {
                 ...appState.now.usage,
@@ -52,14 +52,16 @@ describe('UsageStateModule', () => {
         });
         expect(appState.now.usage.fetching).toBe(false);
         appState.dispatch(new StartItemUsageFetchingAction('page', 1234));
+        tick();
+
         expect(appState.now.usage.fetching).toBe(true);
         expect(appState.now.usage.itemId).toBe(1234);
         expect(appState.now.usage.itemType).toBe('page');
         expect(appState.now.usage.images).toEqual([]);
         expect(appState.now.usage.pages).toEqual([]);
-    });
+    }));
 
-    it('fetchUsageSuccess works', () => {
+    it('fetchUsageSuccess works', fakeAsync(() => {
         appState.mockState({
             entities: {
                 file: {},
@@ -100,6 +102,7 @@ describe('UsageStateModule', () => {
                 { id: 42, name: 'Page variant 42' } as any as Page,
             ],
         }));
+        tick();
 
         expect(appState.now.usage).toEqual({
             fetching: false,
@@ -141,19 +144,21 @@ describe('UsageStateModule', () => {
 
         expect(appState.now.entities).toEqual(jasmine.objectContaining(expected));
 
-    });
+    }));
 
-    it('fetchUsageError works', () => {
+    it('fetchUsageError works', fakeAsync(() => {
         appState.mockState({
             usage: {
                 fetching: true,
             },
         });
         appState.dispatch(new ItemUsageFetchingErrorAction());
-        expect(appState.now.usage.fetching).toBe(false);
-    });
+        tick();
 
-    it('setItemUsage works', () => {
+        expect(appState.now.usage.fetching).toBe(false);
+    }));
+
+    it('setItemUsage works', fakeAsync(() => {
         appState.mockState({
             entities: {
                 page: {
@@ -177,8 +182,9 @@ describe('UsageStateModule', () => {
                 },
             },
         }));
+        tick();
 
         expect(appState.now.entities.page[1234].usage).toEqual(usageData);
-    });
+    }));
 
 });

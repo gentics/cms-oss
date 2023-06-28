@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { UsersnapSettings } from '@gentics/cms-models';
+import { Feature, UsersnapSettings } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { InitializableServiceBase } from '../../../shared/providers/initializable-service-base';
@@ -94,7 +94,7 @@ export class UsersnapService extends InitializableServiceBase {
     }
 
     private loadUsersnapSettingsAndActivateIfEnabled(): void {
-        this.appState.select(state => state.features.global.usersnap).pipe(
+        this.appState.select(state => state.features.global[Feature.USERSNAP]).pipe(
             filter(active => active),
             switchMap(() => this.adminOps.getUsersnapSettings()),
             switchMap(() => this.appState.select(state => state.ui.usersnap)),

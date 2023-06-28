@@ -81,6 +81,8 @@
                                 [formControl]="control"
                                 [supportedLanguages]="supportedLanguages"
                                 [mode]="ConstructPartPropertiesMode.UPDATE"
+                                [initialValue]="initialValue"
+                                (initialValueChange)="updateInitialValueFlag($event)"
                             ></gtx-construct-part-properties>
                         </div>
                     </td>

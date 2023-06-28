@@ -10,41 +10,6 @@ import static com.gentics.contentnode.rest.util.MiscUtils.getTemplate;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.reduceList;
 
-import com.gentics.contentnode.rest.model.response.TagList;
-import com.gentics.contentnode.object.SystemUser;
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -88,16 +53,19 @@ import com.gentics.contentnode.rest.model.response.Message.Type;
 import com.gentics.contentnode.rest.model.response.PagedFolderListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
+import com.gentics.contentnode.rest.model.response.TagList;
 import com.gentics.contentnode.rest.model.response.TagListResponse;
 import com.gentics.contentnode.rest.model.response.TagStatus;
 import com.gentics.contentnode.rest.model.response.TagStatusResponse;
 import com.gentics.contentnode.rest.model.response.TemplateInNodeResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.resource.TemplateResource;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
+import com.gentics.contentnode.rest.resource.parameter.TemplateListParameterBean;
 import com.gentics.contentnode.rest.util.ListBuilder;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.rest.util.ModelBuilder;
@@ -109,12 +77,42 @@ import com.gentics.contentnode.rest.util.StringFilter;
 import com.gentics.lib.genericexceptions.IllegalUsageException;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Resource used for loading, saving and manipulating GCN templates.
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/template")
 public class TemplateResourceImpl implements TemplateResource {
@@ -225,10 +223,10 @@ public class TemplateResourceImpl implements TemplateResource {
 			int constructId = tag.getConstructId();
 			String constructName = tag.getConstruct().getName().toString();
 			String constructIcon = tag.getConstruct().getIconName();
-	
+
 			Map<Integer, AtomicInteger> pagesOutOfSync = getPagesOutOfSync(templateId, tagName, constructId);
 			int outOfSync = pagesOutOfSync.values().stream().mapToInt(AtomicInteger::get).sum();
-	
+
 			int incompatible = 0;
 			Map<Integer, Map<Integer, Boolean>> cache = new HashMap<>();
 			for (Map.Entry<Integer, AtomicInteger> entry : pagesOutOfSync.entrySet()) {
@@ -242,7 +240,7 @@ public class TemplateResourceImpl implements TemplateResource {
 					.setInSync(getPagesInSync(templateId, tagName, constructId)).setMissing(getPagesMissing(templateId, tagName)).setOutOfSync(outOfSync)
 					.setIncompatible(incompatible);
 		}).filter(ResolvableFilter.get(filter, "name")).sort(ResolvableComparator.get(sort, "name")).page(paging).to(new TagStatusResponse());
-	
+
 	}
 
 	@Override
@@ -252,13 +250,28 @@ public class TemplateResourceImpl implements TemplateResource {
 			@BeanParam FilterParameterBean filterParams,
 			@BeanParam SortParameterBean sortingParams,
 			@BeanParam PagingParameterBean pagingParams,
-			@BeanParam PermsParameterBean perms) throws NodeException {
+			@BeanParam PermsParameterBean perms,
+			@BeanParam TemplateListParameterBean listParams) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			Set<Node> nodes = new HashSet<>();
-			List<Pair<Node, Template>> nodeAndTemplates = new ArrayList<>();
-			for (String nodeId : nodeIds) {
-				nodes.add(getNode(nodeId, ObjectPermission.view));
+			Set<Node> nodes;
+
+			if (nodeIds == null || nodeIds.isEmpty()) {
+				nodes = trx.getTransaction().getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDLIST))
+					.stream()
+					.collect(Collectors.toSet());
+
+				PermissionFilter.get(ObjectPermission.view).filter(nodes);
+			} else {
+				nodes = new HashSet<>();
+
+				for (String nodeId : nodeIds) {
+					nodes.add(getNode(nodeId, ObjectPermission.view));
+				}
 			}
+
+			List<Pair<Node, Template>> nodeAndTemplates = new ArrayList<>();
+			Set<Template> foundTemplates = new HashSet<>();
+
 
 			for (Node node : nodes) {
 				try (ChannelTrx cTrx = new ChannelTrx(node)) {
@@ -266,7 +279,10 @@ public class TemplateResourceImpl implements TemplateResource {
 					PermissionFilter.get(ObjectPermission.view).filter(templates);
 
 					for (Template template : templates) {
-						nodeAndTemplates.add(Pair.of(node, template));
+						if (!listParams.reduce || !foundTemplates.contains(template)) {
+							nodeAndTemplates.add(Pair.of(node, template));
+							foundTemplates.add(template);
+						}
 					}
 				}
 			}
@@ -286,7 +302,7 @@ public class TemplateResourceImpl implements TemplateResource {
 					templateInNode.setAssignedNodes(nodeNames);
 					return templateInNode;
 				})
-				.perms(permFunction(perms, pair -> pair.getRight(), ObjectPermission.view))
+				.perms(permFunction(perms, pair -> pair.getRight(), ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
 				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate", "pdate"))
 				.sort(comparator(sortingParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate", "pdate"))
 				.page(pagingParams)

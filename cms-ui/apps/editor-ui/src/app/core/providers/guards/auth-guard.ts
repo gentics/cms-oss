@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
-import { filter, map, take, distinctUntilChanged, tap } from 'rxjs/operators';
+import { filter, map, take, distinctUntilChanged, tap, switchMap } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 
 /**
@@ -28,8 +28,9 @@ export class AuthGuard implements CanActivate {
 
             // if logged in an attempting to access the /login route, redirect to default node.
             // also it should wait until nodes are loaded because it will stuck on login page
-            return this.appState.select(state => state.folder.nodes.list).pipe(
-                filter(nodes => nodes.length > 0),
+            return this.appState.select(state => state.folder.nodesLoaded).pipe(
+                filter(loaded => loaded),
+                switchMap(() => this.appState.select(state => state.folder.nodes.list)),
                 take(1),
                 map(() => {
                     // Only navigate to the default node if no other node has been set through the user settings.
@@ -53,11 +54,11 @@ export class AuthGuard implements CanActivate {
             return false;
         }
 
-        return this.appState.select(state => state.auth).pipe(
-            distinctUntilChanged((a, b) => a.loggingIn === b.loggingIn),
-            filter(auth => !auth.loggingIn),
+        return this.appState.select(state => state.auth.loggingIn).pipe(
+            distinctUntilChanged(),
+            filter(loggingIn => !loggingIn),
             take(1),
-            map(auth => auth.isLoggedIn),
+            map(() => this.appState.now.auth.isLoggedIn),
             tap(loginValidated => {
                 if (!loginValidated) {
                     this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });

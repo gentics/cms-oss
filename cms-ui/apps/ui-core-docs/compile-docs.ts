@@ -1,9 +1,11 @@
-import { AccessModifer, DocBlock, IDocumentation, PropertyGroup } from './src/app/common/docs';
-import * as ts from 'typescript';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import { basename, resolve } from 'path';
+/* eslint-disable import/no-nodejs-modules */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+import hljs from 'highlight.js';
+import { marked } from 'marked';
+import * as ts from 'typescript';
+import { AccessModifer, DocBlock, DocumentationType, IDocumentation, PropertyGroup, SourceFile } from './src/app/common/docs';
 
 marked.setOptions({
     highlight: (code: string, lang: string): string => {
@@ -19,11 +21,6 @@ interface InputFile {
     [id: string]: SourceFile;
 }
 
-interface SourceFile {
-    type: 'component' | 'service';
-    sourceFile: string;
-}
-
 function main(): void {
     const INPUT_FILE = 'docs.input.json';
     const OUTPUT_FILE = 'docs.output.json';
@@ -32,9 +29,10 @@ function main(): void {
     const output: Record<string, IDocumentation> = {};
 
     Object.entries(data).forEach(([id, value]) => {
-        const fileName = basename(value.sourceFile);
         const source = readFileSync(resolve(__dirname, value.sourceFile)).toString();
-        const docs = createDocsFromAST(value.type, fileName, source);
+        const docs = createDocsFromAST(value.type, value.sourceFile, source);
+        appendInheritedDocs(docs, output, value);
+
         output[id] = docs;
     });
 
@@ -43,9 +41,41 @@ function main(): void {
 
 main();
 
-function createDocsFromAST(type: 'component' | 'service', fileName: string, sourceCode: string): IDocumentation {
+function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocumentation>, file: SourceFile): void {
+    if (!file.extends || !map[file.extends]) {
+        return;
+    }
+
+    const inherited = map[file.extends];
+    docs.inheritance.push({
+        type: DocumentationType[inherited.type],
+        name: inherited.name,
+        file: inherited.sourceFile,
+    });
+
+    for (const part of ['inputs', 'outputs', 'properties', 'methods']) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        docs[part].push(...inherited[part].map(block => blockWithInheritance(block, inherited)));
+    }
+
+    appendInheritedDocs(docs, map, inherited);
+}
+
+function blockWithInheritance(block: DocBlock, inheritance: IDocumentation): DocBlock {
+    return {
+        ...block,
+        inheritance: {
+            type: DocumentationType[inheritance.type],
+            file: inheritance.sourceFile,
+            name: inheritance.name,
+        },
+    };
+}
+
+function createDocsFromAST(type: 'component' | 'service', filePath: string, sourceCode: string): IDocumentation {
     /* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */
-    const sourceFile = ts.createSourceFile(baseName(fileName), sourceCode, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
+    const fileName = baseName(filePath);
+    const sourceFile = ts.createSourceFile(fileName, sourceCode, ts.ScriptTarget.ES2015, true, ts.ScriptKind.TS);
 
     function traverseChildren(parent: ts.Node): IDocumentation | null {
         const count = parent.getChildCount();
@@ -54,7 +84,7 @@ function createDocsFromAST(type: 'component' | 'service', fileName: string, sour
 
             // Only generate a Documentation for exported classes
             if (isNodeExported(node) && (ts.isClassDeclaration(node) || node.kind === ts.SyntaxKind.ClassDeclaration)) {
-                return getClassDocumentation(type, sourceFile, node as ts.ClassDeclaration);
+                return getClassDocumentation(type, filePath, sourceFile, node as ts.ClassDeclaration);
             }
 
             if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -83,6 +113,7 @@ function baseName(filePath: string): string {
 /** True if this is visible outside this file, false otherwise */
 function isNodeExported(node: ts.Node): boolean {
     return (
+        // eslint-disable-next-line no-bitwise
         (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0
         || (!!node.parent && node.parent.kind === ts.SyntaxKind.SourceFile)
     );
@@ -90,11 +121,15 @@ function isNodeExported(node: ts.Node): boolean {
 
 function getClassDocumentation(
     type: 'component' | 'service',
+    filePath: string,
     sourceFile: ts.SourceFile,
     classNode: ts.ClassDeclaration,
 ): IDocumentation {
     const docs: IDocumentation = {
         type,
+        name: classNode.name.text,
+        sourceFile: filePath,
+        inheritance: [],
         main: marked(getCommentFromNode(sourceFile, classNode)),
         inputs: [],
         methods: [],
@@ -102,30 +137,30 @@ function getClassDocumentation(
         properties: [],
     };
 
-    for (let i = 0; i < classNode.members.length; i++) {
-        const member = classNode.members[i];
-
-        if (ts.isPropertyDeclaration(member) || (ts.isFunctionLike(member) && !ts.isSetAccessorDeclaration(member))) {
-            const propType = getPropertyGroup(member);
-            const propDocs = getPropertyDocumentation(sourceFile, member as any);
-
-            switch (propType) {
-                case 'property':
-                    if (ts.isFunctionLike(member) && !ts.isGetAccessorDeclaration(member)) {
-                        docs.methods.push(propDocs);
-                    } else {
-                        docs.properties.push(propDocs);
-                    }
-                    break;
-                case 'input':
-                    docs.inputs.push(propDocs);
-                    break;
-                case 'output':
-                    docs.outputs.push(propDocs);
-                    break;
-            }
-
+    for (const member of classNode.members) {
+        if (!ts.isPropertyDeclaration(member)
+            && (!ts.isFunctionLike(member) && !ts.isSetAccessorDeclaration(member))
+        ) {
             continue;
+        }
+
+        const propType = getPropertyGroup(member);
+        const propDocs = getPropertyDocumentation(sourceFile, member as any);
+
+        switch (propType) {
+            case 'property':
+                if (ts.isFunctionLike(member) && !ts.isGetAccessorDeclaration(member)) {
+                    docs.methods.push(propDocs);
+                } else {
+                    docs.properties.push(propDocs);
+                }
+                break;
+            case 'input':
+                docs.inputs.push(propDocs);
+                break;
+            case 'output':
+                docs.outputs.push(propDocs);
+                break;
         }
     }
 

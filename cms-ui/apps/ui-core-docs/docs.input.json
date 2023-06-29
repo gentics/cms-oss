@@ -1,4 +1,18 @@
 {
+    "base.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/base-component/base.component.ts"
+    },
+    "base-form-element.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/base-form-element/base-form-element.component.ts",
+        "extends": "base.component"
+    },
+    "base-table.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/base-table/base-table.component.ts",
+        "extends": "base.component"
+    },
     "button.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/button/button.component.ts"
@@ -17,11 +31,13 @@
     },
     "date-time-picker-controls.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker-controls/date-time-picker-controls.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker-controls/date-time-picker-controls.component.ts",
+        "extends": "base-form-element.component"
     },
     "date-time-picker.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker/date-time-picker.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/date-time-picker/date-time-picker.component.ts",
+        "extends": "base-form-element.component"
     },
     "dropdown-list.component": {
         "type": "component",
@@ -37,7 +53,8 @@
     },
     "grouped-tabs.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/grouped-tabs/grouped-tabs.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/grouped-tabs/grouped-tabs.component.ts",
+        "extends": "base.component"
     },
     "input.component": {
         "type": "component",
@@ -57,7 +74,8 @@
     },
     "radio-button.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/radio-button/radio-button.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/radio-button/radio-button.component.ts",
+        "extends": "base-form-element.component"
     },
     "range.component": {
         "type": "component",
@@ -69,7 +87,8 @@
     },
     "select.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/select/select.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/select/select.component.ts",
+        "extends": "base-form-element.component"
     },
     "side-menu.component": {
         "type": "component",
@@ -89,7 +108,8 @@
     },
     "table.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/table/table.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/table/table.component.ts",
+        "extends": "base-table.component"
     },
     "tabs.component": {
         "type": "component",
@@ -97,7 +117,8 @@
     },
     "textarea.component": {
         "type": "component",
-        "sourceFile": "../../libs/ui-core/src/lib/components/textarea/textarea.component.ts"
+        "sourceFile": "../../libs/ui-core/src/lib/components/textarea/textarea.component.ts",
+        "extends": "base-form-element.component"
     },
     "tooltip.component": {
         "type": "component",

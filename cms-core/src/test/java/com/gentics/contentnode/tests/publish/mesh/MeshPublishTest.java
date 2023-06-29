@@ -248,9 +248,8 @@ public class MeshPublishTest {
 		});
 
 		Trx.operate(() -> {
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+			DBUtils.executeUpdate("DELETE FROM dirtqueue", null);
+			DBUtils.executeUpdate("DELETE FROM publishqueue", null);
 		});
 
 		Folder folderLevel3 = Trx.supply(() -> {

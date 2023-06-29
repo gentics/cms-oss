@@ -1,7 +1,11 @@
 package com.gentics.contentnode.publish.mesh;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.gentics.mesh.core.rest.common.GenericMessageResponse;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
 
@@ -40,7 +44,7 @@ public final class MeshPublishUtils {
 	 * @return true for recoverable error
 	 */
 	public static boolean isRecoverable(Throwable t) {
-		return isConflict(t);
+		return isConflict(t) || isNotFound(t);
 	}
 
 	/**
@@ -55,6 +59,60 @@ public final class MeshPublishUtils {
 		} else if (t.getCause() != null && t.getCause() != t) {
 			// check the cause
 			return isConflict(t.getCause());
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Get the optional message response from the throwable
+	 * @param t throwable
+	 * @return optional message response
+	 */
+	public static Optional<GenericMessageResponse> getResponse(Throwable t) {
+		if (t instanceof MeshRestClientMessageException) {
+			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
+			return Optional.of(meshException.getResponseMessage());
+		} else if (t.getCause() != null && t.getCause() != t) {
+			return getResponse(t.getCause());
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Get the optional conflicting node as pair of uuid and language, if the throwable is a conflict
+	 * @param t throwable
+	 * @return optional conflicting node
+	 */
+	public static Optional<Pair<String, String>> getConflictingNode(Throwable t) {
+		if (isConflict(t)) {
+			return getResponse(t).flatMap(resp -> {
+				Object conflictingUuid = resp.getProperty("conflictingUuid");
+				Object conflictingLanguage = resp.getProperty("conflictingLanguage");
+				if (conflictingUuid == null) {
+					return Optional.empty();
+				} else {
+					return Optional.of(Pair.of(conflictingUuid.toString(), conflictingLanguage != null ? conflictingLanguage.toString() : null));
+				}
+			});
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
+	 * Check whether the throwable is a {@link MeshRestClientMessageException} with {@link MeshRestClientMessageException#getStatusCode()} {@link HttpResponseStatus#NOT_FOUND}.
+	 * @param t throwable
+	 * @return true for not_found errors, false otherwise
+	 */
+	public static boolean isNotFound(Throwable t) {
+		if (t instanceof MeshRestClientMessageException) {
+			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
+			return meshException.getStatusCode() == HttpResponseStatus.NOT_FOUND.code();
+		} else if (t.getCause() != null && t.getCause() != t) {
+			// check the cause
+			return isNotFound(t.getCause());
 		} else {
 			return false;
 		}

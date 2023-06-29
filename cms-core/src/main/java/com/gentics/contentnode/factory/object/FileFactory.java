@@ -84,6 +84,7 @@ import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Value;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -483,7 +484,10 @@ public class FileFactory extends AbstractFactory {
 					f = f.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(f, new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), "")}, Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(new TransactionalTriggerEvent(f,
+						new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
+								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
+						Events.DELETE | Events.WASTEBIN));
 			}
 
 			// if the file is a localized copy, it was hiding other files (which are now "created")
@@ -2583,7 +2587,8 @@ public class FileFactory extends AbstractFactory {
 
 				fileIds.add(file.getId());
 				ActionLogger.logCmd(ActionLogger.DEL, File.TYPE_FILE, file.getId(), null, "File.delete()");
-				Events.trigger(file, new String[] { ObjectTransformer.getString(file.getFolder().getNode().getId(), "")}, Events.DELETE);
+				Events.trigger(file, new String[] { ObjectTransformer.getString(file.getFolder().getNode().getId(), ""),
+						MeshPublisher.getMeshUuid(file), MeshPublisher.getMeshLanguage(file) }, Events.DELETE);
 
 				// if the file is a localized copy, it was hiding other files (which are now "created")
 				if (!file.isMaster()) {

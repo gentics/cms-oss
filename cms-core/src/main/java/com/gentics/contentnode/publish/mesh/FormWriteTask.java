@@ -53,7 +53,7 @@ class FormWriteTask extends AbstractWriteTask {
 	}
 
 	@Override
-	public void perform() throws NodeException {
+	public void perform(boolean withSemaphore) throws NodeException {
 		List<Completable> observableList = new ArrayList<>();
 		for (Map.Entry<String, String> entry : dataMap.entrySet()) {
 			String language = entry.getKey();
@@ -61,7 +61,7 @@ class FormWriteTask extends AbstractWriteTask {
 			observableList.add(publish(data, language));
 		}
 
-		getExistingLanguages().flatMapCompletable(langSet -> {
+		publisher.getExistingFormLanguages(project, uuid).flatMapCompletable(langSet -> {
 			// add completables which will remove languages from Mesh, which are not used any more
 			langSet.stream().filter(lang -> !dataMap.keySet().contains(lang)).forEach(lang -> {
 				observableList.add(remove(lang));
@@ -134,27 +134,6 @@ class FormWriteTask extends AbstractWriteTask {
 	protected Completable remove(String language) {
 		return publisher.client.deleteNode(project.name, uuid, language).toCompletable().doOnSubscribe(disp -> {
 			MeshPublisher.logger.debug(String.format("Removing language %s from form %s", language, uuid));
-		});
-	}
-
-	/**
-	 * Get existing languages (returns empty set, if node does not yet exist)
-	 * @return single emitting the set of existing language tags
-	 */
-	protected Single<Set<String>> getExistingLanguages() {
-		return publisher.client.findNodeByUuid(project.name, uuid, new GenericParametersImpl().setETag(false)).toSingle().map(Optional::of).onErrorResumeNext(t -> {
-			return ifNotFound(t, () -> {
-				MeshPublisher.logger.debug(String.format("Node %s not found", uuid));
-				return Single.just(Optional.empty());
-			});
-		}).map(optionalResponse -> {
-			if (optionalResponse.isPresent()) {
-				MeshPublisher.logger.debug(String.format("Found languages %s in form %s", optionalResponse.get().getAvailableLanguages().keySet(), uuid));
-				return optionalResponse.get().getAvailableLanguages().keySet();
-			} else {
-				MeshPublisher.logger.debug(String.format("Found no languages form form %s", uuid));
-				return Collections.emptySet();
-			}
 		});
 	}
 }

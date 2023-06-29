@@ -968,7 +968,17 @@ public class QueueEntry {
 
 							// delete events should have the node ID as property
 							if (Events.isEvent(eventMask, Events.DELETE) && property != null && property.length >= 1) {
-								((DummyObject) obj).setNodeId(ObjectTransformer.getInt(property[0], 0));
+								DummyObject dummy = (DummyObject) obj;
+								dummy.setNodeId(ObjectTransformer.getInt(property[0], 0));
+								if (property.length >= 2) {
+									String meshUuid = property[1];
+									String meshLanguage = null;
+									if (property.length >= 3) {
+										meshLanguage = property[2];
+									}
+									dummy.setMeshUuid(meshUuid);
+									dummy.setMeshLanguage(meshLanguage);
+								}
 								property = null;
 							}
 							DependencyObject depObj = new DependencyObject(obj, (NodeObject) null);

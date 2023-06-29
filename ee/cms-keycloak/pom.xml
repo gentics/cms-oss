@@ -34,7 +34,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 		</dependency>
 		<dependency>
@@ -53,7 +53,7 @@
 
 		<!--Test dependencies -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>

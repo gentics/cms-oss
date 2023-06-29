@@ -4,7 +4,7 @@
   </a>
 </h1>
 
-<h3 align="center">Gentics CMS is your friendly, enterprise-grade, open-source headless CMS</h3>
+<h3 align="center">Gentics CMS is your friendly, enterprise-grade, open-source CMS</h3>
 
 <p align="center">
 To be honest, it’s more than that: it’s your application development platform
@@ -33,7 +33,6 @@ successfully in less time, no matter which technology you prefer.
    * [Table of Contents](#table-of-contents)
    * [Introduction](#introduction)
       * [Gentics CMP](#gentics-cmp)
-      * [What is a Headless CMS?](#what-is-a-headless-cms)
       * [Why pick Gentics CMS?](#why-pick-gentics-cms)
    * [Status](#status)
    * [Documentation, Changelog, Download Links and System Requirements
@@ -58,41 +57,16 @@ Here are the links to our open-source projects:
 - Gentics CMS OSS: https://github.com/gentics/cms
 - Gentics Mesh OSS: https://github.com/gentics/mesh
 
-## What is a Headless CMS?
-
-Traditional CMSes are "coupled", which means that the CMS also takes care of
-the presentation layer responsible for delivering the content to the
-clients. The content and the presentation are closely interlinked. Typically,
-content managers create and manage their content through tools like "What you see is what you get" (WYSIWYG)
-editors. The CMS then delivers the content according to the front-end delivery
-layer built into the CMS. Typically, a traditional CMS supports your websites
-but not much else.
-
-A pure headless CMS is different, because it offers no front-end capabilities
-at all, giving you full control of your customer experience via APIs. The CMS
-typically provides content managers with a presentation and channel agnostic
-way of managing content. It requires a front-end development team to manage the
-rest with the frameworks and tools they prefer: The content can be loaded by
-external applications which handle the content delivery to the client, meaning
-that the content can be (re-)used by multiple applications and channels (web,
-mobile app, audio guides, IOT).
-
-<p align="center">
-    <img src="https://getmesh.io/blog/gentics-mesh-1-0/headless-vs-coupled.png" alt="a coupled vs a headless CMS" style="max-width: 80%" />
-</p>
-
-
 ## Why pick Gentics CMS?
 
-Gentics CMS is the platform which provides a real WYSIWYG Editor, through which content can be easily edited.
-You can use its modern user interface that makes content editing and administration enjoyable. At the same
-time, we don’t lock you in: You choose the technology and programming language
-you want to implement your application with. You decide whether you want to
+Gentics CMS is an integral part of the Gentics CMP and neccessary in order to create a functioning CMP. 
+It is also the platform which provides a real WYSIWYG Editor, through which content can be easily edited.
+You can use its modern user interface that makes content editing and administration enjoyable. You decide whether you want to
 host it locally or in the cloud. We don’t care if you’re a Windows, Linux or
 Mac guy or girl. Also, with its Apache 2.0 license, you are free to use it, modify
 it and improve it.
 
-What makes Gentics CMS special over other headless CMSes is:
+What makes Gentics CMS special over other CMSes is:
 
 * its built-in user management not only covers the admin and editor features,
   but can also be used for handling access to your application.
@@ -170,8 +144,18 @@ The Gentics CMS core team consists of the following members:
     </a>
    </td>
   </tr>
-
-
+  </tr>
+    </tr>
+    </tr>
+    </tr>
+    <tr>
+   <td align="center">
+    <a href="https://github.com/enizhou">
+     <!-- <img src="https://avatars.githubusercontent.com/pschulzk?size=150" width="150" /><br /> -->
+     En Qiang Zhou<br /><i>Product Owner</i>
+    </a>
+   </td>
+  </tr>
  </table>
 </p>
 
@@ -187,8 +171,7 @@ For our comprehensive documentation on Gentics CMS, please visit the following l
 
 # Getting Help
 
-[Stack Overflow
-questions](https://stackoverflow.com/questions/tagged/gentics-mesh) are always welcome and issues can be reported via [GitHub](https://github.com/gentics/mesh/issues).
+Issues can be reported via [GitHub](https://github.com/gentics/mesh/issues).
 
 # Professional Services
 
@@ -198,9 +181,8 @@ sales@gentics.com for details.
 
 ## Product Development
 
-Gentics CMS already has an extensive set of features, but these features can
-always be extended. After an extension request has been received from you, it
-will be evaluated whether the features will be added to the standard product or
+Gentics CMS is a robust and cutting-edge solution that has undergone continuous development for more than two decades. 
+After an extension request has been received from you, it will be evaluated whether the features will be added to the standard product or
 offered as an individual project.
 
 ## Consulting

@@ -172,7 +172,7 @@ describe('Notification Service', () => {
 
                     const actionDiv: HTMLElement = fixture.nativeElement.querySelector('.action');
 
-                    expect(actionDiv.innerText).toContain('testLabel');
+                    expect(actionDiv.textContent).toContain('testLabel');
                     cleanUp(fixture);
                 }),
             );

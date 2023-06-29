@@ -54,7 +54,7 @@ Gentics CMP (Content Management Platform) is composed of the following component
 
 Here are the links to our open-source projects:
 
-- Gentics CMS OSS: https://github.com/gentics/cms
+- Gentics CMS OSS: https://github.com/gentics/cms-oss
 - Gentics Mesh OSS: https://github.com/gentics/mesh
 
 ## Why pick Gentics CMS?

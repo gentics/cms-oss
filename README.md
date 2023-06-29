@@ -44,12 +44,12 @@ successfully in less time, no matter which technology you prefer.
 
    * [Table of Contents](#table-of-contents)
    * [Introduction](#introduction)
+      * [Gentics CMP](#gentics-cmp)
       * [What is a Headless CMS?](#what-is-a-headless-cms)
-      * [Why pick Gentics Mesh?](#why-pick-gentics-mesh)
+      * [Why pick Gentics CMS?](#why-pick-gentics-cms)
    * [Status](#status)
-   * [Installation](#installation)
-   * [Features](#features)
-   * [Documentation](#documentation)
+   * [Documentation, Changelog, Download Links and System Requirements
+](#documentation-changelog-download-links-and-system-requirements)
    * [Getting Help](#getting-help)
    * [Professional Services](#professional-services)
       * [Product Development](#product-development)
@@ -64,6 +64,15 @@ successfully in less time, no matter which technology you prefer.
    * [Copyright &amp; License](#copyright--license)
 
 # Introduction
+
+## Gentics CMP
+
+Gentics CMP (Content Management Platform) is composed of the following components: Gentics CMS, Gentics Mesh, and Gentics Portal. Gentics CMS and Mesh are available as both open-source software (OSS) and Enterprise Edition (EE). Gentics Portal Java and PHP can only be acquired with the Enterprise Edition. You can find the EE features here: TODO. For more information about the EE, please contact [sales@gentics.com](mailto:sales@gentics.com).
+
+Here are the links to our open-source projects:
+
+- Gentics CMS OSS: https://github.com/gentics/cms
+- Gentics Mesh OSS: https://github.com/gentics/mesh
 
 ## What is a Headless CMS?
 
@@ -89,19 +98,17 @@ mobile app, audio guides, IOT).
 </p>
 
 
-## Why pick Gentics Mesh?
+## Why pick Gentics CMS?
 
-Gentics Mesh is the platform that holds your content, gives you great APIs to
-access and modify it, while relieving you from handling permissions,
-multi-language aspects, search, and much more. You can use its modern user
-interface that makes content editing and administration enjoyable. At the same
+Gentics CMS is the platform which provides a real WYSIWYG Editor, through which content can be easily edited.
+You can use its modern user interface that makes content editing and administration enjoyable. At the same
 time, we don’t lock you in: You choose the technology and programming language
 you want to implement your application with. You decide whether you want to
 host it locally or in the cloud. We don’t care if you’re a Windows, Linux or
 Mac guy or girl. Also, with its Apache 2.0 license, you are free to use it, modify
 it and improve it.
 
-What makes Gentics Mesh special over other headless CMSes is:
+What makes Gentics CMS special over other headless CMSes is:
 
 * its built-in user management not only covers the admin and editor features,
   but can also be used for handling access to your application.
@@ -121,7 +128,7 @@ Austria.
     <img src="https://getmesh.io/blog/gentics-mesh-1-0/gentics-team.jpg" alt="photo of the Gentics Mesh team" style="max-width: 80%" />
 </p>
 
-The Gentics Mesh core team consists of:
+The Gentics Mesh core team consists of the following members:
 
 <p align="center">
  <table align="center" style="width: 100%; max-width: 600px;">
@@ -186,35 +193,13 @@ The Gentics Mesh core team consists of:
 
 <!-- XXX Roadmap XXX -->
 
-# Installation
+# Documentation, Changelog, Download Links and System Requirements
 
-For your first steps, please refer to the [Quick Start](#quick-start) which
-shows you how to run the demo application.
+For our comprehensive documentation on Gentics CMS, please visit the following link: https://www.gentics.com/Content.Node/guides/.
 
-When you're ready to run your own CMS installation, check out our
-[Administration Guide](https://getmesh.io/docs/administration-guide/) where you
-will find everything you need to know, and much more.
-
-
-# Features
-
-* [GraphQL API](https://getmesh.io/docs/graphql/)
-* [content events via websocket](https://getmesh.io/docs/events/)
-* [user, role and permission management](https://getmesh.io/docs/features/#_permissions)
-* [document-level permissions](https://getmesh.io/docs/features/#_permissions)
-* [versioned content](https://getmesh.io/docs/features/#versioning)
-* [a webroot API for easy integration with modern routing frameworks](https://getmesh.io/docs/features/#webroot)
-* [a search API powered by Elasticsearch](https://getmesh.io/docs/elasticsearch/)
-* [an image manipulation API](https://getmesh.io/docs/features/#imagemanipulation)
-* [a tagging API](https://getmesh.io/docs/building-blocks/#_tag)
-* [clustering support](https://getmesh.io/docs/clustering/)
-* [monitoring support](https://getmesh.io/docs/monitoring/)
-* an embedded graph database at its core
-* support for [Docker](https://getmesh.io/docs/deployment/#_docker)
-
-# Documentation
-
-You can find our extensive documentation at https://getmesh.io/docs/
+Changelog: https://www.gentics.com/Content.Node/changelog/
+Download Links: https://www.gentics.com/Content.Node/guides/downloads.html
+System Requirements: https://www.gentics.com/Content.Node/guides/faq_system_requirements.html
 
 # Getting Help
 
@@ -255,7 +240,6 @@ To help and support you and your developers working and developing applications
 and online projects using Gentics Mesh we offer a dedicated Developer Support
 focusing on all the typical questions and needs arising when working with
 Headless CMS solutions.
-
 
 # Getting started developing with Gentics Mesh
 

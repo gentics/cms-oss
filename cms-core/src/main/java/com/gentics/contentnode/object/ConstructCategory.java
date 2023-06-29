@@ -35,6 +35,9 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		} else if (from.getName() != null) {
 			to.setName(from.getName(), 1);
 		}
+		if (from.getSortOrder() != null) {
+			to.setSortorder(from.getSortOrder());
+		}
 		return to;
 	};
 
@@ -47,6 +50,7 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		to.setGlobalId(from.getGlobalId() != null ? from.getGlobalId().toString() : null);
 		to.setName(from.getName().toString());
 		to.setNameI18n(I18NHelper.toI18nMap(from.getName()));
+		to.setSortOrder(from.getSortorder());
 
 		// set the constructs
 		Map<String, com.gentics.contentnode.rest.model.Construct> constructs = new HashMap<String, com.gentics.contentnode.rest.model.Construct>();
@@ -75,6 +79,35 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 		return to;
 	};
 
+	protected static Map<String, Property> resolvableProperties = new HashMap<>();
+
+	static {
+		resolvableProperties.put("id", new Property(new String[] { "id" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getId();
+			}
+		});
+
+		resolvableProperties.put("name", new Property(new String[] { "name" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getName();
+			}
+		});
+
+		resolvableProperties.put("sortorder", new Property(new String[] { "sortorder" }) {
+
+			@Override
+			public Object get(ConstructCategory category, String key) {
+				return category.getSortorder();
+			}
+		});
+
+	}
+
 	/**
 	 * Serial Version UID
 	 */
@@ -97,6 +130,20 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 	 */
 	protected ConstructCategory(Integer id, NodeObjectInfo info) {
 		super(id, info);
+	}
+
+	@Override
+	public Object get(String key) {
+		Property prop = resolvableProperties.get(key);
+
+		if (prop != null) {
+			Object value = prop.get(this, key);
+
+			addDependency(key, value);
+			return value;
+		} else {
+			return super.get(key);
+		}
 	}
 
 	/**
@@ -144,4 +191,27 @@ public abstract class ConstructCategory extends AbstractContentObject implements
 	 * @throws NodeException
 	 */
 	public abstract List<Construct> getConstructs() throws NodeException;
+
+	/**
+	 * Inner property class
+	 */
+	private abstract static class Property extends AbstractProperty {
+
+		/**
+		 * Create instance of the property
+		 * @param dependsOn
+		 */
+		public Property(String[] dependsOn) {
+			super(dependsOn);
+		}
+
+		/**
+		 * Get the property value for the given object
+		 * @param object object
+		 * @param key property key
+		 * @return property value
+		 */
+		public abstract Object get(ConstructCategory object, String key);
+	}
+
 }

@@ -1,5 +1,5 @@
 <h1 align="center">
-  <a href="https://getmesh.io">
+  <a href="https://www.gentics.com/infoportal/">
     <img src="Gentics_CMS_Logo.png" width="420" alt="Gentics CMS" />
   </a>
 </h1>
@@ -21,18 +21,6 @@ successfully in less time, no matter which technology you prefer.
 
  <a href="https://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/:license-apache-brightgreen.svg" alt="License" />
- </a>
- <a href="https://stackoverflow.com/questions/tagged/gentics-mesh">
-  <img src="https://img.shields.io/badge/stack%20overflow-gentics--mesh-brightgreen.svg" alt="Stack Overflow" />
- </a>
- <a href="https://gitter.im/gentics/mesh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
-  <img src="https://badges.gitter.im/gentics/mesh.svg" alt="Join the chat at https://gitter.im/gentics/mesh" />
- </a>
- <a href="https://github.com/gentics/mesh/releases">
-  <img src="https://img.shields.io/github/v/release/gentics/mesh?sort=semver" alt="Latest release" />
- </a>
- <a href="https://cla-assistant.io/gentics/mesh">
-  <img src="https://cla-assistant.io/readme/badge/gentics/mesh" alt="CLA assistant" />
  </a>
 </p>
 
@@ -56,11 +44,7 @@ successfully in less time, no matter which technology you prefer.
       * [Consulting](#consulting)
       * [Maintenance](#maintenance)
       * [Support](#support)
-   * [Getting started developing with Gentics Mesh](#getting-started-developing-with-gentics-mesh)
-      * [Authentication](#authentication)
-      * [Using the REST API](#using-the-rest-api)
-      * [Using the GraphQL API](#using-the-graphql-api)
-   * [Contributing to Gentics Mesh](#contributing-to-gentics-mesh)
+   * [Contributing to Gentics CMS](#contributing-to-gentics-cms)
    * [Copyright &amp; License](#copyright--license)
 
 # Introduction
@@ -121,14 +105,14 @@ What makes Gentics CMS special over other headless CMSes is:
 
 # Status
 
-Gentics Mesh is actively developed by a dedicated team at Gentics Software GmbH in Vienna,
+Gentics CMS is actively developed by a dedicated team at Gentics Software GmbH in Vienna,
 Austria.
 
 <p align="center">
     <img src="https://getmesh.io/blog/gentics-mesh-1-0/gentics-team.jpg" alt="photo of the Gentics Mesh team" style="max-width: 80%" />
 </p>
 
-The Gentics Mesh core team consists of the following members:
+The Gentics CMS core team consists of the following members:
 
 <p align="center">
  <table align="center" style="width: 100%; max-width: 600px;">
@@ -195,35 +179,33 @@ The Gentics Mesh core team consists of the following members:
 
 # Documentation, Changelog, Download Links and System Requirements
 
-For our comprehensive documentation on Gentics CMS, please visit the following link: https://www.gentics.com/Content.Node/guides/.
+For our comprehensive documentation on Gentics CMS, please visit the following link: https://www.gentics.com/Content.Node/guides/
 
-Changelog: https://www.gentics.com/Content.Node/changelog/
-Download Links: https://www.gentics.com/Content.Node/guides/downloads.html
-System Requirements: https://www.gentics.com/Content.Node/guides/faq_system_requirements.html
+* Changelog: https://www.gentics.com/Content.Node/changelog/
+* Download Links: https://www.gentics.com/Content.Node/guides/downloads.html
+* System Requirements: https://www.gentics.com/Content.Node/guides/faq_system_requirements.html
 
 # Getting Help
 
-You can chat with us via our [gitter channel](https://gitter.im/gentics/mesh)
-or create [Stack Overflow
-questions](https://stackoverflow.com/questions/tagged/gentics-mesh). Issues can
-be reported via [GitHub](https://github.com/gentics/mesh/issues).
+[Stack Overflow
+questions](https://stackoverflow.com/questions/tagged/gentics-mesh) are always welcome and issues can be reported via [GitHub](https://github.com/gentics/mesh/issues).
 
 # Professional Services
 
-The company behind Gentics Mesh, Gentics Software GmbH is
-offering commercial services for Gentics Mesh. Please contact us at
+The company behind Gentics CMS, Gentics Software GmbH is
+offering commercial services for Gentics CMS. Please contact us at
 sales@gentics.com for details.
 
 ## Product Development
 
-Gentics Mesh already has an extensive set of features, but these features can
+Gentics CMS already has an extensive set of features, but these features can
 always be extended. After an extension request has been received from you, it
 will be evaluated whether the features will be added to the standard product or
 offered as an individual project.
 
 ## Consulting
 
-We accompany you in your projects with our experienced Gentics Mesh
+We accompany you in your projects with our experienced Gentics CMS
 Consultants. Here we can help you setting up the project, executing together
 the conception of the structures in the CMS, taking into account your
 requirements, and offer orientation to best practices.
@@ -232,82 +214,18 @@ requirements, and offer orientation to best practices.
 
 Product Maintenance includes product error removal. We offer various Product
 Maintenance Packages - differing between Essential, Professional and Elite
-Package - depending on the number of Gentics Mesh Nodes.
+Package - depending on the number of Gentics CMS Nodes.
 
 ## Support
 
 To help and support you and your developers working and developing applications
-and online projects using Gentics Mesh we offer a dedicated Developer Support
+and online projects using Gentics CMS we offer a dedicated Developer Support
 focusing on all the typical questions and needs arising when working with
 Headless CMS solutions.
 
-# Getting started developing with Gentics Mesh
+# Contributing to Gentics CMS
 
-## Authentication
-
-First things first: you need to authenticate, otherwise you will not be able to
-access your data.
-
-* http://localhost:8080/api/v2/auth/login
-
-You can post your credentials via JSON, use basic auth or send a JWT header -
-the choice is yours. If you open that URL in a browser, you will most likely
-authenticate using basic auth.
-
-## Using the REST API
-
-Some sample API requests:
-
-* List users [/users](https://demo.getmesh.io/api/v2/users)
-* List nodes [/demo/nodes?perPage=5](https://demo.getmesh.io/api/v2/demo/nodes?perPage=5)
-* Load by path [/demo/webroot/yachts/indian-empress](https://demo.getmesh.io/api/v2/demo/webroot/yachts/indian-empress)
-* Load Image [/demo/webroot/images/yacht-pelorus.jpg?w=700](https://demo.getmesh.io/api/v2/demo/webroot/images/yacht-pelorus.jpg?w=700)
-
-
-## Using the GraphQL API
-
-[A sample GraphQL query](https://demo.getmesh.io/api/v2/demo/graphql/browser/#query=query%20webroot(%24path%3A%20String)%20%7B%0A%20%20node(path%3A%20%24path)%20%7B%0A%20%20%20%20...%20on%20vehicle%20%7B%0A%20%20%20%20%20%20fields%20%7B%0A%20%20%20%20%20%20%20%20name%0A%20%20%20%20%20%20%20%20description%0A%20%20%20%20%20%20%20%20vehicleImage%20%7B%0A%20%20%20%20%20%20%20%20%20%20uuid%0A%20%20%20%20%20%20%20%20%20%20path%0A%20%20%20%20%20%20%20%20%20%20...%20on%20vehicleImage%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20fields%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20image%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20height%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20width%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20dominantColor%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%0A&variables=%7B%22path%22%3A%20%22%2Fyachts%2Fpelorus%22%7D)
-
-```
-query webroot($path: String) {
-  node(path: $path) {
-    ... on vehicle {
-      fields {
-        name
-        description
-        vehicleImage {
-          uuid
-          path
-          ... on vehicleImage {
-            fields {
-              image {
-                height
-                width
-                dominantColor
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
----
-{
-  "path": "/yachts/indian-empress"
-}
-```
-
-# Contributing to Gentics Mesh
-
-Please read our [Contributing Guidelines](https://getmesh.io/docs/contributing/) if you intend to contribute to the project. The guidelines will tell you the
-legal information, give you instructions on how to set up your IDE in order to build Gentics Mesh, and will tell you necessary knowledge to understand the codebase.
-
-Gentics Mesh is currently split into two repositories:
-
-* https://github.com/gentics/mesh contains the backend code
-* https://github.com/gentics/mesh-ui contains the frontend code
-
+Please sign TODO CLA Link in order to contribute to Gentics CMS.
 
 # Copyright & License
 

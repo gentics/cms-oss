@@ -151,7 +151,42 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<id>invoke build</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>guides</executable>
+							<workingDirectory>${project.basedir}/src/main</workingDirectory>
+							<arguments>
+								<argument>build</argument>
+								<argument>--clean</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>check-links</id>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<phase>package</phase>
+						<configuration>
+							<skip>true</skip>
+							<executable>linkchecker</executable>
+							<arguments>
+								<argument>--ignore-url="(.*\/gcnjsapi.*)|(.*\/contentnode-api.*)|(\/restapi\/.*)|(.*\/api-javadoc.*)|(.*\/restapi-javadoc.*)|(.*rails_guides_logo.*)"</argument>
+								<argument>src/main/output/index.html</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>

@@ -346,6 +346,27 @@
 					"maxVersion": "1.4"
 				}
 			}
+		},
+		{
+			"cmpVersion": "8.0",
+			"productVersions": {
+				"cms": {
+					"minVersion": "6.0",
+					"maxVersion": "6.0"
+				},
+				"mesh": {
+					"minVersion": "2.0",
+					"maxVersion": "2.0"
+				},
+				"portal-java": {
+					"minVersion": "3.0",
+					"maxVersion": "3.0"
+				},
+				"portal-php": {
+					"minVersion": "3.0",
+					"maxVersion": "3.0"
+				}
+			}
 		}
 	]
 }

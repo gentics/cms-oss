@@ -2,6 +2,7 @@
   - [Checkout](#checkout)
   - [Setup Runner](#setup-runner)
   - [Running the UIs](#running-the-uis)
+  - [Running tests](#running-tests)
 - [Building the Changelog locally](#building-the-changelog-locally)
 
 # IDE Setup
@@ -104,6 +105,40 @@ and
 cd [workspace]/cms-oss/cms-ui/
 npm start admin-ui
 ```
+
+## Running Tests
+
+Most tests require a backend database, which is provided by the testdb manager. It is recommended to have the testdb manager running locally, e.g. with docker compose:
+
+docker-compose.yml:
+```
+version: '3.4'
+services:
+  app:
+    image: docker.apa-it.at/gentics/apps/gcn-testdb-manager:master
+    stop_grace_period: 30s
+    environment:
+      - GCN_TESTDB_MANAGER_PORT=8080
+      - GCN_TESTDB_MANAGER_MYSQL_HOST=[host of your MariaDB installation]
+      - GCN_TESTDB_MANAGER_MYSQL_PORT=[post of your MariaDB installation]
+      - GCN_TESTDB_MANAGER_MYSQL_USER=[user of your MariaDB installation]
+      - GCN_TESTDB_MANAGER_MYSQL_PASSWORD=[password of your MariaDB installation]
+      - GCN_TESTDB_MANAGER_GCNDB_LIMIT=1
+      - GCN_TESTDB_MANAGER_GCNDB_POOL_CAPACITY=1
+      - GCN_TESTDB_MANAGER_FILLER_THREADS=1
+      - GCN_TESTDB_MANAGER_DEBUG=true
+    ports:
+      - '7070:8080'
+```
+
+Note: The testdb manager will forward the configured hostname and port of the MariaDB installation to the tests, which will use those data to connect to the database.
+
+To tell the tests, how to connect to the testdb manager, the following environment variables need to be set:
+
+| env                  | Description                    | Example   |
+| -------------------- | ------------------------------ | --------- |
+| TESTMANAGER_HOSTNAME | Hostname of the testdb manager | localhost |
+| TESTMANAGER_PORT     | Post of the testdb manager     | 7070      |
 
 # Building the Changelog locally
 

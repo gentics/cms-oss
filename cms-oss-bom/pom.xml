@@ -7,7 +7,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-oss-bom</artifactId>
 	<packaging>pom</packaging>
 	<name>Gentics CMS - Bill Of Materials</name>
@@ -108,19 +108,19 @@
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>admin-ui</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>editor-ui</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>ct-link-checker</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
@@ -131,12 +131,12 @@
 				<version>4.11</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>base-lib</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>base-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -153,69 +153,69 @@
 				<version>2.7.0</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-aloha-bundle</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-js-lib</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-js-lib</artifactId>
 				<version>${project.version}</version>
 				<classifier>doc</classifier>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-restapi</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-static-migration</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-static-fileuploader</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-cache</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-core</artifactId>
 				<version>${project.version}</version>
 				<type>test-jar</type>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-server</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-doc</artifactId>
 				<version>${project.version}</version>
 				<type>zip</type>

@@ -7,7 +7,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-oss-changelog</artifactId>
 	<packaging>pom</packaging>
 

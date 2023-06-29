@@ -14,11 +14,25 @@ export interface DocBlock {
     decorator?: string;
     accessModifier?: AccessModifer;
     methodArgs?: string[];
+    inheritance?: InheritanceInfo;
 }
 
-export interface IDocumentation {
+export interface InheritanceInfo {
+    type: DocumentationType;
+    name: string;
+    file: string;
+}
+
+export interface SourceFile {
     type: 'component' | 'service';
+    sourceFile: string;
+    extends?: string;
+}
+
+export interface IDocumentation extends SourceFile {
+    name: string;
     main: string;
+    inheritance?: InheritanceInfo[];
     inputs: DocBlock[];
     outputs: DocBlock[];
     properties: DocBlock[];

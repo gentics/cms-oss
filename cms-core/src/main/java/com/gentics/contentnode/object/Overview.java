@@ -164,18 +164,18 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 
 			Class<? extends NodeObject> clazz = getSelectionClass(from.getSelectType(), from.getListType());
 
-			if (from.getSelectedNodeItemIds() != null) {
+			if (from.getSelectedItemIds() != null) {
+				to.setSelection(Flowable.fromIterable(from.getSelectedItemIds()).map(item -> {
+					String globalId = t.getGlobalId(clazz, item);
+					return new OverviewItemModel().setId(globalId);
+				}).toList().blockingGet());
+			} else if (from.getSelectedNodeItemIds() != null) {
 				to.setSelection(Flowable.fromIterable(from.getSelectedNodeItemIds()).map(item -> {
 					String globalNodeId = t.getGlobalId(Node.class, item.getNodeId());
 					String globalId = t.getGlobalId(clazz, item.getObjectId());
 					return new OverviewItemModel().setNodeId(globalNodeId).setId(globalId);
 				}).toList().blockingGet());
-			} else if (from.getSelectedItemIds() != null) {
-				to.setSelection(Flowable.fromIterable(from.getSelectedItemIds()).map(item -> {
-					String globalId = t.getGlobalId(clazz, item);
-					return new OverviewItemModel().setId(globalId);
-				}).toList().blockingGet());
-			} 
+			}
 		}
 		return to;
 	};

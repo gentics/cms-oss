@@ -26,7 +26,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
 			<version>${project.version}</version>
 			<type>zip</type>
@@ -34,7 +34,7 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-js-lib</artifactId>
 			<version>6.0.0-SNAPSHOT</version>
 			<type>zip</type>
@@ -44,7 +44,7 @@
 
 		<!--javadoc dependency for the assembly -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
@@ -52,7 +52,7 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>base-api</artifactId>
 			<version>${project.version}</version>
 			<type>jar</type>
@@ -63,17 +63,17 @@
 
 		<!-- Source dependencies needed for aggregation -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-api</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-restapi</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>base-lib</artifactId>
 			<version>${project.version}</version>
 		</dependency>

@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { NotificationService, TableAction, TableActionClickEvent, TableColumn, TableColumnMappingFn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { at } from 'lodash-es';
 import { IDocumentation } from '../../common/docs';
 import { InjectDocumentation } from '../../common/docs-loader';
-import { at } from 'lodash-es';
 
 interface User {
     firstName: string;
@@ -36,7 +36,7 @@ function sortRows(rows: TableRow<User>[], columns: TableColumn<User>[], key: str
             bVal = col.mapper(bVal, col);
         }
 
-        let left, right;
+        let left; let right;
         if (order === TableSortOrder.ASCENDING) {
             left = bVal;
             right = aVal;
@@ -50,9 +50,11 @@ function sortRows(rows: TableRow<User>[], columns: TableColumn<User>[], key: str
         }
 
         if (left instanceof Date) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             return left.getTime() - right.getTime();
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         return ((left ?? '').toString()).localeCompare((right ?? '').toString());
     });
     return arr;
@@ -138,12 +140,14 @@ export class TableDemoPage implements OnInit {
             icon: 'visibility',
             label: 'Show Notification',
             type: 'secondary',
+            enabled: true,
         },
         {
             id: 'delete',
             icon: 'delete',
             label: 'Delete User',
             type: 'alert',
+            enabled: true,
         },
     ];
 

@@ -50,6 +50,7 @@ import { TypographyDemoPage } from './pages/typography-demo/typography-demo.comp
 import { TrustedHTMLPipe } from './pipes/trusted-html/trusted-html.pipe';
 import { DemoDateFormatService } from './providers/demo-date-format/demo-date-format.service';
 import { TableDemoPage } from './pages/table-demo/table-demo.component';
+import { TrableDemoPage } from './pages/trable-demo/trable-demo.component';
 
 const DEMO_APP_PAGES: Type<any>[] = [
     BreadcrumbsDemoPage,
@@ -83,6 +84,7 @@ const DEMO_APP_PAGES: Type<any>[] = [
     SplitButtonDemoPage,
     SplitViewContainerDemoPage,
     TableDemoPage,
+    TrableDemoPage,
     TabsDemoPage,
     TextareaDemoPage,
     TopBarDemoPage,
@@ -103,7 +105,7 @@ const DEMO_APP_DECLARATIONS: Type<any>[] = [
 
 export const DECLARATIONS = [...DEMO_APP_PAGES, ...DEMO_APP_DECLARATIONS];
 export const ROUTER_MODULE_FOR_ROOT: ModuleWithProviders<GenticsUICoreModule> = RouterModule.forRoot(UI_CORE_DOCS_ROUTES, {
-    useHash: true
+    useHash: true,
 });
 
 @NgModule({

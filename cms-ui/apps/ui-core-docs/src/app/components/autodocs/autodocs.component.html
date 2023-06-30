@@ -1,22 +1,33 @@
 <ng-container *ngIf="docs">
+    <div class="title">
+        <h1>{{ docs.name }}</h1>
+
+        <div *ngIf="docs.inheritance.length > 0" class="inheritance-info">
+            <div
+                *ngFor="let inherit of docs.inheritance"
+                class="inherited-class"
+            >extends <code class="class-name">{{ inherit.name }}</code></div>
+        </div>
+    </div>
+
     <div [innerHTML]="docs.main | trustedHTML"></div>
 
-    <div *ngIf="0 < docs.inputs?.length" class="autodoc-section">
+    <div *ngIf="docs.inputs?.length > 0" class="autodoc-section">
         <h6>Inputs</h6>
         <gtx-autodoc-table [docBlocks]="docs.inputs"></gtx-autodoc-table>
     </div>
 
-    <div *ngIf="0 < docs.outputs?.length" class="autodoc-section">
+    <div *ngIf="docs.outputs?.length > 0" class="autodoc-section">
         <h6>Outputs</h6>
         <gtx-autodoc-table [docBlocks]="docs.outputs"></gtx-autodoc-table>
     </div>
 
-    <div *ngIf="0 < docs.properties?.length" class="autodoc-section">
+    <div *ngIf="docs.properties?.length > 0" class="autodoc-section">
         <h6>Properties</h6>
         <gtx-autodoc-table [docBlocks]="docs.properties"></gtx-autodoc-table>
     </div>
 
-    <div *ngIf="0 < docs.methods?.length" class="autodoc-section">
+    <div *ngIf="docs.methods?.length > 0" class="autodoc-section">
         <h6>Methods</h6>
         <gtx-autodoc-table [docBlocks]="docs.methods"></gtx-autodoc-table>
     </div>

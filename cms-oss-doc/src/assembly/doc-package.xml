@@ -15,7 +15,7 @@
 			<unpack>true</unpack>
 			<includes>
 				<!--  groupId:artifactId:type:version[:classifier] -->
-				<include>com.gentics.cms:cms-restapi:*:doc</include>
+				<include>com.gentics.cms-oss:cms-restapi:*:doc</include>
 			</includes>
 		</dependencySet>
 
@@ -26,7 +26,7 @@
 			<unpack>true</unpack>
 			<includes>
 				<!--  groupId:artifactId:type:version[:classifier] -->
-				<include>com.gentics.cms:base-api:*:javadoc</include>
+				<include>com.gentics.cms-oss:base-api:*:javadoc</include>
 			</includes>
 		</dependencySet>
 
@@ -37,7 +37,7 @@
 			<unpack>true</unpack>
 			<includes>
 				<!--  groupId:artifactId:type:version[:classifier] -->
-				<include>com.gentics.cms:cms-restapi:*:javadoc</include>
+				<include>com.gentics.cms-oss:cms-restapi:*:javadoc</include>
 			</includes>
 		</dependencySet>
 
@@ -48,7 +48,7 @@
 			<unpack>true</unpack>
 			<includes>
 				<!--  groupId:artifactId:type:version[:classifier] -->
-				<include>com.gentics.cms:cms-js-lib:*:doc</include>
+				<include>com.gentics.cms-oss:cms-js-lib:*:doc</include>
 			</includes>
 		</dependencySet>
 	</dependencySets>

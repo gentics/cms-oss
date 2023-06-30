@@ -352,5 +352,5 @@ function getAccessModifer(node: ts.Node): AccessModifer {
  * Remove the `*` and padding from the doc block body.
  */
 function stripStars(body: string): string {
-    return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?/mg, '$1').trim();
+    return body.replace(/^\/\*{2}|^\s*\*(\s?)[/]?|\*\//mg, '$1').trim();
 }

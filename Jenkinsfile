@@ -285,6 +285,7 @@ spec:
                     def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
+                        sh "docker --version"
                         sh "cd cms-server ; docker build --network=host -t ${imageNameWithTag} ."
 
                         // Push released image

@@ -4,26 +4,28 @@ import java.io.ByteArrayInputStream;
 import java.util.Collection;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
-import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.GenericTestUtils;
 
 /**
  * Test cases for the publish process with localized objects
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = {Feature.MULTICHANNELLING, Feature.INSTANT_CR_PUBLISHING, Feature.MCCR}, unset = {Feature.TAG_IMAGE_RESIZER})
 public class LocalizedObjectsPublishingSandboxTest extends AbstractLocalizedObjectsPublishingTest {
 
 	/**
@@ -44,14 +46,6 @@ public class LocalizedObjectsPublishingSandboxTest extends AbstractLocalizedObje
 
 	@Before 
 	public void setUp() throws Exception {
-
-		// activate the feature instant publishing
-		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature("instant_cr_publishing", true);
-		// deactivate the GIS
-		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature("tag_image_resizer", false);
-
-		testContext.getContext().getNodeConfig().getDefaultPreferences().setFeature("multichannelling", true);
-
 		setUpTestData(false, false);
 	}
 

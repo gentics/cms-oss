@@ -33,7 +33,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.datasource.mccr.MCCRDatasource;
 import com.gentics.testutils.GenericTestUtils;
 
-@GCNFeature(set = { Feature.MULTICHANNELLING })
+@GCNFeature(set = { Feature.MULTICHANNELLING, Feature.MCCR })
 public class AbstractMCCRPublishingSandboxTest {
 
 	@Rule

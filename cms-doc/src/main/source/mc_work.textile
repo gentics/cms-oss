@@ -1,0 +1,85 @@
+h2. Working with Channels
+
+Description of the base functions necessary to work with channels.
+
+endprologue.
+
+h3. Create a Channel
+
+Users that have permission to create new nodes may also create channels. A channel is created by selecting the master node from the +Derives from+ dropdown in the +New Node+ dialog.
+
+!images/gcn_dialogs/create_channel.png!
+
+WARNING: After the channel is created, it is not possible to change, from which master node it derives.
+
+h3. Remove a Channel
+
+Channels are removed exactly like nodes by executing the +Delete+ action on the channel in the list of nodes. When a channel is removed, this will remove all localized copies or local objects in the channel, but not the inherited objects from the master.
+
+NOTE: It is not possible to remove a node, if it is master to a channel.
+
+h3. Localize an Object
+
+Objects can be localized with the +Localize+ action from the context menu or the Actions dropdown in the list views.
+
+NOTE: Localizing folders does _not_ affect the objects (pages, templates, images, files, folders) in that folder, but only the folder object itself.
+
+h3. Editing Inherited Objects in Channels
+
+When an inherited object is edited in a channel, an additional dialog will be shown to inform the user about what he is doing:
+
+!images/gcn_dialogs/edit_inherited.png!
+
+From this dialog, the user has three options:
+
+* +Edit Object+ will let him edit the inherited object
+* +Edit Locally+ will localize the object in the channel and let the user edit the localized copy (will not affect the object in the master)
+* +Cancel+ will leave this dialog
+
+h3. Removing Localized Copies
+
+Localized copies of objects can be removed by executing the +Delete+ action for the objects in the channel. This will only delete the localized copy, but not the inherited object, so after the deletion, the inherited object will be shown again.
+
+h3. Removing Master Objects
+
+When master objects, that have localized copies are selected to be deleted, the user will get a message informing about existence of the localized copies. 
+
+The dialog gives the user two options:
+
+* _OK_ to delete the master objects together will all their localized copies
+* _Cancel_ to cancel the whole operation
+
+h3. Moving Objects with Localized Copies
+
+h4. Moving inside the Master
+
+When objects with localized copies are moved inside the master node, the localized copies are also moved.
+
+h4. Moving out of the Master
+
+When objects with localized copies are moved out of the master node, the user will get a message informing that the localized copies will be lost.
+
+The dialog gives the user two options:
+
+* _OK_ to proceed with moving (localized copies will be deleted)
+* _Cancel_ to cancel the whole operation
+
+h3. Moving Inherited or Localized Objects
+
+It is not possible to move inherited or localized objects in or out of channels.
+
+h3. Linking to Localized Copies
+
+When linking to objects (e.g. when filling a link tag), it is possible to select localized copies from channels. However, the reference will be made to the master object. Only when rendering the link in the channel, it will show the localized copy.
+
+Example:
+
+Page A (in the master node) contains a link tag, which is filled to point to the localized copy of page B' in the channel. If page A is now rendered for the master node, it will render the link to page B (master). When rendering page A for the channel, it will contain the link to page B' (localized copy).
+
+NOTE: It is _not_ possible to have an object of the master node reference a localized object in a channel, because the master node simply doesn't "see" localized copies from the channel.
+
+h3. Tagtypes, Languages and Object Properties Definitions in Channels
+
+Every channel will automatically inherit the tagtypes, languages and object properties definitions from its master node. Currently it is not possible to change the assignment or to localize tagtypes, languages or object properties in channels.
+
+It is - however - possible to modify an object property of a localized copy in a channel.

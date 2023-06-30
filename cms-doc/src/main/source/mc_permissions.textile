@@ -1,0 +1,42 @@
+h2. Permissions in Channels
+
+Channels inherit all permissions from their master node. In order to grant channel specific permissions to users, it is possible to restrict the assignment of the user
+to groups to specific channels or nodes.
+
+endprologue.
+
+h3. Restricting user-group assignments to nodes
+
+When a user is assigned to a group, the user will automatically be granted all permissions, that are set for the group.
+If the assignment however is restricted to specific nodes or channels, the group's permissions are only granted for the specified nodes and channels.
+
+The restriction can be done in the user properties dialog, in the group tree next to the assignment of the user to groups.
+
+When the checkbox for assigning the user to a group is checked, an icon appears that shows the restriction status and can be clicked to maintain the node restrictions.
+When the icon is grayed (like in the image below) the assignment is not restricted to nodes.
+
+!images/gcn_dialogs/mc_usergroup_unrestricted.png!
+
+When the icon is not grayed, the assignment is restricted to at least one node.
+
+!images/gcn_dialogs/mc_usergroup_restricted.png!
+
+After clicking the icon, a list of nodes is shown with checkboxes to restrict the assignment to nodes. This dialog will also contain information about restriction to nodes, the user is not allowed to see.
+
+!images/gcn_dialogs/mc_node_restriction.png!
+
+After changing the assignment, this dialog and the main user properties dialog must both be confirmed by clicking OK.
+
+h3. Removing user-group assignment
+
+When a user-group assignment is restricted, this assignment cannot be removed by a user who is not allowed to see all nodes, to which the assignment is restricted.
+
+h3. Mitigation of privilege escalation
+
+A user that has at least one node restriction for any of his own groups cannot create unrestricted group memberships for other users, because this could be used to gain privileges by means of simply creating a new user with more privileges (no node restrictions).
+
+The user properties dialog assists you at making sure that your changes are allowed by automatically adding all available nodes to the restriction if needed.
+
+h3. Editing inherited objects in channels
+
+When a user starts editing an inherited object in a channel, but has no permission to edit the object in its own node, the object will automatically be localized and the user starts editing the localized copy.

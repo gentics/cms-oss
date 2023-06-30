@@ -1,0 +1,60 @@
+title: Gentics CMS-OSS Documentation
+description: This documentation contains information useful for Gentics CMS implementors, developers and users.
+
+authors:
+  Documentation Team:
+    - name: Norbert Pomaroli
+      nick: norps
+      description: Senior Developer @Gentics
+    - name: Clemens Prerovsky
+      nick: clemens
+      description: Former Head of Development @Gentics
+    - name: Petro Salema
+      nick: petro
+      description: Former Developer @Gentics
+    - name: Johannes Schüth
+      nick: Jotschi
+      description: Former Developer @Gentics
+    - name: Bernhard Kaszt
+      nick: berni
+      description: Former Developer @Gentics
+    - name: Andrea Schauerhuber
+      nick: Andi
+      description: Former Head of Gentics
+    - name: Patrick Klaffenböck
+      nick: pk
+      description: Senior Developer @Gentics
+
+index:
+  General:
+    - title: "Features"
+      url: feature_overview
+      text: "Overview of Gentics CMS features"
+
+  Multichannelling:
+    - title: "Administration"
+      url: mc_admin
+      text: Administrative Information about this Feature
+    - title: "Basic Concept"
+      url: mc_basic
+      text: Read about the Basic Concept of Multichannelling
+    - title: "Working with Channels"
+      url: mc_work
+      text: Find information about how to work with channels
+# TODO: Fix permission restriction in admin UI, then create new screenshots for mc_permission and re-enable the link.
+#    - title: "Permissions in Channels"
+#      url: mc_permissions
+    - title: "Restricting Inheritance"
+      url: mc_restrictions
+      text: It is possible to exclude objects from multichannelling and to restrict inheritance
+    - title: "Channel Synchronization"
+      url: mc_channelsync
+      text: Synchronize objects between a Channel and its Master
+    - title: "Multichannelling aware content repository"
+      url: mc_contentrepository
+      text: Publish a node and all of its channels into a single content repository
+
+  Gentics CMS JavaScript API:
+    - title: "Multichannelling"
+      url: gcn_js_api_multichannelling
+      text: How to use multichannelling feature with the Gentics CMS JS API

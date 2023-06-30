@@ -111,9 +111,11 @@ The last released stable version of this browser is supported.
 
 * "Wikipedia Mozilla Firefox":http://en.wikipedia.org/wiki/Firefox
 
-h4. Microsoft Internet Explorer
+h4. Safari
 
-No version of Microsoft Internet Explorer is supported by Gentics CMS, please use one of our other supported browsers.
+The last released stable version of this browser is supported.
+
+* "Wikipedia Mozilla Firefox":https://de.wikipedia.org/wiki/Safari_(Browser)
 
 h4. Google Chrome
 

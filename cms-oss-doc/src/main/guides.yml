@@ -33,9 +33,6 @@ index:
     - title: "Features"
       url: feature_overview
       text: "Overview of Gentics CMS features"
-    - title: "FAQs"
-      url: faq_overview
-      text: "Frequently Asked Questions"
     - title: "System Requirements"
       text: "Gentics CMS System Requirements."
       url: faq_system_requirements

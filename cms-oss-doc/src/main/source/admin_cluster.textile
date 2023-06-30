@@ -23,7 +23,7 @@ The Gentics CMS server takes the central role in the infrastucture overview. Mos
 h5. Gentics Mesh
 
 Starting with version 2.0.0 clustering with OrientDB is no longer part of the professional support by Gentics. For high availability setups, it is recommended to use
-link:https://getmesh.io/premium-features/sql-db/[Gentics Mesh SQL].
+"Gentics Mesh SQL":https://getmesh.io/premium-features/sql-db/.
 
 h5. Gentics Portal
 

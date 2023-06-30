@@ -1,7 +1,0 @@
-h2. Can i skip an update?
-
-endprologue.
-
-h3. FAQ
-
-Of course any update can be omitted and the system can be updated to the next higher version. All missed changes will be applied in the update.

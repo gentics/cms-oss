@@ -1897,7 +1897,13 @@ public class FileFactory extends AbstractFactory {
 		Node channel = orgFile.getChannel();
 
 		// set the channel info (create a new master object)
-		newFile.setChannelInfo(channel != null ? channel.getId() : 0, 0);
+		newFile.setChannelInfo(0, 0);
+
+		if (channel != null) {
+			// The first call to setChannelInfo() above is to make sure isMaster is correctly set on the copied file.
+			// This call is to make sure the file is in the correct channel when determining a filename later on.
+			newFile.setChannelInfo(channel.getId(), 0);
+		}
 
 		if (newFileName != null) {
 			newFile.setName(newFileName);

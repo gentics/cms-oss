@@ -20,6 +20,10 @@
 	<description>The contentnode-doc module</description>
 	<url>http://www.gentics.com</url>
 
+	<properties>
+		<guides.exec.skip>false</guides.exec.skip>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.gentics.cms</groupId>
@@ -154,6 +158,9 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<skip>${guides.exec.skip}</skip>
+				</configuration>
 				<executions>
 					<execution>
 						<phase>compile</phase>

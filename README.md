@@ -4,6 +4,7 @@
   - [Running the UIs](#running-the-uis)
   - [Running tests](#running-tests)
 - [Building the Changelog locally](#building-the-changelog-locally)
+- [Building the Guides locally](#building-the-guides-locally)
 
 # IDE Setup
 ## Checkout
@@ -178,3 +179,41 @@ mvn -pl cms-changelog clean package -Dchangelog.version=6.0.0
 Important: Doing this will generate a mapping file for that version (under `cms-changelog/src/changelog/mappings`), which must **not** be checked into the git repository (unless you know exactly, what you are doing)!
 
 If some changelog entries are missing in the generated changelog, check the directory `cms-changelog/src/changelog/mappings` for generated mapping files of snapshot versions (and remove them). The changelog manager plugin will not add entries to the changelog for a specific version, if the entry is found in a mapping file of a different version (and versions `6.0.0` and `6.0.0-SNAPSHOT` **are** different).
+
+# Building the Guides locally
+
+## CMS OSS Guides
+
+The CMS OSS Guides can be built in a container with the following command (path to the workspace needs to be inserted):
+
+```
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+```
+
+The generated guides can be found at `cms-oss/cms-oss-doc/src/main/output`.
+
+## CMS Guides
+
+Building the CMS Guides locally requires three steps:
+
+First, the artifacts containing the assets of the guides need to be installed locally:
+
+```
+cd [workspace]/cms-oss
+mvn -pl cms-oss-doc install -Dguides.exec.skip
+```
+
+Then, the maven module needs to be built (without actually building the guides):
+
+```
+cd [workspace]/cms
+mvn -pl cms-doc clean compile -Dguides.exec.skip
+```
+
+And finally, the guides can be built with
+
+```
+docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
+```
+
+The generated guides can be found at `cms/cms-doc/target/output`.

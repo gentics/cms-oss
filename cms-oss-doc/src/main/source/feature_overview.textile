@@ -475,18 +475,6 @@ feature:
 
 See "Tagtype Categories feature":feature_construct_categories.html
 
-h3. Tagfill Light
-
-<shell filename="conf/features.yml">
-feature:
-	tagfill_light: true
-</shell>
-
-This feature is activated by default and reduces the tagfill dialog size to make it fit into the lightbox without scrollbars. When deactivated a checkbox "display content" will be shown in every tagfill dialog (this does include object properties).
-This checkbox sets the "active" status of the tag. Tags that are not active will not be rendered.
-When the feature @tagfill_light@ is activated, tags will be automatically activated when created or in the case of object properties when filled for the first time.
-Please note, that when setting a tag via JS or REST API, the property "active" has to be set for the tag / property to be rendered.
-
 h3. Usersnap integration
 
 <shell filename="conf/features.yml">

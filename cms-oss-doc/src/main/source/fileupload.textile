@@ -32,8 +32,6 @@ You can enforce a max filesize for uplading files:
 max_filesize: "64MB"
 </shell>
 
-See "How can i raise the upload limit for files and images?":faq_uploadlimit.html for more information.
-
 h4. JPG / CMYK
 
 Images using the color model <a href="http://en.wikipedia.org/wiki/CMYK_color_model" target="_blank">CMYK</a> are supported by the Gentics Image Store, however be in mind that older browsers (ie.: IE 6-8, FF2) do not support them.

@@ -278,6 +278,7 @@ switch_template
 table_old
 tag_fill_preview
 tag_image_resizer
+tagfill_light
 tagfill2
 tagmap_notsearchable
 tagtype_copy

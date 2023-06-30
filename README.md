@@ -18,9 +18,13 @@ successfully in less time, no matter which technology you prefer.
 <p align="center">
 
  <img src="https://img.shields.io/badge/status-stable-brightgreen.svg" alt="stable" />
-
+ 
  <a href="https://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/:license-apache-brightgreen.svg" alt="License" />
+ </a>
+</a>
+ <a href="https://cla-assistant.io/gentics/cms-oss">
+  <img src="https://cla-assistant.io/readme/badge/gentics/cms-oss" alt="CLA assistant" />
  </a>
 </p>
 
@@ -207,7 +211,7 @@ Headless CMS solutions.
 
 # Contributing to Gentics CMS
 
-Please sign TODO CLA Link in order to contribute to Gentics CMS.
+Please sign the [CLA](https://cla-assistant.io/gentics/cms-oss) in order to contribute to Gentics CMS.
 
 # Copyright & License
 

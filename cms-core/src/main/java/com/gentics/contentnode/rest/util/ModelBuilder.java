@@ -55,6 +55,7 @@ import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.LocalizableNodeObject;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
@@ -735,6 +736,12 @@ public class ModelBuilder {
 			Overview nodeOverview) throws NodeException {
 		com.gentics.contentnode.rest.model.Overview restOverview = new com.gentics.contentnode.rest.model.Overview();
 
+		if (nodeOverview == null) {
+			return restOverview;
+		}
+
+		// Fill IDs
+		restOverview.setGlobalId(nodeOverview.getGlobalId().toString());
 		restOverview.setId(nodeOverview.getId());
 
 		// set the selection type
@@ -2255,6 +2262,10 @@ public class ModelBuilder {
 		}
 		OverviewPartType overviewPartType = (OverviewPartType) value.getPartType();
 		com.gentics.contentnode.object.Overview overview = overviewPartType.getOverview();
+
+		if (org.apache.commons.lang.StringUtils.isNotBlank(restOverview.getGlobalId())) {
+			overview.setGlobalId(new GlobalId(restOverview.getGlobalId()));
+		}
 
 		// set selection type
 		SelectType selectType = restOverview.getSelectType();

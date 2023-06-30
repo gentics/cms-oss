@@ -9,7 +9,7 @@ h3. Diff html
 Render the diff in HTML format.
 
 <javascript>
-POST /CNPortletapp/rest/diff/html
+POST /rest/diff/html
 {
   content1: ..,
   content2: ..,

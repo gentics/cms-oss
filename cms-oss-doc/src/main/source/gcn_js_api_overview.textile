@@ -24,7 +24,7 @@ will need to define the BACKEND_PATH, which locates your
 Gentics CMS backend server:
 
 <javascript>
-GCN.settings.BACKEND_PATH="/[Proxy]/CNPortletapp";
+GCN.settings.BACKEND_PATH="/[Proxy]";
 </javascript>
 
 NOTE: This path must be located on the same host as the page that
@@ -36,7 +36,7 @@ the same domain. In our example this script is referred to as
 
 An "example implementation":https://github.com/gentics/proxy-php is provided.
 
-NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the 
+NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the
 "documentation for the GCNProxyServlet":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-servletfilters-gcnproxyservlet.html
 for further information.
 
@@ -55,7 +55,7 @@ You can either load it from the server or copy it to your frontend and load
 it from there.
 
 <html>
-<script src="/[Proxy]/CNPortletapp/latest/gcnjsapi/bin/gcnjsapi.js"></script>
+<script src="/[Proxy]/latest/gcnjsapi/bin/gcnjsapi.js"></script>
 </html>
 
 NOTE: Don't include the gcnjsapi.js on a page that loads the Aloha
@@ -66,7 +66,7 @@ h3. Library Versions
 
 There are three version of the Gentics CMS JavaScript API.
 
-* gcnjsapi/bin/gcnjsapi.js - Minified concatenated version 
+* gcnjsapi/bin/gcnjsapi.js - Minified concatenated version
 * gcnjsapi/dev/gcnjsapi.js - Unminified not concatenated version
 * gcnjsapi/debug/gcnjsapi.js - Unminified concatenated version
 
@@ -82,7 +82,7 @@ For example:
 
 In the above code, the variable `myPage` is not assigned a page but rather a
 continuation object.  This continuation object exposes the appropriate parts
-of the Gentics CMS JavaScript API for operating on page 42 and for querying for objects 
+of the Gentics CMS JavaScript API for operating on page 42 and for querying for objects
 contained in that page.
 
 Therefore, this would be an *incorrect* usage of the Library:
@@ -118,24 +118,24 @@ been applied but where not saved yet.
 
 GCN.folder(42, function (folder) {
 	// [some magic going on here for a while]
-	
+
 	...
-	
+
 	// [wayyyyy later]
 	// now we need a fresh copy of the folder since
 	// someone might have changed it on the server
 	// this will clear the cache and reset *ANY* changes
 	// that have not been saved yet
-	folder.clear(); 
-	
+	folder.clear();
+
 	// now fetch the folder once again to be good to go
 	GCN.folder(42, function(folder) {
 		// now we're good to go with our fresh copy
 		folder.prop('name', $('#foldername').val());
 		folder.save();
-	}); 
+	});
 });
-</javascript> 
+</javascript>
 
 h3. Example Code Snippets
 

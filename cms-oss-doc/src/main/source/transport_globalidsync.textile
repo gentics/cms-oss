@@ -13,7 +13,7 @@ Synchronization is done in multiple steps:
 
 h4. Read the info from the source system
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -read construct,objprop,datasource -out info.json</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -read construct,objprop,datasource -out info.json</shell>
 
 This will connect to the database (connection properties are read from the given config url), will read the global IDs of all objects of the specified type and will
 output the result in JSON format into the file <code>info.json</code>
@@ -82,7 +82,7 @@ Failing to do so may lead to data inconsistencies!
 
 h4. Match the objects
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -match info.json -out match.json</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -match info.json -out match.json</shell>
 
 This will read the information from the file <code>info.json</code>, will match the objects against the database (connection property read from the given url) and will output matching information into the file <code>match.json</code> in JSON format.
 
@@ -139,14 +139,14 @@ WARNING: It is strongly recommended to not do any other alterations to the file,
 
 h4. Generate update SQL
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -sql match.json -out update.sql</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -sql match.json -out update.sql</shell>
 
 This will read the matching information from file <code>match.json</code> and will generate the SQL statements necessary to synchronize the global IDs.
 The SQL statements will be written to the file <code>update.sql</code>.
 
 h4. Generate and execute update SQL
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.GlobalIdSync -config "http://localhost/.Node/?do=24" -exec match.json -out update.sql</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.GlobalIdSync -exec match.json -out update.sql</shell>
 
 Same as the previous step, but will also *execute* the statements. This is the only step, that will actually change data in the database.
 
@@ -157,7 +157,6 @@ This will reactivate the system. After restarting the tomcat and before enabling
 h3. Command Line Parameters
 
 |_.Parameter      |_.Description                                                                                        |
-| -config _[URL]_ | URL to get configuration                                                                            |
 | -out _[file]_   | Filename for writing output (depending on the current action)                                       |
 | -read _[file]_  | Read the object info for the given object types (possible are *construct*, *objprop*, *datasource*) |
 | -match _[file]_ | Match the object info read from the file                                                            |

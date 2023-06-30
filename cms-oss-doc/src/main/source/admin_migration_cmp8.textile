@@ -474,26 +474,26 @@ The URLs to various parts of the CMS have been changed (shortened), and some par
 
 |_. Description             |_. Old URL                                         |_. New URL                            |
 | Old UI and PHP backend    | @/.Node/...@                                      | _Removed_                            |
-| File Servlet              | @/CNPortletapp/file/...@                          | _Removed_                            |
-| Aloha Tag Servlet         | @/CNPortletapp/alohatag/...@                      | _Removed_                            |
-| Java Parser Invoker       | @/CNPortletapp/JavaParserInvoker/...@             | _Removed_                            |
-| Tidy Servlet              | @/CNPortletapp/tidy/...@                          | _Removed_                            |
-| Gentics Image Store       | @/CNPortletapp/GenticsImageStore/...@             | @/GenticsImageStore@                 |
-| Aloha Page Servlet        | @/CNPortletapp/alohapage/...@                     | @/alohaeditor/...@                   |
-| Aloha Editor              | @/CNPortletapp/[build-timestamp]/alohaeditor/...@ | @/alohaeditor/[build-timestamp]/...@ |
-| Gentics CMS JS API        | @/CNPortletapp/[build-timestamp]/gcnjsapi/...@    | @/gcnjsapi/[build-timestamp]/...@    |
-| REST API                  | @/CNPortletapp/rest/...@                          | @/rest/...@                          |
-| JMX Monitoring API        | @/CNPortletapp/jmx/...@                           | @/jmx/...@                           |
-| Activation Service        | @/CNPortletapp/activation@                        | @/activation/...@                    |
+| File Servlet              | @/file/...@                          | _Removed_                            |
+| Aloha Tag Servlet         | @/alohatag/...@                      | _Removed_                            |
+| Java Parser Invoker       | @/JavaParserInvoker/...@             | _Removed_                            |
+| Tidy Servlet              | @/tidy/...@                          | _Removed_                            |
+| Gentics Image Store       | @/GenticsImageStore/...@             | @/GenticsImageStore@                 |
+| Aloha Page Servlet        | @/alohapage/...@                     | @/alohaeditor/...@                   |
+| Aloha Editor              | @/[build-timestamp]/alohaeditor/...@ | @/alohaeditor/[build-timestamp]/...@ |
+| Gentics CMS JS API        | @/[build-timestamp]/gcnjsapi/...@    | @/gcnjsapi/[build-timestamp]/...@    |
+| REST API                  | @/rest/...@                          | @/rest/...@                          |
+| JMX Monitoring API        | @/jmx/...@                           | @/jmx/...@                           |
+| Activation Service        | @/activation@                        | @/activation/...@                    |
 | Keycloak configuration    | @/customer-config/config/keycloak.json@           | @/ui-conf/keycloak.json@             |
 | UI Overrides              | @/customer-config/config/ui-overrides.json@       | @/ui-conf/ui-overrides.json@         |
 | Form Generator Overrides  | @/customer-config/config/config-override.json@    | @/ui-conf/config-override.json@      |
 | Form Editor configuration | @/customer-config/config/form-editor.json@        | @/ui-conf/form-editor.json@          |
 | UI Custom Script          | @/customer-config/scripts/index.js@               | @/ui-conf/index.js@                  |
-| Implementation tool       | @/CNPortletapp/generic.html@                      | @/tools/generic.html@                |
-| Implementation tool       | @/CNPortletapp/renderpage.html@                   | @/tools/renderpage.html@             |
-| Open API (YAML)           | @/CNPortletapp/openapi.yaml@                      | @/openapi/openapi.yaml@              |
-| Open API (JSON)           | @/CNPortletapp/openapi.json@                      | @/openapi/openapi.json@              |
+| Implementation tool       | @/generic.html@                      | @/tools/generic.html@                |
+| Implementation tool       | @/renderpage.html@                   | @/tools/renderpage.html@             |
+| Open API (YAML)           | @/openapi.yaml@                      | @/openapi/openapi.yaml@              |
+| Open API (JSON)           | @/openapi.json@                      | @/openapi/openapi.json@              |
 
 h3. File Upload Manipulator
 

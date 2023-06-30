@@ -3,7 +3,7 @@ h2. Frontend Editing
 Frontend Editing is a huge focus of the Gentics CMS JavaScript API.
 We tried to make it as easy as possible to have your editors
 editing contents from the frontend - so this is you guide
-to get you started. 
+to get you started.
 
 endprologue.
 
@@ -28,7 +28,7 @@ for the examples to work.
 
 An "example implementation":https://github.com/gentics/proxy-php is provided.
 
-NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the 
+NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the
 "documentation for the GCNProxyServlet":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-servletfilters-gcnproxyservlet.html
 for further information.
 
@@ -52,12 +52,12 @@ errors.
       Frontend Editing with Gentics CMS JavaScript API & Aloha Editor
     </title>
 
-	<!-- Loads the Aloha Editor styles --> 
+	<!-- Loads the Aloha Editor styles -->
 	<link rel="stylesheet"
-      href="/[Proxy]/CNPortletapp/latest/alohaeditor/css/aloha.css"
+      href="/[Proxy]/latest/alohaeditor/css/aloha.css"
       id="aloha-style-include"
       type="text/css">
-    
+
     <!-- Configures the gcn-plugin-->
     <script>
     var alohaEditorContextPath = '/[Proxy]';
@@ -66,9 +66,9 @@ errors.
 	Aloha.settings = {
 		"plugins": {
 			"gcn": {
-				"webappPrefix": alohaEditorContextPath + "/CNPortletapp/",
+				"webappPrefix": alohaEditorContextPath + "/",
 				"buildRootTimestamp": "latest",
-				"stag_prefix": alohaEditorContextPath + "/.Node/"
+				"stag_prefix": alohaEditorContextPath + "/"
 			}
 		}
 	};
@@ -76,7 +76,7 @@ errors.
 
 	<!-- Loads Aloha Editor itself including some plugins -->
 	<script type="text/javascript"
-      src="/[Proxy]/CNPortletapp/latest/alohaeditor/lib/aloha.js"
+      src="/[Proxy]/latest/alohaeditor/lib/aloha.js"
       data-aloha-plugins="common/ui,
 						  common/block,
 						  extra/ribbon,
@@ -94,9 +94,9 @@ errors.
 	<script type="text/javascript">
 	Aloha.ready(function () {
         // Replace [Proxy] with the location of the proxy script
-        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/CNPortletapp";
+        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/";
 
-		// use Aloha Editor's internal jQuery & expose it 
+		// use Aloha Editor's internal jQuery & expose it
 		window.$ = window.jQuery = window.Aloha.jQuery;
 
         // and this is where your code goes
@@ -138,7 +138,7 @@ using basic authentication with username and password for this example.
 h4. Fetch a page & start editing!
 
 The next step is about fetching the page from the server and starting to
-edit contents. 
+edit contents.
 
 <javascript>
 // authenticate with the backend
@@ -150,7 +150,7 @@ GCN.login('[username]', '[password]', function (success, data) {
 			// which will contain all contents
 			// using the .edit() method we will put those
 			// contents into our <div id="content"> and
-			// start editing with aloha right away! 
+			// start editing with aloha right away!
 			page.tag('content').edit('#content');
 		});
 	} else {
@@ -178,7 +178,7 @@ GCN.login('[username]', '[password]', function (success, data) {
 			// which will contain all contents
 			// using the .edit() method we will put those
 			// contents into our <div id="content"> and
-			// start editing with aloha right away! 
+			// start editing with aloha right away!
 			page.tag('content').edit('#content');
 
 			// add a save button
@@ -214,12 +214,12 @@ want to add error handling and SSO.
       Frontend Editing with Gentics CMS JavaScript API & Aloha Editor
     </title>
 
-	<!-- Loads the Aloha Editor styles --> 
+	<!-- Loads the Aloha Editor styles -->
 	<link rel="stylesheet"
-      href="/[Proxy]/CNPortletapp/latest/alohaeditor/css/aloha.css"
+      href="/[Proxy]/latest/alohaeditor/css/aloha.css"
       id="aloha-style-include"
       type="text/css">
-    
+
     <!-- Configures the gcn-plugin-->
     <script>
     var alohaEditorContextPath = '/proxy-php';
@@ -229,9 +229,9 @@ want to add error handling and SSO.
 		"plugins": {
 			"gcn": {
 				"links": "backend",
-				"webappPrefix": alohaEditorContextPath + "/CNPortletapp/",
+				"webappPrefix": alohaEditorContextPath + "/",
 				"buildRootTimestamp": "latest",
-				"stag_prefix": alohaEditorContextPath + "/.Node/"
+				"stag_prefix": alohaEditorContextPath + "/"
 			}
 		}
 	};
@@ -239,7 +239,7 @@ want to add error handling and SSO.
 
 	<!-- Loads Aloha Editor itself including some plugins -->
 	<script type="text/javascript"
-      src="/[Proxy]/CNPortletapp/latest/alohaeditor/lib/aloha.js"
+      src="/[Proxy]/latest/alohaeditor/lib/aloha.js"
       data-aloha-plugins="common/ui,
 						  common/block,
 						  extra/ribbon,
@@ -257,9 +257,9 @@ want to add error handling and SSO.
 	<script type="text/javascript">
 	Aloha.ready(function () {
         // Replace [Proxy] with the location of the proxy script
-        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/CNPortletapp";
+        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/";
 
-		// use Aloha Editor's internal jQuery & expose it 
+		// use Aloha Editor's internal jQuery & expose it
 		window.$ = window.jQuery = window.Aloha.jQuery;
 
 		// authenticate with the backend
@@ -271,9 +271,9 @@ want to add error handling and SSO.
 					// which will contain all contents
 					// using the .edit() method we will put those
 					// contents into our <div id="content"> and
-					// start editing with aloha right away! 
+					// start editing with aloha right away!
 					page.tag('content').edit('#content');
-					
+
 					// add a save button
 					$('body')
 						.append('<button id="save">save</button>')

@@ -18,11 +18,11 @@ h3. Usage
 
 The tool can either be configured with a configuration file:
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.UpdateImplementation -f update.yml</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.UpdateImplementation -f update.yml</shell>
 
 or via command-line parameters:
 
-<shell>/Node/bin/java.sh com.gentics.contentnode.tools.UpdateImplementation -u node -p secret -P baseimplementation gallery</shell>
+<shell>/cms$ java -cp cms-server.jar com.gentics.contentnode.tools.UpdateImplementation -u node -p secret -P baseimplementation gallery</shell>
 
 Note: If both a configuration file and command-line parameters are given, the command-line parameters will overwrite settings from the configuration file.
 

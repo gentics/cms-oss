@@ -38,7 +38,7 @@ It can be used in Java by importing +com.gentics.contentnode.rest.api.client.Res
 initialized by specifying the URI pointing to the base-location of the RESTful service provider.
 
 <javascript>
-RestClient client = new RestClient("http:/[host]/CNPortletapp/rest/");
+RestClient client = new RestClient("http:/[host]/rest/");
 </javascript>
 
 h4. Login

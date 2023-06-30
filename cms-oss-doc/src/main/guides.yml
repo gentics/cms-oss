@@ -1,5 +1,5 @@
 title: Gentics CMS-OSS Documentation
-description: This documentation contains information useful for Gentics CMS implementors, developers and users.
+description: This documentation contains information useful for Gentics CMS implementors, developers and users. Due to extensive changes introduced with Gentics CMS 6.0 some parts of the guides are currently work in progress.
 
 authors:
   Documentation Team:
@@ -62,15 +62,9 @@ index:
     - title: "Installing Gentics CMS"
       url: admin_install
       text: "Learn how to install Gentics CMS"
-    - title: "Autoupdate"
-      url: autoupdate
-      text: "Description of the automatic update feature"
     - title: "Email Sending"
       url: email_sending
       text: "Configuration settings for Email Sending capability"
-    - title: "Gentics CMS package configuration"
-      url: admin_configure
-      text: "Learn how to configure the Gentics CMS package"
     - title: "Backup"
       url: admin_backup
       text: "Learn how to backup Gentics CMS"
@@ -83,10 +77,6 @@ index:
     - title: "Configure & control the Scheduler"
       url: scheduler_api
       text: "Configure & control the Scheduler including its API"
-    - title: "Content Maintenance"
-      url: content_maintenance
-    - title: "Server Migration"
-      url: "admin_server_migration"
     - title: "Monitoring"
       url: "admin_jmx_monitoring"
     - title: "ContentRepositories"

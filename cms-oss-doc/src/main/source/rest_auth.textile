@@ -17,7 +17,7 @@ h3. Authentication with credentials
 To login with credentials, the client must
 
 <shell>
-POST /CNPortletapp/rest/auth/login
+POST /rest/auth/login
 {
   "login": ...,
   "password": ...

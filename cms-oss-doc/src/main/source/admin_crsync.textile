@@ -18,10 +18,10 @@ the CRSync. This way you don't have to worry about setting a
 correct classpath, as our @java.sh@ script will take care.
 
 <shell>
-/Node/bin/java.sh com.gentics.api.portalnode.connector.CRSync
+/cms$ java -cp cms-server.jar com.gentics.api.portalnode.connector.CRSync
 </shell>
 
-NOTE: Place the JDBC driver at @/Node/node/java/lib/@
+NOTE: Place the JDBC driver at @/cms/libs/@
 
 h4. File synchronization
 
@@ -106,7 +106,7 @@ The CRSync is capable of handling the following parameters.
 Here's a usage example call from the command line:
 
 <shell>
-/Node/bin/java.sh com.gentics.api.portalnode.connector.CRSync \
+/cms$ java -cp cms-server.jar com.gentics.api.portalnode.connector.CRSync \
  	-source source.properties \
     -target_url jdbc:mariadb://localhost:3306/crsynctarget \
     -target_driverClass org.mariadb.jdbc.Driver \
@@ -123,7 +123,7 @@ h4. Usage of @-source_ds@ and @-target_ds@
 
 The parameters @-source_ds@ and @-target_ds@ allow you to
 specify a @*.properties@ file with datasource properties. Available
-datasource properties are descriped in the 
+datasource properties are descriped in the
 "Gentics Portal.Node SDK Documentation":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-config-portalconfig.html#reference.configuration.portalconfig.datasource
 Here's an example properties file:
 
@@ -146,7 +146,7 @@ are compared to find differences. @-ignoreoptimized@ changes this behaviour.
 On existing attributes the @optimized@ flag will not be updated. When new
 attributes have been created in the source Content Repository these will
 be created in the target Content Repository too, but without setting the
-optimized flag. However the CRSync will generate all optimized attributes 
+optimized flag. However the CRSync will generate all optimized attributes
 in the ContentMap.
 
 If @-ignoreoptimized@ is switched off attributes in the target database will
@@ -169,7 +169,7 @@ multiply this value by the batchsize you set. The maximum filesize can be found
 by using the following SQL statement:
 
 <sql>
-SELECT filesize FROM contentfile ORDER BY filesize DESC LIMIT 1; 
+SELECT filesize FROM contentfile ORDER BY filesize DESC LIMIT 1;
 </sql>
 
 h4. Handling @java.sql.SQLException: Out of memory@ errors
@@ -189,20 +189,20 @@ The CRSync will rely on @log4j@ for logging. Use the parameter @log4j.configurat
 to configure logging:
 
 <shell>
-/Node/bin/java.sh \ 
--Dlog4j.configuration=file:/Node/etc/sync.properties \
+/cms$ java -cp cms-server.jar
+-Dlog4j.configuration=file:/cms/conf/sync.properties \
 com.gentics.api.portalnode.connector.CRSync
 </shell>
 
-Use the following example for @/Node/etc/sync.properties@ to log to 
-@/Node/node/log/crsync.log@.
+Use the following example for @/cms/conf/sync.properties@ to log to
+@/cms/logs/crsync.log@.
 
-<shell filename="/Node/etc/sync.properties">
+<shell filename="/cms/conf/sync.properties">
 log4j.rootLogger=ERROR,A1
 log4j.logger.com.gentics.api.portalnode.connector.CRSync=INFO
 log4j.logger.com.gentics.api.portalnode.connector.CRSyncProgress=INFO
 log4j.appender.A1=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.A1.File=/Node/node/log/crsync.log
+log4j.appender.A1.File=/cms/logs/crsync.log
 log4j.appender.A1.layout=org.apache.log4j.PatternLayout
 log4j.appender.A1.layout.ConversionPattern=%d [%t] %-5p %c - %m%n
 </shell>

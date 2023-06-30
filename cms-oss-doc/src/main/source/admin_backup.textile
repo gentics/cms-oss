@@ -20,9 +20,6 @@ Create a backup of your MySQL database.
 
 <shell>
   # stop Gentics CMS
-  /Node/bin/nodectl stop 
-  # stop Apache service
-  service apache2 stop
   # dump the database
   mysqldump --max_allowed_packet=512M -u root -h 127.0.0.1 -P 42006 -p node_utf8 > /Node/tmp/node_utf8.sql
   # NOTE: You can decide if want to backup any contentrepositories
@@ -35,14 +32,12 @@ NOTE: This is the recommended way to backup your system
 
 NOTE: Backup your database first
 
-<shell> 
+<shell>
 # stop Gentics CMS
-/Node/bin/nodectl stop
 # create a full backup
-tar cvfz /backup/Node-`date +%F`.tar.gz /Node 
+tar cvfz /backup/Node-`date +%F`.tar.gz /Node
 # start Gentics CMS
-/Node/bin/nodectl start
-</shell> 
+</shell>
 
 h3. Differential Backup
 
@@ -50,11 +45,9 @@ NOTE: Backup your database first
 
 @rdiff-backup@ allows you to restore the system to a state at a given point in time.
 
-<shell> 
+<shell>
 # stop Gentics CMS
-/Node/bin/nodectl stop 
 # create backup using rdiff-backup
-rdiff-backup /Node/ /backup/Node 
+rdiff-backup /cms/ /backup/Node
 # start Gentics CMS
-/Node/bin/nodectl start
-</shell> 
+</shell>

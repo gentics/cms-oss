@@ -19,11 +19,11 @@ All query-parameters (except the ones specified in "Options":editor_proxy.html#o
 Example:
 
 <code>
-https://[hostname]/editor/#/proxy/CNPortletapp/rest/auth/me?example=hello-world
+https://[hostname]/editor/#/proxy/rest/auth/me?example=hello-world
 </code>
 
 <code>
-https://[hostname/CNPortletapp/rest/auth/me?sid=12345&example=hello-world
+https://[hostname/rest/auth/me?sid=12345&example=hello-world
 </code>
 
 

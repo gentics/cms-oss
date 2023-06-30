@@ -6,7 +6,7 @@ endprologue.
 
 h3. Specification location
 
-The specification can be found at http://yourcmshost/CNPortletapp/openapi.yaml or http://yourcmshost/CNPortletapp/openapi.json, in the YAML and JSON formats, respectively.
+The specification can be found at http://yourcmshost/openapi.yaml or http://yourcmshost/openapi.json, in the YAML and JSON formats, respectively.
 
 h3. Client code generation
 
@@ -14,11 +14,11 @@ In addition to the official "OpenAPI client generator":https://github.com/OpenAP
 
 h3. Important notice on authentication
 
-Due to the limitations of the "supported security schemes":https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#securitySchemeObject some extra actions are required to make the authentication mechanism of Gentics CMS REST API working. 
+Due to the limitations of the "supported security schemes":https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#securitySchemeObject some extra actions are required to make the authentication mechanism of Gentics CMS REST API working.
 
 h4. Filling out Session ID value
 
-It is important to fill the +session id+ value into the generated client, in order to proceed with the usage of the API methods, that require authentication. The session id is obtained as a result of a successful login. 
+It is important to fill the +session id+ value into the generated client, in order to proceed with the usage of the API methods, that require authentication. The session id is obtained as a result of a successful login.
 
 Below is an example of setting the session id, taken from the plain username/password login, into the generated Angular Typescript client, and using it afterwards for getting the information about the current user:
 
@@ -34,11 +34,11 @@ Below is an example of setting the session id, taken from the plain username/pas
   this.gcms.login(
     null, { login: "mylogin", password: "mypassword" }
   ).toPromise().then(
-    ret => { 
+    ret => {
       // Setting the session id
       if (!this.gcms.configuration.apiKeys) this.gcms.configuration.apiKeys = {};
-      this.gcms.configuration.apiKeys["sid"] = ret.sid;   
-      // Executing a getMe() call 
+      this.gcms.configuration.apiKeys["sid"] = ret.sid;
+      // Executing a getMe() call
       return this.gcms.getMe().toPromise();
     }
   ).then(ret => {

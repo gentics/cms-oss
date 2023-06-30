@@ -636,7 +636,7 @@ public class ObjectTagLoadTest {
 	 * @throws NodeException
 	 */
 	protected void assertTags(Collection<Tag> tags) throws NodeException {
-		assertThat(tags).as("Object tags").usingElementComparatorIgnoringFields("id", "properties", "construct").containsOnly(
+		assertThat(tags).as("Object tags").usingElementComparatorOnFields("active", "constructId", "name", "type").containsOnly(
 			tag("object.def10", constructId),
 			tag("object.def11", constructId),
 			tag("object.def8", constructId),
@@ -665,7 +665,7 @@ public class ObjectTagLoadTest {
 	 * @throws NodeException
 	 */
 	protected void assertTagsPrefilled(Collection<Tag> tags) throws NodeException {
-		assertThat(tags).as("Object tags").usingElementComparatorIgnoringFields("id", "properties", "construct").containsOnly(
+		assertThat(tags).as("Object tags").usingElementComparatorOnFields("active", "constructId", "name", "type").containsOnly(
 			tag("object.def10", constructId),
 			tag("object.def11", constructId),
 			tag("object.def8", constructId),

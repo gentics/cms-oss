@@ -22,9 +22,8 @@ The Gentics CMS server takes the central role in the infrastucture overview. Mos
 
 h5. Gentics Mesh
 
-Gentics Mesh can be clustered in a multi-master setup. More details on the clustering capabilities can be found in the "documentation":https://getmesh.io/docs/clustering/.
-
-NOTE: It is advised to deploy at least one additional dedicated Gentics Mesh instance which is used to only run the "backup process":https://getmesh.io/docs/administration-guide/#_backup_recovery.
+Starting with version 2.0.0 clustering with OrientDB is no longer part of the professional support by Gentics. For high availability setups, it is recommended to use
+link:https://getmesh.io/premium-features/sql-db/[Gentics Mesh SQL].
 
 h5. Gentics Portal
 

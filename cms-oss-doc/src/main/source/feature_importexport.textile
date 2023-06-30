@@ -1,0 +1,7 @@
+h2. Import/Export
+
+endprologue.
+
+h3. Import from filesystem (Since 5.14.0)
+
+It is possible to select update files which have been placed in the the /Node/node/system/fs_import_bundles folder on the filesystem. All zip files in this folder will be listed for import.

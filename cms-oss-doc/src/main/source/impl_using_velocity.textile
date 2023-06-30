@@ -1,0 +1,124 @@
+h2. Using Velocity in Tagtypes
+
+If you want to use Velocity in your tagtypes you have to use at least 2 parts of the tagtype in the right manner.
+
+endprologue.
+
+h3. Basic Usage
+
+# Add a Velocity part. Do not hide it and don't make it editable.
+# Add any HTML part, set "template" as the key and hide it. The part may be editable (when editors should be able to modify the template), but should not be inline editable.
+
+NOTE: Make sure that the Velocity part is not editable. Editable Velocity parts are not supported. It could lead to side effects and there is no possibility
+that users can edit the Velocity part anyway.
+
+h3. &lt;node&gt;-Notation in Templates
+
+WARNING: It is strongly discouraged to use the &lt;node&gt;-Notation in Velocity templates. It is better to use Velocity syntax or the "Render Directives":#render-directives to render other parts, tags or other data from the CMS.
+
+If the VTL-Template includes data via the &lt;node&gt;-Notation, these includes will be resolved in a separate step before Velocity rendering is done.
+
+bq.. For example, when using the VTL-template
+
+@Page <node page.name> renders <node textpart> into the content.@
+
+for a page (with name "Test Page"), and @textpart@ is resolved into another part of the tag, with content
+
+@## Hello world ##@
+
+the &lt;node&gt; inclusions would be resolved first, leading to
+
+@Page Test Page renders ## Hello world ## into the content.@
+
+which Velocity would render to
+
+@Page Test Page renders@
+
+because @##@ starts a VTL-comment.
+
+p. This is bad for the following reasons:
+
+# The rendering behaviour is unpredictable, because included content could contain the characters # and $ which have a special meaning in Velocity.
+# The templates depend on the content and can therefore not be cached efficiently, which can decrease rendering performance significantly.
+
+h3. Render Directives
+
+In the velocity template, two directives will be available for rendering other parts or tags.
+
+|_. Name        |_. Description |_. Usage example |
+| +#gtx_render+ | Renders the specified part or tag not editable (even if in edit mode) | #gtx_render("text"), #gtx_render($cms.tag.parts.text), #gtx_render($cms.page.tags.content) |
+| +#gtx_edit+   | Renders the specified part or tag editable (if in edit mode) or not editable (if not in edit mode) | #gtx_edit("text"), #gtx_edit($cms.tag.parts.text), #gtx_edit($cms.page.tags.content) |
+
+h3. GIS Directive
+
+The directive +#gtx_gis+ can be used to include resized images in velocity tags. See "GenticsImageStore":feature_genticsimagestore.html for details about this directive.
+
+h3. Channel Directive
+
+The directive +#gtx_channel+ can be used to render its body in the context of another channel, which is
+for example useful to create links to another channel.
+
+<html filename="Example">
+#gtx_channel($cms.tag.parts.channel)
+<a href="$cms.tag.part.pageurl">$cms.tag.parts.text</a>
+#end
+</html>
+
+Its is also possible to use global UUIDs instead of local ids. E.g.:
+
+<html filename="Example">
+#gtx_channel("63C2.85f146ae-8d03-11ed-b8bc-0242ac1a0002")
+<a href="$cms.tag.part.pageurl">$cms.tag.parts.text</a>
+#end
+</html>
+
+
+h3. Form Directive
+
+The directive +#gtx_form+ is used to render the template code necessary for rendering a CMS Form into a page in either Gentics Portal | java or Gentics Portal | php.
+See "Gentics CMS Forms":feature_forms.html#form-directive for details.
+
+h3. Defining Macros
+
+There are three possible ways to define macros:
+
+h4. Inline Macros in Templates
+
+Define the macro directly in the template, which will use it.
+The drawback of this approach is, that macros can not be reused
+in other tags in a proper manner.
+
+Note: Starting with Gentics CMS 5.2.5, inline macros will
+only be callable in the template and not interfere with macros from other tags.
+
+h4. Global Macro Library
+
+For correctly reusing macros, they must be defined in a global macro library.
+
+<html filename="conf/*.yml">
+velocity:
+  resource.loader: "string,file"
+  file.resource.loader.path: "/cms/data/"
+  file.resource.loader.cache: "true"
+  file.resource.loader.modificationCheckInterval: "60"
+  velocimacro.library: "velocimacro-lib.vm"
+</html>
+
+You define a single file @/cms/data/velocimacro-lib.vm@ (which should be readable for user node)
+to contain the global macros. Those macros will automatically be available to all Velocity Tags.
+With the above settings, changes to the @velocimacro-lib.vm@ will be available after up to 60 seconds.
+
+NOTE: After changing the file resource loader path, the configuration must be reloaded in order for the setting to take effect.
+
+See the "Velocity Developer Guide":http://velocity.apache.org/engine/1.6/developer-guide.html#velocity_configuration_keys_and_values
+for details about the velocity configuration settings.
+
+h4. Macro Library in a pagetag
+
+The third possibility to reuse macros is to create e.g. a special page, that contains the macros in a tag (do use Tagtype HTML (long) here).
+Then add a third tagpart with keyword "macros" and parttype "Tag (page)" to the Velocity Tag, and let it link to the tag of the macro library page.
+In this way, the macros can be maintained in a global place, but will be used as inline macros in the tags.
+
+h4. Velocity Implementations with Aloha Editor
+
+To avoid common mistakes you should "follow this guide":aloha_gcn_overview.html#constructs for implementing your root tag.

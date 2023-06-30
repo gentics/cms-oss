@@ -1,0 +1,38 @@
+h2. Managing ContentRepositories
+
+endprologue.
+
+h3. Database driver configuration
+
+h4. Install additional JDBC drivers
+
+The JDBC drivers for MariaDB (default driver for MySQL) and Oracle-MySQL are included in the CMS package already.
+The JDBC drivers for Oracle-DB or Microsoft-SQL-Server are not included in the CMS package and have to be
+installed manually. To install a JDBC driver, simply copy the JAR-file provided by your database vendor to the shared
+lib directory of the CMS: @/cms/libs@.
+
+h4. Configuration
+
+To activate the Oracle-DB, Oracle-MySQL or Microsoft-SQL-Server JDBC driver in the CMS you have to configure the full class name (including
+the package name - e.g.: "oracle.jdbc.OracleDriver") of the JDBC driver in the node.conf:
+
+<javascript filename="conf/*.yml">
+contentrepository_driverclass:
+  # activate Oracle-DB support for content repositories
+  oracle: "<FULL-JDBC-DRIVER-CLASS-NAME>"
+  # activate Microsoft-SQL-Server support for content repositories
+  mssql: "<FULL-JDBC-DRIVER-CLASS-NAME>"
+  # activate Oracle MySQL JDBC driver for content repositories (default is org.mariadb.jdbc.driver)
+  mysql: "com.mysql.jdbc.Driver"
+</javascript>
+
+After making theses changes the CMS has to be restarted. After the CMS restart it should be
+possible to choose the Oracle-DB or Microsoft-SQL-Server database type in the Content Repository create and edit dialogs.
+
+h3. ContentRepository Fragments
+
+Tagmap Entries can either be created for individual ContentRepositories, or they can be grouped together in "ContentRepository Fragments":admin_cr_fragments.html.
+
+Using ContentRepository Fragments has two major advantages:
+# Fragments can be assigned to multiple ContentRepositories, so their entries are shared by multiple CRs
+# Fragments can be put into "devtool packages":devtools_overview.html

@@ -1,0 +1,16 @@
+h2. Always localize
+
+If you try to edit an inherited object in a channel, Gentics CMS will normally ask you if you want to edit the inherited object or create a localized copy and edit the copy. Sometimes it is more convenient to skip this dialogue and always create a localized copy instead. This feature accommodates for that situation.
+
+endprologue.
+
+h3. Configuration
+
+If you want to use this feature, you first have to enable it globally in your node.conf
+
+<shell filename="conf/features.yml>
+feature:
+  always_localize: true
+</shell>
+
+After that, you can enable it per node in the nodes' "Features" dialogues (which can be found either in a node's context menu or in Node – Features).

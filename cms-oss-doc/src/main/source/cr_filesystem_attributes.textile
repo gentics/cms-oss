@@ -1,0 +1,90 @@
+h2. Gentics CMS File System Attributes
+
+File system attributes are stored in the file system rather than in the content repository, which can offer performance gains when working with large binary data since these files can be streamed from the file system rather than loading them all at once from the database.
+
+endprologue.
+
+h3. Overview
+
+As described above, the file system attribute option works by moving data from the content repository and storing it in files. As such, the file system must be accessible from all systems that write to the content repository.
+
+h3. Configuration
+
+The feature
+
+<javascript filename="conf/features.yml">
+feature:
+  cr_filesystem_attributes: true
+</javascript>
+
+must be switched on.
+
+The location of the binary files that will be created to store the attribute content can be set individually for each content repository with the base path option in the ContentReposity settings, which are found under Administration -> Content.Admin -> ContentRepositories.
+
+The file system option can be set individually for each attribute, though it is only available for binary and long text types and cannot be combined with optimized attributes. It can, however, be combined with multivalue attributes.
+To set which attributes should be stored to the file system, activate the Filesystem checkbox in the attribute's Tagmap entry.
+
+NOTE: When exporting and importing ContentRepositories, the base path is ignored, since the path might be system dependent. The _filesystem_ flag of attributes however will be exported and imported.
+
+WARNING: When the feature is switched on, the database structure of the ContentRepository must be compatible. When using older ContentRepositories it is likely, that they are not fully compatible, because the column _filesystem_ is missing from the table _contentattributetype_.
+This can be checked in the backend UI with the actions +Check+ or +Repair+ that are available in the ContentRepositories list view.
+If the feature is turned on and incompatible ContentRepositories are used, the publish process will fail.
+
+WARNING: When writing attributes into the filesystem, the frontend services reading those data must be compatible with filesystem attributes. Please consult the product documentation and changelog for details.
+
+WARNING: When changing the _filesystem_ flag for existing contentrepositories, the data already stored in the attributes will be migrated (either from the database into the filesystem or from the filesystem into the database) during
+the next publish run (in the publish state +Synchronizing Object Types+). Depending on the amount of data, this will take longer than usual publish runs.
+
+WARNING: When the feature is disabled (and after a CMS restart), all attributes will be treated as not storing into the filesystem. This may cause migration of data from the filesystem back to the database during the next publish run.
+
+h3. CRSync
+
+When a content repository with filesystem attributes must be synchronized into another content repository (located on another server), the following steps must be done:
+
+# The server running the CRSync process must be able to access the filesystem attributes (via the filesystem).
+# The CRSync process must be started with parameters +source_ds [filename]+ and +target_ds [filename]+ to define datasource properties for the source and target datasource.
+# The properties files must contain a setting for the datasource property +attribute.path+ (pointing to the root directory containing the filesystem attributes).
+
+Example:
+<javascript>
+/Node/bin/java.sh com.gentics.api.portalnode.connector.CRSync \
+	-source_ds source_ds.properties \
+	-target_ds target_ds.properties \
+	...
+</javascript>
+
+<javascript filename="source_ds.properties">
+attribute.path=/path/to/source/fs/
+</javascript>
+
+<javascript filename="target_ds.properties">
+attribute.path=/path/to/target/fs/
+</javascript>
+
+h3. Advantages and disadvantages of filesystem attributes
+
+h4. Advantages
+
+* Reading/Writing binary data from/into the filesystem has generally better performance than reading/writing from/into a database
+* Unchanged binary data will not be written again during the publish run or during a CRSync. To detect binary data changes, the MD5 hashes over the old and new data (which is stored in the contentrepository) is compared.
+* Memory consumption of the publish process and the CRSync is drastically reduced, because the data stored in filesystem attributes is streamed from and to the filesystem. When using attributes that are stored in the database, the data must be completely loaded into the memory, because some databases do not support streaming.
+
+h4. Disadvantages
+
+* Filesystem attributes cannot be versioned.
+* Filesystem attributes cannot be used in filter rules (and thus they cannot be optimized)
+* Distributed systems that all access the same ContentRepository must all have access to the filesystem containing the data files as well.
+* Data files of filesystem attributes need to be handled separately in backup scenarios.
+
+h3. Tuning
+
+Streaming the data files of filesystem attributes is done with buffer pools to avoid wasting memory resources.
+There are two system properties, that can be set (when starting the JVM) to tune the behaviour of the buffer pools:
+
+* _com.gentics.util.buffersize_ sets the buffer size in bytes, default is 1048576 (1MB). Setting this higher will possibly reduce the time necessary to stream a single large file, but will possibly consume more memory.
+* _com.gentics.util.buffer.maxIdle_ sets the maximum number of idle buffers remaining the the pool (the default is 10). Setting this higher will reduce the chance that new buffers need to be created when necessary, but will increase the permanent memory consumption.
+
+If multiple threads need to stream filesystem attributes concurrently, they will all borrow buffers from the buffer pool. If the pool exhausts, it will automatically grow, so that no thread ever needs to wait for a buffer.
+This will temporarily consume more memory, which is returned to the garbage collector, when the buffers are returned to the pool.
+
+The publish process of Gentics CMS or a CRSync process will only use a single thread to read/write data from/into ContentRepositories so increasing the setting for _com.gentics.util.buffer.maxIdle_ generally make no sense.

@@ -1,0 +1,121 @@
+body {
+	background-color: white;
+}
+
+#mainCol dd p {
+	margin: 0em;
+}
+
+#mainCol {
+	width: 50em;
+}
+
+#header h1 {
+	background: url(../images/gcn_icons/gentics_logo.png) 0px 13px no-repeat;
+}
+
+#feature, #topNav {
+	background: white;
+}
+
+#topNav {
+	padding: 0;
+}
+
+#header {
+	background: #0096DC no-repeat top right;
+}
+
+#header .nav .index, #header .nav .index a, #guides {
+	background: #405664;
+}
+
+#feature .wrapper {
+	width: 46em;
+}
+
+#guides dd {
+	color: white;
+}
+
+#guides hr {
+	display: none;
+}
+
+#guides dt {
+	font-size: 20px;
+	margin-bottom: 10px;
+	color: rgb(180,180,180);
+}
+
+#subCol {
+	width: 16em;
+}
+
+#subCol .chapters {
+	color: #405664;
+}
+
+a, #subCol .chapters a, #mainCol a, #subCol a, #feature a {
+	color: #77afd4;
+}
+.syntaxhighlighter table td.code {
+	padding: 1px !important;
+}
+
+.chapters a > p {
+	display: inline;
+}
+
+#___gcse_0 {
+	width: 800px;
+	margin: auto;
+}
+
+#___gcse_0 * {
+	text-align: left;
+}
+
+#___gcse_0 table th, #___gcse_0 table td {
+	border: 0px;
+}
+
+#___gcse_0 table {
+	border: 0px;
+}
+
+#gsc-iw-id1 {
+	height: 30px;
+}
+
+td.gsc-input {
+	padding-bottom: 0px;
+}
+
+td.gsc-input input {
+	background: transparent;
+}
+
+td.gsc-search-button input {
+	background-color: #77afd4;
+	border: 3px solid #77AFD4;
+	margin-top: 7px
+}
+
+td.gsc-search-button input:hover {
+	background-color: #c0daeb;
+	border: 3px solid #c0daeb;
+}
+
+form.gsc-search-box.gsc-search-box-tools {
+	margin-left: -25px;
+}
+
+.gsc-cursor-box {
+	font-size: 1.2em;
+	color: #77AFD4;
+}
+
+#footer {
+	padding: 0px;
+}

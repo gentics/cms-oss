@@ -1,0 +1,86 @@
+h2. Publish Cache
+
+The feature Publish Cache improves the performance of rendering pages during the publish process by using additional caches.
+
+endprologue.
+
+h3. Requirements and feature activation
+
+The feature can be activated like this
+
+<javascript filename="conf/features.yml">
+feature:
+	publish_cache: true
+</javascript>
+
+Additionally, there are some other requirements:
+
+* "Multithreaded publishing":feature_multithreaded_publishing.html must be used
+* Versioned publishing must not be disabled
+
+h3. Configuration of the extra cache regions
+
+There are two extra cache regions, that will be used:
+
+* _gentics-publishable-objects_ is the region for caching the pages
+* _gentics-publishable-templates_ is used for caching the templates
+
+h4. Cache region _gentics-publishable-objects_
+
+This cache region will contain every online page. For each page, a serialized version of the complete page data of the published version will be stored in a single cache entry.
+
+It is recommended to use both an in-memory cache and a persistent disk based cache for this cache region.
+The example below sets the in-memory cache to a maximum of _50000_ objects and the disk based cache to _1000000_.
+The in-memory cache should not be too large, since it consumes heap memory of the Java process, whereas the disk based cache should be large enough to contain all pages.
+
+<javascript filename="cache.ccf">
+# Region for publishable objects
+jcs.region.gentics-publishable-objects=PUB
+jcs.region.gentics-publishable-objects.cacheattributes.MaxObjects=50000
+jcs.region.gentics-publishable-objects.elementattributes.MaxLifeSeconds=-1
+jcs.region.gentics-publishable-objects.elementattributes.IsEternal=true
+jcs.region.gentics-publishable-objects.cacheattributes.UseMemoryShrinker=true
+jcs.region.gentics-publishable-objects.cacheattributes.MaxMemoryIdleTimeSeconds=7200
+jcs.region.gentics-publishable-objects.cacheattributes.ShrinkerIntervalSeconds=300
+jcs.region.gentics-publishable-objects.elementattributes=org.apache.jcs.engine.ElementAttributes
+
+# Cache for publishable objects
+jcs.auxiliary.PUB=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheFactory
+jcs.auxiliary.PUB.attributes=org.apache.jcs.auxiliary.disk.indexed.IndexedDiskCacheAttributes
+jcs.auxiliary.PUB.attributes.DiskPath=${java.io.tmpdir}/pub
+jcs.auxiliary.PUB.attributes.MaxKeySize=1000000
+</javascript>
+
+This region will be cleared at the start of the publish process, if the feature _publish_cache_ is turned off.
+
+NOTE: If the feature is turned on for the first time (or after it had been turned off), the cache will be empty. During the initialization phase of rendering pages for a node,
+the raw data for all dirted pages, that are not contained in the cache will be collected, transformed into the cache entry (which resembles the REST model of the page object) and put into the cache.
+Depending on the number of dirted pages and the overall system performance this may take some extra time.
+
+h4. Cache region _gentics-publishable-templates_
+
+This cache region will contain all templates, that are used during the publish process. For each template, a serialized version of the complete template data will be stored in a single cache entry.
+
+It is recommended to use only an in-memory cache for this cache region, that is large enough to hold all templates existing.
+
+<javascript filename="cache.ccf">
+# Region for publishable templates
+jcs.region.gentics-publishable-templates=
+jcs.region.gentics-publishable-templates.cacheattributes.MaxObjects=5000
+jcs.region.gentics-publishable-templates.elementattributes.MaxLifeSeconds=86400
+jcs.region.gentics-publishable-templates.elementattributes.IsEternal=false
+</javascript>
+
+This region will be cleared at the end of every publish process.
+
+h3. Clearing the caches for publishable objects
+
+Using the default configuration, the cache for publishable objects is stored in the filesystem and will survive
+a restart of the system.
+
+When the data in the database is changed, e.g. be importing a dump from another system or from a backup, it might be necessary to clear the cache.
+This can be done by manually deleting the files stored in the directory
+<code>
+/cms/cache
+</code>
+while the CMS is stopped.

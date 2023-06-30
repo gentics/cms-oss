@@ -1,0 +1,180 @@
+h2. Cluster Support
+
+This guide covers all topics related to running the CMS as a cluster.
+
+endprologue.
+
+h3. Introduction
+
+The following infrastucture graphic should give you a basic overview of the components that are used in a typical Gentics Content Management Platform Cluster where Gentics CMS is just one part of.
+
+!images/cluster_infra.png!
+
+h4. Components
+
+h5. MariaDB Cluster
+
+A "MariaDB Galera Cluster":https://mariadb.com/kb/en/library/what-is-mariadb-galera-cluster/ can be to setup to be used for Activiti, Keycloak and Gentics CMS.
+
+h5. Gentics CMS
+
+The Gentics CMS server takes the central role in the infrastucture overview. Most of the used components are connected with this service. See the description of its "functionality":#functionality for more information.
+
+h5. Gentics Mesh
+
+Starting with version 2.0.0 clustering with OrientDB is no longer part of the professional support by Gentics. For high availability setups, it is recommended to use
+link:https://getmesh.io/premium-features/sql-db/[Gentics Mesh SQL].
+
+h5. Gentics Portal
+
+The Portal framework instances are stateless and be deployed multiple times without any special configuration changes.
+
+NOTE: Custom extensions which add state to the Portal will need a tailored setup in a clustered deployments.
+
+h5. Elasticsearch
+
+There are three dedicated roles within an Elasticsearch cluster.
+
+* Master Node: Accepts write requests
+* Data Node: Distributes and provides shards
+* Ingest Node: Uses the ingest plugins to process added documents
+
+A single instance can own multiple roles.
+
+Individual search clusters for Gentics CMS and Gentics Mesh can be used if a DMZ or dedicated security policy mandates this.
+
+h5. Keycloak
+
+All Gentics Products support keycloak as a IAM provider.
+
+The Keycloak service can also be deployed in a clustered fashion. The central MariaDB cluster should be used to store the service data in this case.
+More details on the setup and configuration can be found in the "Keycloak Clustering Documentation":https://www.keycloak.org/docs/3.3/server_installation/topics/clustering.html.
+
+h5. Language Tool
+
+The Language Tool is the basis for the "Aloha Editor Spellcheck Plugin":aloha_spellcheck_plugin.html.
+
+The "Language Tool Server":http://wiki.languagetool.org/http-server is stateless and does not require any database. We provide a "docker image":https://github.com/gentics/languagetool-docker for this service.
+
+h4. Filesystem
+
+A common filesystem needs to be used in all clustering scenarios.
+The uploads into Gentics Mesh and Gentics CMS need to be synchronized across this filesystem.
+
+NOTE: Using individual filesystems will cause issues since the uploaded files can be updated. A manual synchronization would cause inevitable issues with data consistency.
+
+Possible solutions to this requirement are:
+
+* Use of a distributed filesystem (e.g. GlusterFS, Ceph)
+* Use of a S3 backed object store and fuse based mount on all cluster instances.
+* A master/slave aproach to NFS.
+Some NFS solutions can replicate the data in background across multiple locations. Only a single NFS would in turn be mounted in both locations.
+If one of the storage systems fails or the connection between the datacenters is disrupted a failover process can kick in which switches the used NFS to the still accessible location.
+
+h4. Load Balancing
+
+Most of the service clusters (e.g. Elasticsearch cluster, Gentics Mesh cluster) require a load balancing mechanism in-front in order to correctly handle failover, redundancy.
+
+NOTE: Solutions like "Kubernetes":https://kubernetes.io/ already provide a build-in mechanism to distribute requests across multiple instances.
+
+h4. Multiple Datacenters
+
+The previous listed components can also be used across multiple datacenters. This solution may be desired when redundancy should be increased.
+
+The "filesystem for uploads":#filesystem needs to be distributed in this case.
+
+!images/cluster_infra_rz.png!
+
+h3. Overview on Gentics CMS cluster support
+
+h4. Architecture
+
+The architecture of a CMS instance is built from the following components:
+
+|_. Component                     |_. Requirements for cluster support                                                                                           |
+| SQL Database (MySQL or MariaDB) | Full read/write access to the shared/clustered database from all CMS cluster nodes. See "Backend database":#backend-database |
+| Local Filesystem                | Read/write access to some shared filesystem paths. See "Filesystem mounts":#filesystem-mounts                                |
+| Gentics CMS                     | Cluster support provided by "Hazelcast IMDG":https://hazelcast.org/                                                          |
+
+h4. Functionality
+
+All user interaction (through the UI or REST API) can be made against any of the CMS cluster nodes. It is therefore possible to distribute incoming client requests
+to all CMS cluster nodes by using a load balancer (session stickyness is not required).
+
+Automatic (background) jobs are executed on only one of the CMS cluster nodes (the _master_ node). These include:
+* Scheduler Tasks
+* Publish Process
+* Dirting of objects
+* Devtools package synchronization
+
+The _master_ node is automatically elected by the cluster, whenever this is necessary. This means that if the current _master_ node leaves the cluster,
+another node will be elected as new _master_ node.
+There will always be exactly one _master_ node, except in special cases while performing an update (see "Updating":#updating for details).
+
+h3. Setup
+
+h4. Backend database
+
+All cluster nodes must have read/write access to the same backend database system (MySQL or MariaDB). The backend database itself can
+also be setup as a cluster of database nodes (so that - for example - each CMS cluster node accesses a separate database cluster node of the
+same database cluster), but this is optional.
+
+h4. Filesystem mounts
+
+All cluster nodes must have read/write access to the following list of shared filesystem paths (e.g. mounted via NFS):
+
+|_. Path      |_. Description                                                                                                                                     |
+| @/cms/data@ | Contains binary contents of images/file, resized images for GenticsImageStore, Publish Log files, Devtool Packages and statically published files |
+
+Optionally, also the CMS configuration located at @/cms/conf/@ can be shared between the cluster nodes to ensure that all nodes have identical configuration.
+
+h3. Configuration
+
+h4. Activate Feature
+
+<shell filename="conf/*.yml">
+feature:
+  cluster: true
+</shell>
+
+h4. Hazelcast Configuration
+
+By default, the hazelcast configuration file must be placed at @/cms/conf/hazelcast.xml@.
+
+The only configuration setting, which is mandatory for the CMS cluster, is setting an _individual_ instance name for each cluster node.
+This is necessary for the automatic changelog system (used for "updating":#updating) to work.
+
+<div class="code_container">
+<div class="filename">/cms/conf/hazelcast.xml</div>
+<pre class="brush: plain; toolbar: false; highlight: [5]; gutter: false;">
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast
+	xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.0.xsd"
+	xmlns="http://www.hazelcast.com/schema/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<instance-name>gcms_node_1</instance-name>
+	...
+</hazelcast>
+</pre>
+</div>
+
+For all other hazelcast specific settings, please consult the "Hazelcast IMDG Documentation":https://hazelcast.org/documentation/.
+
+h3. REST API
+
+The "ClusterResource":https://www.gentics.com/Content.Node/guides/restapi/resource_ClusterResource.html of the REST API can be used to get information
+of the cluster and make a specific cluster node the current master.
+
+Administration permission is required to access the ClusterResource.
+
+h3. Updating
+
+The nodes of a CMS cluster can be updated individually. However, there are some important things to note:
+
+* If an update contains changes in the database, those changes will be applied with the update of the first CMS cluster node.
+Since the database is shared between all CMS cluster nodes, the changes will be visible for all other (not yet updated) cluster nodes as well.
+* Updates, that contain no database changes (or database changes, which are compatible with older versions) can be done while other cluster nodes are still productive.
+* Updates, that contain _incompatible_ database changes will be marked in the changelog. Additionally, when such an update is applied to the first cluster node,
+the cluster is specifically prepared for the update:
+** The maintenance mode is automatically enabled (if this was not done before by the administrator).
+** The current master node will drop its master flag, so no background jobs (scheduler tasks, publish process, dirting) will run anymore.
+* Generally, it is strongly recommended that all nodes of a CMS cluster use the exact same version. This means that the intervals between updates of individual nodes should be as short as possible.

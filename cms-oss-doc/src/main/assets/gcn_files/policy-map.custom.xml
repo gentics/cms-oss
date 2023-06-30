@@ -1,0 +1,170 @@
+<!--
+	** Important Note **
+	
+	If any changes to the policies defined in the custom policy-map
+	are made (in the policies section), the policy URI must be changed
+	to a customer specific URI. Otherwise, there may be problems with
+	Import/Export.
+-->
+<policyMap xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		   xsi:noNamespaceSchemaLocation="policy-map.xsd">
+	<!--
+		inputChannels map a channel through which data is being input
+		into the system, to either a policy or policy-group (specified
+		in the policy and policy-group sections).
+	 -->
+	<inputChannels>
+		<contentAdmin>
+			<!--
+				Since the policy for part-types is configurable, they must
+				refer to a policy-group and not directly to a policy. The
+				policy-group specifies a number of policies that may be
+				configured for a part-type.
+			-->
+			<partTypes>
+				<partType typeId="03" ref="AntiSamyDefault"/> <!-- HTML -->
+				<partType typeId="21" ref="AntiSamyDefault"/> <!-- HTML (long) -->
+			
+				<!-- 
+					URL part-types should only contain URIs. Never mixed content.
+				-->
+				<partType typeId="04" ref="AnyURI"/>   <!-- URL (page) -->
+				<partType typeId="06" ref="AnyURI"/>   <!-- URL (image) -->
+				<partType typeId="08" ref="AnyURI"/>   <!-- URL (file) -->
+				<partType typeId="25" ref="AnyURI"/>   <!-- URL (folder) -->
+
+				<!--
+					We allow mixed content by default since implementers have to
+					be aware of the danger of using custom node tags
+					in attributes. Editors will not be able to use node tags in
+					attributes (unless a policy is configured that allows such
+					usage, e.g. with the ignoreNodeTags option).
+				-->
+				<default ref="AntiSamyDefault"/>
+			</partTypes>
+		</contentAdmin>
+		<nodes>
+			<!--
+				Policies for inputs associated with a node may be defined:
+				<node localId="...">...</node>
+			-->
+			<!--
+				The default configuration will be used, if no node-specific
+				configuration exists.
+			-->
+			<default>
+				<!--
+					Example configuration for inputs associated with a
+					particular node: 
+					<folderDescription ref="AntiSamyDefault"/>
+					<folderName        ref="AntiSamyDefault"/>
+				-->
+				<!--
+					Node default policy - for all inputs associated with a
+					node that don't have a policy configuration.
+				-->
+		  		<default ref="antiSamy"/>
+			</default>
+		</nodes>
+		<!--
+			Global default policy - for all inputs that don't have a policy
+			configuration.
+		-->
+		<default ref="antiSamy"/>
+	</inputChannels>
+    <policyGroups>
+		<!--
+			Groups of policies. This is for configurable input channels.
+			When displaying a tag-part definition of a tag-type, there,
+			one can find a drop-down which reflects one of these groups.
+			The <default> policy in each group will be used as the effective
+			policy if none is configured by the user.
+		-->
+		<policyGroup id="AnyURI">
+		    <policy ref="antiSamy"/>
+            <default ref="anyURI"/>
+            <policy  ref="anyContent"/>
+        </policyGroup>
+		<policyGroup id="AnyContent">
+		    <policy ref="antiSamy"/>
+		    <policy  ref="anyURI"/>
+		    <default ref="anyContent"/>
+		</policyGroup>
+		<policyGroup id="AntiSamyDefault">
+		    <default ref="antiSamy"/>
+		    <policy  ref="anyURI"/>
+		    <policy  ref="anyContent"/>
+		</policyGroup>
+    </policyGroups>
+    <policies>
+		<!--
+			Policy definitions.
+		
+			Ids ("id" attribute) should start with lower-case to distinguish
+			them from policy groups (share the same namespace).
+		
+			The policy URI ("uri" attribute) is used to refer to the policy
+			from outside the document (the id is only used within the document).
+		
+			The URI attribute can be any arbitrary URI, but should point
+			to a resource located on a domain that is owned by the
+			defining entity - these URIs are transmitted through
+			import/export of tag-types, and should not clash with URIs
+			of policies not under the defining entity's control.
+		
+			If a policy definition for a policy URI doesn't exist on a foreign
+			system, a default policy will be used, which is usually more
+			constraining than the actual policy definition. 
+
+			It does not constitute an error, if a policy definition exist
+			on a foreign system, that differs from the local definition with
+			the same URI. (the policy definition on the foreign system will
+			be used since policy definitions are not automatically transmitted
+			through import/export, only the URI is).
+			
+			The URI must not be used for more than one unique policy definition
+			at a time, and the purpose of the policy should be reflected in the
+			URI.
+			
+			Additionally, the URI must not be longer than 255 characters.
+			
+			Other common settings:
+
+			* id the XMLID that is used to refer to the policy withing this
+			  document.
+
+			* displayName the internationalization key. must be all lowercase.
+
+			* policyFile the location of the AntiSamy policy file. If not
+			  provided, the default AntiSamy policy file that is shipped with
+			  the product will be used.
+		-->
+		<antiSamy id="antiSamy"
+				  displayName="AntiSamy"
+				  uri="http://www.gentics.com/validation/policy/antiSamy"
+				  convertNodeTags="true"
+				  policyFile="antisamy.custom.xml"
+				  />
+		<!-- 
+			Will validate the input text in the context of the element and
+			attribute defined with <occursIn ...>. This is useful to
+			validate attribute values, which are not allowed to contain
+			mixed content. 
+		-->
+        <attribute id="anyURI"
+				   uri="http://www.gentics.com/validation/policy/anyURI"
+				   displayName="validation.policies.anyuri"
+				   policyFile="antisamy.custom.xml"
+				   >
+		  <occursIn element="a" attribute="href"/>
+        </attribute>
+		<!-- 
+			Will not validate anything but will simply pass the input text
+			through unchanged.
+		-->        
+        <passThrough id="anyContent"
+					 uri="http://www.gentics.com/validation/policy/anyContent"
+					 displayName="validation.policies.anycontent"
+					 />
+    </policies>
+</policyMap>

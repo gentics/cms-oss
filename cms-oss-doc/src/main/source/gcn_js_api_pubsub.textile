@@ -1,0 +1,171 @@
+h2. Publish/Subscribe Messaging
+
+The Gentics CMS JavaScript API uses a publish/subscribe messaging pattern. You can subscribe
+to messages published by the Gentics CMS JavaScript API itself or publish messages on your own.
+
+endprologue.
+
+h3. Publishing and Sucscribing to messages
+
+Publishing and subscribing works using the +GCN.pub()+ and +GCN.pub()+ methods.
+Here's a usage example:
+
+<javascript>
+// publishing a message
+GCN.pub('some-event-encountered', [parameters]);
+</javascript>
+
+Publishing a message allows you to specify a message name and also to add one
+custom parameter like an array or an object to pass additional information to
+your message subscriber.
+
+<javascript>
+// subscribing to error messages
+GCN.sub('error-encountered', function (error) {
+	console.log('an error occured: ' + error.toString());
+});
+</javascript>
+
+Subscribing to messages is accomplished by specifying the message name and a
+callback function. The callback will receive one parameter containing additional
+information if the message sender has added data. 
+
+NOTE: If there is no subscriber publishing your message will yield no result.
+
+h3. Messages Published by the Core Library
+
+h4. +error-encountered+ Message
+
+Subscribing to these messages allows you to handle all error messages encountered
+at runtime. The subscriber will receive an GCNError object as an argument.
+
+h5. GCNError Object
+
+The GCNError object contains the following properties and methods:
+
+ * +code+       - The error's error code as a string.
+ * +message+    - A user-friendly message describing the error.
+                             This message may be communited to the user.
+ * +data+       - An object that holds information about relevent
+                             data around the context of when the error occured.
+                             This information may be useful for logging.
+ * +toString()+ - Prints the error in a log-friendly way.
+
+NOTE: The contents of this data object are completely undefined, and an error
+	  object may not event contain a data object at all.  Error codes are the
+	  only guarenteed interface.
+
+NOTE: If no onError handler is registered, any errors that occur will result in
+      an JavaScript exception being thrown.
+
+h5. Error Codes
+
+ * +UNKNOWN_ARGUMENT+        - To be completed.
+ * +INVALID_ARGUMENT+        - To be completed.
+ * +NO_AUTH_HANDLER+ - Authentication was required, but no handlers
+                                  have been registered to listen for
+                                  +authentication-required+ messages.
+ * +UNFETCHED_OBJECT_ACCESS+ - Attempting to invoke a read method on
+                                          an object that has not yet had its
+                                          data fetched from the server.  The
+                                          following methods can only be called
+                                          within a +success+
+                                          callback closure otherwise this error
+                                          will be raised:
+                                          ** +meta()+
+                                          ** +props()+
+                                          ** +id()+
+ * +READONLY_ATTRIBUTE+      - Attempting to write to a readonly
+                                          property.
+ * +AUTHENTICATION_FAILED+   - Will be triggered when the
+										  +cancel()+ method that is passed
+										  to the +authentication-required+
+										  handler is called.
+ * +NO_SESSION+              - To be completed.
+
+
+h5. Example
+
+<javascript>
+// handle all errors
+GCN.sub('error-encountered', function (error) {
+	console.log(error.toString());
+});
+</javascript>
+
+
+h3. +'content-rendered'+ Message
+
+Whenever a tag is rendered (including when it is rendered for editing), or when
+a page is rendered for preview, a global render message is published.  The
+registered callback will be called after the tag or page that has been rendered
+but before it has reached the success handler that was passed to the invoking
+function.  The handler receives 3 arguments: first is the rendered HTML, the
+second is the Content Object which was rendered, and the third argument is a
+callback, that, when invoked, will allow the render invocation to reach its
+completion.  This callback receives the modified html as its only argument.
+
+h4. Example
+
+<javascript>
+GCN.sub('content-rendered', function (html, tag, callback) {	
+	html = html.replace('foo', 'bar');
+	callback(html);
+});
+</javascript>
+
+
+h3. +authentication-required+ Message
+
+An +authentication-required+ message is published when an API method
+that requires an authenticated session in order to accomplish
+communication with the Gentics CMS back-end is invoked and no
+authenticated session exists.  This can also happen if a previously
+authenticated session expires or is otherwise destroyed.
+
+When the +authentication-required+ message is published, any subscriptions
+will be invoked, and receive an array containing two callbacks as its arguments.
+The first callback will be a +proceed()+ function that should be called once an 
+authenticated session has
+been obtained.  The second is the  +cancel()+ function which aborts the process
+that was waiting for the authenticated session. Calling  +cancel()+ will result
+in a error event being triggered.
+
+h4. Example
+
+<javascript>
+GCN.sub('authentication-required', function (args) {
+	var isLoginSuccessful;
+	var proceed = args[0];
+	var cancel = args[1];
+
+	// ... attempt login
+
+	if (isLoginSuccessful) {
+		proceed();
+	} else {
+		cancel();
+	}
+});
+</javascript>
+
+NOTE: If a method is invoked that results in the +authentication-required+
+	  event being triggered, and no subscription
+	  has been registered, then an +NO_AUTH_HANDLER+ error message
+	  will be published.
+
+
+h3. Custom Error Handlers
+
+With the exception of +meta()+, +prop()+,
++part()+, and +id()+, methods in the Gentics CMS JavaScript API
+receive optional +success+ and +error+ callbacks.  A
+success handler is required whenever we wish to read/write an object's data to
+and from the Gentics CMS back-end.
+
+If the success handler is provided it will trigger communication with the
+server and bring the control flow into the success callback once that
+communication completes.  If an error occurs during this process an 
++error-encountered+ message is published. If provided, the custom error
+handler will be invoked first and only if it returns true will the 
+invocation then be bubble an trigger an +error-encountered+ message.

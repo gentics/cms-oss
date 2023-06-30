@@ -1,0 +1,107 @@
+h2. Installing Gentics CMS
+
+This page described what steps are needed to install Gentics CMS.
+
+endprologue.
+
+h3. Pre Requirements
+
+* "System Requirements":faq_system_requirements.html
+* All commands have to be executed using the root user.
+* Make sure the locale en_US.UTF-8 is generated
+* Make sure your timezone is correctly set (eg. to CET)
+
+h4. Download the package
+
+Download the Gentics CMS JAR from our Maven repository:
+
+# OSS version: https://maven.gentics.com/maven2/com/gentics/cms-oss/cms-oss-server
+# Enterprise version: https://maven.gentics.com/maven2/com/gentics/cms/cms-server
+
+Save the JAR file under /cms.
+
+h4. Create service
+
+Create the systemd service file:
+
+<shell filename="/cms/cms.service">
+[Unit]
+Description=Gentics CMS
+Wants=basic.target
+After=basic.target network.target syslog.target
+
+[Service]
+User=node
+Restart=on-failure
+ExecStart=java -Duser.dir=/cms -Dcom.gentics.contentnode.config.files=cms -cp cms-oss-server.jar com.gentics.contentnode.server.Runner
+WorkingDirectory=/ms
+LimitMEMLOCK=infinity
+LimitNOFILE=65536
+LimitAS=infinity
+LimitRSS=infinity
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+</shell>
+
+Create the configuration .yml files under /cms/conf/cms and activate the service with
+<shell>
+# systemctl enable /cms/cms.service
+</shell>
+
+h4. Database server
+
+When using the debian package installer with MariaDB, this step will be done automatically.
+
+Please install a "compatible":gcn_compatibility_list.html MySQL Server on your system.
+We suggest a installation of MariaDB on the same server that will host Gentics CMS.
+
+The following mysql permissions are needed.
+
+<shell>
+  mysql> GRANT usage ON *.* to node_cms@HOSTNAME;
+  mysql> GRANT super ON *.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8_cr.* to node_cms@HOSTNAME;
+  mysql> GRANT all ON node_utf8_todo.* to node_cms@HOSTNAME;
+</shell>
+
+The following mysql custom settings are mandatory. (MariaDB / MySQL 5.7)
+<shell>
+[mysqld]
+  innodb_flush_log_at_trx_commit = 2
+  character-set-server           = utf8mb4
+  character_set_client           = utf8
+  character-set-filesystem       = utf8
+
+  sql_mode                       = ""
+  innodb                         = FORCE
+  default-storage-engine         = InnoDB
+  max_allowed_packet             = 256M
+  collation_server               = utf8_general_ci
+
+[client]
+  default-character-set          = utf8
+</shell>
+
+h3. Migration
+
+See the "migration guide":admin_migration_cmp8.html for information about migrating from CMP 7.x to CMP 8.x.
+
+h4. Final recommendations and suggestions
+
+IMPORTANT: It is mandatory to adjust the "memory settings":faq_memory_performance_settings.html for your installation. Not doing so can lead to performance issues.
+
+NOTE: It's considered best practice to use hyphens (-) instead of underscores (<notextile>_</notextile>) in URL's. For new installations you should add "these settings":feature_sanitize_name.html#using-hyphens-instead-of-underscores to your configuration.
+
+h4. Resetting the database
+
+The database of the Gentics CMS can by reset anytime by dropping & recreating the database:
+
+<shell>
+mysql> DROP database node_utf8;
+mysql> CREATE database node_utf8;
+</shell>
+
+The database structure will be recreated during the next startup of Gentics CMS.

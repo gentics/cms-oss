@@ -1,0 +1,36 @@
+h2. Synchronized Object Properties
+
+Object Properties can be defined to be synchronized, which means, that the object property values will always be identical for some object groups.
+
+Object Properties can be synchronized for
+
+* All language variants of a page
+* All page variants (pages sharing the same content)
+* The master object and all its localized copies (when feature "Multichannelling":https://www.gentics.com/Content.Node/cmp8/guides/mc_admin.html is used.)
+
+endprologue.
+
+h3. Configuration
+
+The feature needs to be activated in the CMS configuration.
+
+<shell filename="conf/features.yml">
+feature:
+	objtag_sync: true
+</shell>
+
+h3. Synchronization Settings
+
+When the feature is activated, the dialog for Object Property Definitions has new checkboxes for the synchronization options:
+
+!images/gcn_dialogs/objtag_sync_page.png(Object Property settings for pages)!
+
+NOTE: The checkboxes _Synchronous languages_ and _Synchronous variants_ will only be available for pages and the checkbox _Synchronous channels_ will only be available, when feature "Multichannelling":https://www.gentics.com/Content.Node/cmp8/guides/mc_admin.html is activated.
+
+h3. Functional description
+
+* When an object property, which has already been used for some objects is set to be synchronized, the existing property values will *not* be changed and may therefore still be different for e.g. language variants.
+The _Synchronization_ tab in the _Object Property Maintenance_ dialog can be used to check for unsynchronized object properties.
+* Synchronized object properties will be changed all together, when the object property is changed for one of the objects (e.g. changing the object property for one language variant will copy the values over to all other language variants).
+* Synchronized object properties will be changed for other objects even if the other object is currently locked for editing by another user.
+* Synchronized object properties will be changed for other objects even if the user has no permission on the other object (it is sufficient to have change permission on *one* of the objects).

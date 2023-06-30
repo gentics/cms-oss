@@ -1,0 +1,50 @@
+h2. Live URLs
+
+This page will explain what this feature does.
+endprologue.
+
+h3. Enabling this feature in the configuration
+
+The feature can either be activated globally (for all nodes):
+
+<code>
+feature:
+	live_urls: true
+</code>
+
+or it can be activated as a "per node" feature:
+
+<code>
+feature:
+	live_urls_per_node: true
+</code>
+
+When the feature is activated in the latter fashion, live URLs must be activated for each node over the "Features" entry in the node tree.
+
+NOTE: If both "live_urls" and "live_urls_per_node" are activated, live URLs will be shown in every node.
+
+h3. What does this feature do?
+
+A small icon for live-URL is displayed after the page name in the page list, the image list and the file list.
+
+When you hover with the mouse pointer over the icon, you will see the URL, the object (page, file or image) is assumed
+to have, once it's published.
+When you click on the icon, a new page will be opened with the live-URL.
+If the object didn't get published yet, this will most likely lead to a 404-page on your webserver.
+
+!images/gcn_dialogs/feature_liveurl.png!
+
+h3. How is the Live-URL generated?
+
+The URL is built out of the following parts:
+
+* Protocol - this can either be http:// or https://. You can enable this in the configuration of each Node in GCN.
+* Host - the host can also be configured in the Node configuration.
+* Publish path - this can be configured in the Node configuration and the configuration of each folder.
+* Filename - the filename of the page, file or image.
+
+h3. Does this work with content repositories?
+
+Yes, this also works with CRs.
+However, it's not guaranteed that the URL will be the same on the dynamic
+web frontend once the page is published. It will use the host and publish directory as defined in the Node configuration.

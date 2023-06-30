@@ -1,0 +1,19 @@
+h2. Downloads
+
+This page lists all downloads for Gentics CMS
+
+endprologue.
+
+All our downloads are managed via maven. You can browse through the maven repository.
+
+NOTE: Important Please use the username __gcn__ and your license key to authenticate for the downloads.
+
+h3. Packages
+
+* The "contentnode-package":https://maven.gentics.com/maven2/com/gentics/contentnode-package/ provides a deb file that installs Gentics CMS and all dependencies under Debian. There is also a .tar.gz file used for manual installations under RHEL or SLES, or to migrate from the legacy package structure.
+
+* The "contentnode-restapi":https://maven.gentics.com/maven2/com/gentics/contentnode-restapi/ is a library that can be used to interface with the Gentics CMS RestAPI. 
+
+* The "contentnode-api":https://maven.gentics.com/maven2/com/gentics/contentnode-api library contains API classes like interfaces for the Migration Post Processors and custom PublishHandlers. 
+
+* The "contentnode-js-lib (gcnjsapi)":https://maven.gentics.com/maven2/com/gentics/contentnode-js-lib/ zipfile contains the Gentics CMS JavaScript API.

@@ -1,0 +1,74 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+	<id>doc</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<dependencySets>
+		<!-- Copy the restapi lib doc -->
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/restapi</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<!--  groupId:artifactId:type:version[:classifier] -->
+				<include>com.gentics.cms:cms-restapi:*:doc</include>
+			</includes>
+		</dependencySet>
+
+		<!-- Copy the api javadoc -->
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/api-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<!--  groupId:artifactId:type:version[:classifier] -->
+				<include>com.gentics.cms:base-api:*:javadoc</include>
+			</includes>
+		</dependencySet>
+
+		<!-- Copy the contentnode-restapi javadoc -->
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/restapi-javadoc</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<!--  groupId:artifactId:type:version[:classifier] -->
+				<include>com.gentics.cms:cms-restapi:*:javadoc</include>
+			</includes>
+		</dependencySet>
+
+		<!-- Copy the gcnjsapi doc -->
+		<dependencySet>
+			<useStrictFiltering>true</useStrictFiltering>
+			<outputDirectory>/gcnjsapi</outputDirectory>
+			<unpack>true</unpack>
+			<includes>
+				<!--  groupId:artifactId:type:version[:classifier] -->
+				<include>com.gentics.cms:cms-js-lib:*:doc</include>
+			</includes>
+		</dependencySet>
+	</dependencySets>
+
+	<fileSets>
+		<fileSet>
+			<directory>${basedir}/src/main/output</directory>
+			<outputDirectory>/</outputDirectory>
+			<includes>
+				<include>**</include>
+			</includes>
+		</fileSet>
+		<!-- Attach aggregated javadoc -->
+		<fileSet>
+			<directory>${basedir}/target/site/apidocs/</directory>
+			<outputDirectory>/api-javadoc</outputDirectory>
+			<includes>
+				<include>**</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+	<includeBaseDirectory>false</includeBaseDirectory>
+</assembly>

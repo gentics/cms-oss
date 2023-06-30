@@ -1,0 +1,519 @@
+h2. Gentics CMS Feature Overview
+
+This overview contains a list of Gentics CMS features.
+
+endprologue.
+
+INFO: Features are by default activated by setting them to boolean @true@
+and deactivated by setting them to @false@. These are the allowed settings
+for all features, if not documented otherwise.
+
+Discontinued features can be found on our "list of discontinued features":features_discontinued.html
+
+h3. Aloha Editor
+
+<shell filename="conf/features.yml">
+feature:
+	aloha: true
+</shell>
+
+Will enable "Aloha Editor":aloha_gcn_overview.html for Gentics CMS.
+
+h3. Always localize
+
+See "Always localize":feature_always_localize.html
+
+h3. Annotating Aloha Editables
+
+<shell filename="conf/features.yml">
+feature:
+  aloha_annotate_editables: true
+</shell>
+
+For details, read continue reading about "Annotating Editables":aloha_gcn_overview.html#annotating-editables
+
+h3. Asset Management
+
+With the "Gentics CMS Asset Management":feature_asset_management.html it is possible to insert files from asset stores directly.
+
+h3. Attribute Dirting
+
+<shell filename="conf/features.yml">
+feature:
+	attribute_dirting: true
+</shell>
+
+Enables attribute specific dirting and publishing of objects into Content Repositories.
+For details, read the "Feature description":feature_attribute_dirting.html
+
+h3. Autocomplete Folder Paths
+
+<shell filename="conf/features.yml">
+feature:
+	autocomplete_folder_path: true
+</shell>
+
++autocomplete_folder_path+ will automatically generate meaningful folder path name as you type the folder name.
+
+h3. Construct Autoenable
+
+<shell filename="conf/features.yml">
+feature:
+	construct_autoenable: true
+</shell>
+
+This feature will add a flag "autoenable" to the Tagtype properties dialog. Activating
+this flag will autoenable a Tag that has been placed in a page, so that the editor
+does not have to click on it in order to render its contents.
+
+h3. Contentgroup3 (Languages)
+
+<shell filename="conf/features.yml">
+feature:
+	contentgroup3: true
+</shell>
+
+WARNING: *Must* be set to true.
+
+h3. Copy Tags
+
+<shell filename="conf/features.yml">
+feature:
+	copy_tags: true
+</shell>
+
+This feature allows copy & paste of tags. Find further information in the section about "Copy Tags":feature_copy_tags.html
+
+h3. Debug Tools
+
+See "Debug Tools":feature_debugtools.html
+
+h3. Devtools
+
+<shell filename="conf/features.yml">
+feature:
+	devtools: true
+</shell>
+
+This enables the "Devtools":devtools_overview.html on the system.
+
+h3. Disable instant delete
+
+See "Disable instant delete":feature_disable_instant_delete.html
+
+h3. Filesystem Attributes
+
+<shell filename="conf/features.yml">
+feature:
+	cr_filesystem_attributes: true
+</shell>
+
+With this feature, it is possible to store attributes in contentrepositories in the filesystem instead of the database.
+
+See "Filesystem Attributes":cr_filesystem_attributes.html
+
+h3. File publish dependencies
+
+<shell filename="conf/features.yml">
+feature:
+	contentfile_auto_offline: true
+</shell>
+
+With this feature, it is possible to configure nodes, for which images and files, that are not used by other objects (pages or folders) will not be published into the filesystem and contentrepository.
+
+See "File publish dependencies":feature_file_publish_dependencies.html
+
+h3. Folder Based Template Selection
+
+<shell filename="conf/features.yml">
+feature:
+	folder_based_template_selection: true
+</shell>
+
+When this feature is enabled, the behavior of the editor UI changes when linking templates: a user has to select a folder, and only the templates in the selected folder are available for linking. When the feature is disabled, a user can link any template from a node which is already linked to a folder where the user has the appropriate permissions.
+
+h3. GCMS UI Object
+
+See "GCMS UI Object Overview":feature_gcmsui_object.html
+
+h3. GenticsImageStore
+
+See "GenticsImageStore":feature_genticsimagestore.html
+
+h3. Hardlink Files
+
+<shell filename="conf/features.yml">
+feature:
+	hardlink_files: true
+</shell>
+
+Use hardlinks for files and images instead of softlinks when publishing to the filesystem.
+
+h3. Hide Manual Link
+
+<shell filename="conf/features.yml">
+feature:
+	hide_manual: true
+</shell>
+
+Will hide the link to the manual in the editor UI.
+
+h3. Image Cropping Custom Aspect Ratios
+
+See "Image Cropping Custom Aspect Ratios":feature_image_crop_ar.html
+
+h3. Image Focal Point Modification
+
+<shell filename="conf/features.yml">
+feature:
+  focal_point_editing: true
+</shell>
+
+This allows setting the focal point of an image in the image editor of the editor UI.
+
+h3. Image Manipulation 2
+
+See "Image Manipulation 2":feature_imagemanipulation2.html
+
+h3. Image Uploads in Tagfill
+
+<shell filename="conf/features.yml">
+feature:
+	enable_image_upload_in_tagfill: true
+</shell>
+
+This enables the "New Image" button in the tagfill dialog for "URL (image)" tag parts. This feature is enabled by default.
+
+Disabling this feature is useful e.g., when users should only select images through the "Asset Management Feature":feature_asset_management.html and uploading of new images to the CMS
+should be disabled (the image upload button in the list view of the editor UI needs to be overridden separately).
+
+h3. Inbox to eMail
+
+<shell filename="conf/features.yml">
+feature:
+	inbox_to_email: true
+</shell>
+
+When this feature is enabled, inbox messages are also sent as eMails. Find further information in the section about "eMail sending":email_sending.html
+
+h3. Instant Publishing
+
+This feature allows enabling the immediate writing of published objects into a ContentRepository.
+
+<shell filename="conf/features.yml">
+feature:
+	instant_cr_publishing: true
+</shell>
+
+For details, continue reading at "Instant Publishing":feature_instant_publishing.html
+
+h3. Invalid Page URL Message
+
+<shell filename="conf/features.yml">
+feature:
+	invalidpageurlmsg: true
+</shell>
+
+If internal links resolve to objects that are not online anymore, the system will send a message to the editor who last published the page.
+
+h3. Keycloak Single Sign Out
+
+<shell filename="conf/features.yml">
+feature:
+	keycloak_signout: true
+</shell>
+
+By activating this feature and using SSO with Keycloak, the user will be logged out from Keycloak, when logging out from the CMS.
+See "Keycloak Single Sign Out":auth_keycloak.html#single-sign-out for details.
+
+h3. Language Code in Filename
+
+<shell filename="conf/features.yml">
+feature:
+	contentgroup3_pagefilename: true
+</shell>
+
+Page file names will include an abbreviation of the page language.
+
+Example: When the page "Testpage" is created in English, with an HTML template,
+the filename will be "testpage.en.html" (or e.g. "testpage1.en.html", if the
+former filename already exists). When the page properties are modified and
+the filename set to empty, this will also include the language code into
+the filename.
+
+h3. Live URLs
+
+<shell filename="conf/features.yml">
+feature:
+	live_urls: true
+</shell>
+
+See "Live URLs":feature_liveurls.html
+
+h3. Live URLs per Node
+
+<shell filename="conf/features.yml">
+feature:
+	live_urls_per_node: true
+</shell>
+
+See "Live URLs":feature_liveurls.html
+
+h3. Magic Value
+
+See "Magic Value":feature_magicvalue.html
+
+h3. Maintenance Mode
+
+<shell filename="conf/features.yml">
+feaure:
+	maintenance_mode: true
+</shell>
+
+Allows you to switch the system into maintenance mode if you need to do larger scale maintenance. In maintenance mode no other users may login except for the user who triggered maintenance mode.
+
+h3. Mandatory Tags
+
+"How to use mandatory tags to prevent publishing of incomplete pages":gcn_mandatory_tags.html
+
+h3. Mesh ContentRepository
+
+This feature allows publishing into instances of "Mesh":https://getmesh.io/
+
+<shell filename="conf/features.yml">
+feature:
+	mesh_contentrepository: true
+</shell>
+
+See "detailed description":feature_mesh_contentrepository.html
+
+h3. Multithreaded Publishing
+
+<shell filename="conf/features.yml">
+feature:
+	multithreaded_publishing: true
+</shell>
+
+See "Multithreaded Publishing":feature_multithreaded_publishing.html
+
+h3. Manage Link URLs
+
+<shell filename="conf/features.yml">
+feature:
+	managelinkurl: true
+</shell>
+
+Internal links to pages or files that are not online anymore are replaced with "#", thus disabling the link.
+
+<shell filename="conf/features.yml">
+feature:
+	managelinkurl_onlyforpublish: true
+</shell>
+
+Whether to manage link URLs only when publishing, not for editing.
+
+h3. New Tag Editor
+
+See "New Tag Editor":feature_new_tag_editor.html
+
+h3. Nice URLs
+
+<shell filename="conf/features.yml">
+feature:
+	nice_urls: true
+</shell>
+
+This enables the setting of "Nice URLs":nice_urls.html and alternate URLs for pages, files and images.
+
+h3. Nodecopy
+
+<shell filename="conf/features.yml">
+feature:
+  nodecopy: true
+  nodecopy_files: true
+</shell>
+
++nodecopy+ will allow you to copy whole Nodes. +nodecopy_files+ will also give you an option to duplicate the files - otherwise pages etc. would just reference files and images from the original nodes.
+
+h3. Omit Writing to the Publish Table
+
+<shell filename="conf/features.yml">
+feature:
+	omit_publish_table: true
+</shell>
+
+By activating this feature, pages in nodes that do not publish into the filesystem (only into a contentrepository) will not be written into the publish table in the backend.
+This reduces the size of the backend database and increases publish performance.
+
+NOTE: When this feature is activated and nodes that were not published into the filesystem are reconfigured to publish into the filesystem, all pages in that node need to be republished using the maintenance dialog.
+
+h3. Publish Directory Segment
+
+<shell filename="conf/features.yml">
+feature:
+	pub_dir_segment: true
+</shell>
+
+With this "feature":feature_pub_dir_segment.html it is possible to change the way, the publish directories for nodes are constructed.
+
+h3. Publish Folder Startpage
+
+<shell filename="conf/features.yml">
+feature:
+	publish_folder_startpage: true
+</shell>
+
+An additional checkbox will be shown in the node feature view which allows the activation of an additional instant publishing feature. When enabled the folder startpage of the published pages parent folder will additionally be published when an instant publishing process is invoked.
+
+h3. Publish Cache
+
+<shell filename="conf/features.yml">
+feature:
+  publish_cache: true
+</shell>
+
+If set to true, the publish process will use an additional cache to improve the performance for rendering pages.
+
+See "Publish Cache":feature_publish_cache.html
+
+h3. Reusing inherited page source
+
+<shell filename="conf/features.yml">
+feature:
+	publish_inherited_source: true
+</shell>
+
+If set to true, the publish process will first check, whether the rendered page source of a master page can be reused when rendering the inherited page in a channel.
+The master page source can safely be reused, if no dependency of the page (i.e. no other object, that was used to render the page source) is different (localized) between the master and channel.
+Using this feature might improve the publish performance, if checking the dependencies is faster than actually rendering the page.
+
+NOTE: The feature requires that the published master page source is written into the publish table of the backend db. If the feature omit_publish_table is used, this might not always be the case.
+If the master page source is not written into the publish table, the inherited page is always re-rendered for the channel.
+
+h3. Recent Items
+
+See "Recent Items":feature_recent_items.html
+
+h3. Resumable Publish Process
+
+<shell filename="conf/features.yml">
+feature:
+	resumable_publish_process: true
+</shell>
+
+See "Resumable Publish Process":feature_resumable_publish_process.html for details.
+
+h3. Roles
+
+<shell filename="conf/features.yml">
+feature:
+	roles: true
+</shell>
+
+Enables you to use roles for language-specific permissions.
+
+h3. Sanitize names
+
+Replaces characters in filenames and headerid names (Aloha Plugin) with a predefined set of characters replacement.
+
+See "Sanitize names":feature_sanitize_name.html
+
+h3. Secure session cookies
+
+<shell filename="conf/features.yml">
+feature:
+	secure_cookie: true
+</shell>
+
+This sets the "Secure" flag in the session cookie. This may only be enabled if all access to the backend and REST-API is done via HTTPS <em>only</em>.
+
+h3. Suspend Scheduler
+
+<shell filename="conf/features.yml">
+feature:
+	suspend_scheduler: true
+</shell>
+
+Enables suspension of the scheduler for maintenance.
+
+h3. Synchronized Object Properties
+
+<shell filename="conf/features.yml">
+feature:
+	objtag_sync: true
+</shell>
+
+This feature allows object properties to be synchronized between language variants of pages, page variants or the master object and its localized copies.
+See "Synchronized Object Properties":feature_objtag_sync.html for details.
+
+h3. Symlink Files
+
+<shell filename="conf/features.yml">
+feature:
+	symlink_files: true
+</shell>
+
+Write symlinks when publishing to the disk rather than writing the whole binary information.
+
+h3. Tagmap Use Expression Parser
+
+<shell filename="conf/features.yml">
+feature:
+	tagmap_useexpressionparser: true
+</shell>
+
+To enable the Expression Parser for the column "tagname" of the Tagmap set this feature to @true@.
+
+See "ExpressionParser for Tagmap Entries":tagmap_expression_parser.html
+
+h3. Tagtype Categories
+
+<shell filename="conf/features.yml">
+feature:
+	construct_categories: true
+</shell>
+
+See "Tagtype Categories feature":feature_construct_categories.html
+
+h3. Tagfill Light
+
+<shell filename="conf/features.yml">
+feature:
+	tagfill_light: true
+</shell>
+
+This feature is activated by default and reduces the tagfill dialog size to make it fit into the lightbox without scrollbars. When deactivated a checkbox "display content" will be shown in every tagfill dialog (this does include object properties).
+This checkbox sets the "active" status of the tag. Tags that are not active will not be rendered.
+When the feature @tagfill_light@ is activated, tags will be automatically activated when created or in the case of object properties when filled for the first time.
+Please note, that when setting a tag via JS or REST API, the property "active" has to be set for the tag / property to be rendered.
+
+h3. Usersnap integration
+
+<shell filename="conf/features.yml">
+feature:
+	usersnap: true
+</shell>
+
+Enables the "Usersnap":feature_usersnap.html integration.
+
+h3. Validation
+
+See "Validation":feature_validation.html
+
+h3. View Perms
+
+<shell filename="conf/features.yml">
+feature:
+	view_perms: true
+</shell>
+
+Adds an extra entry to the tree that is intended for chief editors to enable them to inspect the permission settings for each group he is able to see. However, permissions can not be changed from this dialog.
+
+h3. Wastebin
+
+<shell filename="conf/features.yml">
+feature:
+	wastebin: true
+</shell>
+
+Enables the "wastebin functionality":feature_wastebin.html.

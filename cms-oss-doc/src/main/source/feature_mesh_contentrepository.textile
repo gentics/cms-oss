@@ -1,0 +1,400 @@
+h2. Mesh ContentRepository
+
+This feature allows publishing into an instance of "Gentics Mesh":https://getmesh.io/
+
+endprologue.
+
+WARNING: Setting the "defaultLanguage":https://getmesh.io/docs/administration-guide/#_general_settings of the Mesh instance
+to something different than the default "en" is currently not supported.
+
+h3. Configuration
+
+If you want to use this feature, you first have to enable it globally in your node.conf
+
+<shell filename="conf/features.yml">
+feature:
+	mesh_contentrepository: true
+</shell>
+
+h4. General settings
+
+The following settings can be changed in the configuration:
+
+|_. Name   |_. Description |_. Default |
+| pageSize | Number of objects, which are loaded from Mesh when checking for obsolete objects during every publish run. Higher numbers increase performance but also memory consumption of the CMS Server. | 10000 |
+
+<shell filename="conf/*.yml">
+mesh:
+  pageSize: 10000
+</shell>
+
+h4. Client Timeouts
+
+The publish process uses an HTTP Client for accessing Gentics Mesh. In cases, where requests may take longer than the default timeout of 1 minute (e.g. for uploading files),
+the following timeouts can be configured:
+
+<shell filename="conf/*.yml>
+mesh:
+  client:
+    # Timeout for connecting in seconds
+    connectTimeout: 60
+    # Write timeout in seconds
+    writeTimeout: 60
+    # Read timeout in seconds
+    readTimeout: 60
+    # Timeout for completing a call in seconds. This includes resolving DNS, connecting, writing the request body, server processing, and reading the response body.
+    callTimeout: 60
+</shell>
+
+h3. Create ContentRepository
+
+When the feature is activated, the field _ContentRepository Type_ in the creation dialog has the new option +Mesh ContentRepository+.
+
+h4. Connection Url
+
+The field _Url_ must contain a valid connection Url to an instance of Gentics Mesh. The Url must be in the format +[protocol]://[hostname]:[port]/[cr_identifier]+.
+
+|_. Name        |_. Description                                                                                                        |_. Mandatory                                |
+| protocol      | Connection protocol (http or https)                                                                                  | false (Default http)                       |
+| hostname      | Hostname                                                                                                             | true                                       |
+| port          | Connection port                                                                                                      | false (Default 80 for http, 443 for https) |
+| cr_identifier | Identifier, which is used as schema prefix and project name, if "Project per Node":#project-per-node is not selected | true                                       |
+
+Examples of valid Connection Urls:
+
+* _my.mesh.cr/project_
+* _my.mesh.cr:8080/project_
+* _http://my.mesh.cr/project_
+* _http://my.mesh.cr:8080/project_
+* _https://my.mesh.cr/project_
+* _https://my.mesh.cr:8080/project_
+
+h4. Authentication with Username/Password
+
+WARNING: It is recommended to use authentication with ApiToken instead, to prevent session timeouts in long publish runs.
+
+Gentics CMS will authenticate against Gentics Mesh with username/password filled into the fields +Username+ and +Password+.
+
+h4. Authentication with ApiToken (Recommended)
+
+If the field +Username+ is left empty, the field +Password+ must contain a valid API Token. Consult the documentation of "Gentics Mesh":https://getmesh.io/
+about how an API Token can be generated.
+
+h4. Permissions
+
+The user (identified either by username/password or be API Token) must have sufficient privileges to publish into the Mesh ContentRepository:
+
+* Create new Projects
+* Read/Update/Delete/Publish on all nodes of the project
+* Assign and Revoke permissions on nodes of the project
+* Create new Schemas
+* Read/Update/Delete on all created schemas
+
+h4. Roles Property
+
+By setting the field _Roles Property_ it is possible to assign the +readPublished+ permission on published objects to specific roles in Gentics Mesh. This property can be either an object property with a select part, or an expression that evaluates fields in a Velocity context.
+
+h5. Roles Objectproperty
+
+The object property must at least have one part of type +Select (multiple)+ or +Select (single)+ using an initially empty datasource. The datasource will be filled by performing the
+action "Synchronize Mesh roles":#synchronize-mesh-roles.
+
+Permissions in Mesh can neither be set language specific nor branch specific. Therefore, it is required, that the roles object properties are set to be synchronized over channels
+(when "Multichannelling":#multichannelling is used) and over languages (object property for pages only), with the feature "Synchronized Object Properties":feature_objtag_sync.html.
+
+NOTE: If one of the roles object properties is *not* synchronized, the action +Check+ in the ContentRepository will fail (and the log will show an error). The publish process will not fail
+in such cases, but will possibly lead to unexpected permission settings in Mesh.
+
+h5. Velocity Expression
+
+Variables used in a Velocity template can be resolved using the "Expression Parser":https://www.gentics.com/Content.Node/guides/tagmap_expression_parser.html. Such expressions can be used to define the desired roles. For example:
+
+# Create a tagtype with a Velocity part called +vtl+ and the following template:
+<shell>
+#set($roles = [])
+$roles.add("role_a")
+$roles.add("role_b")
+</shell>
+# Create Folder/File/Page object properties with the name +meshroles+ using the created tagtype.
+# Set the ContentRepositories _Roles Property_ to +object.meshroles.parts.vtl.roles+.
+
+For more complex solution additional tagparts will be needed, and the corespondig logic must be implemented in the Velocity template.
+
+h4. Default Role
+
+The set default role will have the +readPublished+ permission assigned on all objects, for which the _Roles Property_ was not filled.
+
+If no _Roles Property_ is defined at all, the default role applies to all objects.
+
+NOTE: The default role must already exist in Gentics Mesh. Setting this property to an inexistent role will *not* create the role in Mesh and the publish process will fail.
+
+NOTE: When the default role is changed, all objects need to be republished (using the maintenance dialog), so that the default role will be set were applicable.
+
+h4. Project per Node
+
+With this option, the mapping between Nodes published into this ContentRepository and projects in Mesh can be configured:
+
+h5. Single project
+
+When the option "Project per Node" is _not_ selected, all Nodes that are published into the ContentRepository will be published into a single Mesh project. The name of the
+project is the +[cr_identifier]+ from the connection Url.
+
+The contents of every Node in GCMS will be published into a separate folder in Mesh (having the same name as the Node).
+
+NOTE: If "Project per Node" is _not_ selected, it is not possible to set a "Page directory" in the properties of any of the Nodes that publish into the Mesh Content.Repository.
+
+h5. Multiple projects
+
+When the option "Project per Node" _is_ selected, every Node will be published into a separate Mesh project (having the same name as the Node).
+
+In this case, there will be no "root" folders in the Mesh projects, representing the Nodes, but all immediate children of the Nodes in the GCMS will be directly put into
+the roots of their respective Mesh projects.
+
+In order to publish a master node with its channels into the same Mesh ContentRepository, this option must be selected. See "Multichannelling":#multichannelling for details.
+
+h4. Implementation version
+
+By setting an implementation version, it is possible to let the publish process publish objects into separate Mesh branches. For details see "Mesh ContentRepository Implementation Branches":mesh_cr_implementation_branches.html.
+
+h4. Tagmap
+
+The CMS publishes folders, pages, images and files into Gentics Mesh. The nodes in Gentics Mesh will use three schemas in Gentics Mesh:
+
+* +[cr_identifier]_folder+ for folders
+* +[cr_identifier]_content+ for pages
+* +[cr_identifier]_binary_content+ for images/files
+
+The fields in the schemas are defined by the tagmap entries of the _Mesh ContentRepository_ in the CMS.
+
+|_. Tagmap Attributetype        |_. Schema field type |
+| Text                          | string              |
+| Node                          | node                |
+| Integer                       | number              |
+| Binary                        | binary              |
+| Date                          | date                |
+| Boolean                       | boolean             |
+| "Micronode":#micronode-fields | micronode           |
+
+NOTE: When a new Mesh ContentRepository is created, it will have some default tagmap entries. Some of them are Reserved and cannot be modified or removed, because they are
+absolutely necessary.
+
+h5. Rendering Page Content
+
+Per default, the tagmap will contain a tagmap entry for pages with mapname *content* and empty tagname. This tagmap entry is used for publishing the
+rendered page content into the Mesh Content.Repository.
+
+If rendering of pages is done in the frontend component (e.g. Gentics Portal | java or Gentics Portal | php), this tagmap entry can be deleted or modified e.g. by setting a tagname.
+If a tagname is set, it will be used to resolve the data to be written into the attribute *content*, instead of the rendered page.
+
+h5. Segmentfield
+
+For each object type, exactly one tagmap entry is marked as +Segmentfield+. The segmentfield is used to construct the URLs to objects in Gentics Mesh and must be unique among
+objects with the same parent folder.
+
+For folders, the default segmentfield is +pub_dir+, but for this to work as expected, the feature "Publish Directory Segment":feature_pub_dir_segment.html must be activated
+for the node.
+
+h5. Displayfield
+
+For each object type, exactly one tagmap entry is used as +Displayfield+. The displayfield is used to represent the object in the Administration UI of Gentics Mesh and must be unique
+among objects with the same parent folder.
+
+h5. URL-field
+
+Tagmap entries can be marked as +URL-field+. By filling URL-fields, it is possible to specify additional URLs (besides the URL, which is constructed from the segment fields)
+for accessing objects, that are published into the Mesh ContentRepository.
+
+This is especially useful in combination with the feature "Nice URLs":nice_urls.html:
+
+!images/gcn_dialogs/tagmap_niceurl.png!
+
+h5. Micronode Fields
+
+Tagmap entries of type "Micronode" will publish the editable data contained in tags into micronodes. It is possible to publish single tags (e.g. by using the tagname @page.tags.content@ to publish the tag @content@) into a single value
+field of type Micronode.
+When using e.g. @page.tags@, the field must be multivalue and will contain all tags of the page as list of micronodes.
+
+h6. Transformation of tagtypes
+
+When a Mesh ContentRepository contains at least one tagmap entry of type "Micronode", all constructs that meet all of the following requirements will be transformed into microschemas:
+
+# The construct must be assigned to at least one Node that publishes into the Mesh ContentRepository
+# The construct must contain at least one editable Part with a non-empty keyword - other than @Tag (global)@, @File (localpath)@, @Table ext@, @Velocity@, @Breadcrumb@, @Navigation@
+# The construct matches at least one of the micronode filters
+
+h6. Part Types with special mapping
+
+The following list contains all Part Types that have a special mapping to fields in the microschema
+
+|_. Part type       |_. Schema field         |_. Description                                            |
+|/2. URL (page)     | @[keyword]_internal@   | Node reference to linked page                            |
+|                     @[keyword]_external@   | External URL (as string)                                 |
+|/2. Tag (page)     | @[keyword]_page@       | Node reference to linked page                            |
+|                     @[keyword]_tag@        | Name of the referenced tag                               |
+|/9. Overview       | @[keyword]_listType@   | Type of listed objects                                   |
+|                     @[keyword]_selectType@ | Selection type                                           |
+|                     @[keyword]_orderDir@   | Order Direction                                          |
+|                     @[keyword]_orderBy@    | Ordering type                                            |
+|                     @[keyword]_items@      | Node references to listed items                          |
+|                     @[keyword]_nodeIds@    | List of internal node IDs from which items were selected |
+|                     @[keyword]_source@     | Overview template                                        |
+|                     @[keyword]_recursive@  | Flag for recursive selection                             |
+|                     @[keyword]_maxItems@   | Maximum number of items to be shown in the overview      |
+|/2. List           | @[keyword]@            | List of entries                                          |
+|                     @[keyword]_ordered@    | Boolean flag ordered/unordered                           |
+|/2. Tag (template) | @[keyword]_template@   | Internal ID of the referenced template                   |
+|                     @[keyword]_tag@        | Name of the referenced tag                               |
+
+WARNING: If the field names of a microschema to be generated are not unique, creation of the microschema (and therefore the publish process) will fail. It is for instance not
+possible to create a microschema from a construct having a part of type @URL (page)@ with keyword @url@ when there is another part with keyword @url_internal@.
+
+All other part types will be mapped to a single field.
+
+h6. Micronode filter
+
+For tagmap entries of type "Micronode", it is possible to define a filter for the published micronodes. Only tags matching the filter will be published into the field.
+
+The filter can contain a list of construct keywords (separated by comma, whitespace or newline), and can be a whitelist (keywords are not prefixed) or a blacklist (keywords are prefixed with -).
+
+h4. Searchindex Configuration
+
+Objects that are written into Gentics Mesh will automatically be put into a search index. To implement specific search features (like autocompletion, did-you-mean, ...) it is necessary to
+extend the default configuration. This can be done by adding index specific configuration to the ContentRepository and to tagmap entries.
+
+h5. ContentRepository Searchindex Configuration
+
+The ContentRepository Searchindex Configuration can be set in the ContentRepository properties dialog in JSON format.
+The root-object can have attributes @page@, @folder@ and @file@ which contain the searchindex configuration for pages, folders and files.
+
+Example configuration:
+
+<shell>
+{
+  "page" : {
+    "settings": {
+      "number_of_shards" :   1,
+      "number_of_replicas" : 0
+    },
+    "analysis" : {
+      "analyzer" : {
+        "suggest" : {
+          "tokenizer" : "mesh_default_ngram_tokenizer",
+          "char_filter" : [ "html_strip" ],
+          "filter" : [ "lowercase" ]
+        }
+      }
+    }
+  }
+}
+</shell>
+
+h5. Tagmap Entry Searchindex Configuration
+
+Every tagmap entry can have a specific searchindex configuration set in its properties dialog in JSON format.
+
+Example configuration:
+
+<shell>
+{
+  "suggest": {
+    "analyzer": "suggest",
+    "type": "string"
+  }
+}
+</shell>
+
+h3. URLs (Mesh webroot paths)
+
+There are different options to define the URLs of pages, images and files which are published to a Mesh ContentRepository.
+
+h4. Publish Directory Segments
+
+If the nodes publishing into the Mesh ContentRepository have the setting "Publish Directory Segments" activated, the filenames of pages, images and files
+and the segments of folders will be published as "Segment fields" into Mesh.
+
+The URLs of objects in Mesh is then composed of the values of their segment fields and the values of the segment fields of their parents (see "https://getmesh.io/docs/features/#prettyurls":https://getmesh.io/docs/features/#prettyurls).
+
+Restrictions:
+* Publish Directory Segments of folders (including the root folder) must not be empty
+* Publish Directory Segments of folders with the same parent must be unique
+
+h4. Publish Paths
+
+If the nodes publishing into the Mesh ContentRepository do not have the setting "Publish Directory Segments" activated, every folder in the CMS can have its own publish path.
+The URLs of pages, images and files are constructed from the publish path of their folder and the respective filename.
+
+The URLs of pages, images and files are published into a special field in Mesh (named "gtx_url"), which is set as "urlfield". The schemas for folders, files and pages in Mesh
+will not have segment fields *even if tagmap entries are defined to be segment fields*.
+
+Restrictions:
+* Folders in Mesh do not have URLs, only pages, images and files have URLs
+
+WARNING: It is not possible to publish nodes into the same Mesh ContentRepository, if some do have the "Publish Directory Segment" setting while others don't have it. Doing so will let the publish process fail.
+It is - however - possible to publish those nodes into different Mesh ContentRepositories that write into the same Mesh instance, because each Mesh ContentRepository will create its own set of schemas in Mesh.
+
+h3. Multichannelling
+
+For publishing a node and all its channels into the same Mesh ContentRepository, the option "Project per Node":#project-per-node must be activated for the ContentRepository.
+
+The master node and its channels will be published into the same Mesh project, but every node/channel into its own Mesh Branch.
+
+The names of the Branches are the names of the node/channel (with spaces replaced by underscores).
+
+NOTE: If an "Implementation version":#implementation-version is set, the branch names will be composed of the node/channel name and the implementation version.
+
+h3. Check/Repair
+
+With the action +Check+ the validity of the Mesh ContentRepository will be checked:
+
+* Accessing the instance of Gentics Mesh
+* Existence and correctness of the schemas
+* Existence of the project
+* Schemas assigned to the project
+* Existence and validity of the Roles Property
+
+The action +Repair+ is used to repair incorrect data in Gentics Mesh:
+
+* Missing schemas will be created
+* Incorrect schemas will be updated
+* Missing project will be created
+* Schemas will be assigned to the project
+
+The publish process will also try to repair incorrect data in Gentics Mesh (everything above, but the Roles Property)
+
+h3. Mesh Preview URL
+
+The properties dialog of Nodes in the CMS have a field _Mesh Preview URL_ which can contain the URL to an application (portal) that is used to render the
+objects published into Gentics Mesh.
+
+When the URL is set and a page must be rendered in the CMS (for preview or in edit mode), the CMS will transform the page into a Mesh Node and +POST+ that to the preview URL.
+The response is then used as template for rendering the page in edit or preview mode.
+
+h3. Synchronize Mesh roles
+
+The datasource used in the "Roles Property":#roles-property has to be filled with the Mesh roles, that should be available for selection.
+This can be done with the action "Synchronize Mesh roles" performed on the Mesh Content.Repository in the list of Content.Repositories.
+
+!images/gcn_dialogs/sync_mesh_roles.png!
+
+The dialog shows all available roles, which are not used in the datasource under *Available Roles* and all currently used roles under *Used Roles*.
+
+When roles are moved from one side to another with one of the buttons, the datasource will be changed immediately.
+
+WARNING: Removing a role from the datasource, will remove the role from all objects, where it had be selected before. Readding it will *not* restore the
+selection state of the objects.
+
+h3. Missing roles
+
+When the "Roles Objectproperty":#roles-objectproperty for an object contains an entry which does not exist in Mesh, the role will be created automatically during the next publish run.
+
+h3. Languages
+
+Folders, images and files (which do not have a language in the CMS) will be published onto nodes with language _english_ into the Mesh Content.Repository.
+
+Pages, that have no language in the CMS will also be published as _english_ nodes.
+
+Pages with languages will be published onto nodes with the same language (same language code). Without further configuration, Mesh supports
+all *two-letter* codes defined in "ISO-639-1":https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes.
+
+To support languages in the CMS with codes not defined in ISO-639-1, they need to be configured in Mesh according to this
+"documentation":https://getmesh.io/docs/administration-guide/#_general_settings.

@@ -1,0 +1,117 @@
+h2. How does the publish process work?
+
+The publish process will bring the content online. It is started by a scheduler task and runs in the background.
+
+endprologue.
+
+h3. What will be published
+
+The publish process will publish pages, files, images and folders that are scheduled to be published ("dirted")
+and will remove objects that were deleted or should no longer be online for other reasons. Whether to publish pages,
+files/images and/or folders can be configured for each node in the node settings.
+
+An object is scheduled to be (re-)published if
+
+* The object is new and (in case of pages) "published" by an editor
+* The object itself was changed (and "published")
+* Another object was changed that influences the rendered output of the object
+* The object was scheduled to be republished using the "content maintenance":content_maintenance.html
+* The object is a page and has to be (re-)published due to time management.
+* The object is an image or file and has to be published due to the feature "file publish dependencies":feature_file_publish_dependencies.html
+
+Objects will be removed from the online content if
+
+* The object was deleted
+* The object is a page and was taken offline by an editor
+* The object is a page and was to be taken offline due to time management.
+* The object is an image or file and has to be taken offline due to the feature "file publish dependencies":feature_file_publish_dependencies.html
+
+Objects will not be changed in their online status (although they were dirted) if
+
+* Publishing of the object was delayed using the "content maintenance":content_maintenance.html
+* The node containing the object has updating the contentmap/filesystem deactivated
+
+h4. Status
+
+* Offline - the page will be taken offline if it is currently online.
+* Being edited (online) - someone is currently editing the page. The latest published version will be accessible online.
+* Being edited (offline) - someone is currently editing the page. The page will be taken offline if it is currently online.
+* Published - the page will be published.
+
+h3. Where online content goes to
+
+Content can be published into the filesystem or into a database (content repository) or both.
+
+The target of the publish process can be defined for every node individually.
+
+h3. Phases of the publish process
+
+h4. Waiting for dirt events
+
+The publish process needs to wait until all pending dirt events have been handled.
+
+h4. Initialization
+
+In this phase, the publish process collects data for calculation of the expected publish duration.
+
+h4. Synchronize Object Types
+
+Changes made in the tagmap of Content Repositories are written into the Content Repository Databases.
+
+h4. Delete old Objects from Content Repository
+
+Objects, that are removed from the backend (or pages taken offline) are removed from the Content Repositories.
+
+h4. Publish Files and Folders into Content Repository
+
+Files, images and folders are published into the Content Repositories if enabled.
+
+h4. Rendering pages
+
+All pages, that need to be republished are rendered, the content is stored in the backend database and also written into Content Repositories (if configured).
+This is the only phase, that uses multiple parallel threads for rendering if the feature "multithreaded publishing":feature_multithreaded_publishing.html is activated.
+Saving the changes is synchronized to avoid possible DB locking problems.
+
+h4. Checking online status of images and files
+
+In this phase, images and files will be checked, whether they need to be online or not.
+When the feature "file publish dependencies":feature_file_publish_dependencies.html is used, some images or files may have to be taken offline in this
+phase, dependening on whether they are referenced in any page.
+
+NOTE: This phase will done in every publish process, even if the feature "file publish dependencies":feature_file_publish_dependencies.html is not used.
+
+h4. Writing Pages and Files into Filesystem
+
+All pages, images and files are written into the filesystem, if configured in the node settings.
+
+NOTE: Writing the objects into the filesystem will be done completely (not incrementally) for all online objects,
+even if nothing changed or updating the contentmap/filesystem was deactivated for the node.
+
+h4. Invoking GenticsImageStore
+
+The contents of all pages is scanned for GenticsImageStore URLs. The images are resized (if not found in the Cache) and the resized images are written into the filesystem.
+
+h4. Finalizing
+
+The database transactions are committed and final cleanup is done.
+
+h3. Multithreaded publishing
+
+Activating the feature "multithreaded publishing":feature_multithreaded_publishing.html can significantly improve the publish performance on systems with multiple cores or multiple processors.
+
+h3. URL rendering
+
+There are a few options how URLs to pages and files/images are rendered. This can be configured for each node individually for pages and files:
+
+* *Automatic* - The way the URL is rendered will be chosen automatically, depending on if the object is published into the FS or CR and if it is in the same node or not.
+* *Portal-Links (&lt;plink&gt;)* - Portal.Node URLs. example: &lt;plink contentid="10007.123"&gt;
+* *Static URLs (dynamic)* - Static URL that is absolute (with domain) or relative (without domain) depending on if the target is in the same node or not.
+* *Static URLs with domain* - Absolute URL
+* *Static URLs without domain* - Relative URL
+
+NOTE: This setting only affects links *to* this node, and not links *from* this node.
+
+&nbsp;
+
+
+

@@ -1,0 +1,58 @@
+h2. Image Cropping Custom Aspect Ratios
+
+Allows configuration of the available crop aspect ratios in the image editor of the new UI.
+
+endprologue.
+
+h3. Overview
+
+By default three aspect ratios are available in the image editor of the new UI:
+* Original (the same aspect ratio as the image being edited)
+* Square
+* Free
+
+Each of these built in aspect ratios can be disabled and/or custom ratios can be added.
+
+
+h3. Configuration
+
+The image cropping aspect ratios are configured using "node specific settings":admin_node_settings.html and can thus be set
+individually for each node and globally for all nodes (the global settings are used as a fallback if there are no specific settings
+for a node).
+
+Here is an example of a configuration for the node with ID 1:
+
+<shell filename="conf/*.yml">
+node_settings:
+  # Image editor settings for node 1
+  "1":
+    image_editor:
+      # Allows to add custom aspect ratios
+      custom_aspect_ratios:
+        # For custom ratios, 'kind' must always be 'dimensions' and the 'width' & 'height' params are required.
+        # 'label' and 'display' are optional ('display' can be 'radio' or 'select', default is radio)
+         - kind: 'dimensions'
+           width: 16
+           height: 9
+           label: 'Wide'
+           display: 'select
+         - kind: 'dimensions'
+           width: 4
+           height: 3
+           display: 'radio'
+</shell>
+
+Custom aspect ratios have to be added to the @custom_aspect_ratios@ array and have the following properties:
+* @kind@: must always be @'dimensions'@
+* @width@
+* @height@
+* @label@ (optional): The label that will be displayed for this aspect ratio. If no label is set, it will be @width@:@height@ (e.g., 4:3).
+* @display@: Either @'radio'@ (default) to display this aspect ratio as a radio button or @'select'@ to display this aspect ratio in a select box. If the screen size is too small, all radio options are automatically moved to the select box.
+
+The same configuration object can also be set in the global settings:
+<shell filename="conf/*.yml">
+node_settings_global:
+  # Image editor global node settings
+  image_editor:
+    # Same options as for node specific settings in the example above.
+</shell>

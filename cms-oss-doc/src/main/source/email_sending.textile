@@ -1,0 +1,46 @@
+h2. eMail Sending with Gentics CMS
+
+This section covers the necessary configuration settings, when Gentics CMS shall send inbox messages as eMails.
+
+endprologue.
+
+h3. Configuration Settings
+
+The following features may be set to enable eMail sending
+
+<shell filename="conf/features.yml">
+# enable the feature to send inbox messages as eMails
+feature:
+  inbox_to_email: true
+</shell>
+
+These are the configuration options for the feature:
+
+<shell filename="conf/*.yml">
+# set the hostname of the mailserver. The mailserver must be
+# reachable from the Gentics CMS Server and must accept
+# relaying eMails from this server. The default is 'localhost'
+mailhost: "mail.mycompany.org"
+
+# Port of the mailserver
+mailport: 587
+
+# set the eMail Address to be used as Return-Path header (also
+# called envelope address). It may be important to set this to
+# a real eMail address, because some target mail servers might
+# block eMails otherwise.
+mailreturnpath: "admin@mycompany.org"
+
+# with this flag, STARTTLS will be used when communicating with the email server (see https://en.wikipedia.org/wiki/Opportunistic_TLS)
+mailstarttls: true
+
+# username for email authentication
+mailusername: "emailuser"
+
+# password for email authentication
+mailpassword: "secret"
+</shell>
+
+INFO: As Gentics CMS does not always send emails with a "From"-header, you should configure your mail sending application (sendmail, postfix) to send emails with a valid email address by default (a valid external public DNS hostname). Otherwise other mail servers will maybe reject the emails.
+
+&nbsp;

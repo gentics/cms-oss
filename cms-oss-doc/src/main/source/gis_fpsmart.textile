@@ -1,0 +1,70 @@
+h2. Using Focal Point with GenticsImageStore
+
+When the aspect ratio of an image is changed while resizing (and the mode is not "force", which would distort the image),
+the image is also cropped to the new aspect ratio.
+
+With the resize mode "smart", the image will be cropped in a way that the center of the image is preserved (will still be the center after cropping).
+
+If it is required, that the most interesting part of an image (e.g. the face of a person) is not cropped while resizing, it is possible to set the
+focal point of the image (to define, where the most interesting part is) and to use the resize mode "fpsmart", which will take the focal point
+into consideration while resizing.
+
+endprologue.
+
+h3. Usage
+
+<html>
+#set($image = $cms.tag.parts.img.target)##
+<img src='#gtx_gis($image, {"width": 100, "height": 100, "mode": "fpsmart"})'>
+</html>
+
+h3. How fpsmart works
+
+h4. Resizing with mode smart
+
+When resizing the image (with original size 400x267)
+
+!images/gis_fpsmart/original.jpg!
+
+is resized with the following settings:
+
+<html>
+<img src='#gtx_gis($image, {"width": 200, "height": 200, "mode": "smart"})'>
+</html>
+
+the image will first be cropped like this
+
+!images/gis_fpsmart/cropping_areas.jpg!
+
+to match the requested aspect ratio:
+
+!images/gis_fpsmart/cropped.jpg!
+
+and then resized to:
+
+!images/gis_fpsmart/resized.jpg!
+
+h4. Resizing with fpsmart
+
+If a focal point is set for the image like this:
+
+!images/gis_fpsmart/focal_point.jpg!
+
+and the image is resized with:
+
+<html>
+<img src='#gtx_gis($image, {"width": 200, "height": 200, "mode": "fpsmart"})'>
+</html>
+
+the image will be cropped in a way that moves the focal point towards the center of the cropped image:
+
+!images/gis_fpsmart/focal_point_cropping_areas.jpg!
+
+which results in
+
+!images/gis_fpsmart/focal_point_cropped.jpg!
+
+and after resizing in
+
+!images/gis_fpsmart/focal_point_resized.jpg!
+

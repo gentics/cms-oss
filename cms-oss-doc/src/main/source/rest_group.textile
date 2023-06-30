@@ -1,0 +1,11 @@
+h2. Group Resource
+
+endprologue.
+
+h3. Group Load
+
+Load the groups of the user, including child groups.
+
+<javascript>
+GET /rest/group/load
+</javascript>

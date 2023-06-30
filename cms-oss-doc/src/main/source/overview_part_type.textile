@@ -1,0 +1,52 @@
+h2. Overview Part Type
+
+endprologue.
+
+h3. Part Settings
+
+The dialog for editing a part of type @Overview@ has the following additional checkbox fields:
+
+|_. Field                                                |_. Description                                                                                                           |
+| Page                                                   | Restrict the listable objects to pages                                                                                  |
+| Folder                                                 | Restrict the listable objects to folders                                                                                |
+| File                                                   | Restrict the listable objects to files                                                                                  |
+| Image                                                  | Restrict the listable objects to images                                                                                 |
+| Folder (selection type)                                | Restrict the selection type to listing objects from selected folders                                                    |
+| Individual (selection type)                            | Restrict the selection type to listing individually selected objects                                                    |
+| Automatically from the current folder (selection type) | Restrict the selection type to listing objects from the current folder                                                  |
+| Hide sort options                                      | Hide the sort options in the tagfill dialog                                                                             |
+| Sticky Channel                                         | Make the channel from which objects are selected "sticky" (only available for feature "Multichannelling":https://www.gentics.com/Content.Node/cmp8/guides/mc_basic.html) |
+
+The settings define, how overviews can be filled in the tagfill dialog. The settings are explained in detail in the following sections.
+
+h4. Page, Folder, File, Image
+
+Those four checkboxes define, which objects can be listed in tags. If none is checked, all four options are available in the tagfill dialog.
+If some checkboxes are checked, the options in the tagfill dialog are restricted to the checked ones.
+
+NOTE: Overview tags can only list one type of objects. The checkboxes in the part definition dialog only define the possible options.
+
+h4. Selection Types (Folder, Individual, Automatically from the current folder)
+
+Those three checkboxes define the options for how the listed objects are selected. If none is checked, all three options are available in the tagfill dialog.
+If some checkboxes are checked, the options in the tagfill dialog are restricted to the checked ones.
+
+h4. Hide sort options
+
+When this checkbox is checked, the tagfill dialog will not contain fields to select, how the objects in the overview are sorted.
+
+h4. Sticky Channel
+
+Normally, for overviews it does not matter, from which channel the objects are selected.
+Rendering will always be done in the scope of the channel for which the overview is rendered.
+
+_Example: A page *P* from node *N* is selected for an overview. The page has a localized copy *L* in channel *C*.
+When the overview is rendered in the scope of node *N*, it will show the page *P*, when the overview is rendered in the scope of channel *C*,
+it will show the localized copy *L*._
+
+When the checkbox *Sticky Channel* is checked, the objects listed in the overview will be rendered in the scope of the channel, from which they were selected,
+regardless of the channel, for which the overview is rendered.
+This also enables selection of the same object multiple times from different channels.
+
+_Example: When the page *P* is selected from node *N* and its localized copy *L* is selected from channel *C*, the overview will always show *P* and *L*,
+no matter, for which channel the overview is rendered._

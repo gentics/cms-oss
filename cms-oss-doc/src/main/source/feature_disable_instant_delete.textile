@@ -1,0 +1,16 @@
+h2. Disable instant delete
+
+Disables deleting objects from the contentrepository during instant publishing
+
+endprologue.
+
+h3. Configuration
+
+If you want to use this feature, you first have to enable it globally in your node.conf
+
+<shell filename="conf/features.yml">
+feature:
+  disable_instant_delete: true
+</shell>
+
+After that, you can enable it per node in the nodes' "Features" dialogues (which can be found either in a node's context menu or in Node – Features).

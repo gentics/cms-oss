@@ -1,0 +1,92 @@
+h2. Repository Browser configuration
+
+This page describes how to configure the Repository Browser.
+
+endprologue.
+
+h3. Options
+
+h4. Show all page languages
+
+All of a page's languages can be displayed in one line or just a number
+of them in one line and the others will be show in a pop-up when hovering the elements (default). To show all
+in one line we must set the option 'expandLanguages' to 'true'.
+
+<shell filename="conf/*.yml">
+aloha_settings:
+  plugins:
+    "gcn-linkbrowser":
+      expandLanguages: true
+</shell>
+
+NOTE: When using this option we recommend setting paging size to unlimited. Otherwise paging size might be affected.
+
+h4. Columns configuration
+
+We can configure the order and number of the columns of the repository browser we want to show.
+The columns that can be configured are:
+
+* icon
+* id
+* name
+* fileName
+* type
+* baseType
+* template
+* path
+* language
+* translations
+* fileType
+* fileSize
+* folderName
+* status
+* inherited
+* sizeX
+* sizeY
+
+For each columns we can define a set of properties:
+
+* title (default: '') - the column title to be displayed. This can contain translations in for the available languages ('de' and 'en')
+* width (default: 150) - the pixel width of the column
+* resizable (default: true) - whether the column should be resizeable
+* fixed (default: false) - together with 'width' to indicate that the width of the column will not be changed when resizing
+
+Configuration example:
+
+<shell filename="conf/*.yml">
+aloha_settings:
+  plugins:
+    "gcn-linkbrowser":
+      columns:
+        - icon:
+            width: 10
+            fixed: true
+        - name:
+            title: "Name"
+            width: 100
+        - translations:
+            title:
+              de: "Übersetzungen"
+              en: "Translations"
+        - fileName:
+            resizable: false
+        - template:
+            title:
+              de: "Vorlage"
+              en: "Template"
+            width: 100
+        - language:
+            width: 20
+</shell>
+
+h4. Configuration for specific nodes
+
+It is also possible to add configuration for specific nodes.
+
+<shell filename="conf/*.yml">
+aloha_settings_node:
+  "2":
+    plugins:
+      "gcn-linkbrowser":
+        expandLanguages: false
+</shell>

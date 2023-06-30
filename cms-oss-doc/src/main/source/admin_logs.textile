@@ -1,0 +1,52 @@
+h2. Gentics CMS Log Files
+
+Gentics CMS uses a different log files to inform administrators about the systems current state.
+
+endprologue.
+
+h3. File locations
+
+Gentics CMS logs messages to standard output and for special information (e.g. about publish runs) into log files located in /cms/logs.
+
+h3. Configuration
+
+Gentics CMS uses the logging library "log4j 2.x":https://logging.apache.org/log4j/2.x/.
+
+By default the configuration file is located at `/cms/conf/nodelog.yml` and uses the YAML format.
+
+<shell filename="/cms/conf/nodelog.yml">
+Configuration:
+  status: error
+  name: CMS Configuration
+  monitorInterval: 10
+  properties:
+    property:
+      name: filename
+      value: /cms/logs/gentics.log
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+    RollingFile:
+      name: rollingFile
+      fileName: ${filename}
+      filePattern: ${filename}.%d{yyyy-MM-dd}.gz
+      PatternLayout:
+        Pattern: "%d [%t] %-5p %c - %m%n"
+      Policies:
+        TimeBasedTriggeringPolicy:
+          interval: 1
+          modulate: true
+      DefaultRollOverStrategy:
+          max: 30
+  Loggers:
+    Root:
+      level: error
+      AppenderRef:
+        -
+          ref: rollingFile
+        -
+          ref: STDOUT
+</shell>

@@ -1,0 +1,89 @@
+h2. Node specific settings
+
+Custom settings can be configured per node and loaded via the REST API.
+
+endprologue.
+
+h3. Setting and retrieving custom settings
+
+Node specific settings can be configured via the variable @node_settings@ using either the local ID or global ID or name of the node:
+<shell filename="conf/*.yml">
+node_settings:
+  '3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f':
+    resizing:
+      aspect_ratios:
+		- '4:3'
+		- '16:10'
+	  max_height: 500
+);
+</shell>
+The settings can be retrieved via the REST API with requests to the @/rest/node/[NODEID]/settings@ endpoint. In the resulting
+"JSON response":https://www.gentics.com/Content.Node/guides/restapi/json_NodeSettingsResponse.html the configuration will be in
+the field @data@. With the configuration above, a request to @/rest/node/1/settings@ would yield:
+<javascript>
+{
+	"messages": [],
+	"responseInfo": {
+		"responseCode": "OK",
+		"responseMessage": "Loaded settings for Node {1}"
+	},
+	"data": {
+		"resizing": {
+			"aspect_ratios": [
+				"4:3",
+				"16:10"
+			],
+			"max_height": 500
+		}
+	}
+}
+</javascript>
+
+h3. Global values
+
+Global settings for all nodes can be configured in the variable @node_settings_global@. All entries in this array will be
+added to the node specific settings unless they already contain that setting.
+
+*NOTE:* that the value types for settings must match in the global and node specific settings. For example a global array value
+cannot be overriden with a numeric value.
+
+Loading settings for nodes without specific settings will just return the global settings.
+
+For example the configuration
+
+<shell filename="conf/*.yml">
+node_settings_global:
+  resizing:
+    max_height: 500
+    allowh_this: false
+
+node_settings:
+  "1":
+    resizing:
+      aspect_ratios:
+        - "4:3"
+        - "16:10"
+</shell>
+
+would result in the following response from @/rest/node/1/settings@ (note that the configuration for node 1 only contains
+the aspect ratios, the rest comes from the global settings):
+
+<javascript>
+{
+	"messages": [],
+	"responseInfo": {
+		"responseCode": "OK",
+		"responseMessage": "Loaded settings for Node {1}"
+	},
+	"data": {
+		"allow_this": false,
+		"resizing": {
+			"aspect_ratios": [
+				"4:3",
+				"16:10"
+			],
+			"max_height": 500
+		}
+	}
+}
+</javascript>

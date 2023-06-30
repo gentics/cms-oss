@@ -1,0 +1,14 @@
+h2. Which Doctype should be used with Aloha Editor?
+
+Because Aloha Editor is an HTML5 Editor, we strongly suggest to 
+stick to using a HTML5 Doctype.
+
+endprologue.
+
+If the Doctype declaration is missing UI Components such as the 
+draggable toolbar might be missing. Always add a valid HTML5
+Doctype declaration to your code:
+
+<html>
+<!DOCTYPE html>
+</html>

@@ -1,0 +1,58 @@
+h2. Configure the Devtools
+
+This section covers the configuration options for the Devtools.
+
+endprologue.
+
+WARNING: When the CMS runs in a docker container on a Windows based system, and the _packages_ directory is mounted from the host into the container, changes to files in the
+_packages_ directory are not propagated as @inotify@ events, and therefore the default watcher implementation (WatchServiceWatcher) cannot be used. This setup requires the
+usage of the "FileMonitorWatcher":#filemonitorwatcher.
+
+h3. Activate Feature
+
+The feature must be activated in the CMS configuration:
+
+<shell filename="conf/*.yml">
+feature:
+  devtools: true
+</shell>
+
+NOTE: After activating/deactivating the feature or changing other configuration settings, it is necessary to "reload the configuration":content_maintenance.html#reload-configuration for the changes
+to take effect.
+
+h3. Watcher implementation
+
+The automatic synchronization of files changed in the filesystem with the objects in the CMS is based on a mechanism to detect filesystem changes.
+
+There are two different implementations of this mechanism.
+
+h4. WatchServiceWatcher (default)
+
+This implementation listens to filesystem events (e.g. "inotify":https://en.wikipedia.org/wiki/Inotify on linux based systems). This implementation (which is the default)
+is best suited for installations, where the _packages_ directory is located on a native filesystem or where the the _packages_ directory is mounted using a technology which
+supports those filesystem events.
+
+This watcher implementation can be activated with
+
+<shell filename="conf/*.yml">
+devtools:
+  synchronizer:
+    class: "com.gentics.contentnode.devtools.WatchServiceWatcher"
+</shell>
+
+h4. FileMonitorWatcher
+
+This implementation uses polling to detect changes in the monitored directories and will work in all scenarios. However, it has the disadvantage to create some permament CPU load
+caused by the polling (as long as the @devtools@ feature is activated).
+
+This watcher implementation can be activated with
+
+<shell filename="conf/*.yml">
+devtools:
+  synchronizer:
+    class: "com.gentics.contentnode.devtools.FileMonitorWatcher"
+    interval: 100
+</shell>
+
+The setting @devtools.synchronizer.interval@ defines the polling interval in milliseconds (default is _1000_). Longer intervals produce less CPU load but cause a longer
+delay for the change detection. Shorter intervals allow for faster detection but increase the CPU load.

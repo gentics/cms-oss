@@ -1,9 +1,3 @@
-db:
-  settings:
-    driverClass: "org.mariadb.jdbc.Driver"
-server:
-  port: 8080
-dbfiles: "data/content/dbfiles"
 accesscontrol:
   default:
     secured: true
@@ -204,7 +198,6 @@ regex:
   46: "^([a-zA-Z0-9/\\._-]){0,255}$"
   47: "^.{0,255}$"
   48: "^(.|\\n|\\r){1,255}$"
-tmppath:
 multilevel_pub_workflow: ""
 mailreturnpath: ""
 contentmap_keepalive_interval: 3600
@@ -544,7 +537,6 @@ custom_tools: ""
 custom_proxy: ""
 gis_requests: ""
 portletapp_prefix_internal: "/"
-mesh: ""
 selfupdate:
   baseUrl:
     prefix: "https://"

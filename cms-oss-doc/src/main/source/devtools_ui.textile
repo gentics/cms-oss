@@ -1,0 +1,68 @@
+h2. Devtools UI
+
+This section contains a short description of the devtools UI.
+
+endprologue.
+
+h3. Packages
+
+When the "feature devtools":devtools_configuration.html#activate-feature is activated, users with sufficient permission
+will get a new entry in the tree @Administration|Content.Admin|Packages@ which will lead to the list of packages found in the filesystem.
+
+From here, the following actions are possible:
+
+* Activate/deactivate "automatic synchronization":devtools_synchronization.html#automatic-synchronization
+* Add/remove packages
+* "Manually synchronize":devtools_synchronization.html#manual-synchronization packages
+* List objects contained in a package
+
+h3. List of objects
+
+Selecting a package will list the objects contained in the package. The lists are separated by types:
+
+* Tagtypes
+* Templates
+* Datasources
+* Object properties
+* CR Fragments
+* ContentRepositories
+
+The current listed type can be changed in the assistent frame. The @Info@ section of the assistent frame shows the content of the @README.md@ file
+found in the package's root directory.
+
+The object lists allow to
+
+* Add objects (from the CMS) into the package
+* Remove objects from the package
+
+NOTE: When the automatic synchronization is disabled, packages might contain objects that do not exist in the CMS. They will also be listed, but marked with @No@ in
+the column @In the CMS@.
+
+h3. Node related tree entries
+
+Users with sufficient permission will get additional tree entries for each node.
+
+h4. @Packages@ of the node
+
+This entry will lead to a list of all packages, with the possibility to assign packages to the node.
+When a package is assigned to a node, all tagtypes and templates in that package will also be assigned to the node. CR fragments contained in the package will be assigned to the
+CR of the node.
+When a package is unassigned from a node, the tagtypes and templates already assigned will still be assigned to the node, but any further changes
+of the package will not affect the node.
+
+h4. @Tagtypes@ of the node
+
+This will show a list of all tagtypes currently assigned to the node.
+
+h4. @Templates@ of the node
+
+This will show a list of all templates currently assigned to the node. Templates are assigned to the node, when they are contained in a package which is
+assigned to the node, or when they are linked to at least one folder of the node.
+
+When a template is unassigned from the node, it is unlinked from all folders of the node.
+
+h3. Adding multiple objects to packages
+
+Users with sufficient permissions have an additional action @Add to package@ in the list views for template, tagtypes, datasources, object properties and CR fragments.
+Selecting this action for a single or multiple objects will show a list of all packages, where one or multiple packages can be selected and the objects
+added to the packages with the action @Add to package@.

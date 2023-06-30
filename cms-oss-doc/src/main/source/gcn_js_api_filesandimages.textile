@@ -1,0 +1,274 @@
+h2. Gentics CMS JavaScript API
+
+Files and Images
+
+endprologue.
+
+
+h3. Accessing files in Gentics CMS
+
+The files API allows you to access files from the backend server. Retrieving a file is as simple as
+
+<javascript>
+// load file with id 42
+GCN.file(42, function (file) {
+	// print filename to console
+	console.log(file.prop('name'));
+});
+</javascript>
+
+Files and images behave exactly the same way - images just provide some more properties to be accessed using the +prop()+ method.
+
+Working with files works exactly like working with pages or any other objects in the Gentics CMS JavaScript API. However files have something that makes them special: binary content. Binary content will not be available directly using the Gentics CMS JavaScript API, but the library is capable of providing you with a download link by using the +binURL()+ method.
+
+WARNING: *NEVER EVER* save those links in your frontend code. Don't even think of it. Links provided by the +binURL()+ method will directly access your backend.
+
+If you'd like to create a list of download links of files from a folder this is how to do it.
+
+<javascript>
+// load a folder that contains our files
+GCN.folder(42).files(function (files) {
+	// loop over all the files
+	$.each(files, function (i, file) {
+		// write a list of download links to the document
+		document.writeln(file.binURL());
+	});
+});
+</javascript>
+
+h3. Handling Default Upload Folders
+
+It is possible to load properties that contain the folderId of the image and file default upload folder using the NodeAPI.
+
+<javascript>
+	GCN.node(1, function (node) {
+		var defaultFileUploadFolderId = uploadnode.prop('defaultFileFolderId');
+		var defaultImageUploadFolderId = uploadnode.prop('defaultImageFolderId');
+	});
+</javascript> 
+
+
+Example that explains how to use the defaultFileUploadFolderId property within a fileupload process.
+
+<javascript>
+
+// You would need to provide the filename by your upload implementation.
+var fileName = "wildfire.jpg";
+
+GCN.node(1, function (node) {
+	// 1. Read the default folders from the rest api
+	var defaultFileUploadFolderId = uploadnode.prop('defaultFileFolderId');
+	var defaultImageUploadFolderId = uploadnode.prop('defaultImageFolderId');
+	var uploadFolderId = gcnplugin.settings.folderId;
+
+	// 2. One crude way of determining the file type is examining the file 
+	//    extension. We do this so that we can later on select the 
+	//    appropriate upload folder.
+	var	imageExtensions: ['jpeg', 'jpg', 'png', 'gif'];
+
+	var extension =  fileName.substring(fileName.lastIndexOf(".") + 1);
+	extension = extension.toLowerCase();
+	
+	var isImageFile = jQuery.inArray(extension, that.imageExtensions) > 0;
+
+	// 3. Change the upload folder to the default image upload folder 
+	//    when the file is an image and the image upload folder was set for 
+	//    this node. Select the default file upload folder when one was 
+	//    specified for this node.
+	if (isImageFile && typeof defaultImageFolderId !== 'undefined') {
+		uploadFolderId = defaultImageFolderId;
+	} else if (!isImageFile && typeof defaultFileFolderId !== 'undefined') {
+		uploadFolderId = defaultFileFolderId;
+	}
+
+	// Load the folder so that we can fetch the upload url
+	GCN.folder(uploadFolderId, function (folder) {
+		// Fetch the rest url for multipart form data uploads
+		var restUrl = folder.multipartUploadURL();
+		
+		// ... Now you can use this url to upload your file ...
+	}
+
+});
+</javascript> 
+
+
+h3. File Upload
+
+A rest url that can be passed to any uploader can be fetched by using the +uploadURL()+ method. The underlying rest implementation accepts multipart form data.  
+<javascript> 
+	var url = GCN.folder(42).uploadURL();
+</javascript>
+
+Additionally another url can also be used. The +multipartUploadURL()+ returns a url that can be used to post multipart form data. This parameter also accepts additional parameters to wrap the response content and change the response content type. This is useful for some uploaders.
+
+The "jquery form plugin":http://www.malsup.com/jquery/form/ for example expects a wrapped response content so that this content can be fetched by a special javascript implementation. The content-type needs to be changed to text/html as well. Otherwise the content could not be read by the uploader.
+
+<javascript>
+	var url = GCN.folder(42).multipartUploadURL();
+</javascript>
+
+An upload response handler can be used to determine whether the upload was successful or not. Internally the handler will examine the returned json and call onSuccess or onError. 
+We need to do this because the rest upload call will be executed by the uploader library. Additionally the success handler will receive a file object that represents the newly uploaded file.
+<javascript>
+	GCN.folder(42).handleUploadResponse(result, onSuccess, onError);
+</javascript>
+
+
+
+h3. Example 
+
+Full featured example that uses the "blueimp jquery fileuploader":https://github.com/blueimp/jQuery-File-Upload can be found below.
+
+<javascript>
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>File Upload Example</title>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
+</script>
+
+<script type="text/javascript" src="js/gcnjsapi.js"></script>
+
+</head>
+<body>
+	<input id="fileupload" type="file" name="files[]" multiple>
+	<a href="#" id="startUpload">Upload</a>
+
+	<!-- 
+		The jQuery UI widget factory, can be omitted if jQuery UI is already
+		included 
+	-->
+	<script src="js/vendor/jquery.ui.widget.js"></script>
+
+	<!-- 
+		The Iframe Transport is required for browsers without 
+		 support for XHR file uploads 
+	-->
+	<script src="js/jquery.iframe-transport.js"></script>
+	<!-- The basic File Upload plugin -->
+	<script src="js/jquery.fileupload.js"></script>
+
+	<!-- 
+		The XDomainRequest Transport is included for cross-domain file 
+		deletion for IE8+ 
+	-->
+	<!--[if gte IE 8]>
+		<script src="js/cors/jquery.xdr-transport.js"></script>
+	<![endif]-->
+
+	<script>
+
+		GCN.sub('authentication-required', function(proceed, cancel) {
+			// Login using node/node
+			GCN.login('node', 'node', function(success) {
+				success ? proceed() : cancel();
+			});
+		});
+		
+		GCN.sub('error-encountered' ,function (error) {
+			alert(error.toString());
+		});
+
+		/**
+		 * Success handler for the upload
+		 */
+		function onSuccess(file, messages) {
+			console.log('Upload successful:');
+			console.log("File Id: " + file.id());
+			console.log("Filename: " + file.prop('name'));
+		}
+		
+		/**
+		 * Completion handler for the upload
+		 */
+		function onComplete(result, textStatus, jqXHR) {
+			console.log('Upload completed');
+		}
+		
+		/**
+		 * Error handler for the upload
+		 */
+		function onError(responseCode, responseMessage, messages) {
+			alert('Error during upload - code:' + responseCode + 
+				" ,message: " + responseMessage);
+			console.dir(messages);
+		}
+		
+		/**
+	 	 * This method can be used to prepare the uploader to handle the
+	 	 * folder specific callback methods.
+		 */
+		function prepareHandleUpload(folder) {
+			
+			// Automatically submit data  
+			$('#startUpload').fileupload({
+				add: function(e, data) {
+					// Start the upload process
+					var jqXHR = data.submit();
+					
+					jqXHR.success(function (result, textStatus, jqXHR) {
+						/*
+						 * Pass the result to the folder handleUpload
+						 * response method. This method will inspect the
+						 * result and invoke the given success or error
+						 * callback. 
+						 */
+						folder.handleUploadResponse(result, 
+													onSuccess, 
+													onError);
+					});
+					
+					jqXHR.error(function (jqXHR, textStatus, errorThrown) { 
+						onError(textStatus);
+					});
+
+					jqXHR.complete(onComplete);
+				}
+			});
+		}
+		
+		// Configure upload
+		$('#fileupload').fileupload('option', {
+			sequentialUploads: true
+		});
+		
+		$(document).ready(function() {
+			
+			// Handle the upload link click event
+			$('#startUpload').click( function() {
+				
+				var filesList = $('#fileupload').prop('files');
+
+				// Check whether a file was already selected
+				if("object" == jQuery.type(filesList)) {
+					
+					/*  
+					 * Load the folder and get an upload URL for that folder.
+					 * This URL can be used to add the chosen file to the
+					 * fileuploader. The 'add' action will automatically
+					 * start the upload process.
+					 */
+					GCN.folder(42, function(folder) {
+						prepareHandleUpload(folder);
+						var restUrl = folder.uploadURL();
+						var files = { files: filesList, url: restUrl };
+						$('#startUpload').fileupload('add', files);
+					});
+					
+				} else {
+					alert('Please choose a file first');
+				}
+					
+			});
+		
+		});
+	</script>
+
+
+
+</body>
+</html>
+</javascript>

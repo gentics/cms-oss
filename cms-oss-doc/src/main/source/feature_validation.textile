@@ -1,0 +1,129 @@
+h2. Validation
+
+Once the feature is activated, user-inputs will be examined for potentially harmful
+content. If such content is encountered, the system will either clean the harmful content
+or refuse to accept the harmful input and display an error message.
+
+endprologue.
+
+h3. Configuration
+
+<javascript filename="conf/features.yml">
+feature:
+  # enables comprehensive validation of input values if set to true.
+  validation: true
+</javascript>
+
+h3. Description
+
+Inputs are not always validated, as implementers must be able to enter arbitrary inputs. Generally, those areas that should be made accessible only to implementers (e.g. Content.Admin, Page-Templates) are not covered by the validation feature. Instead, the permissions should be use to restrict access to these areas.
+
+It is important to keep in mind that validation will be performed for inputs made after the feature has been turned on, but not for inputs entered while the feature was turned off. For this reason it is recommended to examine all existing user-created content for possible XSS attack vectors after turning on the feature.
+
+The validation feature will work out-of-the-box for inputs such as messages to other users, or folder-names. Validation of edit operations on pages, however, is highly dependent on the tag-type implementation.
+
+h3. Validation of page-edit operations
+
+For the purpose of validating edit operations on pages, we separate users into two groups, implementers and editors. The distinction is,that implementers have access to the Content.Admin area, where tag-types can be defined. Editors must not have access to the Content.Admin area.
+
+When we say that a part of a tag-type must not be editable, we mean that the part must not be editable by an editor. An editor is able to edit any parts that are defined as being editable. An Implementer can define whether a part is editable by setting the "editable" checkbox in the part-properties dialog, which can be accessed through the Content.Admin area.
+
+Once the validation feature is turned on, edit operations performed on tags will be validated. The edit operations may be performed from the tag-list, or using the live-editor, or using the new Aloha-Editor - in each case the same form of validation will be done. The content-tag validation will require the tag-type implementation to conform to the following points:
+
+HTML attributes in existing content (templates, tags, tagtypes) must not contain node-tags, with the exception of URL tags (wich have a default part-policy of "any URI")
+all parts of tag-types, and only parts of tag-types, have keywords beginning with "part". Tag-types themselves should not have keywords beginning with "part"
+page-templates and the "template" and "macros" parts, that are used in conjunction with Overview and Velocity parts, are not editable, and Overview parts are not changeable, and any input entered by editors that is processed by XNL tags and Overview and Velocity tags is performed in a safe manner.
+No errors will be displayed if these requirements aren't fulfilled, but these requirements must be fulfilled in order for the validation to be secure.
+
+h4. Node tags in HTML attributes
+
+As an example for the first condition, consider the following:
+
+<code>
+<a href="<node some-part>"></a>
+</code>
+
+By default the validation mechanism assumes that node-tags are being used at the element-level, and not the attribute-level. For this reason, the default validation mechanism will allow e.g. "javascript:alert()" to be a valid input into the tag-part named "some-part". This is an obvious XSS vulnerability.
+
+The exception is if "some-part" has an URL part-type - in this case, the validation mechanism will only allow valid URLs to be inserted. What constitues a valid URL is specified by an AntiSamy policy file, which only allows URLs that don't constitute a XSS vulnerability.
+
+If any parts are being used at the attribute-level, and are not of an URL type, a special policy may be configured for that part. The policy of a part can be configured in the part-properties dialog, which can be accessed by clicking on a part in the tag-type definition dialog.
+
+The special policy to configure for parts that are used on the attribute-level is called "any-URI". If validation of attributes other than URLs is desired, please get in touch with us.
+
+The above example contains a node-tag in an HTML attribute value, and therefore special care must be taken so that it can be correctly validated. HTML attributes that do not contain node-tags, will be correctly validated automatically. Again, the AntiSamy policy file specifies how these attributes will be validated.
+
+h4. Keywords of tagtypes must not begin with "part"
+
+The names of parts of tag-types must begin with the "part". Editors must not be able to refer to the parts of a tag-type. Otherwise, a XSS attack may be formulated by combining several individual parts in ways not intended by the implementer.
+
+For example: let part one contain the string @'<a href="'@, and let part two be an editable part of an URL type, and let part three contain the string @'"/>'@. Editing a tag with these three parts will restrict the user to choose a URL which will be validated in a secure manner since it is of an URL type. However, if parts one and three could be freely resolved, a XSS attack may be formulated by accessing these two parts individually and substituting any arbitrary text for the URL part.
+
+It is specified in the default AntiSamy policy file that node-tag keywords that begin with "part" will not validate. For example, the string @"<node partly>"@ will cause a validation error, since the keyword begins with "part".
+
+Additionally, it is specified that node-tag keywords may not contain a dot ("."). This will restrict editors to resolve content-tags only.
+
+An alternative to prefixing the keyword of a tag-part with "part" is to leave the keyword empty, which will make it impossible to resolve the part with a node-tag.
+
+h4. Page-Templates, XNL, Velocity and Overviews
+
+The third condition concerns page-templates, XNL, and Velocity and Overview parts.
+
+Page-templates must be able to contain arbitrary HTML, since it must be possible to define script dependencies and the HTML structure for the page.
+
+XNL functinos and conditions may perform arbitrary operations.
+
+Velocity and Overview parts, both, use the "template" and "macros" parts, which may contain arbitray Velocity.
+
+Authoring page-templates or Velocity code, or calling XNL functions or writing XNL conditions are inherently trusted operations. It is not feasible to validate these operations to prevent XSS attacks.
+
+For this reason, editors must not have the possibility to edit page-templates or use XNL functions or XNL conditions, and Overview and Velocity parts must not be editable (checkbox in the part-properties dialog) and Overview templates must not be changeable (there is a checkbox below the template when filling-in the tag-type defaults).
+
+If XNL structures are encountered in the markup, they will by default cause a validation error. However, the impelementer is still responsible for ensuring that user-supplied parameters to XNL functions or XNL conditions can't be exploited to formulate an XSS attack. The same applies to page-templates and Overview/Velocity parts except that these must be explicitly disabled for editors. The same also applies for parts of tag-types, for which the implementer chose a more permissive policy than the default policy. Such tag-types must not be editable by a user, and the implementer must ensure that user-supplied content is processed in a safe manner.
+
+For example, consider the following scenario: the implementer writes the following HTML fragment into the source of a page-template, or into a part with a permissive policy:
+
+<html>
+<script type="text/javascript">
+var userVariable = '<node user-supplied-content>';
+</script>
+</html>
+
+If the tag "user-supplied-content" has the default XSS-safe policy, an editor will be able to write arbitrary text into the tag. In this scenario, however, arbitrary text means that the user is able to write arbitrary javascript, since it is straightforward to escape the single quotes from within the user supplied content. It is not possible to combine Javascript and node-tags in a safe manner. This is because node-tags are not treated as Javascript objects - once the page is rendered, the node tags will be inserted into the Javascript element as an arbitrary chunk of text. It is possible, however, to use Velocity to access contents of node tags in a safe manner. Velocity can access the contents of node-tags in the form of Java Strings. These Java Strings do not escape the Velocity contex. If the Java String is to be rendered in the page, however, the same Problem as above applies. With Velocity, however, it is possible to perform custom validation or escaping on the string before rendering it into the page, since Velocity is executed during the rendering process of the page.
+
+h3. Working with secure tag-types
+
+Implementers will have the requirement to be able to insert arbitrary HTML, including arbitrary scripts, into parts that are not accessible by editors. Once the implementer has made certain, that a part is not editable, he may choose a more permissive validation policy for this part. For example, the "any Content" policy will allow any input to be entered, which is necessitated by e.g. the "template" part of Velocity tag-types.
+
+h3. Configuring a custom AntiSamy policy
+
+The validation feature uses the AntiSamy library for validation. AntiSamy uses a policy file to determine what constitutes valid markup. This policy file is conceptually a whitelist of valid tags, attributes and attribute values.
+
+reasonable default policy file is shipped with Gentics CMS. However, implementers may have special requirements to allow other content elements to pass validation, that are not defined in the default policy file. For this purpose, a custom AntiSamy policy file may be defined.
+
+Two files are required to configure the custom policy: the policy file itself and a so called policy-map that maps the custom policy file to the custom validation policy that will be configured for a tag-part. The following files can be saved in the /Node/etc folder to provide a basis for the customization:
+
+* "policy-map.custom.xml":./gcn_files/policy-map.custom.xml (5.8 KB)
+* "antisamy.custom.xml":./gcn_files/antisamy.custom.xml (78.7 KB)
+* "policy-map.xsd":./gcn_files/policy-map.xsd (8.2 KB)
+
+The custom policy-map will link a custom validation policy (which can be selected from the policy drop-down in the part-properties dialog) to the custom AntiSamy policy. For the custom policy-map to be loaded, the following entry must be added to the configuration file located in /Node/etc/node.conf - the path to the custom policy-map file can be freely chosen:
+
+<javascript filename="conf/*.yml">
+validation:
+  policyMap: "file:///Node/etc/policy-map.custom.xml"
+</javascript>
+
+Please note that the custom AntiSamy policy and custom policy-map will not automatically be updated with changes to the default AntiSamy policy and default policy-map, which are shipped with the product - every change to the default files must be manually merged into the custom AntiSamy policy file. Changes to the default files will be announced in the Gentics CMS changelog.
+
+The AntiSamy policy file may be modified freely. Please also see the "OWASP AntiSamy Project website":https://www.owasp.org/index.php/Category:OWASP_AntiSamy_Project, where many sample configurations are available. The policy-map should not be modified, unless there is a manual change in the Gentics CMS changelog that requires it.
+
+h3. Known issues
+
+h4. Page-import and validation
+
+Names of pages imported with the page-import feature will not be validated. In particular, this concerns the option "cn_import_pagename" which will allow an arbitrary HTML tag in the import-file to provide the page-name.
+
+h4. Validation and XML namespaces
+
+The AntiSamy library is used for validation. There is currently no support for XML namespaces in AntiSamy. Namespaces can nevertheless be implemented through tag-types that set the default XML namespace to a custom value by using a non-editable part that wraps an editable part.

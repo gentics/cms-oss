@@ -14,6 +14,9 @@ Configuration:
         name: com.gentics.contentnode
         level: error
       -
+        name: com.gentics.contentnode.runtime
+        level: warn
+      -
         name: wastebin
         level: error
       -

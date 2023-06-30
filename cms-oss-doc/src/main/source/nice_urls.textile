@@ -1,0 +1,57 @@
+h2. Nice URLs
+
+When the feature is activated, editors can specify _nice URLs_ and _alternate URLs_ for individual pages, files and images.
+The nice URL and alternate URLs are additional URLs for a specific page, file or image besides the default URL,
+which is constructed by concatenating the folder's publish directory and the
+object's filename. It can for example be used as easy to remember short-cut to specially featured objects.
+
+endprologue.
+
+h3. Configuration
+
+The feature must be activated
+
+<shell filename="conf/features.yml">
+feature:
+	nice_urls: true
+</shell>
+
+h3. Editing
+
+When the feature is activated, additional fields @Nice URL@ and @Alternate URLs@ will be included in the properties dialogs for pages, files and images.
+The fields may be left empty for objects without nice or alternate URL. If a nice or alternate URL is set, it must begin with a "/" and must not end with a "/".
+Invalid URL characters will be sanitized according to the "sanitizing file names configuration":https://gentics.com/Content.Node/guides/feature_sanitize_name.html.
+
+Input that does not comply with these constraints will be corrected automatically.
+
+h4. Validation
+
+Any input will be sanitized according to the rules for folder paths and will then be made unique (against other nice or alternate URLs or combinations of folder.pub_dir + filename),
+so that no two objects would be addressed by the same URL.
+
+h3. Publishing
+
+To publish an objects's nice and alternate URLs into the Content Repository, the meta attributes @[object].nice_url@ and @[object].alternate_urls@ must be mapped to attributes
+(e.g. @nice_url@ and @alternate_urls@). The attribute @alternate_urls@ must be a multivalue attribute.
+When publishing into a Mesh Content.Repository, the attributes must be marked as "URL fields".
+
+See the example implementation in this devtool package: "Download nice_urls.zip devtool package":files/packages/nice-urls.zip
+
+To use the devtool package in your project:
+* activate the feature "devtool packages":https://www.gentics.com/Content.Node/guides/devtools_overview.html
+* extract the provided nice-urls.zip to your "devtool directory":https://www.gentics.com/Content.Node/guides/devtools_overview.html#directory-layout
+* In the CMS add the "content repository fragment":https://gentics.com/Content.Node/guides/admin_cr_fragments.html contained in the package to your content repository.
+
+h3. Frontend Implementation
+
+The frontend implementation must be able to resolve the nice URL to the object.
+When using Gentics CMP, this will work out of the box without further configuration using "Gentics Mesh Webroot":https://getmesh.io/docs/features/#webroot
+
+h3. Difference between nice URL and alternate URLs
+
+What is the difference between a nice URL and an alternate URL?
+
+Actually, the only difference is, that the nice URL field can contain only a single value, whereas the alternate URLs field can contain many. This allows to mark one URL (the nice URL) as "special"
+and frontend implementations could use this "special" URL as the "canonical link":https://en.wikipedia.org/wiki/Canonical_link_element.
+
+Please consult the guides for "Gentics Portal | php":https://gentics.com/portal-php/docs/development/nice-urls/ or "Gentics Portal | Java":https://gentics.com/portal-java/docs/development/nice-urls/ for details.

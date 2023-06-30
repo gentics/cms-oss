@@ -33,6 +33,7 @@ import { TooltipDemoPage } from '../pages/tooltip-demo/tooltip-demo.component';
 import { TopBarDemoPage } from '../pages/top-bar-demo/top-bar-demo.component';
 import { TypographyDemoPage } from '../pages/typography-demo/typography-demo.component';
 import { TableDemoPage } from '../pages/table-demo/table-demo.component';
+import { TrableDemoPage } from '../pages/trable-demo/trable-demo.component';
 
 export enum PageType {
     COMPONENT = 'component',
@@ -204,15 +205,27 @@ export const PAGES: IPageInfo[] = [
         keywords: ['panel', 'master-detail'],
     },
     {
-        path: 'textarea',
-        component: TextareaDemoPage,
+        path: 'table',
+        component: TableDemoPage,
         type: PageType.COMPONENT,
+        keywords: ['table'],
+    },
+    {
+        path: 'trable',
+        component: TrableDemoPage,
+        type: PageType.COMPONENT,
+        keywords: ['trable', 'table'],
     },
     {
         path: 'tabs',
         component: TabsDemoPage,
         type: PageType.COMPONENT,
         keywords: [''],
+    },
+    {
+        path: 'textarea',
+        component: TextareaDemoPage,
+        type: PageType.COMPONENT,
     },
     {
         path: 'top-bar',
@@ -232,18 +245,12 @@ export const PAGES: IPageInfo[] = [
         type: PageType.COMPONENT,
         keywords: ['tooltip', 'message'],
     },
-    {
-        path: 'table',
-        component: TableDemoPage,
-        type: PageType.COMPONENT,
-        keywords: ['table']
-    },
 ];
 
 /**
  * Convert "my-best-string" to "MyBestString"
  */
 export function kebabToPascal(str: string): string {
-    let camel: string = str.replace(/-([a-z])/g, (m: string) => m[1].toUpperCase());
+    const camel: string = str.replace(/-([a-z])/g, (m: string) => m[1].toUpperCase());
     return camel.charAt(0).toUpperCase() + camel.slice(1);
 }

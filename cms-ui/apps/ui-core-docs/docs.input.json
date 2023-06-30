@@ -111,6 +111,11 @@
         "sourceFile": "../../libs/ui-core/src/lib/components/table/table.component.ts",
         "extends": "base-table.component"
     },
+    "trable.component": {
+        "type": "component",
+        "sourceFile": "../../libs/ui-core/src/lib/components/trable/trable.component.ts",
+        "extends": "base-table.component"
+    },
     "tabs.component": {
         "type": "component",
         "sourceFile": "../../libs/ui-core/src/lib/components/tabs/tabs.component.ts"

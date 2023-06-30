@@ -1,0 +1,13 @@
+@import "ui-core/src/styles/variables";
+
+.name-wrapper {
+    display: flex;
+    align-items: center;
+
+    icon {
+        color: $gtx-color-primary;
+        width: 20px;
+        height: 24px;
+        margin-right: 1rem;
+    }
+}

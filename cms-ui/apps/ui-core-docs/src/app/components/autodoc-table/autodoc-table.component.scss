@@ -25,10 +25,6 @@
         vertical-align: top;
     }
 
-    .identifier {
-
-    }
-
     .block-body *:first-child {
         margin-top: 0;
     }
@@ -46,5 +42,15 @@
 
     .type {
         background-color: lighten($gtx-color-primary, 50%);
+    }
+
+    .regular-row.has-inheritance {
+        border-bottom: none;
+    }
+
+    .inheritance-row {
+        td {
+            padding: 5px 10px;
+        }
     }
 }

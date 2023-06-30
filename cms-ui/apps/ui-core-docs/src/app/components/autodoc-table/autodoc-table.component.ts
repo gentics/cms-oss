@@ -14,7 +14,7 @@ export class AutodocTableComponent implements OnInit {
     props: string[];
 
     ngOnInit(): void {
-        let firstBlock = this.docBlocks[0];
+        const firstBlock = this.docBlocks[0];
         if (firstBlock.decorator === 'Input') {
             // Inputs
             this.headers = ['Attribute', 'Type', 'Default Value', 'Comments'];

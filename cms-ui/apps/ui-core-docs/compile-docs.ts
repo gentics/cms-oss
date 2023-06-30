@@ -31,7 +31,7 @@ function main(): void {
     Object.entries(data).forEach(([id, value]) => {
         const source = readFileSync(resolve(__dirname, value.sourceFile)).toString();
         const docs = createDocsFromAST(value.type, value.sourceFile, source);
-        appendInheritedDocs(docs, output, value);
+        appendInheritedDocs(docs, output, value as any);
 
         output[id] = docs;
     });
@@ -52,16 +52,21 @@ function appendInheritedDocs(docs: IDocumentation, map: Record<string, IDocument
         name: inherited.name,
         file: inherited.sourceFile,
     });
+    if (inherited.inheritance) {
+        docs.inheritance.push(...inherited.inheritance);
+    }
 
     for (const part of ['inputs', 'outputs', 'properties', 'methods']) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         docs[part].push(...inherited[part].map(block => blockWithInheritance(block, inherited)));
     }
-
-    appendInheritedDocs(docs, map, inherited);
 }
 
 function blockWithInheritance(block: DocBlock, inheritance: IDocumentation): DocBlock {
+    if (block.inheritance) {
+        return block;
+    }
+
     return {
         ...block,
         inheritance: {

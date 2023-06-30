@@ -240,6 +240,8 @@ public class StagingModelBuilder {
 
 		com.gentics.contentnode.rest.model.Overview restOverview = ModelBuilder.getOverview(t.getObject(Overview.class, stagedOverview.getId(), true));
 
+		restOverview.setGlobalId(stagedOverview.getId());
+
 		// set the selection type
 		restOverview.setSelectType(stagedOverview.getSelectType());
 
@@ -284,23 +286,27 @@ public class StagingModelBuilder {
 			List<Integer> selectedItemIds = new ArrayList<>(overviewEntries.size());
 
 			for (StagedNodeIdObjectId entry : overviewEntries) {
-				if (org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId())) {
-					selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound)));
-				} else {
-					selectedItemIds.add(t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound));
+				Integer localId = t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound);
+				if (localId != null) {
+					if (org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId())) {
+						selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), localId));
+					} else {
+						selectedItemIds.add(localId);
+					}
 				}
 			}
 
 			// if the sortorder is DESC, we will reverse the order of the entries
-			// (entries will always be set in selection order, not in the real
-			// sortorder)
+			// (entries will always be set in selection order, not in the real sortorder)
 			if (stagedOverview.getOrderDirection() == OrderDirection.DESC) {
 				Collections.reverse(selectedObjects);
 			}
-			restOverview.setSelectedNodeItemIds(selectedObjects);
-			restOverview.setSelectedItemIds(selectedItemIds);
-		} else if (stagedOverview.getSelectedItemIds() != null && stagedOverview.getSelectedItemIds().size() > 0) {
-			restOverview.setSelectedItemIds(stagedOverview.getSelectedItemIds());
+			if (selectedObjects.size() > 0) {
+				restOverview.setSelectedNodeItemIds(selectedObjects);
+			}
+			if (selectedItemIds.size() > 0) {
+				restOverview.setSelectedItemIds(selectedItemIds);
+			}
 		}
 
 		// set the maximum number of listed entries
@@ -368,21 +374,6 @@ public class StagingModelBuilder {
 				Collections.reverse(selectedObjects);
 			}
 			restOverview.setSelectedNodeItemIds(selectedObjects);
-		}
-		// Fill out local IDs for backwards compatibility
-		{
-			List<Integer> selectedItemIds = new ArrayList<>(overviewEntries.size());
-			for (OverviewEntry entry : overviewEntries) {
-				selectedItemIds.add(entry.getObjectId());
-			}
-
-			// if the sortorder is DESC, we will reverse the order of the entries
-			// (entries will always be set in selection order, not in the real
-			// sortorder)
-			if (nodeOverview.getOrderWay() == com.gentics.contentnode.object.Overview.ORDERWAY_DESC) {
-				Collections.reverse(selectedItemIds);
-			}
-			restOverview.setSelectedItemIds(selectedItemIds);
 		}
 
 		// set the maximum number of listed entries

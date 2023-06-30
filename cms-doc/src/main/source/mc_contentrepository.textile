@@ -1,0 +1,143 @@
+h2. Multichannelling aware Content Repository
+
+This section describes how to publish a node and all of its channels into the same content repository.
+
+endprologue.
+
+INFO: This feature is a purchasable addon that needs to be activated for your Gentics CMS license key by Gentics Support.
+
+h3. Gentics CMS Integration
+
+The Multichanneling Content Repositories can be used after enabling the __multichannelling_contentrepository__ feature. Once enabled it is possible to create Content Repositories that are multichanneling aware.
+
+h4. Checking for removed objects
+
+Every publish run will check for objects, that need to be removed from the Content Repository. For Multichannelling Content Repositories, it is possible to define, whether this
+check shall be done differentially (which is the faster option) or fully (which is slower but safer). Generally, it is recommended to have the checks done differentially.
+
+h3. Database structure
+
+For a multichannelling aware content repository, the following extended database structure is necessary:
+
+h4. Table +channel+
+
+The table _channel_ stores hierarchical information about the nodes and channels contained in the content repository.
+
+NOTE: The tree structure of nodes and channels will be stored according to "Modified preorder tree traversal":http://en.wikipedia.org/wiki/MPTT.
+There will always be a dummy root node with _id_ 0. All master nodes contained in the content repository will be direct children of the dummy root node.
+
+The table has the following columns:
+
+|_. column |_. type |_. description |
+| id | integer | ID of the node/channel |
+| name | string | Name of the node/channel |
+| mptt_left | integer | Left boundary |
+| mptt_right | integer | Right boundary |
+| updatetimestamp | integer | timestamp of the last update in this channel |
+
+h4. Table +contentobject+
+
+The table _contentobject_ stores all available object types (like "page", "file" and "folder")
+
+|_. column |_. type |_. description |
+| name | string | Name of the object type |
+| type | integer | numerical type |
+
+h4. Table +contentattributetype+
+
+The table _contentattributetype_ stores the meta data about available attributes.
+
+|_. column |_. type |_. description |
+| name | string | Name of the attribute |
+| type | integer | Datatype of the attribute (see below for Available datatypes) |
+| optimized | boolean | Set to 1 for attributes, that are optimized. Optimized attributes will also be stored in the table _contentmap_ |
+| quickname | string | Name of the column to store the attribute value in table _contentmap_ (if the attribute is optimized) |
+| multivalue | boolean | Set to 1 for multivalue attributes. Multivalue attributes cannot be optimized |
+| filesystem | boolean | Set to 1 for attributes, that have their values stored in the filesystem, instead of the database. This is only possible for the datatypes 5 and 6 and not in combination with optimized |
+| linkedobjecttype | type | Object type of the linked objects (for datatype 2 or 7) |
+| foreignlinkattribute | string | Name of the attribute of the linked object type, that reverses this attribute, if the datatype is 7 |
+| foreignlinkattributerule | string | Rule for restricting the matching linked objects, if the datatype is 7 |
+
+h5. Available datatypes
+
+|_. datatype |_. name |_. description |
+| 1 | Text (short) | Short texts of up to 255 characters |
+| 2 | Object Link | Links to other objects |
+| 3 | Integer | integer values |
+| 5 | Text (long) | Long text values |
+| 6 | Binary | binary values |
+| 7 | Foreign Link | "logical" datatype, that collects all objects of another type, which link to this object (in the specified attribute) |
+| 8 | Long | long values |
+| 9 | Double | double values |
+| 10 | Date | date values |
+
+h4. Table +object_attribute+
+
+The table _object_attribute_ stores the assignment of attribute types to object types
+
+|_. column |_. type |_. description |
+| object_type | integer | Object type (references _contentobject.type_) |
+| attribute_name | string | Attribute name (references _contentattributetype.name_) |
+
+h4. Table +contentmap+
+
+The table _contentmap_ stores the objects contained in the content repository. For every object (page, image, file or folder), the table will contain a single row for each node/channel.
+
+NOTE: Objects that are inherited from master nodes will also be stored as separate rows, even if it contains redundant information.
+
+|_. column |_. type |_. description |
+| id | integer | Internal ID (auto increment) |
+| channel_id | integer | ID of the channel, the object belongs to. References column _channel.id_ |
+| channelset_id | integer | ID of the channelset. Objects that are inherited from master nodes or are localized (locally overwritten) will share the same channelset_id |
+| obj_id | integer | ID of the stored object (e.g. the page id in the backend database) |
+| obj_type | integer | type of the object. References _contentobject.type_ |
+| contentid | string | content ID (constructed as [obj_type].[obj_id]) |
+| updatetimestamp | integer | Timestamp of the last update to this object (or any of its attributes) |
+| quick_... | various | various quick columns (one for each optimized attribute |
+
+h4. Table +contentattribute+
+
+The table _contentattribute_ stores the attribute values of objects.
+
+|_. column |_. type |_. description |
+| id | integer | internal ID of an attribute value (auto increment) |
+| map_id | integer | ID of the contentmap entry, the attribute value belongs to. References _contentmap.id_ |
+| name | string | Name of the attribute. References _contentattributetype.name_ |
+| sortorder | integer | Sortorder of the attribute value. This will be 0 for values of singlevalue attributes. For multivalue attributes the sortorder values define the ordering |
+| value_text | string | Column for storing short string values (datatypes 1, 2). For filesystem attributes, this column will contain the path to the data file |
+| value_int | integer | Column for storing integer values (datatype 3) |
+| value_blob | binary | Column for storing binary values (datatype 6) |
+| value_clob | string | Column for storing long string values (datatype 5). For filesystem attributes, this column will contain the MD5 sum over the data file |
+| value_long | long | Column for storing long values (datatype 8). For filesystem attributes, this column will store the length of the data file |
+| value_double | double | Column for storing double values (datatype 9) |
+| value_date | date | Column for storing date values (datatype 10) |
+| updatetimestamp | integer | timestamp when the attribute value was changed the last time |
+
+h3. Referential integrity
+
+The database structure contains some foreign key constraints to ensure data integrity. All foreign key constraints are created with the action _CASCADE_ for delete or (when supported) update actions.
+This means that if the referenced column is deleted, all referencing columns will also be deleted.
+
+WARNING: Referential integrity with cascading actions will make some simple delete statements very powerfull: If for instance an entry in the table _channel_ is removed, all objects, which are stored in this channel will also be removed, together with their attribute values.
+If an entry in table _contentobject_ is removed (an object type), this will automatically remove all assignments to attribute types, all objects of that type and all attribute values.
+
+WARNING: When attributes store their values in the filesystem, and the attribute value is removed from the database by issuing SQL statements, the data file will _NOT_ be removed from the filesystem.
+Therefore it is strongly discouraged to modify data in a content repository directly, unless it is absolutely necessary.
+
+h3. Efficient storage of filesystem attributes
+
+Attributes of type 5 (long text) and 6 (binary) can be configured to store their data in the filesystem, instead of in the database (see "Filesystem Attributes":https://www.gentics.com/Content.Node/cmp8/guides-oss/cr_filesystem_attributes.html for details).
+
+Filesystem attributes in a multichannelling content repository will be stored efficiently for objects that share the same content.
+If the data of an attribute is identical to the data of another filesystem attribute, the file will not be stored again, but a hardlink to the already existing attribute file will be created.
+This saves disk memory, because hardlinks share the same physical data on the disk.
+
+For example, if a node and 10 channels are published into a content repository and no files are localized (all inherited),
+the binary data would be stored in 11 hardlinks to the same content on the disk, instead of 11 different (but identical) files.
+It is therefore strongly recommended to at least store the attribute _binarycontent_ for files and _content_ for pages in the filesystem.
+
+h4. Cache Region for hardlinks
+
+The pulish process must check for files having identical content that can be reused by creating a hard link, when writing data into filesystem attributes.
+Depending on the speed of the filesystem (which may be mounted from another deviced and therefore accessed over the network), this may consume some time.
+To improve the publish performance, the mapping of attribute content (represented by the md5 sum and the length) to a data file is cached in an extra cache region _gentics-mccr-fsattrfiles_.

@@ -1,0 +1,80 @@
+h2. Restricting Inheritance
+
+Pages, images, files and folders can be completely excluded from multichannelling, so that they are not inherited at all, or inheritance can be restricted to specific channels.
+
+endprologue.
+
+h3. Display of inheritance
+
+The current inheritance setting for objects will be shown in the object lists in the column "Inheritance".
+* !images/gcn_icons/ok.gif! the object is inherited without restrictions
+* !images/gcn_icons/ok_light.png! the object is inherited with some restrictions
+* !images/gcn_icons/remove.gif! the object is excluded from multichannelling
+
+h3. Changing the inheritance
+
+The inheritance of objects can be changed by selection the action "Inheritance" from the context menu or the actions dropdown (for multiple selected objects).
+
+h4. General inheritance
+
+The general inheritance allows to completely exclude objects from multichannelling. The current state is shown by one of the following icons:
+* !images/gcn_icons/ok.gif! all of the selected objects are not generally excluded from multichannelling
+* !images/gcn_icons/remove_light.png! some of the selected objects are generally excluded from multichannelling
+* !images/gcn_icons/remove.gif! all of the selected objects are generally excluded from multichannelling.
+
+Objects, that are generally excluded from multichannelling will not be inherited in any channels at all.
+
+This state can be changed by clicking the icon.
+
+h4. Remove from specific channels
+
+If objects are not generally excluded from multichannelling, they can be removed from specific channels. The dialog will show all channels, that are applicable for all of the selected objects.
+The icon in the column *Inheritance* shows the current state:
+* !images/gcn_icons/ok.gif! all of the selected objects are inherited into the channel
+* !images/gcn_icons/ok_light.png! some of the selected objects are inherited into the channel
+* !images/gcn_icons/remove_light.png! some of the selected objects are not inherited into a higher channel (and therefore not inherited into this channel)
+* !images/gcn_icons/remove.gif! all of the selected objects are restricted from being inherited into the channel
+
+There are two actions that can be performed in selected channels:
+* *Remove from channel* will remove the objects from the selected channels
+* *Inherit in channel* will re-inherit the objects into the selected channels
+
+When clicking *OK* there will be a check, whether the inheritance can be changed without breaking consistency. If this is possible, the inheritance will be changed.
+
+NOTE: When the inheritance of published objects is changed, this will affect the next publish run. Objects that are no longer inherited will be removed and objects that are re-inherited will be added to the channel.
+
+h4. Recursive setting of exclusion
+
+If the inheritance of a folder is restricted (by excluding or by adding channels into which the folder will no longer be inherited), this restriction will be applied to all subobjects, if possible.
+
+If inheritance restrictions of folders are removed, this will *not* be applied to the subobjects, unless the checkbox *Recursive* is selected.
+
+h3. Inheritance consistency
+
+Changing the inheritance is only possible, if some consistency rules are followed:
+* Objects in folders, that are excluded from inheritance also have to be excluded.
+* Objects in folders, that are restricted from being inherited in specific channels also have to be restricted (or generally excluded).
+* Objects cannot be generally excluded from inheritance if they have localized copies
+* Objects cannot be restricted from being inherited into channels, if they have localized copies in that channels or are local to that channels.
+* Re-inheriting of objects must not lead to duplicate names.
+
+h3. Implicit changes in inheritance
+
+Some actions will implicitly change the inheritance of objects (if the Inheritance consistency is conserved).
+
+* Removing folders from channels will also remove all subobjects from the channels
+* Excluding folders from inheritance will also exclude all subobjects from inheritance.
+* Changing the inheritance of a page will set the identical inheritance to all language variants
+* New objects will get the inheritance setting of their folder
+* If objects are moved into another folder, the inheritance setting will be modified to conserve the inheritance consistency
+
+h3. Import/Export
+
+The inheritance setting of objects will be exported and imported, if the target system supports changing the inheritance. If the target system does yet not support changing the inheritance,
+all imported objects will be fully inherited.
+
+h3. Required permissions
+
+Removing objects from channels requires the permission to *delete* the object in the channel.
+
+Generally excluding an object from multichannelling requires to *delete* the object in its channel.

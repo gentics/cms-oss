@@ -66,15 +66,6 @@ This feature will add a flag "autoenable" to the Tagtype properties dialog. Acti
 this flag will autoenable a Tag that has been placed in a page, so that the editor
 does not have to click on it in order to render its contents.
 
-h3. Contentgroup3 (Languages)
-
-<shell filename="conf/features.yml">
-feature:
-	contentgroup3: true
-</shell>
-
-WARNING: *Must* be set to true.
-
 h3. Copy Tags
 
 <shell filename="conf/features.yml">
@@ -175,7 +166,7 @@ h3. Image Manipulation 2
 
 See "Image Manipulation 2":feature_imagemanipulation2.html
 
-h3. Image Uploads in Tagfill
+h3. Image Uploads in Tag Editor
 
 <shell filename="conf/features.yml">
 feature:
@@ -311,10 +302,6 @@ feature:
 </shell>
 
 Whether to manage link URLs only when publishing, not for editing.
-
-h3. New Tag Editor
-
-See "New Tag Editor":feature_new_tag_editor.html
 
 h3. Nice URLs
 

@@ -2396,7 +2396,7 @@ public class ModelBuilder {
 
 	private static void fillRestOverviewEntries2Node(Transaction t, com.gentics.contentnode.rest.model.Overview restOverview,
 			com.gentics.contentnode.object.Overview overview) throws NodeException {
-		if (restOverview.getSelectedNodeItemIds() != null) {
+		if (overview.isStickyChannel()) {
 			List<NodeIdObjectId> selectedItemIds = restOverview.getSelectedNodeItemIds();
 
 			if (null == selectedItemIds) {

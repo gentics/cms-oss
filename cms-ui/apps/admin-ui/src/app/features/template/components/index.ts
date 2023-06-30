@@ -1,5 +1,6 @@
 export * from './assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 export * from './assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
+export * from './copy-template-modal/copy-template-modal.component';
 export * from './create-template-modal/create-template-modal.component';
 export * from './create-template-tag-modal/create-template-tag-modal.component';
 export * from './edit-template-tag-modal/edit-template-tag-modal.component';

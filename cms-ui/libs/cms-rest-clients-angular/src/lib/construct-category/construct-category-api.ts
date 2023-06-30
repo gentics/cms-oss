@@ -4,6 +4,7 @@ import {
     ConstructCategoryListOptions,
     ConstructCategoryListResponse,
     ConstructCategoryLoadResponse,
+    ConstructCategorySortRequest,
     ConstructCategoryUpdateRequest,
     ConstructCategoryUpdateResponse,
     EntityIdType,
@@ -74,4 +75,15 @@ export class ConstructCategoryApi {
         return this.apiBase.delete(`construct/category/${constructId}`);
     }
 
+    /**
+     * Sorts the Categories by the provided ids order (Updates the `sortOrder` property for all categories).
+     *
+     * @param payload The ids of the categories how they should be sorted
+     * @returns A new list which is sorted like the ids are sent.
+     */
+    sortConstructCategories(
+        payload: ConstructCategorySortRequest,
+    ): Observable<ConstructCategoryListResponse> {
+        return this.apiBase.post('construct/category/sortorder', payload);
+    }
 }

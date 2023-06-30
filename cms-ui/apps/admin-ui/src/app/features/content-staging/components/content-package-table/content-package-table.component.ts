@@ -21,7 +21,7 @@ const IMPORT_PACKAGE_ACTION = 'importPackage';
     templateUrl: './content-package-table.component.html',
     styleUrls: ['./content-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ContentPackageTableComponent extends BaseEntityTableComponent<ContentPackage, ContentPackageBO> {
 
     public canCreate = false;
@@ -72,12 +72,13 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                 'readContentPackage',
                 'updateContentPackage',
                 'deleteContentPackage',
+                'modifyContentPackageContent',
             ].map(actionId => this.permissions.checkPermissions(
                 this.permissions.getUserActionPermsForId(`content_staging.${actionId}`).typePermissions),
             ),
         ]).pipe(
             map(([_, ...perms]) => perms as boolean[]),
-            map(([canCreate, canRead, canUpdate, canDelete]) => {
+            map(([canCreate, canRead, canUpdate, canDelete, canModifyContent]) => {
                 this.canCreate = canCreate;
 
                 const actions: TableAction<ContentPackageBO>[] = [
@@ -104,6 +105,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                         label: this.i18n.instant('content_staging.export_content_package'),
                         single: true,
                         multiple: true,
+                        enabled: canModifyContent,
                     },
                     {
                         id: IMPORT_PACKAGE_ACTION,
@@ -112,6 +114,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
                         label: this.i18n.instant('content_staging.import_content_package'),
                         single: true,
                         multiple: true,
+                        enabled: canRead,
                     },
                     {
                         id: DELETE_ACTION,
@@ -156,7 +159,7 @@ export class ContentPackageTableComponent extends BaseEntityTableComponent<Conte
 
         switch (event.actionId) {
             case DOWNLOAD_PACKAGE_ACTION:
-                this.operations.download(event.item[BO_ID]);
+                this.operations.download(event.item[BO_ID]).subscribe();
                 return;
 
             case UPLOAD_PACKAGE_ACTION:

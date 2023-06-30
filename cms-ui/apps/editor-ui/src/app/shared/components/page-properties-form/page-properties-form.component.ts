@@ -41,7 +41,7 @@ import { ApplicationStateService, FeaturesActionsService, FolderActionsService }
     templateUrl: './page-properties-form.tpl.html',
     styleUrls: ['./page-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
 
     @Input()
@@ -164,7 +164,7 @@ export class PagePropertiesForm implements OnInit, OnChanges, OnDestroy {
         this.form.get('niceUrl').disable({ emitEvent: false });
         this.form.get('alternateUrls').disable({ emitEvent: false });
 
-        this.featuresActions.checkFeature(Feature.nice_urls)
+        this.featuresActions.checkFeature(Feature.NICE_URLS)
             .then(active => {
                 if (active) {
                     this.form.get('niceUrl').enable({ emitEvent: false });

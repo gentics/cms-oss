@@ -84,7 +84,7 @@ describe('FolderStateModule', () => {
     }
 
     it('sets the correct initial state', () => {
-        expect(state.now.folder).toEqual({
+        const expectedState: FolderState = {
             folders: emptyItemInfo,
             forms: emptyItemInfo,
             pages: emptyItemInfo,
@@ -110,6 +110,7 @@ describe('FolderStateModule', () => {
             searchFiltersValid: false,
             searchFiltersVisible: false,
             breadcrumbs: emptyItemInfo,
+            nodesLoaded: false,
             channelSyncReport: {
                 folders: [],
                 forms: [],
@@ -119,7 +120,8 @@ describe('FolderStateModule', () => {
                 templates: [],
                 fetching: false,
             },
-        } as FolderState);
+        };
+        expect(state.now.folder).toEqual(expectedState);
     });
 
     it('copyItemStart works', () => {
@@ -150,13 +152,14 @@ describe('FolderStateModule', () => {
         expect(state.now.folder.folders.creating).toBe(true);
     });
 
-    it('createItemSuccess works', () => {
+    it('createItemSuccess works', fakeAsync(() => {
         mockListState('folders', { creating: true, list: [1, 2] });
         const folder = getExampleFolderData({ id: 123, userId: 999 });
 
         // With addToList: false
         expect(state.now.folder.folders.creating).toBe(true);
         state.dispatch(new CreateItemSuccessAction('folder', [folder], false));
+        tick();
         expect(state.now.folder.folders.creating).toBe(false);
         expect(state.now.folder.folders.list).toEqual([1, 2]);
         expect(state.now.entities.folder[123]).toBeDefined('no folder 123');
@@ -165,37 +168,41 @@ describe('FolderStateModule', () => {
         // With addToList: true
         const secondFolder = getExampleFolderData({ id: 456, userId: 999 });
         state.dispatch(new CreateItemSuccessAction('folder', [secondFolder], true));
+        tick();
         expect(state.now.folder.folders.list).toEqual([1, 2, 456], 'folder not added to list');
         expect(state.now.entities.folder[456]).toBeDefined('no folder 456');
-    });
+    }));
 
-    it('createItemError works', () => {
+    it('createItemError works', fakeAsync(() => {
         mockListState('folders', { creating: true });
         expect(state.now.folder.folders.creating).toBe(true);
         const errorMessage = 'something went wrong';
         state.dispatch(new ListCreatingErrorAction('folder', errorMessage));
+        tick();
         expect(state.now.folder.folders.creating).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('deleteItemsStart works', () => {
+    it('deleteItemsStart works', fakeAsync(() => {
         mockListState('pages', { deleting: [], list: [1, 2, 3] });
         state.dispatch(new StartListDeletingAction('page', [1, 2]));
+        tick();
         expect(state.now.folder.pages.deleting).toEqual([1, 2]);
         expect(state.now.folder.pages.list).toEqual([3]);
-    });
+    }));
 
-    it('deleteItemsSuccess works', () => {
+    it('deleteItemsSuccess works', fakeAsync(() => {
         mockListState('pages', {
             deleting: [1, 2, 5, 6],
             list: [3],
         });
         state.dispatch(new ListDeletingSuccessAction('page', [1, 2]));
+        tick();
         expect(state.now.folder.pages.deleting).toEqual([5, 6]);
         expect(state.now.folder.pages.list).toEqual([3]);
-    });
+    }));
 
-    it('deleteItemsError works', () => {
+    it('deleteItemsError works', fakeAsync(() => {
         mockListState('pages', {
             deleting: [1, 2, 5, 6],
             list: [3],
@@ -204,42 +211,47 @@ describe('FolderStateModule', () => {
         const errorMessage = 'could not delete';
 
         state.dispatch(new ListDeletingErrorAction('page', [1, 2], errorMessage));
+        tick();
         expect(state.now.folder.pages.deleting).toEqual([5, 6]);
         expect(sorted(state.now.folder.pages.list)).toEqual([1, 2, 3]);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('editImageStart works', () => {
+    it('editImageStart works', fakeAsync(() => {
         state.dispatch(new StartListSavingAction('image'));
+        tick();
         expect(state.now.folder.images.saving).toBe(true);
-    });
+    }));
 
-    it('editImageSuccess works', () => {
+    it('editImageSuccess works', fakeAsync(() => {
         mockListState('images', { saving: true, list: [1, 2], total: 2 });
         const image = getExampleImageData({ id: 1234, userId: 3 });
         state.dispatch(new EditImageSuccessAction(image));
+        tick();
 
         expect(state.now.folder.images.saving).toBe(false);
         expect(state.now.folder.images.list).toEqual([1, 2, 1234]);
         expect(state.now.folder.images.total).toBe(3);
         expect(state.now.entities.image[1234]).toBeDefined('new image not in entities');
-    });
+    }));
 
-    it('editImageError works', () => {
+    it('editImageError works', fakeAsync(() => {
         mockListState('images', { saving: true });
         const errorMessage = 'could not save image';
         state.dispatch(new ListSavingErrorAction('image', errorMessage));
+        tick();
         expect(state.now.folder.images.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchBreadcrumbsStart works', () => {
+    it('fetchBreadcrumbsStart works', fakeAsync(() => {
         expect(state.now.folder.breadcrumbs.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('breadcrumbs', false));
+        tick();
         expect(state.now.folder.breadcrumbs.fetching).toBe(true);
-    });
+    }));
 
-    it('fetchBreadcrumbsSuccess works', () => {
+    it('fetchBreadcrumbsSuccess works', fakeAsync(() => {
         state.mockState({
             folder: {
                 activeFolder: 111,
@@ -265,33 +277,36 @@ describe('FolderStateModule', () => {
             schema: folderSchema,
             total: items.length,
         }));
+        tick();
 
         expect(state.now.folder.breadcrumbs.fetching).toBe(false);
         expect(state.now.folder.breadcrumbs.list).toEqual([1, 2, 3]);
         expect(state.now.entities.folder[1]).toBeDefined('folder 1 not in entity state');
         expect(state.now.entities.folder[2]).toBeDefined('folder 2 not in entity state');
         expect(state.now.entities.folder[3]).toBeDefined('folder 3 not in entity state');
-    });
+    }));
 
-    it('fetchBreadcrumbsError works', () => {
+    it('fetchBreadcrumbsError works', fakeAsync(() => {
         mockListState('breadcrumbs', {
             fetching: true,
             list: [1, 5],
         });
         const errorMessage = 'failed fetching breadcrumbs';
         state.dispatch(new ListFetchingErrorAction('breadcrumbs', errorMessage, true));
+        tick();
         expect(state.now.folder.breadcrumbs.fetching).toBe(false);
         expect(state.now.folder.breadcrumbs.list.length).toEqual(2);
         expect(state.now.folder.lastError).toBe('failed fetching breadcrumbs');
-    });
+    }));
 
-    it('fetchInheritanceStart works', () => {
+    it('fetchInheritanceStart works', fakeAsync(() => {
         expect(state.now.folder.pages.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('page'));
+        tick();
         expect(state.now.folder.pages.fetching).toBe(true);
-    });
+    }));
 
-    it('fetchInheritanceSuccess works', () => {
+    it('fetchInheritanceSuccess works', fakeAsync(() => {
         state.mockState({
             folder: {
                 pages: {
@@ -317,67 +332,82 @@ describe('FolderStateModule', () => {
             excluded: true,
             inheritable: [77, 99],
         }));
+        tick();
+
         expect(state.now.entities.page[1].disinherit).toEqual([5, 8]);
         expect(state.now.entities.page[1].disinheritDefault).toBe(true, 'disinheritDefault != true');
         expect(state.now.entities.page[1].excluded).toBe(true, 'excluded != true');
         expect(state.now.entities.page[1].inheritable).toEqual([77, 99]);
-    });
+    }));
 
-    it('fetchInheritanceError works', () => {
+    it('fetchInheritanceError works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         const errorMessage = 'fetching inheritance failed';
         state.dispatch(new ListFetchingErrorAction('page', errorMessage, true));
+        tick();
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchItemStart works', () => {
+    it('fetchItemStart works', fakeAsync(() => {
         expect(state.now.folder.pages.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('page', undefined, true));
+        tick();
         expect(state.now.folder.pages.fetching).toBe(true);
-    });
+    }));
 
-    it('fetchItemSuccess works', () => {
+    it('fetchItemSuccess works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         const page = getExamplePageData({ id: 1234, userId: 777 });
         state.dispatch(new ItemFetchingSuccessAction('page', page));
+        tick();
 
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.entities.page[1234]).toBeDefined('page not in entity state');
         expect(state.now.entities.user[777]).toBeDefined('user not in entity state');
-    });
+    }));
 
-    it('fetchItemError works', () => {
+    it('fetchItemError works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         const errorMessage = 'fetching item failed';
         state.dispatch(new ListFetchingErrorAction('page', errorMessage, true));
+        tick();
+
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchItemListStart works with fetchAll = false', () => {
+    it('fetchItemListStart works with fetchAll = false', fakeAsync(() => {
         expect(state.now.folder.folders.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('folders', false));
+        tick();
+
         expect(state.now.folder.folders.fetching).toBe(true, 'fetching != true');
         expect(state.now.folder.folders.fetchAll).toBe(false, 'fetchAll != false');
 
         state.mockState({ folder: { folders: { fetchAll: true } } });
         state.dispatch(new StartListFetchingAction('folders', false));
-        expect(state.now.folder.folders.fetchAll).toBe(false, 'fetchAll is not overwritten');
-    });
+        tick();
 
-    it('fetchItemListStart works with fetchAll = true', () => {
+        expect(state.now.folder.folders.fetchAll).toBe(false, 'fetchAll is not overwritten');
+    }));
+
+    it('fetchItemListStart works with fetchAll = true', fakeAsync(() => {
         expect(state.now.folder.pages.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('pages', true));
+        tick();
+
         expect(state.now.folder.pages.fetching).toBe(true, 'fetching != true');
         expect(state.now.folder.pages.fetchAll).toBe(true, 'fetchAll != true');
 
         state.mockState({ folder: { pages: { fetchAll: false } } });
         state.dispatch(new StartListFetchingAction('pages', true));
-        expect(state.now.folder.pages.fetchAll).toBe(true, 'fetchAll is not overwritten');
-    });
+        tick();
 
-    it('fetchItemListSuccess works for small lists (3 items)', () => {
+        expect(state.now.folder.pages.fetchAll).toBe(true, 'fetchAll is not overwritten');
+    }));
+
+    it('fetchItemListSuccess works for small lists (3 items)', fakeAsync(() => {
         state.mockState({
             folder: {
                 activeFolder: 111,
@@ -404,6 +434,7 @@ describe('FolderStateModule', () => {
             total: 3,
             schema: pageSchema,
         }));
+        tick();
 
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.folder.pages.fetchAll).toBe(true, 'fetchAll was reset to false');
@@ -413,7 +444,7 @@ describe('FolderStateModule', () => {
         expect(state.now.entities.page[1]).toBeDefined('page 1 not in entity state');
         expect(state.now.entities.page[2]).toBeDefined('page 2 not in entity state');
         expect(state.now.entities.page[3]).toBeDefined('page 3 not in entity state');
-    });
+    }));
 
     describe('fetchItemListSuccess for large lists', () => {
 
@@ -520,6 +551,7 @@ describe('FolderStateModule', () => {
                 total: testPages.length,
                 schema: pageSchema,
             }));
+            tick();
             expect(emittedIDs.length).toBe(2);
 
             tick(15);
@@ -536,21 +568,24 @@ describe('FolderStateModule', () => {
         }));
     });
 
-    it('fetchItemListError works', () => {
+    it('fetchItemListError works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         const errorMessage = 'some error';
         state.dispatch(new ListFetchingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchNodeLanguagesStart works', () => {
+    it('fetchNodeLanguagesStart works', fakeAsync(() => {
         expect(state.now.folder.activeNodeLanguages.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('activeNodeLanguages', undefined, true));
+        tick();
         expect(state.now.folder.activeNodeLanguages.fetching).toBe(true);
-    });
+    }));
 
-    it('fetchNodeLanguagesSuccess works', () => {
+    it('fetchNodeLanguagesSuccess works', fakeAsync(() => {
         mockListState('activeNodeLanguages', { fetching: true });
 
         const languages: Language[] = [
@@ -559,29 +594,35 @@ describe('FolderStateModule', () => {
         ];
 
         state.dispatch(new LanguageFetchingSuccessAction(languages));
+        tick();
+
         expect(state.now.folder.activeNodeLanguages.fetching).toBe(false, 'fetching != false');
         expect(state.now.folder.activeNodeLanguages.list).toEqual([1, 2]);
         expect(state.now.folder.activeNodeLanguages.total).toBe(2);
         expect(state.now.folder.activeNodeLanguages.hasMore).toBe(false, 'hasMore != false');
         expect(state.now.entities.language[1]).toBeDefined('language 1 not in entity state');
         expect(state.now.entities.language[2]).toBeDefined('language 2 not in entity state');
-    });
+    }));
 
-    it('fetchNodeLanguagesError works', () => {
+    it('fetchNodeLanguagesError works', fakeAsync(() => {
         mockListState('activeNodeLanguages', { fetching: true });
         const errorMessage = 'fetching failed';
         state.dispatch(new ListFetchingErrorAction('activeNodeLanguages', errorMessage));
+        tick();
+
         expect(state.now.folder.activeNodeLanguages.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchNodesStart works', () => {
+    it('fetchNodesStart works', fakeAsync(() => {
         expect(state.now.folder.nodes.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('nodes', undefined, true));
-        expect(state.now.folder.nodes.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchNodesSuccess works', () => {
+        expect(state.now.folder.nodes.fetching).toBe(true);
+    }));
+
+    it('fetchNodesSuccess works', fakeAsync(() => {
         mockListState('nodes', { fetching: true });
         const user = getExampleUserData();
         const folders = [
@@ -608,6 +649,8 @@ describe('FolderStateModule', () => {
         ] as Node<Raw>[];
 
         state.dispatch(new NodeFetchingSuccessAction(folders, nodes));
+        tick();
+
         expect(state.now.folder.nodes.fetching).toBe(false);
         expect(state.now.folder.nodes.hasMore).toBe(false, 'hasMore != false');
         expect(state.now.folder.nodes.list).toEqual([1, 2]);
@@ -617,23 +660,27 @@ describe('FolderStateModule', () => {
         expect(state.now.entities.user[user.id]).toBeDefined('user not in entity state');
         expect(state.now.entities.folder[111]).toBeDefined('folder 111 not in entity state');
         expect(state.now.entities.folder[222]).toBeDefined('folder 222 not in entity state');
-    });
+    }));
 
-    it('fetchNodesError works', () => {
+    it('fetchNodesError works', fakeAsync(() => {
         mockListState('nodes', { fetching: true });
         const errorMessage = 'fetching nodes failed';
         state.dispatch(new ListFetchingErrorAction('nodes', errorMessage));
+        tick();
+
         expect(state.now.folder.nodes.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchNodeStart works', () => {
+    it('fetchNodeStart works', fakeAsync(() => {
         expect(state.now.folder.nodes.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('nodes', undefined, true));
-        expect(state.now.folder.nodes.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchNodeSuccess works', () => {
+        expect(state.now.folder.nodes.fetching).toBe(true);
+    }));
+
+    it('fetchNodeSuccess works', fakeAsync(() => {
         mockListState('nodes', { fetching: true });
         const user = getExampleUserData();
         const folders = [
@@ -650,28 +697,33 @@ describe('FolderStateModule', () => {
         } as Node<Raw>;
 
         state.dispatch(new ItemFetchingSuccessAction('nodes', node));
+        tick();
 
         expect(state.now.folder.nodes.fetching).toBe(false);
         expect(state.now.folder.nodes.hasMore).toBe(false, 'hasMore != false');
         expect(state.now.entities.node[1]).toBeDefined('node 1 not in entity state');
         expect(state.now.entities.user[user.id]).toBeDefined('user not in entity state');
-    });
+    }));
 
-    it('fetchNodeError works', () => {
+    it('fetchNodeError works', fakeAsync(() => {
         mockListState('nodes', { fetching: true });
         const errorMessage = 'fetching node failed';
         state.dispatch(new ListFetchingErrorAction('nodes', errorMessage));
+        tick();
+
         expect(state.now.folder.nodes.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchSyncReportStart works', () => {
+    it('fetchSyncReportStart works', fakeAsync(() => {
         expect(state.now.folder.channelSyncReport.fetching).toBe(false);
         state.dispatch(new StartChannelSyncReportFetchingAction());
-        expect(state.now.folder.channelSyncReport.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchSyncReportSuccess works', () => {
+        expect(state.now.folder.channelSyncReport.fetching).toBe(true);
+    }));
+
+    it('fetchSyncReportSuccess works', fakeAsync(() => {
         mockListState('channelSyncReport', { fetching: true });
         state.dispatch(new ChannelSyncReportFetchingSuccessAction({
             files: [],
@@ -681,6 +733,7 @@ describe('FolderStateModule', () => {
             templates: [],
             forms: [],
         }));
+        tick();
 
         expect(state.now.folder.channelSyncReport).toEqual({
             fetching: false,
@@ -691,65 +744,81 @@ describe('FolderStateModule', () => {
             templates: [],
             forms: [],
         });
-    });
+    }));
 
-    it('fetchSyncReportError works', () => {
+    it('fetchSyncReportError works', fakeAsync(() => {
         mockListState('channelSyncReport', { fetching: true });
         const errorMessage = 'fetching sync report failed';
         state.dispatch(new ChannelSyncReportFetchingErrorAction(errorMessage));
+        tick();
+
         expect(state.now.folder.channelSyncReport.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('localizeItemStart works', () => {
+    it('localizeItemStart works', fakeAsync(() => {
         expect(state.now.folder.files.saving).toBe(false);
         state.dispatch(new StartListSavingAction('file'));
-        expect(state.now.folder.files.saving).toBe(true);
-    });
+        tick();
 
-    it('localizeItemSuccess works', () => {
+        expect(state.now.folder.files.saving).toBe(true);
+    }));
+
+    it('localizeItemSuccess works', fakeAsync(() => {
         mockListState('files', { saving: true });
         expect(state.now.folder.files.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('file'));
-        expect(state.now.folder.files.saving).toBe(false);
-    });
+        tick();
 
-    it('localizeItemError works', () => {
+        expect(state.now.folder.files.saving).toBe(false);
+    }));
+
+    it('localizeItemError works', fakeAsync(() => {
         mockListState('files', { saving: true });
         expect(state.now.folder.files.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('file', errorMessage));
+        tick();
+
         expect(state.now.folder.files.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('moveItemStart works', () => {
+    it('moveItemStart works', fakeAsync(() => {
         expect(state.now.folder.files.saving).toBe(false);
         state.dispatch(new StartListSavingAction('file'));
-        expect(state.now.folder.files.saving).toBe(true);
-    });
+        tick();
 
-    it('moveItemSuccess works', () => {
+        expect(state.now.folder.files.saving).toBe(true);
+    }));
+
+    it('moveItemSuccess works', fakeAsync(() => {
         mockListState('files', { saving: true });
         expect(state.now.folder.files.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('file'));
-        expect(state.now.folder.files.saving).toBe(false);
-    });
+        tick();
 
-    it('moveItemError works', () => {
+        expect(state.now.folder.files.saving).toBe(false);
+    }));
+
+    it('moveItemError works', fakeAsync(() => {
         mockListState('files', { saving: true });
         expect(state.now.folder.files.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('file', errorMessage));
+        tick();
+
         expect(state.now.folder.files.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('publishPageStart works', () => {
+    it('publishPageStart works', fakeAsync(() => {
         expect(state.now.folder.pages.saving).toBe(false);
         state.dispatch(new StartListSavingAction('page'));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(true);
-    });
+    }));
 
     // describe('publishPageSuccess', () => {
     //     let page: Page<Normalized>;
@@ -876,7 +945,7 @@ describe('FolderStateModule', () => {
 
     // });
 
-    it('restorePageVersionSuccess works', () => {
+    it('restorePageVersionSuccess works', fakeAsync(() => {
         const rawPage = getExamplePageData({ id: 33 });
         const normalizedPage = getExamplePageDataNormalized({ id: 33 });
 
@@ -902,6 +971,7 @@ describe('FolderStateModule', () => {
         const normalizedRestore = normalize(restoredPage, pageSchema);
 
         state.dispatch(new UpdateEntitiesAction(normalizedRestore.entities));
+        tick();
 
         expect(state.now.entities.page[33].currentVersion).toBeDefined();
         expect(state.now.entities.page[33].currentVersion).toEqual(restoredPage.currentVersion);
@@ -909,9 +979,9 @@ describe('FolderStateModule', () => {
         expect(state.now.entities.page[33].lockedSince).toBe(restoredPage.lockedSince);
         expect(state.now.entities.page[33].lockedBy).toBeDefined();
         expect(state.now.entities.page[33].lockedBy).toEqual(restoredPage.lockedBy.id);
-    });
+    }));
 
-    it('restorePageVersionSuccess works without page.lockedBy', () => {
+    it('restorePageVersionSuccess works without page.lockedBy', fakeAsync(() => {
         const rawPage = getExamplePageData({ id: 33 });
         const normalizedPage = getExamplePageDataNormalized({ id: 33 });
         state.mockState({
@@ -947,46 +1017,55 @@ describe('FolderStateModule', () => {
                 },
             },
         }));
+        tick();
 
         expect(state.now.entities.page[33].currentVersion).toBeDefined();
         expect(state.now.entities.page[33].currentVersion).toEqual(restoredPage.currentVersion);
         expect(state.now.entities.page[33].locked).toBe(restoredPage.locked);
         expect(state.now.entities.page[33].lockedSince).toBe(restoredPage.lockedSince);
         expect(state.now.entities.page[33].lockedBy).toBeUndefined();
-    });
+    }));
 
-    it('publishPageError works', () => {
+    it('publishPageError works', fakeAsync(() => {
         mockListState('pages', { saving: true });
         expect(state.now.folder.pages.saving).toBe(true);
         const errorMessage = 'failed to publish';
         state.dispatch(new ListSavingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('pushToMasterStart works', () => {
+    it('pushToMasterStart works', fakeAsync(() => {
         expect(state.now.folder.pages.saving).toBe(false);
         state.dispatch(new StartListSavingAction('page'));
-        expect(state.now.folder.pages.saving).toBe(true);
-    });
+        tick();
 
-    it('pushToMasterSuccess works', () => {
+        expect(state.now.folder.pages.saving).toBe(true);
+    }));
+
+    it('pushToMasterSuccess works', fakeAsync(() => {
         mockListState('pages', { saving: true });
         expect(state.now.folder.pages.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('page'));
-        expect(state.now.folder.pages.saving).toBe(false);
-    });
+        tick();
 
-    it('pushToMasterError works', () => {
+        expect(state.now.folder.pages.saving).toBe(false);
+    }));
+
+    it('pushToMasterError works', fakeAsync(() => {
         mockListState('pages', { saving: true });
         expect(state.now.folder.pages.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('recentItemsLoaded filters out invalid items', () => {
+    it('recentItemsLoaded filters out invalid items', fakeAsync(() => {
         state.mockState({
             folder: {
                 recentItems: [],
@@ -1009,42 +1088,52 @@ describe('FolderStateModule', () => {
             { id: 103, type: { nested: { test: 123 } }, name: 'invalid', nodeId: 1 },
             { id: 104, type: ['page'], name: 'invalid', nodeId: 1 },
         ] as any));
+        tick();
+
         expect(state.now.folder.recentItems).toEqual([
             { id: 1337, type: 'file', name: 'l33t.mp4', nodeId: 1 },
         ] as any);
-    });
+    }));
 
-    it('searchPagesStart works', () => {
+    it('searchPagesStart works', fakeAsync(() => {
         expect(state.now.folder.pages.fetching).toBe(false);
         state.dispatch(new StartListFetchingAction('page', undefined, true));
-        expect(state.now.folder.pages.fetching).toBe(true);
-    });
+        tick();
 
-    it('searchPagesSuccess works', () => {
+        expect(state.now.folder.pages.fetching).toBe(true);
+    }));
+
+    it('searchPagesSuccess works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         const foundPage = getExamplePageData({ id: 1234 });
         state.dispatch(new ItemFetchingSuccessAction('page', foundPage));
+        tick();
+
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.entities.page[1234]).toBeDefined('page not added to entity state');
-    });
+    }));
 
-    it('searchPagesError works', () => {
+    it('searchPagesError works', fakeAsync(() => {
         mockListState('pages', { fetching: true });
         expect(state.now.folder.pages.fetching).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListFetchingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.fetching).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
     describe('setActiveFolder', () => {
 
-        it('updates activeFolder id', () => {
+        it('updates activeFolder id', fakeAsync(() => {
             state.dispatch(new SetActiveFolderAction(1234));
-            expect(state.now.folder.activeFolder).toBe(1234);
-        });
+            tick();
 
-        it('resets currentPage values for folders, pages, images, files', () => {
+            expect(state.now.folder.activeFolder).toBe(1234);
+        }));
+
+        it('resets currentPage values for folders, pages, images, files', fakeAsync(() => {
             state.mockState({
                 folder: {
                     folders: { currentPage: 2 },
@@ -1054,39 +1143,48 @@ describe('FolderStateModule', () => {
                 },
             });
             state.dispatch(new SetActiveFolderAction(1234));
+            tick();
+
             const folderState = state.now.folder;
             expect(folderState.folders.currentPage).toBe(1);
             expect(folderState.pages.currentPage).toBe(1);
             expect(folderState.images.currentPage).toBe(1);
             expect(folderState.files.currentPage).toBe(1);
-        });
-
+        }));
     });
 
-    it('setActiveLanguage works', () => {
+    it('setActiveLanguage works', fakeAsync(() => {
         state.dispatch(new SetFolderLanguageAction(9876));
+        tick();
+
         expect(state.now.folder.activeLanguage).toBe(9876);
-    });
+    }));
 
-    it('setActiveNode works', () => {
+    it('setActiveNode works', fakeAsync(() => {
         state.dispatch(new SetActiveNodeAction(7777));
-        expect(state.now.folder.activeNode).toBe(7777);
-    });
+        tick();
 
-    it('setDisplayAllLanguages works', () => {
+        expect(state.now.folder.activeNode).toBe(7777);
+    }));
+
+    it('setDisplayAllLanguages works', fakeAsync(() => {
         state.dispatch(new SetDisplayAllLanguagesAction(true));
+        tick();
         expect(state.now.folder.displayAllLanguages).toBe(true);
 
         state.dispatch(new SetDisplayAllLanguagesAction(false));
+        tick();
         expect(state.now.folder.displayAllLanguages).toBe(false);
-    });
+    }));
 
-    it('setDisplayFields works', () => {
+    it('setDisplayFields works', fakeAsync(() => {
         state.dispatch(new SetListDisplayFieldsAction('folder', ['id', 'name', 'cdate']));
-        expect(state.now.folder.folders.displayFields).toEqual(['id', 'name', 'cdate']);
-    });
+        tick();
 
-    it('setDisplayFields filters out invalid values', () => {
+        expect(state.now.folder.folders.displayFields).toEqual(['id', 'name', 'cdate']);
+    }));
+
+    it('setDisplayFields filters out invalid values', fakeAsync(() => {
         const types: (FolderItemOrTemplateType)[] = ['file', 'folder', 'form', 'image', 'page'];
         const testEntries = [
             {
@@ -1118,29 +1216,32 @@ describe('FolderStateModule', () => {
                 mockListState(plural[type], { displayFields: [] });
                 // Set tht test data and check it
                 state.dispatch(new SetListDisplayFieldsAction(type, entry.input as any));
+                tick();
                 expect(state.now.folder[plural[type]].displayFields).toEqual(entry.expected);
             });
         });
-    });
+    }));
 
-    it('setDisplayFieldsRepositoryBrowser works', () => {
+    it('setDisplayFieldsRepositoryBrowser works', fakeAsync(() => {
         const selection = ['id', 'name', 'cdate'];
         state.dispatch(new SetRepositoryBrowserDisplayFieldsAction('folder', {
             selection: [...selection],
             showPath: true,
         }));
+        tick();
         expect(state.now.folder.folders.displayFieldsRepositoryBrowser).toEqual({ selection, showPath: true });
-    });
+    }));
 
     describe('setFilterTerm', () => {
 
-        it('updates the value of filterTerm', () => {
+        it('updates the value of filterTerm', fakeAsync(() => {
             const term = 'page with';
             state.dispatch(new SetFilterTermAction(term));
+            tick();
             expect(state.now.folder.filterTerm).toBe(term);
-        });
+        }));
 
-        it('resets currentPage values for folders, pages, images, files', () => {
+        it('resets currentPage values for folders, pages, images, files', fakeAsync(() => {
             state.mockState({
                 folder: {
                     folders: { currentPage: 2 },
@@ -1150,24 +1251,27 @@ describe('FolderStateModule', () => {
                 },
             });
             state.dispatch(new SetFilterTermAction('page with'));
+            tick();
+
             const folderState = state.now.folder;
             expect(folderState.folders.currentPage).toBe(1);
             expect(folderState.pages.currentPage).toBe(1);
             expect(folderState.images.currentPage).toBe(1);
             expect(folderState.files.currentPage).toBe(1);
-        });
-
+        }));
     });
 
     describe('setSearchTerm', () => {
 
-        it('updates the value of searchTerm', () => {
+        it('updates the value of searchTerm', fakeAsync(() => {
             const term = 'home';
             state.dispatch(new SetSearchTermAction(term));
-            expect(state.now.folder.searchTerm).toBe(term);
-        });
+            tick();
 
-        it('resets currentPage values for folders, pages, images, files', () => {
+            expect(state.now.folder.searchTerm).toBe(term);
+        }));
+
+        it('resets currentPage values for folders, pages, images, files', fakeAsync(() => {
             state.mockState({
                 folder: {
                     folders: { currentPage: 2 },
@@ -1177,32 +1281,37 @@ describe('FolderStateModule', () => {
                 },
             });
             state.dispatch(new SetSearchTermAction('home'));
+            tick();
+
             const folderState = state.now.folder;
             expect(folderState.folders.currentPage).toBe(1);
             expect(folderState.pages.currentPage).toBe(1);
             expect(folderState.images.currentPage).toBe(1);
             expect(folderState.files.currentPage).toBe(1);
-        });
-
+        }));
     });
 
-    it('setSearchFiltersVisible works', () => {
+    it('setSearchFiltersVisible works', fakeAsync(() => {
         expect(state.now.folder.searchFiltersVisible).toBe(false);
 
         state.dispatch(new SetSearchFiltersVisibleAction(true));
+        tick();
         expect(state.now.folder.searchFiltersVisible).toBe(true);
 
         state.dispatch(new SetSearchFiltersVisibleAction(false));
+        tick();
         expect(state.now.folder.searchFiltersVisible).toBe(false);
-    });
+    }));
 
-    it('setSorting works', () => {
+    it('setSorting works', fakeAsync(() => {
         state.dispatch(new SetListSortingAction('file', 'filesize', 'desc'));
+        tick();
+
         expect(state.now.folder.files.sortBy).toBe('filesize');
         expect(state.now.folder.files.sortOrder).toBe('desc');
-    });
+    }));
 
-    it('setSorting correctly validates and correct malformed options', () => {
+    it('setSorting correctly validates and correct malformed options', fakeAsync(() => {
         const types: (FolderItemOrTemplateType)[] = ['file', 'folder', 'form', 'image', 'page'];
         const testEntries = [
             {
@@ -1238,19 +1347,23 @@ describe('FolderStateModule', () => {
                 mockListState(plural[type], { sortBy: null, sortOrder: null });
                 // Set tht test data and check it
                 state.dispatch(new SetListSortingAction(type, entry.input.sortBy as any, entry.input.sortOrder as any));
+                tick();
+
                 expect(state.now.folder[plural[type]].sortBy).toEqual(entry.expected.sortBy);
                 expect(state.now.folder[plural[type]].sortOrder).toEqual(entry.expected.sortOrder);
             });
         });
-    });
+    }));
 
-    it('takePagesOfflineStart works', () => {
+    it('takePagesOfflineStart works', fakeAsync(() => {
         expect(state.now.folder.pages.saving).toBe(false);
         state.dispatch(new StartListSavingAction('page'));
-        expect(state.now.folder.pages.saving).toBe(true);
-    });
+        tick();
 
-    it('takePagesOfflineSuccess works', () => {
+        expect(state.now.folder.pages.saving).toBe(true);
+    }));
+
+    it('takePagesOfflineSuccess works', fakeAsync(() => {
         const page = getExamplePageDataNormalized({ id: 1234 });
         page.online = true;
         state.mockState({
@@ -1268,35 +1381,43 @@ describe('FolderStateModule', () => {
 
         expect(state.now.folder.pages.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('page'));
+        tick();
+
         const pageUpdates: { [id: number]: Partial<Page<Normalized>> } = {
             [page.id]: {
                 online: false,
             },
         };
         state.dispatch(new UpdateEntitiesAction({ page: pageUpdates }));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(false);
 
         const pageEntity = state.now.entities.page[page.id];
         expect(pageEntity).toBeDefined('page not in entity state');
         expect(pageEntity.online).toBe(false, 'online != false');
-    });
+    }));
 
-    it('takePagesOfflineError works', () => {
+    it('takePagesOfflineError works', fakeAsync(() => {
         mockListState('pages', { saving: true });
         expect(state.now.folder.pages.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('translatePageStart works', () => {
+    it('translatePageStart works', fakeAsync(() => {
         expect(state.now.folder.pages.creating).toBe(false);
         state.dispatch(new StartListCreatingAction('page'));
-        expect(state.now.folder.pages.creating).toBe(true);
-    });
+        tick();
 
-    it('translatePageSuccess works', () => {
+        expect(state.now.folder.pages.creating).toBe(true);
+    }));
+
+    it('translatePageSuccess works', fakeAsync(() => {
         const german: Language = { id: 1, code: 'de', name: 'Deutsch (German)' };
         const english: Language = { id: 2, code: 'en', name: 'English' };
 
@@ -1329,6 +1450,8 @@ describe('FolderStateModule', () => {
         translatedPage.languageVariants = undefined;
 
         state.dispatch(new ListCreatingSuccessAction('page'));
+        tick();
+
         expect(state.now.folder.pages.creating).toBe(false);
 
         const newPage = translatedPage;
@@ -1342,12 +1465,14 @@ describe('FolderStateModule', () => {
             [newPage.contentGroupId]: newPage.id,
         };
         state.dispatch(new AddEntitiesAction(normalized));
+        tick();
         state.dispatch(new UpdateEntitiesAction({
             page: {
                 [oldPageId]: { languageVariants },
                 [newPage.id]: { languageVariants },
             },
         }));
+        tick();
 
         const originalEntity = state.now.entities.page[originalPage.id];
         expect(originalEntity.languageVariants).toEqual({
@@ -1361,46 +1486,56 @@ describe('FolderStateModule', () => {
             [german.id]: originalPage.id,
             [english.id]: translatedPage.id,
         }, 'language variants of translated page are wrong');
-    });
+    }));
 
-    it('translatePageError works', () => {
+    it('translatePageError works', fakeAsync(() => {
         mockListState('pages', { creating: true });
         expect(state.now.folder.pages.creating).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListCreatingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.creating).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('unlocalizeItemStart works', () => {
+    it('unlocalizeItemStart works', fakeAsync(() => {
         expect(state.now.folder.folders.saving).toBe(false);
         state.dispatch(new StartListSavingAction('folder'));
-        expect(state.now.folder.folders.saving).toBe(true);
-    });
+        tick();
 
-    it('unlocalizeItemSuccess works', () => {
+        expect(state.now.folder.folders.saving).toBe(true);
+    }));
+
+    it('unlocalizeItemSuccess works', fakeAsync(() => {
         mockListState('folders', { saving: true });
         expect(state.now.folder.folders.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('folder'));
-        expect(state.now.folder.folders.saving).toBe(false);
-    });
+        tick();
 
-    it('unlocalizeItemError works', () => {
+        expect(state.now.folder.folders.saving).toBe(false);
+    }));
+
+    it('unlocalizeItemError works', fakeAsync(() => {
         mockListState('folders', { saving: true });
         expect(state.now.folder.folders.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('folder', errorMessage));
+        tick();
+
         expect(state.now.folder.folders.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('updateInheritanceStart works', () => {
+    it('updateInheritanceStart works', fakeAsync(() => {
         expect(state.now.folder.folders.saving).toBe(false);
         state.dispatch(new StartListSavingAction('folder'));
-        expect(state.now.folder.folders.saving).toBe(true);
-    });
+        tick();
 
-    it('updateInheritanceSuccess works', () => {
+        expect(state.now.folder.folders.saving).toBe(true);
+    }));
+
+    it('updateInheritanceSuccess works', fakeAsync(() => {
         const folder = getExampleFolderDataNormalized({ id: 1234 });
         folder.disinherit = [];
         folder.disinheritDefault = false;
@@ -1421,6 +1556,7 @@ describe('FolderStateModule', () => {
 
         expect(state.now.folder.folders.saving).toBe(true);
         state.dispatch(new ListSavingSuccessAction('folder'));
+        tick();
         state.dispatch(new UpdateEntitiesAction({
             folder: {
                 [folder.id]: {
@@ -1430,6 +1566,8 @@ describe('FolderStateModule', () => {
                 },
             },
         }));
+        tick();
+
         expect(state.now.folder.folders.saving).toBe(false);
 
         const folderEntity = state.now.entities.folder[folder.id];
@@ -1437,22 +1575,26 @@ describe('FolderStateModule', () => {
         expect(folderEntity.disinherit).toEqual([5, 6, 7], 'disinherit has the wrong value');
         expect(folderEntity.disinheritDefault).toBe(true, 'disinheritDefault != true');
         expect(folderEntity.excluded).toBe(true, 'excluded != true');
-    });
+    }));
 
-    it('updateInheritanceError works', () => {
+    it('updateInheritanceError works', fakeAsync(() => {
         mockListState('folders', { saving: true });
         expect(state.now.folder.folders.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('folder', errorMessage));
+        tick();
+
         expect(state.now.folder.folders.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('updateItemStart works', () => {
+    it('updateItemStart works', fakeAsync(() => {
         expect(state.now.folder.pages.saving).toBe(false);
         state.dispatch(new StartListSavingAction('page'));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(true);
-    });
+    }));
 
     describe('updateItemSuccess', () => {
 
@@ -1486,28 +1628,32 @@ describe('FolderStateModule', () => {
             });
         });
 
-        it('works without passing changed properties', () => {
+        it('works without passing changed properties', fakeAsync(() => {
             expect(state.now.folder.pages.saving).toBe(true);
             state.dispatch(new ListSavingSuccessAction('page'));
-            expect(state.now.folder.pages.saving).toBe(false);
-        });
+            tick();
 
-        it('works when passed a hash of changed properties', () => {
+            expect(state.now.folder.pages.saving).toBe(false);
+        }));
+
+        it('works when passed a hash of changed properties', fakeAsync(() => {
             expect(state.now.folder.pages.saving).toBe(true);
             expect(state.now.entities.page[page.id].description).toBe('No description');
             expect(state.now.entities.page[page.id].fileName).toBe('page.html');
 
             const props: Partial<Page<Raw>> = { description: 'A different description', fileName: 'other.html' };
             state.dispatch(new ListSavingSuccessAction('page'));
+            tick();
             const normalized = normalize({ id: page.id, ...props }, getNormalizrSchema('page'));
             state.dispatch(new AddEntitiesAction(normalized));
+            tick();
 
             expect(state.now.folder.pages.saving).toBe(false);
             expect(state.now.entities.page[page.id].description).toBe('A different description');
             expect(state.now.entities.page[page.id].fileName).toBe('other.html');
-        });
+        }));
 
-        it('correctly normalizes passed properties', () => {
+        it('correctly normalizes passed properties', fakeAsync(() => {
             expect(state.now.folder.pages.saving).toBe(true);
             expect(state.now.entities.page[page.id].editor).toBe(111);
             expect(state.now.entities.user[222]).toBeUndefined();
@@ -1521,24 +1667,27 @@ describe('FolderStateModule', () => {
                 } as User<Raw>,
             };
             state.dispatch(new ListSavingSuccessAction('page'));
+            tick();
             const normalized = normalize({ id: page.id, ...props }, getNormalizrSchema('page'));
             state.dispatch(new AddEntitiesAction(normalized));
+            tick();
 
             expect(state.now.folder.pages.saving).toBe(false);
             expect(state.now.entities.page[page.id].description).toBe('A different description');
             expect(state.now.entities.page[page.id].editor).toBe(222);
             expect(state.now.entities.user[222]).toBeDefined();
-        });
+        }));
 
     });
 
-    it('updateItemError works', () => {
+    it('updateItemError works', fakeAsync(() => {
         mockListState('pages', { saving: true });
         expect(state.now.folder.pages.saving).toBe(true);
         const errorMessage = 'some error';
         state.dispatch(new ListSavingErrorAction('page', errorMessage));
+        tick();
+
         expect(state.now.folder.pages.saving).toBe(false);
         expect(state.now.folder.lastError).toBe(errorMessage);
-    });
-
+    }));
 });

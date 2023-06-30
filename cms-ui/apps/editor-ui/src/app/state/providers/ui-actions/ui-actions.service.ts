@@ -87,7 +87,7 @@ export class UIActionsService {
             // check if at least one node has NodeFeature.linkChecker activated
             map(nodeFeatures => {
                 return Object.values(nodeFeatures).some(nodeFeaturesOfNode => {
-                    return nodeFeaturesOfNode.find(feature => feature === NodeFeature.linkChecker) ? true : false;
+                    return nodeFeaturesOfNode.find(feature => feature === NodeFeature.LINK_CHECKER) ? true : false;
                 });
             }),
             filter(status => status),
@@ -105,7 +105,7 @@ export class UIActionsService {
     getAlertLinkCheckerBrokenLinks(): void {
         this.appState.select(state => state.folder.activeNode).pipe(
             switchMap(activeNodeId => this.appState.select(state => state.features.nodeFeatures[activeNodeId])),
-            map((activeNodeFeatures: NodeFeature[]) => activeNodeFeatures && !activeNodeFeatures.some(f => f === NodeFeature.linkChecker)),
+            map((activeNodeFeatures: NodeFeature[]) => activeNodeFeatures && !activeNodeFeatures.some(f => f === NodeFeature.LINK_CHECKER)),
             switchMap((linkCheckerIsEnabled: boolean) => {
                 if (!linkCheckerIsEnabled) {
                     return of<ExternalLinkStatistics>();

@@ -1,12 +1,12 @@
 {
   "name": "@gentics/image-editor",
-  "version": "0.6.0",
+  "version": "6.0.0-SNAPSHOT",
   "dependencies": {
     "tslib": "^2.5.0"
   },
   "peerDependencies": {
     "cropperjs": "^1.5.13",
-    "@angular/common": "^14.0.7",
-    "@angular/core": "^14.2.12"
+    "@angular/common": "15.2.5",
+    "@angular/core": "15.2.5"
   }
 }

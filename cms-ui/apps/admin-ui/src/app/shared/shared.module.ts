@@ -6,7 +6,7 @@ import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import {
     AccordionComponent,
-    AssignContentrepositoriesToCrfragmentsModalComponent,
+    AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
     AssignGroupToUsersModalComponent,
@@ -58,7 +58,7 @@ import {
     SidebarItemGroupComponent,
     SplitViewRouterOutletComponent,
     TagEditorWrapperComponent,
-    TagmapEntryPropertiesComponent,
+    TagMapEntryPropertiesComponent,
     TagMapEntryTableComponent,
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
@@ -67,6 +67,7 @@ import {
     WidgetPublishingProcessTotalComponent,
     WizardComponent,
     WizardModalComponent,
+    I18nPanelGroupComponent,
 } from './components';
 import { ContentItemTrableComponent } from './components/content-item-trable/content-item-trable.component';
 import {
@@ -121,7 +122,7 @@ import {
 
 const COMPONENTS: any[] = [
     AccordionComponent,
-    AssignContentrepositoriesToCrfragmentsModalComponent,
+    AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
     AssignGroupToUsersModalComponent,
@@ -155,6 +156,7 @@ const COMPONENTS: any[] = [
     GenericRouterOutletComponent,
     GroupTableComponent,
     GroupTrableComponent,
+    I18nPanelGroupComponent,
     IconCheckboxComponent,
     IconComponent,
     LanguageTableComponent,
@@ -175,7 +177,7 @@ const COMPONENTS: any[] = [
     SplitViewRouterOutletComponent,
     TagEditorWrapperComponent,
     TagMapEntryTableComponent,
-    TagmapEntryPropertiesComponent,
+    TagMapEntryPropertiesComponent,
     TemplateFolderLinkTrableComponent,
     TemplateTableComponent,
     UserTableComponent,

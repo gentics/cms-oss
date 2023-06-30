@@ -1,0 +1,102 @@
+h2. Message
+
+Sending, listing and reading inbox messages
+
+endprologue.
+
+h3. Sending messages
+
+Sending messages to users and groups
+
+* +MessageAPI.send()+ 
+
+This method allows you to send a message to one or multiple users or groups.
+Instead of passing an array with the ID's of the users and groups, you can also just pass a single number.
+
+<javascript>
+	GCN.Message.send(
+		{
+			users : [ 1, 3 ], // User ID's
+			groups: [ 4, 6 ]  // Group ID's
+		},
+		'This is a test message',
+		function (response) {
+			// This function is called when the message was
+			// sent successfully.
+		},
+		function (error) {
+			// This function is called when there was an error.
+			// The response object is passed.
+		}
+	);
+</javascript>
+
+h3. Listing messages
+
+Listing messages from the inbox
+
+* +MessageAPI.list()+ 
+
+This retrieves all messages of the currently authenticated user.
+The first parameter specifies if to list unread messages only (true),
+or all messages (false).
+
+<javascript>
+	GCN.Message.list(
+		// True for unread messages only
+		false,
+		function (messages) {
+			// 'messages' is an array, which
+			// contains all messages.
+			for (var i = 0; i < messages.length; i++) {
+				var message = messages[i];
+				console.log('Listing message with ID ' + message.id + '; Text: ' + message.message);
+			}
+		},
+		function (error) {
+			// This function is called when there was an error.
+			// The response object is passed.
+		}
+	);
+</javascript>
+
+Each message object contains the following properties:
+
+* id
+* message
+* type - this is normally just "INFO"
+* timestamp
+* sender.description
+* sender.id
+* sender.firstName
+* sender.lastName
+* sender.login
+* sender.email
+
+h3. Reading messages
+
+Marking one or multiple messages as read
+
+* +MessageAPI.read()+ 
+
+With this method you can mark a message as read.
+It will then not be highlighted in the Backend for the user
+anymore and will not be returned by MessageAPI.list(true) anymore.
+Instead of an array, you can also just pass a single number.
+
+<javascript>
+	GCN.Message.read(
+		// Array with the message ID's
+		// You can also just pass a single ID instead
+		// of this array.
+		[ 123, 456, 789 ],
+		function (response) {
+			// This function is called when the request
+			// was successful.			
+		},
+		function (error) {
+			// This function is called when there was an error.
+			// The response object is passed.
+		}
+	);
+</javascript>

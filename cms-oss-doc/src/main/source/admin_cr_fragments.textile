@@ -1,0 +1,45 @@
+h2. ContentRepository Fragments
+
+ContentRepository fragments are containers for tagmap entries. Grouping tagmap entries in ContentRepository fragments allows to
+
+* Reuse the same set of tagmap entries in multiple ContentRepositories.
+* Put tagmap entries into devtools packages.
+
+endprologue.
+
+h3. Administration
+
+ContentRepository Fragments can be created and managed in the Administration UI under +Administration|Content.Admin|CR Fragments+.
+
+NOTE: The properties dialog for an entry will show all possible properties the entry can have. Not all properties are applicable to all types
+of ContentRepository. Properties not applicable will be ignored, when the fragment containing the entry is assigned to a ContentRepository.
+
+h3. Assignment to ContentRepository
+
+ContentRepositories have a menu entry +CR Fragments+ which will show a list of available CR Fragments. CR Fragments can be assigned to the ContentRepository
+or unassigned from the ContentRepository.
+
+The list of Tagmap Entries for a ContentRepository will also show the entries from assigned CR Fragments, but they cannot be modified or deleted in this list.
+If Tagmap Entries from CR Fragments assigned to the ContentRepository conflict with each other or with Tagmap Entries from the ContentRepository itself, they
+will be marked with a warning Icon (next to the Mapname). The tooltip of the icon will show a description of the conflict.
+
+WARNING: Whenever a CR Fragment is modified or assigned to a ContentRepository, the list of Tagmap Entries should be checked for conflicts. Using a ContentRepository
+with conflicting Tagmap Entries for publishing might lead to unexpected results or even let the publish process fail with an error.
+
+h3. Devtools
+
+ContentRepository Fragments can be added to "devtool packages":devtools_overview.html.
+
+h3. Import/Export
+
+ContentRepository Fragments can be exported and imported either as part of ContentRepositories or individually.
+
+If a ContentRepository is exported, the assigned ContentRepository Fragments will also be exported (unless excluded from the export).
+
+Exporting a ContentRepository Fragment, will _not_ automatically export any ContentRepository having it assigned.
+
+When a ContentRepository is imported, and it had a ContentRepository Fragment assigned to it while being exported, the ContentRepository Fragment will be
+assigned during the import, if it is also imported or already exists locally.
+
+When a ContentRepository Fragment is imported, and it was assigned to a ContentRepository while being exported, it will not be assigned to the ContentRepository during
+the import, unless the ContentRepository is also imported.

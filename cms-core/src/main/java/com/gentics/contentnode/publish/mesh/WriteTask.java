@@ -3,6 +3,7 @@ package com.gentics.contentnode.publish.mesh;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -12,7 +13,7 @@ import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
-import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshNodeTracker;
+//import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshNodeTracker;
 import com.gentics.mesh.core.rest.node.FieldMap;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 
@@ -34,24 +35,34 @@ class WriteTask extends AbstractWriteTask {
 	protected String parentUuid;
 
 	/**
+	 * Local ID of the parent folder
+	 */
+	protected int folderId;
+
+	/**
 	 * Language
 	 */
 	protected String language;
 
 	/**
-	 * Base Version (null for new objects)
+	 * Optional alternative mesh languages
 	 */
-	protected String baseVersion;
+	protected Set<String> alternativeMeshLanguages;
+
+	/**
+	 * Flag to mark existing objects
+	 */
+	protected boolean exists;
 
 	/**
 	 * Fields of the Mesh Node
 	 */
 	protected FieldMap fields;
 
-	/**
-	 * Tracker to mark when an object was written
-	 */
-	protected MeshNodeTracker tracker;
+//	/**
+//	 * Tracker to mark when an object was written
+//	 */
+//	protected MeshNodeTracker tracker;
 
 	/**
 	 * Optional list of post save operations (e.g. for uploading binary data)
@@ -78,8 +89,8 @@ class WriteTask extends AbstractWriteTask {
 	 * @throws NodeException
 	 */
 	@Override
-	public void perform() throws NodeException {
-		publisher.save(this);
+	public void perform(boolean withSemaphore) throws NodeException {
+		publisher.save(this, withSemaphore, null);
 	}
 
 	/**
@@ -116,10 +127,10 @@ class WriteTask extends AbstractWriteTask {
 
 	@Override
 	public String toString() {
-		if (baseVersion == null) {
+		if (!exists) {
 			return String.format("Create %s as %s (uuid %s)", description, schema, uuid);
 		} else {
-			return String.format("Update %s as %s (uuid %s, version %s)", description, schema, uuid, baseVersion);
+			return String.format("Update %s as %s (uuid %s)", description, schema, uuid);
 		}
 	}
 }

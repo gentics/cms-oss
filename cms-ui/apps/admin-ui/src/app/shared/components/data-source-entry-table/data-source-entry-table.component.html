@@ -19,6 +19,18 @@
     >
         <icon left>add</icon> {{ 'shared.create_new_dataSource_entry_button' | i18n }}
     </gtx-button>
+
+    <gtx-button
+        *ngIf="!sorting"
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+    </gtx-button>
 </div>
 
 <div class="entity-table-selection">
@@ -34,6 +46,7 @@
     [selectable]="selectable"
     [hideActions]="hideActions"
     [disabled]="disabled"
+    [sortable]="!sorting"
 
     [paginated]="false"
     [columns]="columns"

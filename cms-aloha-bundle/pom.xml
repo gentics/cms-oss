@@ -8,7 +8,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-aloha-bundle</artifactId>
 
 	<name>Gentics CMS - Aloha Bundle</name>
@@ -25,7 +25,7 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
@@ -49,7 +49,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-aloha-plugins</artifactId>
 			<version>${project.version}</version>
 			<type>zip</type>
@@ -88,7 +88,7 @@
 								</artifactItem>
 								<!-- GCN Plugins -->
 								<artifactItem>
-									<groupId>com.gentics.cms</groupId>
+									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>cms-aloha-plugins</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>

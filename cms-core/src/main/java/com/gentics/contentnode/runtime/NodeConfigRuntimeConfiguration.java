@@ -12,7 +12,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
@@ -30,6 +32,7 @@ import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.InstantCRPublishing;
+import com.gentics.contentnode.server.ServletContextHandlerService;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -58,6 +61,11 @@ public class NodeConfigRuntimeConfiguration {
 	private static Map<String, Object> overwriteConfig;
 
 	/**
+	 * ServiceLoader for the {@link ServletContextHandlerService}s
+	 */
+	protected static ServiceLoader<ServletContextHandlerService> servletContextHandlerServiceLoader;
+
+	/**
 	 * Configuration instance
 	 */
 	private NodeConfig nodeConfig;
@@ -77,6 +85,14 @@ public class NodeConfigRuntimeConfiguration {
 			throw new RuntimeException("Error while initializing configuration.", e);
 		}
 		return singleton;
+	}
+
+	/**
+	 * Set the ServiceLoader for the {@link ServletContextHandlerService}
+	 * @param loader loader
+	 */
+	public static void setServletContextHandlerServiceLoader(ServiceLoader<ServletContextHandlerService> loader) {
+		servletContextHandlerServiceLoader = loader;
 	}
 
 	/**
@@ -100,9 +116,19 @@ public class NodeConfigRuntimeConfiguration {
 			Map<String, Object> data = loadConfiguration();
 
 			nodeConfig = new PropertyNodeConfig(data);
-			nodeConfig.init();
-
 			NodePreferences nodePreferences = nodeConfig.getDefaultPreferences();
+
+			// check features
+			for (Feature feature : Feature.values()) {
+				if (feature.activatedButNotAvailable()) {
+					logger.error(String.format(
+							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
+							feature.getName()));
+					nodePreferences.setFeature(feature, false);
+				}
+			}
+
+			nodeConfig.init();
 
 			// TODO move this to PopertyNodeConfig.init
 			// set configuration for the instant cr publishing disabler
@@ -115,15 +141,6 @@ public class NodeConfigRuntimeConfiguration {
 			}
 
 			MBeanRegistry.registerMBean(new SessionInfo(), "System", "SessionInfo");
-
-			// check features
-			for (Feature feature : Feature.values()) {
-				if (feature.activatedButNotAvailable()) {
-					logger.error(String.format(
-							"Feature %s was activated in the configuration, but is not available. Feature will not be active.",
-							feature.getName()));
-				}
-			}
 		} catch (Exception e) {
 			throw new NodeException("Error while loading Gentics Content.Node configuration", e);
 		}
@@ -187,6 +204,8 @@ public class NodeConfigRuntimeConfiguration {
 	public void reloadConfiguration() throws NodeException {
 		initConfigurationProperties();
 		operate(() -> CNDictionary.ensureConsistency());
+		Optional.ofNullable(servletContextHandlerServiceLoader)
+				.ifPresent(loader -> loader.forEach(ServletContextHandlerService::onReloadConfiguration));
 	}
 
 	/**

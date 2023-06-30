@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.contentnode.rest.model.request.DaisyDiffRequest;
 import com.gentics.contentnode.rest.model.request.DiffRequest;
@@ -12,8 +13,7 @@ import com.gentics.contentnode.rest.model.response.DiffResponse;
  * This resource implements the diff tool in the REST API, which can be used to
  * calculate the diff between html contents.
  */
-@Produces( { "application/json; charset=UTF-8",
-	"application/xml; charset=UTF-8" })
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/diff")
 public interface DiffResource {
 

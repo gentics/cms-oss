@@ -19,6 +19,17 @@
     >
         <icon left>add</icon> {{ 'node.create_node' | i18n }}
     </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+    </gtx-button>
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
@@ -74,6 +85,7 @@
 <ng-template #crRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
+        class="gtx-entity-grid-link"
         [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.contentRepositoryName || value }}</a>
@@ -82,6 +94,7 @@
 <ng-template #masterRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0 && value !== row.item.id"
+        class="gtx-entity-grid-link"
         [routerLink]="'node' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.masterName || value }}</a>

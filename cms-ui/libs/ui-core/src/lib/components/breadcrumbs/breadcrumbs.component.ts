@@ -17,6 +17,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { coerceInstance } from '../../utils';
 
 export interface IBreadcrumbLink {
     href?: string;
@@ -55,71 +56,52 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
      * A list of links to display
      */
     @Input()
-    links: IBreadcrumbLink[];
+    public links: IBreadcrumbLink[];
 
     /**
      * A list of RouterLinks to display
      */
     @Input()
-    routerLinks: IBreadcrumbRouterLink[];
+    public routerLinks: IBreadcrumbRouterLink[];
 
     /**
      * A color that is used for collapsed state background.
      */
     @Input()
-    collapsedColor: string;
+    public collapsedColor: string;
 
     /**
      * If true the first folder and all the folder names from the end of the breadcrumbs, which fit into one line are shown
      * and an ellipsis in between.
      */
     @Input()
-    get multiline(): boolean {
-        return this.isMultiline;
-    }
-    set multiline(val: boolean) {
-        this.isMultiline = val != null && val !== false;
-    }
+    public multiline = false;
 
     /**
      * If true the breadcrumbs are always expanded
      */
     @Input()
-    get multilineExpanded(): boolean {
-        return this.isMultilineExpanded;
-    }
-    set multilineExpanded(val: boolean) {
-        this.isMultilineExpanded = val != null && val !== false;
-    }
+    public multilineExpanded = false;
 
     /**
      * Controls whether the navigation is disabled.
      */
     @Input()
-    get disabled(): boolean {
-        return this.isDisabled;
-    }
-    set disabled(val: boolean) {
-        this.isDisabled = val != null && val !== false;
-    }
+    public disabled = false;
 
     /**
      * Fires when a link is clicked
      */
     @Output()
-    linkClick = new EventEmitter<IBreadcrumbLink | IBreadcrumbRouterLink>();
+    public linkClick = new EventEmitter<IBreadcrumbLink | IBreadcrumbRouterLink>();
 
     /**
      * Fires when the expand button is clicked
      */
     @Output()
-    multilineExpandedChange = new EventEmitter<boolean>();
+    public multilineExpandedChange = new EventEmitter<boolean>();
 
-    isMultiline = false;
-    isMultilineExpanded = false;
-    isDisabled = false;
     isOverflowing = false;
-
     showArrow = false;
 
     backLink: IBreadcrumbLink | IBreadcrumbRouterLink;
@@ -138,11 +120,11 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private elementRef: ElementRef,
+        private elementRef: ElementRef<HTMLElement>,
     ) { }
 
     ngAfterViewInit(): void {
-        let element: HTMLElement = this.elementRef.nativeElement;
+        const element = this.elementRef.nativeElement;
         if (element) {
             // Listen in the "capture" phase to prevent routerLinks when disabled
             element.firstElementChild.addEventListener('click', this.preventClicksWhenDisabled, true);
@@ -160,8 +142,9 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     ngOnChanges(changes: SimpleChanges): void {
+        coerceInstance(this, ['multiline', 'multilineExpanded', 'disabled'], changes);
         if (changes['links'] || changes['routerLinks']) {
-            let allLinks = (this.links || []).concat(this.routerLinks || []);
+            const allLinks = (this.links || []).concat(this.routerLinks || []);
             this.backLink = allLinks[allLinks.length - 2];
             this.resizeEvents.next(null);
         }
@@ -171,13 +154,13 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     ngOnDestroy(): void {
-        let element: HTMLElement = this.elementRef.nativeElement;
+        const element: HTMLElement = this.elementRef.nativeElement;
         element.firstElementChild.removeEventListener('click', this.preventClicksWhenDisabled, true);
         this.subscriptions.unsubscribe();
     }
 
     onLinkClicked(link: IBreadcrumbLink | IBreadcrumbRouterLink, event: Event): void {
-        if (this.isDisabled) {
+        if (this.disabled) {
             event.preventDefault();
             event.stopImmediatePropagation();
         } else {
@@ -198,40 +181,38 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
         let prevIsExpanded: boolean;
         let prevNavWidth = -1;
 
-        const resizeSub = this.resizeEvents
-            .pipe(debounceTime(5))
-            .subscribe(() => {
-                if (!this.lastPart || !this.navWrapper) {
-                    return;
-                }
-                // If neither the links, nor isMultilineExpanded, nor the navWrapper element's clientWidth has changed, we don't need to do anything.
-                const currNavWidth = this.navWrapper.nativeElement.clientWidth;
-                if (
-                    prevLinks === this.links
-                    && prevRouterLinks === this.routerLinks
-                    && prevIsExpanded === this.isMultilineExpanded
-                    && prevNavWidth === currNavWidth
-                ) {
-                    return;
-                }
-                prevLinks = this.links;
-                prevRouterLinks = this.routerLinks;
-                prevIsExpanded = this.isMultilineExpanded;
-                prevNavWidth = currNavWidth;
+        this.subscriptions.add(this.resizeEvents.pipe(
+            debounceTime(5),
+        ).subscribe(() => {
+            if (!this.lastPart || !this.navWrapper) {
+                return;
+            }
+            // If neither the links, nor isMultilineExpanded, nor the navWrapper element's clientWidth has changed, we don't need to do anything.
+            const currNavWidth = this.navWrapper.nativeElement.clientWidth;
+            if (
+                prevLinks === this.links
+                && prevRouterLinks === this.routerLinks
+                && prevIsExpanded === this.multilineExpanded
+                && prevNavWidth === currNavWidth
+            ) {
+                return;
+            }
+            prevLinks = this.links;
+            prevRouterLinks = this.routerLinks;
+            prevIsExpanded = this.multilineExpanded;
+            prevNavWidth = currNavWidth;
 
-                const elements: NodeListOf<HTMLElement> = this.lastPart.nativeElement.querySelectorAll('a.breadcrumb');
-                if (elements.length > 0) {
-                    const firstOffsetBottom = elements[0].offsetTop + elements[0].offsetHeight;
-                    const lastOffsetBottom = elements[elements.length - 1].offsetTop + elements[elements.length - 1].offsetHeight;
-                    this.showArrow = firstOffsetBottom !== lastOffsetBottom;
-                } else {
-                    this.showArrow = false;
-                }
-                this.shortenTexts();
-                this.changeDetector.markForCheck();
-            });
-
-        this.subscriptions.add(resizeSub);
+            const elements: NodeListOf<HTMLElement> = this.lastPart.nativeElement.querySelectorAll('a.breadcrumb');
+            if (elements.length > 0) {
+                const firstOffsetBottom = elements[0].offsetTop + elements[0].offsetHeight;
+                const lastOffsetBottom = elements[elements.length - 1].offsetTop + elements[elements.length - 1].offsetHeight;
+                this.showArrow = firstOffsetBottom !== lastOffsetBottom;
+            } else {
+                this.showArrow = false;
+            }
+            this.shortenTexts();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     private shortenTexts() {
@@ -274,7 +255,7 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     private getCuttableBreadcrumbsTexts(): string[] {
-        let defaultBreadcrumbs: string[] = [];
+        const defaultBreadcrumbs: string[] = [];
         if (this.links) {
             for (const link of this.links) {
                 defaultBreadcrumbs.push(link.text);
@@ -293,8 +274,8 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     private preventClicksWhenDisabled = (ev: Event): void => {
-        if (this.isDisabled) {
-            let target = ev.target as HTMLElement;
+        if (this.disabled) {
+            const target = ev.target as HTMLElement;
             if (target.tagName.toLowerCase() === 'a' && target.classList.contains('breadcrumb')) {
                 ev.preventDefault();
                 ev.stopImmediatePropagation();
@@ -312,7 +293,7 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
         for (const link of this.routerLinkChildren.filter(link => !link.hasOwnProperty('onClick'))) {
             const originalOnClick = link.onClick;
             link.onClick = function interceptedOnClick(...args: any[]): boolean {
-                if (thisComponent.isDisabled) {
+                if (thisComponent.disabled) {
                     return true;
                 } else {
                     return originalOnClick.apply(this, args);

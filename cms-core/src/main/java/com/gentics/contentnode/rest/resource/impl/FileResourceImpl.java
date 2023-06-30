@@ -17,12 +17,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
@@ -1228,7 +1231,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 */
 	@POST
 	@Path("/save/{id}")
-	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Consumes({ MediaType.APPLICATION_JSON })
 	public GenericResponse save(@PathParam("id") Integer id, FileSaveRequest request) {
 			// Get the file
 			com.gentics.contentnode.rest.model.File restFile = request.getFile();
@@ -1582,8 +1585,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 
 		try {
-			fileId = getMasterFileIds(fileId);
-			return getTotalUsageInfo(fileId, File.TYPE_FILE, nodeId);
+			Map<Integer, Integer> masterMap = mapMasterFileIds(fileId);
+			return getTotalUsageInfo(masterMap, File.TYPE_FILE, nodeId);
 		} catch (Exception e) {
 			logger.error("Error while getting total usage info for " + fileId.size() + " files", e);
 			I18nString message = new CNI18nString("rest.general.error");
@@ -1591,6 +1594,34 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			return new TotalUsageResponse(new Message(Message.Type.CRITICAL, message.toString()),
 					new ResponseInfo(ResponseCode.FAILURE, "Error while getting total usage info for " + fileId.size() + " files" + e.getLocalizedMessage()));
 		}
+	}
+
+	/**
+	 * For every file in the list, get the id of the master file (or the file itself, if it is a master page or multichannelling is not
+	 * activated)
+	 *
+	 * @param fileId
+	 *            list of file ids
+	 * @return map of master file ids to original ids
+	 * @throws NodeException
+	 */
+	protected Map<Integer, Integer> mapMasterFileIds(List<Integer> fileId) throws NodeException {
+		Transaction t = getTransaction();
+
+		if (!t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
+			return fileId.stream().collect(Collectors.toMap(Function.identity(), Function.identity()));
+		}
+		List<File> files = t.getObjects(File.class, fileId);
+		Map<Integer, Integer> masterMap = new HashMap<>(fileId.size());
+
+		for (File file : files) {
+			Integer id = ObjectTransformer.getInteger(file.getMaster().getId(), null);
+
+			if (id != null && !masterMap.containsKey(id)) {
+				masterMap.put(id, file.getId());
+			}
+		}
+		return masterMap;
 	}
 
 	/*

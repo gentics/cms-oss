@@ -1,0 +1,246 @@
+h2. Aloha Editor Gentics CMS Integration
+
+There are serval Aloha Editor plugins that allow the integration of Aloha Editor with Gentics CMS.
+
+* gcn/gcn-plugin - This is the main integeration plugin which enabled frontend editing with Aloha Editor.
+* gcn/fileupload - This plugin allows to use the fileupload for newly created links with Aloha Editor.
+* gcn/image - This is a small plugin that contains interface methods to the 'commons/image' plugin.
+* gcn/imagemanipulation2 - This is the Aloha Editor Image Manipulation 2 plugin.
+
+endprologue.
+
+h3. Loading Aloha Editor
+
+Load the Aloha Editor should always be done with URLs starting with _/latest/..._. Those URLs will be answered with a HTTP redirect to the URL containing the build timestamp of the Aloha Editor versioned currently contained in the Backend. This ensures that
+* URLs to load Aloha Editor do not change when updating the Backend
+* Browsers will cache different versions of Aloha Editor differently, so after an update of the Backend, it is no longer necessary to clear the browser cache to load the currently contained version of Aloha Editor.
+
+h4. Issues when using https://
+
+When using an additional Web Server to handle SSL (https://) that forwards the requests to the Backend Apache with http:// the redirect will be done with http:// also, because the redirector does not know about https://. To handle such situations, there are two features, that can be used:
+
+If the feature +redirect_check_referer+ is turned on, the redirector will check the Referer URL, and use the schema and hostname from it. In cases, where the Referer might be missing, the feature +redirect_assume_https+ will always enforce the redirect to https:// and the hostname from the Host request header.
+
+An example configuration could look like this
+
+<shell failename="conf/features.yml">
+# check the Referer for https:// and hostname
+feature:
+  redirect_check_referer: true
+  # always assume the originating request to be https://
+  redirect_assume_https: true
+</shell>
+
+h3. Constructs
+
+When using Aloha Editor to edit your contents you want to be able to use Contenttags created from your Tagtype implementations. In order for constructs to work with Aloha Editor the following guidelines have to be kept.
+
+h4. Single Root Tags
+
+Use single root tags for your constructs. This will allow Gentics CMS to re-use your root tags as container elements. Make sure that *there are no whitespaces* before or after your root tag. You can add your own id attributes to the root tags, but you have to make sure that those ids are unique on the page.
+
+WARNING: No whitespace also means: no line breaks! Avoid line breaks in velocity implementations by putting velocity comments at the end of the line (##).
+
+<html filename="Bad example">
+<!-- your tag should *NOT* render that way -->
+<img src="sunset.jpg" alt="Sunset" />
+<p>Beautiful sunset at the shore<p>
+</html>
+
+<html filename="Good example">
+<!-- your tag should render that way -->
+<!-- there is a distinctive root tag -->
+<div>
+	<img src="sunset.jpg" alt="Sunset" />
+	<p>Beautiful sunset at the shore<p>
+</div>
+</html>
+
+NOTE: If your tagtypes wont render a single root tag Gentics CMS will wrap the output in a div-tag while editing the page. In published state your output remains unchanged.
+
+h4. Live Editable Tags
+
+If you want to use tags for inline editing the best approach is to use +<div>+ tags as the root tag. If you want to use a tagtype in templates to create an editable with no edit icons that tagtype should only consist of a single inline editable +HTML (long)+ part.
+
+NOTE: In older versions of Gentics CMS, using other parts as +HTML (long)+ for editables could cause the duplication of breaks while editing. Although this behavior has been fixed now, it is still recommended to use editables with +HTML (long)+ parts.
+
+If you provide a root tag in the template Gentics CMS will make use of that root tag and turn it into an editable:
+
+<html filename="Root tag for an editable in a template">
+<!-- ... header ... -->
+<body>
+	<!-- ... -->
+	<!-- Gentics CMS will turn this div into an editable. -->
+	<!-- The tagtype for node editable just has a single
+	<!-- HTML (long) part. -->
+	<div id="content"><node editable></div>
+	<!-- ... -->
+</body>
+<!-- ... footer ... -->
+</html>
+
+WARNING: Make sure that there are *no spaces* between the editable tag an its root tag like in the example above!
+
+
+The following root tags are allowed for editables:
+
+* +<div>+
+* +<span>+
+* +<p>+
+* +<h1>+ - +<h6>+
+
+
+h3. Aloha Editor Plugins
+
+h4. Gentics CMS Integration Plugin +gcn/gcn+
+
+The Aloha Editor Gentics CMS Integration Plugin allows Gentics CMS to use Aloha Editor for editing page contents. Settings are provided automatically and must not be changed by implementation. The plugin will also place tagicons in the content if Contenttags are used. Also delete icons are provided which make it possible to remove a contenttag from a page.
+
+If a tagicon is clicked Gentics CMSs Tagfill dialog is opened in a lightbox allowing you to update a Contenttags contents. If a delete icon is clicked the corresponding contenttag will be removed from the page and its underlying data model. If contenttags are removed by any other means (eg. selecting and deleting them using the Del key on your keyboard) they will be removed from the contents, but not from the pages data model.
+
+NOTE: If you use the Tagfill dialog to paste HTML contents from Microsoft Word, another Webpage or even code you created or modified yourself Aloha Editor will not be able to filter and clean those. Your HTML code will be inserted directly into the editable and may lead to undesired results.
+
+h4. Gentics CMS FileLink Plugin +gcn/gcnfilelink+
+
+The Gentics CMS FileLink Plugin allows handling links to files as blocks, that render additional (not editable) information.
+Read this "Setup Guide":aloha_gcn_filelink_plugin.html about how to use this plugin.
+
+h3. Configuration
+
+The tag insert buttons within the insert tag can be configured per editable. A whitelist configuration is used to show/hide specific tag insert options. The whitelist uses the tagtype keyword to filter the buttons/menu. This enables the system administrator to further define which tags options can be used for editors.
+
+Example configuration:
+<javascript filename="conf/*.yml">
+# Custom function to check if an URL is internal.
+aloha_settings_node:
+  "1":
+    plugins:
+      gcn:
+        checkForInternalLinkFunction: "My.Namespace.checkLink"
+        # this resembles the default configuration of available
+        # constructs for all editables
+        config:
+        	tagtypeWhitelist:
+			  - link
+			  - wikilink
+			  - formspace
+			  - htmllang
+			  - myuncategorizedtagtype
+        # if you want to have a specific set of constructs
+        # you have to configure it using the "editables" key
+        editable:
+          "#customEditableId":
+            tagtypeWhitelist: []
+          ".header":
+		  # specify construct keywords to be available
+		  # for insertion
+		    tagtypeWhitelist:
+		      - link
+		      - seitentag
+		      - download
+		      - upload
+		  "#GENTICS_METAEDITABLE_page_name":
+		    tagtypeWhitelist:
+			  - fileurl
+			  - breadcrumb
+			  - lswitch
+</javascript>
+
+h4. Detection of internal links
+
+By default regular expressions are used to determine if a URL points to an internal
+page or file respectively. This behaviour can be customized by supplying a fully qualified name to
+a function in the @checkForInternalLinkFunction@ setting of the Gentics CMS plugin.
+
+Upon saving this function will be called with the href attribute of every link on the page and is
+expected to return an object with the following information:
+* @match@ (boolean): Whether the given URL matches an internal object.
+* @url@ (string or integer): The URL of an external link or the ID of an internal page or
+  0 if the link points to an internal file and not a page.
+* @fileurl@ (integer): The ID of an internal file or 0 if the link does not point to a file.
+
+h4. Gentics CMS Fileupload Plugin +gcn/gcnfileupload+
+
+The Gentics CMS Fileupload Plugin allows you to upload files by adding a button to the FloatingMenus "Link" tab. If you click the "Upload File" button a prompt will appear asking you to select a file. You may also add a description for your file. The file will be linked as soon as the upload finishes.
+
+h4. Gentics CMS Image Plugin +gcn/image+
+
+The Gentics CMS Image Plugin is currently used to edit images from the backend and is not designed to be used with standard Aloha Editor inline editing.
+
+h4. Gentics CMS Linkbrowser Plugin +gcn/linkbrowser+
+
+The Gentics CMS Linkbrowser Plugin will interface the Repository Browser with Gentics CMS so that pages, images and files from the Gentics CMS Backend can be selected.
+
+h4. Gentics CMS Aloha Page Link Tag
+
+"Here":http://www.aloha-editor.org/guides/aloha_gcn_alohapagelink.html you can find instructions on how to configure the necessary "gtxalohapagelink" Tag for storing links inserted with Aloha Editor.
+
+h4. Link Plugin default https
+
+When inserting a new link with the toolbar, the link target with be prefilled with "http://" by default.
+This can be changed to e.g. "https://" with the following configuration:
+
+<javascript filename="conf/*.yml">
+aloha_settings:
+  plugins:
+    link:
+      hrefValue: "https://"
+</javascript>
+
+h3. Annotating Editables
+
+In order to have better control over the editable configuration, it is possible to have the root Elements annotated, by activating the feature
+
+<shell filename="conf/features.yml">
+feature:
+  aloha_annotate_editables: true
+</shell>
+
+When enabled, the root elements of Aloha Editor editables will be annotated by adding the following classes (if applicable):
+
+* +GENTICS_construct_[constructkeyword]+ where [constructkeyword] is the keyword of the construct
+* +GENTICS_tagname_[tagname]+ where [tagname] is the keyword of the tag
+* +GENTICS_tagpart_[partkeyword]+ where [partkeyword] is the keyword of the part (if any)
+* +GENTICS_parttype_[parttype]+ where [parttype] is the _simplified_ Name of the Part Type.
+
+The Part Type names are simplified by first removing the characters '(', ')' and '/', then all non-alphabetical characters are replaced by '_' (underscore). Finally the name is converted to lowercase.
+
+The following table will show, how Part Type names are simplified:
+
+|_.Name                 |_.Class              |
+| Breadcrumb            | breadcrumb          |
+| Checkbox              | checkbox            |
+| Datasource            | datasource          |
+| DHTML Editor          | dhtml_editor        |
+| File (localpath)      | file_localpath      |
+| File (Upload)         | file_upload         |
+| Folder (Upload)       | folder_upload       |
+| HTML                  | html                |
+| HTML (custom form)    | html_custom_form    |
+| HTML (long)           | html_long           |
+| Java Editor           | java_editor         |
+| List                  | list                |
+| List (ordered)        | list_ordered        |
+| List (unordered)      | list_unordered      |
+| Navigation            | navigation          |
+| Overview              | overview            |
+| Select (image-height) | select_image_height |
+| Select (image-width)  | select_image_width  |
+| Select (multiple)     | select_multiple     |
+| Select (single)       | select_single       |
+| Table ext             | table_ext           |
+| Tag (global)          | tag_global          |
+| Tag (page)            | tag_page            |
+| Tag (template)        | tag_template        |
+| Text                  | text                |
+| Text (custom form)    | text_custom_form    |
+| Text (short)          | text_short          |
+| Text/HTML             | text_html           |
+| Text/HTML (long)      | text_html_long      |
+| URL (file)            | url_file            |
+| URL (folder)          | url_folder          |
+| URL (image)           | url_image           |
+| URL (page)            | url_page            |
+| Velocity              | velocity            |
+
+For the sake of completeness, this table contains +all+ existing Part Types, although most of them can not be used as editables.

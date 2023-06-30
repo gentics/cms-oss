@@ -155,8 +155,6 @@ public class Publisher implements Runnable {
 	 * representative
 	 */
 	private int representativePageCount = 100;
-	private PublishETAStatisticGenerator publishETAStatisticGenerator;
-	private PublishETAGraphGenerator publishETAGraphGenerator;
 	private IWorkPhase timeManagementPhase;
 	private IWorkPhase initPhase;
 	private IWorkPhase finalizePhase;
@@ -228,23 +226,6 @@ public class Publisher implements Runnable {
 
 			if (!logdir.exists()) {
 				logdir.mkdirs();
-			}
-			if (prefs.getFeature("javaparser_eta_statistics")) {
-				publishETAStatisticGenerator = new PublishETAStatisticGenerator(myPublishInfo, initPhase,
-						new File(logdir, logfilenameformatCsv.format(new Date())));
-				publishETAStatisticGenerator.setDaemon(true);
-				publishETAStatisticGenerator.start();
-				// publishETAGraphGenerator = new PublishETAGraphGenerator(publishETAStatisticGenerator, new File(logdir, logfilenameformatCsvPng.format(new Date())));
-				int graphdelay = ObjectTransformer.getInt(prefs.getProperty("contentnode.config.javaparser_eta_statistics_graphdelay"), 30);
-
-				publishETAGraphGenerator = new PublishETAGraphGenerator(publishETAStatisticGenerator, new File(logdir, logfilenameformatCsvPngCurrent),
-						graphdelay);
-				publishETAGraphGenerator.setDaemon(true);
-				publishETAGraphGenerator.setWidth(
-						ObjectTransformer.getInt(prefs.getProperty("contentnode.config.javaparser_eta_statistics_graphwidth"), publishETAGraphGenerator.getWidth()));
-				publishETAGraphGenerator.setHeight(
-						ObjectTransformer.getInt(prefs.getProperty("contentnode.config.javaparser_eta_statistics_graphheight"), publishETAGraphGenerator.getHeight()));
-				publishETAGraphGenerator.start();
 			}
 			logfile = new File(logdir, logfilenameformat.format(new Date()));
 			logfileVerbose = new File(logdir, logfilenameformatVerbose.format(new Date()));
@@ -697,12 +678,6 @@ public class Publisher implements Runnable {
 
 			PublishableTemplate.clearCache();
 			myPublishInfo.done();
-			if (publishETAStatisticGenerator != null) {
-				publishETAStatisticGenerator.interrupt();
-			}
-			if (publishETAGraphGenerator != null) {
-				publishETAGraphGenerator.interrupt();
-			}
 			if (loggingRenderResult != null) {
 				loggingRenderResult.close();
 			}
@@ -1074,12 +1049,6 @@ public class Publisher implements Runnable {
 			contentMapPublishPhase.begin();
 			cnMapPublisher.publishObjects(renderResult);
 			contentMapPublishPhase.done();
-
-			// set all files/folders to be published
-			PublisherInfo publisherInfo = MBeanRegistry.getPublisherInfo();
-
-			publisherInfo.publishedAllFiles();
-			publisherInfo.publishedAllFolders();
 
 			return cnMapPublisher;
 		} catch (NodeException e) {

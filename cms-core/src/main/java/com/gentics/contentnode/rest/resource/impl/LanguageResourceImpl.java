@@ -57,8 +57,8 @@ import com.gentics.lib.db.IntegerColumnRetriever;
 /**
  * Implementation of a language resource
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("language")
 public class LanguageResourceImpl implements LanguageResource {

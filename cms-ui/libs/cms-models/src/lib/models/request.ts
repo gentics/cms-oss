@@ -254,6 +254,10 @@ export interface EmbedListOptions<T> {
     embed?: T | T[];
 }
 
+export interface IdSetRequest {
+    ids: string[];
+}
+
 /**
  * Request object used to configure the behaviour of the `admin/actionlog` endpoint.
  */
@@ -695,8 +699,9 @@ export interface TemplateFolderListRequest extends FolderListOptions {
 }
 
 export interface TemplateListRequest extends BaseListOptionsWithPaging<Template> {
-    nodeId?: number;
+    nodeId?: number | number[];
     perms?: boolean;
+    reduce?: boolean;
 }
 
 export interface NodeMultiLinkRequest {
@@ -1518,9 +1523,9 @@ export type RoleListOptions = BaseListOptionsWithPaging<Role>;
 /**
  * Request used for saving a `Role`.
  */
-export type RoleCreateRequest = Partial<Role<Raw>>;
+export type RoleCreateRequest = Pick<Role, 'nameI18n' | 'descriptionI18n'>;
 
-export type RoleUpdateRequest = RoleCreateRequest;
+export type RoleUpdateRequest = Pick<Role, 'id'> & Partial<Pick<Role, 'nameI18n' | 'descriptionI18n'>>;
 
 /**
  * Query parameters for POST `/roles/{id}/perm`
@@ -1566,6 +1571,8 @@ export type ConstructCategoryListOptions = BaseListOptionsWithPaging<ConstructCa
 export type ConstructCategoryCreateRequest = Partial<ConstructCategory<Raw>>;
 
 export type ConstructCategoryUpdateRequest = ConstructCategoryCreateRequest;
+
+export type ConstructCategorySortRequest = IdSetRequest;
 
 // CONTENTREPOSITORY /////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -348,8 +348,6 @@ export class IFrameManager {
                     } else {
                         url = this.resourceUrlBuilder.pageEditor(itemId, nodeId);
                     }
-                } else if (editorState.itemType === 'image') {
-                    url = this.resourceUrlBuilder.imageEditor(itemId, folderId);
                 }
             } else if (editorState.editMode === 'editProperties') {
                 url = BLANK_PROPERTIES_PAGE;

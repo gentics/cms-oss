@@ -2,6 +2,7 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { ConstructCategoryBO, GtxI18nProperty, Language } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
@@ -77,7 +78,7 @@ export class ConstructCategoryPropertiesComponent
     }
 
     protected onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 nameI18n: this.value?.nameI18n || {},
             });

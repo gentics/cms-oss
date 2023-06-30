@@ -44,7 +44,7 @@
         margin: 0 10px 0 8px;
     }
 
-    @media (min-width: 320px) and (max-width: 480px) {
+    @media (min-width: 320px) and (max-width: 600px) {
         a.breadcrumb:not(:last-child) {
             display: none;
         }
@@ -54,7 +54,7 @@
         }
 
         > nav > .nav-wrapper :last-child {
-            display: -webkit-box !important;
+            display: flex !important;
         }
     }
 

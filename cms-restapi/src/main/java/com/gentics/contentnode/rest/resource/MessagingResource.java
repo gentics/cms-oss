@@ -22,8 +22,8 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
  * Messaging resource to access the inbox (list, view, mark read, delete) and
  * send messages
  */
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({ MediaType.APPLICATION_JSON })
+@Consumes({ MediaType.APPLICATION_JSON })
 @Path("/msg")
 @StatusCodes({
 	@ResponseCode(code = 401, condition = "No valid sid and session secret cookie were provided."),

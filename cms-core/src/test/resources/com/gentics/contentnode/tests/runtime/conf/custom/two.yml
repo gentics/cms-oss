@@ -1,0 +1,7 @@
+common: two
+two: set
+complex:
+  two: set
+array:
+  - common
+  - two

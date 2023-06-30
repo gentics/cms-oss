@@ -1,0 +1,262 @@
+
+h2. Gentics CMS Asset Management
+
+With the feature _asset_management_ it is possible to insert files from asset stores directly.
+Next to the existing functionality of uploading from user's local filesystem (which can optionally be disabled) additional asset store selectors can be integrated and provided to the user.
+
+
+endprologue.
+
+
+h3. Configuration in Gentics CMS
+
+In order to use the feature, it must be first configured in the configuration:
+
+<shell filename="conf/*.yml">
+# activate feature
+feature:
+  asset_management: true
+
+# configure asset_management for node with id "1" (consider using a guid for staging)
+# or use node_settings_global if all Nodes should recieve the same configuration
+node_settings:
+  "1":
+    asset_management:
+      - default: true
+      - celum:
+          label_i18n:
+            de: "Celum verwenden"
+            en: "Use Celum"
+          iframeSrcUrl: "/customer-config/config/asset_management/celum/asset-picker-2.5.1-dist/api/index.html"
+</shell>
+
+Additionally the feature must be activated in the Node Features Dialog in the Administration User Interface for all Nodes where it should be avaliable.
+
+Array @asset_management@ contains an arbitrary number of possible external stores.
+One entry of this array can contain @default@. If set to @true@, the default function (uploading from user's local filesystem) will be available.
+@identifier@ must be unique within array.
+@label_i18n@ is the displayed dropdown item label, which can be configured for multiple languages. However, it must be at least configured for english (@en@).
+@iframeSrcUrl@ points to the file which starts an external asset management application. It will be running in an iframe within Gentics CMS frontend application.
+Dropdown menu order reflects the order of the configration array.
+
+*Further notes on configuration:*
+With this feature it is possible to hide the upload button entirely by providing only the `default` array with value `false`.
+However, this is not recommended, as some UI components include the upload button.
+
+The given structure aims towards allowing any asset store integrations.
+This example follows the implemented use case of "CELUM ContentHub asset store integration":https://www.celum.com/en/marketplace/gentics-connect/ .
+
+
+h3. Static files
+
+Via @iframeSrcUrl@ any asset store application can be run but must satisfy the following requirements in order to integrate with GCMS UI.
+
+
+h4. UI workflow
+
+The iframe will open on a user action intending to select one or more assets (files). Thus, a view displaying a list or tiles of selectable items is expected.
+
+
+h4. Styling
+
+Webpage opened in the iframe must have the following styles.
+<javascript>
+    body {
+        overflow-x: hidden;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
+</javascript>
+
+
+h4. Interface to GCMS UI
+
+The user's asset store selection's data must be propagated to parent window via JavaScript postmessage API.
+A stringified array of JSON objects is expected.
+
+<javascript>
+// event to be fired when user has accomplished asset selection:
+window.parent.postMessage(JSON.stringify(selections), window.opener);
+</javascript>
+
+*Important note:*
+If stringified JSON objects do not adhere to the following structure, Gentics development needs to implement explicit data mapping. Current implementation only supports the fields in the following sample.
+
+The values of the @properties@ field will be matched to file object properties: when an object property with the respective name is found, the value is saved to the first editable text part of that property. Fields which do not correspond to object properties are ignored.
+
+h5. Sample data
+
+<javascript>
+[
+    {
+        // asset name
+        "name": "myimage.png";
+        // allows 'image' or 'file'
+        "fileCategory": "image"
+        // expected return value of URL is binary data
+        "@odata.mediaReadLink": "https://integration.celum.net/cora/download?ticket=0b1e1207-5db9-4cf5-bf9f-d162f78ced62",
+        // the files nice URL
+        "niceUrl": "/nice/myimage.png",
+        // the files alternate URLs
+        "alternateUrls": [ "/alternative/one/myimage.png", "/alternative/two/othername.png" ],
+        // additional properties
+        "properties": {
+            "copyright": "(C) 2000 by me",
+            "comment": "Nice image"
+        }
+    }
+]
+</javascript>
+
+
+h4. Sample implementation
+
+E. g. CELUM provides an asset selection application called "Asset Picker" and must be adapted similar to the following code.
+"Link to CELUM Asset Picker repository":https://portal.celum.com/main/opennodeview.do?tab=producttab&nodeId=13411&assetId=69942 (active account required)
+
+
+h5. File structure
+
+<shell>
+/Node/etc/conf/customer-config/
+├── asset_management
+│   └── celum
+│       └── asset-picker-2.5.1-dist
+│           ├── api
+│           │   ├── assetPickerApi.js
+│           │   ├── index.html <------- Asset Picker application entry point (configured in @iframeSrcUrl@)
+│           │   └── samples
+│           │       ├── configs
+│           │       │   └── defaultConfig.js <------- API access credentials and parameter are configured here (CELUM-specific)
+│           │       ├── jquery.js
+│           │       └── samples.css
+│           └── picker
+│               ├── assetPicker.css
+│               ├── assetPicker.min.css
+│               ├── assetPickerConnector.js
+│               ├── assetPickerMerged.min.js
+│               ├── config.css
+│               ├── config.js
+│               ├── fonts
+│               │   ├── ...
+│               ├── icon_unsupported_filetype.png
+│               ├── inactive.png
+│               ├── index.html
+│               ├── logo.png
+│               ├── ooops.png
+│               └── templates
+│                   ├── ...
+</shell>
+
+
+h5. index.html
+
+<shell filename="/Node/etc/conf/customer-config/asset_management/celum/asset-picker-2.5.1-dist/api/index.html">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+    <title>Asset Picker - iFrame</title>
+    <META http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+
+        <!-- API -->
+        <script type="text/javascript" src="./assetPickerApi.js"></script>
+
+        <!-- Resources -->
+        <script type="text/javascript" src="samples/jquery.js"></script>
+        <link rel="stylesheet" href="samples/samples.css"/>
+
+        <!-- GTX override STYLES -->
+        <style>
+            body {
+                overflow-x: hidden;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+            }
+            #mask {
+                display: none;
+                height: unset;
+                width: unset;
+                position: absolute;
+            }
+            #sampleDialog {
+                display: none;
+                z-index: 10;
+                background-color: white;
+                position: absolute;
+                bottom: 0;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border: none;
+            }
+            #picker-wrap {
+                height: 100%;
+            }
+        </style>
+
+        <script type="text/javascript">
+
+            ////// GTX override SCRIPT //////
+
+            // sources can live anywhere as long as it's accessible via the same domain - basePath in this case makes sure that samples work out of the box!
+            var index = location.href.indexOf('index.html');
+            var basePath = index < 0 ? location.href : location.href.substr(0, index);
+            var picker = undefined;
+
+            $(function () {
+
+                var mask = $('#mask');
+                var dialog = $('#sampleDialog');
+
+                var closePicker = function () {
+                    picker.destroy();
+                    dialog.removeClass('open');
+                    mask.removeClass('open');
+                };
+
+                // Path to access credetnials to CELUM ContentHub instance
+                var configUrl = basePath + '/samples/configs/defaultConfig.js';
+
+                // Get iframeSrcUrl URL query parameters
+                var urlParams = new URLSearchParams(window.location.search);
+                var locale = urlParams.get('locale');
+
+                mask.addClass('open');
+                dialog.addClass('open');
+
+                picker = Celum.AssetPicker.create({
+                    container: 'picker-wrap',
+                    basePath: '../',
+                    locale: locale,
+                    cssPath: '',
+                    jsConfigPath: configUrl,
+                    listeners: {
+                        transfer: function (id, selections) {
+                            closePicker();
+                            window.parent.postMessage(JSON.stringify(selections), window.opener);
+                        }
+                    }
+                });
+                mask.click(closePicker);
+            });
+
+        </script>
+    </head>
+
+    <body>
+        <!-- GTX override MARKUP -->
+
+        <!-- DIALOG which displays the marker -->
+        <div id="mask"></div>
+        <div id="sampleDialog">
+            <div class="header"><span>Asset Picker</span></div>
+            <div id="picker-wrap"></div>
+        </div>
+    </body>
+</html>
+
+</shell>

@@ -13,6 +13,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-construct-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSTRUCTS"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-construct-table>
@@ -32,6 +33,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-content-repository-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONTENT_REPOSITORIES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-content-repository-table>
@@ -51,6 +53,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-cr-fragment-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CR_FRAGMENTS"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-cr-fragment-table>
@@ -70,6 +73,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-data-source-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.DATA_SOURCES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-data-source-table>
@@ -89,6 +93,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-object-property-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.OBJECT_PROPERTIES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-object-property-table>
@@ -108,6 +113,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-template-table
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.TEMPLATES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-template-table>

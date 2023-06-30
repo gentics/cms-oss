@@ -4,47 +4,19 @@
     class="row small-12 medium-12"
 >
     <div *ngIf="supportedLanguages" class="input-container small-12 medium-12 columns">
-        <h2 class="item-properties-heading">{{ 'shared.i18n_properties_label' | i18n }}</h2>
-
-        <div class="properties-editor-i18n">
-            <gtx-grouped-tabs
-                class="properties-tabs"
-                pure
-                wrap
-                statusIcons
-                [activeId]="activeTabI18nLanguage?.id"
-            >
-                <gtx-tab-pane
-                    *ngFor="let language of supportedLanguages"
-                    [id]="language?.id"
-                    [readonly]="disabled"
-                    [inactive]="!activeI18nTabValueExists(language?.code)"
-                    (select)="setActiveI18nTab($event)"
-                >
-                    <ng-template gtx-tab-label>
-                        <div
-                            class="language-pane-label"
-                            [class.invalid]="invalidLanguages | gtxIncludes:language?.code"
-                        >{{ language?.name }}</div>
-                    </ng-template>
-                </gtx-tab-pane>
-            </gtx-grouped-tabs>
-
-            <div
-                *ngIf="activeTabI18nLanguage?.code as activeLanguage"
-                class="tab-content"
-            >
-                <h3>{{ activeTabI18nLanguage?.name }}</h3>
-
-                <gtx-i18n-input
-                    *ngIf="form.get('nameI18n')"
-                    [label]="('common.name' | i18n) + ' *'"
-                    [requiredInCurrentLanguage]="true"
-                    [language]="activeLanguage"
-                    [availableLanguages]="languages"
-                    formControlName="nameI18n"
-                ></gtx-i18n-input>
-            </div>
-        </div>
+        <gtx-i18n-panel-group
+            *ngIf="supportedLanguages"
+            [languages]="supportedLanguages"
+            [invalidLanguages]="invalidLanguages"
+            [(activeLanguage)]="activeTabI18nLanguage"
+        >
+            <gtx-i18n-input
+                [label]="('common.name' | i18n) + ' *'"
+                formControlName="nameI18n"
+                [requiredInCurrentLanguage]="true"
+                [language]="activeTabI18nLanguage?.code"
+                [availableLanguages]="supportedLanguages"
+            ></gtx-i18n-input>
+        </gtx-i18n-panel-group>
     </div>
 </form>

@@ -1,4 +1,5 @@
 import { applyInstancePermissions, discard, PackageEntityOperations } from '@admin-ui/common';
+import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
 import {
     EntityIdType,
@@ -8,14 +9,14 @@ import {
     Template,
     TemplateBO,
     TemplateCreateRequest,
+    TemplateFolderListRequest,
     TemplateLinkListOptions,
     TemplateLinkRequestOptions,
     TemplateLinkResponse,
-    TemplateFolderListRequest,
+    TemplateListRequest,
     TemplateRequestOptions,
     TemplateSaveOptions,
     TemplateSaveRequest,
-    TemplateListRequest,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable } from 'rxjs';
@@ -33,6 +34,7 @@ export class TemplateOperations
     constructor(
         injector: Injector,
         private api: GcmsApi,
+        private appState: AppStateService,
         private entityManager: EntityManagerService,
         private notification: I18nNotificationService,
     ) {
@@ -66,6 +68,7 @@ export class TemplateOperations
         return this.api.template.getTemplates(options).pipe(
             map(res => applyInstancePermissions(res)),
             map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );
@@ -103,18 +106,24 @@ export class TemplateOperations
         return this.api.node.getNodes().pipe(
             map(res => res.items.map(node => node.id)),
             mergeMap(nodeIds => {
-                const requests = nodeIds.map(nodeId => this.getAllOfNode(nodeId, options));
+                const requests = nodeIds.map(nodeId => {
+                    const copy = { ...options };
+                    copy.nodeId = nodeId;
+                    return this.getAllOfNode(copy);
+                });
                 return forkJoin(requests).pipe(
+                    // eslint-disable-next-line prefer-spread
                     map(items => [].concat.apply([], items)),
                 );
             }),
         );
     }
 
-    getAllOfNode(nodeId: number, options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
-        return this.api.node.getNodeTemplates(nodeId, options).pipe(
+    getAllOfNode(options?: TemplateListRequest): Observable<TemplateBO<Raw>[]> {
+        return this.api.template.getTemplates(options).pipe(
             map(res => applyInstancePermissions(res)),
             map(res => res.items.map(item => this.mapToBusinessObject(item))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(templates => this.entityManager.addEntities(this.entityIdentifier, templates)),
             this.catchAndRethrowError(),
         );
@@ -151,7 +160,22 @@ export class TemplateOperations
     }
 
     delete(templateId: EntityIdType): Observable<void> {
-        return this.api.template.deleteTemplate(templateId);
+        const templateToBeDeleted = this.appState.now.entity.template[templateId];
+
+        return this.api.template.deleteTemplate(templateId).pipe(
+            discard(() => {
+                this.entityManager.deleteEntities(this.entityIdentifier, [templateId]);
+
+                if (templateToBeDeleted) {
+                    this.notification.show({
+                        type: 'success',
+                        message: 'shared.item_singular_deleted',
+                        translationParams: { name: templateToBeDeleted.name },
+                    });
+                }
+            }),
+            this.catchAndRethrowError(),
+        );
     }
 
     getLinkedFolders(templateId: EntityIdType, options?: TemplateLinkListOptions): Observable<Folder<Raw>[]> {

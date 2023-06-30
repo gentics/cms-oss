@@ -1,0 +1,89 @@
+h2. Gentics CMS FileLink plugin
+
+The Gentics CMS FileLink Plugin allows handling links to files or images as blocks, that render additional (not editable) information.
+
+This setup guide covers the following topics:
+
+* Implementation of the tagtype
+* Configuration of the plugin
+* Dependencies of the plugin
+* Functionality
+
+endprologue.
+
+h3. Implementation of the tagtype
+
+The FileLink plugin will transform links that point to files or images, which are managed by Gentics CMS to blocks, which are stored as Gentics CMS Tags in the backend.
+Therefore an appropriate tagtype must be present and assigned to the Node of the edited page.
+
+The tagtype implementation must meet all of the following conditions:
+
+* The tagtype must render a single root element (a +span+ is recommended), that must have the attribute +data-aloha-block-type="GCNFileBlock"+
+* The tagtype must have a part of type +File (URL)+ with keyword +file+
+* The tagtype must have a part of type +Text (short)+ with keyword +text+ which must be inline editable.
+* The tagtype must render an +a+ (anchor) tag, where the href contains the url of the part +file+ and the contents is the part +text+ (in edit mode, e.g. by using the velocity directive #gtx_edit)
+* The anchor tag must have attributes +data-gentics-aloha-repository+ and +data-gentics-aloha-object-id+ filled like in the example below.
+
+Additionally, the tagtype may have some additional parts:
+
+* +class+ for setting the class attribute of the anchor
+* +title+ for setting a title to the anchor
+* +target+ for setting the target of the anchor
+
+It is recommended to implement the tagtype with a Velocity Part, and a template like shown in the example below:
+
+<shell>
+#if( "$!cms.tag.parts.title" != "" )##
+#set( $escapedTitle = $cms.imps.string.regexp($cms.tag.parts.title, '"', '&quot;') )##
+#set( $title=" title='$escapedTitle'" )##
+#end##
+#if( "$!cms.tag.parts.target" != "" )##
+#set( $target = " target='$cms.tag.parts.target'")##
+#end##
+#if("$!cms.tag.parts.get('class')" != "")##
+#set($class = " class='$!cms.tag.parts.get('class')'")##
+#end##
+#if( "$!cms.tag.parts.file" != "" )##
+#set( $data = " data-gentics-aloha-repository='com.gentics.aloha.GCN.Page' data-gentics-aloha-object-id='$!{cms.tag.parts.file.target.ttype}.$!{cms.tag.parts.file.target.id}'" )##
+#set ($sizeinfo = " ($cms.tag.parts.file.target.sizeMB MB)" )##
+#set( $href = $cms.tag.parts.file )##
+#end##
+#if( "$!href" == "")##
+#set( $data = " data-gentics-gcn-url='#'" )##
+#set( $href = "#")##
+#end##
+<span data-aloha-block-type="GCNFileBlock"><a$!title$!target$!class href="$href" $data>#gtx_edit("text")</a>$!sizeinfo</span>##
+</shell>
+
+h3. Configuration of the plugin
+
+The plugin must be loaded, and the construct to be used must be defined
+
+<javascript filename="conf/*.yml">
+custom_aloha_plugins:
+  - "gcn/gcnfilelink"
+
+aloha_settings:
+  plugins:
+    gcnfilelink:
+	  # the construct to be used by the gcnfilelink plugin (keyword or ID)
+      construct: "filedownload"
+</javascript>
+
+h3. Dependencies of the plugin
+
+The FileLink Plugin depends on the following other plugins:
+
+* gcn/gcn (Gentics CMS Integration Plugin)
+* common/link (Aloha Editor Link Plugin)
+* common/block (Aloha Editor Block Plugin)
+
+All of those plugins need to be loaded together with the FileLink Plugin in order for the FileLink Plugin to work properly.
+
+h3. Functionality
+
+When the target of a link is changed to be a file or image, the link will be transformed into a block and a new tag will be created in the page.
+
+When the target of a link is changed from a file or image to a page, the block will be transformed to a normal link and the tag will be removed.
+
+The additional properties of the file/image links can be modified in the sidebar.

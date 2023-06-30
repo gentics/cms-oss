@@ -60,6 +60,7 @@ import com.gentics.contentnode.object.NodeObjectVersion;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.publish.PublishQueue;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderUrl;
 import com.gentics.contentnode.render.RenderUrlFactory;
@@ -1143,7 +1144,10 @@ public class FormFactory extends AbstractFactory {
 
 			ActionLogger.logCmd(ActionLogger.WASTEBIN, Form.TYPE_FORM, getId(), null, "Form.delete()");
 			t.dirtObjectCache(Form.class, getId(), true);
-			t.addTransactional(new TransactionalTriggerEvent(this, new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), "")}, Events.DELETE | Events.WASTEBIN));
+			t.addTransactional(new TransactionalTriggerEvent(this,
+					new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
+							MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
+					Events.DELETE | Events.WASTEBIN));
 		}
 
 		/**
@@ -1664,7 +1668,8 @@ public class FormFactory extends AbstractFactory {
 			for (Form form : deleted) {
 				// add logcmd
 				ActionLogger.logCmd(ActionLogger.DEL, Form.TYPE_FORM, form.getId(), 0, "Form.delete");
-				Events.trigger(form, new String[] { ObjectTransformer.getString(form.getOwningNode().getId(), "")}, Events.DELETE);
+				Events.trigger(form, new String[] { ObjectTransformer.getString(form.getOwningNode().getId(), ""),
+						MeshPublisher.getMeshUuid(form), MeshPublisher.getMeshLanguage(form) }, Events.DELETE);
 			}
 
 			// delete the forms with their versions

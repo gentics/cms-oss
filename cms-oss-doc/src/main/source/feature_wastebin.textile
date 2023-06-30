@@ -1,0 +1,131 @@
+h2. Wastebin
+
+This feature activates the Wastebin. Folders, pages, images and files, that are deleted will be put into the Wastebin.
+It is possible to restore deleted objects from the Wastebin or remove them permanently.
+
+endprologue.
+
+h3. Configuration
+
+The feature has to be activated generally in the configuration:
+
+<shell filename="conf/features.yml">
+feature:
+	wastebin: true
+</shell>
+
+h3. Functionality
+
+If a user deletes an object (folder, page, image or file) in a node, that has the Wastebin activated, the object will not
+be deleted permanently, but put into the Wastebin instead.
+
+This will be done in a transparent fashion, so the user deleting the object will see no difference, whether the Wastebin is
+activated for the node or not.
+
+The feature "multichannelling":http://www.gentics.com/Content.Node/cmp8/guides/mc_basic.html allows creation of
+localized copies of objects in channels. If an object from the master is put into the wastebin, all its localized
+copies will also be put into the wastebin.
+
+h3. The Wastebin
+
+Users with sufficient privileges can inspect the Wastebin for a node and can remove objects from the Wastebin (which will permanently delete them)
+or restore objects from the Wastebin.
+
+h4. Permissions
+
+Users need to have the permission to *Show and restore* the *Wastebin* for the node to inspect the Wastebin and perform actions on deleted objects.
+Additionally, the general *view* privileges on the objects are also required to see and act upon objects in the Wastebin.
+
+h4. Inspect the Wastebin
+
+Users with sufficient privileges will have access to the Wastebin through an additional entry in the tree.
+
+!images/gcn_dialogs/wastebin/wastebin_tool.png!
+
+Clicking on the *Wastebin* entry will show the Wastebin dialog.
+
+!images/gcn_dialogs/wastebin/wastebin_objects.png!
+
+The Wastebin dialog will show deleted objects matching the current filter.
+
+h4. Removing objects
+
+Objects in the Wastebin can be removed permanently. The action *Remove from Wastebin* is available in the
+Wastebin dialog.
+
+WARNING: When a folder is permanently removed from the Wastebin, this will also affect all objects (folders, pages, images and files)
+that are contained in this folder and were also put into the Wastebin.
+
+NOTE: For pages in the Wastebin, there is an action *Remove from Wastebin (all languages)* which will remove all language variants of
+the page, that were put into the Wastebin before. Language variants, that were not put into the Wastebin will not be affected.
+
+h4. Implicit removal
+
+There are some situations, where objects will be implicitly removed from the Wastebin.
+
+h5. Language variants
+
+There can only be one variant of a page in a specific language. That means that if e.g. the german variant of a page is deleted and put into
+the wastebin, and the page is then translated into german again, the deleted german variant is implicitly removed from the wastebin.
+
+h5. Localized copies
+
+Every object may only have up to one localized copy in a specific
+"channel":http://www.gentics.com/Content.Node/cmp8/guides/mc_basic.html. So when this localized copy is deleted and
+put into the wastebin, and after that the object is localized in the channel again, the deleted localized copy is
+implicitly removed from the wastebin.
+
+Furthermore when both the localized copy and the master object are in the wastebin, removing the master object will
+also remove all localized copies.
+
+h4. Restoring objects
+
+Objects in the Wastebin can be restored. The action *Restore* is available in the Wastebin dialog.
+
+The objects will be restored in the same folder, in which they were deleted.
+
+When multichannelling is used a localized copy of an object can only be restored if the master object
+is not also in the wastebin, or the user has the necessary privileges to implicitly restore it.
+Also note that restoring a master object, will *not* automatically restore its localized copies.
+
+NOTE: If an object is restored from the Wastebin, its folder will also be restored, if necessary.
+
+h4. Disinheriting and the wastebin
+
+Localized or local objects that were put into the wastebin of a channel will prevent their mother folders from being disinherited.
+The message shown to the user in such cases will state that the obstructing object is in the wastebin.
+
+h3. Staging deleted objects
+
+If objects were deleted and put into the Wastebin, and are then re-created through a content staging, the object from the Wastebin will be restored and overwritten
+by the import.
+
+h3. Purging the Wastebin
+
+The wastebin can be purged using a scheduler task.
+Objects will be removed by this task from the wastebin, if
+
+* They reach a maximum age in the wastebin
+* The wastebin feature was switched off again
+
+h4. Maximum age configuration
+
+It is possible to configure a maximum age for all objects:
+
+<shell filename="conf/*.yml">
+wastebin_maxage: 604800 # 7 * 24 * 60 * 60 = 7 days (in seconds)
+</shell>
+
+Additionally, it is possible to overwrite the global configuration for specific nodes:
+
+<shell filename="conf/*.yml">
+wastebin_maxage_node:
+  "1": 60 # objects in node with ID 1 last only 60 seconds
+</shell>
+
+By default, neither the global, nor any individual settings are configured, so running the purge task will just do
+nothing (unless the feature was switched off again).
+
+h4. Scheduler task
+
+For purging the Wastebin, it is necessary to create a schedule with the internal @purgewastebin@ task.

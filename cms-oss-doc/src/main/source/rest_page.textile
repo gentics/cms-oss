@@ -1,0 +1,147 @@
+h2. Page Resource
+
+
+endprologue.
+
+
+h3. Page Create
+
+The create Request is used to create new pages.
+
+<javascript>
+POST /rest/page/create
+{
+  folderId : ..;  // id of the folder
+  templateId: ..; // id of the template
+  language: ..;   // language code
+  variantId: ..;  // id of the variant
+}
+</javascript>
+
+
+h3. Page Load
+
+Load the page with given ID.
+
+<javascript>
+GET /rest/page/load/{id}
+</javascript>
+
+
+| Name | Description | Defaultvalue |
+| id | Local or global Id of the page to load | - |
+| update | TRUE when the page shall be locked on the backend | FALSE |
+| template | TRUE when the template information shall be embedded in the page response | FALSE |
+| folder | TRUE when the folder information shall be embedded in the page response | FALSE |
+| langvars | TRUE when the language variants shall be embedded in the page response | FALSE |
+| workflow | TRUE when the workflow information shall be embedded in the page response | FALSE |
+| pagevars | TRUE when the page variants shall be embedded in the page response. Page variants will contain folder information. | FALSE |
+| translationstatus | TRUE will return information on the page's translation status | FALSE |
+
+
+h3. Page save
+
+Save the page with given ID.
+It is perfectly possible to just send the part of the page, which actually needs to be modified when saving. The only mandatory field in the page object is the page id.
+
+<javascript>
+POST /rest/page/save/{id}
+{
+  page: ..;   // the page
+  unlock: ..; // true, when the page shall be unlocked
+  delete: ..; // list of tagnames which shall be deleted
+}
+</javascript>
+
+
+h3. Page preview
+
+Render a preview of the given page.
+
+<javascript>
+POST /rest/page/preview
+{
+  page: ..;
+}
+</javascript>
+
+
+h3. Page delete
+
+Deletes the given page.
+
+<javascript>
+POST /rest/page/delete/{id}
+</javascript>
+
+
+h3. Page cancel
+
+Cancel editing the current page (unlocks the page).
+
+POST /rest/page/cancel/{id}
+newtag
+
+Create a new tag in the page. The posted magicValue will be inserted into the created tag at appropriate position.
+
+POST /rest/page/newtag/{id}?constructId=..
+{
+  magicValue: ..;
+}
+
+h3. Page restoreVersion
+
+Restore a certain version of the page.
+
+<javascript>
+POST /rest/page/restore/{id}?version=..
+</javascript>
+
+h3. translate
+
+Translate the given page into another language.
+
+<javascript>
+POST /rest/page/translate/{id}?language=..
+</javascript>
+
+h3. Page publish
+
+Publish the given page. If the user has no permission to publish the page, a workflow for the publish process will be started. The posted message will be sent to users in groups responsible for further proceeding in the workflow.
+
+<javascript>
+POST /rest/page/publish/{id}
+{
+  "message" : ..;
+}
+</javascript>
+
+
+h3. workflow/decline
+
+Decline the workflow step (assign the page to another group).
+
+<javascript>
+POST /rest/page/workflow/decline/{id}
+{
+  "message" : ..;
+  "group" : ..;
+  "delete" : ..;
+}
+</javascript>
+
+| Name | Description | default Value |
+| id   | Page id | - |
+| message | Message which explains, why the workflow is declined | - |
+| group | ID of the group to which the workflow shall be assigned (mandatory if delete is FALSE) | - |
+| delete | TRUE if the workflow shall be completely deleted | FALSE |
+
+Parameters for /rest/page/workflow/decline
+
+h3. Page workflow/revoke
+
+Revoke a workflow (if it was not yet edited).
+
+<javascript>
+POST /rest/page/workflow/revoke/{id}
+</javascript>

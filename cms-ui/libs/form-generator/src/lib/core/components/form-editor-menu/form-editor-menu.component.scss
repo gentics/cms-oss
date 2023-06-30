@@ -2,14 +2,13 @@
 
 :host {
     position: sticky;
-    top: 5vh;
-    height: 65vh;
+    top: 0;
+    height: 100%;
     z-index: 9;
     display: flex;
     flex-direction: column;
     overflow-y: scroll;
-    width: 14rem;
-    max-height: 42rem;
+    width: 100%;
     background-color: white;
     box-shadow: rgba( 0, 0, 0, 0.3) 1px 1px 15px 2px;
 }

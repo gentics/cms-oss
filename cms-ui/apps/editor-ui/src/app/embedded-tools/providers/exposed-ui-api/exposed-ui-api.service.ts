@@ -77,7 +77,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
             this.folderActions.refreshList('page');
             this.folderActions.refreshList('file');
             this.folderActions.refreshList('image');
-            if (this.nodeFeatureIsActive(NodeFeature.forms)) {
+            if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
                 this.folderActions.refreshList('form');
             }
         }
@@ -179,32 +179,32 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
     }
 
     previewForm(formId: number, nodeId?: number): Promise<boolean> {
-        if (this.nodeFeatureIsActive(NodeFeature.forms)) {
+        if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
             return this.internalNavigate('preview', 'form', formId, nodeId);
         } else {
             throw new Error(`Cannot previewForm of Form with
                 ID ${formId}, because Node
-                with ID ${nodeId} feature "${NodeFeature.forms}" is not active.`);
+                with ID ${nodeId} feature "${NodeFeature.FORMS}" is not active.`);
         }
     }
 
     formProperties(formId: number, nodeId?: number): Promise<boolean> {
-        if (this.nodeFeatureIsActive(NodeFeature.forms)) {
+        if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
             return this.internalNavigate('editProperties', 'form', formId, nodeId, 'properties', ITEM_PROPERTIES_TAB);
         } else {
             throw new Error(`Cannot formProperties of Form with
                 ID ${formId}, because Node
-                with ID ${nodeId} feature "${NodeFeature.forms}" is not active.`);
+                with ID ${nodeId} feature "${NodeFeature.FORMS}" is not active.`);
         }
     }
 
     editForm(formId: number, nodeId?: number): Promise<boolean> {
-        if (this.nodeFeatureIsActive(NodeFeature.forms)) {
+        if (this.nodeFeatureIsActive(NodeFeature.FORMS)) {
             return this.internalNavigate('edit', 'form', formId, nodeId);
         } else {
             throw new Error(`Cannot editForm of Form with
                 ID ${formId}, because Node
-                with ID ${nodeId} feature "${NodeFeature.forms}" is not active.`);
+                with ID ${nodeId} feature "${NodeFeature.FORMS}" is not active.`);
         }
     }
 

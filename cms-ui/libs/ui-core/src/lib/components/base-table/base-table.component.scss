@@ -117,12 +117,23 @@
 }
 
 .grid-table .grid-cell.select-column {
-    padding: 0.75rem 33px 0 1rem;
-    width: 20px;
+    height: 100%;
+    padding: 0;
+    display: flex;
+    width: auto;
     border-right: 1px solid $gtx-color-light-gray;
 }
 
+.grid-table .grid-cell.data-column {
+    display: flex;
+
+    .cell-content-wrapper {
+        margin: auto 0;
+    }
+}
+
 .grid-table .selection-checkbox {
+    margin: auto;
     display: block;
     width: 20px;
     height: 20px;

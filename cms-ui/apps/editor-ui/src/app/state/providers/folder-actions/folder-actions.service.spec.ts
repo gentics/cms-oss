@@ -190,7 +190,7 @@ describe('FolderActionsService', () => {
     describe('pageQueuedApprove()', () => {
         const examplePage = getExamplePageData();
 
-        it('calls the correct api method with right parameters for pages with queuedPublish', () => {
+        it('calls the correct api method with right parameters for pages with queuedPublish', fakeAsync(() => {
             examplePage.timeManagement.queuedPublish = {
                 version: null,
                 at: 0,
@@ -203,8 +203,10 @@ describe('FolderActionsService', () => {
             };
 
             folderActions.pageQueuedApprove([examplePage]);
+            tick();
+
             expect(api.publishQueue.approvePageStatus).toHaveBeenCalledWith([examplePage.id]);
-        });
+        }));
 
         it('calls the correct api method with right parameters for pages with queuedOffline', () => {
             examplePage.timeManagement.queuedOffline = {
@@ -255,13 +257,15 @@ describe('FolderActionsService', () => {
             });
         });
 
-        it('calls the correct api method and options according to state', () => {
+        it('calls the correct api method and options according to state', fakeAsync(() => {
             folderActions.refreshList('page');
+            tick();
             expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
-        });
+        }));
 
-        it('calls the correct api method and options according to state for multiple languages', () => {
+        it('calls the correct api method and options according to state for multiple languages', fakeAsync(() => {
             folderActions.refreshList('page', ['en', 'de']);
+            tick();
 
             const expectedOptionsFirst = {
                 ...expectedOptions,
@@ -274,7 +278,7 @@ describe('FolderActionsService', () => {
                 language: 'de',
             };
             expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsSecond);
-        });
+        }));
 
     });
 
@@ -282,28 +286,33 @@ describe('FolderActionsService', () => {
 
         const PARENT_ID = 42;
 
-        it('calls the correct api method for folders', () => {
+        it('calls the correct api method for folders', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'folder');
+            tick();
             expect(api.folders.getFolders).toHaveBeenCalled();
-        });
+        }));
 
-        it('calls the correct api method for pages', () => {
+        it('calls the correct api method for pages', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'page');
+            tick();
             expect(api.folders.getPages).toHaveBeenCalled();
-        });
+        }));
 
-        it('calls the correct api method for files', () => {
+        it('calls the correct api method for files', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'file');
+            tick();
             expect(api.folders.getFiles).toHaveBeenCalled();
-        });
+        }));
 
-        it('calls the correct api method for images', () => {
+        it('calls the correct api method for images', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'image');
+            tick();
             expect(api.folders.getImages).toHaveBeenCalled();
-        });
+        }));
 
-        it('adds nodeId, sortby and sortorder to the options', () => {
+        it('adds nodeId, sortby and sortorder to the options', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'page');
+            tick();
             const expectedOptions = {
                 nodeId: ACTIVE_NODE_ID,
                 sortby: 'name',
@@ -314,11 +323,13 @@ describe('FolderActionsService', () => {
                 folderId: 42,
             };
             expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
-        });
+        }));
 
-        it('adds nodeId, sortby and sortorder to the options and includes deleted items', () => {
+        it('adds nodeId, sortby and sortorder to the options and includes deleted items', fakeAsync(() => {
             state.dispatch(new SetDisplayDeletedAction(true));
+            tick();
             folderActions.getItems(PARENT_ID, 'page');
+            tick();
             const expectedOptions = {
                 nodeId: ACTIVE_NODE_ID,
                 sortby: 'name',
@@ -329,10 +340,11 @@ describe('FolderActionsService', () => {
                 folderId: 42,
             };
             expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
-        });
+        }));
 
-        it('adds privilegeMap = true to folder requests', () => {
+        it('adds privilegeMap = true to folder requests', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'folder');
+            tick();
             const expectedOptions = {
                 nodeId: ACTIVE_NODE_ID,
                 sortby: 'name',
@@ -343,9 +355,9 @@ describe('FolderActionsService', () => {
                 privilegeMap: true,
             };
             expect(api.folders.getFolders).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
-        });
+        }));
 
-        it('calls PermissionService.normalizeAPIResponse() on folder result', () => {
+        it('calls PermissionService.normalizeAPIResponse() on folder result', fakeAsync(() => {
             const privilegeMap1 = {};
             const privilegeMap2 = {};
 
@@ -358,10 +370,11 @@ describe('FolderActionsService', () => {
                 );
 
             folderActions.getItems(PARENT_ID, 'folder');
+            tick();
             expect(permissions.normalizeAPIResponse).toHaveBeenCalledTimes(2);
             expect(permissions.normalizeAPIResponse.calls.argsFor(0)[0]).toBe(privilegeMap1);
             expect(permissions.normalizeAPIResponse.calls.argsFor(1)[0]).toBe(privilegeMap2);
-        });
+        }));
 
         describe('action calls', () => {
             function testActionCallFor(type: FolderItemType): void {
@@ -421,7 +434,7 @@ describe('FolderActionsService', () => {
                 });
             }
 
-            it('does not use search endpoint if no search term is passed and node filter is set to current node', () => {
+            it('does not use search endpoint if no search term is passed and node filter is set to current node', fakeAsync(() => {
                 setSearchFiltersState({
                     searchFiltersVisible: false,
                     searchFiltersValid: false,
@@ -431,10 +444,11 @@ describe('FolderActionsService', () => {
                     },
                 });
                 folderActions.getItems(PARENT_ID, 'page');
+                tick();
                 expect(api.folders.searchItems).not.toHaveBeenCalled();
-            });
+            }));
 
-            it('uses search endpoint if filters exist and are valid', () => {
+            it('uses search endpoint if filters exist and are valid', fakeAsync(() => {
                 setSearchFiltersState({
                     searchFiltersVisible: true,
                     searchFiltersValid: true,
@@ -445,6 +459,8 @@ describe('FolderActionsService', () => {
                     },
                 });
                 folderActions.getItems(PARENT_ID, 'page');
+                tick();
+
                 expect(api.folders.searchItems).toHaveBeenCalledWith(
                     'page',
                     PARENT_ID,
@@ -473,9 +489,9 @@ describe('FolderActionsService', () => {
                         folderId: 42,
                     },
                 );
-            });
+            }));
 
-            it('resets search filters when advanced search is closed', () => {
+            it('resets search filters when advanced search is closed', fakeAsync(() => {
                 setSearchFiltersState({
                     searchFiltersVisible: false,
                     searchFiltersValid: false,
@@ -485,10 +501,12 @@ describe('FolderActionsService', () => {
                     },
                 });
                 folderActions.resetSearchFilters();
+                tick();
+
                 expect(state.now.folder.searchFilters).toEqual({
                     nodeId: null,
                 });
-            });
+            }));
 
         });
     });
@@ -511,24 +529,27 @@ describe('FolderActionsService', () => {
                     getType = getItemsDelegate(type);
                 });
 
-                it('passes default options', () => {
+                it('passes default options', fakeAsync(() => {
                     getType(PARENT_ID);
+                    tick();
+
                     expect(folderActions.getItems).toHaveBeenCalledWith(PARENT_ID, type, false, jasmine.objectContaining({
                         maxItems: 10,
                         search: '',
                         recursive: false,
                     }));
-                });
+                }));
 
-                it('sets options for a searchTerm', () => {
+                it('sets options for a searchTerm', fakeAsync(() => {
                     getType(PARENT_ID, false, 'foo');
+                    tick();
+
                     expect(folderActions.getItems).toHaveBeenCalledWith(PARENT_ID, type, false, jasmine.objectContaining({
                         maxItems: 10,
                         search: 'foo',
                         recursive: true,
                     }));
-                });
-
+                }));
             });
 
         });
@@ -543,8 +564,10 @@ describe('FolderActionsService', () => {
             return folderActions[getMethodName(type)].bind(folderActions);
         }
 
-        it('getPages() passes correct default options', () => {
+        it('getPages() passes correct default options', fakeAsync(() => {
             folderActions.getPages(PARENT_ID);
+            tick();
+
             expect(folderActions.getItems).toHaveBeenCalledWith(PARENT_ID, 'page', false, {
                 maxItems: 10,
                 search: '',
@@ -554,9 +577,9 @@ describe('FolderActionsService', () => {
                 sortby: 'filename',
                 skipCount: 0,
             });
-        });
+        }));
 
-        it('getPages() passes correct language code', () => {
+        it('getPages() passes correct language code', fakeAsync(() => {
             state.mockState({
                 entities: {
                     language: {
@@ -566,12 +589,14 @@ describe('FolderActionsService', () => {
             });
 
             folderActions.getPages(PARENT_ID);
+            tick();
+
             expect(folderActions.getItems).toHaveBeenCalledWith(PARENT_ID, 'page', false, jasmine.objectContaining({
                 language: ACTIVE_LANGUAGE.code,
             }));
-        });
+        }));
 
-        it('setFilterTerm() loads additional items if necessary', () => {
+        it('setFilterTerm() loads additional items if necessary', fakeAsync(() => {
             const hasMoreItemInfo: ItemsInfo = {
                 ...emptyItemInfo,
                 hasMore: true,
@@ -591,11 +616,13 @@ describe('FolderActionsService', () => {
             folderActions.getImages = jasmine.createSpy('getImages').and.stub();
 
             folderActions.setFilterTerm('test');
+            tick();
+
             expect(folderActions.getPages).toHaveBeenCalledWith(state.now.folder.activeFolder, true, state.now.folder.searchTerm);
             expect(folderActions.getFolders).toHaveBeenCalledWith(state.now.folder.activeFolder, true, state.now.folder.searchTerm);
             expect(folderActions.getFiles).toHaveBeenCalledWith(state.now.folder.activeFolder, true, state.now.folder.searchTerm);
             expect(folderActions.getImages).toHaveBeenCalledWith(state.now.folder.activeFolder, true, state.now.folder.searchTerm);
-        });
+        }));
 
         folderItemTypes.forEach(type => {
 
@@ -622,8 +649,10 @@ describe('FolderActionsService', () => {
         const PAGE_ID = 12;
         const LANGUAGE: Language = { id: 2, name: 'English', code: 'en' };
 
-        it('updatePageLanguage calls updateItem() with correct parameters', () => {
+        it('updatePageLanguage calls updateItem() with correct parameters', fakeAsync(() => {
             folderActions.updatePageLanguage(PAGE_ID, LANGUAGE);
+            tick();
+
             expect(api.folders.updateItem).toHaveBeenCalledWith('page', PAGE_ID,
                 {
                     id: PAGE_ID,
@@ -634,7 +663,7 @@ describe('FolderActionsService', () => {
                     unlock: true,
                     deriveFileName: true,
                 });
-        });
+        }));
     });
 
     /**
@@ -660,7 +689,7 @@ describe('FolderActionsService', () => {
             };
         }
 
-        it('creates correct folder', (done) => {
+        it('creates correct folder', fakeAsync(async () => {
             const folder = {
                 name: 'A new folder',
                 directory: '/new-folder',
@@ -668,15 +697,15 @@ describe('FolderActionsService', () => {
                 nodeId: 2222,
                 parentFolderId: 1111,
             };
-            folderActions.createNewFolder(folder).then((createdFolder) => {
-                expect(createdFolder).not.toBeUndefined();
-                expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
-                done();
-            })
-            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
-        });
+            const createdFolder = await folderActions.createNewFolder(folder);
+            tick();
 
-        it('creates correct folder with optional failOnDuplicate flag', (done) => {
+            expect(createdFolder).not.toBeUndefined();
+            expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
+            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
+        }));
+
+        it('creates correct folder with optional failOnDuplicate flag', fakeAsync(async () => {
             const folder = {
                 name: 'A new folder',
                 directory: '/new-folder',
@@ -685,15 +714,15 @@ describe('FolderActionsService', () => {
                 parentFolderId: 1111,
                 failOnDuplicate: true,
             };
-            folderActions.createNewFolder(folder).then((createdFolder) => {
-                expect(createdFolder).not.toBeUndefined();
-                expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
-                done();
-            })
-            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
-        });
+            const createdFolder = await folderActions.createNewFolder(folder);
+            tick();
 
-        it('emits void value if an error occurs', (done) => {
+            expect(createdFolder).not.toBeUndefined();
+            expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
+            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
+        }));
+
+        it('emits void value if an error occurs', fakeAsync(async () => {
             const folder = {
                 name: 'existing',
                 directory: '/new-folder',
@@ -702,11 +731,11 @@ describe('FolderActionsService', () => {
                 parentFolderId: 1111,
                 failOnDuplicate: true,
             };
-            folderActions.createNewFolder(folder).then((createdFolder) => {
-                expect(createdFolder).toBeUndefined();
-                done();
-            })
+            const createdFolder = await folderActions.createNewFolder(folder);
+            tick();
+
+            expect(createdFolder).toBeUndefined();
             expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
-        });
+        }));
     });
 });

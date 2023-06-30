@@ -1,6 +1,11 @@
 package com.gentics.contentnode.publish.mesh;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.ChannelTrx;
+import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshProject;
 
 /**
@@ -56,10 +61,52 @@ abstract class AbstractWriteTask {
 	 * Perform this write task
 	 * @throws NodeException
 	 */
-	public abstract void perform() throws NodeException;
+	public void perform() throws NodeException {
+		perform(true);
+	}
+
+	/**
+	 * Perform this write task
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @throws NodeException
+	 */
+	public abstract void perform(boolean withSemaphore) throws NodeException;
 
 	/**
 	 * Report publishing of an object
 	 */
 	public abstract void reportDone();
+
+	/**
+	 * Get the node object of this write task
+	 * @return node object
+	 * @throws NodeException
+	 */
+	public NodeObject getNodeObject() throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+			return t.getObject(t.getClass(objType), objId);
+		}
+	}
+
+	/**
+	 * Get the language variant of the node object in the given language (or null)
+	 * @param language language
+	 * @return language variant or null
+	 * @throws NodeException
+	 */
+	public NodeObject getLanguageVariant(String language) throws NodeException {
+		NodeObject nodeObject = getNodeObject();
+		if (nodeObject == null) {
+			return null;
+		}
+		if (nodeObject instanceof Page) {
+			Page page = (Page) nodeObject;
+			try (ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+				return page.getLanguageVariant(language);
+			}
+		} else {
+			return null;
+		}
+	}
 }

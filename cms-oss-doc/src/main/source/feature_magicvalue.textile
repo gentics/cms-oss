@@ -1,0 +1,23 @@
+h2. Magic Value
+
+When this feature is enabled new tags will be able to automatically receive
+contents that have been selected before inserting the text.
+
+endprologue.
+
+h3. Configuration
+
+<javascript filename="conf/features.yml">
+feature:
+	magic_part_value: true
+</javascript>
+
+<javascript filename="">
+# When inserting a new tag in the live editor or Aloha,
+# the current selection will automatically be inserted
+# into any part of the tag having one of the keynames
+# configured in the array
+# default value: text
+magic_part_names:
+  - text
+</javascript>

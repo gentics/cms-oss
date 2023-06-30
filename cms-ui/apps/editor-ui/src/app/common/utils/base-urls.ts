@@ -6,18 +6,21 @@
 //     IMAGESTORE_URL as /customer-prefix/GenticsImageStore
 
 /** @internal */
-export function urlsRelativeTo(locationPathname: string): {
-        alohaPage: string;
-        contentNode: string;
-        imageStore: string;
-        restAPI: string; } {
-    const contentNode = locationPathname.replace(/\/+[^\/]+\/+[^/]*$/, '');
-    const base = contentNode.replace(/\/[^\/]*$/, '');
+
+interface ResourceLocations {
+    alohaPage: string;
+    imageStore: string;
+    restAPI: string;
+}
+
+export function urlsRelativeTo(locationPathname: string): ResourceLocations {
+    const contentNode = locationPathname.replace(/\/+[^/]+\/+[^/]*$/, '');
+    const base = contentNode.replace(/\/[^/]*$/, '');
+
     return {
         alohaPage: base + '/alohapage',
-        contentNode: contentNode !== '/' && contentNode || '/.Node',
         imageStore: base + '/GenticsImageStore',
-        restAPI: base + '/rest'
+        restAPI: base + '/rest',
     };
 }
 
@@ -28,9 +31,6 @@ export const API_BASE_URL = paths.restAPI;
 
 /** Absolute path of Aloha endpoint to edit pages */
 export const ALOHAPAGE_URL = paths.alohaPage;
-
-/** Absolute path of Content.Node PHP */
-export const CONTENTNODE_URL = paths.contentNode;
 
 /** Absolute path of the Gentics Image Store */
 export const IMAGESTORE_URL = paths.imageStore;

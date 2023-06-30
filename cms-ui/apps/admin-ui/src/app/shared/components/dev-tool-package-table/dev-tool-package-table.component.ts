@@ -1,13 +1,13 @@
 import { DevToolPackageBO } from '@admin-ui/common';
 import { DevToolPackageTableLoaderOptions, DevToolPackageTableLoaderService, I18nService, PackageOperations, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { AnyModelType, NormalizableEntityTypesMap, Package } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
+import { BehaviorSubject, Observable, combineLatest, interval } from 'rxjs';
+import { debounceTime, filter, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { AssignPackagesToNodeModalComponent } from '../assign-packages-to-node-modal/assign-packages-to-node-modal.component';
+import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 
 const SYNC_FROM_FILE_SYSTEM_ACTION = 'syncFromFs';
 const SYNC_TO_FILE_SYSTEM_ACTION = 'syncToFs';
@@ -18,13 +18,26 @@ const UNASSIGN_FROM_NODE_ACTION = 'unassignFromNode';
     templateUrl: './dev-tool-package-table.component.html',
     styleUrls: ['./dev-tool-package-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class DevToolPackageTableComponent
     extends BaseEntityTableComponent<Package, DevToolPackageBO, DevToolPackageTableLoaderOptions>
-    implements OnChanges {
+    implements OnInit, OnChanges {
 
     @Input()
     public nodeId: number;
+
+    /**
+     * If it should hide the sync options
+     */
+    @Input()
+    public hideSync = false;
+
+    private syncCheck$ = new BehaviorSubject<boolean>(null);
+    private canEditSub = new BehaviorSubject<boolean>(false);
+
+    public syncEnabled = false;
+    public syncLoading = true;
+    public canEdit$ = this.canEditSub.asObservable();
 
     protected rawColumns: TableColumn<DevToolPackageBO>[] = [
         {
@@ -90,6 +103,42 @@ export class DevToolPackageTableComponent
             loader,
             modalService,
         );
+
+        this.booleanInputs.push('hideSync');
+    }
+
+    public override ngOnInit(): void {
+        super.ngOnInit();
+
+        this.subscriptions.push(combineLatest([
+            this.syncCheck$.asObservable(),
+            interval(60_000).pipe(
+                startWith(null),
+            ),
+            this.loadTrigger.asObservable().pipe(
+                startWith(null),
+            ),
+        ]).pipe(
+            filter(([allow]) => allow),
+            tap(() => {
+                this.syncLoading = true;
+                this.changeDetector.markForCheck();
+            }),
+            debounceTime(1_000),
+            switchMap(() => this.operations.getSyncState()),
+        ).subscribe(res => {
+            this.syncEnabled = res.enabled;
+            this.syncLoading = false;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(
+            this.permissions.checkPermissions(
+                this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions,
+            ).subscribe(this.canEditSub),
+        );
+
+        this.syncCheck$.next(!this.hideSync);
     }
 
     public override ngOnChanges(changes: SimpleChanges): void {
@@ -99,12 +148,16 @@ export class DevToolPackageTableComponent
             this.loadTrigger.next();
             this.actionRebuildTrigger.next();
         }
+
+        if (changes.hideSync) {
+            this.syncCheck$.next(!this.hideSync);
+        }
     }
 
     protected override createTableActionLoading(): Observable<TableAction<DevToolPackageBO>[]> {
         return combineLatest([
             this.actionRebuildTrigger$,
-            this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentadmin.updateContent').typePermissions),
+            this.canEdit$,
             this.permissions.checkPermissions(this.permissions.getUserActionPermsForId('contentadmin.deleteContent').typePermissions),
         ]).pipe(
             map(([_, ...perms]) => perms),
@@ -160,6 +213,28 @@ export class DevToolPackageTableComponent
         return {
             nodeId: this.nodeId,
         };
+    }
+
+    public toggleSync(): void {
+        if (this.syncLoading) {
+            return;
+        }
+
+        let op: Observable<PackageSyncResponse>;
+        if (this.syncEnabled) {
+            op = this.operations.stopSync();
+        } else {
+            op = this.operations.startSync();
+        }
+
+        this.syncLoading = true;
+        this.changeDetector.markForCheck();
+
+        this.subscriptions.push(op.subscribe(res => {
+            this.syncEnabled = res.enabled;
+            this.syncLoading = false;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     public override handleAction(event: TableActionClickEvent<DevToolPackageBO>): void {

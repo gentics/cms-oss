@@ -34,11 +34,11 @@ describe('FeaturesActionsService', () => {
             let result: boolean;
             spyOn(api.admin, 'getFeature').and.callFake(((key: Feature) => of({ name: key, activated: true })) as any);
 
-            featuresActions.checkFeature(Feature.nice_urls).then((active: boolean) => {
+            featuresActions.checkFeature(Feature.NICE_URLS).then((active: boolean) => {
                 result = active;
             });
             tick();
-            expect(state.now.features[Feature.nice_urls]).toBeTrue();
+            expect(state.now.features[Feature.NICE_URLS]).toBeTrue();
             expect(result).toEqual(true);
         }));
 
@@ -46,11 +46,11 @@ describe('FeaturesActionsService', () => {
             let result: boolean;
             spyOn(api.admin, 'getFeature').and.callFake(((key: Feature) => of({ name: key, activated: false })) as any);
 
-            featuresActions.checkFeature(Feature.nice_urls).then((active: boolean) => {
+            featuresActions.checkFeature(Feature.NICE_URLS).then((active: boolean) => {
                 result = active;
             });
             tick();
-            expect(state.now.features[Feature.nice_urls]).toBeFalse();
+            expect(state.now.features[Feature.NICE_URLS]).toBeFalse();
             expect(result).toEqual(false);
         }));
     });

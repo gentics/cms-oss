@@ -1,0 +1,184 @@
+h2. PageAPI
+
+The PageAPI object will allow you to manipulate pages from the backend.
+
+endprologue.
+
+h3. Loading a page from the server
+
+Use the +page()+ method to load a page from the backend. Note that
+you will only be able to work with the page object if you supply a success
+callback method.
+
+<javascript>
+// load page 5 from the server
+GCN.page(5, function (page) {
+	// yay! mess around with page!
+	console.log(page.prop('name'));
+});
+</javascript>
+
+h3. Properties of a page
+
+One thing you might want to do is manipulating or reading a page's property. There is
+a whole list of properties available. You can access the properties using the 
++prop()+ method.
+
+<javascript>
+// load page 5 from the server
+GCN.page(5, function (page) {
+	// alert the current name of the page
+	alert(page.prop('name'));
+});
+</javascript>
+
+You may access the following properties:
+
+* folderId
+* templateId
+* timeManagement
+* publisher
+* pdate
+* contentSetId
+* contentGroupId
+* language
+* inherited
+* priority
+* fileName
+* readOnly
+* path
+* description
+* locked
+* status
+* cdate
+* customCdate
+* edate
+* customEdate
+* name
+* id
+* type
+* editor
+
+However not all of a page's properties are writable. You may write to the following properties:
+
+* customCdate
+* customEdate
+* description
+* fileName
+* folderId
+* name
+* priority
+* templateId
+* timeManagement (object, "at" is readonly and can only be set in the publish request)
+
+Writing a property will enable you eg. to change a page's name:
+
+<javascript>
+// load page 5 from the server
+GCN.page(5, function (page) {
+	// change its name to "New Page Name!"
+	page.prop('name', 'New Page Name!');
+});
+</javascript>
+
+h3. Saving and publishing pages
+
+At some point in your script you want to save and/or publish the page. This
+can be achieved using the +save+ or +publish+ method respecitvely:
+
+<javascript>
+// load page 5 from the server
+GCN.page(5, function (page) {
+	// ...
+	// do some changes, add new tags... let the user do
+	// frontend editing... change the page's name and so on
+	// ...
+	
+	// now it's time to save & publish the page
+	page.save().publish();
+});
+</javascript>
+
+WARNING: Saving the page does not unlock it automatically. You will have to unlock it when the save is finished.
+
+
+h3. Special settings for loading a page
+
+Sometimes a basic page object is not enough. That's why we added some magic!
+When loading a page using +GCN.page()+ you can specify an additional object
+that allows you to add the following settings:
+
+<javascript>
+GCN.page(42, {
+		// whether the page should be locked in the backend when loading it
+	 	// default: true
+	 	update: true,
+		// wheter the template information should be embedded in the page object
+		// default: true
+		template: true,
+		// wheter the folder information should be embedded in the page object
+		// default: true
+		// WARNING: do not turn this option off - it will leave the API in a broken state
+		folder: true,
+		// when the language variants shall be embedded in the page response
+		// default: false
+		langvars: false,
+		// when the workflow information shall be embedded in the page response
+		// default: false
+		workflow: false,
+	 	// when the page variants shall be embedded in the page response. Page variants will contain folder information.
+	 	// default: false
+	 	pagevars: false,
+	 	// will return information on the page's translation status
+	 	// default: false
+		translationstatus: false
+	}, function (page) {
+		// success! :)
+});
+</javascript>
+
+h4. Loading pages without locking +update+
+
+Whenever you load a page Gentics CMS will automatically lock it for you
+so that no one else may manipulate the data while you are working with the object.
+However - sometimes you might want to fetch a page just for reading, eg. when
+generating a list of pages which does not require to lock the page since you
+don't want to update any of its data. For this purpose *only* you might pass
+the +update+ setting when fetching a page - the page will not be
+locked.
+
+WARNING: Keep in mind that this will still enable you to +save+ the page
+- you might overwrite changes another user has made in the meantime!
+
+<javascript>
+// load page 5 from the server without locking it 
+GCN.page(5, { update: false }, function (page) {
+	// your code here
+});
+</javascript>
+
+h4. Adding page variants +pagevars+
+
+When setting the +pagevars+ option to +true+ an additional +pageVariants+ property is available
+which consists of an array of page variants stored as full-fledged page objects. If there are 
+no page variants it will be null.
+
+<javascript>
+GCN.page(42, { pagevars: true }, function (page) {
+		// list all the page variants
+		var pagevars = page.prop('pageVariants');
+		if (pagevars) {
+			for (var i = 0; i < pagevars.length; i++) {
+				console.log(pagevars[i].prop('name'));
+			}
+		}
+});
+</javascript>
+
+h4. Folder information +folder+
+
+WARNING: Do not set the +folder+ setting to +false+. In any case.
+
+The Gentics CMS JavaScript API will always load pages with their folder information. You
+may alter that behaviour by switching the +folder+ option to +false+. This
+will however leave you with broken page objects not usable by the library.

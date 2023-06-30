@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -29,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,7 +40,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 
-import okhttp3.RequestBody;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -57,7 +56,6 @@ import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.etc.SemaphoreMap;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -82,6 +80,7 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.DatasourceEntry;
+import com.gentics.contentnode.object.DummyObject;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -103,6 +102,7 @@ import com.gentics.contentnode.object.parttype.SelectPartType;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.PublishController;
 import com.gentics.contentnode.publish.PublishQueue;
+import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.PublishQueue.NodeObjectWithAttributes;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
 import com.gentics.contentnode.publish.SimplePublishInfo;
@@ -138,16 +138,15 @@ import com.gentics.mesh.core.rest.branch.info.BranchSchemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
 import com.gentics.mesh.core.rest.common.RestModel;
-import com.gentics.mesh.core.rest.graphql.GraphQLRequest;
-import com.gentics.mesh.core.rest.graphql.GraphQLResponse;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.job.JobStatus;
 import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
 import com.gentics.mesh.core.rest.node.FieldMap;
 import com.gentics.mesh.core.rest.node.FieldMapImpl;
-import com.gentics.mesh.core.rest.node.NodeCreateRequest;
+import com.gentics.mesh.core.rest.node.NodeListResponse;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
+import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
 import com.gentics.mesh.core.rest.node.field.BinaryField;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
@@ -199,7 +198,6 @@ import com.gentics.mesh.parameter.GenericParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
 import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
-import com.gentics.mesh.parameter.client.NodeParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
 import com.gentics.mesh.rest.client.MeshRequest;
@@ -211,19 +209,18 @@ import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.functions.BiPredicate;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -394,9 +391,19 @@ public class MeshPublisher implements AutoCloseable {
 	};
 
 	/**
+	 * First Mesh Version, which supports publishing and setting role permissions with the create/update request
+	 */
+	public final static CmpProductVersion FIRST_MESH_VERSION_WITH_PUBLISH_ON_CREATE = new CmpProductVersion("1.10.8");
+
+	/**
+	 * First Mesh SQL Version, which supports publishing and setting role permissions with the create/update request
+	 */
+	public final static CmpProductVersion FIRST_MESH_SQL_VERSION_WITH_PUBLISH_ON_CREATE = new CmpProductVersion("1.10.5");
+
+	/**
 	 * Semaphore map for synchronization of instant publishing transactions to the Mesh CRs
 	 */
-	private final static SemaphoreMap<Integer> semaphoreMap = new SemaphoreMap<>("mesh_trx");
+	protected final static SemaphoreMap<Integer> semaphoreMap = new SemaphoreMap<>("mesh_trx");
 
 	/**
 	 * Map of object types to schema names
@@ -459,11 +466,6 @@ public class MeshPublisher implements AutoCloseable {
 	 * This is the case, if the node is published into a Mesh CR with "projectPerNode" enabled, because in this case, the root folder is published onto the root Node of the project.
 	 */
 	protected static Map<Node, String> rootFolderUuid = new ConcurrentHashMap<>();
-
-	/**
-	 * First Mesh Version, which supports (and requires) "lang" attribute when getting nodes via GraphQL
-	 */
-	protected static CmpProductVersion versionSupportingLanguageFilter = new CmpProductVersion("0.36.4");
 
 	/**
 	 * Parameter "wait"="false"
@@ -570,6 +572,11 @@ public class MeshPublisher implements AutoCloseable {
 	protected Single<MeshServerInfoModel> serverInfo;
 
 	/**
+	 * Flag, which is set when publishing into Mesh SQL
+	 */
+	protected boolean meshSql = false;
+
+	/**
 	 * Flag to mark whether an error was found
 	 */
 	protected boolean error = false;
@@ -597,6 +604,16 @@ public class MeshPublisher implements AutoCloseable {
 	protected MeshMicronodePublisher micronodePublisher;
 
 	/**
+	 * Map containing the IDs of all objects, which were written to Mesh during the publish process (per nodeId and objectType)
+	 */
+	protected Map<Integer, Map<Integer, Set<Integer>>> written = Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * Map containing the IDs of all objects, which were already checked and are known to be missing in Mesh (per nodeId and objectType)
+	 */
+	protected Map<Integer, Map<Integer, Set<Integer>>> missing = Collections.synchronizedMap(new HashMap<>());
+
+	/**
 	 * Lambda that handles errors
 	 */
 	protected java.util.function.Consumer<Throwable> errorHandler = t -> {
@@ -609,32 +626,29 @@ public class MeshPublisher implements AutoCloseable {
 	};
 
 	/**
-	 * Container for all tracked Mesh nodes (per nodeId)
-	 */
-	protected Map<Integer, MeshNodeTrackerContainer> trackedNodes = new ConcurrentHashMap<>();
-
-	/**
-	 * Map of type specific graphql queries to load all language versions of a node
-	 */
-	protected Map<Integer, String> languageVersionsGraphQL = new HashMap<>();
-
-	/**
-	 * Language Codes, which are used in the graphql query to load all existing objects from Mesh
-	 */
-	protected List<String> languageCodes;
-
-	/**
-	 * Flag to mark, whether nodes have to be filtered by language when loading them via graphQL
-	 * This flag is set to true on certain mesh versions and is necessary, because older mesh versions
-	 * do not support the "lang" attribute and newer mesh versions will not return nodes in other languages,
-	 * if the "lang" attribute is not given.
-	 */
-	protected boolean filterLanguages = false;
-
-	/**
 	 * Configured call timeout (in seconds)
 	 */
 	protected long callTimeout = DEFAULT_TIMEOUT;
+
+	/**
+	 * Flag, which is set to true, when the Mesh Server supports publishing (and setting role permission) on create/update requests
+	 */
+	protected boolean supportsPublishOnCreate = false;
+
+	/**
+	 * Counter for requests to get a single node from Mesh
+	 */
+	protected AtomicInteger getNodeCounter = new AtomicInteger();
+
+	/**
+	 * Counter for requests to save a node to Mesh
+	 */
+	protected AtomicInteger saveNodeCounter = new AtomicInteger();
+
+	/**
+	 * Counter for graphql requests
+	 */
+	protected AtomicInteger graphQlCounter = new AtomicInteger();
 
 	/**
 	 * Shutdown Mesh Publisher
@@ -684,9 +698,16 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getMeshUuid(NodeObject object, boolean useProjectRootNode) throws NodeException {
-		if (object instanceof Page) {
+		if (object instanceof DummyObject) {
+			return ((DummyObject) object).getMeshUuid();
+		} else if (object instanceof Page) {
 			Page page = (Page) object;
-			return toMeshUuid(GlobalId.getGlobalId("contentset", page.getMaster().getContentsetId()).toString());
+			GlobalId globalId = GlobalId.getGlobalId("contentset", page.getMaster().getContentsetId());
+			if (globalId != null) {
+				return toMeshUuid(globalId.toString());
+			} else {
+				return null;
+			}
 		} else if (useProjectRootNode && object instanceof Folder) {
 			Folder folder = (Folder) object;
 			folder = folder.getMaster();
@@ -811,7 +832,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static String getMeshLanguage(NodeObject object) throws NodeException {
-		if (object instanceof Page) {
+		if (object instanceof DummyObject) {
+			return ((DummyObject) object).getMeshLanguage();
+		} else if (object instanceof Page) {
 			Page page = (Page)object;
 			ContentLanguage language = page.getLanguage();
 			if (language != null) {
@@ -854,7 +877,18 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return true iff the object supports alternative languages
 	 */
 	public static boolean supportsAlternativeLanguages(NodeObject object) {
-		return object instanceof Folder;
+		return supportsAlternativeLanguages(object.getTType());
+	}
+
+	/**
+	 * Check whether objects with given type support alternative languages (currently only folders).
+	 * Alternative languages means that the same object (same cms_id) may be published onto multiple language variants in Mesh.
+	 * Pages do <b>not</b> support alternative languages, because every language variant has a unique cms_id
+	 * @param objType object type
+	 * @return true iff the object type supports alternative languages
+	 */
+	public static boolean supportsAlternativeLanguages(int objType) {
+		return objType == Folder.TYPE_FOLDER || objType == Form.TYPE_FORM;
 	}
 
 	/**
@@ -1050,8 +1084,6 @@ public class MeshPublisher implements AutoCloseable {
 
 		initMeshProjects();
 
-		initGraphQlQueries();
-
 		for (int type : schemaNames.keySet()) {
 			tagmapEntries.put(type, new ArrayList<>(cr.getAllEntries().stream().filter(e -> e.getObject() == type).map(e -> new TagmapEntryWrapper(e)).collect(Collectors.toList())));
 			if (!ObjectTransformer.isEmpty(cr.getPermissionProperty())) {
@@ -1095,13 +1127,9 @@ public class MeshPublisher implements AutoCloseable {
 			serverInfo = client.getApiInfo().toSingle().cache();
 			serverInfo.subscribe();
 
-			filterLanguages = getMeshServerVersion().isGreaterOrEqual(versionSupportingLanguageFilter);
-			if (filterLanguages) {
-				// get all languages currently available in the CMS and extract the language codes
-				List<ContentLanguage> languages = t.getObjects(ContentLanguage.class,
-						DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS));
-				languageCodes = languages.stream().map(ContentLanguage::getCode).collect(Collectors.toList());
-			}
+			// determine, whether the Mesh version supports publishing (and setting roles) with the save requests
+			meshSql = !serverInfo.blockingGet().getDatabaseVendor().contains("orientdb");
+			supportsPublishOnCreate = getMeshServerVersion().isGreaterOrEqual(meshSql ? FIRST_MESH_SQL_VERSION_WITH_PUBLISH_ON_CREATE : FIRST_MESH_VERSION_WITH_PUBLISH_ON_CREATE);
 		} else {
 			micronodePublisher.initForPreview();
 		}
@@ -1166,32 +1194,6 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Initialize graphQl Queries
-	 * @throws NodeException
-	 */
-	protected void initGraphQlQueries() throws NodeException {
-		String graphQlQuery = null;
-		try (InputStream in = MeshPublisher.class.getResourceAsStream("language_versions.gql")) {
-			graphQlQuery = FileUtil.stream2String(in, "UTF-8");
-		} catch (IOException e) {
-			throw new NodeException(e);
-		}
-
-		for (int type : Arrays.asList(Folder.TYPE_FOLDER, Page.TYPE_PAGE, File.TYPE_FILE, Form.TYPE_FORM)) {
-			languageVersionsGraphQL.put(type, String.format(graphQlQuery, getSchemaName(type)));
-		}
-	}
-
-	/**
-	 * Get the tracker container for the given node ID
-	 * @param nodeId node ID
-	 * @return tracker container
-	 */
-	protected MeshNodeTrackerContainer getTrackedNodes(int nodeId) {
-		return trackedNodes.computeIfAbsent(nodeId, id -> new MeshNodeTrackerContainer());
-	}
-
-	/**
 	 * Get the mesh project for the node
 	 * @param node node
 	 * @return mesh project (never null)
@@ -1237,6 +1239,16 @@ public class MeshPublisher implements AutoCloseable {
 		} catch (NodeException e) {
 			return Optional.empty();
 		}
+	}
+
+	/**
+	 * Check whether there is another project than the given one, which might contain nodes
+	 * @param project project to check
+	 * @return true iff there are other projects
+	 */
+	public boolean hasOtherProjects(MeshProject project) {
+		return Stream.concat(projectMap.values().stream(), alternativeProjects.stream())
+				.filter(p -> !Objects.equals(p, project)).findFirst().isPresent();
 	}
 
 	/**
@@ -1783,7 +1795,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		try (NodeLogCollector collector = new NodeLogCollector(Level.INFO, logger)) {
 			if (checkSchemasAndProjects(false, true)) {
-				consistent &= checkObjectConsistency(repair, false, null);
+				consistent &= checkObjectConsistency(repair, false);
 				result.append(collector.getLog());
 			} else {
 				result.append("Not checking data, because projects/schemas are not valid");
@@ -1971,10 +1983,7 @@ public class MeshPublisher implements AutoCloseable {
 				controller.putWriteTask(task);
 			} else {
 				logger.debug(String.format("Postponed update of %d.%d still cannot be done, ignoring", task.objType, task.objId));
-				logger.debug(String.format("Set %d.%d to be done", task.objType, task.objId));
-				if (controller.publishProcess && task.reportToPublishQueue) {
-					PublishQueue.reportPublishActionDone(normalizeObjType(task.objType), task.objId, task.nodeId, PublishAction.WRITE_CR);
-				}
+				task.reportDone();
 			}
 			phase.work();
 		}
@@ -1985,24 +1994,35 @@ public class MeshPublisher implements AutoCloseable {
 	 * Remove offline objects
 	 * @param repair true to repair (remove incorrect objects)
 	 * @param publishProcess true if this is running during a publish process
-	 * @param filter function that filters the check for Node/Type
 	 * @return true if everything was consistent or was repaired
 	 * @throws NodeException
 	 */
-	public boolean checkObjectConsistency(boolean repair, boolean publishProcess, BiFunction<Node, Integer, Boolean> filter) throws NodeException {
+	public boolean checkObjectConsistency(boolean repair, boolean publishProcess) throws NodeException {
 		if (publishProcess && (PublishController.getState() != PublishController.State.running)) {
 			logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 			return false;
 		}
 
-		info(String.format("Checking objects in '%s'", cr.getName()));
+		if (publishProcess) {
+			// remove root folders in alternative projects
+			Set<String> schemas = schemaNames.keySet().stream().map(this::getSchemaName).collect(Collectors.toSet());
+			for (MeshProject project : alternativeProjects) {
+				NodeListResponse nodeList = client.findNodeChildren(project.name, project.rootNodeUuid,
+						new GenericParametersImpl().setETag(false).setFields("schema", "uuid")).blockingGet();
+				for (NodeResponse node : nodeList.getData()) {
+					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+						return false;
+					}
 
-		String graphQlQuery = null;
-		try (InputStream in = getClass().getResourceAsStream(filterLanguages ? "nodes_for_schema_lang.gql" : "nodes_for_schema.gql")) {
-			graphQlQuery = FileUtil.stream2String(in, "UTF-8");
-		} catch (IOException e) {
-			throw new NodeException(e);
+					if (schemas.contains(node.getSchema().getName())) {
+						client.deleteNode(project.name, node.getUuid(), new DeleteParametersImpl().setRecursive(true)).blockingAwait();
+					}
+				}
+			}
 		}
+
+		info(String.format("Checking objects in '%s'", cr.getName()));
 
 		// prepare maps of mesh UUIDs to sets of internal IDs, which will be used to check, whether objects in Mesh still exist in the CMS
 		// and should still be published into the Mesh CR. We do not rely on the cms_id stored with the Mesh object, because when objects are
@@ -2010,7 +2030,7 @@ public class MeshPublisher implements AutoCloseable {
 		Map<Integer, Map<String, Set<Integer>>> meshUuidMap = prepareMeshUuidMap();
 		boolean consistent = true;
 		for (MeshProject project : projectMap.values()) {
-			consistent &= checkObjectConsistency(project, graphQlQuery, repair, publishProcess, filter, meshUuidMap);
+			consistent &= checkObjectConsistency(project, repair, publishProcess, meshUuidMap);
 		}
 
 		return consistent;
@@ -2019,25 +2039,22 @@ public class MeshPublisher implements AutoCloseable {
 	/**
 	 * Remove offline objects from the project
 	 * @param project mesh project
-	 * @param graphQlQuery graph QL Query
 	 * @param repair true to repair (remove incorrect objects)
 	 * @param publishProcess true if this is running during a publish process
-	 * @param filter function that filters the check for Node/Type
 	 * @param meshUuidMap map of meshUuids to local IDs
 	 * @return true if everything was consistent or was repaired
 	 * @throws NodeException
 	 */
-	protected boolean checkObjectConsistency(MeshProject project, String graphQlQuery, boolean repair, boolean publishProcess,
-			BiFunction<Node, Integer, Boolean> filter, Map<Integer, Map<String, Set<Integer>>> meshUuidMap) throws NodeException {
+	protected boolean checkObjectConsistency(MeshProject project, boolean repair, boolean publishProcess, Map<Integer, Map<String, Set<Integer>>> meshUuidMap) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		boolean consistent;
 
 		try (PublishCacheTrx trx = new PublishCacheTrx(false)) {
-			consistent = checkObjectConsistency(project, graphQlQuery, project.defaultBranchParameter, null, repair, publishProcess, filter, meshUuidMap);
+			consistent = checkObjectConsistency(project, project.defaultBranchParameter, null, repair, publishProcess, meshUuidMap);
 
 			for (Entry<Integer, VersioningParameters> entry : project.branchParamMap.entrySet()) {
 				Node channel = t.getObject(Node.class, entry.getKey(), -1, false);
-				consistent &= checkObjectConsistency(project, graphQlQuery, entry.getValue(), channel, repair, publishProcess, filter, meshUuidMap);
+				consistent &= checkObjectConsistency(project, entry.getValue(), channel, repair, publishProcess, meshUuidMap);
 			}
 		}
 
@@ -2047,28 +2064,26 @@ public class MeshPublisher implements AutoCloseable {
 	/**
 	 * Remove offline objects from the project
 	 * @param project mesh project
-	 * @param graphQlQuery graph QL Query
 	 * @param branch branch parameter
 	 * @param node optional channel
 	 * @param repair true to repair (remove incorrect objects)
 	 * @param publishProcess true if this is running during a publish process
-	 * @param filter function that filters the check for Node/Type
 	 * @param meshUuidMap map of meshUuids to local IDs
 	 * @return true if everything was consistent or was repaired
 	 * @throws NodeException
 	 */
-	protected boolean checkObjectConsistency(MeshProject project, String graphQlQuery, VersioningParameters branch, Node node, boolean repair,
-			boolean publishProcess, BiFunction<Node, Integer, Boolean> filter, Map<Integer, Map<String, Set<Integer>>> meshUuidMap) throws NodeException {
+	protected boolean checkObjectConsistency(MeshProject project, VersioningParameters branch, Node node,
+			boolean repair, boolean publishProcess, Map<Integer, Map<String, Set<Integer>>> meshUuidMap) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
+
+		if (!publishProcess) {
+			return true;
+		}
+
 		Node checkedNode = node;
 		if (checkedNode == null) {
 			checkedNode = project.node;
 		}
-
-		NodePreferences prefs = NodeConfigRuntimeConfiguration.getDefault().getNodeConfig().getDefaultPreferences();
-		int pageSize = ObjectTransformer.getInt(prefs.getProperty("mesh.pageSize"), DEFAULT_GRAPHQL_PAGESIZE);
-
-		boolean consistent = true;
 
 		Set<Integer> types = new HashSet<>(schemaNames.keySet());
 		// also check forms, if the node is no channel and has the feature activated
@@ -2076,141 +2091,85 @@ public class MeshPublisher implements AutoCloseable {
 			types.add(Form.TYPE_FORM);
 		}
 		for (int objectType : types) {
-			if (filter != null && !filter.apply(checkedNode, objectType)) {
-				continue;
-			}
-			String schemaName = getSchemaName(objectType);
-			int page = 0;
-			boolean nextPage = true;
-			Set<Pair<String, String>> toRemove = new HashSet<>();
-			Set<Pair<String, String>> toTakeOffline = new HashSet<>();
+			Class<? extends NodeObject> clazz = t.getClass(objectType);
 
-			while (nextPage) {
-				if (publishProcess && (PublishController.getState() != PublishController.State.running)) {
+			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
+
+			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
+			if (objectType == Form.TYPE_FORM) {
+				List<Form> forms = t.getObjects(Form.class, map.keySet());
+				for (Form form : forms) {
+					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+						return false;
+					}
+
+					map.remove(form.getId());
+					if (!cr.mustContain(form)) {
+						String meshUuid = getMeshUuid(form);
+						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
+							for (String lang : languages) {
+								offline(project, branch, objectType, meshUuid, lang);
+							}
+							return Completable.complete();
+						}).blockingAwait();
+					}
+				}
+			}
+			Map<String, Set<String>> toDelete = new HashMap<>();
+			for (Map.Entry<Integer, Set<String>> entry : map.entrySet()) {
+				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
-				// map of meshUuid -> languages
-				Map<String, Set<String>> meshNodes = new HashMap<>();
-				page++;
 
-				GraphQLResponse response = null;
-				if (filterLanguages) {
-					GraphQLRequest request = new GraphQLRequest().setQuery(String.format(graphQlQuery, schemaName, pageSize, page, schemaName))
-							.setVariables(new JsonObject().put("languages", languageCodes));
-					response = client.graphql(project.name, request, branch, doNotWaitForIdle).blockingGet();
-				} else {
-					response = client.graphqlQuery(project.name, String.format(graphQlQuery, schemaName, pageSize, page, schemaName), branch, doNotWaitForIdle).blockingGet();
-				}
-
-				JsonObject nodes = response.getData().getJsonObject("schema").getJsonObject("nodes");
-				nextPage = ObjectTransformer.getBoolean(nodes.getBoolean("hasNextPage"), false);
-				JsonArray elements = nodes.getJsonArray("elements");
-				for (int elemIndex = 0; elemIndex < elements.size(); elemIndex++) {
-					JsonObject element = elements.getJsonObject(elemIndex);
-
-					String meshUuid = element.getString("uuid");
-
-					// omit the root node
-					if (StringUtils.isEqual(meshUuid, project.rootNodeUuid)) {
-						continue;
-					}
-
-					JsonArray languageVariants = element.getJsonArray("languages");
-					for (int langIndex = 0; langIndex < languageVariants.size(); langIndex++) {
-						JsonObject langVariant = languageVariants.getJsonObject(langIndex);
-
-						String language = langVariant.getString("language");
-						if (objectType == Folder.TYPE_FOLDER) {
-							// special treatment of folders: we add null as language, because we want to delete the whole folder, not only the language variant
-							meshNodes.computeIfAbsent(meshUuid, key -> new HashSet<>()).add(null);
-						} else {
-							meshNodes.computeIfAbsent(meshUuid, key -> new HashSet<>()).add(language);
+				String meshUuid = null;
+				String meshLanguage = null;
+				if (entry.getValue() != null) {
+					for (String value : entry.getValue()) {
+						if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
+							meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
+						} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
+							meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
 						}
 					}
 				}
-				// load the cms objects
-				try (ChannelTrx cTrx = new ChannelTrx(node)) {
-					List<? extends NodeObject> objects = fromMeshUuid(t.getClass(objectType), meshUuidMap.get(objectType), meshNodes.keySet());
-					for (NodeObject object : objects) {
-						String meshUuid = getMeshUuid(object);
-						String language = getMeshLanguage(object);
-						if (node == null) {
-							if (cr.mustContain(object)) {
-								if (object instanceof Form || object instanceof Folder) {
-									meshNodes.remove(meshUuid);
-								} else {
-									meshNodes.getOrDefault(meshUuid, Collections.emptySet()).remove(language);
-								}
-							} else if (object instanceof Form) {
-								// special handling of forms: if the form is offline, we do not remove it, but take it offline
-								Set<String> languages = meshNodes.getOrDefault(meshUuid, Collections.emptySet());
-								for (String lang : languages) {
-									toTakeOffline.add(Pair.of(meshUuid, lang));
-								}
-								meshNodes.remove(meshUuid);
-							}
-						} else {
-							if (cr.mustContain(object, node)) {
-								if (object instanceof Form || object instanceof Folder) {
-									meshNodes.remove(meshUuid);
-								} else {
-									meshNodes.getOrDefault(meshUuid, Collections.emptySet()).remove(language);
-								}
-							} else if (object instanceof Form) {
-								// special handling of forms: if the form is offline, we do not remove it, but take it offline
-								Set<String> languages = meshNodes.getOrDefault(meshUuid, Collections.emptySet());
-								for (String lang : languages) {
-									toTakeOffline.add(Pair.of(meshUuid, lang));
-								}
-								meshNodes.remove(meshUuid);
-							}
-						}
-					}
+				if (meshUuid != null) {
+					toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
 				}
-				for (Map.Entry<String, Set<String>> entry : meshNodes.entrySet()) {
-					String meshUuid = entry.getKey();
-					if (objectType == Form.TYPE_FORM) {
-						// forms will be removed completely, not language by language
-						toRemove.add(Pair.of(meshUuid, null));
-					} else {
-						for (String language : entry.getValue()) {
-							toRemove.add(Pair.of(meshUuid, language));
-						}
+			}
+
+			// check whether we really want to delete the object in Mesh
+			try (ChannelTrx cTrx = new ChannelTrx(node)) {
+				List<? extends NodeObject> objects = fromMeshUuid(clazz,
+						meshUuidMap.getOrDefault(objectType, Collections.emptyMap()), toDelete.keySet());
+				for (NodeObject object : objects) {
+					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+						return false;
+					}
+
+					if (cr.mustContain(object, checkedNode)) {
+						toDelete.remove(getMeshUuid(object));
 					}
 				}
 			}
 
-			for (Pair<String, String> remove : toRemove) {
-				if (publishProcess && (PublishController.getState() != PublishController.State.running)) {
-					logger.debug(String.format("Stop removing offline objects, because publisher state is %s", PublishController.getState()));
+			for (Entry<String, Set<String>> entry : toDelete.entrySet()) {
+				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
 
-				if (repair) {
-					remove(project, branch, objectType, remove.getLeft(), remove.getRight());
-				} else {
-					consistent = false;
-					logger.error(String.format("Node with UUID %s, language %s must be removed", remove.getLeft(), remove.getRight()));
-				}
-			}
-
-			for (Pair<String, String> offline : toTakeOffline) {
-				if (publishProcess && (PublishController.getState() != PublishController.State.running)) {
-					logger.debug(String.format("Stop removing offline objects, because publisher state is %s", PublishController.getState()));
-					return false;
-				}
-
-				if (repair) {
-					offline(project, branch, objectType, offline.getLeft(), offline.getRight());
-				} else {
-					consistent = false;
-					logger.error(String.format("Node with UUID %s, language %s must be taken offline", offline.getLeft(), offline.getRight()));
+				String meshUuid = entry.getKey();
+				Set<String> languages = entry.getValue();
+				for (String language : languages) {
+					remove(project, checkedNode, objectType, meshUuid, language, true);
 				}
 			}
 		}
 
-		return consistent;
+		return true;
 	}
 
 	/**
@@ -2236,10 +2195,24 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage) throws NodeException {
+		remove(project, node, objectType, meshUuid, meshLanguage, true);
+	}
+
+	/**
+	 * Try to remove an object from mesh
+	 * @param project mesh project
+	 * @param node node from which to remove the object
+	 * @param objectType object type
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @throws NodeException
+	 */
+	public void remove(MeshProject project, Node node, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
 		if (cr.isProjectPerNode()) {
-			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage);
+			remove(project, project.enforceBranch(node.getId()), objectType, meshUuid, meshLanguage, withSemaphore);
 		} else {
-			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage);
+			remove(project, (VersioningParameters)null, objectType, meshUuid, meshLanguage, withSemaphore);
 		}
 	}
 
@@ -2253,7 +2226,23 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
+		remove(project, branch, objectType, meshUuid, meshLanguage, true);
+	}
+
+	/**
+	 * Try to remove an object from mesh
+	 * @param project mesh project
+	 * @param branch optional branch parameter
+	 * @param objectType object type
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh Language (null to delete all language variants)
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @throws NodeException
+	 */
+	public void remove(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage, boolean withSemaphore) throws NodeException {
+		if (withSemaphore) {
+			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
+		}
 		logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 		try {
 			if (meshLanguage != null) {
@@ -2293,7 +2282,9 @@ public class MeshPublisher implements AutoCloseable {
 			}
 		} finally {
 			logger.debug(String.format("Finished removing %d.%s", objectType, meshUuid));
-			semaphoreMap.release(lockKey);
+			if (withSemaphore) {
+				semaphoreMap.release(lockKey);
+			}
 		}
 	}
 
@@ -2379,6 +2370,10 @@ public class MeshPublisher implements AutoCloseable {
 			client.close();
 			client = null;
 		}
+
+		logger.debug(String.format("%d requests to load single node", getNodeCounter.get()));
+		logger.debug(String.format("%d requests to create/update single node", saveNodeCounter.get()));
+		logger.debug(String.format("%d graphql requests", graphQlCounter.get()));
 	}
 
 	/**
@@ -2403,7 +2398,6 @@ public class MeshPublisher implements AutoCloseable {
 
 		try (HandleDependenciesTrx depTrx = new HandleDependenciesTrx(false)) {
 			Scheduled next = null;
-			Scheduled putBackMarker = null;
 			while ((next = queue.poll()) != null) {
 				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop processing the queue, because publisher state is %s", PublishController.getState()));
@@ -2420,24 +2414,7 @@ public class MeshPublisher implements AutoCloseable {
 					if (phase != null) {
 						phase.work();
 					}
-				} else if (!next.dependenciesDone()) {
-					// set the put back marker (if not done before)
-					if (putBackMarker == null) {
-						putBackMarker = next;
-					} else if (putBackMarker == next && !controller.isBusy()) {
-						// check for dependencies again (after we checked, that the controller is no longer busy)
-						if (!next.dependenciesDone()) {
-							// revisited the put back marker, and nothing is open to be done: break from endless loop
-							throw new NodeException(String.format("Found %s again, which was put back into the queue before.", next.wrapped.getObject()));
-						}
-					}
-					// put back, if dependencies are not yet done
-					logger.debug(String.format("Dependencies not all done, putting %s back into queue", next.get().getObject()));
-					queue.add(next);
 				} else if (next.wrapped.getObject() instanceof Form) {
-					// reset put back marker
-					putBackMarker = null;
-
 					// publish a form
 					Form form = (Form) next.wrapped.getObject();
 					logger.debug(String.format("Handling %s", form));
@@ -2497,9 +2474,6 @@ public class MeshPublisher implements AutoCloseable {
 						phase.work();
 					}
 				} else {
-					// reset put back marker
-					putBackMarker = null;
-
 					handle(project, nodeId, next, (scheduled, meshObject) -> {
 						NodeObjectWithAttributes<? extends NodeObject> o = scheduled.get();
 						logger.debug(String.format("Submit task to render %s", o));
@@ -2507,125 +2481,10 @@ public class MeshPublisher implements AutoCloseable {
 							logger.debug(String.format("Rendering %s", o));
 							try {
 								Trx.operate(() -> {
-									// dependencies need to be handled during the publish process, when the object is not pre-rendered
-									// or when instant publishing and the feature "contentfile_autooffline" is true
-									boolean handleDependencies = (controller.publishProcess
-											|| NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)) && scheduled.tagmapEntries == null;
+									WriteTask task = generateWriteTask(node, project, scheduled, meshObject, dependencies);
 
-									// depencencies need to be stored when they are handled during a publish process
-									boolean storeDependencies = handleDependencies && controller.publishProcess;
-
-									try (LangTrx lTrx = new LangTrx("en");
-											ChannelTrx cTrx2 = new ChannelTrx(node);
-											PublishCacheTrx pTrx = new PublishCacheTrx(controller.publishProcess);
-											PublishedNodeTrx pnTrx = TransactionManager.getCurrentTransaction().initPublishedNode(node);
-											RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, o.getObject(), handleDependencies,
-													storeDependencies)) {
-										WriteTask task = new WriteTask();
-										// task.project is the current project of the node, not necessarily the desired project
-										task.project = meshObject != null ? meshObject.project : project;
-										// target project is the desired project
-										task.targetProject = project;
-										task.reportToPublishQueue = scheduled.reportToPublishQueue;
-										task.baseVersion = meshObject != null ? meshObject.version : null;
-										task.objType = o.getObject().getTType();
-										task.objId = o.getObject().getId();
-										task.description = o.getObject().toString();
-										task.nodeId = nodeId;
-										task.schema = getSchemaName(task.objType);
-										task.uuid = getMeshUuid(o.getObject());
-										NodeObject mother = o.getObject().getParentObject();
-										if (StringUtils.isEqual(task.uuid, project.rootNodeUuid)) {
-											task.parentUuid = null;
-										} else if (mother == null || (cr.isProjectPerNode() && mother.getParentObject() == null)) {
-											task.parentUuid = project.rootNodeUuid;
-										} else {
-											task.parentUuid = getMeshUuid(mother);
-										}
-										task.language = scheduled.language;
-										Map<TagmapEntryRenderer, Object> renderedEntries = scheduled.tagmapEntries;
-										if (renderedEntries == null) {
-											// render the tagmap entries.
-											renderedEntries = render(getEntries(o.getObject().getTType()),
-													o.getAttributes(), scheduled.getRenderedLanguage());
-										}
-
-										// if the rendered object is the Root-Folder and we have "projectPerNode" enabled, we need to remove the pub_dir
-										if (cr.isProjectPerNode() && o.getObject() instanceof Folder && ((Folder)o.getObject()).isRoot()) {
-											renderedEntries.keySet().removeIf(e -> "folder.pub_dir".equals(e.getTagname()));
-										}
-
-										handleRenderedEntries(task.nodeId, renderedEntries, o.getAttributes(), fields -> {
-											task.fields = fields;
-										}, roles -> {
-											task.roles = roles;
-										}, postponed -> {
-											task.postponed = postponed;
-										});
-
-										task.publisher = this;
-										task.tracker = scheduled.tracker;
-
-										// postSave for updating binary data
-										if (o.getObject() instanceof File) {
-											File file = (File) o.getObject();
-											boolean uploadBinary = (ObjectTransformer.isEmpty(o.getAttributes()) || o.getAttributes().contains("binarycontent")) && file.getFilesize() > 0;
-											boolean setFocalPointInfo = file.isImage();
-
-											if (uploadBinary || setFocalPointInfo) {
-												task.postSave = new ArrayList<>();
-											}
-
-											if (uploadBinary) {
-												// add dependencies
-												RenderType renderType = rTrx.get();
-												renderType.setRenderedProperty("binarycontent");
-												renderType.addDependency(file, "name");
-												renderType.addDependency(file, "type");
-												renderType.addDependency(file, "filesize");
-
-												task.postSave.add(resp -> {
-													return Trx.supply(() -> {
-														InputStream in = file.getFileStream();
-														if (in == null) {
-															throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
-														}
-
-														return client.updateNodeBinaryField(task.project.name, task.uuid, getMeshLanguage(file), "draft",
-																"binarycontent", in, file.getFilesize(), file.getFilename(), file.getFiletype(),
-																task.project.enforceBranch(task.nodeId)).toSingle();
-													});
-												});
-											}
-
-											if (setFocalPointInfo) {
-												ImageFile image = (ImageFile) file;
-												task.postSave.add(resp -> {
-													return Trx.supply(() -> {
-														if (needFocalPointUpdate(resp, image)) {
-															NodeUpdateRequest update = new NodeUpdateRequest();
-															update.setLanguage(getMeshLanguage(image));
-															update.setVersion("draft");
-															update.getFields().put("binarycontent", new BinaryFieldImpl().setFocalPoint(image.getFpX(), image.getFpY()));
-															return client.updateNode(task.project.name, task.uuid, update, task.project.enforceBranch(task.nodeId))
-																	.toSingle();
-														} else {
-															return Single.just(resp);
-														}
-													});
-												});
-											}
-										}
-
-										logger.debug(String.format("Put task %s into queue", task));
-										controller.putWriteTask(task);
-
-										// when an object is instant published, and autooffline is used, we need to collect all dependencies
-										if (dependencies != null && !controller.publishProcess && NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)
-												&& (task.objType == Page.TYPE_PAGE || task.objType == Folder.TYPE_FOLDER)) {
-											dependencies.addAll(rTrx.get().getDependencies());
-										}
-									}
+									logger.debug(String.format("Put task %s into queue", task));
+									controller.putWriteTask(task);
 								});
 								controller.renderTasks.finish();
 							} catch (Throwable e) {
@@ -2650,6 +2509,179 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Generate the write task for the given scheduled object
+	 * @param node node
+	 * @param project mesh project
+	 * @param scheduled scheduled object
+	 * @param meshObject mesh object
+	 * @param dependencies optional dependencies
+	 * @return write task
+	 * @throws NodeException
+	 */
+	protected WriteTask generateWriteTask(Node node, MeshProject project, Scheduled scheduled, MeshObject meshObject, List<Dependency> dependencies) throws NodeException {
+		NodeObjectWithAttributes<? extends NodeObject> o = scheduled.get();
+		int nodeId = node.getId();
+
+		// dependencies need to be handled during the publish process, when the object is not pre-rendered
+		// or when instant publishing and the feature "contentfile_autooffline" is true
+		boolean handleDependencies = (controller.publishProcess
+				|| NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)) && scheduled.tagmapEntries == null;
+
+		// depencencies need to be stored when they are handled during a publish process
+		boolean storeDependencies = handleDependencies && controller.publishProcess;
+
+		try (LangTrx lTrx = new LangTrx("en");
+				ChannelTrx cTrx2 = new ChannelTrx(node);
+				PublishCacheTrx pTrx = new PublishCacheTrx(controller.publishProcess);
+				PublishedNodeTrx pnTrx = TransactionManager.getCurrentTransaction().initPublishedNode(node);
+				RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, o.getObject(), handleDependencies,
+						storeDependencies)) {
+			WriteTask task = new WriteTask();
+			// task.project is the current project of the node, not necessarily the desired project
+			task.project = meshObject != null ? meshObject.project : project;
+			// target project is the desired project
+			task.targetProject = project;
+			task.reportToPublishQueue = scheduled.reportToPublishQueue;
+			task.exists = meshObject != null;
+			task.objType = o.getObject().getTType();
+			task.objId = o.getObject().getId();
+			task.description = o.getObject().toString();
+			task.nodeId = nodeId;
+			task.schema = getSchemaName(task.objType);
+			task.uuid = getMeshUuid(o.getObject());
+			NodeObject mother = o.getObject().getParentObject();
+			if (StringUtils.isEqual(task.uuid, project.rootNodeUuid)) {
+				task.parentUuid = null;
+				task.folderId = 0;
+			} else if (mother == null || (cr.isProjectPerNode() && mother.getParentObject() == null)) {
+				task.parentUuid = project.rootNodeUuid;
+				if (mother != null) {
+					task.folderId = mother.getId();
+				}
+			} else {
+				task.parentUuid = getMeshUuid(mother);
+				if (mother != null) {
+					task.folderId = mother.getId();
+				}
+			}
+			task.language = scheduled.language;
+			if (supportsAlternativeLanguages(task.objType)) {
+				task.alternativeMeshLanguages = getAlternativeMeshLanguages(o.getObject());
+			}
+
+			Map<TagmapEntryRenderer, Object> renderedEntries = scheduled.tagmapEntries;
+			if (renderedEntries == null) {
+				// render the tagmap entries.
+				renderedEntries = render(getEntries(o.getObject().getTType()),
+						o.getAttributes(), scheduled.getRenderedLanguage());
+			}
+
+			// if the rendered object is the Root-Folder and we have "projectPerNode" enabled, we need to remove the pub_dir
+			if (cr.isProjectPerNode() && o.getObject() instanceof Folder && ((Folder)o.getObject()).isRoot()) {
+				renderedEntries.keySet().removeIf(e -> "folder.pub_dir".equals(e.getTagname()));
+			}
+
+			handleRenderedEntries(task.nodeId, renderedEntries, o.getAttributes(), fields -> {
+				task.fields = fields;
+			}, roles -> {
+				task.roles = roles;
+			}, postponed -> {
+				task.postponed = postponed;
+			});
+
+			task.publisher = this;
+
+			// postSave for updating binary data
+			if (o.getObject() instanceof File) {
+				File file = (File) o.getObject();
+				boolean uploadBinary = (ObjectTransformer.isEmpty(o.getAttributes()) || o.getAttributes().contains("binarycontent")) && file.getFilesize() > 0;
+				boolean setFocalPointInfo = file.isImage();
+
+				if (uploadBinary || setFocalPointInfo) {
+					task.postSave = new ArrayList<>();
+				}
+
+				if (uploadBinary) {
+					// add dependencies
+					RenderType renderType = rTrx.get();
+					renderType.setRenderedProperty("binarycontent");
+					renderType.addDependency(file, "name");
+					renderType.addDependency(file, "type");
+					renderType.addDependency(file, "filesize");
+
+					task.postSave.add(resp -> {
+						return Trx.supply(() -> {
+							InputStream in = file.getFileStream();
+							if (in == null) {
+								throw new NodeException(String.format("Cannot publish %s, binary data not found", file));
+							}
+
+							if (supportsPublishOnCreate) {
+								return client.updateNodeBinaryField(
+										task.project.name,
+										task.uuid,
+										getMeshLanguage(file),
+										"draft",
+										"binarycontent",
+										in,
+										file.getFilesize(),
+										file.getFilename(),
+										file.getFiletype(),
+										true,
+										task.project.enforceBranch(task.nodeId))
+									.toSingle();
+							}
+
+							return client.updateNodeBinaryField(
+									task.project.name,
+									task.uuid,
+									getMeshLanguage(file),
+									"draft",
+									"binarycontent",
+									in,
+									file.getFilesize(),
+									file.getFilename(),
+									file.getFiletype(),
+									task.project.enforceBranch(task.nodeId))
+								.toSingle();
+						});
+					});
+				}
+
+				if (setFocalPointInfo) {
+					ImageFile image = (ImageFile) file;
+					task.postSave.add(resp -> {
+						return Trx.supply(() -> {
+							if (needFocalPointUpdate(resp, image)) {
+								NodeUpdateRequest update = new NodeUpdateRequest();
+								update.setLanguage(getMeshLanguage(image));
+								update.setVersion("draft");
+
+								if (supportsPublishOnCreate) {
+									update.setPublish(true);
+								}
+
+								update.getFields().put("binarycontent", new BinaryFieldImpl().setFocalPoint(image.getFpX(), image.getFpY()));
+								return client.updateNode(task.project.name, task.uuid, update, task.project.enforceBranch(task.nodeId))
+										.toSingle();
+							} else {
+								return Single.just(resp);
+							}
+						});
+					});
+				}
+			}
+
+			// when an object is instant published, and autooffline is used, we need to collect all dependencies
+			if (dependencies != null && !controller.publishProcess && NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENTFILE_AUTO_OFFLINE)
+					&& (task.objType == Page.TYPE_PAGE || task.objType == Folder.TYPE_FOLDER)) {
+				dependencies.addAll(rTrx.get().getDependencies());
+			}
+			return task;
+		}
+	}
+
+	/**
 	 * Remove all objects in the collection from their current project, if it is not the given project
 	 * TODO: when mesh supports moving of objects between projects, remove this method
 	 * @param nodeId node ID
@@ -2658,40 +2690,6 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	protected void removeObjectsFromIncorrectProject(int nodeId, Collection<Scheduled> entries, MeshProject project) throws NodeException {
-		Queue<Scheduled> queue = new ArrayDeque<>(entries);
-
-		Scheduled next = null;
-		MeshNodeTrackerContainer trackerContainer = getTrackedNodes(nodeId);
-		while ((next = queue.poll()) != null) {
-			if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
-				logger.debug(String.format("Stop processing the queue, because publisher state is %s", PublishController.getState()));
-				return;
-			}
-
-			NodeObject object = next.get().getObject();
-			if (object instanceof Form) {
-				continue;
-			}
-			int objType = normalizeObjType(object.getTType());
-			Set<String> meshUuids = new HashSet<>();
-			meshUuids.add(getMeshUuid(object, true));
-			meshUuids.add(getMeshUuid(object, false));
-			String language = getMeshLanguage(object);
-
-			for (String meshUuid : meshUuids) {
-				next.initTracker(project, trackerContainer);
-				Map<String, MeshObject> variants = trackerContainer.read(project, objType, meshUuid, language, nodeId);
-				Set<MeshProject> incorrectProjects = variants.values().stream().filter(var -> !project.equals(var.project)).map(var -> var.project)
-						.collect(Collectors.toSet());
-				for (MeshProject incorrect : incorrectProjects) {
-					remove(incorrect, (VersioningParameters)null, objType, meshUuid, null);
-				}
-				// remove the tracker, if the object was removed (because the tracker would tell, that the object exists, but it doesn't)
-				if (!incorrectProjects.isEmpty()) {
-					next.removeTracker(trackerContainer);
-				}
-			}
-		}
 	}
 
 	/**
@@ -3373,10 +3371,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param putBack consumer that puts the object back (will be handled later)
 	 * @throws NodeException
 	 */
-	protected void handle(MeshProject project, int nodeId, Scheduled scheduled, BiConsumer<Scheduled, MeshObject> handler, Consumer<Scheduled> putBack) throws NodeException {
-		MeshNodeTrackerContainer trackerContainer = getTrackedNodes(nodeId);
+	protected void handle(MeshProject project, int nodeId, Scheduled scheduled,
+			BiConsumer<Scheduled, MeshObject> handler, Consumer<Scheduled> putBack) throws NodeException {
 		NodeObject object = scheduled.get().getObject();
-		String language = scheduled.language;
 		logger.debug(String.format("Handling %s", object));
 		int objType = object.getTType();
 		int objId = object.getId();
@@ -3390,138 +3387,16 @@ public class MeshPublisher implements AutoCloseable {
 			return;
 		}
 
-		// initialize the tracker, if not done before
-		Scheduled usedScheduled = scheduled.initTracker(project, trackerContainer);
-		NodeObject parentObject = getParent(object);
-
-		// check whether object exists in mesh
-		Map<String, MeshObject> variants = trackerContainer.read(project, object, language, nodeId);
-
-		// we want to update the language variant (if it exists)
-		MeshObject toUpdate = variants.get(language);
-
-		Set<Pair<Scheduled, MeshObject>> scheduledAlternatives = new HashSet<>();
-		if (!supportsAlternativeLanguages(object)) {
-			// check whether there is a language variant with a different language,
-			// but the same cms_id
-			MeshObject toDelete = variants.values().stream().filter(o -> o.getCmsId() == object.getId() && !StringUtils.isEqual(o.getLanguage(), language))
-					.findFirst().orElse(null);
-
-			if (toDelete != null) {
-				remove(toDelete.project, toDelete.project.enforceBranch(nodeId), objType, getMeshUuid(object), toDelete.getLanguage());
-			}
-		} else {
+		if (supportsAlternativeLanguages(object)) {
 			// the object supports alternative languages, so create/update all language variants in Mesh
 			Set<String> alternativeMeshLanguages = getAlternativeMeshLanguages(object);
 			for (String alternativeLanguage : alternativeMeshLanguages) {
-				MeshObject variant = variants.get(alternativeLanguage);
-				if (variant != null) {
-					// if the variant already exists in Mesh, we copy the wrapped object (will only update the same attribute set)
-					scheduledAlternatives
-							.add(Pair.of(new Scheduled(nodeId, usedScheduled.wrapped, alternativeLanguage, false)
-									.initTracker(project, trackerContainer), variant));
-				} else {
-					// if the variant does not yet exist, we create a new object with empty attribute set (will write all attributes)
-					scheduledAlternatives
-							.add(Pair.of(new Scheduled(nodeId, new NodeObjectWithAttributes<NodeObject>(object),
-									alternativeLanguage, false).initTracker(project, trackerContainer), null));
-				}
-			}
-
-			// interconnect all trackers (the original one and the alternative trackers)
-			// this is necessary, because for objects, that depend on existence of the object, it is irrelevant which language version was created first
-			interconnectTrackers(usedScheduled, scheduledAlternatives.stream().<Scheduled>map(Pair::getLeft).collect(Collectors.toSet()));
-
-			// remove all language variants, which must not exist any more
-			for (MeshObject variant : variants.values()) {
-				String variantLanguage = variant.getLanguage();
-				// never remove the variant in the "primary" language
-				if (Objects.equals(variantLanguage, language)) {
-					continue;
-				}
-				// ... or the language variants, which are currently used by the object
-				if (alternativeMeshLanguages.contains(variantLanguage)) {
-					continue;
-				}
-				remove(variant.project, (VersioningParameters) null, objType, getMeshUuid(object),
-						variant.getLanguage());
+				handler.accept(new Scheduled(nodeId, new NodeObjectWithAttributes<NodeObject>(object),
+						alternativeLanguage, false), null);
 			}
 		}
 
-		if (toUpdate == null) {
-			// element not found, need to create it, so we remove the set of dirted attributes
-			// (creating the object must render everything)
-			usedScheduled.get().setAttributes(null);
-			// when the object is prerendered, we make sure that the entry "cms_id" is present
-			if (usedScheduled.tagmapEntries != null) {
-				try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, usedScheduled.get().getObject(),
-						false, true)) {
-					usedScheduled.tagmapEntries.putAll(render(
-							getEntries(usedScheduled.get().getObject().getTType()).stream()
-									.filter(entry -> "cms_id".equals(entry.getMapname())).collect(Collectors.toList()),
-							null, usedScheduled.getRenderedLanguage()));
-				}
-			}
-
-			if (parentObject == null || object instanceof Form) {
-				// object has no parent (is root folder) or is a form, so it can be handled
-				idSet.add(objId);
-				// add alternative languages if needed
-				for (Pair<Scheduled, MeshObject> alternative : scheduledAlternatives) {
-					handler.accept(alternative.getLeft(), alternative.getRight());
-				}
-				handler.accept(usedScheduled, null);
-			} else {
-				trackerContainer.check(project, parentObject, nodeId, () -> {
-					// add alternative languages if needed
-					for (Pair<Scheduled, MeshObject> alternative : scheduledAlternatives) {
-						handler.accept(alternative.getLeft(), alternative.getRight());
-					}
-					handler.accept(usedScheduled, null);
-				}, (scheduledParent, isNew) -> {
-					logger.debug(String.format("%s depends on %s to be handled first", object, parentObject));
-					usedScheduled.dependsOn(scheduledParent);
-					putBack.accept(usedScheduled);
-					if (isNew) {
-						handle(project, nodeId, scheduledParent, handler, putBack);
-					}
-				});
-			}
-		} else {
-			// element found
-			if (parentObject == null) {
-				// object has no parent (is root folder), so it can be handled
-				idSet.add(objId);
-				// add alternative languages if needed
-				for (Pair<Scheduled, MeshObject> alternative : scheduledAlternatives) {
-					handler.accept(alternative.getLeft(), alternative.getRight());
-				}
-				handler.accept(usedScheduled, toUpdate);
-			} else if (StringUtils.isEqual(toUpdate.getParentUuid(), getMeshUuid(parentObject))) {
-				// parent stays the same, so object can be handled
-				idSet.add(objId);
-				// add alternative languages if needed
-				for (Pair<Scheduled, MeshObject> alternative : scheduledAlternatives) {
-					handler.accept(alternative.getLeft(), alternative.getRight());
-				}
-				handler.accept(usedScheduled, toUpdate);
-			} else {
-				trackerContainer.check(project, parentObject, nodeId, () -> {
-					// add alternative languages if needed
-					for (Pair<Scheduled, MeshObject> alternative : scheduledAlternatives) {
-						handler.accept(alternative.getLeft(), alternative.getRight());
-					}
-					handler.accept(usedScheduled, toUpdate);
-				}, (scheduledParent, isNew) -> {
-					logger.debug(String.format("%s depends on %s to be handled first", object, parentObject));
-					usedScheduled.dependsOn(scheduledParent);
-					putBack.accept(usedScheduled);
-					if (isNew) {
-						handle(project, nodeId, scheduledParent, handler, putBack);
-					}
-				});
-			}
-		}
+		handler.accept(scheduled, null);
 	}
 
 	/**
@@ -3533,7 +3408,28 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	protected boolean existsInMesh(int nodeId, MeshProject project, NodeObject object) throws NodeException {
-		return getTrackedNodes(nodeId).check(project, object);
+		int id = object.getId();
+		if (written.getOrDefault(nodeId, Collections.emptyMap()).getOrDefault(object.getTType(), Collections.emptySet()).contains(id)) {
+			return true;
+		}
+		if (missing.getOrDefault(nodeId, Collections.emptyMap()).getOrDefault(object.getTType(), Collections.emptySet()).contains(id)) {
+			return false;
+		}
+
+		String meshUuid = getMeshUuid(object);
+		return client.findNodeByUuid(project.name, meshUuid, new GenericParametersImpl().setETag(false)).toSingle().map(Optional::of).onErrorResumeNext(t -> {
+			return ifNotFound(t, () -> {
+				return Single.just(Optional.empty());
+			});
+		}).map(optionalResponse -> {
+			if (optionalResponse.isPresent()) {
+				getWrittenSet(nodeId, object.getTType()).add(id);
+				return true;
+			} else {
+				getMissingSet(nodeId, object.getTType()).add(id);
+				return false;
+			}
+		}).blockingGet();
 	}
 
 	/**
@@ -3549,93 +3445,204 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	protected void save(WriteTask task) throws NodeException {
-		MeshRequest<NodeResponse> response = null;
+		save(task, true, null);
+	}
 
-		// check (again) whether the object was instant published in meantime
-		if (controller != null && controller.publishProcess && PublishController.wasInstantPublished(task.objType, task.objId)) {
-			if (renderResult != null) {
-				try {
-					renderResult.info(MeshPublisher.class, String.format("Omit writing %d.%d into {%s} for node %d, because it was instant published",
-							task.objType, task.objId, cr.getName(), task.nodeId));
-				} catch (NodeException e) {
-				}
-			}
-			if (task.tracker != null) {
-				task.tracker.created(task.project);
-			}
-			return;
+	/**
+	 * Write an object to Mesh:
+	 * <ol>
+	 * <li>Create/Update the language version of the node (with the fields)</li>
+	 * <li>Optionally move the object to its correct parent</li>
+	 * <li>Perform the optional postSave operation</li>
+	 * <li>Publish the language version of the node</li>
+	 * <li>Mark the task to be done and report back to the PublishQueue</li>
+	 * </ol>
+	 * @param task
+	 * @param withSemaphore whether the acquire a semaphore
+	 * @param doAfter optional completable to do after saving
+	 * @throws NodeException
+	 */
+	protected void save(WriteTask task, boolean withSemaphore, Completable doAfter) throws NodeException {
+		if (withSemaphore) {
+			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
-
-		if (task.baseVersion == null) {
-			// create the node
-			NodeCreateRequest request = new NodeCreateRequest();
-			request.setLanguage(task.language);
-			request.setParentNodeUuid(task.parentUuid);
-			request.setSchema(new SchemaReferenceImpl().setName(task.schema));
-			request.setFields(task.fields);
-			response = client.createNode(task.uuid, task.project.name, request, task.project.enforceBranch(task.nodeId),
-					new GenericParametersImpl().setETag(false).setFields("uuid", "parent"));
-		} else {
-			// update the node
-			NodeUpdateRequest request = new NodeUpdateRequest();
-			request.setLanguage(task.language);
-			// set the base version to "draft" to avoid "409 Conflict" responses. The rationale behind this is that - even though we just tested, whether the object
-			// was instant published meanwhile (after the baseVersion was loaded), it still might be that the object was instant published after this test. In these rare
-			// cases, we don't want the publish process to fail, but rather have the object overwritten with the - possibly older - version. The object will be published
-			// again in the next publish run with the correct version anyways.
-			request.setVersion("draft");
-			request.setFields(task.fields);
-			response = client.updateNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
-					new GenericParametersImpl().setETag(false).setFields("uuid", "parent"));
-		}
-
-		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		logger.debug(String.format("Start saving %d.%d", task.objType, task.objId));
+		Completable completable = prepare(task);
+		if (doAfter != null) {
+			completable = completable.andThen(doAfter);
+		}
 		try {
-			response.toSingle()
-				.flatMap(node -> setRolePermissions(task, node))
-				.flatMap(node -> move(task, node))
-				.flatMap(node -> postSave(task, node))
-				.flatMap(node -> publish(task, node))
-				.doOnError(t -> {
-					if (!task.postponable || !isRecoverable(t)) {
-					errorHandler.accept(new NodeException(String.format("Error while performing task '%s' for '%s'", task, cr.getName()), t));
-					}
-				})
-				.doOnSuccess(node -> {
-					if (renderResult != null) {
-						try {
-							renderResult.info(MeshPublisher.class,
-									String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
-						} catch (NodeException e) {
-						}
-					}
-					if (task.tracker != null) {
-						task.tracker.created(task.project);
-					}
-
-					if (task.postponed != null) {
-						logger.debug(String.format("Postponing update of %d.%d", task.objType, task.objId));
-						task.baseVersion = "draft";
-						task.postSave = null;
-						postponedTasks.add(task);
-					} else {
-						task.reportDone();
-					}
-				}).blockingGet();
+			completable.blockingAwait();
 		} catch (Throwable t) {
 			if (task.postponable && isRecoverable(t)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Postponing update of %d.%d due to recoverable error '%s'", task.objType, task.objId, t.getMessage()));
+				if (MeshPublishUtils.isNotFound(t)) {
+					// get parent folder
+					Folder parentFolder = Trx.supply(tx -> tx.getObject(Folder.class, task.folderId));
+					Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
+
+					// generate the write task for the parent folder
+					Scheduled scheduledParent = Scheduled.from(task.nodeId, new NodeObjectWithAttributes<>(parentFolder));
+					WriteTask parentTask = Trx.supply(() -> generateWriteTask(node, task.project, scheduledParent, null, null));
+
+					Completable postponedCompletable = prepare(task);
+					if (doAfter != null) {
+						postponedCompletable = postponedCompletable.andThen(doAfter);
+					}
+					save(parentTask, false, postponedCompletable);
+				} else {
+					boolean postpone = true;
+					Optional<Pair<String,String>> conflictingNode = MeshPublishUtils.getConflictingNode(t);
+					if (conflictingNode.isPresent()) {
+						String conflictingUuid = conflictingNode.get().getLeft();
+						String conflictingLanguage = conflictingNode.get().getRight();
+
+						if (org.apache.commons.lang3.StringUtils.equals(conflictingUuid, task.uuid)
+								&& !org.apache.commons.lang3.StringUtils.equals(conflictingLanguage, task.language)) {
+							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
+							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
+
+							if (!cr.mustContain(languageVariant)) {
+								// remove language variant
+								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
+								// repeat task
+								task.perform(false);
+								postpone = false;
+							}
+						}
+					}
+
+					if (postpone) {
+						if (logger.isDebugEnabled()) {
+							logger.debug(String.format("Postponing update of %d.%d due to recoverable error '%s'", task.objType, task.objId, t.getMessage()));
+						}
+						postponedTasks.add(task);
+					}
 				}
-				postponedTasks.add(task);
 			} else {
 				throw t;
 			}
 		} finally {
 			logger.debug(String.format("Finished saving %d.%d", task.objType, task.objId));
-			semaphoreMap.release(lockKey);
+			if (withSemaphore) {
+				semaphoreMap.release(lockKey);
+			}
 		}
+	}
+
+	/**
+	 * Prepare the completable to write the given task
+	 * @param task task
+	 * @return completable
+	 */
+	protected Completable prepare(WriteTask task) {
+		MeshRequest<NodeResponse> response = null;
+
+		// upsert the node
+		NodeUpsertRequest request = new NodeUpsertRequest();
+		request.setLanguage(task.language);
+		request.setParentNodeUuid(task.parentUuid);
+		request.setSchema(new SchemaReferenceImpl().setName(task.schema));
+		request.setFields(task.fields);
+
+		if (supportsPublishOnCreate) {
+			request.setPublish(true);
+			if (task.roles != null) {
+				request.setGrant(createPermissionUpdateRequests(task));
+			}
+		}
+
+		boolean supportsAlternativeLanguages = supportsAlternativeLanguages(task.objType) && task.alternativeMeshLanguages != null;
+		GenericParameters params = supportsAlternativeLanguages
+				? new GenericParametersImpl().setETag(false).setFields("uuid", "parent", "languages")
+				: new GenericParametersImpl().setETag(false).setFields("uuid", "parent");
+		response = client.upsertNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
+				params);
+
+		return ensureRoles(task.roles)
+			.andThen(
+				response.toSingle()
+					.doOnSubscribe(disp -> saveNodeCounter.incrementAndGet())
+					.flatMap(node -> setRolePermissions(task, node))
+					.flatMap(node -> move(task, node))
+					.flatMap(node -> postSave(task, node))
+					.flatMap(node -> publish(task, node))
+					.doOnError(t -> {
+						if (!task.postponable || !isRecoverable(t)) {
+							errorHandler.accept(new NodeException(String.format("Error while performing task '%s' for '%s'", task, cr.getName()), t));
+						}
+					})
+					.doOnSuccess(node -> {
+						if (renderResult != null) {
+							try {
+								renderResult.info(MeshPublisher.class,
+										String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
+							} catch (NodeException e) {
+							}
+						}
+						setWritten(task);
+
+						if (supportsAlternativeLanguages && node.getAvailableLanguages() != null) {
+							Set<String> languages = node.getAvailableLanguages().keySet();
+							// remove the primary language
+							languages.remove("en");
+							// remove all the languages that should exist
+							languages.removeAll(task.alternativeMeshLanguages);
+
+							if (!languages.isEmpty()) {
+								Node cmsNode = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
+								for (String lang : languages) {
+									remove(task.project, cmsNode, task.objType, task.uuid, lang, false);
+								}
+							}
+						}
+
+						if (task.postponed != null) {
+							logger.debug(String.format("Postponing update of %d.%d", task.objType, task.objId));
+							task.exists = true;
+							task.postSave = null;
+							postponedTasks.add(task);
+						} else {
+							task.reportDone();
+						}
+				})).ignoreElement()
+			.andThen(task.project.setPermissions(task.roles));
+	}
+
+	/**
+	 * Set the object contained in the task to be written to Mesh
+	 * @param task write task
+	 */
+	protected void setWritten(WriteTask task) {
+		getWrittenSet(task.nodeId, task.objType).add(task.objId);
+		Set<Integer> missingSet = missing.getOrDefault(task.nodeId, Collections.emptyMap())
+			.getOrDefault(task.objType, Collections.emptySet());
+		if (!missingSet.isEmpty()) {
+			missingSet.remove(task.objId);
+		}
+	}
+
+	/**
+	 * Get the modifiable set containing IDs of objects, which were already written to Mesh for the nodeId and objType.
+	 * If the set does not yet exist, create it
+	 * @param nodeId node ID
+	 * @param objType object type
+	 * @return set of IDs
+	 */
+	protected Set<Integer> getWrittenSet(int nodeId, int objType) {
+		return written.computeIfAbsent(nodeId, k -> Collections.synchronizedMap(new HashMap<>()))
+				.computeIfAbsent(objType, k -> Collections.synchronizedSet(new HashSet<>()));
+	}
+
+	/**
+	 * Get the modifiable set containing IDs of objects, which are known to be missing in Mesh for the nodeId and objType.
+	 * If the set does not yet exist, create it
+	 * @param nodeId node ID
+	 * @param objType object type
+	 * @return set of IDs
+	 */
+	protected Set<Integer> getMissingSet(int nodeId, int objType) {
+		return missing.computeIfAbsent(nodeId, k -> Collections.synchronizedMap(new HashMap<>()))
+				.computeIfAbsent(objType, k -> Collections.synchronizedSet(new HashSet<>()));
 	}
 
 	/**
@@ -3670,10 +3677,28 @@ public class MeshPublisher implements AutoCloseable {
 			return Single.just(node);
 		}
 
+		if (supportsPublishOnCreate) {
+			return Single.just(node);
+		}
+
 		return ensureRoles(task.roles)
-			.andThen(createPermissionUpdateRequests(task, node.getUuid()))
+			.andThen(updatePermissions(task, node.getUuid()))
 			.andThen(task.project.setPermissions(task.roles))
 			.andThen(Single.just(node));
+	}
+
+	/**
+	 * Create the request that will perform the permission update requests.
+	 *
+	 * @param task The current write task.
+	 * @return the request for updating the permissions
+	 */
+	protected ObjectPermissionGrantRequest createPermissionUpdateRequests(WriteTask task) {
+		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
+		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
+		request.setExclusive(true);
+		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
+		return request;
 	}
 
 	/**
@@ -3683,12 +3708,8 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param nodeUuid The UUID of the currently published node.
 	 * @return A {@code Completable} which will perform the necessary permission update requets.
 	 */
-	protected Completable createPermissionUpdateRequests(WriteTask task, String nodeUuid) {
-		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
-		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
-		request.setExclusive(true);
-		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
-		return client.grantNodeRolePermissions(task.project.name, nodeUuid, request).toCompletable();
+	protected Completable updatePermissions(WriteTask task, String nodeUuid) {
+		return client.grantNodeRolePermissions(task.project.name, nodeUuid, createPermissionUpdateRequests(task)).toCompletable();
 	}
 
 	/**
@@ -3699,6 +3720,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * 		have been created in Mesh.
 	 */
 	protected Completable ensureRoles(Collection<String> neededRoles) {
+		if (CollectionUtils.isEmpty(neededRoles)) {
+			return Completable.complete();
+		}
 		Map<String, String> currentRolesMap = getRoleMap();
 
 		return Observable.fromIterable(neededRoles)
@@ -3742,6 +3766,10 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return single node response
 	 */
 	protected Single<NodeResponse> publish(WriteTask task, NodeResponse node) {
+		if (supportsPublishOnCreate) {
+			return Single.just(node);
+		}
+
 		return client.publishNodeLanguage(task.project.name, task.uuid, task.language, task.project.enforceBranch(task.nodeId)).toSingle()
 				.flatMap(status -> Single.just(node));
 	}
@@ -3771,31 +3799,26 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Interconnect the trackers of the given scheduled objects
-	 * @param scheduled "main" scheduled object
-	 * @param alternatives scheduled alternatives (language variants)
+	 * Get existing languages for the form in Mesh (returns empty set, if node does not yet exist)
+	 * @param project mesh project
+	 * @param uuid form uuid
+	 * @return single emitting the set of existing language tags
 	 */
-	protected void interconnectTrackers(Scheduled scheduled, Set<Scheduled> alternatives) {
-		if (CollectionUtils.isEmpty(alternatives)) {
-			return;
-		}
-		Set<MeshNodeTracker> trackers = Collections.synchronizedSet(new HashSet<>());
-		if (scheduled != null && scheduled.tracker != null) {
-			trackers.add(scheduled.tracker);
-		}
-		if (alternatives != null) {
-			for (Scheduled altScheduled : alternatives) {
-				if (altScheduled.tracker != null) {
-					trackers.add(altScheduled.tracker);
-				}
+	protected Single<Set<String>> getExistingFormLanguages(MeshProject project, String uuid) {
+		return client.findNodeByUuid(project.name, uuid, new GenericParametersImpl().setETag(false)).toSingle().map(Optional::of).onErrorResumeNext(t -> {
+			return ifNotFound(t, () -> {
+				MeshPublisher.logger.debug(String.format("Node %s not found", uuid));
+				return Single.just(Optional.empty());
+			});
+		}).map(optionalResponse -> {
+			if (optionalResponse.isPresent()) {
+				MeshPublisher.logger.debug(String.format("Found languages %s in form %s", optionalResponse.get().getAvailableLanguages().keySet(), uuid));
+				return optionalResponse.get().getAvailableLanguages().keySet();
+			} else {
+				MeshPublisher.logger.debug(String.format("Found no languages for form %s", uuid));
+				return Collections.emptySet();
 			}
-		}
-
-		if (trackers.size() >= 2) {
-			for (MeshNodeTracker tracker : trackers) {
-				tracker.setConnectedTrackers(trackers);
-			}
-		}
+		});
 	}
 
 	/**
@@ -3821,16 +3844,6 @@ public class MeshPublisher implements AutoCloseable {
 		 * Optionally set tagmap entries
 		 */
 		protected Map<TagmapEntryRenderer, Object> tagmapEntries;
-
-		/**
-		 * Set of scheduled jobs, this job depends on
-		 */
-		protected Set<Scheduled> dependsOn = new HashSet<>();
-
-		/**
-		 * Tracker for this scheduled job
-		 */
-		protected MeshNodeTracker tracker;
 
 		/**
 		 * Flag to mark scheduled objects that need to be reported to the publish queue
@@ -3916,30 +3929,6 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		/**
-		 * Check whether this job is done
-		 * @return true for done jobs
-		 */
-		public boolean isDone() {
-			return tracker != null ? tracker.exists() : true;
-		}
-
-		/**
-		 * Let this job depend on another job
-		 * @param other dependency
-		 */
-		public void dependsOn(Scheduled other) {
-			dependsOn.add(other);
-		}
-
-		/**
-		 * Check whether all dependencies are done
-		 * @return true iff all dependencies are done (or this job has no dependencies)
-		 */
-		public boolean dependenciesDone() {
-			return dependsOn.stream().filter(v -> !v.isDone()).map(Scheduled::isDone).findFirst().orElse(true);
-		}
-
-		/**
 		 * Report publishing an object
 		 * @param publishInfo optional publish info
 		 */
@@ -3952,41 +3941,6 @@ public class MeshPublisher implements AutoCloseable {
 					MBeanRegistry.getPublisherInfo().publishedFile(nodeId);
 					publishInfo.fileRendered();
 				}
-			}
-		}
-
-		/**
-		 * Initiate the {@link #tracker} for this instance, if not done before.
-		 * If a tracker was already created before, it might be bound to another instance of {@link Scheduled}, which will be
-		 * returned and must be used as replacement of this instance
-		 * @param project mesh project
-		 * @param trackerContainer tracker container
-		 * @return scheduled job for the tracker
-		 * @throws NodeException
-		 */
-		public Scheduled initTracker(MeshProject project, MeshNodeTrackerContainer trackerContainer) throws NodeException {
-			if (tracker == null) {
-				NodeObject object = wrapped.getObject();
-				logger.debug(String.format("Init tracker for %s", object));
-				tracker = trackerContainer.get(project, getMeshUuid(object), language);
-				if (tracker.scheduledJob == null) {
-					tracker.scheduledJob = this;
-				}
-				return tracker.scheduledJob;
-			} else{
-				return this;
-			}
-		}
-
-		/**
-		 * Remove the tracker (if it exists)
-		 * @param trackerContainer tracker container
-		 * @throws NodeException
-		 */
-		public void removeTracker(MeshNodeTrackerContainer trackerContainer) throws NodeException {
-			if (tracker != null) {
-				trackerContainer.remove(wrapped.getObject(), language);
-				tracker = null;
 			}
 		}
 
@@ -4048,274 +4002,9 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
-	 * Implementation of trackers that will track the existance/creation of objects in Mesh
-	 */
-	protected class MeshNodeTracker {
-		/**
-		 * Scheduled job (if object did not exist and has to be created)
-		 */
-		private Scheduled scheduledJob;
-
-		/**
-		 * Project that is set, when the object was created by the publisher
-		 */
-		private MeshProject createdInProject = null;
-
-		/**
-		 * Maybe the mesh project, where the node was found
-		 */
-		private Maybe<MeshProject> exists;
-
-		/**
-		 * Set of trackers, which are connected to this one (these are trackers for other language variants of the same object)
-		 */
-		private Set<MeshNodeTracker> connectedTrackers;
-
-		/**
-		 * Create an instance for the given object. This will initiate the mesh call to find the object, but will not block until the response is here.
-		 * @param project mesh project
-		 * @param meshUuid mesh UUID
-		 * @param language mesh language
-		 */
-		private MeshNodeTracker(MeshProject project, String meshUuid, String language) {
-			LinkedHashSet<MeshProject> projects = new LinkedHashSet<>();
-			projects.add(project);
-			projects.addAll(projectMap.values());
-			projects.addAll(alternativeProjects);
-
-			exists = Observable.fromIterable(projects).flatMap(p -> loadNodeFromProject(p, meshUuid, language).toObservable(), 1).firstElement().cache();
-			exists.subscribe();
-		}
-
-		/**
-		 * Load the node from the project and return project name as Maybe
-		 * @param project project
-		 * @param meshUuid mesh UUID
-		 * @param language mesh language
-		 * @return Maybe project (empty if node not found)
-		 */
-		private Maybe<MeshProject> loadNodeFromProject(MeshProject project, String meshUuid, String language) {
-			return client.findNodeByUuid(project.name, meshUuid, new NodeParametersImpl().setLanguages(language)).toMaybe().map(response -> project).onErrorComplete();
-		}
-
-		/**
-		 * Call the callback with an instance of {@link Scheduled} for the object. This method makes sure that only one instance if {@link Scheduled} is created
-		 * for each object
-		 * @param nodeId node ID
-		 * @param object object
-		 * @param consumer callback
-		 * @throws NodeException
-		 */
-		protected void schedule(int nodeId, NodeObject object, BiConsumer<Scheduled, Boolean> consumer)
-				throws NodeException {
-			boolean newScheduled = false;
-			synchronized (this) {
-				if (scheduledJob == null) {
-					scheduledJob = Scheduled.from(nodeId, new NodeObjectWithAttributes<>(object));
-					scheduledJob.tracker = this;
-					newScheduled = true;
-				}
-			}
-			consumer.accept(scheduledJob, newScheduled);
-		}
-
-		/**
-		 * Set the tracked object to be created
-		 * @param project project, where the object was created
-		 */
-		public void created(MeshProject project) {
-			createdInProject = project;
-			scheduledJob = null;
-
-			// set all connected trackers to "created"
-			if (connectedTrackers != null) {
-				connectedTrackers.stream().forEach(tracker -> {
-					tracker.createdInProject = project;
-					tracker.scheduledJob = null;
-				});
-			}
-		}
-
-		/**
-		 * Check whether the object exists in Mesh.
-		 * @return true iff the object exists in Mesh
-		 */
-		public boolean exists() {
-			return (createdInProject != null) || (exists.blockingGet() != null);
-		}
-
-		/**
-		 * Get the project, where the object exists or null, if the object does not exist
-		 * @return
-		 */
-		public MeshProject getProject() {
-			return createdInProject != null ? createdInProject : exists.blockingGet();
-		}
-
-		/**
-		 * Set the connected trackers
-		 * @param connectedTrackers connected trackers
-		 */
-		public void setConnectedTrackers(Set<MeshNodeTracker> connectedTrackers) {
-			this.connectedTrackers = connectedTrackers;
-		}
-	}
-
-	/**
-	 * Encapsulation of tracking Nodes in Mesh
-	 */
-	protected class MeshNodeTrackerContainer {
-		/**
-		 * Map of uuid-language -> Tracker instances
-		 */
-		protected Map<String, MeshNodeTracker> trackers = new ConcurrentHashMap<>();
-
-		/**
-		 * Get the tracker instance for the given object. Create one if not yet done
-		 * @param project mesh project
-		 * @param meshUuid mesh uuid
-		 * @param language language
-		 * @return tracker
-		 * @throws NodeException
-		 */
-		protected MeshNodeTracker get(MeshProject project, String meshUuid, String language) throws NodeException {
-			String objectKey = String.format("%s-%s", meshUuid, language);
-
-			return trackers.computeIfAbsent(objectKey, key -> new MeshNodeTracker(project, meshUuid, language));
-		}
-
-		/**
-		 * Remove the tracker for the given object
-		 * @param object object
-		 * @param language language
-		 * @throws NodeException
-		 */
-		public void remove(NodeObject object, String language) throws NodeException {
-			String meshUuid = getMeshUuid(object);
-			String objectKey = String.format("%s-%s", meshUuid, language);
-			trackers.remove(objectKey);
-		}
-
-		/**
-		 * Use the tracker for the object to check, whether the object already exists in Mesh
-		 * @param project mesh project
-		 * @param object object
-		 * @return true iff the object already exists in Mesh
-		 * @throws NodeException
-		 */
-		public boolean check(MeshProject project, NodeObject object) throws NodeException {
-			return get(project, getMeshUuid(object), getMeshLanguage(object)).exists();
-		}
-
-		/**
-		 * Read the object from Mesh, when it exists, return empty map if the object does not exist
-		 * @param project mesh project
-		 * @param object object
-		 * @param language language
-		 * @param nodeId node ID
-		 * @return map of variants (as MeshObject instances)
-		 * @throws NodeException
-		 */
-		public Map<String, MeshObject> read(MeshProject project, NodeObject object, String language, int nodeId) throws NodeException {
-			return read(project, normalizeObjType(object.getTType()), getMeshUuid(object), language, nodeId);
-		}
-
-		/**
-		 * Read the object from Mesh, when it exists, return empty map if the object does not exist
-		 * @param project mesh project
-		 * @param objType object type
-		 * @param meshUuid mesh uuid
-		 * @param language language
-		 * @param nodeId node ID
-		 * @return map of variants (as MeshObject instances)
-		 * @throws NodeException
-		 */
-		public Map<String, MeshObject> read(MeshProject project, int objType, String meshUuid, String language, int nodeId) throws NodeException {
-			MeshProject foundInProject = get(project, meshUuid, language).getProject();
-
-			if (foundInProject != null) {
-				return getLanguageVariants(foundInProject, objType, meshUuid, nodeId);
-			} else {
-				return Collections.emptyMap();
-			}
-		}
-
-		/**
-		 * Get language variants of object
-		 * @param project project containing the object
-		 * @param object object
-		 * @param nodeId node ID
-		 * @return map of language variants
-		 * @throws NodeException
-		 */
-		protected Map<String, MeshObject> getLanguageVariants(MeshProject project, NodeObject object, int nodeId) throws NodeException {
-			return getLanguageVariants(project, normalizeObjType(object.getTType()), getMeshUuid(object), nodeId);
-		}
-
-		/**
-		 * Get language variants of object
-		 * @param project project containing the object
-		 * @param objType object type
-		 * @param nodeId node ID
-		 * @return map of language variants
-		 * @throws NodeException
-		 */
-		protected Map<String, MeshObject> getLanguageVariants(MeshProject project, int objType, String meshUuid, int nodeId) throws NodeException {
-			String graphQlQuery = languageVersionsGraphQL.get(objType);
-			GraphQLRequest request = new GraphQLRequest().setQuery(graphQlQuery).setVariables(new JsonObject().put("uuid", meshUuid));
-
-			GraphQLResponse response = client.graphql(project.name, request, project.enforceBranch(nodeId), doNotWaitForIdle).blockingGet();
-			Map<String, MeshObject> variantsMap = new HashMap<>();
-
-			JsonObject node = response.getData().getJsonObject("node");
-			if (node != null) {
-				JsonArray languages = node.getJsonArray("languages");
-
-				if (languages != null) {
-					for (int i = 0; i < languages.size(); i++) {
-						MeshObject meshObject = new MeshObject(project, languages.getJsonObject(i));
-						variantsMap.put(meshObject.getLanguage(), meshObject);
-					}
-				}
-			}
-
-			return variantsMap;
-		}
-
-		/**
-		 * Use the tracker to check, whether the object already exists in Mesh.
-		 * @param project mesh project
-		 * @param object object
-		 * @param nodeId node ID
-		 * @param whenExists callback that is called when the object already exists
-		 * @param whenScheduled callback that is called when the object does not exist. Will get the Scheduled Job and a boolean to specify whether scheduled job was just created (and not yet handled/queued)
-		 * @throws NodeException
-		 */
-		public void check(MeshProject project, NodeObject object, int nodeId, Operator whenExists, BiConsumer<Scheduled, Boolean> whenScheduled)
-				throws NodeException {
-			MeshNodeTracker tracker = get(project, getMeshUuid(object), getMeshLanguage(object));
-			if (tracker.exists()) {
-				// check whether the object has a language variant in the release
-				if (!getLanguageVariants(tracker.getProject(), object, nodeId).isEmpty()) {
-					whenExists.operate();
-				} else if (whenScheduled != null) {
-					tracker.schedule(nodeId, object, whenScheduled);
-				}
-			} else if (whenScheduled != null) {
-				tracker.schedule(nodeId, object, whenScheduled);
-			}
-		}
-	}
-
-	/**
 	 * Class for mesh objects loaded via graphql
 	 */
 	protected class MeshObject {
-		/**
-		 * Version String
-		 */
-		protected String version;
-
 		/**
 		 * Id of the object in GCMS
 		 */
@@ -4343,7 +4032,6 @@ public class MeshPublisher implements AutoCloseable {
 		 */
 		public MeshObject(MeshProject project, JsonObject element) {
 			this.project = project;
-			version = element.getString("version");
 			language = element.getString("language");
 			JsonObject parent = element.getJsonObject("parent");
 			if (parent != null) {
@@ -4356,11 +4044,17 @@ public class MeshPublisher implements AutoCloseable {
 		}
 
 		/**
-		 * Get the version string
-		 * @return version string
+		 * Create an instance
+		 * @param cmsId cms ID
+		 * @param language language
+		 * @param parentUuid parent UUID
+		 * @param project project
 		 */
-		public String getVersion() {
-			return version;
+		public MeshObject(int cmsId, String language, String parentUuid, MeshProject project) {
+			this.cmsId = cmsId;
+			this.language = language;
+			this.parentUuid = parentUuid;
+			this.project = project;
 		}
 
 		/**
@@ -5116,6 +4810,9 @@ public class MeshPublisher implements AutoCloseable {
 		 * @return completable
 		 */
 		protected Completable setPermissions(Collection<String> roles) {
+			if (CollectionUtils.isEmpty(roles)) {
+				return Completable.complete();
+			}
 			Set<String> missingPermissions = new HashSet<>(roles);
 
 			missingPermissions.removeAll(rolesWithPermissions);

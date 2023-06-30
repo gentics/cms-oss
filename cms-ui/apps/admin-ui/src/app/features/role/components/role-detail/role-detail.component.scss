@@ -3,3 +3,37 @@
 .gtx-entity-details-tab-content-body-form {
     align-items: center;
 }
+
+.language-permissions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .language-group {
+        flex: 1 0 33%;
+        padding: 1rem;
+        min-width: 20rem;
+
+        &.all-languages {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+    }
+
+    .role-language-title {
+        margin-top: 10px;
+        border-bottom: 1px solid $gtx-color-mid-gray;
+        margin-bottom: 5px;
+        padding-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        text-transform: uppercase;
+    }
+
+    .role-language-content {
+        > gtx-checkbox {
+            margin: 0.5rem 0;
+            display: block;
+        }
+    }
+}

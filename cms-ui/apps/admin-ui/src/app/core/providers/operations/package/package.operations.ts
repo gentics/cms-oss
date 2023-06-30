@@ -26,6 +26,7 @@ import {
     PackageListResponse,
     PackageLoadResponse,
     PackageSyncOptions,
+    PackageSyncResponse,
     PagedConstructListRequestOptions,
     Raw,
     TagType,
@@ -63,19 +64,43 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
     /**
      * Get the current status information for the automatic synchronization
      */
-    getSyncState(): Observable<{
-        enabled: boolean;
-    }> {
+    getSyncState(): Observable<PackageSyncResponse> {
         return this.api.devTools.getSyncState();
+    }
+
+    /**
+     * Start the sync
+     */
+    startSync(): Observable<PackageSyncResponse> {
+        return this.api.devTools.startSync().pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'package.autosync_activate_message',
+                    type: 'success',
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
     }
 
     /**
      * Stop the sync, if it was started by the current user
      */
-    stopSync(): Observable<{
-        enabled: boolean;
-    }> {
-        return this.api.devTools.stopSync();
+    stopSync(): Observable<PackageSyncResponse> {
+        return this.api.devTools.stopSync().pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'package.autosync_deactivate_message',
+                    type: 'success',
+                });
+            }),
+            // Hacky workaround because the backend may not respond with a body
+            map(res => ({
+                ...(res || {}),
+                enabled: res?.enabled || false,
+            } as any)),
+            this.catchAndRethrowError(),
+        );
     }
 
     // PACKAGES ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

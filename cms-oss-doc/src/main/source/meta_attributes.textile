@@ -1,0 +1,402 @@
+h2. List of meta attributes
+
+A comprehensive list of all meta attributes available in the CMS.
+
+endprologue.
+
+NOTE: If you're looking for detailed description on how meta attributes are used
+head over to "using meta attributes":using_meta_attributes.html.
+
+h3. Baseobjects
+
+h4. Page
+
+|_. Property name |_. Description |
+| id | id of the actual page |
+| url | address of the actual page |
+| "template":meta_attributes.html#template | template of the actual page |
+| name | name of the actual page |
+| filename | filename of the actual page |
+| description | description of the actual page |
+| priority | priority of the actual page |
+| "tags":meta_attributes.html#tag | tags of the actual page |
+| publishtimestamp | UNIX timestamp of the last time a user clicked "publish" |
+| publishdate | date of the last time a user clicked "publish" |
+| creationtimestamp | UNIX timestamp of the creationdate (taken from customCdate, if set, or the cdate) |
+| creationdate | date of the page creation (taken from customCdate, if set, or the cdate) |
+| edittimestamp | UNIX timestamp of last page update (taken from customEdate, if set, or the edate) |
+| editdate | date of last page update (taken from customEdate, if set, or the edate) |
+| "folder":meta_attributes.html#folder | reference to pages folder |
+| "creator":meta_attributes.html#user | reference to pages creator |
+| "editor":meta_attributes.html#user | reference to last editor of the page |
+| "publisher":meta_attributes.html#user | reference to the last publisher of the page |
+| "language":meta_attributes.html#language | reference to the language of the page |
+| languageset.id | id of the pages languageset. A languageset is a collection that groups pages of the same contents but with different translations together. So an English version and a German version of a page have the same +languageset.id+ |
+| languageset."pages":meta_attributes.html#page | reference to other language layouts of the page |
+| online | true, in case page is online, else false |
+| ispage | returns true |
+| versions | version history of the page (see 'version' attribute) |
+| version | last version of the page |
+| version.number | version (e.g. 3.0) |
+| version.date | creationdate of the page |
+| version.editor | editor of the version |
+| version.major | true, if its major version |
+| "object":using_meta_attributes.html#object | object properties of the page |
+| pagevariants | returns all page layouts (independent of the page status |
+| ismaster | true, if its a master page, false if the page is a localized copy |
+| inherited | true, if the page is inherited from a master node, false if not |
+
+h4. Template
+
+|_. Property name |_. Description |
+| id | id of the template |
+| name | name of the template |
+| "tags":meta_attributes.html#tag | list of all available tags of the template |
+| ml | markup language of the template (e.g. php3, php4, etc.) |
+
+
+h4. Folder
+
+|_. Property name |_. Description |
+| id | id of the folder |
+| name | name of the folder |
+| description | description of the folder |
+| "node":meta_attributes.html#node | reference to the folders node |
+| "parent":meta_attributes.html#folder | reference to parent folder or NULL on top level |
+| path | publish path of the folder |
+| "creator":#user | the folders creator |
+| "editor":#user | the last user who edited the folder |
+| creationtimestamp | see "file.createtimestamp":#file |
+| creationdate | see "file.createdate":#file |
+| edittimestamp | see "file.edittimestamp":#file |
+| editdate | see "file.editdate":#file |
+| folders | list of all "subfolders":#folder or NULL |
+| pages | list of "pages":#page in this folder or NULL |
+| files | list of "files":#file of files in this folder or NULL |
+| images | list of "images":#file in this folder or NULL |
+| filesandimages | list of all "files and images":#file in this folder or NULL |
+| children | list of all subfolders, images and files or NULL |
+| isfolder | true |
+| folders | list of all "subfolders":#folder or NULL |
+| "object":meta_attributes.html#object | prefix to access object properties of this folder |
+| ismaster | true, if its a master folder, false if the folder is a localized copy |
+| inherited | true, if the folder is inherited from a master node, false if not |
+
+h4. File
+
+|_. Property name |_. Description |
+| id | id of this file |
+| name | filename |
+| description | description of the file |
+| size | size in bytes (int). same as +sizeb+ |
+| sizeb | size in bytes (int) |
+| sizekb | size in kb (double) |
+| sizemb | size in mb (double) |
+| "folder":meta_attributes.html#folder | reference to the files folder |
+| extension | file extension (eg. "jpg") |
+| "creator":#user | the user who created the file |
+| "editor":#user | last user who edited the file |
+| createtimestamp | UNIX timestamp of creation time |
+| createdate | creation date |
+| edittimestamp | UNIX timestamp of last edit |
+| editdate | last editdate |
+| type | MIME-type of the file |
+| url | link to file |
+| width* | image width (int) |
+| height* | image height (int) |
+| dpix* | horizontal dpi resolution (int) |
+| dpiy* | vertical dpi resolution (int) |
+| dpi* | dpi resolution (int) |
+| fpx* | Focal Point position, relative to the width (float, between 0. and 1.) |
+| fpy* | Focal Point position, relative to the height (float, between 0. and 1.) |
+| isfile | +true+, in case its a file, +false+ (e.g. file is an image). The system will check the MIME-type of the file. If it starts with "image" +isfile+ will return +false+. |
+| isimage | analog to +isfile+ only for images. If the MIME-type of the file starts with "image" +isimage+ will return +true+. |
+| object | object properties of the file |
+| ismaster | true, if its a master file, false if the file is a localized copy |
+| inherited | true, if the file is inherited from a master node, false if not |
+
+ _* these properties are only available for images_
+
+h4. Node
+
+|_. Property name |_. Description |
+| id | id of the node |
+| https | Whether https is enabled (true) for the node or not (false) |
+| host | hostname of the node |
+| "folder":#folder | the nodes root folder |
+| path | path of the node (alias for _pub_dir_) |
+| pub_dir | Publish directory for pages |
+| pub_dir_bin | Publish directory for binary files and images |
+| master | The master node of the current node, if it is a channel or null if the current node is not a channel |
+| utf8 | True if utf8 encoding is enabled, false otherwise |
+| alohaeditor | True if Aloha Editor is enabled for editing, false otherwise |
+| "languages":#language | list of references of languages of the node |
+
+h4. Tag
+
+|_. Property name |_. Description |
+| TAGNAME | references to the tag |
+| tag | references to the current tag |
+| id | id of the tag |
+| name | name of the tag |
+| parts | list of parts of the tag |
+| parts.PARTNAME | references a single part of a tag |
+| empty | +1+ in case the tag does not render any output, +0+ otherwise |
+| visible | +1+ if the tag is active, else +0+ |
+| istag (since Gentics CMS 5.1.3) | will always return +true+ for tags |
+
+h4. Rendermode
+
+|_. Property name |_. Description |
+| publish | +true+ if the page is rendered during a publish process |
+| live | +true+ in case of using the Live Preview |
+| edit | +true+ in case of using the Edit Mode |
+| preview | +true+ in case of using the Preview Mode |
+| real | +true+ in case of using the Real Edit Mode |
+| frontend | +true+ when rendering in frontend mode. The return value is valid in edit mode only. |
+| backend | +true+ when rendering in backend mode. The return value is valid in edit mode only. |
+
+h4. Imps
+
+|_. Property name          |_. Description                                                                                                       |
+| velocitytools            | Velocity ToolsImp                                                                                                   |
+| velocitytools.date       | "DateTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/DateTool.html             |
+| velocitytools.math       | "MathTool":http://velocity.apache.org/tools/1.4/generic/MathTool.html                                               |
+| velocitytools.number     | "NumberTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/NumberTool.html         |
+| velocitytools.esc        | "EscapeTool":http://velocity.apache.org/tools/1.4/generic/EscapeTool.html                                           |
+| velocitytools.alternator | "AlternatorTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/AlternatorTool.html |
+| velocitytools.list       | "ListTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/ListTool.html             |
+| velocitytools.iterator   | "IteratorTool":http://velocity.apache.org/tools/1.4/javadoc/org/apache/velocity/tools/generic/IteratorTool.html     |
+| string                   | "String Formatter Imp":#string-formatter-imp                                                                        |
+| date                     | "Date Formatter Imp":#date-formatter-imp                                                                            |
+| sorter                   | "Sort Imp":#sort-imp                                                                                                |
+| loader                   | "Loader Imp":#loader-imp                                                                                            |
+| url                      | "URL Include Imp":#url-include-imp                                                                                  |
+
+h5. String Formatter Imp
+
+The String Formatter Imp provides methods for escaping and other string manipulation:
+
+|_. Syntax                                                               |_. Description |
+| $cms.imps.string.escapeHTML(string)                                    | Escape special characters (like '<', '>', '&') with entities. |
+| $cms.imps.string.escapeJS(string)                                      | Escapes special javascript characters (like '\', ''', '"') with \ to make them save for output in javascript strings. |
+| $cms.imps.string.stripML(string)                                       | Remove the embedded HTML tags from user input string to prevent potential problems (in fact it removes anything beginning with < and ending with > ). |
+| $cms.imps.string.trim(string, length)                                  | Trim the given string to be no longer than length characters. |
+| $cms.imps.string.regexp(string, pattern, replacement)                  | Replace all occurances of the pattern with replacement. |
+| $cms.imps.string.testRegex(string, regex)                              | Test whether the string matches the regex. |
+| $cms.imps.string.trimWords(string, length)                             | Trim all words in @string@ to be no longer than @length@. Longer words are trimmed using ... as ellipsis. |
+| $cms.imps.string.trimWords(string, length, ellipsis)                   | Trim all words in @string@ to be no longer than @length@. Longer words are trimmed using @ellipsis@. |
+| $cms.imps.string.trimWords(string, length, ellipsis, template)         | Trim all words in @string@ to be no longer than @length@. Longer words are replaced by @template@, where @$trimmedword@ will be replaced by the trimmed word and @$word@ with the original one. |
+| $cms.imps.string.encodeURL(string[, string])                           | URL - encode the specified @string@ and return it. The encoding used to get the bytes for unsafe characters defaults to "utf-8" but may be given as second parameter (e.g. "iso-8859-1"). |
+| $cms.imps.string.implode(Array/Collection, seperator)                  | Convert the given array or collection into a string separating the items with the given string separator. |
+| $cms.imps.string.implode(Array/Collection, separator, prefix, postfix) | See above. In addition the items will be pre- and postfixed. |
+| $cms.imps.string.toUpper(string)                                       | Convert the given string to all uppercase. |
+| $cms.imps.string.md5(string)                                           | Compute the md5 hash of the given String. |
+
+h5. Date Formatter Imp
+
+The DateFormatterImp allows you to format date strings and date objects.
+
+<shell filename="Example: using the DateFormatterImp">
+  // Format the date using the given pattern and the english locale
+  $cms.imps.date.format($date, "dd MMM yyyy HH:mm:ss", "en")
+
+  // Format the date using the given pattern. The local is deduced by inspecting the page language.
+  $cms.imps.date.format($date, "dd MMM yyyy HH:mm:ss")
+
+  // Create a date by using a timestamp
+  $cms.imps.date.fromTimestamp($timestamp)
+
+  // Parse a date string and create a date object
+  $cms.imps.date.parse("22 MAR 1984 12:30:00", "dd MMM yyyy HH:mm:ss", "EN")
+
+  // Calculate difference in years between dateA and dateB
+  $cms.imps.date.dateDiff($dateA, $dateB, "y")
+
+  // Example of using the imp with edittimestamps
+  $cms.imps.date.format($cms.imps.date.fromTimestamp($cms.page.edittimestamp), "MMMM dd, yyyy", "en")
+</shell>
+
+h5. Sort Imp
+
+Sort the given collection (might also be an array or a map) by the given list of properties.
+
+<shell filename="Syntax of the Sort Imp">
+  $cms.imps.sorter.sort(Collection collection, String[] properties[, boolean caseSensitive][, String languageCode])
+</shell>
+
+Sort the given collection (might also be an array or a map) by the given list of properties.
+The sortorder can be independently set for each property in the list.
+When sorting by only one property, one can also pass a single String instead of an array of Strings as value for the parameter properties.
+
+| __collection__    | Collection to be sorted. |
+| __properties__    | Array of sorted properties. The general syntax for a sorted property is @[path.to.property][:asc][:desc]@. If neither @:asc@ nor @:desc@ are given, the sorting is done ascending. |
+| __caseSensitive__ | Optional boolean flag to sort case sensitive (default is @false@). |
+| __languageCode__  | Optional language code. Must be a lower-case, two-letter code as defined by "ISO-639-1":http://www.loc.gov/standards/iso639-2/php/code_list.php. |
+
+h5. Loader Imp
+
+The Loader Imp can be used to retrieve content objects by id.
+
+|_. Syntax                             |_. Description                                                                                       |
+| $cms.imps.loader.getObject(type, id) | Load the object of @type@ with @id@. @type@ can be one of "page", "folder", "image", "file", "node" |
+| $cms.imps.loader.getPage(id)         | Load the page with @id@.                                                                            |
+| $cms.imps.loader.getFolder(id)       | Load the folder with @id@.                                                                          |
+| $cms.imps.loader.getImage(id)        | Load the image with @id@.                                                                           |
+| $cms.imps.loader.getFile(id)         | Load the file with @id@.                                                                            |
+| $cms.imps.loader.getNode(id)         | Load the node with @id@.                                                                            |
+
+h5. URL Include Imp
+
+The +URLIncludeImp+ allows you to include contents from other URLs.
+
+<shell filename="Example: using the URLIncludeImp">
+  $cms.imps.url.include(url, cache, timeout, default)
+</shell>
+
+| __url__     | URL to be requested |
+| __cache__   |  cache lifetime in secs, defaults to 300 secs (5 mins) |
+| __timeout__ |  timeout for accessing the URL and getting the contents in ms, defaults to 2000 ms (2 secs) |
+| __default__ |  default content to be returned, if the URL cannot be accessed (default: null, will result in an error if URL cannot be accessed) |
+
+h3. Childobjects
+
+h4. Language
+
+|_. Property name |_. Description |
+| id | id of current language |
+| code | code of current language (e.g. "de") |
+| name | name of current language (e.g. "Deutsch") |
+
+
+h4. Pagetag/Templatetag Parttype
+
+|_. Property name |_. Description |
+| id | id of the pagetag |
+| "tag":#tag | reference to the tag itself |
+| container | page or template the tag is referencing to |
+
+h4. Markuplanguage
+
+|_. Property name |_. Description |
+| id | id of the markuplanguage |
+| extension | fileextension for this markuplanguage |
+| name | name of the markuplanguage |
+| contenttype | MIME type of the content |
+| feature | Optional feature, the markuplanguage is bound to |
+| excludeFromPublishing | true if pages using templates with this markuplanguage are excluded from publishing |
+
+
+h4. User
+
+|_. Property name |_. Description |
+| id | id number of the user |
+| firstname | the users first name |
+| lastname | the users last name |
+| login | login name of the user |
+| email | mail address of the user |
+| active | true, in case user is active now |
+| "creator":#user | creator of the user |
+| creationdate | date of the creation of the user |
+| creationtimestamp | timestamp (time in seconds since 1.1.1970) of the creation of the user |
+| "editor":#user | editor of the user |
+| editdate | date where the user was edited last time |
+| edittimestamp | timestamp (time in seconds since 1.1.1970) where the user was edited last time |
+| description | description of the user |
+
+
+h3. Parttypes
+
+h4. Overview Parttype
+
+h5. Velocity Properties
+
+Properties available when rendering an overview using velocity:
+
+|_. Property name |_. Description |
+| items           | Collection, viewable objects of the overview |
+| listType        | Type of objects listed in the overview. One of PAGE, FOLDER, IMAGE, FILE, UNDEFINED |
+| selectType      | Object selection type. One of FOLDER, AUTO, MANUAL, UNDEFINED |
+| orderBy         | Ordered attribute. One of CDATE, EDATE, FILESIZE, ALPHABETICALLY, PDATE, PRIORITY, SELF, UNDEFINED |
+| orderDirection  | Order direction. One of ASC, DESC, UNDEFINED |
+| maxItems        | Maximum number of listed items |
+| recursive       | True to select items recursively (when selectType is either FOLDER or AUTO) |
+
+<shell filename="Example: iterating an overview using velocity">
+#foreach($item in $cms.page.tags.overviewtag.overviewpart.items)
+$item.key $item.value
+#end
+</shell>
+
+h5. &lt;node&gt; Template Properties
+
+These placeholders are available in overview templates (when the overview part is rendered directly, without the use of velocity):
+
+|_. Property name |_. Description |
+| &lt;node ds.nr&gt; | iteration counter |
+| &lt;node ds.count&gt; | item count for this overview |
+| &lt;node ds.container&gt; | container object of the overview (eg. a page) |
+
+h4. Datasource/Select (Single)/Select (Multiple) Parttype
+
+h5. Velocity Properties
+
+|_. Property name |_. Description |
+| items | Collection of all entries in the database |
+| selection | Collection of all selected entries in the database |
+| nr | id of the entry |
+| key | entry name |
+| value | value of the entry |
+| keys | name of the dataset in the database |
+| values | values of the database |
+| dsid | internal id of the element |
+
+<shell filename="Example: list items of a multiselect part">
+#foreach( $item in $cms.tag.parts.multiselect.items )
+$item.key - $item.value
+#end
+</shell>
+
+h5. &lt;node&gt; Template Properties
+
+These placeholders are available in datasource templates (when the part is rendered directly, without the use of velocity).
+
+|_. Property name |_. Description |
+| &lt;ds value&gt; | the selected value |
+| &lt;ds name&gt; | name of the selected value |
+| &lt;ds nr&gt; | id of the selected value |
+| &lt;ds dsid&gt; | internal id of the element |
+
+h4. Pageurl/Fileurl/Imageurl/Folderurl Parttype
+
+|_. Property name |_. Description |
+| id | id of the parttype |
+| internal | +true+ if an internal link, +false+ otherwise. Only available for Pageurl Parttype. |
+| target | reference to the target object |
+| size | Get the formatted size (in KB or MB) of the target file. Only available for Fileurl or Imageurl Parttypes |
+| url | url of the target, only available for internal links |
+| node | node for which the target was selected, only available for internal links (may be empty) |
+| nodeId | ID of the node for which the target was selected, may be 0 but never empty |
+
+<shell filename="Example: Output of the id of the url parttype">
+Node-Style: <node page.tags.tlink1.href.id> 
+VTL-Style: $cms.page.tags.tlink1.href.id
+</shell>
+
+h4. Checkbox Parttype
+
+|_. Property name |_. Description |
+| checked | true, in case checkbox was checked, else false |
+
+h4. Text Parttypes
+
+|_. Property name |_. Description |
+| text | textual contents of the part |
+
+h4. Node Parttype
+
+In addition to the properties exposed by "nodes":#node in general the parttype can resolve the
+name of the node directly.
+
+|_. Property name |_. Description |
+| name        | The name of the node |

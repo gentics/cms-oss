@@ -10,19 +10,22 @@ import {
     filter,
     map,
     pairwise,
-    skip,
-    switchMap,
-    take,
-    tap,
-    withLatestFrom,
-    switchMapTo,
     publishReplay,
     refCount,
+    skip,
+    switchMap,
+    switchMapTo,
+    tap,
+    withLatestFrom,
 } from 'rxjs/operators';
-import { AppState, AuthState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
+import { AppState, GtxChipSearchSearchFilterMap, ItemsInfo } from '../../../common/models';
 import { isLiveUrl } from '../../../common/utils/is-live-url';
 import { ListUrlParams, NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
+
+function sortOrderEqual(a: ItemsInfo, b: ItemsInfo): boolean {
+    return a.sortBy === b.sortBy && a.sortOrder === b.sortOrder;
+}
 
 /**
  * The ListService orchestrates all the various parts of the state which can affect the contents of the list view (current folder, search
@@ -118,7 +121,7 @@ export class ListService implements OnDestroy {
             page: this.state.select(state => state.folder.pages),
         };
         this.itemStreams = {} as any;
-        for (let key of Object.keys(itemInfoStreams) as Array<keyof typeof itemInfoStreams>) {
+        for (const key of Object.keys(itemInfoStreams) as Array<keyof typeof itemInfoStreams>) {
             this.itemStreams[key] = itemInfoStreams[key].pipe(
                 map(itemInfo => itemInfo.list),
                 distinctUntilChanged(isEqual),
@@ -220,18 +223,22 @@ export class ListService implements OnDestroy {
      */
     private initLanguageChangeSubscriptions(activeFolderId$: Observable<number>): void {
         // Fetch the list of pages when the activeLanguage changes
-        let languageChangeSub = this.state.select(state => state.folder.activeLanguage).pipe(
-            filter(languageId => languageId != null),
-            skip(1),
-            switchMap(() => activeFolderId$),
-            filter(folderId => folderId != null),
-            take(1),
-            withLatestFrom(this.state.select(state => state.folder)),
-        ).subscribe(([currentFolderId, folderState]) => {
+        this.subscriptions.push(combineLatest([
+            this.state.select(state => state.folder.activeLanguage).pipe(
+                filter(languageId => languageId != null),
+                distinctUntilChanged(),
+                skip(1),
+            ),
+            activeFolderId$.pipe(
+                filter(folderId => folderId != null),
+                distinctUntilChanged(),
+            ),
+            this.state.select(state => state.folder).pipe(
+                distinctUntilChanged(isEqual),
+            ),
+        ]).subscribe(([, currentFolderId, folderState]) => {
             this.folderActions.getPages(currentFolderId, false, folderState.searchTerm);
-        });
-
-        this.subscriptions.push(languageChangeSub);
+        }));
     }
 
     /**
@@ -249,6 +256,7 @@ export class ListService implements OnDestroy {
                 })),
             );
 
+        /* eslint-disable @typescript-eslint/unbound-method */
         const sortingStreams$ = Observable.merge(
             sortStream(state => state.folder.folders, this.folderActions.getFolders),
             sortStream(state => state.folder.pages, this.folderActions.getPages),
@@ -256,6 +264,7 @@ export class ListService implements OnDestroy {
             sortStream(state => state.folder.images, this.folderActions.getImages),
             sortStream(state => state.folder.forms, this.folderActions.getForms),
         );
+        /* eslint-enable @typescript-eslint/unbound-method */
 
         this.subscriptions.push(sortingStreams$.subscribe(({ handler, itemsInfo }) => {
             const folderState = this.state.now.folder;
@@ -276,7 +285,7 @@ export class ListService implements OnDestroy {
 
         // Emits when any filter-related factors impacting folder items list change and requests folder items accordingly.
         // This is true also for the default FolderContents view without any filter-settings applied from user-perspective.
-        let searchTermSub = combineLatest([
+        const searchTermSub = combineLatest([
             searchFiltersVisible$,
             searchFiltersValid$,
             searchFiltersChanged$,
@@ -295,14 +304,14 @@ export class ListService implements OnDestroy {
         });
 
         // emits when searchfilter change and writes it to URL params in state
-        let urlChangeSub = combineLatest([
+        const urlChangeSub = combineLatest([
             searchTerm$,
             this.state.select(state => state.folder.searchFilters),
         ]).pipe(
             filter(() => !this.updatingByUrlParams),
             withLatestFrom(this.state.select(state => state.features.elasticsearch)),
             // searchUrl for Advanced Search not yet implemented
-            filter(([[], elasticsearch]) => elasticsearch),
+            filter(([, elasticsearch]) => elasticsearch),
         ).subscribe(() => {
             const currentFilters = this.getCurrentFilters();
             this.setSearchUrl(
@@ -397,11 +406,13 @@ export class ListService implements OnDestroy {
             });
         };
 
+        /* eslint-disable @typescript-eslint/unbound-method */
         this.subscriptions.push(setUpPaginationSub('folders', this.folderActions.getFolders));
         this.subscriptions.push(setUpPaginationSub('pages', this.folderActions.getPages));
         this.subscriptions.push(setUpPaginationSub('files', this.folderActions.getFiles));
         this.subscriptions.push(setUpPaginationSub('images', this.folderActions.getImages));
         this.subscriptions.push(setUpPaginationSub('forms', this.folderActions.getForms));
+        /* eslint-enable @typescript-eslint/unbound-method */
     }
 
     ngOnDestroy(): void {
@@ -416,7 +427,8 @@ export class ListService implements OnDestroy {
         const defaultFilter: any = {};
         const nonNullMap: any = {...filters};
 
-        for (let key in nonNullMap) {
+        for (const key in nonNullMap) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             if (nonNullMap.hasOwnProperty(key) && nonNullMap[key] == null) {
                 delete nonNullMap[key];
             }
@@ -425,9 +437,4 @@ export class ListService implements OnDestroy {
         return isEqual(nonNullMap, defaultFilter);
     }
 
-}
-
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-function sortOrderEqual(a: ItemsInfo, b: ItemsInfo): boolean {
-    return a.sortBy === b.sortBy && a.sortOrder === b.sortOrder;
 }

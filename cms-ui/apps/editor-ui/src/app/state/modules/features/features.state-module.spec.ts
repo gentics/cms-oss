@@ -26,40 +26,48 @@ describe('FeaturesStateModule', () => {
     });
 
     it('sets the correct initial state', () => {
-        expect(appState.now.features).toEqual({
-            nice_urls: false,
-            elasticsearch: false,
-            always_localize: false,
-            recent_items: false,
-            focal_point_editing: false,
-            hide_manual: false,
-            imagemanipulation2: false,
-            enable_image_upload_in_tagfill: false,
-            tagfill_light: true,
-            wastebin: false,
-            pub_dir_segment: false,
-            usersnap: false,
-            autocomplete_folder_path: false,
-            devtools: false,
-            keycloak_signout: false,
-            folder_based_template_selection: false,
+        const expected: FeaturesState = {
+            [Feature.NICE_URLS]: false,
+            [Feature.ELASTICSEARCH]: false,
+            [Feature.ALWAYS_LOCALIZE]: false,
+            [Feature.RECENT_ITEMS]: false,
+            [Feature.FOCAL_POINT_EDITING]: false,
+            [Feature.HIDE_MANUAL]: false,
+            [Feature.IMAGE_MANIPULATION2]: false,
+            [Feature.ENABLE_UPLOAD_IN_TAGFILL]: false,
+            [Feature.TAGFILL_LIGHT]: true,
+            [Feature.WASTEBIN]: false,
+            [Feature.PUB_DIR_SEGMENT]: false,
+            [Feature.USERSNAP]: false,
+            [Feature.AUTOCOMPLETE_FOLDER_PATH]: false,
+            [Feature.DEVTOOLS]: false,
+            [Feature.KEYCLOAK_SIGNOUT]: false,
+            [Feature.FOLDER_BASED_TEMPLATE_SELECTION]: false,
+            [Feature.CONTENT_STAGING]: false,
+            [Feature.MULTICHANNELLING]: false,
+            [Feature.MESH_CR]: false,
+            [Feature.OBJECT_TAG_SYNC]: false,
+
             nodeFeatures: {},
-            content_staging: false,
-        } as FeaturesState);
+        };
+        expect(appState.now.features).toEqual(expected);
     });
 
     it('setFeature() works', () => {
-        appState.dispatch(new SetFeatureAction(Feature.nice_urls, true));
+        appState.dispatch(new SetFeatureAction(Feature.NICE_URLS, true));
         expect(appState.now.features.nice_urls).toBe(true);
     });
 
     it('setNodeFeatures() works', () => {
-        appState.dispatch(new SetNodeFeaturesAction(4711, [ NodeFeature.contentAutoOffline ]));
-        expect(appState.now.features.nodeFeatures).toEqual({ 4711: [ NodeFeature.contentAutoOffline ] });
+        appState.dispatch(new SetNodeFeaturesAction(4711, [ NodeFeature.CONTENT_AUTO_OFFLINE ]));
+        expect(appState.now.features.nodeFeatures).toEqual({ 4711: [ NodeFeature.CONTENT_AUTO_OFFLINE ] });
     });
 
     it('feature definitions are congruent with feature state', () => {
-        const featureEnumKeys: string[] = getOrderedObjectKeys(Feature);
+        const featureEnumKeys: string[] = Object.keys(Feature)
+            .filter(key => key !== 'nodeSettings')
+            .map(key => Feature[key])
+            .sort();
         const appStateFeaturesKeys: string[] = getOrderedObjectKeys(appState.now.features);
         expect(featureEnumKeys).toEqual(appStateFeaturesKeys);
     });

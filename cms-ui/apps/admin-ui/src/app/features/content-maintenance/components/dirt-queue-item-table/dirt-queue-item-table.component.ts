@@ -89,10 +89,6 @@ export class DirtQueueItemTableComponent extends BaseEntityTableComponent<DirtQu
         ]);
     }
 
-    public reloadItems(): void {
-        this.loadTrigger.next();
-    }
-
     public override handleAction(event: TableActionClickEvent<DirtQueueItemBO>): void {
         switch (event.actionId) {
             case REDO_TASK_ACTION:

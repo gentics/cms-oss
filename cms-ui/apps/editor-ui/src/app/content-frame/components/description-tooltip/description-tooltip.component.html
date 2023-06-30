@@ -5,24 +5,23 @@
     </tr>
     <tr>
         <td class="popover_title">{{ 'editor.read_only' | i18n }}:</td>
-        <td *ngIf="!objectProperty.readOnly">{{ 'common.yes_label' | i18n }}</td>
-        <td *ngIf="objectProperty.readOnly">{{ 'common.no_label' | i18n }}</td>
+        <td>{{ (objectProperty.readOnly ? 'common.no_label' : 'common.yes_label') | i18n }}</td>
     </tr>
     <tr>
         <td class="popover_title">{{ 'editor.display_content_label' | i18n }}:</td>
-        <td *ngIf="objectProperty.tagType.visibleInMenu">{{ 'common.yes_label' | i18n }}</td>
-        <td *ngIf="!objectProperty.tagType.visibleInMenu">{{ 'common.no_label' | i18n }}</td>
+        <td>{{ (objectProperty.tagType?.visibleInMenu ? 'common.yes_label' : 'common.no_label') | i18n }}</td>
     </tr>
     <tr>
         <td class="popover_title">{{ 'editor.required_label' | i18n }}:</td>
-        <td *ngIf="objectProperty.required">{{ 'common.yes_label' | i18n }}</td>
-        <td *ngIf="!objectProperty.required">{{ 'common.no_label' | i18n }}</td>
+        <td>{{ (objectProperty.required ? 'common.yes_label' : 'common.no_label') | i18n }}</td>
     </tr>
     <tr *ngIf="objectProperty.name || objectProperty.id">
         <td class="popover_title">{{ 'editor.object_property_label' | i18n }}:</td>
-        <td *ngIf="objectProperty.name">({{ objectProperty.name }})<br><span *ngIf="objectProperty.id">ID: {{ objectProperty.id }}</span></td>
+        <td *ngIf="objectProperty.name">({{ objectProperty.name }})<br>
+            <span *ngIf="objectProperty.id">ID: {{ objectProperty.id }}</span>
+        </td>
     </tr>
-    <tr *ngIf="objectProperty.tagType.name">
+    <tr *ngIf="objectProperty.tagType?.name">
         <td class="popover_title">{{ 'editor.tagtype_name_label' | i18n }}:</td>
         <td>{{ objectProperty.tagType.name }}</td>
     </tr>

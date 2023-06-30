@@ -3,12 +3,14 @@
     [class.selectable]="selectable"
     [class.disabled]="disabled"
     [class.has-actions]="!hideActions && hasActions"
+    [class.sortable]="sortable"
     [style.--grid-table-columns]="columns.length"
 >
     <div class="grid-row header-row">
         <div *ngIf="selectable" class="grid-cell select-column" (click)="preventClick($event)">
             <gtx-checkbox
                 *ngIf="selectAllType != null && selectAllType !== TableSelectAllType.NONE"
+                class="selection-checkbox"
                 [checked]="!(rows?.length < 1 && totalCount < 1) && allSelected"
                 [disabled]="disabled || rows?.length < 1 && totalCount < 1"
                 (click)="toggleAllSelections($event)"
@@ -23,7 +25,7 @@
                 totalItems: totalCount
             })); trackBy: trackElement"
             class="grid-cell data-column"
-            [class.sortable]="column.sortable"
+            [class.sortable]="sortable && column.sortable"
             [class.sort-active]="sortBy === column.id"
             [ngClass]="column.align ? 'align-' + column.align : ''"
             [attr.column-id]="column.id"
@@ -31,7 +33,7 @@
         >
             <span class="column-label" (click)="updateSortBy(column)">{{ column.label }}</span>
             <icon
-                *ngIf="column.sortable"
+                *ngIf="sortable && column.sortable"
                 class="sort-icon"
                 [ngClass]="sortOrder != null ? sortOrder : ''"
                 (click)="updateSortBy(column)"
@@ -48,7 +50,7 @@
                 class="action-button"
                 [icon]="true"
                 [size]="'small'"
-                [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || (action.disabled | gtxTableActionEnabled)"
+                [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || selected.length < 1 || !selectable || !(action | gtxTableActionEnabled)"
                 [title]="action.label"
                 [type]="action.type"
                 (click)="handleMultiActionClick(action)"
@@ -108,7 +110,11 @@
                 ></ng-container>
             </ng-template>
 
-            <ng-template #defaultCellRenderer>{{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}</ng-template>
+            <ng-template #defaultCellRenderer>
+                <div class="cell-content-wrapper">
+                    {{ row.item | gtxValuePath:column.fieldPath | gtxTableCellMapper:column.mapper:column }}
+                </div>
+            </ng-template>
         </div>
 
         <div
@@ -121,7 +127,7 @@
                 class="action-button"
                 [icon]="true"
                 [size]="'small'"
-                [disabled]="disabled || (action.disabled | gtxTableActionEnabled:row.item)"
+                [disabled]="disabled || !(action | gtxTableActionEnabled:row.item)"
                 [title]="action.label"
                 [type]="action.type || 'secondary'"
                 (click)="handleSingleActionClick(action, row)"

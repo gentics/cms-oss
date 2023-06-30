@@ -395,7 +395,7 @@ public class CustomMetaDateTest {
 
 		String renderedOverview = execute(systemUser, id -> {
 			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
-					LinksType.frontend, false, false, false);
+					LinksType.frontend, false, false, false, 0);
 			assertResponseCodeOk(response);
 			return response.getContent();
 		}, overviewPage.getId());
@@ -438,7 +438,7 @@ public class CustomMetaDateTest {
 
 		String renderedOverview = execute(systemUser, id -> {
 			PageRenderResponse response = new PageResourceImpl().render(Integer.toString(id), null, "<node " + tagName.get() + ">", false, null,
-					LinksType.frontend, false, false, false);
+					LinksType.frontend, false, false, false, 0);
 			assertResponseCodeOk(response);
 			return response.getContent();
 		}, overviewPage.getId());
@@ -548,7 +548,7 @@ public class CustomMetaDateTest {
 	protected String render(int pageId, String property) throws NodeException {
 		try (Trx trx = new Trx(systemUser)) {
 			PageRenderResponse response = new PageResourceImpl().render(String.valueOf(pageId), 0, String.format("<node page.%s>", property), false, null,
-					LinksType.frontend, false, false, false);
+					LinksType.frontend, false, false, false, 0);
 			assertResponseCodeOk(response);
 			trx.success();
 			return response.getContent();

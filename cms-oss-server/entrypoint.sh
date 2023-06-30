@@ -8,4 +8,4 @@ function join() {
 
 CUSTOM_LIBS=$(join ':' libs/*)
 
-java -Duser.dir=/cms -cp cms-oss-server.jar:"$CUSTOM_LIBS" com.gentics.contentnode.server.Runner
+java -Duser.dir=/cms -cp cms-oss-server.jar:"$CUSTOM_LIBS" com.gentics.contentnode.server.OSSRunner

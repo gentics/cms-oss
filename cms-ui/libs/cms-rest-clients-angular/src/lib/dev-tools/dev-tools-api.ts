@@ -19,6 +19,7 @@ import {
     PackageListResponse,
     PackageLoadResponse,
     PackageSyncOptions,
+    PackageSyncResponse,
     PagedConstructListRequestOptions,
     Response,
     Template,
@@ -47,19 +48,19 @@ export class DevToolsApi {
     /**
      * Get the current status information for the automatic synchronization
      */
-    getSyncState(): Observable<{
-        enabled: boolean;
-    }> {
-        return this.apiBase.get('devtools/sync') as unknown as Observable<{ enabled: boolean; }>;
+    getSyncState(): Observable<PackageSyncResponse> {
+        return this.apiBase.get('devtools/sync');
+    }
+
+    startSync(): Observable<PackageSyncResponse> {
+        return this.apiBase.put('devtools/sync', null);
     }
 
     /**
      * Stop the sync, if it was started by the current user
      */
-    stopSync(): Observable<{
-        enabled: boolean;
-    }> {
-        return this.apiBase.delete('devtools/sync') as unknown as Observable<{ enabled: boolean; }>;
+    stopSync(): Observable<PackageSyncResponse> {
+        return this.apiBase.delete('devtools/sync');
     }
 
     // PACKAGES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

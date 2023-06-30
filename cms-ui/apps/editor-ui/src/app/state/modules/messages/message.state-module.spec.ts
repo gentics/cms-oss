@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Message, MessageFromServer, Normalized, Raw, User } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { MessageState } from '../../../common/models';
@@ -31,12 +31,14 @@ describe('MessageStateModule', () => {
         } as MessageState);
     });
 
-    it('fetchAllMessagesStart works', () => {
+    it('fetchAllMessagesStart works', fakeAsync(() => {
         state.dispatch(new StartMessagesFetchingAction());
-        expect(state.now.messages.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchAllMessagesSuccess works', () => {
+        expect(state.now.messages.fetching).toBe(true);
+    }));
+
+    it('fetchAllMessagesSuccess works', fakeAsync(() => {
         const firstMessage: Message<Normalized> = {
             id: 1,
             message: 'Test message',
@@ -91,6 +93,7 @@ describe('MessageStateModule', () => {
         ];
 
         state.dispatch(new MessagesFetchingSuccessAction(false, unreadMessagesFromServer, messagesFromServer));
+        tick();
 
         expect(state.now.messages.fetching).toBe(false);
         expect(state.now.messages.all).toEqual([2, 3]);
@@ -120,19 +123,23 @@ describe('MessageStateModule', () => {
             firstName: 'Second',
             lastName: 'User',
         }));
-    });
+    }));
 
-    it('fetchAllMessagesError works', () => {
+    it('fetchAllMessagesError works', fakeAsync(() => {
         const errorMessage = 'some error happened';
         state.dispatch(new MessagesFetchingErrorAction(errorMessage));
+        tick();
+
         expect(state.now.messages.fetching).toBe(false);
         expect(state.now.messages.lastError).toBe(errorMessage);
-    });
+    }));
 
-    it('fetchUnreadMessagesStart works', () => {
+    it('fetchUnreadMessagesStart works', fakeAsync(() => {
         state.dispatch(new StartMessagesFetchingAction());
+        tick();
+
         expect(state.now.messages.fetching).toBe(true);
-    });
+    }));
 
     describe('fetchUnreadMessagesSuccess', () => {
 
@@ -171,7 +178,7 @@ describe('MessageStateModule', () => {
             });
         });
 
-        it('works', () => {
+        it('works', fakeAsync(() => {
             const unreadMessage: MessageFromServer = {
                 id: 3,
                 message: 'Third message',
@@ -181,6 +188,7 @@ describe('MessageStateModule', () => {
             };
 
             state.dispatch(new MessagesFetchingSuccessAction(true, [unreadMessage]));
+            tick();
 
             expect(state.now.messages.fetching).toBe(false);
             expect(state.now.messages.all).toEqual([1, 2, 3]);
@@ -199,9 +207,9 @@ describe('MessageStateModule', () => {
                 firstName: 'Third',
                 lastName: 'User',
             }));
-        });
+        }));
 
-        it('does not change the state when no new information was received', () => {
+        it('does not change the state when no new information was received', fakeAsync(() => {
             const alreadyUnreadMessage: MessageFromServer = {
                 id: 2,
                 message: 'Second message',
@@ -212,23 +220,26 @@ describe('MessageStateModule', () => {
 
             const stateBefore = state.now;
             state.dispatch(new MessagesFetchingSuccessAction(true, [alreadyUnreadMessage]));
+            tick();
             const stateAfter = state.now;
 
             expect(stateAfter.messages.fetching).toBeFalse();
             expect(stateBefore.messages.all).toEqual(stateAfter.messages.all);
             expect(stateBefore.messages.read).toEqual(stateAfter.messages.read);
             expect(stateBefore.messages.unread).toEqual(stateAfter.messages.unread);
-        });
+        }));
 
     });
 
-    it('fetchUnreadMessagesError works', () => {
+    it('fetchUnreadMessagesError works', fakeAsync(() => {
         const errorMessage = 'some error';
         state.dispatch(new MessagesFetchingErrorAction(errorMessage));
-        expect(state.now.messages.lastError).toBe(errorMessage);
-    });
+        tick();
 
-    it('markMessagesAsRead works', () => {
+        expect(state.now.messages.lastError).toBe(errorMessage);
+    }));
+
+    it('markMessagesAsRead works', fakeAsync(() => {
         state.mockState({
             entities: {
                 message: {
@@ -268,6 +279,7 @@ describe('MessageStateModule', () => {
         const message1 = state.now.entities.message[1];
 
         state.dispatch(new MessagesReadAction([2, 3]));
+        tick();
 
         expect(state.now.messages.all).toEqual([1, 2, 3]);
         expect(state.now.messages.read).toEqual([2, 3]);
@@ -276,6 +288,5 @@ describe('MessageStateModule', () => {
         expect(state.now.entities.message[2].unread).toBe(false, 'message 2 not marked as read');
         expect(state.now.entities.message[3].unread).toBe(false, 'message 3 not marked as read');
         expect(state.now.entities.message[1]).toBe(message1, 'message 1 reference changed');
-    });
-
+    }));
 });

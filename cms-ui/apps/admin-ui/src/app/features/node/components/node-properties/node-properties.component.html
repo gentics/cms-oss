@@ -13,21 +13,24 @@
                 formControlName="name"
             ></gtx-input>
 
-            <ng-container *ngIf="allowChangingInheritedFrom; else inheritedFromNotChangeable">
-                <gtx-select
-                    [label]="'node.derives_from' | i18n:{ master: '' }"
-                    formControlName="inheritedFromId"
-                    [clearable]="true"
-                >
-                    <gtx-option *ngFor="let node of (nodes$ | async)" [value]="node.id">{{ node.name }}</gtx-option>
-                </gtx-select>
+            <ng-container *ngIf="multiChannelingEnabled">
+                <ng-container *ngIf="allowChangingInheritedFrom; else inheritedFromNotChangeable">
+                    <gtx-select
+                        [label]="'node.derives_from' | i18n:{ master: '' }"
+                        formControlName="inheritedFromId"
+                        [clearable]="true"
+                    >
+                        <gtx-option *ngFor="let node of (nodes$ | async)" [value]="node.id">{{ node.name }}</gtx-option>
+                    </gtx-select>
+                </ng-container>
+
+                <ng-template #inheritedFromNotChangeable>
+                    <div *ngIf="inheritedFromNode$" class="gtx-inheritance-info" [class.visible]="inheritedFromNode$">
+                        <icon>input</icon>
+                        {{ 'node.derives_from' | i18n:{ master: (inheritedFromNode$ | async)?.name } }}
+                    </div>
+                </ng-template>
             </ng-container>
-            <ng-template #inheritedFromNotChangeable>
-                <div *ngIf="inheritedFromNode$" class="gtx-inheritance-info" [class.visible]="inheritedFromNode$">
-                    <icon>input</icon>
-                    {{ 'node.derives_from' | i18n:{ master: (inheritedFromNode$ | async)?.name } }}
-                </div>
-            </ng-template>
 
             <gtx-textarea
                 [required]="false"
@@ -37,20 +40,22 @@
                 formControlName="description"
             ></gtx-textarea>
 
-            <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | i18n }}</div>
+            <ng-container *ngIf="meshCrEnabled">
+                <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | i18n }}</div>
 
-            <gtx-input
-                type="text"
-                maxlength="255"
-                [label]="('node.mesh_preview_url' | i18n)"
-                [placeholder]="'node.mesh_preview_url' | i18n"
-                formControlName="meshPreviewUrl"
-            ></gtx-input>
+                <gtx-input
+                    type="text"
+                    maxlength="255"
+                    [label]="('node.mesh_preview_url' | i18n)"
+                    [placeholder]="'node.mesh_preview_url' | i18n"
+                    formControlName="meshPreviewUrl"
+                ></gtx-input>
 
-            <gtx-checkbox
-                [label]="'node.allow_insecure_mesh_preview_url' | i18n"
-                formControlName="insecurePreviewUrl"
-            ></gtx-checkbox>
+                <gtx-checkbox
+                    [label]="'node.allow_insecure_mesh_preview_url' | i18n"
+                    formControlName="insecurePreviewUrl"
+                ></gtx-checkbox>
+            </ng-container>
         </div>
 
         <div class="input-container small-12 medium-6 columns">

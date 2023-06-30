@@ -1,0 +1,40 @@
+h2. Image Manipulation 2
+
+imagemanipulation2 enables the new imagamanipulation feature which can be accessed through
+the image list or an image tag.
+
+endprologue.
+
+h3. Description
+
+The imagemanipulation can be accessed through the image file list or through
+the image url tagpart. The imagemanipulation2 enables the user to create a copy
+of the image. This is useful when the original image should not be changed.
+The user can also edit image properties like description and filename through the sidebar.
+
+NOTE: The behaviour of resizing and ui may change in future releases.
+
+h3. Configuration
+
+The feature can be configured with the following options:
+
+<javascript filename="conf/features.yml">
+feature:
+  imagemanipulation2: true
+</javascript>
+
+<javascript filename="conf/*.yml">
+aloha_settings:
+  plugins:
+    image:
+      # Define the max resize width
+      maxWidth: 600
+      # Define the max resize height
+      maxHeight: 600
+      # Define the min resize width
+      minWidth: 10
+      # Define the min resize height
+      minHeight: 10
+      # If set to true the image plugin will initially try to keep the aspect ration. This can be overrwritten by untoggling the keep aspect ratio toggle.
+      fixedAspectRatio: true
+</javascript>

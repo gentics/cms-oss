@@ -106,7 +106,7 @@ public class MeshPublishTest {
 
 	/**
 	 * Setup static test data
-	 * 
+	 *
 	 * @throws NodeException
 	 */
 	@BeforeClass
@@ -248,9 +248,8 @@ public class MeshPublishTest {
 		});
 
 		Trx.operate(() -> {
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+			DBUtils.executeUpdate("DELETE FROM dirtqueue", null);
+			DBUtils.executeUpdate("DELETE FROM publishqueue", null);
 		});
 
 		Folder folderLevel3 = Trx.supply(() -> {
@@ -732,28 +731,6 @@ public class MeshPublishTest {
 
 		// delete folder
 		update(folder, Folder::delete);
-
-		// check data consistency again
-		result = Trx.supply(t -> {
-			try (MeshPublisher mp = new MeshPublisher(t.getObject(ContentRepository.class, crId))) {
-				StringBuilder stringBuilder = new StringBuilder();
-				boolean consistent = mp.checkDataConsistency(false, stringBuilder);
-				return Pair.of(consistent, stringBuilder.toString());
-			}
-		});
-		assertThat(result.getKey()).as("Check result after folder.delete").isFalse();
-		assertObject("Check folder after delete", mesh.client(), MESH_PROJECT_NAME, folder, true);
-
-		// repair data consistency
-		result = Trx.supply(t -> {
-			try (MeshPublisher mp = new MeshPublisher(t.getObject(ContentRepository.class, crId))) {
-				StringBuilder stringBuilder = new StringBuilder();
-				boolean consistent = mp.checkDataConsistency(true, stringBuilder);
-				return Pair.of(consistent, stringBuilder.toString());
-			}
-		});
-		assertThat(result.getKey()).as("Check result after data repair").isTrue();
-		assertObject("Check folder after repair", mesh.client(), MESH_PROJECT_NAME, folder, false);
 	}
 
 	/**
@@ -885,6 +862,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after creation", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Created node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.7f).hasFieldOrPropertyWithValue("y", 0.3f);
@@ -904,6 +885,10 @@ public class MeshPublishTest {
 
 		// assert image
 		assertObject("Image after update", mesh.client(), MESH_PROJECT_NAME, image, true, node -> {
+			assertThat(node.getVersion())
+				.as("Updated node version")
+				.endsWith(".0");
+
 			BinaryField binaryField = node.getFields().getBinaryField("binarycontent");
 			assertThat(binaryField).as("Binary Field").isNotNull();
 			assertThat(binaryField.getFocalPoint()).as("Focal Point").isNotNull().hasFieldOrPropertyWithValue("x", 0.9f).hasFieldOrPropertyWithValue("y", 0.1f);
@@ -1086,5 +1071,38 @@ public class MeshPublishTest {
 					.isEqualTo(PublishInfo.RETURN_CODE_ERROR);
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that the nodes written to Mesh are "published"
+	 * @throws Exception
+	 */
+	@Test
+	public void testMeshNodeIsPublished() throws Exception {
+		Trx.operate(() -> {
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
+			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+		});
+
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		operate(() -> {
+			assertObject("Published folder", mesh.client(), MESH_PROJECT_NAME, folder, true, node -> {
+				assertThat(node.getVersion()).as("Node Version").endsWith(".0");
+				assertThat(node.getAvailableLanguages()).as("Available languages").containsKey("en");
+				assertThat(node.getAvailableLanguages().get("en")).as("English version").hasFieldOrPropertyWithValue("published", true);
+			});
+		});
 	}
 }

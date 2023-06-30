@@ -345,16 +345,16 @@ describe('NodeOperations', () => {
 
         beforeEach(() => {
             featuresUpdate = {
-                [NodeFeature.newTagEditor]: true,
-                [NodeFeature.contentAutoOffline]: false,
-                [NodeFeature.alwaysLocalize]: true,
+                [NodeFeature.ASSET_MANAGEMENT]: true,
+                [NodeFeature.CONTENT_AUTO_OFFLINE]: false,
+                [NodeFeature.ALWAYS_LOCALIZE]: true,
             };
         });
 
         it('enables and disables node features and refetches the node\'s complete feature list afterwards', fakeAsync(() => {
             const activatedFeatures: NodeFeature[] = [
-                NodeFeature.newTagEditor,
-                NodeFeature.alwaysLocalize,
+                NodeFeature.ASSET_MANAGEMENT,
+                NodeFeature.ALWAYS_LOCALIZE,
             ];
             const getSpy = spyOn(nodeOps, 'getNodeFeatures').and.returnValue(
                 createDelayedObservable(activatedFeatures),
@@ -377,11 +377,11 @@ describe('NodeOperations', () => {
             tick();
 
             expect(api.node.activateNodeFeature).toHaveBeenCalledTimes(2);
-            expect(api.node.activateNodeFeature.calls.argsFor(0)).toEqual([NODE_ID, NodeFeature.newTagEditor]);
-            expect(api.node.activateNodeFeature.calls.argsFor(1)).toEqual([NODE_ID, NodeFeature.alwaysLocalize]);
+            expect(api.node.activateNodeFeature.calls.argsFor(0)).toEqual([NODE_ID, NodeFeature.ASSET_MANAGEMENT]);
+            expect(api.node.activateNodeFeature.calls.argsFor(1)).toEqual([NODE_ID, NodeFeature.ALWAYS_LOCALIZE]);
 
             expect(api.node.deactivateNodeFeature).toHaveBeenCalledTimes(1);
-            expect(api.node.deactivateNodeFeature.calls.argsFor(0)).toEqual([NODE_ID, NodeFeature.contentAutoOffline]);
+            expect(api.node.deactivateNodeFeature.calls.argsFor(0)).toEqual([NODE_ID, NodeFeature.CONTENT_AUTO_OFFLINE]);
 
             expect(getSpy).toHaveBeenCalledTimes(1);
             expect(getSpy).toHaveBeenCalledWith(NODE_ID);
@@ -406,8 +406,8 @@ describe('NodeOperations', () => {
 
         it('fetches the available node features', fakeAsync(() => {
             const mockFeatures: NodeFeatureModel[] = [
-                { id: NodeFeature.newTagEditor, name: 'New Tag Editor', description: '' },
-                { id: NodeFeature.alwaysLocalize, name: 'Always Localize', description: '' },
+                { id: NodeFeature.ASSET_MANAGEMENT, name: 'New Tag Editor', description: '' },
+                { id: NodeFeature.ALWAYS_LOCALIZE, name: 'Always Localize', description: '' },
             ];
             api.node.getNodeFeatureList.and.returnValue(
                 createDelayedObservable({ items: mockFeatures }),
@@ -442,8 +442,8 @@ describe('NodeOperations', () => {
 
         it('fetches the node\'s activated features', fakeAsync(() => {
             const activatedFeatures: NodeFeature[] = [
-                NodeFeature.newTagEditor,
-                NodeFeature.alwaysLocalize,
+                NodeFeature.ASSET_MANAGEMENT,
+                NodeFeature.ALWAYS_LOCALIZE,
             ];
             api.node.getNodeFeatures.and.returnValue(
                 createDelayedObservable({ items: activatedFeatures }),

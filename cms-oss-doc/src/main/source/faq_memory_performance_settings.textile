@@ -1,0 +1,185 @@
+h2. Adapting Memory Settings
+
+This page will explain the different memory settings and how these settings affect system performance.
+Please note that no general memory settings can be given because each system is different. Factors such as user count and implementation complexity should be considered when changing the memory and performance settings.
+
+endprologue.
+
+h3. Minimal Requirements
+
+NOTE: The system should provide at least 4GB of memory and it is mandatory to use a 64Bit Kernel/System.
+
+Overview over memory distribution for the basic Gentics CMS package.
+
+|_.Programm        |_. Memory Usage |
+| MySQL            |  500 MB        |
+| JVM + JCS-Cache  | 1024 MB        |
+| *Total*          | *1524 MB*      |
+
+h4. JVM Garbage Collector Settings
+
+When using *JDK 8*, we advise to enable the concurrent mark sweep garbage collector to avoid long duration full garbage collections.
+
+<shell>
+-XX:+UseConcMarkSweepGC
+</shell>
+
+See "Virtual Machine Garbage Collection Tuning":http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html for more information.
+
+When using *JDK 11*, we advise to use the default G1 garbage collector.
+
+h3. JCS Cache Size
+
+The node object cache is a Java cache inside of the CMS. This cache is used to cache node objects like pages, templates and files. Increasing this memory can help speed up the loading times of pages in preview mode and the publishing process.
+
+<javascript filename="conf/cache.ccf">
+  jcs.region.gentics-nodeobjects.cacheattributes.MaxObjects=100000
+</javascript>
+
+By default the largest cache region is configured to hold 100k objects. An object size of 1kB is assumed for this cache setting.
+The memory requirements depend upon the existing content. The profiler webapp can be used to create a differential measurement (Full GC, Check Used Memory, Cache Clear).
+An OutOfMemoryException or stalling garbage collection can occur when the cache region is too large for the heap memory.
+
+h4. Rule of thumb
+
+Assume 50 kB to 300 kB per object and apply the following formula:
+
+Cache memory usage = 50 kB * object count (Page, Folder, Image, File...) to 300 kB * object count (Page, Folder, Image, File...).
+
+h4. Individual caches for object types
+
+It is possible to configure individual caches for specific object types. This can be useful to enforce caching of some objects (e.g. folders) for
+performance reasons. Since folders are frequently used (to display the folder tree and also for checking object permissions), it is recommended to
+configure a separate cache for folders and make it big enough so that it can hold all existing folders.
+
+<javascript filename="conf/*.yml">
+node_cache:
+  "10002": "gentics-nodeobjects-folders"
+</javascript>
+
+<javascript filename="conf/cache.ccf">
+jcs.region.gentics-nodeobjects-folders=
+jcs.region.gentics-nodeobjects-folders.cacheattributes.MaxObjects=50000
+jcs.region.gentics-nodeobjects-folders.elementattributes.MaxLifeSeconds=86400
+jcs.region.gentics-nodeobjects-folders.elementattributes.MaxMemoryIdleTimeSeconds=86400
+</javascript>
+
+h3. Connection Pool
+
+The default max_connections limits for MySQL 5.5/5.6 is 151. We suggest to use 80% of the server connection limit for the Gentics CMS connection pool.
+
+Generally it is a good idea to increase this limit to a value of > 250. This is especially important for production systems with multiple concurrent users.
+
+You can check the connection limit by logging in your MySQL server and execute the following command:
+<shell>
+  show variables like 'max_connections';
+</shell>
+
+The pool_whenExhaustedAction setting can have the following values:
+
+* BLOCK: The connection pool will no longer hand out connections when the limit was reached (Suggested action)
+* GROW: The connection pool will continue growing even if the limit has been reached. (Current default action)
+* FAIL: The connection pool will throw exceptions when the limit was reached.
+
+<javascript filename="con/*.yml">
+db:
+  settings:
+    # pool_size_max = 0.8 * max_connections (151)
+    pool_size_max: 120
+    pool_whenExhaustedAction: "BLOCK"
+    # set the maximum wait time to 30 seconds
+    pool_maxWait: 30000
+</javascript>
+
+WARNING: If the @pool_whenExhaustedAction@ is set to @BLOCK@, it is important to also set a positive @pool_maxWait@ timeout in order to avoid deadlocks in the CMS.
+
+h3. MySQL Memory
+
+The main MySQL settings are __innodb_buffer_pool_size__ and __innodb_log_file_size__.
+
+<javascript filename="gentics_custom.cnf">
+  // This option will change the way the mysql synchonizes the written data
+  // with the disk. Value 2 means that the sync action for the mysql data
+  // logfile is invoked once per second.
+  innodb_flush_log_at_trx_commit=2
+  // Should be 50-80% of main mysql memory
+  innodb_buffer_pool_size=2048M
+  // Should be 25% of innodb_buffer_pool_size
+  innodb_log_file_size=512M
+  // Be careful not to set the size of the cache too large. Due to the need
+  // for threads to lock the cache during updates, you may see lock contention
+  // issues with a very large cache.
+  query_cache_size=64M
+</javascript>
+
+Please note that changes to __innodb_log_file_size__ require the deletion of the MySQL logfile and a restart of the MySQL server.
+
+h3. Example Configuration
+
+NOTE: Please note that the following values should only be considered as a guideline for planned memory setups.
+
+h4. 8 GB
+
+<shell>
+  # /cms/conf/cache.ccf - 380k (10k per object)
+  jcs.region.gentics-nodeobjects.cacheattributes.MaxObjects=280000
+
+  export JAVA_OPTS="-Dcom.gentics.contentnode.config.files=cms -Xmx3686m -Xms3686m -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+UseConcMarkSweepGC -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.headless=true"
+
+  # gentics_custom.cnf
+  innodb_flush_log_at_trx_commit=2
+  innodb_buffer_pool_size=3276M
+  innodb_log_file_size=819M
+  query_cache_size=64M
+  max_connections=200
+
+  # gtx_gcn_custom.ini
+  apc.shm_size=128M
+</shell>
+
+h4. 16 GB
+
+<shell>
+  # /cms/conf/cache.ccf - 780k (10kb per object)
+  jcs.region.gentics-nodeobjects.cacheattributes.MaxObjects=590000
+
+  export JAVA_OPTS="-Dcom.gentics.contentnode.config.files=cms -Xmx7680m -Xms7680m -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+UseConcMarkSweepGC -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.headless=true"
+
+  # gentics_custom.cnf
+  innodb_flush_log_at_trx_commit=2
+  innodb_buffer_pool_size=6656M
+  innodb_log_file_size=1664M
+  query_cache_size=128M
+  max_connections=250
+
+  # gtx_gcn_custom.ini
+  apc.shm_size=256M
+</shell>
+
+h4. 32 GB
+
+<shell>
+  # /cms/conf/cache.ccf - 1.5 million (10kb per object)
+  jcs.region.gentics-nodeobjects.cacheattributes.MaxObjects=1100000
+
+  export JAVA_OPTS="-Dcom.gentics.contentnode.config.files=cms -Xmx14336m -Xms14336m -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+UseConcMarkSweepGC -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.headless=true"
+
+  # gentics_custom.cnf
+  innodb_flush_log_at_trx_commit=2
+  innodb_buffer_pool_size=13312M
+  innodb_log_file_size=3328M
+  query_cache_size=128M
+  max_connections=300
+
+  # gtx_gcn_custom.ini
+  apc.shm_size=512M
+</shell>
+
+h3. Memory Formula
+
+|_. Memory Value                                        |_. Formula/Value                           |
+| Average Object Size (Pages, Files, Folders, Images..) | 10 kB                                     |
+| MySQL Memory                                          | Total Memory * 0.4                        |
+| Java Heap Memory                                      | Total Memory * 0.45                       |
+| JCS Node Object Cache Count                           | (JavaMemory * 0.75) / Average Object Size |
+| System Memory                                         | 0.5 GB                                    |

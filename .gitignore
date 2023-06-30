@@ -13,30 +13,16 @@ gentics.log*
 velocity.log
 start-devbox.sh
 .DS_Store
-contentnode-php/src/main/php/node.conf.custom
-node.conf.custom*
 contentnode-lib/permanent_sandbox.properties
-contentnode-lib/cache
-contentnode-changelog/src/main/tmp
 *versionsBackup
-contentnode-changelog/src/main/source/merged_changelog.textile
-contentnode-php/src/main/php/languages/*.php
 output
 *.swp
 *.orig
 *.cache
 .checkstyle
 /*.sh
-/contentnode-js-lib/bin
-/contentnode-js-lib/build
 chromedriver.log
-/contentnode-changelog/src/changelog/mappings/*SNAPSHOT.json
-/contentnode-api/.gitignore
-/contentnode-lib/.gitignore
-contentnode-js-lib/core
 libpeerconnection.log
-contentnode-lib/src/main/jaxb/copy_configurationPrime.xsd
-contentnode-lib/src/main/jaxb/xnl_configPrime.xsd
 .pmd
 .pmdruleset.xml
 processlogger.lock
@@ -51,4 +37,5 @@ processlogger.lock
 # VS Code files
 .vscode
 dependency-reduced-pom.xml
-conf
+cache
+.run

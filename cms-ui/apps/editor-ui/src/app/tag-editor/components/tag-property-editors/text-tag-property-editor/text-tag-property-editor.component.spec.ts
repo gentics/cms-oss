@@ -151,7 +151,7 @@ describe('TextTagPropertyEditorComponent', () => {
             editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
             editor.registerOnChange(() => getMultiValidationResult(tagPart, getExampleValidationSuccess()));
             fixture.detectChanges();
-            tick();
+            tick(100);
 
             // Make sure that a Textarea is used for Text and that there is no InputField.
             const textAreaElement = editorElement.query(By.directive(TextareaComponent));
@@ -162,7 +162,8 @@ describe('TextTagPropertyEditorComponent', () => {
             const textAreaComponent = textAreaElement.componentInstance as TextareaComponent;
             expect(textAreaComponent.label).toEqual(tagPart.name);
             expect(textAreaComponent.readonly).toBe(context.readOnly);
-            expect(textAreaElement.query(By.css('textarea')).nativeElement.value).toEqual(origTagProperty.stringValue);
+            const textAreaEl: HTMLTextAreaElement = textAreaElement.query(By.css('textarea')).nativeElement;
+            expect(textAreaEl.value).toEqual(origTagProperty.stringValue);
         }
 
         it('initializes properly for Text without an initial value',

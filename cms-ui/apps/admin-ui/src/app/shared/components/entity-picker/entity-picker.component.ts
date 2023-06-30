@@ -1,6 +1,6 @@
 import { ContentItemTypes, PickableEntity } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { BaseFormElementComponent, generateFormProvider, ModalService } from '@gentics/ui-core';
+import { BaseFormElementComponent, ModalService, generateFormProvider } from '@gentics/ui-core';
 import { EntityPickerModalComponent } from '../entity-picker-modal/entity-picker-modal.component';
 
 @Component({

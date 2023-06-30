@@ -11,11 +11,11 @@ import {
     TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
-    ValidationResult
+    ValidationResult,
 } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
 
 /**
  * Used to edit Text TagParts.
@@ -25,7 +25,7 @@ import { distinctUntilChanged } from 'rxjs/operators';
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush
-})
+    })
 export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
@@ -44,28 +44,45 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
     displayedValidationResult: ValidationResult;
 
     /** Used to debounce the input/textarea changes. */
-    private inputChange = new Subject<string>();
-    private blur = new Subject<string>();
-    private subscriptions = new Subscription();
+    private inputChange = new BehaviorSubject<string>('');
+    private blur = new BehaviorSubject<void>(null);
+    private subscriptions: Subscription[] = [];
 
     /** The onChange function registered by the TagEditor. */
     private onChangeFn: TagPropertiesChangedFn;
     private lastValidationResult: ValidationResult;
 
-    constructor(private changeDetector: ChangeDetectorRef) { }
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+    ) { }
 
     ngOnInit(): void {
-        const debouncer = this.inputChange.debounceTime(100);
-        const blurOrDebouncedChange = Observable.merge(this.blur, debouncer).pipe(
+        const tmp$ = new BehaviorSubject<void>(null);
+
+        this.subscriptions.push(this.inputChange.asObservable().pipe(
+            skip(1),
             distinctUntilChanged(isEqual),
-        );
-        this.subscriptions.add(
-            blurOrDebouncedChange.subscribe(newValue => this.processChange(newValue))
-        );
+        ).subscribe(newValue => {
+            this.tagProperty.stringValue = newValue;
+            tmp$.next();
+        }));
+
+        this.subscriptions.push(this.blur.asObservable().pipe(
+            skip(1),
+        ).subscribe(() => {
+            tmp$.next();
+        }));
+
+        this.subscriptions.push(tmp$.asObservable().pipe(
+            skip(1),
+            debounceTime(100),
+        ).subscribe(() => {
+            this.processChange();
+        }));
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
@@ -93,11 +110,9 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
         }
     }
 
-    onBlur(newValue: string): void {
-        if (typeof newValue === 'string') {
-            this.blur.next(newValue);
-            this.displayedValidationResult = this.lastValidationResult;
-        }
+    onBlur(): void {
+        this.blur.next();
+        this.displayedValidationResult = this.lastValidationResult;
     }
 
     /**
@@ -107,7 +122,7 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
         if (newValue.type !== TagPropertyType.STRING && newValue.type !== TagPropertyType.RICHTEXT) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by TextTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as StringTagPartProperty;
+        this.tagProperty = newValue ;
         this.changeDetector.markForCheck();
     }
 
@@ -115,11 +130,10 @@ export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestr
      * Signals the change to the TagEditor and also validates the change if the
      * last validation was unsuccessful.
      */
-    private processChange(newValue: string): void {
+    private processChange(): void {
         if (this.onChangeFn) {
             // Signal only the changed tag properties.
             const changes: Partial<TagPropertyMap> = {};
-            this.tagProperty.stringValue = newValue;
             changes[this.tagPart.keyword] = this.tagProperty;
             const validationResults = this.onChangeFn(changes);
             this.lastValidationResult = validationResults[this.tagPart.keyword];

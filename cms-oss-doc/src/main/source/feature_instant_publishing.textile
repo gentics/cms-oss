@@ -1,0 +1,47 @@
+h2. Instant Publishing
+
+The instant publishing feature allows modifying the default publishing behavior of Gentics CMS. Typically, changes made to pages, templates and other objects will not be updated in their corresponding ContentRepositories until the next publish run is performed. When instant publishing is enabled, changes made in the CMS will be reflected in configured ContentRepositories immediately when a user marks the modified objects to be published.
+
+endprologue.
+
+h3. Configuration
+
+To enable instant publishing, add the following setting to the node.conf and restart the CMS.
+
+<javascript filename="conf/features.yml">
+feature:
+  instant_cr_publishing: true
+</javascript>
+
+Instant publishing must then be activating for each ContentRepository individually by enabling the "Instant Publishing" checkbox in the ContentRepository's properties.
+
+h3. Use Cases
+
+The primary intended use of instant publishing is in combination with "Frontend Editing":gcn_js_api_fe.html . Since by default, modified pages are not updated in ContentRepositories until a publish run is performed, frontend editors would not see their own changes immediately. By activating instant publishing, their changes will be reflected in the frontend every time they publish the page they are working on.
+
+NOTE: Instant publishing is not a replacement for the normal publish process, but an additional feature. This means that objects, that are instantly published into a ContentRepository, will also regularly be handled at the next publish process.
+
+h3. Error Behaviour
+
+In cases where the content repository database is not available (e.g. due to infrastructural problems, misconfiguration, etc.) the whole system might be affected.
+Many actions of users (like publishing pages, editing files or folders) could possibly be locked for some time, which could cause long lasting database locks, that affect other user actions.
+
+With the following configuration, the system will check for continuous errors when doing instant publishing for specific datasources and will temporarily disable instant publishing,
+if the error count becomes too large.
+
+<shell filename="conf/*.yml">
+instant_cr_publishing:
+  # after 3 subsequent errors for instant publishing, disable instant publishing for this CR
+  maxErrorCount: 3
+  # Retry instant publishing into the CR after 60 seconds
+  retryAfter: 60
+</shell>
+
+When a content repository has instant publishing automatically disabled, the list of content repositories will show "ERROR" in the column for "Instant Publishing".
+The error count can be reset for those content repositories by issuing the command "Reset Instant Publishing" in such cases.
+
+h3. Limitations
+
+When publishing multiple pages at a time, instant publishing will be ignored and the selected pages will not be published to the configured ContentRepositories until the next publish run is performed.
+
+Instant publishing also has no effect on deleting collections of objects at once, so when multiple objects are deleted simultaneously, they will not be removed from ContentRepositories until the next publish run. Similarly, folders will also not be instantly removed from ContentRepositories when they are deleted.

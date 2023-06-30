@@ -84,7 +84,7 @@ export class UsageStateModule  {
     }
 
     @ActionDefinition(ItemUsageFetchingSuccessAction)
-    handleItemUsageFetchingSuccessAction(ctx: StateContext<UsageState>, action: ItemUsageFetchingSuccessAction): void {
+    async handleItemUsageFetchingSuccessAction(ctx: StateContext<UsageState>, action: ItemUsageFetchingSuccessAction): Promise<void> {
         const diff: Partial<UsageState> = {
             fetching: false,
         };
@@ -97,7 +97,7 @@ export class UsageStateModule  {
 
             diff[usageType] = typeData.map(item => item.id);
             const normalized = normalize(typeData, new schemaNamespace.Array(getUsageSchema(usageType)));
-            ctx.dispatch(new AddEntitiesAction(normalized));
+            await ctx.dispatch(new AddEntitiesAction(normalized)).toPromise();
         }
 
         ctx.patchState(diff);

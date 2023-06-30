@@ -1,8 +1,7 @@
-import {ChangeDetectorRef, OnDestroy, Pipe, PipeTransform} from '@angular/core';
-import {LangChangeEvent, TranslateService} from '@ngx-translate/core';
-import {Subscription} from 'rxjs';
-
-import {KnownDateFormatName, knownFormats} from './known-date-formats';
+import { ChangeDetectorRef, OnDestroy, Pipe, PipeTransform } from '@angular/core';
+import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
+import { KnownDateFormatName, knownFormats } from './known-date-formats';
 
 declare var navigator: Navigator &  {
     languages: string[];
@@ -39,9 +38,10 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
     private lastResult: string;
     private formatFunction: (date: Date) => string;
 
-    constructor(private translate: TranslateService,
-                private changeDetector: ChangeDetectorRef) {
-
+    constructor(
+        private translate: TranslateService,
+        private changeDetector: ChangeDetectorRef,
+    ) {
         this.subscription = translate.onLangChange.subscribe((event: LangChangeEvent) => {
             this.lastValue = undefined;
             this.lastResult = undefined;
@@ -59,7 +59,16 @@ export class I18nDatePipe implements OnDestroy, PipeTransform {
             return this.lastResult;
         }
 
-        if (value == undefined || (typeof value !== 'number' && !(value instanceof Date))) {
+        if (typeof value === 'string') {
+            const tmp = new Date(value);
+            // Only reliable way to check if parsing worked.
+            if (tmp.toString() === 'Invalid Date') {
+                return '';
+            }
+            value = tmp;
+        }
+
+        if (value == null || (typeof value !== 'number' && !(value instanceof Date))) {
             return '';
         }
 

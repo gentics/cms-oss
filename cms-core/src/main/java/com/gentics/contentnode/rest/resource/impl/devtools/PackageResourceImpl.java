@@ -110,7 +110,7 @@ import com.gentics.contentnode.rest.util.ResolvableFilter;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.util.FileUtil;
 
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Path("/devtools")
 @Authenticated
 @RequiredFeature(Feature.DEVTOOLS)

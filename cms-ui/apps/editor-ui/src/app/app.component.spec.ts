@@ -388,7 +388,7 @@ describe('AppComponent', () => {
                             ...currentState.features,
                             ...{
                                 nodeFeatures: featureEnabled ? {
-                                    1: [NodeFeature.linkChecker],
+                                    1: [NodeFeature.LINK_CHECKER],
                                 } : {},
                             },
                         },

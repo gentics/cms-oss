@@ -8,7 +8,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-core</artifactId>
 
 	<organization>
@@ -379,7 +379,7 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
@@ -416,7 +416,7 @@
 		</dependency>
 		<!-- Product dependencies -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>base-lib</artifactId>
 			<exclusions>
 				<exclusion>
@@ -426,7 +426,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-api</artifactId>
 		</dependency>
 		<dependency>
@@ -506,11 +506,6 @@
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-server</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -626,14 +621,6 @@
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
 			<version>2.9.1</version>
-		</dependency>
-
-		<!-- Compile dependencies -->
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>2.4.public_draft</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- Bcrypt -->

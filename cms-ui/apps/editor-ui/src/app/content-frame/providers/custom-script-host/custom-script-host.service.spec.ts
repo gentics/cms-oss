@@ -128,33 +128,6 @@ describe('CustomScriptHostService', () => {
         });
     });
 
-    describe('buildForwardUrlAfterTagfillFileUpload()', () => {
-
-        const fieldToUpdate = 'foo';
-        const formActionUrl = 'bar';
-
-        it('calls ResourceUrlBuilder.useFileInTagFill() with correct params for single file', () => {
-            const file: any = {
-                id: 42,
-            };
-            customScriptHostService.buildForwardUrlAfterTagfillFileUpload(file, fieldToUpdate, formActionUrl);
-
-            expect(resourceUrlBuilder.useFileInTagFill).toHaveBeenCalledWith(42, fieldToUpdate, formActionUrl);
-        });
-
-        it('calls ResourceUrlBuilder.useFileInTagFill() with correct params for array of files', () => {
-            const files: any[] = [
-                { id: 42 },
-                { id: 2 },
-                { id: 66 },
-                { id: 93 },
-            ];
-            customScriptHostService.buildForwardUrlAfterTagfillFileUpload(files, fieldToUpdate, formActionUrl);
-
-            expect(resourceUrlBuilder.useFileInTagFill).toHaveBeenCalledWith(93, fieldToUpdate, formActionUrl);
-        });
-    });
-
     describe('uploadForCurrentItem()', () => {
 
         let uploadResponses: any[] = [];
@@ -306,10 +279,6 @@ class MockContentFrame {
     };
 }
 
-class MockResourceUrlBuilder {
-    useFileInTagFill = jasmine.createSpy('useFileInTagFill');
-}
-
 class MockFolderActions {
     uploadFiles = jasmine.createSpy('uploadFiles');
 }
@@ -328,3 +297,4 @@ class MockEntityResolver { }
 class MockI18nNotification { }
 class MockI18nService { }
 class MockErrorHandler { }
+class MockResourceUrlBuilder { }

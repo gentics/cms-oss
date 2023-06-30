@@ -178,9 +178,33 @@ folder_not_found_in_node:
 form_reports_download_binaries_button:
     en: 'Download all binaries'
     de: 'Alle Binärdateien herunterladen'
+form_reports_generate_binary_button:
+    en: 'Generate binary download'
+    de: 'Binaries Download erstellen'
+form_reports_binary_generated_at:
+    en: 'Binaries created at: {{date}}'
+    de: 'Binärdaten erstellt am: {{date}}'
+form_reports_binary_generate_started:
+    en: 'Binaries are getting generated in the background ...'
+    de: 'Binärdaten werden im Hintergrund erstellt ...'
+form_reports_binary_generate_finished:
+    en: 'Binaries have been generated'
+    de: 'Binärdaten wurden erstellt'
 form_reports_download_csv_button:
     en: 'Download CSV'
     de: 'CSV herunterladen'
+form_reports_generate_csv_button:
+    en: 'Generate export download'
+    de: 'Export Download erstellen'
+form_reports_csv_generated_at:
+    en: 'Export created at: {{date}}'
+    de: 'Export erstellt am: {{date}}'
+form_reports_csv_generate_started:
+    en: 'Export is getting generated in the background ...'
+    de: 'Export wird im Hintergrund erstellt ...'
+form_reports_csv_generate_finished:
+    en: 'Export has been generated'
+    de: 'Export wurde erstellt'
 form_reports_label:
     en: 'Form reports'
     de: 'Formularberichte'
@@ -853,3 +877,24 @@ custom_tools_label:
 administration_tool_label:
     en: Administration
     de: Administration
+select_not_deleted_items:
+    en: Please select {{itemTypePlural}} which are not deleted
+    de: Bitte wählen Sie {{itemTypePlural}} aus, welche nicht gelöscht sind
+select_deleted_items:
+    en: Please select {{itemTypePlural}} which are deleted
+    de: Bitte wählen Sie {{itemTypePlural}} aus, welche gelöscht sind
+admin_no_nodes_title:
+    en: No Nodes configured yet
+    de: Keine Nodes eingestellt
+user_no_nodes_title:
+    en: Missing Permissions
+    de: Fehlende Berechtigungen
+admin_no_nodes_message:
+    en: It seems there are no Nodes configured yet.<br>Please finish the setup in the Administration Interface first.<br>This might be related to your permissions as well.
+    de: Es wurden keine Nodes gefunden.<br>Bitte stellen Sie sicher das die Nodes passend in der Administration Oberfläche konfiguriert wurden.<br>Überprüfen Sie auch die Berechtigungen für diese.
+user_no_nodes_message:
+    en: You do not have permissions to read any Content currently.<br>Please contact an Administrator if you belief this is an error.
+    de: Sie haben keine Berechtigugen um Inhalt zu lesen.<br>Bitte kontaktieren Sie einen Administrator wenn Sie glauben, dass es ein Fehler ist.
+admin_ui_button_link:
+    en: Open Administration Interface
+    de: Administrator Oberfläche öffnen

@@ -1,22 +1,35 @@
-import {TestBed} from '@angular/core/testing';
-import {FormReportsListComponent} from '@editor-ui/app/content-frame/components/form-reports-list/form-reports-list.component';
-import {TestApplicationState} from '@editor-ui/app/state/test-application-state.mock';
-import {Component, ErrorHandler, ViewChild} from '@angular/core';
-import {MockErrorHandler} from '@editor-ui/app/core/providers/error-handler/error-handler.mock';
-import {getExampleFormDataNormalized, getExampleReports} from '@gentics/cms-models/lib/testing/test-data.mock';
-import {of} from 'rxjs';
-import {Api} from '@editor-ui/app/core/providers/api';
-import {ApplicationStateService} from '@editor-ui/app/state';
-import {EntityResolver} from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
-import {I18nNotification} from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
-import {GenticsUICoreModule} from '@gentics/ui-core';
-import {FormsModule} from '@angular/forms';
-import {SharedModule} from '@editor-ui/app/shared/shared.module';
-import {FormEditorService, FormReportService} from '@gentics/form-generator';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {By} from '@angular/platform-browser';
-import {API_BASE_URL} from '@editor-ui/app/common/utils/base-urls';
-import {componentTest, configureComponentTest} from '../../../../testing';
+import { Component, ErrorHandler, Pipe, ViewChild } from '@angular/core';
+import { TestBed, tick } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { FormReportsListComponent } from '@editor-ui/app/content-frame/components/form-reports-list/form-reports-list.component';
+import { Api } from '@editor-ui/app/core/providers/api';
+import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
+import { MockErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.mock';
+import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
+import { SharedModule } from '@editor-ui/app/shared/shared.module';
+import { ApplicationStateService } from '@editor-ui/app/state';
+import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { FormDownloadInfo } from '@gentics/cms-models';
+import { getExampleFormDataNormalized, getExampleReports } from '@gentics/cms-models/lib/testing/test-data.mock';
+import { FormEditorService, FormReportService } from '@gentics/form-generator';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { of } from 'rxjs';
+import { componentTest, configureComponentTest } from '../../../../testing';
+
+const MOCK_EXPORT_DOWNLOAD_INFO: FormDownloadInfo = {
+    requestPending: false,
+    downloadReady: true,
+    downloadUuid: '291b80fc0f344b4abc15ff7fb0487da1',
+    downloadTimestamp: '2023-05-13T18:43:22',
+};
+
+const MOCK_BINARY_DOWNLOAD_INFO: FormDownloadInfo = {
+    requestPending: true,
+    downloadReady: false,
+    downloadUuid: null,
+    downloadTimestamp: null,
+};
 
 describe('FormReportListComponent', () => {
     let state: TestApplicationState;
@@ -33,6 +46,7 @@ describe('FormReportListComponent', () => {
                 {provide: EntityResolver, useClass: MockEntityResolver},
             ],
             declarations: [
+                MockI18nDatePipe,
                 FormReportsListComponent,
                 TestComponent,
             ],
@@ -51,19 +65,15 @@ describe('FormReportListComponent', () => {
         })
     });
 
-    it('adds href to file fields',
+    it('loads the status from the api on init',
         componentTest(() => TestComponent, (fixture, testComponent) => {
             fixture.detectChanges();
-            const formId = testComponent.form.id;
-            const sid = state.now.auth.sid;
 
-            const firstEntryFileField = fixture.debugElement.query(By.css('table tbody tr:nth-child(2) td:nth-child(3) a'));
-            expect(firstEntryFileField.attributes.href).toBe(
-                `${API_BASE_URL}/form/${formId}/data/291b80fc0f344b4abc15ff7fb0487da1/binary/file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce?sid=${sid}`);
+            tick();
 
-            const secondEntryFileField = fixture.debugElement.query(By.css('table tbody tr:nth-child(3) td:nth-child(3) a'));
-            expect(secondEntryFileField.attributes.href).toBe(
-                `${API_BASE_URL}/form/${formId}/data/72a7334c56c641fe93a44b10bdffc98f/binary/file_127d4c49_9415_4ef8_aa1a_0aa96d1b94ce?sid=${sid}`);
+            const list = testComponent.formReportsList;
+            expect(list.binaryStatus).toEqual(MOCK_BINARY_DOWNLOAD_INFO);
+            expect(list.exportStatus).toEqual(MOCK_EXPORT_DOWNLOAD_INFO);
         }),
     );
 
@@ -73,7 +83,7 @@ describe('FormReportListComponent', () => {
     selector: 'test-component',
     template: `
         <form-reports-list [form]="form"></form-reports-list>`,
-})
+    })
 class TestComponent {
     @ViewChild(FormReportsListComponent, {static: true})
     formReportsList: FormReportsListComponent;
@@ -84,7 +94,16 @@ class TestComponent {
 class MockApi {
     forms = {
         getReports: jasmine.createSpy('getReports').and.returnValue(of(getExampleReports())),
+        getBinaryStatus: jasmine.createSpy('getBinaryStatus').and.returnValue(of(MOCK_BINARY_DOWNLOAD_INFO)),
+        getExportStatus: jasmine.createSpy('getExportStatus').and.returnValue(of(MOCK_EXPORT_DOWNLOAD_INFO)),
     };
+}
+
+@Pipe({ name: 'i18nDate' })
+class MockI18nDatePipe {
+    transform(val: any): any {
+        return val;
+    }
 }
 
 class MockI18nNotification {

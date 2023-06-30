@@ -3,22 +3,19 @@ package com.gentics.contentnode.testutils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +40,6 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.exception.FeatureRequiredException;
 import com.gentics.contentnode.factory.NodeFactory;
 import com.gentics.contentnode.factory.SessionToken;
 import com.gentics.contentnode.factory.Transaction;
@@ -117,6 +113,12 @@ public class DBTestContext extends TestWatcher {
 	public final static String DEFAULT_CONFIG_NAME = "default_test_config.yml";
 
 	public final int DEFAULT_MAX_WAIT = 240;
+
+	/**
+	 * Name of the environment variable, which could contain a comma separated list
+	 * of features, that need to be activated when running tests
+	 */
+	public final static String ENV_TEST_FEATURES = "CMS_TEST_FEATURES";
 
 	protected ContentNodeTestContext context;
 
@@ -294,7 +296,15 @@ public class DBTestContext extends TestWatcher {
 	protected void setFeatures(Description description) throws NodeException {
 		Class<?> testClass = description.getTestClass();
 		if (testClass != null) {
-			setFeatures(testClass.getAnnotation(GCNFeature.class));
+			List<Class<?>> classes = new ArrayList<>();
+			while (testClass != null) {
+				classes.add(testClass);
+				testClass = testClass.getSuperclass();
+			}
+			Collections.reverse(classes);
+			for (Class<?> clazz : classes) {
+				setFeatures(clazz.getAnnotation(GCNFeature.class));
+			}
 		}
 		setFeatures(description.getAnnotation(GCNFeature.class));
 	}
@@ -308,8 +318,17 @@ public class DBTestContext extends TestWatcher {
 	 * @throws NodeException
 	 */
 	protected void setFeatures(GCNFeature featureAnnotation) throws NodeException {
+		NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
+		Optional.ofNullable(System.getenv(ENV_TEST_FEATURES)).ifPresent(env -> {
+			for (String name : env.split(",")) {
+				Feature feature = Feature.getByName(org.apache.commons.lang3.StringUtils.trim(name));
+				if (feature != null) {
+					prefs.setFeature(feature, true);
+				}
+			}
+		});
+
 		if (featureAnnotation != null) {
-			NodePreferences prefs = getContext().getNodeConfig().getDefaultPreferences();
 			for (Feature feature : featureAnnotation.set()) {
 				if (!feature.isAvailable()) {
 					throw new NodeException(String.format("Feature %s is not available", feature.getName()));

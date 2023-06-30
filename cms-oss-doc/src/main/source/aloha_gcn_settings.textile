@@ -1,0 +1,141 @@
+h2. Configuration of Aloha Settings
+
+This page describes bundle configuration and how to setup custom plugins
+
+endprologue.
+
+h3. Configuration Example
+
+Aloha Settings can be configured in a .yml file in /cms/conf using the aloha_settings setting. Those settings will be mapped to a corresponding JavaScript array for use with Aloha Editor.
+You may also define an exclusive per-node configuration by using aloha_settings."KEY", where "key" is either the local id or the global id or the name of the node you want to configure (eg. 1, "3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f" or "Gentics CMS Demo").
+
+Per node configuration example:
+<javascript filename="conf/*.yml">
+# configure bundle path for node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f
+aloha_settings_node:
+ '3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f':
+   bundles:
+     custom: '/customplugins'
+</javascript>
+
+Global configuration example:
+<javascript filename="conf/*.yml">
+# Table Plugin
+aloha_settings:
+  plugins:
+    table:
+      config: [ "table" ]
+      tableConfig:
+        - name: "hor-minimalist-a"
+        - name: "box-table-a"
+        - name: "hor-zebra"
+      columnConfig:
+        - name: "bigbold"
+          iconClass: "GENTICS_button_col_bigbold"
+        - name: "redwhite"
+          iconClass: "GENTICS_button_col_redwhite"
+      rowConfig:
+        - name: "bigbold"
+          iconClass: "GENTICS_button_row_bigbold"
+        - name: "redwhite"
+          iconClass: "GENTICS_button_row_redwhite"
+    # Image Plugin
+    image:
+      maxWidth: 1024
+      maxHeight: 786
+      minWidth: 5
+      minHeight: 5
+</javascript>
+
+h3. Configuration of Plugin Bundles
+
+In order for the plugin to be loaded, two settings must be made in the node.conf:
+
+* Set the path of the bundle
+* Add the plugin to the list of plugins to be loaded
+* Define bundle path
+
+
+The bundle path for the bundle custom must be configured like this:
+<shell filename="conf/*.yml">
+aloha_settings:
+  bundles:
+    custom: "/customplugins"
+</shell>
+
+h3. Configure Aloha Editor in a template
+
+See "Configure Aloha Editor in a template":aloha_gcn_conf_inside_template.html
+
+
+h3. Adding custom plugins
+
+Starting with Aloha 0.10, the mechanism for loading plugins was completely changed. It uses require.js now.
+
+h4. 1. Placing the plugin bundle
+
+Plugins are now organized in bundles. We place the custom bundle in a static directory of the CMS installation and add a simple helloworld plugin:
+
+Set the environment variable STATIC_SERVE_LIST=/tmp/customplugins and place the helloworld plugin in the directory:
+
+<shell>
+/tmp/customplugins/helloworld/lib/helloworld-plugin.js
+</shell>
+
+h4. 2. Example Demo Helloworld Plugin
+
+
+This is a demo plugin (which just logs 'Hello World!' to the JavaScript Console when loaded).
+
+<javascript filename="helloworld-plugin.js">
+define(['aloha/plugin', 'aloha/jquery'], function(Plugin,jQuery) {
+  "use strict";
+   var $ = jQuery;
+
+   return Plugin.create('helloworld', {
+      init: function() {
+        // Executed on plugin initialization
+        if (console && console.log) {
+           console.log('Hello World!');
+        }
+      },
+      destroy: function() {
+        // Executed when this plugin is unloaded
+      }
+   });
+});
+</javascript>
+
+h3. Changing the toolbar settings
+
+The toolbar settings contain all components of common and extra plugins, but if custom plugins are added that need to adopt components
+into the toolbar, the toolbar settings need to be extended.
+
+The default configuration in the GCMS is
+
+<shell filename="conf/*.yml>
+aloha_settings:
+  toolbar:
+    tabs:
+      - label: "tab.format.label"
+      - label: "tab.insert.label"
+        components: ["gcnArena"]
+      - label: "tab.link.label"
+        components: ["editLink", "removeLink", "linkBrowser", "gcnLinkBrowser", "gcnFileUpload"]
+</shell>
+
+This can e.g. be extended to add buttons _increase_ and _decrease_ (for the community fontsize plugin) like that:
+
+<shell filename="conf/*.yml">
+aloha_settings:
+  toolbar:
+    tabs:
+      - label: "tab.format.label"
+        components: [["increase", "decrease"]]
+      - label: "tab.insert.label"
+        components: [["gcnArena"]]
+      - label: "tab.link.label"
+        components: ["editLink", "removeLink", "linkBrowser", "gcnLinkBrowser", "gcnFileUpload"]
+</shell>
+
+Note that @aloha_jqueryui_settings@ can also be used. However @aloha_jqueryui_settings@ will always be global (for the whole CMS). @aloha_settings@ is its equivalent and @aloha_settings_node."<NODE_GLOBAL_ID>"@ can be used to specifiy settings for a specific Node.

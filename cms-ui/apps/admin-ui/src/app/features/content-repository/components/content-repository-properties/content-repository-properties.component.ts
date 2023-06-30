@@ -1,4 +1,5 @@
-import { FormControlOnChangeFn, FormControlOnTouchedFn, ObservableStopper } from '@admin-ui/common';
+import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common';
+import { AppStateService } from '@admin-ui/state';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -8,7 +9,7 @@ import {
     Input,
     OnDestroy,
     OnInit,
-    Output
+    Output,
 } from '@angular/core';
 import {
     AbstractControl,
@@ -17,12 +18,13 @@ import {
     UntypedFormGroup,
     ValidationErrors,
     ValidatorFn,
-    Validators
+    Validators,
 } from '@angular/forms';
 import { GtxJsonValidator } from '@gentics/cms-components';
-import { ContentRepositoryBO, ContentRepositoryType, Normalized } from '@gentics/cms-models';
+import { ContentRepositoryBO, ContentRepositoryType, Feature, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 export interface ContentRepositoryPropertiesFormData {
     basepath: string;
@@ -50,6 +52,11 @@ export enum ContentRepositoryPropertiesComponentMode {
     UPDATE = 'update',
 }
 
+type CRDisplayType = {
+    id: ContentRepositoryType;
+    label: string;
+};
+
 /**
  * Defines the data editable by the `ContentRepositoryPropertiesComponent`.
  *
@@ -64,10 +71,6 @@ export enum ContentRepositoryPropertiesComponentMode {
     providers: [generateFormProvider(ContentRepositoryPropertiesComponent)],
 })
 export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnInit, OnDestroy, ControlValueAccessor {
-
-    constructor(
-        private changeDetectorRef: ChangeDetectorRef,
-    ) { }
 
     @Input()
     mode: ContentRepositoryPropertiesComponentMode;
@@ -84,24 +87,19 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
     fgProperties: UntypedFormGroup;
 
     /** selectable options for contentRepository input crtype */
-    public readonly crTypes: readonly { id: ContentRepositoryType; label: string; }[] = [
-        {
-            id: ContentRepositoryType.CR,
-            label: `contentRepository.contentRepository_type_${ContentRepositoryType.CR}`,
-        },
-        {
-            id: ContentRepositoryType.MESH,
-            label: `contentRepository.contentRepository_type_${ContentRepositoryType.MESH}`,
-        },
-    ];
+    public crTypes: CRDisplayType[] = [];
 
     isModeUpdate: boolean;
-
     isCrTypeMesh: boolean;
-
     usePassword: boolean;
+    meshCrEnabled = false;
 
-    private stopper = new ObservableStopper();
+    private subscriptions: Subscription[] = [];
+
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+        private appState: AppStateService,
+    ) { }
 
     private validatorPasswordsDontMatch: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
         const error = control.value !== this.fgProperties?.get('repeat_password')?.value;
@@ -114,6 +112,13 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
 
     ngOnInit(): void {
         this.fgPropertiesInit();
+        this.updateCRTypes();
+
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
+            this.meshCrEnabled = featureEnabled;
+            this.updateCRTypes();
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngAfterViewInit(): void {
@@ -124,11 +129,29 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
         // refresh form with not null dependencies
         this.configureFormControls(this.value);
         this.fgProperties.updateValueAndValidity();
-        this.changeDetectorRef.markForCheck();
+        this.changeDetector.markForCheck();
     }
 
     ngOnDestroy(): void {
-        this.stopper.stop();
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    protected updateCRTypes(): void {
+        const types: CRDisplayType[] = [
+            {
+                id: ContentRepositoryType.CR,
+                label: `contentRepository.contentRepository_type_${ContentRepositoryType.CR}`,
+            },
+        ];
+
+        if (this.meshCrEnabled) {
+            types.push({
+                id: ContentRepositoryType.MESH,
+                label: `contentRepository.contentRepository_type_${ContentRepositoryType.MESH}`,
+            });
+        }
+
+        this.crTypes = types;
     }
 
     writeValue(value: ContentRepositoryBO<Normalized>): void {
@@ -140,7 +163,7 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
     }
 
     registerOnChange(fn: FormControlOnChangeFn<ContentRepositoryBO<Normalized>>): void {
-        this.fgProperties.valueChanges.pipe(
+        this.subscriptions.push(this.fgProperties.valueChanges.pipe(
             map((formData: ContentRepositoryPropertiesFormData) => {
                 this.value = this.assembleValue(formData);
 
@@ -153,14 +176,14 @@ export class ContentRepositoryPropertiesComponent implements AfterViewInit, OnIn
                 return this.value;
             }),
             tap(() => this.isValidChange.emit(this.fgProperties.valid)),
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(fn);
+        ).subscribe(fn))
     }
 
     registerOnTouched(fn: FormControlOnTouchedFn): void { }
 
     /**
      * Alter FormGroup depending from values, which input fields appear and disappear or change validation logic.
+     *
      * @param value values of active fields to be to (re-)initialized
      */
     private configureFormControls(value: ContentRepositoryBO<Normalized> | ContentRepositoryPropertiesFormData): void {

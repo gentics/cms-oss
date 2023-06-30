@@ -1,17 +1,18 @@
 import { EntityExistsValidator, GroupDataService } from '@admin-ui/shared';
-import { getPatternEmail, PASSWORD_VALIDATORS } from '@admin-ui/shared/utils';
+import { PASSWORD_VALIDATORS, getPatternEmail } from '@admin-ui/shared/utils';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors } from '@angular/forms';
 import { GroupUserCreateRequest, Normalized, User } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { BaseModal } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Component({
     selector: 'gtx-create-user-modal',
     templateUrl: './create-user-modal.component.html',
+    styleUrls: ['./create-user-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateUserModalComponent implements IModalDialog, OnInit {
+export class CreateUserModalComponent extends BaseModal<User<Normalized>> implements OnInit {
 
     /** Current step (tab) of the entity creation wizzard */
     currentTab = String(1);
@@ -59,6 +60,7 @@ export class CreateUserModalComponent implements IModalDialog, OnInit {
         private groupData: GroupDataService,
         private entityExistsValidator: EntityExistsValidator<User<Normalized>>,
     ) {
+        super();
         entityExistsValidator.configure('user', 'login');
     }
 
@@ -73,19 +75,6 @@ export class CreateUserModalComponent implements IModalDialog, OnInit {
             password1: new UntypedFormControl( null, PASSWORD_VALIDATORS ),
             password2: new UntypedFormControl( null, PASSWORD_VALIDATORS),
         }, this.passwordsDontMatch );
-    }
-
-    closeFn = (entityCreated: User<Normalized>) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = (entityCreated: User<Normalized>) => {
-            close(entityCreated);
-        };
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
     }
 
     /** Get form validity state */

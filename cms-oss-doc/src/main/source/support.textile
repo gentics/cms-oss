@@ -1,0 +1,26 @@
+h2. Support
+
+endprologue.
+
+h3. Before you write a ticket
+
+* Make sure your software is up to date
+* Check that the changelog does not contain the fix for your bug
+
+h3. How to write a ticket
+
+The following guidelines can be used to enhance your ticket with additional and useful information.
+
+* Write a clear subject:
+    ** Good: "Cancelling a File Copy dialog crashes File Manager"
+    ** Bad: "Software crashes"
+* Add information about used software. (e.g: Internet Explorer 9.x, Gentics CMS Version 5.14.3)
+* Write precise steps to reproduce the problem.
+    ** What happened and what did you expect to happen?
+    ** Add Screenshots/Screencasts if possible.
+    ** Add pageIds when pages are affected.
+* On which system did the problem occur? [System URL/Name]
+* License key of the installation.
+* __[Optional]__ Add a regression window. When did the bug first appear?
+
+The ticket can be send via email to __support [at] gentics [dot] com__ or created via our "ticket tracker system":https://support.gentics.com.

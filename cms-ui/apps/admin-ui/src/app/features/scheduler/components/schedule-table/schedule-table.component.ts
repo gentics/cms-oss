@@ -1,9 +1,8 @@
-import { BO_PERMISSIONS, buildEntityDetailPath, discard, ScheduleBO } from '@admin-ui/common';
+import { BO_PERMISSIONS, discard, ScheduleBO } from '@admin-ui/common';
 import { I18nNotificationService, I18nService, PermissionsService, ScheduleOperations } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { Router } from '@angular/router';
 import {
     AccessControlledType,
     AnyModelType,
@@ -13,10 +12,10 @@ import {
     SchedulerStatus,
     ScheduleSaveReqeust,
 } from '@gentics/cms-models';
-import { cancelEvent, ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableColumn, TableRow, TableSortOrder } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { combineLatest, forkJoin, interval, Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { combineLatest, forkJoin, interval, Observable } from 'rxjs';
+import { distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { ScheduleTableLoaderService } from '../../providers';
 import { CreateScheduleModalComponent } from '../create-schedule-modal/create-schedule-modal.component';
 import { ScheduleExecutionDetailModalComponent } from '../schedule-execution-detail-modal/schedule-execution-detail-modal.component';
@@ -30,7 +29,7 @@ const DEACTIVATE_SCHEDULE_ACTION = 'deactivateSchedule';
     templateUrl: './schedule-table.component.html',
     styleUrls: ['./schedule-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, ScheduleBO> implements OnInit {
 
     @Output()
@@ -41,6 +40,7 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
 
     public canManageScheduler = false;
     public schedulerRunning = false;
+    public loadingSchedulerStatus = false;
 
     protected rawColumns: TableColumn<ScheduleBO>[] = [
         {
@@ -99,7 +99,6 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         protected operations: ScheduleOperations,
         protected permissions: PermissionsService,
         protected notification: I18nNotificationService,
-        protected router: Router,
     ) {
         super(
             changeDetector,
@@ -114,12 +113,21 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         super.ngOnInit();
 
         this.subscriptions.push(combineLatest([
-            of(), // Load the status from the very beginning
-            interval(10_000),
+            interval(10_000).pipe(
+                startWith(null),
+            ),
+            this.loadTrigger.asObservable().pipe(
+                startWith(null),
+            ),
         ]).pipe(
+            tap(() => {
+                this.loadingSchedulerStatus = true;
+                this.changeDetector.markForCheck();
+            }),
             switchMap(() => this.operations.status()),
         ).subscribe(res => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
+            this.loadingSchedulerStatus = false;
             this.changeDetector.markForCheck();
         }));
 
@@ -215,19 +223,14 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
         super.handleAction(event);
     }
 
-    public handleTaskClick(taskId: number, event?: MouseEvent): void {
-        cancelEvent(event);
-        const target = buildEntityDetailPath('scheduleTask', taskId);
-        this.router.navigate(target).then(didNavigate => {
-            if (didNavigate) {
-                this.taskClick.emit(taskId);
-            }
-        });
-    }
-
     public handleSchedulerResume(): void {
+        this.loadingSchedulerStatus = true;
+        this.changeDetector.markForCheck();
+
         this.subscriptions.push(this.operations.resumeExecutions().subscribe(res => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
+            this.loadingSchedulerStatus = false;
+            this.changeDetector.markForCheck();
             this.notification.show({
                 type: 'success',
                 message: 'scheduler.resume_success',
@@ -236,8 +239,13 @@ export class ScheduleTableComponent extends BaseEntityTableComponent<Schedule, S
     }
 
     public handleSchedulerPause(): void {
+        this.loadingSchedulerStatus = true;
+        this.changeDetector.markForCheck();
+
         this.subscriptions.push(this.operations.suspendExecutions().subscribe(res => {
             this.schedulerRunning = res.status === SchedulerStatus.RUNNING;
+            this.loadingSchedulerStatus = false;
+            this.changeDetector.markForCheck();
             this.notification.show({
                 type: 'success',
                 message: 'scheduler.suspend_success',

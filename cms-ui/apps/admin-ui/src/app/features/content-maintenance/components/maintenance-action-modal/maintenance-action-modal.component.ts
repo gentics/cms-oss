@@ -57,7 +57,7 @@ export class MaintenanceActionModalComponent extends BaseModal<boolean> implemen
         // init form
         this.formGroup = this.formBuilder.group({
             types: [null, Validators.required],
-            contentRepositories: [null, Validators.required],
+            contentRepositories: [null],
             attributes: [{ value: '', disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             clearPublishCache: [{ value: false, disabled: this.modalAction !== MaintenanceActionModalAction.REPUBLISH_OBJECTS }],
             limitToDateRange: [false],

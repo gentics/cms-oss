@@ -31,6 +31,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.Transaction;
@@ -733,7 +734,7 @@ public class ModelBuilder {
 	public static com.gentics.contentnode.rest.model.Overview getOverview(
 			Overview nodeOverview) throws NodeException {
 		com.gentics.contentnode.rest.model.Overview restOverview = new com.gentics.contentnode.rest.model.Overview();
-	
+
 		restOverview.setId(nodeOverview.getId());
 
 		// set the selection type
@@ -809,6 +810,8 @@ public class ModelBuilder {
 
 		applyTagProperties(templateTag, restTemplateTag, addConstruct, addPrivateData);
 		restTemplateTag.setEditableInPage(templateTag.isPublic());
+		restTemplateTag.setMandatory(templateTag.getMandatory());
+
 		return restTemplateTag;
 	}
 
@@ -835,6 +838,14 @@ public class ModelBuilder {
 	}
 
 	public static com.gentics.contentnode.rest.model.Tag getTag(Tag nodeTag, boolean addConstruct, boolean addPrivateData) throws NodeException {
+		if (nodeTag instanceof TemplateTag) {
+			return getTemplateTag((TemplateTag) nodeTag, addConstruct, addPrivateData);
+		}
+
+		if (nodeTag instanceof ObjectTag) {
+			return getObjectTag((ObjectTag) nodeTag, 0, addConstruct, addPrivateData);
+		}
+
 		com.gentics.contentnode.rest.model.Tag restTag = new com.gentics.contentnode.rest.model.Tag();
 
 		applyTagProperties(nodeTag, restTag, addConstruct, addPrivateData);
@@ -867,7 +878,11 @@ public class ModelBuilder {
 		restTag.setInheritable(nodeTag.isInheritable());
 		restTag.setRequired(nodeTag.isRequired());
 		restTag.setSortOrder(sortOrder);
-		restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
+		// temporarily disable publish cache, because checking permissions on an objecttag might try to load the container object, which - when publish cache is enabled - will get the REST model
+		// of the object, including its object tags. this would lead to endless recursions
+		try (PublishCacheTrx pCacheTrx = new PublishCacheTrx(false)) {
+			restTag.setReadOnly(!TransactionManager.getCurrentTransaction().getPermHandler().canEdit(nodeTag));
+		}
 		return restTag;
 	}
 

@@ -10,15 +10,15 @@ import {
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-    AssignContentrepositoriesToCrfragmentsModalComponent,
-} from '../assign-content-repositories-to-cr-fragments-modal/assign-content-repositories-to-crf-ragments-modal.component';
+    AssignCRFragmentsToContentRepositoryModal,
+} from '../assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 import {
     AssignContentrepositoriesToNodesModalComponent,
 } from '../assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
@@ -48,9 +48,6 @@ export class ContentRepositoryTableComponent
     implements OnChanges {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
-
-    @Output()
-    public openDetail = new EventEmitter<OpenCRDetailEvent>();
 
     @Input()
     public linkDetails = false;
@@ -153,7 +150,7 @@ export class ContentRepositoryTableComponent
                         icon: 'dns',
                         enabled: true,
                         single: true,
-                        label: this.i18n.instant('shared.assign_contentrepositories_to_crfragments'),
+                        label: this.i18n.instant('shared.assign_crfragments_to_contentrepositories'),
                     },
                     {
                         id: DATA_CHECK_ACTION,
@@ -257,11 +254,6 @@ export class ContentRepositoryTableComponent
         super.handleAction(event);
     }
 
-    openDetailTab(event: MouseEvent, item: ContentRepositoryBO, tab: ContentRepositoryDetailTabs): void {
-        this.cancelEvent(event);
-        this.openDetail.emit({ item, tab });
-    }
-
     protected async assignNodes(crId: string | number): Promise<void> {
         const dialog = await this.modalService.fromComponent(
             AssignContentrepositoriesToNodesModalComponent,
@@ -275,7 +267,7 @@ export class ContentRepositoryTableComponent
 
     protected async assignFragments(crId: string | number): Promise<void> {
         const dialog = await this.modalService.fromComponent(
-            AssignContentrepositoriesToCrfragmentsModalComponent,
+            AssignCRFragmentsToContentRepositoryModal,
             { closeOnOverlayClick: false, width: '50%' },
             { contentRepositoryId: String(crId) },
         );

@@ -190,7 +190,9 @@ export function replaceRegExpSpecialChars(input: string): string {
 export function findPageLinks(input: string, nodes: { id: number, name: string }[]): { links: MessageLink[], textAfterLinks: string } {
 
     // Matches any node name
-    const nodeNamePattern = nodes.map(node => replaceRegExpSpecialChars(node.name)).join('|');
+    const nodeNamePattern = nodes
+        .filter(node => node != null)
+        .map(node => replaceRegExpSpecialChars(node.name)).join('|');
 
     // Matches "/folder/", "/some folder/", "/folder a/folder b/"
     const pathPattern = `/(?:[^/\\n]+?/)*?`;

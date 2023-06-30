@@ -37,7 +37,10 @@ export class FollowUpScheduleDataPropertiesComponent
         super.ngOnChanges(changes);
 
         if (changes.scheduleBlacklist) {
-            this.blacklist$.next(this.scheduleBlacklist || []);
+            this.blacklist$.next((this.scheduleBlacklist || [])
+                .map(val => Number(val))
+                .filter(num => Number.isInteger(num)),
+            );
         }
     }
 
@@ -45,20 +48,25 @@ export class FollowUpScheduleDataPropertiesComponent
         super.ngOnInit();
 
         this.schedules$ = combineLatest([
-            this.scheduleData.watchAllEntities(),
+            this.scheduleData.watchAllEntities().pipe(
+                map(schedules => schedules.map(singleSchedule => ({
+                    ...singleSchedule,
+                    id: Number(singleSchedule.id),
+                }))),
+            ),
             this.blacklist$.pipe(
                 distinctUntilChanged(isEqual),
             ),
         ]).pipe(
-            map(([schedules, blacklist]) => schedules.filter(singleSchedule => !blacklist.includes(singleSchedule.id))),
-        );
+            map(([schedules, blacklist]: [any[], number[]]) => schedules.filter(singleSchedule => !blacklist.includes(singleSchedule.id))),
+        ) as any;
     }
 
     protected override createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
-            scheduleId: new UntypedFormControl((this.value )?.follow?.scheduleId, Validators.required),
+            scheduleId: new UntypedFormControl((this.value )?.follow?.scheduleId, [Validators.required, Validators.minLength(1)]),
             onlyAfterSuccess: new UntypedFormControl((this.value )?.follow?.onlyAfterSuccess),
-        }, Validators.required);
+        });
     }
 
     protected override configureForm(value: FollowUpScheduleData, loud?: boolean): void {

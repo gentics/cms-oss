@@ -26,7 +26,6 @@ import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.CNWorkPhase;
 import com.gentics.contentnode.publish.PublishController;
-import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishWorkPhaseConstants;
 import com.gentics.contentnode.publish.SimplePublishInfo;
 import com.gentics.contentnode.publish.WorkPhaseHandler;
@@ -121,7 +120,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	/**
 	 * Tracker for the render tasks
 	 */
-	protected TaskQueueSize renderTasks = new TaskQueueSize();
+	protected TaskQueueSize renderTasks = new TaskQueueSize(MeshPublisher.TASKQUEUE_SIZE * 2);
 
 	/**
 	 * Tracker for the write tasks
@@ -236,7 +235,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 						writeTask.perform();
 						writeTasks.finish();
 					}
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					MeshPublisher.logger.error("Error while publishing", e);
 					proceed = false;
 					if (publishProcess) {
@@ -252,9 +251,15 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	/**
 	 * Either run the render task synchronously (for instant publishing), or asynchonously (for publish process)
 	 * @param renderTask render task
+	 * @throws NodeException 
 	 */
-	protected void runRenderTask(Runnable renderTask) {
+	protected void runRenderTask(Runnable renderTask) throws NodeException {
 		if (publishProcess) {
+			try {
+				renderTasks.awaitNotFull();
+			} catch (InterruptedException e) {
+				throw new NodeException("Error while waiting for a place in the render task queue", e);
+			}
 			renderTasks.schedule();
 			rendererThreadPool.submit(renderTask);
 		} else {
@@ -401,13 +406,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		state = State.removeOfflineObjects;
 		try (WorkPhaseHandler phase = new WorkPhaseHandler(offlinePhase)) {
 			for (MeshPublisher mp : publishers) {
-				mp.checkObjectConsistency(true, true, (node, objType) -> {
-					if (node == null) {
-						return true;
-					}
-					Transaction t = TransactionManager.getCurrentTransaction();
-					return !PublishQueue.getRemovedObjectIds(t.getClass(objType), true, node).isEmpty();
-				});
+				mp.checkObjectConsistency(true, true);
 				phase.work();
 			}
 		}
@@ -537,6 +536,16 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	@Override
 	public int getPostponedWriteTasks() {
 		return publishers.stream().mapToInt(mp -> mp.postponedTasks.size()).sum();
+	}
+
+	@Override
+	public int getRemainingWriteTasks() {
+		return writeTasks.getRemainingTasks();
+	}
+
+	@Override
+	public int getTotalWriteTasks() {
+		return writeTasks.getTotalTasks();
 	}
 
 	@Override

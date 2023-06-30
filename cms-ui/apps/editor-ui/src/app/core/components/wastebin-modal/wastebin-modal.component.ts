@@ -14,7 +14,7 @@ import { SortingModal } from './../../../shared/components/sorting-modal/sorting
     selector: 'wastebin-modal',
     templateUrl: './wastebin-modal.tpl.html',
     styleUrls: ['./wastebin-modal.scss'],
-    })
+})
 export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
 
     folders$: Observable<Folder[]>;
@@ -24,11 +24,13 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
     images$: Observable<Image[]>;
     fetching$: Observable<boolean>;
     empty$: Observable<boolean>;
+
     filterTerm = '';
     sortBy: SortField;
     sortOrder: 'asc' | 'desc';
     selection: { [type: string]: number[] } = {};
     nodeId: number;
+
     private nodeFeatIsActiveForms$: Observable<boolean>;
     private destroyed$ = new Subject<void>();
 
@@ -42,9 +44,9 @@ export class WastebinModal implements OnInit, OnDestroy, IModalDialog {
     ) { }
 
     ngOnInit(): void {
-        this.nodeFeatIsActiveForms$ = this.nodeFeatureIsActive(this.nodeId, NodeFeature.forms);
+        this.nodeFeatIsActiveForms$ = this.nodeFeatureIsActive(this.nodeId, NodeFeature.FORMS);
 
-        this.nodeFeatureIsActive(this.nodeId, NodeFeature.forms);
+        this.nodeFeatureIsActive(this.nodeId, NodeFeature.FORMS);
         this.nodeId = this.nodeId || this.appState.now.folder.activeNode;
         this.sortBy = this.appState.now.wastebin.sortBy;
         this.sortOrder = this.appState.now.wastebin.sortOrder;

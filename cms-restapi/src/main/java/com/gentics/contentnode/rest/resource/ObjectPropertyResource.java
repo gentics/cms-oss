@@ -2,11 +2,13 @@ package com.gentics.contentnode.rest.resource;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 import com.gentics.contentnode.rest.model.ObjectProperty;
 import com.gentics.contentnode.rest.model.ObjectPropertyCategory;
@@ -128,7 +130,7 @@ public interface ObjectPropertyResource {
 		@ResponseCode(code = 200, condition = "The object property has been deleted."),
 		@ResponseCode(code = 404, condition = "The object property {id} does not exist.")
 	})
-	GenericResponse delete(@PathParam("id") String objectPropertyId) throws Exception;
+	GenericResponse delete(@PathParam("id") String objectPropertyId, @QueryParam("foregroundTime") @DefaultValue("-1") int foregroundTime) throws Exception;
 
 	/**
 	 * Create a new object property category

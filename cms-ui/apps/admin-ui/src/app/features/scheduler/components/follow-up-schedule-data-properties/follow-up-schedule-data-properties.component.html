@@ -3,6 +3,7 @@
     <gtx-select
         [label]="('scheduler.followUp_schedule' | i18n) + ' *'"
         [required]="true"
+        [multiple]="true"
         formControlName="scheduleId"
     >
         <gtx-option *ngFor="let schedule of schedules$ | async" [value]="schedule.id">{{ schedule.name }}</gtx-option>

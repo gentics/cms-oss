@@ -12,7 +12,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AnyModelType, GcmsPermission, NormalizableEntityTypesMap, Template } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BasePackageEntityTableComponent } from '../base-package-entity-table/base-package-entity-table.component';
 
@@ -27,7 +27,7 @@ export class TemplateTableComponent
     implements OnChanges {
 
     @Input()
-    public nodeId: number;
+    public nodeId: number | number[];
 
     protected rawColumns: TableColumn<TemplateBO>[] = [
         {

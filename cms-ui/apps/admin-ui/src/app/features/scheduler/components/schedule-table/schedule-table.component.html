@@ -25,7 +25,7 @@
         flat
         size="small"
         type="success"
-        [disabled]="disabled || !canManageScheduler || schedulerRunning"
+        [disabled]="disabled || loadingSchedulerStatus || !canManageScheduler || schedulerRunning"
         (click)="handleSchedulerResume()"
     >
         <icon left>play_arrow</icon> {{ 'scheduler.resume_scheduler' | i18n }}
@@ -36,10 +36,21 @@
         flat
         size="small"
         type="warning"
-        [disabled]="disabled || !canManageScheduler || !schedulerRunning"
+        [disabled]="disabled || loadingSchedulerStatus || !canManageScheduler || !schedulerRunning"
         (click)="handleSchedulerPause()"
     >
         <icon left>pause</icon> {{ 'scheduler.suspend_scheduler' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
 </div>
 
@@ -96,13 +107,22 @@
 </ng-template>
 
 <ng-template #resultRenderer let-value="value" let-row="row">
-    <a (click)="openExecutionDetails(row, $event)">
+    <a
+        *ngIf="value != null"
+        class="gtx-entity-grid-link"
+        (click)="openExecutionDetails(row, $event)"
+    >
         {{ 'scheduler.execution_result_' + (value ? 'true' : 'false') | i18n }}
     </a>
 </ng-template>
 
 <ng-template #taskRenderer let-value="value" let-row="row">
-    <a *ngIf="value > 0" (click)="handleTaskClick(value, $event)">
+    <a
+        *ngIf="value > 0"
+        class="gtx-entity-grid-link"
+        [routerLink]="'scheduleTask' | gtxEntityDetailRouterLink:row.item.taskId"
+        (click)="cancelEvent($event)"
+    >
         {{ row.item.task?.name || row.item.taskId }}
     </a>
 </ng-template>

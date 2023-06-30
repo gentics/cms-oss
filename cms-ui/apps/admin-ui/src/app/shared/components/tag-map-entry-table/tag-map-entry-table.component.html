@@ -18,6 +18,17 @@
     >
         <icon left>add</icon> {{ 'shared.create_new_tagmapEntry_button' | i18n }}
     </gtx-button>
+
+    <gtx-button
+        class="table-action-button reload-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="reload()"
+    >
+        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+    </gtx-button>
 </div>
 
 <div class="entity-table-selection">
@@ -66,7 +77,7 @@
 <ng-template #boolIconRenderer let-value="value">
     <icon
         class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+        [ngClass]="'gtx-entity-grid-cell-icon-' + (value ? 'true' : 'false')"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>
 

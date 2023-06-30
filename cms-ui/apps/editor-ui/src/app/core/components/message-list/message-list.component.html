@@ -1,0 +1,35 @@
+<div
+    *ngFor="let msg of messages; trackBy: trackUnique"
+    class="message"
+    [class.read]="!msg?.unread"
+>
+    <icon-checkbox
+        icon="mail"
+        [selected]="isSelected(msg)"
+        (change)="toggleSelect(msg, $event)"
+    ></icon-checkbox>
+
+    <span class="name" (click)="messageClick.emit(msg)">{{ getFullName(msg?.sender) }}</span>:
+
+    <message-body
+        singleLine
+        [body]="msg?.message"
+        [nodes]="nodes"
+        (click)="messageClick.emit(msg)"
+    ></message-body>
+
+    <div class="message-actions">
+        <icon
+            *ngIf="msg?.unread"
+            [title]="'user.archive_message_title' | i18n"
+            (click)="messageArchive.emit(msg)"
+        >move_to_inbox</icon>
+
+        <icon
+            [title]="'user.delete_message_title' | i18n"
+            [attr.data-msg-id]="msg.id"
+            [class.confirm]="msg === waitsForDeleteConfirmation"
+            (click)="messageDelete.emit(msg)"
+        >delete</icon>
+    </div>
+</div>

@@ -27,7 +27,7 @@ export function applyShortcuts(value: string, params?: any): string {
         case 'linkedPage':
         case 'linkedFile':
         case 'linkedImage':
-        case 'variant':
+        case 'variant': {
             let key = `common.type_${value}`;
             if (params && params.hasOwnProperty('count') && 1 != params.count) {
                 key += 's';
@@ -36,6 +36,8 @@ export function applyShortcuts(value: string, params?: any): string {
                 key += '_dative';
             }
             return key;
+        }
+
         case 'published':
         case 'edited':
         case 'offline':
@@ -43,22 +45,23 @@ export function applyShortcuts(value: string, params?: any): string {
         case 'timeframe':
         case 'publishat':
             return `common.status_${value}`;
+
         default:
             return value;
-   }
+    }
 }
 
 export function translateParams(params: {[key: string]: any}, translate: TranslateService): {[key: string]: any} {
     let translated: {[key: string]: any} = {};
     for (let key in params) {
         if (key === '_lang' || key === '_language') {
-            translated[key.substr(1)] = translate.instant('lang.' + params[key]);
-       } else if (key[0] === '_') {
+            translated[key.substr(1)] = translate.instant(`lang.${params[key]}`);
+        } else if (key[0] === '_') {
             translated[key.substr(1)] = translateParamValue(params[key], params, translate);
-       } else {
+        } else {
             translated[key] = params[key];
-       }
-   }
+        }
+    }
     return translated;
 }
 
@@ -66,7 +69,12 @@ export function translateParams(params: {[key: string]: any}, translate: Transla
  * If a param value is one of the common pages, we translate it implicitly.
  */
 function translateParamValue(value: any, params: {[key: string]: any}, translate: TranslateService): any {
-    return translate.instant(applyShortcuts(value, params));
+    const shortCut = applyShortcuts(value, params);
+    const toTranslate = shortCut || value;
+    if (!toTranslate) {
+        return toTranslate;
+    }
+    return translate.instant(toTranslate);
 }
 
 /**
@@ -96,7 +104,7 @@ export function getFormattedTimeMgmtValue(
     currentNodeId: number,
     i18n: I18nService,
     datePipe: I18nDatePipe,
-    folderActions: FolderActionsService
+    folderActions: FolderActionsService,
 ): Observable<string | boolean> {
     if (!item || !item.timeManagement || !item.timeManagement[field]) return of(false);
 
@@ -113,7 +121,7 @@ export function getFormattedTimeMgmtValue(
 
     switch (field) {
         // PLANNED: action is scheduled and will we performed
-        case 'at':
+        case 'at': {
             dateRaw = item.timeManagement.at;
             date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
             const timeManagement = item.timeManagement;
@@ -121,7 +129,7 @@ export function getFormattedTimeMgmtValue(
                 version = timeManagement.version.number;
                 user = item.timeManagement.version.editor.firstName + ' ' + item.timeManagement.version.editor.lastName;
                 translation = i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-           } else {
+            } else {
                 user = i18n.translate('editor.publish_queue_migration_notice');
                 // SPECIAL CASE
                 // If there is no ```timeManagement.version``` despite ```timeManagement.at > 0``` in the CMS' response
@@ -142,7 +150,7 @@ export function getFormattedTimeMgmtValue(
                 const pageOptions: PageRequestOptions = {
                     nodeId: currentNodeId,
                     versioninfo: true,
-                    langvars: true
+                    langvars: true,
                 };
                 const formOptions: FormRequestOptions = {
                     nodeId: currentNodeId,
@@ -155,11 +163,11 @@ export function getFormattedTimeMgmtValue(
                             // if there are mutliple versions, get latest
                             if (versionedPage.versions && versionedPage.versions.length > 0) {
                                 version = pageVersionsGetLatest(versionedPage.versions);
-                        } else {
+                            } else {
                                 throw new Error('No version information found in page data.');
-                        }
+                            }
                             return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-                    })
+                        }),
                     );
                 }
                 if (item.type === 'form') {
@@ -169,15 +177,17 @@ export function getFormattedTimeMgmtValue(
                             // if there are mutliple versions, get latest
                             if (versionedForm.version) {
                                 version = versionedForm.version.number;
-                        } else {
+                            } else {
                                 throw new Error('No version information found in form data.');
-                        }
+                            }
                             return i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
-                    })
+                        }),
                     );
                 }
-           }
+            }
             break;
+        }
+
         case 'offlineAt':
             dateRaw = item.timeManagement.offlineAt;
             date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
@@ -185,10 +195,11 @@ export function getFormattedTimeMgmtValue(
             // if no user is available, fallback to date-only
             if (user) {
                 translation = i18n.translate('editor.publish_queue_date_value_label', {date, user})
-           } else {
+            } else {
                 translation = date;
-           }
+            }
             break;
+
         // QUEUED: action is requested to be planned but won't be performed until approval
         case 'queuedPublish':
             dateRaw = item.timeManagement.queuedPublish['at'];
@@ -197,6 +208,7 @@ export function getFormattedTimeMgmtValue(
             user = item.timeManagement.queuedPublish['user']['firstName'] + ' ' + item.timeManagement.queuedPublish['user']['lastName'];
             translation = i18n.translate('editor.publish_queue_date_version_value_label', {date, user, version});
             break;
+
         case 'queuedOffline':
             dateRaw = item.timeManagement.queuedOffline['at'];
             date = dateRaw > 0 ? datePipe.transform(dateRaw, 'dateTime') : i18n.translate('editor.publish_queue_date_value_immediately');
@@ -206,6 +218,7 @@ export function getFormattedTimeMgmtValue(
 
         default:
             return of(false);
-   }
+    }
+
     return of(translation);
 }

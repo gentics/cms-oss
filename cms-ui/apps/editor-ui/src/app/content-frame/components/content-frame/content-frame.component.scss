@@ -366,10 +366,14 @@
     }
 
     .form-editor {
-        height: 100%;
+        flex: 1 1 auto;
+        min-height: 1px;
+        width: 100%;
     }
 
+    .form-editor,
     .preview-form {
+        display: block;
         height: 100%;
         position: relative;
         overflow: auto;

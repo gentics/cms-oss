@@ -139,10 +139,6 @@
         "en": "Select Objects with Channel",
         "de": "Objekte mit Channel wählen"
     },
-    "newEditor": {
-        "en": "NewEditor",
-        "de": "Neuer Editor"
-    },
     "externalEditorUrl": {
         "en": "External Editor URL",
         "de": "Externe Bearbeitungs-URL"
@@ -190,6 +186,10 @@
     "categorySortorder": {
         "en": "Category Sortorder",
         "de": "Kategoriesortierung"
+    },
+    "sort_categories": {
+        "en": "Sort Categories",
+        "de": "Kategorien sortieren"
     },
     "visibleInMenu": {
         "en": "Visible in Menu",

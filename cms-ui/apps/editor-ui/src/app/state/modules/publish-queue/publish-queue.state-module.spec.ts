@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
 import {
     getExamplePageData,
@@ -58,13 +58,15 @@ describe('PublishQueueStateModule', () => {
         } as PublishQueueState);
     });
 
-    it('assignToUsersStart works', () => {
+    it('assignToUsersStart works', fakeAsync(() => {
         expect(appState.now.publishQueue.assigning).toBe(false);
         appState.dispatch(new StartAssigningUsersToPagesAction());
-        expect(appState.now.publishQueue.assigning).toBe(true);
-    });
+        tick();
 
-    it('assignToUsersSuccess works', () => {
+        expect(appState.now.publishQueue.assigning).toBe(true);
+    }));
+
+    it('assignToUsersSuccess works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 assigning: true,
@@ -78,10 +80,12 @@ describe('PublishQueueStateModule', () => {
             },
         });
         appState.dispatch(new AssigningUsersToPagesSuccessAction([1, 2, 3]));
-        expect(appState.now.publishQueue.assigning).toEqual(false);
-    });
+        tick();
 
-    it('assignToUsersError works', () => {
+        expect(appState.now.publishQueue.assigning).toEqual(false);
+    }));
+
+    it('assignToUsersError works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 assigning: true,
@@ -104,16 +108,20 @@ describe('PublishQueueStateModule', () => {
             },
         });
         appState.dispatch(new AssigningUsersToPagesErrorAction());
-        expect(appState.now.publishQueue.assigning).toEqual(false);
-    });
+        tick();
 
-    it('fetchQueueStart works', () => {
+        expect(appState.now.publishQueue.assigning).toEqual(false);
+    }));
+
+    it('fetchQueueStart works', fakeAsync(() => {
         expect(appState.now.publishQueue.fetching).toBe(false);
         appState.dispatch(new StartPublishQueueFetchingAction());
-        expect(appState.now.publishQueue.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchQueueSuccess works', () => {
+        expect(appState.now.publishQueue.fetching).toBe(true);
+    }));
+
+    it('fetchQueueSuccess works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 fetching: true,
@@ -145,6 +153,8 @@ describe('PublishQueueStateModule', () => {
             getExamplePageData({ id: 3 }),
             getExamplePageData({ id: 5 }),
         ]));
+        tick();
+
         expect(appState.now.publishQueue.fetching).toBe(false);
         expect(appState.now.publishQueue.pages).toEqual(
             {
@@ -167,9 +177,9 @@ describe('PublishQueueStateModule', () => {
 
         // List extended with the default languageVariant id: 48, which is auto-loaded
         expect(Object.keys(appState.now.entities.page)).toEqual(['1', '3', '5', '48']);
-    });
+    }));
 
-    it('fetchQueueError works', () => {
+    it('fetchQueueError works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 fetching: true,
@@ -192,16 +202,20 @@ describe('PublishQueueStateModule', () => {
             },
         });
         appState.dispatch(new PublishQueueFetchingErrorAction());
-        expect(appState.now.publishQueue.fetching).toBe(false);
-    });
+        tick();
 
-    it('fetchUsersStart works', () => {
+        expect(appState.now.publishQueue.fetching).toBe(false);
+    }));
+
+    it('fetchUsersStart works', fakeAsync(() => {
         expect(appState.now.publishQueue.fetching).toBe(false);
         appState.dispatch(new StartPublishQueueFetchingAction());
-        expect(appState.now.publishQueue.fetching).toBe(true);
-    });
+        tick();
 
-    it('fetchUsersSuccess works', () => {
+        expect(appState.now.publishQueue.fetching).toBe(true);
+    }));
+
+    it('fetchUsersSuccess works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 fetching: true,
@@ -232,19 +246,23 @@ describe('PublishQueueStateModule', () => {
             getExampleUserData({ id: 3 }),
             getExampleUserData({ id: 9 }),
         ]));
+        tick();
+
         expect(appState.now.publishQueue.fetching).toBe(false);
         expect(appState.now.publishQueue.users).toEqual([3, 9]);
         expect(Object.keys(appState.now.entities.user)).toEqual(['1', '3', '9']);
-    });
+    }));
 
-    it('fetchUsersError works', () => {
+    it('fetchUsersError works', fakeAsync(() => {
         appState.mockState({
             publishQueue: {
                 fetching: true,
             },
         });
         appState.dispatch(new PublishQueueFetchingErrorAction());
+        tick();
+
         expect(appState.now.publishQueue.fetching).toBe(false);
-    });
+    }));
 
 });

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { StageableItem, StagingMode, UIMode, plural } from '@editor-ui/app/common/models';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import {
@@ -15,6 +15,7 @@ import {
     StagedItemsMap,
     getNoPermissions,
 } from '@gentics/cms-models';
+import { Subscription } from 'rxjs';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
@@ -50,8 +51,8 @@ export interface ContextMenuButtonsMap {
     templateUrl: './item-context-menu.component.html',
     styleUrls: ['./item-context-menu.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
-export class ItemContextMenuComponent implements OnChanges {
+})
+export class ItemContextMenuComponent implements OnInit, OnChanges, OnDestroy {
 
     readonly UIMode = UIMode;
     readonly StagingMode = StagingMode;
@@ -82,18 +83,34 @@ export class ItemContextMenuComponent implements OnChanges {
     public stagingMap: StagedItemsMap;
 
     buttons: ContextMenuButtonsMap;
+    wastebinEnabled = false;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private contextMenuOperations: ContextMenuOperationsService,
         private folderActions: FolderActionsService,
         private state: ApplicationStateService,
         private entityResolver: EntityResolver,
     ) { }
 
+    ngOnInit(): void {
+        this.subscriptions.push(this.state.select(state => state.features.wastebin).subscribe(enabled => {
+            this.wastebinEnabled = enabled;
+            this.buttons = this.determineVisibleButtons();
+            this.changeDetector.markForCheck();
+        }));
+    }
+
     ngOnChanges(changes: SimpleChanges): void {
         if (Object.keys(changes).length > 0) {
             this.buttons = this.determineVisibleButtons();
         }
+    }
+
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     /**
@@ -327,7 +344,7 @@ export class ItemContextMenuComponent implements OnChanges {
             requestTranslation: !this.isDeleted && showRequestTranslationButton,
             linkTemplates: !this.isDeleted && isFolder && userCan.edit && templatePermissions ? templatePermissions.link : false,
             delete: !this.isDeleted && (isMaster || isForm) && !inherited && userCan.delete,
-            restore: this.isDeleted && !inherited && userCan.delete,
+            restore: this.wastebinEnabled && this.isDeleted && !inherited && userCan.delete,
             unlocalize: !isForm && !this.isDeleted && isLocalized && userCan.unlocalize,
             takeOffline: this.hasOnlineItem(this.item, isPage, isForm, inherited),
             publish: !this.isDeleted && (isPage || (isForm && this.permissions.form.publish)),

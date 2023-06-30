@@ -104,7 +104,7 @@ export class ContentRepositoryFragmentTagmapEntryOperations extends ExtendedEnti
      */
     update(
         contentRepositoryId: string,
-        tagmapId: string,
+        tagmapId: string | number,
         payload: TagmapEntryUpdateRequest,
     ): Observable<TagmapEntryBO<Normalized>> {
         return this.api.contentRepositoryFragments.updateContentRepositoryFragmentTagmapEntry(contentRepositoryId, tagmapId, payload).pipe(

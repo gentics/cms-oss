@@ -84,7 +84,7 @@ export class UploadButtonComponent implements OnDestroy, OnInit {
         this.featureAssetManagementIsActive$ = activeNode$.pipe(
             mergeMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
             filter(nodeFeatures => !!nodeFeatures),
-            map(nodeFeatures => nodeFeatures.includes(NodeFeature.assetManagement)),
+            map(nodeFeatures => nodeFeatures.includes(NodeFeature.ASSET_MANAGEMENT)),
         );
 
         activeNode$.pipe(

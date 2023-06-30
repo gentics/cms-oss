@@ -16,7 +16,6 @@ describe('MaintenanceModeService', () => {
     let service: MaintenanceModeService;
     let apiBase: MockApiBase;
     let appState: TestApplicationState;
-    let errorHandler: SpyErrorHandler;
     let notification: MockNotificationService;
     let subscription: Subscription;
 
@@ -27,19 +26,17 @@ describe('MaintenanceModeService', () => {
         TestBed.configureTestingModule({
             imports: [NgxsModule.forRoot(STATE_MODULES)],
             providers: [
+                { provide: Api, useValue: api },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nNotification, useClass: MockNotificationService },
+                { provide: ErrorHandler, useClass: SpyErrorHandler },
+                MaintenanceModeService,
             ],
         });
-        appState = TestBed.get(ApplicationStateService);
 
-        notification = new MockNotificationService();
-
-        service = new MaintenanceModeService(
-            api,
-            appState,
-            errorHandler as any as ErrorHandler,
-            notification as any as I18nNotification,
-        );
+        appState = TestBed.inject(ApplicationStateService) as any;
+        notification = TestBed.inject(I18nNotification) as any;
+        service = TestBed.inject(MaintenanceModeService);
     });
 
     afterEach(() => {
@@ -54,30 +51,32 @@ describe('MaintenanceModeService', () => {
 
     describe('refresh()', () => {
 
-        it('requests the maintenance mode status from the API', () => {
+        it('requests the maintenance mode status from the API', fakeAsync(() => {
             expect(apiBase.get).not.toHaveBeenCalled();
             service.refresh();
+            tick();
             expect(apiBase.get).toHaveBeenCalledWith('info/maintenance');
-        });
+        }));
 
-        it('does not re-request the status if the server does not provide the endpoint', () => {
+        it('does not re-request the status if the server does not provide the endpoint', async () => {
             expect(apiBase.get).not.toHaveBeenCalled();
             apiBase.get = jasmine.createSpy('get').and.returnValue(
                 Observable.throw(new ApiError('Not Found', 'http', { statusCode: 404 })),
             );
 
-            service.refresh();
+            await service.refresh();
             expect(apiBase.get).toHaveBeenCalled();
 
-            service.refresh();
+            await service.refresh();
             expect(apiBase.get).toHaveBeenCalledTimes(1);
         });
 
-        it('dispatches the status to the app state', () => {
+        it('dispatches the status to the app state', fakeAsync(() => {
             const responses = new Subject<MaintenanceModeResponse>();
             apiBase.get = () => responses.take(1);
 
             service.refresh();
+            tick();
             expect(appState.now.maintenanceMode.active).toEqual(false);
 
             responses.next({
@@ -90,26 +89,30 @@ describe('MaintenanceModeService', () => {
                 },
             });
 
+            tick();
             expect(appState.now.maintenanceMode.active).toEqual(true);
             expect(appState.now.maintenanceMode.message).toEqual('Stop working, the building is on fire!');
 
             service.refresh();
             responses.error(new ApiError('Not Found', 'http', { statusCode: 404 }));
+            tick();
             expect(appState.now.maintenanceMode.active).toEqual(false);
-        });
+        }));
 
-        it('marks the endpoint as unsupported when it returns an error', () => {
+        it('marks the endpoint as unsupported when it returns an error', fakeAsync(() => {
             const responses = new Subject<MaintenanceModeResponse>();
             apiBase.get = jasmine.createSpy('get').and.callFake(() => responses.take(1));
 
             service.refresh();
             responses.error(new ApiError('Not Found', 'http', { statusCode: 404 }));
+            tick();
 
             expect(appState.now.maintenanceMode.reportedByServer).toEqual(false);
 
             service.refresh();
+            tick();
             expect(apiBase.get).toHaveBeenCalledTimes(1);
-        });
+        }));
 
     });
 

@@ -22,8 +22,8 @@ class MockApi implements RecursivePartial<InterfaceOf<GcmsApi>> {
     };
 }
 
-const GLOBAL_FEATURE_A = Feature.nice_urls;
-const NODE_FEATURE_A = NodeFeature.newTagEditor;
+const GLOBAL_FEATURE_A = Feature.NICE_URLS;
+const NODE_FEATURE_A = NodeFeature.ASSET_MANAGEMENT;
 const NODE_ID = 2;
 
 describe('FeatureOperations', () => {

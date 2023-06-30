@@ -182,7 +182,9 @@ export class TagMapEntryTableComponent
                         icon: 'delete',
                         type: 'alert',
                         label: this.i18n.instant('shared.delete'),
-                        enabled: canEdit,
+                        enabled: (item) => {
+                            return (item == null || !item.reserved) && canEdit;
+                        },
                         single: true,
                         multiple: true,
                     },
@@ -233,6 +235,7 @@ export class TagMapEntryTableComponent
                 parentType: this.parentType,
                 parentId: String(this.parentId),
                 value: entry as any,
+                tagmapId: entry.id,
             },
         );
         const updated = await dialog.open();

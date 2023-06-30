@@ -6,7 +6,7 @@ JobContext.set(this)
 
 
 final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-"
+final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-oss"
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
@@ -48,7 +48,7 @@ spec:
           topologyKey: kubernetes.io/hostname
   containers:
     - name: build
-      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "contentnode") + """
+      image: """ + buildEnvironmentDockerImage("build/Dockerfile", "cms") + """
       resources:
         requests:
           cpu: '0'
@@ -77,8 +77,8 @@ spec:
     }
 
     parameters {
-        booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. contentnode-lib tests will be skipped for MR builds if there are no relevant changes.")
-        booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module."),
+        booleanParam(name: 'runTests',                  defaultValue: true,  description: "Whether to run the unit tests. tests will be skipped for MR builds if there are no relevant changes.")
+        booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
@@ -139,7 +139,7 @@ spec:
                             mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
                         }
 
-                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
 
                         // Check if triggered by a Gitlab merge request
                         if (env.gitlabTargetBranch) {
@@ -181,7 +181,7 @@ spec:
                             echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
                         }
 
-                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix + codeName)
+                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix)
                         mvnGoal = "deploy"
                     } else {
                         // for now, do not build modules in parallel

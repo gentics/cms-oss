@@ -1,10 +1,11 @@
-import { FormControlOnChangeFn, FormControlOnTouchedFn, ObservableStopper } from '@admin-ui/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common';
+import { AppStateService } from '@admin-ui/state';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Node, Normalized } from '@gentics/cms-models';
+import { Feature, Node, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { EntityManagerService } from '../../../../core';
 
 /**
@@ -40,12 +41,10 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
      * This is normally only the case when creating a new node.
      */
     @Input()
-    allowChangingInheritedFrom = false;
+    public allowChangingInheritedFrom = false;
 
     @Input()
     public disabled = false;
-
-    isChildNode: boolean;
 
     /**
      * Determines if changing the default upload folders for files and images is allowed.
@@ -53,14 +52,17 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
      * For an existing node, this is normally allowed, while in the create node wizard it is not.
      */
     @Input()
-    allowEditingDefaultUploadFolders = true;
+    public allowEditingDefaultUploadFolders = true;
 
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
+     *
      * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
      */
     @Input()
-    pubDirSegmentActivated: boolean;
+    public pubDirSegmentActivated: boolean;
+
+    isChildNode: boolean;
 
     fgProperties: UntypedFormGroup;
 
@@ -71,14 +73,29 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
      */
     inheritedFromNode$?: Observable<Node>;
 
-    private stopper = new ObservableStopper();
+    multiChannelingEnabled = false;
+    meshCrEnabled = false;
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
+        private changeDetector: ChangeDetectorRef,
         private entityManager: EntityManagerService,
+        private appState: AppStateService,
     ) { }
 
     ngOnInit(): void {
         this.nodes$ = this.entityManager.watchNormalizedEntitiesList('node');
+
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MULTICHANNELLING]).subscribe(featureEnabled => {
+            this.multiChannelingEnabled = featureEnabled;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(featureEnabled => {
+            this.meshCrEnabled = featureEnabled;
+            this.changeDetector.markForCheck();
+        }));
 
         this.fgPropertiesInit();
     }
@@ -90,7 +107,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
     }
 
     ngOnDestroy(): void {
-        this.stopper.stop();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     writeValue(value: NodePropertiesFormData): void {
@@ -108,7 +125,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
     }
 
     registerOnChange(fn: FormControlOnChangeFn<NodePropertiesFormData>): void {
-        this.fgProperties.valueChanges.pipe(
+        this.subscriptions.push(this.fgProperties.valueChanges.pipe(
             map((formData: NodePropertiesFormData) => {
                 if (formData && typeof formData.inheritedFromId === 'number') {
                     this.isChildNode = true;
@@ -117,8 +134,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
                 }
                 return this.fgProperties.valid ? formData : null;
             }),
-            takeUntil(this.stopper.stopper$),
-        ).subscribe(fn);
+        ).subscribe(fn));
     }
 
     registerOnTouched(fn: FormControlOnTouchedFn): void { }

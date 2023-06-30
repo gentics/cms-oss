@@ -6,6 +6,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
@@ -26,7 +27,7 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 /**
  * Implementation of the markupLanguage resource
  */
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/markupLanguage")
 public class MarkupLanguageResourceImpl implements MarkupLanguageResource {

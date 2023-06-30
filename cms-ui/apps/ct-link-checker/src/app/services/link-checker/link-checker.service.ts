@@ -27,7 +27,7 @@ export interface NodeStats {
 
 @Injectable({
     providedIn: 'root'
-})
+    })
 export class LinkCheckerService {
 
     protected pages$ = new Subject<LinkCheckerPageList>();
@@ -43,25 +43,30 @@ export class LinkCheckerService {
         private userSettings: UserSettingsService,
         private filterService: FilterService,
         private api: GcmsApi,
-        private appService: AppService
+        private appService: AppService,
     ) { }
 
     fetchStats(nodeId?: number): Observable<ExternalLinkStatistics> {
-        nodeId ? this.nodeStatsLoading$.next(true) : this.globalStatsLoading$.next(true);
+        if (nodeId) {
+            this.nodeStatsLoading$.next(true);
+        } else {
+            this.globalStatsLoading$.next(true);
+        }
+
         return this.api.linkChecker.getStats(nodeId).pipe(
             first(),
             tap(stats => nodeId ? this.nodeStats$.next({
                 ...this.nodeStats$.value,
                 [nodeId]: stats,
             }) : null),
-            tap(() => nodeId ? this.nodeStatsLoading$.next(false) : this.globalStatsLoading$.next(false))
+            tap(() => nodeId ? this.nodeStatsLoading$.next(false) : this.globalStatsLoading$.next(false)),
         );
     }
 
     hasNodeLinkCheckerFeatureEnabled(nodeId: number): Observable<boolean> {
         return this.api.folders.getNodeFeatures(nodeId)
             .pipe(
-                map(response => !!response.features.find(feature => feature === NodeFeature.linkChecker))
+                map(response => !!response.features.find(feature => feature === NodeFeature.LINK_CHECKER)),
             );
     }
 
@@ -76,7 +81,7 @@ export class LinkCheckerService {
                 map(() => node),
             )),
             concatMap(node => this.api.linkChecker.getStats(node.id).pipe(
-                map(stats => ({ node, stats }))
+                map(stats => ({ node, stats })),
             )),
             toArray(),
         ).subscribe(nodes => {
@@ -87,7 +92,7 @@ export class LinkCheckerService {
             nodes.forEach(node => {
                 nodeStats = {
                     ...nodeStats,
-                    [node.node.id]: node.stats
+                    [node.node.id]: node.stats,
                 };
             });
 
@@ -109,7 +114,7 @@ export class LinkCheckerService {
         return this.api.folders.getLanguagesOfNode(nodeId)
             .pipe(
                 first(),
-                map(response => uniqWith(response.languages, (o1, o2) => o1.id === o2.id))
+                map(response => uniqWith(response.languages, (o1, o2) => o1.id === o2.id)),
             );
     }
 
@@ -149,7 +154,7 @@ export class LinkCheckerService {
                 // Remove null / undefined properties
                 Object.keys(requestOptions).forEach((key) => (requestOptions[key] == null) && delete requestOptions[key]);
                 return this.api.linkChecker.getPages(requestOptions).pipe(first());
-            })
+            }),
         )
             .subscribe(response => {
                 this.pages$.next(response);
@@ -159,7 +164,7 @@ export class LinkCheckerService {
 
     getNodes(): Observable<Node<Raw>[]> {
         return this.nodes$.pipe(
-            map(nArr => nArr.map(nodeWithStats => nodeWithStats.node))
+            map(nArr => nArr.map(nodeWithStats => nodeWithStats.node)),
         );
     }
 
@@ -176,14 +181,14 @@ export class LinkCheckerService {
             pages: this.pagesLoading$.asObservable(),
             nodes: this.nodesLoading$.asObservable(),
             globalStats: this.globalStatsLoading$.asObservable(),
-            nodeStats: this.nodeStatsLoading$.asObservable()
+            nodeStats: this.nodeStatsLoading$.asObservable(),
         };
     }
 
     setUserSettings(): void {
         this.userSettings.setUserSettings({
             displayFields: this.appService.settings.displayFields,
-            sortOptions: this.filterService.options.sortOptions
+            sortOptions: this.filterService.options.sortOptions,
         })
             .pipe(first())
             .subscribe();

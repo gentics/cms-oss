@@ -52,7 +52,6 @@ export interface GcmsUiBridge {
     paths: {
         apiBaseUrl: string;
         alohapageUrl: string;
-        contentnodeUrl: string;
         imagestoreUrl: string;
     };
     /**

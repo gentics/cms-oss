@@ -169,7 +169,7 @@ describe('CombinedPropertiesEditorComponent', () => {
             },
             features: {
                 nodeFeatures: {
-                    [mockNode.id]: [ NodeFeature.newTagEditor ],
+                    [mockNode.id]: [ NodeFeature.ASSET_MANAGEMENT ],
                 },
                 tagfill_light: true,
             },
@@ -270,8 +270,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect(tabs.length).toBe(mockObjPropsSorted.length + 2); // +2 because ITEM_PROPERTIES_TAB and ITEM_TAG_LIST_TAB are also displayed
                 expect((tabs[0].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.general_properties_label');
                 expect((tabs[1].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.tag_list_label');
-                // 'code' in this is the material icon name which is being rendered.
-                const expectedTabLabels = mockObjPropsSorted.map(tag => `code${tag.displayName}`);
+                // 'code' and 'info' in this is the material icon name which is being rendered before.
+                const expectedTabLabels = mockObjPropsSorted.map(tag => `codeinfo${tag.displayName}`);
                 const actualTabLabels = tabs.slice(2).map(tab => tab.nativeElement.textContent.toLowerCase().trim());
                 expect(actualTabLabels).toEqual(expectedTabLabels);
             }),
@@ -831,7 +831,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -862,7 +861,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -896,8 +894,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     expect(folderActions.updateItemObjectProperties).toHaveBeenCalledWith(
                         'folder', mockFolder.id, expectedSavedTag, { showNotification: false, fetchForUpdate: true, fetchForConstruct: true }, undefined,
                     );
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill.calls.argsFor(0)[0]).toEqual(tagId);
 
                     expect(state.now.editor).toEqual(jasmine.objectContaining({
                         objectPropertiesModified: true,
@@ -912,7 +908,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     (mockFolder.tags[editedObjProp.name] as ObjectTag).readOnly = true;
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -933,7 +928,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     expect(iFrameWrapperComp.srcUrl).toEqual('about:blank');
 
                     expect(folderActions.updateItemObjectProperties).not.toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).not.toHaveBeenCalled();
                     expect(i18nNotificationService.show).toHaveBeenCalledTimes(1);
 
                     expect(state.now.editor).toEqual(jasmine.objectContaining({
@@ -946,7 +940,6 @@ describe('CombinedPropertiesEditorComponent', () => {
             it('uses the correct URL builder parameters if the tag does not contain an overview',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -957,18 +950,12 @@ describe('CombinedPropertiesEditorComponent', () => {
 
                     testComponent.item = mockPage;
                     multiDetectChanges(fixture, 2);
-
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledWith(
-                        editedObjProp.id, mockPage.id, mockPage.folderId, mockNode.id, 'page', false,
-                    );
                 }),
             );
 
             it('uses the correct URL builder parameters if the tag contains an overview',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockPage.tags[TAG_WITH_OVERVIEW];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -979,18 +966,12 @@ describe('CombinedPropertiesEditorComponent', () => {
 
                     testComponent.item = mockPage;
                     multiDetectChanges(fixture, 2);
-
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledTimes(1);
-                    expect(resourceUrlBuilder.objectPropertyTagfill).toHaveBeenCalledWith(
-                        editedObjProp.id, mockPage.id, mockPage.folderId, mockNode.id, 'page', true,
-                    );
                 }),
             );
 
             it('sets the state correctly if the object property was already active',
                 componentTest(() => TestComponent, (fixture, testComponent) => {
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1022,7 +1003,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1079,8 +1059,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockFolder.tags[editedObjProp.name].active = false;
-                    mockFolder.tags[editedObjProp.name].construct.newEditor = false;
-                    editedObjProp.construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1156,8 +1134,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                     const customScriptHostService = TestBed.get(CustomScriptHostService) as MockCustomScriptHostService;
                     const editedObjProp = mockObjPropsSorted[mockObjPropsSorted.length - 1];
                     mockPage.tags[editedObjProp.name].active = false;
-                    mockPage.tags[editedObjProp.name].construct.newEditor = false;
-                    editedObjProp.construct.newEditor = false;
                     state.mockState({
                         editor: {
                             ...state.now.editor,
@@ -1611,7 +1587,6 @@ class MockCustomScriptHostService {
 }
 
 class MockResourceUrlBuilderService {
-    objectPropertyTagfill = jasmine.createSpy('objectPropertyTagfill').and.returnValue(OLD_TAGFILL_URL);
 }
 
 class MockI18nNotification {

@@ -311,6 +311,10 @@
         "en": "Send",
         "de": "Senden"
     },
+    "reload_table_button": {
+        "en": "Reload",
+        "de": "Neu laden"
+    },
     "set_new_password_button": {
         "en": "Set new password",
         "de": "Neues Passwort setzen"

@@ -11,7 +11,7 @@ import {
     Response,
 } from '@gentics/cms-models';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { NotificationService } from '@gentics/ui-core';
+import { NotificationService, OpenedNotification } from '@gentics/ui-core';
 import { last } from 'lodash';
 import { from, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
@@ -33,14 +33,18 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
         super(injector, 'contentPackage');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-module-boundary-types
     getAll(options?: any, parentId?: string): Observable<ContentPackageBO[]> {
         return this.api.contentStaging.listContentPackages(options).pipe(
             map(res => (res.items || []).map(item => this.mapToBusinessObject(item))),
-            tap(packages => this.entityManager.addEntities(this.entityIdentifier, packages)),
+            tap(packages => {
+                this.entityManager.addEntities(this.entityIdentifier, packages);
+            }),
             this.catchAndRethrowError(),
         )
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-module-boundary-types
     get(entityId: string, options?: any, parentId?: string | number): Observable<ContentPackageBO> {
         return this.api.contentStaging.getContentPackage(entityId).pipe(
             map(res => this.mapToBusinessObject(res.contentPackage)),
@@ -172,16 +176,43 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     importFromFileSystem(entityId: string, options?: ContentPackageSyncOptions, notify: boolean = true): Observable<void> {
-        return this.api.contentStaging.importContentPackage(entityId, options).pipe(
+        let startNotif: OpenedNotification;
+
+        return of(null).pipe(
+            tap(() => {
+                if (!notify) {
+                    return;
+                }
+
+                startNotif = this.i18nNotification.show({
+                    message: 'content_staging.start_import_message',
+                    type: 'success',
+                    delay: 0,
+                    dismissOnClick: false,
+                    translationParams: {
+                        packageName: entityId,
+                    },
+                });
+            }),
+            switchMap(() => this.api.contentStaging.importContentPackage(entityId, options)),
             discard(res => {
+                if (startNotif) {
+                    startNotif.dismiss();
+                }
+
                 if (notify) {
                     this.notification.show({
                         type: 'success',
+                        delay: 5_000,
                         message: last(res.messages)?.message || res.responseInfo.responseMessage,
                     });
                 }
             }),
             catchError(err => {
+                if (startNotif) {
+                    startNotif.dismiss();
+                }
+
                 if (!(err instanceof ApiError)) {
                     return throwError(err);
                 }
@@ -201,16 +232,43 @@ export class ContentPackageOperations extends ExtendedEntityOperationsBase<'cont
     }
 
     exportToFileSystem(entityId: string, options?: ContentPackageSyncOptions, notify: boolean = true): Observable<void> {
-        return this.api.contentStaging.exportContentPackage(entityId, options).pipe(
+        let startNotif: OpenedNotification;
+
+        return of(null).pipe(
+            tap(() => {
+                if (!notify) {
+                    return;
+                }
+
+                startNotif = this.i18nNotification.show({
+                    message: 'content_staging.start_export_message',
+                    type: 'success',
+                    delay: 0,
+                    dismissOnClick: false,
+                    translationParams: {
+                        packageName: entityId,
+                    },
+                });
+            }),
+            switchMap(() => this.api.contentStaging.exportContentPackage(entityId, options)),
             discard(res => {
+                if (startNotif) {
+                    startNotif.dismiss();
+                }
+
                 if (notify) {
                     this.notification.show({
                         type: 'success',
+                        delay: 5_000,
                         message: last(res.messages)?.message || res.responseInfo.responseMessage,
                     });
                 }
             }),
             catchError(err => {
+                if (startNotif) {
+                    startNotif.dismiss();
+                }
+
                 if (!(err instanceof ApiError)) {
                     return throwError(err);
                 }

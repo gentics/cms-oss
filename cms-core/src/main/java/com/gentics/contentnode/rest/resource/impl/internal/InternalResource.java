@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.xml.ws.spi.http.HttpContext;
@@ -15,7 +16,7 @@ import com.gentics.contentnode.security.AccessControlService;
 /**
  * Abstract base class for internal REST API Resources
  */
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 public abstract class InternalResource {
 	/**
 	 * Access control 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Raw, Template } from '@gentics/cms-models';
-import { concat, forkJoin, Observable } from 'rxjs';
+import { concat, forkJoin, from, Observable } from 'rxjs';
 import { map, switchMap, tap, toArray } from 'rxjs/operators';
 import { FolderActionsService, TemplateActionsService } from '../../../state';
 
@@ -81,7 +81,11 @@ export class LinkTemplateService {
                 );
             }),
             // refresh templates in state
-            tap(() => this.folderActions.getTemplates(folderId))
+            switchMap(success => {
+                return from(this.folderActions.getTemplates(folderId)).pipe(
+                    map(() => success),
+                );
+            }),
         );
     }
 

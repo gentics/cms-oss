@@ -1,0 +1,20 @@
+<%# This will replace the <title> element in your page. By default, it uses the title key in your guides.yml %>
+
+
+<%# This content will go in the top navigation area. Leave it blank if you don't want nav %>
+<%= content_for :top_nav do %>
+<% end %>
+
+<%# This content will be used when you mark your guides as belonging to an edge release of your project. It defaults
+    to showing a diagonal "edge" badge %>
+<%= content_for :edge do %>
+  <div>
+    <img src="images/edge_badge.png" alt="edge-badge" id="edge-badge" />
+  </div>
+<% end %>
+
+<%= content_for :license do %>
+  <p>
+    <%# Any additional trademark information should be entered here %>
+  </p>
+<% end %>

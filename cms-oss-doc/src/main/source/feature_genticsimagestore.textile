@@ -1,0 +1,364 @@
+h2. Gentics CMS GenticsImageStore
+
+The GenticsImageStore is a feature that can be used to embed resized images in pages and overviews.
+
+endprologue.
+
+INFO: JPEG CMYK images are supported by the GenticsImageStore. However, because a generic CMYK color profile is used, the image colors
+might change slightly after the image was manipulated.
+
+h3. Usage
+
+<shell>/GenticsImageStore/[width]/[height]/[mode]/[imageurl]</shell>
+
+Example:
+<shell>
+<img src="/GenticsImageStore/<node width>/auto/prop/<node bild>">
+</shell>
+h4. Resize modes
+
+<shell>/GenticsImageStore/[width]/[height]/[mode]/[imageurl]</shell>
+
+|_. Parameter |_. Description |
+| width | Image width |
+| height | Image height |
+| mode | Resizing Mode |
+| imageurl | Image url |
+
+The following modes are available:
+
+* __prop__ used for proportional resizing. The aspect ratio of the image will be preserved. When target width and height do not match the original image proportions, the lower value (height, width) will be used for resizing.
+* __force__ used for forced resizing. The aspect ratio of the original image will not be preserved when this mode is used. If the original aspect ratio of the image is different than the resized aspect ratio, the image will be distorted.
+* __smart__ used for automatic resizing and cropping of images.
+
+h4. Crop and resize mode
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+Additionally the special 'cropandresize' mode can be used to crop images.
+
+<shell>/GenticsImageStore/[width]/[height]/cropandresize/[mode]/[topleft_x]/[topleft_y]/[cropwidth]/[cropheight]/[imageurl]</shell>
+
+Parameter:
+
+|_. Name |_. Description |
+| width | Image width |
+| height | Image height |
+| mode | Resizing Mode (see prop,force,smart) |
+| topleft_x | Start X coordinate of the image area (from the top left corner) |
+| topleft_y | Start Y coordinate of the image area (from the top left corner) |
+| cropwidth | Image area width |
+| cropheight | Image area height |
+| imageurl | Imageurl |
+
+h4. Degree of compression
+
+The compression value for JPEG is a value from 0.0 (max compression) to 1.0 (min compression). By default this value is set to 0.9
+and can be configured inside your node.conf like following:
+
+<shell filename="conf/*.yml">
+image_resizer_jpeg_quality: "1.0"
+</shell>
+
+h3. Gentics CMS
+
+h4. Render Directive
+
+To include a resized image into a velocity tag, this should be done with the directive +#gtx_gis+.
+
+<html>
+<img src='#gtx_gis($image, $resize)'>
+</html>
+
+or, when cropping shall be done:
+
+<html>
+<img src='#gtx_gis($image, $resize, $crop)'>
+</html>
+
+The +$image+ may be an image from the same or from another node.
+
+h5. Parameters
+
+|_. Name    |_. Description                                |_. Usage example                                 |
+| +$image+  | Either the image (as object) or the image ID | +$cms.tag.parts.img.target+                     |
+| +$resize+ | Resize options                               | +{"width": 50, "mode": "smart"}+                |
+| +$crop+   | Crop options                                 | +{"x": 10, "y": 10, "width": 30, "height": 30}+ |
+
+h5. Resize options
+
+|_. Name    |_. Description                                         |_. Default value |
+| +width+   | Image width                                           | "auto"          |
+| +height+  | Image height                                          | "auto"          |
+| +mode+    | Resizing mode ("prop", "force", "smart", "fpsmart")   | "prop"          |
+| +type+    | Type of the rendering ("url", "phpwidget")            | "url"           |
+
+NOTE: +width+ and +height+ must not both be set to "auto".
+
+NOTE: The +mode+ "fpsmart" is like "smart", but it requires both +width+ and +height+ to be set and it takes the focal point of the image into account when cropping.
+"fpsmart" is only available in the render directive, not in the GenticsImageStore itself. The directive will convert "fpsmart"
+into a "cropandresize" operation. See "Using Focal Point with GenticsImageStore":gis_fpsmart.html for details.
+
+h5. Cropping options
+
+|_. Name    |_. Description                                                   |_. Default value |
+| +x+       | Start X coordinate of the image area (from the top left corner) | 0               |
+| +y+       | Start Y coordinate of the image area (from the top left corner) | 0               |
+| +width+   | Cropping width                                                  |                 |
+| +height+  | Cropping height                                                 |                 |
+
+h5. Usage examples
+
+The following example assumes, that the tag has a part +img+ of type +URL (Image)+:
+
+<html>
+#set($image = $cms.tag.parts.img.target)##
+<img src='#gtx_gis($image, {"width": 100, "height": 100, "mode": "prop"})'>
+</html>
+
+It is also possible, to define the resizing parameters in a separate variable (which can be reused in the template):
+
+<html>
+#set($image = $cms.tag.parts.img.target)##
+#set($resize = {"width": 50, "mode": "smart"})##
+<img src='#gtx_gis($image, $resize)'>
+</html>
+
+Additionally, when cropping shall be done, the cropping parameters have to be passed as (optional) third parameter:
+
+<html>
+#set($image = $cms.tag.parts.img.target)##
+#set($resize = {"width": 50, "mode": "smart"})##
+#set($crop = {"x": 10, "y": 10, "width": 30, "height": 30})##
+<img src='#gtx_gis($image, $resize, $crop)'>
+</html>
+
+NOTE: When publishing pages for Gentics Portal.Node PHP, you should set the type to "phpwidget" in the resize options. It will render a PHP widget that resizes the image.
+
+h4. Static Cross Node Projects
+
+NOTE: When using the directive +#gtx_gis()+, the URLs will already be rendered correctly, even in the image
+is contained in a foreign node. The following description applies only, if *not* using the directive +#gtx_gis()+.
+
+The GenticsImageStore is also able to resize images in foreign nodes. A page in node A may contain the following image url:
+<shell>
+http://www.node-b-hostname.tld/GenticsImageStore/300/auto/prop/Content.Node/images/flower.jpg
+</shell>
+
+Such an url will be identified by the GenticsImageStore during the publish process.
+The GenticsImageStore identifies the referenced node by examining the hostname within the found url.
+The image within node B will be resized when the GenticsImageStore determines that the referenced
+node (in this case node b) is publishing into the file system. Resizing will otherwise be omitted.
+
+The image tag must be adapted to include the node B hostname.
+
+Example velocity implementation:
+<javascript filename="velocity example">
+#set( $nodePath = "$cms.tag.parts.src.target.folder.node.path")
+#set( $pubdir = "$cms.tag.parts.src.target.folder.pub_dir")
+#set( $imagePath = "$cms.tag.parts.src.target.name")
+
+## Remove the trailing slash from the pub_dir
+#set( $pubdir = $pubdir.trim())
+#if($pubdir.endsWith("/"))
+#set( $len = $cms.imps.velocitytools.math.sub($pubdir.length(),1) )
+#set( $pubdir = $pubdir.substring(0, $len))
+#end
+
+## Remove the trailing slash from the nodePath
+#set( $nodePath = $nodePath.trim())
+#if($nodePath.endsWith("/"))
+#set( $len = $cms.imps.velocitytools.math.sub($nodePath.length(),1) )
+#set( $nodePath = $nodePath.substring(0, $len))
+#end
+
+#if($cms.rendermode.publish)
+<img  src="http://${cms.tag.parts.src.target.folder.node.host}/GenticsImageStore/300/auto/prop${nodePath}${pubdir}/${imagePath}"/>
+#else
+<img src="/GenticsImageStore/300/auto/prop/$cms.tag.parts.src.target.url" />
+#end
+</javascript>
+
+h4. Publishing
+
+Resized images will be written to the file system when the GenticsImageStore was used within the project. The usage will be determined by examining the final page content. All GenticsImageStore URLs will be processed.
+The GenticsImageStore will invoke the resizing of a page when the GenticsImageStore finds a resize call within a published page. The resized image will be written to a folder called __GenticsImageStore__ within the pub directory of that particular node.
+Please note that this directory has to be synced with the target webserver as well.
+
+h4. Restricting parallel resize requests
+
+Requests to the CMS for resizing images might consume large amounts of memory. If too many requests are handled at the same time, this might even cause OutOfMemory situations.
+Therefore, the maximum number of actual resize operations is per default limited to 10.
+
+This can be configured in the CMS configuration files:
+
+<javascript filename="conf/*.yml">
+gis_requests: 5
+</javascript>
+
+NOTE: When this setting is changed, the CMS must be restarted.
+
+h3. Servlet Parameters
+
+The GenticsImageStore can be used within Portal implementations. The configuration is performed using the following servlet parameters.
+
+h4. cacheKeyQueryParameters
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+This parameter can be used to modify the internally used cache key for cached images. It is possible to specify certain get parameters. These parameters will then be used (if available) to enhance the cache.key. Normally all other query parameters will not be used for generating the cache key.
+The parameters can be specified in a comma-separated list. This parameter is useful when the images will be retrieved using a servlet that uses query parameters to identify the image that should be loaded.
+
+Example:
+<javascript>
+	<init-param>
+			<param-name>cacheKeyQueryParameters</param-name>
+			<param-value>contentid,type,mycustomparam</param-value>
+	</init-param>
+</javascript>
+
+
+h4. portalBasePath
+
+NOTE: Available after Gentics Portal.Node Update 11432 2011-06-01
+
+The portal base path is used to identify the image url within a GenticsImageStore url. The default value is "/Portal.Node".
+The used prefix can be adapted using this parameter. This is useful of images will not be delivered by Portal.Node.
+
+<javascript>
+	<init-param>
+			<param-name>portalBasePath</param-name>
+			<param-value>/MyWebapp</param-value>
+	</init-param>
+</javascript>
+
+h4. portalBasePathRegEx
+
+NOTE: Available after Gentics Portal.Node Update Update 11779 2011-11-29
+
+This parameter has the same functionality as the portalBasePath. It is possible to configure multiple basepaths by using a regular expression. When set, this parameter has priority over portalBasePath.
+
+<javascript>
+	<init-param>
+		<param-name>portalBasePathRegEx</param-name>
+		<param-value>(\/Portal\.Node.*)|(\/GCN5_Portal.*)</param-value>
+	</init-param>
+</javascript>
+
+
+h4. urlPrefix
+
+By default the image will be loaded from the host that received the initial GenticsImageStore request.
+The __urlPrefix__ setting can be used when the image should be loaded from a different host.
+
+<javascript>
+	<init-param>
+		<param-name>urlPrefix</param-name>
+		<param-value>http://localhost:8080/</param-value>
+	</init-param>
+</javascript>
+
+
+h4. uriMapper
+
+An addition to the uriPrefix is the uriMapper parameter. This parameter allows specifying a custom implementation that is able to modify the image uri.
+It is therefore possible to customize the uri according to set uri parameters or hostnames.
+
+To achieve this, one has to implement the interface __com.gentics.api.imagestore.ImageUriMapper__. The name of the implemented class has to be set as value for the "uriMapper" parameter. Please note that the full package name has to be specified.
+The implemented class must be able to be loaded by the Servlet ClassLoader.
+
+Interface:
+<javascript>
+public interface ImageUriMapper {
+
+	/**
+	 * Maps a request for an image to an URI where the image can be fetched from.
+	 *
+	 * This method should have no side effects and should always return the same URI
+	 * for the given imageUri and the parameters in the given servletRequest.
+	 *
+	 * Further, this method should be idempotent such that passing back the returned URI
+	 * to this method again returns the given URI unchanged.
+	 *
+	 * @param servletRequest
+	 * 		  The request that fetches the image.
+	 * @param imageUri
+	 * 		  The URI of the image to fetch.
+	 * @return
+	 * 		  May either return the given URI unchanged, or an alternate URI
+	 * 		  where the image will be fetched from instead.
+	 */
+
+
+	URI mapImageUri(HttpServletRequest servletRequest, URI imageUri);
+
+}
+</javascript>
+
+<javascript>
+	<init-param>
+		<param-name>uriMapper</param-name>
+		<param-value>com.example.ImageUriMapperImpl</param-value>
+	</init-param>
+</javascript>
+
+
+h4. Request Decorators
+
+This parameter allows a custom implementation to be specified that will intercept requests to the GenticsImageStore and modify them as desired.
+
+For this to be done, an implementation of the interface __com.gentics.api.imagestore.RequestDecorator__ has to be specified in the configuration. The name of the implemented class (including the full package name) has to be set as value for the "requestDecorator" parameter. As with the uriMapper, the implemented class must be able to be loaded by the Servlet ClassLoader.
+
+Interface:
+<javascript>
+public interface RequestDecorator {
+
+	/**
+	 * Provides the ability to alter parameters of requests sent to the GenticsImageStore
+	 *
+	 * @param gisRequest
+	 * 		  The GenticsImageStoreRequest Bean containing request information
+	 * @param request
+	 * 		  The HttpServletRequest object containing request information
+	 */
+	void decorateRequest(GenticsImageStoreRequest gisRequest, HttpServletRequest request);
+
+}
+</javascript>
+
+<javascript>
+	<init-param>
+		<param-name>requestDecorator</param-name>
+		<param-value>com.example.RequestDecoratorImpl</param-value>
+	</init-param>
+</javascript>
+
+For use in Gentics CMS, the RequestDecorator class must be configured in the node.conf with the setting gis_request_decorator, for example:
+
+<javascript filename="conf/*.yml">
+gis_request_decorator: "com.example.RequestDecoratorImpl"
+</javascript>
+
+h4. loadTimeout
+
+NOTE: Available since "Gentics Portal.Node 4.8.7":https://gentics.com/Portal.Node/changelog/4.8.0/4.8.7.html
+
+This parameter defines the timeout used for loading the original image for resizing in milliseconds. The default is 60000 ms (= 1 minute).
+
+<javascript>
+	<init-param>
+		<param-name>loadTimeout</param-name>
+		<param-value>5000</param-value>
+	</init-param>
+</javascript>
+
+h3. Caching
+
+The GenticsImageStore uses the JCS Cache which can be configured using the __cache.ccf__ file.
+
+Example Cache Region Configuration:
+<javascript filename="cache.ccf">
+jcs.region.gentics-content-imagestorecache=DC
+jcs.region.gentics-content-imagestorecache.cacheattributes.MaxObjects=0
+jcs.region.gentics-content-imagestorecache.elementattributes.MaxLifeSeconds=86400
+</javascript>

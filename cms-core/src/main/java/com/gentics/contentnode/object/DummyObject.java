@@ -30,6 +30,16 @@ public class DummyObject extends AbstractContentObject implements LocalizableNod
 	protected int nodeId;
 
 	/**
+	 * Mesh UUID of the dummy object
+	 */
+	protected String meshUuid;
+
+	/**
+	 * Language of the dummy object in Mesh CR
+	 */
+	protected String meshLanguage;
+
+	/**
 	 * Create an instance of the dummy object
 	 * @param id id
 	 * @param info object info
@@ -162,5 +172,37 @@ public class DummyObject extends AbstractContentObject implements LocalizableNod
 	@Override
 	public String setName(String name) throws ReadOnlyException {
 		return null;
+	}
+
+	/**
+	 * Get the mesh uuid
+	 * @return mesh uuid
+	 */
+	public String getMeshUuid() {
+		return meshUuid;
+	}
+
+	/**
+	 * Set the mesh uuid
+	 * @param meshUuid mesh uuid
+	 */
+	public void setMeshUuid(String meshUuid) {
+		this.meshUuid = meshUuid;
+	}
+
+	/**
+	 * Get the mesh language
+	 * @return mesh language
+	 */
+	public String getMeshLanguage() {
+		return meshLanguage;
+	}
+
+	/**
+	 * Set the mesh language
+	 * @param meshLanguage mesh language
+	 */
+	public void setMeshLanguage(String meshLanguage) {
+		this.meshLanguage = meshLanguage;
 	}
 }

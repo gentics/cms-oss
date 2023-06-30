@@ -21,7 +21,7 @@ import {
 } from '@angular/forms';
 import { CmsFormElementI18nValue } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { clone } from 'lodash';
+import { clone, cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -74,10 +74,12 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
     ngOnInit(): void {
         this.valueChangesSubscription = this.i18nInput.valueChanges.subscribe((value: string | number | null) => {
             if (this.i18nData && this.language) {
-                try {
-                    this.i18nData[this.language] = value;
-                } catch (e) { }
-                this.triggerChange(this.i18nData);
+                // Has to be a clone. Since the value is passed as ref, we'd edit it
+                // in here and the change detection above would not detect any changes,
+                // since the value is already present/updated.
+                const tmp = cloneDeep(this.i18nData || {});
+                tmp[this.language] = value;
+                this.triggerChange(tmp);
             }
         });
     }

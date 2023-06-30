@@ -7,6 +7,7 @@
     [class.select-all]="selectAll"
     [class.has-addon]="clearable || selectAll"
     (open)="dropdownOpened()"
+    (keydown)="handleKeydown($event)"
 >
     <gtx-dropdown-trigger [class.with-label]="label != null">
         <div

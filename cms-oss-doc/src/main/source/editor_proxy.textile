@@ -1,0 +1,38 @@
+h2. Editor User-Interface Proxy
+
+The Editor User-Interface Proxy allows one to specify an internal resource which can only be accessed after first being authenticated.
+This is usually done for endpoints/features which require a logged in user, but are not commonly used in the User-Interface.
+
+endprologue.
+
+h3. Usage
+
+The proxy checks if the user is logged in or not.
+If the user isn't signed in yet, it'll follow the regular login workflow of the CMS.
+
+Once the user is authenticated, it'll redirect the user directly to the ressource.
+
+*Important*: You cannot redirect the user to a different domain.
+
+All query-parameters (except the ones specified in "Options":editor_proxy.html#options), are forwarded to the specified ressource.
+
+Example:
+
+<code>
+https://[hostname]/editor/#/proxy/rest/auth/me?example=hello-world
+</code>
+
+<code>
+https://[hostname/rest/auth/me?sid=12345&example=hello-world
+</code>
+
+
+h3. Options
+
+Following query-parameters can be added (which will be filtered out), to customize the behaviour of the proxy:
+
+|_.Parameter                    |_.Type             |_.Default                      |_.Description      |
+| @gcms-background-download@    | @boolean@         | @false@                       | If the ressource is a download and should be downloaded in the background. Will open the regular editor-ui once the download is finished. |
+| @gcms-download-method@        | GET, POST, PUT    | GET                           | Specifies which HTTP-Method to use when downloading. Only used with the background download. |
+| @gcms-download-file-name@     | @string@          | 'gcms-download_{timestamp}'   | The file-name when downloading the file for the user. Only used with the background download. |
+| @gcms-new-tab@                | @boolean@         | @false@                       | If it should open the Ressource in a new separate tab instead. |

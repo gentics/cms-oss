@@ -1,0 +1,66 @@
+h2. Custom Tools
+
+It is possible to add Custom Tools to the new UI.
+
+* Custom Tools are defined in the configuration files
+* Users must be granted permission to see the Custom Tool in the UI
+
+endprologue.
+
+h3. Configuration
+
+Custom Tools are configured in the configuration files:
+
+<shell filename="conf/*.yml">
+custom_tools:
+  - id: 2
+    key: "supertool"
+    name: "Supertool"
+    toolUrl: "http://supertool.org/"
+    newtab: true
+  - id: 1
+    key: "formgenerator"
+	# make sure to use singlequotes (') here so ${SID} will be replaced correctly
+	toolUrl: 'https://cms.gentics.com/formgenerator/admin?sid=${SID}'
+	iconUrl: "https://cms.gentics.com/formgenerator/admin/icon.png"
+	name:
+	  de: "Formulargenerator Administration"
+	  en: "Formgenerator Administration"
+	newtab: false
+</shell>
+
+|_. Property |_. Description                                                                                                                     |_. Mandatory |
+| *id*       | Internal ID of the Custom Tool. Must be an integer and unique among the custom tools. Is internally used for permission handling. | yes         |
+| *key*      | Unique key of the custom tool, which is used in the URL of the new UI                                                             | yes         |
+| *toolUrl*  | URL to open the custom tool. The URL might contain the placeholder @${SID}@ which will be replaced with the current session ID.
+This can be used for tools, that use the CMS session for authentication/authorization.                                                           | yes         |
+| *iconUrl*  | URL of the tool's icon                                                                                                            | no          |
+| *name*     | Name of the custom tool. Can be a single string or an associative array of names in english ("en") and german ("de").             | yes         |
+| *newtab*   | Flag that can be set, when the custom tool shall be opened in a new Tab. Defaults to @false@                                      | no          |
+
+NOTE: Custom Tools, that use the current CMS session for authentication/authorization must use the same hostname as the CMS itself. Otherwise the session secret cookie
+(which identifies the current CMS session together with the _SID_) would not be sent to the custom tool.
+
+h3. Permissions
+
+The CMS permission system is used to grant permission to see custom tools to specific user groups.
+
+Users in groups with the permission to grant privileges on custom tools will implicitly have permission to see all custom tools.
+
+Custom tools, that use the CMS session for authentication/authorization can use the REST API to check for view permission:
+
+<code>
+GET /rest/perm/view/90001/{id}
+</code>
+will return
+<shell>
+{
+	"messages": [],
+	"responseInfo": {
+		"responseCode": "OK",
+		"responseMessage": "Successfully fetched perm"
+	},
+	"granted": true
+}
+</shell>
+if the user is granted view permission on the custom tool with ID @{id}@.

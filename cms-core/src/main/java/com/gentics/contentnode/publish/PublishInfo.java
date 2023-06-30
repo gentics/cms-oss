@@ -77,10 +77,10 @@ public interface PublishInfo {
 		int[] pageNodeIds = publishedNodes.stream().mapToInt(Node::getId).toArray();
 
 		PublishQueueStats stats = PublishQueueStats.get();
-		infoModel.setFiles(stats.count(File.TYPE_FILE, publisherInfo::getPublishedFiles, publisherInfo::getRemainingFiles, fileNodeIds));
-		infoModel.setFolders(stats.count(Folder.TYPE_FOLDER, publisherInfo::getPublishedFolders, publisherInfo::getRemainingFolders, folderNodeIds));
-		infoModel.setPages(stats.count(Page.TYPE_PAGE, publisherInfo::getPublishedPages, publisherInfo::getRemainingPages, pageNodeIds));
-		infoModel.setForms(stats.count(Form.TYPE_FORM, publisherInfo::getPublishedForms, publisherInfo::getRemainingForms, pageNodeIds));
+		infoModel.setFiles(stats.count(File.TYPE_FILE, publisherInfo.isRunning() ? publisherInfo::getFilesToPublish : null, publisherInfo::getPublishedFiles, publisherInfo::getRemainingFiles, fileNodeIds));
+		infoModel.setFolders(stats.count(Folder.TYPE_FOLDER, publisherInfo.isRunning() ? publisherInfo::getFoldersToPublish : null, publisherInfo::getPublishedFolders, publisherInfo::getRemainingFolders, folderNodeIds));
+		infoModel.setPages(stats.count(Page.TYPE_PAGE, publisherInfo.isRunning() ? publisherInfo::getPagesToPublish : null, publisherInfo::getPublishedPages, publisherInfo::getRemainingPages, pageNodeIds));
+		infoModel.setForms(stats.count(Form.TYPE_FORM, publisherInfo.isRunning() ? publisherInfo::getFormsToPublish : null, publisherInfo::getPublishedForms, publisherInfo::getRemainingForms, pageNodeIds));
 
 		if (StringUtils.isBlank(info.getCurrentPhaseName())) {
 			infoModel.setPhase(I18NHelper.get("waiting"));

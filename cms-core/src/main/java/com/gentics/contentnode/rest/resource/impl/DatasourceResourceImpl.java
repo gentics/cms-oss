@@ -23,6 +23,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -57,6 +58,7 @@ import com.gentics.contentnode.rest.model.response.PagedDatasourceListResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.ResponseInfo;
 import com.gentics.contentnode.rest.resource.DatasourceResource;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
@@ -66,7 +68,7 @@ import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
 import com.gentics.contentnode.rest.util.ResolvableFilter;
 
-@Produces({ "application/json; charset=UTF-8", "application/xml; charset=UTF-8"})
+@Produces({ MediaType.APPLICATION_JSON })
 @Authenticated
 @Path("/datasource")
 @RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
@@ -197,7 +199,7 @@ public class DatasourceResourceImpl implements DatasourceResource {
 	@Path("/{id}/constructs")
 	@Override
 	public ConstructList constructs(@PathParam("id") String id, @BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging) throws NodeException {
+			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			com.gentics.contentnode.object.Datasource datasource = MiscUtils
 					.load(com.gentics.contentnode.object.Datasource.class, id);
@@ -213,6 +215,7 @@ public class DatasourceResourceImpl implements DatasourceResource {
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
 					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "keyword", "description", "category"))
 					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "keyword", "description", "category"))
+					.embed(embed, "category", com.gentics.contentnode.object.Construct.EMBED_CATEGORY)
 					.page(paging).to(new ConstructList());
 
 			trx.success();

@@ -170,7 +170,7 @@ export class ContentrespositoryApi {
      */
     updateContentRepositoryTagmapEntry(
         contentRepositoryId: EntityIdType,
-        tagmapId: string,
+        tagmapId: string | number,
         payload: TagmapEntryUpdateRequest,
     ): Observable<TagmapEntryUpdateResponse> {
         return this.apiBase.put(`contentrepositories/${contentRepositoryId}/entries/${tagmapId}`, payload);

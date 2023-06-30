@@ -1,0 +1,7 @@
+h2. Third party licenses
+
+Third party licenses used in the CMS.
+
+endprologue.
+
+* <a href="files/licenses/TwelveMonkeys-ImageIO.txt" target="_blank">TwelveMonkeys ImageIO</a>

@@ -1,7 +1,7 @@
 import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent } from '@gentics/cms-components';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { IndexById, MarkupLanguage, Node, Raw, TagEditorChange, TemplateBO } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 
@@ -106,7 +106,7 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
     }
 
     protected onValueChange(): void {
-        if (this.form && this.value) {
+        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             this.form.setValue({
                 id: this.value?.id || null,
                 name: this.value?.name || '',

@@ -1,0 +1,7 @@
+Added new endpoint @GET template/{id}/tag@ endpoint that allows filtering and sorting.
+
+Deprecate old endpoints:
+
+* @GET /user/list@
+* @GET /group/list@
+* @GET /template/getTags/{id}@

@@ -9,9 +9,11 @@ export interface ConstructCategoryBase<T extends ModelType> {
     /** of Construct	Map of constructs for this category */
     constructs: TagType<T>[];
     /** Global ID */
-    globalId: string
+    globalId: string;
     /** of string */
-    nameI18n: CmsI18nValue
+    nameI18n: CmsI18nValue;
+    /** The sort order of the category */
+    sortOrder?: number;
 }
 
 /** Data model as defined by backend. */

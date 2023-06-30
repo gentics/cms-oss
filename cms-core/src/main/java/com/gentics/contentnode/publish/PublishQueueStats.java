@@ -155,16 +155,20 @@ public class PublishQueueStats {
 	/**
 	 * Get object counts for the given object type
 	 * @param objType object type
+	 * @param toPublishCount function to get the count of objects to publish
 	 * @param publishedCount function to get the count of published objects
 	 * @param remainingCount function to get the count of remaining objects
 	 * @param nodeIds optional node IDs
 	 * @return object count instance
 	 */
-	public ObjectCount count(int objType, Function<Integer, Integer> publishedCount, Function<Integer, Integer> remainingCount, int...nodeIds) {
+	public ObjectCount count(int objType, Function<Integer, Integer> toPublishCount, Function<Integer, Integer> publishedCount, Function<Integer, Integer> remainingCount, int...nodeIds) {
 		ObjectCount count = new ObjectCount();
+		if (toPublishCount == null) {
+			toPublishCount = nodeId -> count(nodeId, objType, false);
+		}
 		for (int nodeId : nodeIds) {
 			count.setDelayed(count.getDelayed() + count(nodeId, objType, true));
-			count.setToPublish(count.getToPublish() + count(nodeId, objType, false));
+			count.setToPublish(count.getToPublish() + toPublishCount.apply(nodeId));
 			count.setPublished(count.getPublished() + publishedCount.apply(nodeId));
 			count.setRemaining(count.getRemaining() + remainingCount.apply(nodeId));
 		}
@@ -179,10 +183,10 @@ public class PublishQueueStats {
 	 */
 	public PublishQueueCounts counts(int nodeId, PublisherInfo publisherInfo) {
 		return new PublishQueueCounts()
-				.setFiles(count(File.TYPE_FILE, publisherInfo::getPublishedFiles, publisherInfo::getRemainingFiles, nodeId))
-				.setFolders(count(Folder.TYPE_FOLDER, publisherInfo::getPublishedFolders, publisherInfo::getRemainingFolders, nodeId))
-				.setForms(count(Form.TYPE_FORM, publisherInfo::getPublishedForms, publisherInfo::getRemainingForms, nodeId))
-				.setPages(count(Page.TYPE_PAGE, publisherInfo::getPublishedPages, publisherInfo::getRemainingPages, nodeId));
+				.setFiles(count(File.TYPE_FILE, publisherInfo.isRunning() ? publisherInfo::getFilesToPublish : null, publisherInfo::getPublishedFiles, publisherInfo::getRemainingFiles, nodeId))
+				.setFolders(count(Folder.TYPE_FOLDER, publisherInfo.isRunning() ? publisherInfo::getFoldersToPublish : null, publisherInfo::getPublishedFolders, publisherInfo::getRemainingFolders, nodeId))
+				.setForms(count(Form.TYPE_FORM, publisherInfo.isRunning() ? publisherInfo::getFormsToPublish : null, publisherInfo::getPublishedForms, publisherInfo::getRemainingForms, nodeId))
+				.setPages(count(Page.TYPE_PAGE, publisherInfo.isRunning() ? publisherInfo::getPagesToPublish : null, publisherInfo::getPublishedPages, publisherInfo::getRemainingPages, nodeId));
 	}
 
 	/**

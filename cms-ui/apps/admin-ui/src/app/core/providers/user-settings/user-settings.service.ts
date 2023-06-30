@@ -3,6 +3,7 @@ import { AppStateService, AuthStateModel, SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { combineLatest, Observable } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, pairwise, startWith, switchMap, takeUntil } from 'rxjs/operators';
+import { isEqual } from 'lodash-es';
 import { objectDiff } from '../../../common';
 import { SetBackendLanguage, SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
 import { INITIAL_USER_SETTINGS, UIStateModel, UIStateSettings } from '../../../state/ui/ui.state';
@@ -12,11 +13,13 @@ import { LanguageOperations } from '../operations/language';
 import { ServerStorageService } from '../server-storage';
 
 export type UserSettingName = keyof UIStateSettings;
-const userSettingNames = Object.keys(INITIAL_USER_SETTINGS) as UserSettingName[];
+const USER_SETTING_NAMES = Object.keys(INITIAL_USER_SETTINGS) as UserSettingName[];
 
 export const UI_SETTINGS_DEBOUNCE_MS = 50;
 export const ADMIN_UI_SETTINGS_PREFIX = 'admin_';
-const SETTINGS_WITHOUT_PREFIX = ['uiLanguage'];
+const SETTINGS_WITHOUT_PREFIX: UserSettingName[] = ['uiLanguage'];
+
+const SERVER_SETTING_NAMES = USER_SETTING_NAMES.map(key => SETTINGS_WITHOUT_PREFIX.includes(key) ? key : `${ADMIN_UI_SETTINGS_PREFIX}${key}`);
 
 @Injectable()
 export class UserSettingsService extends InitializableServiceBase {
@@ -34,10 +37,6 @@ export class UserSettingsService extends InitializableServiceBase {
      * Should be true until settings are loaded first.
      */
     private loading = true;
-
-    get serverSettingsKeys(): string[] {
-        return userSettingNames.map(key => SETTINGS_WITHOUT_PREFIX.includes(key) ? key : `${ADMIN_UI_SETTINGS_PREFIX}${key}`);
-    }
 
     constructor(
         private appState: AppStateService,
@@ -86,31 +85,31 @@ export class UserSettingsService extends InitializableServiceBase {
             switchMap(() => this.serverStorage.getAll()),
             takeUntil(this.stopper.stopper$),
         )
-        .subscribe(data => {
-            if (this.serverStorage.supported !== false) {
-                this.loading = true;
+            .subscribe(data => {
+                if (this.serverStorage.supported !== false) {
+                    this.loading = true;
 
-                const settings = Object.keys(data)
-                            .filter(key => this.serverSettingsKeys.includes(key))
-                            .reduce((r, k) => ({...r, [this.convertFromServerKey(k)]: data[k]}), {});
+                    const settings = Object.keys(data)
+                        .filter(key => SERVER_SETTING_NAMES.includes(key))
+                        .reduce((r, k) => ({...r, [this.convertFromServerKey(k)]: data[k]}), {});
 
-                this.appState.dispatch(new SetUISettings(settings))
-                .toPromise()
-                .then(() => {
-                    this.loading = false;
+                    this.appState.dispatch(new SetUISettings(settings))
+                        .toPromise()
+                        .then(() => {
+                            this.loading = false;
+                        });
+                }
+
+                /**
+                 * UI language used to be hardcoded and is now available via `i18n`endpoint.
+                 * This method fetches all available and current active UI language and stores it to state and localstorage.
+                 * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
+                 */
+                this.languageOperations.getActiveBackendLanguage().subscribe(language => {
+                    this.appState.dispatch(new SetUILanguage(language));
+                    this.appState.dispatch(new SetBackendLanguage(language));
                 });
-            }
-
-            /**
-             * UI language used to be hardcoded and is now available via `i18n`endpoint.
-             * This method fetches all available and current active UI language and stores it to state and localstorage.
-             * In case fetching fails, fallback language logic should be in place by localstorage and browser language.
-             */
-             this.languageOperations.getActiveBackendLanguage().subscribe(language => {
-                this.appState.dispatch(new SetUILanguage(language));
-                this.appState.dispatch(new SetBackendLanguage(language));
             });
-        });
     }
 
     /**
@@ -118,28 +117,28 @@ export class UserSettingsService extends InitializableServiceBase {
      */
     private saveSettingsOnChange(): void {
         combineLatest([this.uiState$, this.auth$]).pipe(
-            distinctUntilChanged(
-                ([a, authA], [b, authB]) => a.language === b.language && a.settings[authA.currentUserId] === b.settings[authB.currentUserId],
+            distinctUntilChanged(([uiA, authA], [uiB, authB]) => uiA.language === uiB.language
+                && isEqual(uiA.settings[authA.currentUserId], uiB.settings[authB.currentUserId]),
             ),
-            filter(([ui, auth]) => auth.isLoggedIn && !this.loading),
+            filter(([, auth]) => auth.isLoggedIn && !this.loading),
             debounceTime(50),
             startWith([this.appState.now.ui]),
             pairwise(),
             takeUntil(this.stopper.stopper$),
-        )
-        .subscribe(([[uiPrev], [ui, auth]]) => {
+        ).subscribe(([[uiPrev], [ui, auth]]) => {
             const currentUserId = (auth as AuthStateModel).currentUserId;
             // Only store the settings if server storage is supported, the user is still logged in,
             // and the currentUserId is still the same as the one before the debounce.
             if (this.serverStorage.supported !== false && this.appState.now.auth.isLoggedIn && this.appState.now.auth.currentUserId === currentUserId) {
-                const previousSettings = (uiPrev as UIStateModel).settings[currentUserId] || {};
-                const currentSettings = (ui as UIStateModel).settings[currentUserId];
+                const previousSettings = uiPrev.settings[currentUserId] || {};
+                const currentSettings = ui.settings[currentUserId];
                 const changedSettings: UIStateSettings = objectDiff(currentSettings, previousSettings);
 
                 for (const setting in changedSettings) {
+                    // eslint-disable-next-line no-prototype-builtins
                     if (changedSettings.hasOwnProperty(setting)) {
                         const keyOnServer = this.convertToServerKey(setting);
-                        this.serverStorage.set(keyOnServer, changedSettings[setting]).then(() => {});
+                        this.serverStorage.set(keyOnServer, changedSettings[setting]);
                     }
                 }
             }
@@ -151,7 +150,7 @@ export class UserSettingsService extends InitializableServiceBase {
      * @param key Setting key
      */
     private convertToServerKey(key: string): string {
-        return SETTINGS_WITHOUT_PREFIX.includes(key) ? key : `${ADMIN_UI_SETTINGS_PREFIX}${key}`;
+        return SETTINGS_WITHOUT_PREFIX.includes(key as UserSettingName) ? key : `${ADMIN_UI_SETTINGS_PREFIX}${key}`;
     }
 
     /**

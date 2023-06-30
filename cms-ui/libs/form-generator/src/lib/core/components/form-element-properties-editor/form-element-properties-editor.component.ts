@@ -4,8 +4,9 @@ import {
     CmsFormElementProperty,
     CmsFormElementPropertyType,
 } from '@gentics/cms-models';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { isEqual } from 'lodash-es';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { FormEditorService } from '../../providers';
 
 @Component({
@@ -36,8 +37,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     @Output()
     requiredOrValidationErrorStatus = new EventEmitter<boolean>();
 
-    private propertiesSubject: BehaviorSubject<CmsFormElementProperty[]> = new BehaviorSubject(undefined);
-    private properties$: Observable<CmsFormElementProperty[]> = this.propertiesSubject.asObservable();
+    private propertiesSubject: BehaviorSubject<CmsFormElementProperty[]> = new BehaviorSubject([]);
 
     formGroup: UntypedFormGroup;
     private formGroupSubscription: Subscription;
@@ -51,8 +51,17 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     ) {}
 
     ngOnInit(): void {
-        this.properties$.pipe(
-            takeUntil(this.destroyed$),
+        this.propertiesSubject.asObservable().pipe(
+            distinctUntilChanged((oldVal, newVal) => {
+                const reducer = (mapping, property) => {
+                    mapping[property.name] = property.type;
+                    return mapping;
+                };
+                const oldMapping: Record<string, CmsFormElementPropertyType> = oldVal.reduce(reducer, {});
+                const newMapping: Record<string, CmsFormElementPropertyType> = newVal.reduce(reducer, {});
+
+                return isEqual(oldMapping, newMapping);
+            }),
         ).subscribe((properties) => {
             this.createFormGroup(properties);
         });
@@ -66,6 +75,13 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         this.destroyed$.next();
         this.destroyed$.complete();
         this.propertiesSubject.complete();
+
+        if (this.formGroupSubscription) {
+            this.formGroupSubscription.unsubscribe();
+        }
+        if (this.formGroupStatusSubscription) {
+            this.formGroupStatusSubscription.unsubscribe();
+        }
     }
 
     private createFormGroup(

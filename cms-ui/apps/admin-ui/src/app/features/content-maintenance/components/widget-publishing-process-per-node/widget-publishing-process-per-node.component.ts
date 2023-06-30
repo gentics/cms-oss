@@ -20,7 +20,7 @@ import { Node, PublishQueue, Raw } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
 import { BehaviorSubject, Observable, Subscription, timer } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, filter, map, mergeMap, startWith, switchMap, tap } from 'rxjs/operators';
 import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';
 
 /**
@@ -32,36 +32,36 @@ import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '.
     styleUrls: ['./widget-publishing-process-per-node.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     animations: [
-    trigger('slideAnim', [
-        state('in', style({
-            opacity: 1,
-            height: '*',
-            'padding-top': '*',
-            'padding-bottom': '*',
-            'margin-top': '*',
-            'margin-bottom': '*',
-        })),
-        transition(':enter', [
-            style({
-                opacity: 0,
-                height: '0rem',
-                'padding-top': '0',
-                'padding-bottom': '0',
-                'margin-top': '0',
-                'margin-bottom': '0',
-                }),
-            animate(100),
-        ]),
-        transition(':leave',
-            animate(100, style({
-                opacity: 0,
-                height: '0rem',
-                'padding-top': '0',
-                'padding-bottom': '0',
-                'margin-top': '0',
-                'margin-bottom': '0',
+        trigger('slideAnim', [
+            state('in', style({
+                opacity: 1,
+                height: '*',
+                'padding-top': '*',
+                'padding-bottom': '*',
+                'margin-top': '*',
+                'margin-bottom': '*',
             })),
-        ),
+            transition(':enter', [
+                style({
+                    opacity: 0,
+                    height: '0rem',
+                    'padding-top': '0',
+                    'padding-bottom': '0',
+                    'margin-top': '0',
+                    'margin-bottom': '0',
+                }),
+                animate(100),
+            ]),
+            transition(':leave',
+                animate(100, style({
+                    opacity: 0,
+                    height: '0rem',
+                    'padding-top': '0',
+                    'padding-bottom': '0',
+                    'margin-top': '0',
+                    'margin-bottom': '0',
+                })),
+            ),
         ]),
     ],
 })
@@ -143,12 +143,16 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
             distinctUntilChanged(isEqual),
             switchMap(milliseconds => timer(0, milliseconds)),
             filter(() => this.lifeSyncEnabled),
-            // start loading indicator
-            tap(() => this.tableIsLoading = true),
         );
 
         // initialize data stream of node publish status info
         this.subscriptions.push(intervall$.pipe(
+            startWith(null),
+            // start loading indicator
+            tap(() => {
+                this.tableIsLoading = true;
+                this.changeDetectorRef.markForCheck();
+            }),
             // request data
             switchMap(() => this.adminOps.getPublishQueue()),
             // validate response
@@ -192,6 +196,10 @@ export class WidgetPublishingProcessPerNodeComponent implements OnInit, OnChange
             this.changeDetectorRef.markForCheck();
             // set min height for container element to prevent page from scrolling during filter
             this.tableElementViewHeight = this.tableElementView.nativeElement.offsetHeight;
+        }, err => {
+            console.error(err);
+            this.tableIsLoading = false;
+            this.changeDetectorRef.markForCheck();
         }));
     }
 

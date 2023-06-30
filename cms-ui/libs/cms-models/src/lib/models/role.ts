@@ -1,26 +1,30 @@
 import { GcmsUiLanguage } from '../gcms-ui-bridge';
 import { DefaultModelType, Index, ModelType } from './type-util';
 
-/** Data model as defined by backend. */
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_RoleModel.html */
-export interface Role<T extends ModelType = DefaultModelType> {
-    /** Internal ID of the object property definition */
-    id: number;
+interface BaseRole<T extends ModelType = DefaultModelType> {
+    /** Name of the role in the current language. Only available when loading a role. */
+    name: string;
+    /** Description of the role in the current language. Only available when loading a role. */
+    description: string;
 
     /** Name of the role in all possible translations */
-    name: Index<GcmsUiLanguage, string>;
+    nameI18n: Index<GcmsUiLanguage, string>;
 
     /** Description in all possible translations */
-    description: Index<GcmsUiLanguage, string>;
+    descriptionI18n: Index<GcmsUiLanguage, string>;
+}
+
+/** Data model as defined by backend. */
+/** @see https://www.gentics.com/Content.Node/guides/restapi/json_RoleModel.html */
+export interface Role<T extends ModelType = DefaultModelType> extends BaseRole<T> {
+    /** Internal ID of the object property definition */
+    id: number;
 }
 
 /** Data model as defined by frontend. */
-export interface RoleBO<T extends ModelType = DefaultModelType> {
+export interface RoleBO<T extends ModelType = DefaultModelType> extends BaseRole<T> {
     /** Internal ID of the object property definition */
     id: string;
-
-    name: string;
-    description: string;
 }
 
 /** Data model as defined by backend. */

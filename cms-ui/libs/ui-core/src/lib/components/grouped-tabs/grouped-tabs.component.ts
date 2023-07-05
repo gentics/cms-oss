@@ -129,11 +129,11 @@ export class GroupedTabsComponent
 
     /** All of the defined tab panes. */
     @ContentChildren(TabPaneComponent, { descendants: true })
-    protected tabPanes: QueryList<TabPaneComponent>;
+    public tabPanes: QueryList<TabPaneComponent>;
 
     /** All of the defined groups of tab panes. */
     @ContentChildren(TabGroupComponent)
-    protected tabGroups: QueryList<TabGroupComponent>;
+    public tabGroups: QueryList<TabGroupComponent>;
 
     /** The tabs/tab-groups of this component */
     public tabs$ = new BehaviorSubject<Array<TabPaneComponent | TabGroupComponent>>([]);
@@ -282,7 +282,9 @@ export class GroupedTabsComponent
     public setAsActive(tabToActivate?: TabPaneComponent): void {
         this.tabPanes.toArray().forEach(tab => {
             if (tabToActivate != null) {
-                tab.active = tab.id === tabToActivate.id;
+                tab.active = tab.id == null && tabToActivate.id == null
+                    ? tab === tabToActivate
+                    : tab.id === tabToActivate.id;
             } else {
                 tab.active = false;
             }
@@ -291,7 +293,10 @@ export class GroupedTabsComponent
 
         if (tabToActivate != null) {
             this.tabGroups.map(group => {
-                if (group.tabs.some(currentTab => currentTab === tabToActivate)) {
+                if (group.tabs.some(currentTab => currentTab.id == null && tabToActivate.id == null
+                    ? currentTab === tabToActivate
+                    : currentTab.id === tabToActivate.id,
+                )) {
                     group.expand = true;
                 }
             });

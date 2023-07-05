@@ -1,16 +1,16 @@
-import {TestBed, ComponentFixture} from '@angular/core/testing';
-import {Component, ViewChild} from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import * as Sortable from 'sortablejs';
-
-import {componentTest} from '../../testing';
-import {SortableListComponent, ISortableEvent} from './sortable-list.component';
+import { ISortableEvent } from '../../common';
+import { componentTest } from '../../testing';
+import { SortableListComponent } from './sortable-list.component';
 
 describe('SortableList:', () => {
 
     beforeEach(() => TestBed.configureTestingModule({
-    declarations: [SortableListComponent, TestComponent],
-    teardown: { destroyAfterEach: false }
-}));
+        declarations: [SortableListComponent, TestComponent],
+        teardown: { destroyAfterEach: false },
+    }));
 
     describe('sort() method', () => {
 
@@ -18,95 +18,95 @@ describe('SortableList:', () => {
          * Returns the sort() function of the SortableList class, configured with the indexes supplied.
          */
         function getSortFn(fixture: ComponentFixture<TestComponent>, oldIndex: number = 0, newIndex: number = 2): Function {
-            let instance: SortableListComponent = fixture.componentInstance.listInstance;
-            let event: ISortableEvent = <ISortableEvent> {
+            const instance: SortableListComponent = fixture.componentInstance.listInstance;
+            const event: ISortableEvent = <ISortableEvent> {
                 oldIndex,
-                newIndex
+                newIndex,
             };
             return instance.sortFactory(event);
         }
 
         it('is a function',
             componentTest(() => TestComponent, fixture => {
-                let sortFn: any = getSortFn(fixture);
+                const sortFn: any = getSortFn(fixture);
                 expect(typeof sortFn).toBe('function');
-            })
+            }),
         );
 
         it('returns a new array by default',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let sortFn = getSortFn(fixture);
-                let sorted = sortFn(initial);
+                const initial = [1, 2, 3];
+                const sortFn = getSortFn(fixture);
+                const sorted = sortFn(initial);
                 expect(initial).not.toBe(sorted);
-            })
+            }),
         );
 
         it('returns the same array when byReference = true',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let sortFn = getSortFn(fixture);
-                let sorted = sortFn(initial, true);
+                const initial = [1, 2, 3];
+                const sortFn = getSortFn(fixture);
+                const sorted = sortFn(initial, true);
                 expect(initial).toBe(sorted);
-            })
+            }),
         );
 
         it('sorts a simple small array',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let expected = [2, 3, 1];
-                let sortFn = getSortFn(fixture);
+                const initial = [1, 2, 3];
+                const expected = [2, 3, 1];
+                const sortFn = getSortFn(fixture);
 
                 expect(sortFn(initial)).toEqual(expected);
-            })
+            }),
         );
 
         it('sorts a simple large array',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-                let expected = [1, 2, 3, 5, 6, 7, 4, 8, 9, 10];
-                let sortFn = getSortFn(fixture, 3, 6);
+                const initial = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                const expected = [1, 2, 3, 5, 6, 7, 4, 8, 9, 10];
+                const sortFn = getSortFn(fixture, 3, 6);
 
                 expect(sortFn(initial)).toEqual(expected);
-            })
+            }),
         );
 
         it('sorts an array of objects',
             componentTest(() => TestComponent, fixture => {
-                let initial = [{ name: 'john' }, { name: 'joe' }, { name: 'mary' }];
-                let expected = [{ name: 'joe' }, { name: 'mary' }, { name: 'john' }];
-                let sortFn = getSortFn(fixture);
+                const initial = [{ name: 'john' }, { name: 'joe' }, { name: 'mary' }];
+                const expected = [{ name: 'joe' }, { name: 'mary' }, { name: 'john' }];
+                const sortFn = getSortFn(fixture);
 
                 expect(sortFn(initial)).toEqual(expected);
-            })
+            }),
         );
 
         it('outputs the input array when undefined index values are passed',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let instance: SortableListComponent = fixture.componentInstance.listInstance;
-                let sortFn = instance.sortFactory(<ISortableEvent> {});
+                const initial = [1, 2, 3];
+                const instance: SortableListComponent = fixture.componentInstance.listInstance;
+                const sortFn = instance.sortFactory(<ISortableEvent> {});
 
                 expect(sortFn(initial)).toEqual(initial);
-            })
+            }),
         );
 
         it('outputs the input array for out-of-bound oldIndex',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let sortFn = getSortFn(fixture, 3, 1);
+                const initial = [1, 2, 3];
+                const sortFn = getSortFn(fixture, 3, 1);
 
                 expect(sortFn(initial)).toEqual(initial);
-            })
+            }),
         );
 
         it('outputs the input array for out-of-bound newIndex',
             componentTest(() => TestComponent, fixture => {
-                let initial = [1, 2, 3];
-                let sortFn = getSortFn(fixture, 0, 3);
+                const initial = [1, 2, 3];
+                const sortFn = getSortFn(fixture, 0, 3);
 
                 expect(sortFn(initial)).toEqual(initial);
-            })
+            }),
         );
 
     });
@@ -116,7 +116,7 @@ describe('SortableList:', () => {
         it('is forwarded to the options of its sortable instance',
             componentTest(() => TestComponent, (fixture, instance) => {
                 fixture.detectChanges();
-                let sortable: Sortable = (instance.listInstance as any).sortable;
+                const sortable: Sortable = (instance.listInstance as any).sortable;
 
                 expect(sortable.option('disabled')).toBe(false);
 
@@ -124,7 +124,7 @@ describe('SortableList:', () => {
                 fixture.detectChanges();
 
                 expect(sortable.option('disabled')).toBe(true);
-            })
+            }),
         );
 
     });
@@ -133,9 +133,9 @@ describe('SortableList:', () => {
 
 
 @Component({
-    template: `<gtx-sortable-list [disabled]="disabled"></gtx-sortable-list>`
+    template: '<gtx-sortable-list [disabled]="disabled"></gtx-sortable-list>',
 })
 class TestComponent {
-    disabled: boolean = false;
+    disabled = false;
     @ViewChild(SortableListComponent, { static: true }) listInstance: SortableListComponent;
 }

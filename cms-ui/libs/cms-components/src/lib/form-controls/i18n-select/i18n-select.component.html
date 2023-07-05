@@ -5,7 +5,7 @@
     [required]="requiredInCurrentLanguage"
     [class.untranslated]="!isTranslated"
     [class.invalid-selection]="invalidSelection"
-    (blur)="_onTouched()"
+    (blur)="cvaTouch()"
 >
     <gtx-option
         *ngFor="let selectOption of selectOptions"

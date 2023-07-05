@@ -1,0 +1,2 @@
+Administrator User Interface: Fixed inconsistency error with translatable texts (Name, Description) which didn't apply changes correctly.
+This prevented Roles and other Entities to be created and/or to be properly edited.

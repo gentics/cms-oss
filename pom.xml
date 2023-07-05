@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms</artifactId>
-	<version>6.0.0-SNAPSHOT</version>
+	<version>6.0.1-SNAPSHOT</version>
 	<name>Gentics CMS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
@@ -37,15 +37,16 @@
 		<module>cms-search</module>
 		<module>cms-server</module>
 		<module>cms-changelog</module>
+		<module>cms-doc</module>
 	</modules>
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<cms-oss.version>6.0.0-SNAPSHOT</cms-oss.version>
+		<cms-oss.version>6.0.0</cms-oss.version>
 		<generic-testutils.version>1.15.7</generic-testutils.version>
 		<mesh.forms.plugin.version>1.10.0</mesh.forms.plugin.version>
 		<hazelcast.version>3.9.1</hazelcast.version>
-		<license.checker.version>1.0-SNAPSHOT</license.checker.version>
+		<license.checker.version>1.0.0</license.checker.version>
 
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>

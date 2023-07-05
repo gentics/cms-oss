@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics.cms</groupId>
 		<artifactId>cms-search</artifactId>
-		<version>6.0.0-SNAPSHOT</version>
+		<version>6.0.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>cms-search-core</artifactId>
@@ -99,7 +99,7 @@
 			<artifactId>cms-search-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 		</dependency>
 		<dependency>
@@ -117,7 +117,7 @@
 
 		<!--Test dependencies -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>

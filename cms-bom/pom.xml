@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms</artifactId>
-		<version>6.0.0-SNAPSHOT</version>
+		<version>6.0.1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms</groupId>
@@ -18,7 +18,7 @@
 		<dependencies>
 			<!-- Import dependencies from Gentics CMS OSS -->
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>

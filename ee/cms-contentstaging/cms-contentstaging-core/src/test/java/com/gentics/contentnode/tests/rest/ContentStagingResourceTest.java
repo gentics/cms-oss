@@ -164,6 +164,8 @@ public class ContentStagingResourceTest {
 	private static com.gentics.contentnode.object.File file1;
 	private static Form form1;
 
+	private static java.io.File dbFilesDir;
+
 	@BeforeClass
 	public static void setupOnce() throws Exception {
 		{
@@ -171,7 +173,7 @@ public class ContentStagingResourceTest {
 			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 			prefs.setFeature(Feature.CONTENT_STAGING.toString().toLowerCase(), true);
 
-			java.io.File dbFilesDir = new java.io.File(
+			dbFilesDir = new java.io.File(
 					prefs.getProperty("filepath") + java.io.File.separator + CONTENT_ROOT + java.io.File.separator + "content-packages");
 			dbFilesDir.mkdirs();
 		}

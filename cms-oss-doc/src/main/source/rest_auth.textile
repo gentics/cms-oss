@@ -1,0 +1,129 @@
+h2. Authentication methods for REST API
+
+The REST API supports different methods of authentication. This section describes necessary configuration and methods.
+
+endprologue.
+
+h3. Session Identification
+
+When using the REST API, a session is identified by the +session secret+ cookie and the +session id+, which must be sent as query parameter +sid+.
+This ensures that
+
+* A session can never be fully identified by URLs (because the session secret is not part of the URL)
+* One client may have multiple sessions. They share the same session secret, but use different session ids
+
+h3. Authentication with credentials
+
+To login with credentials, the client must
+
+<shell>
+POST /rest/auth/login
+{
+  "login": ...,
+  "password": ...
+}
+</shell>
+
+The response will be of the form
+
+<shell>
+{
+  "sid" : "1022",
+  "user" : {
+    "id" : 34,
+    "description" : "",
+    "login" : "editor",
+    "email" : "",
+    "firstName" : "Max",
+    "lastName" : "No-Publish"
+  },
+  "responseInfo" : {
+    "responseCode" : "OK",
+    "responseMessage" : "Successfully performed login"
+  }
+}
+</shell>
+
+Note that the "User-Agent" has to be set in the header of the request as it will be saved in the session, otherwise the login will fail.
+
+Additionally, the session secret cookie will be set to the client.
+
+h3. SSO with Keycloak
+
+h4(#keycloak-config). Configuration
+
+Activate the Keycloak feature and add configuration for user creation callbacks and initial groups:
+
+<shell filename="keycloak.yml">
+feature:
+  keycloak: true
+keycloak:
+  user_created_callback: your.companyname.custom.SsoUserCreated
+  sync_groups: true
+  init_groups: |
+    if(attr.roles.realm CONTAINSONEOF 'admin-user-role',
+      [3],
+      if(attr.roles.resource.gcms CONTAINSONEOF 'editor-user-role',
+        [4],
+        [5]
+      )
+    )
+</shell>
+
+Place the `keycloak.json` generated for the CMS in the UI configuration directory (default: `ui-conf`).
+
+The optional settings @user_created_callback@ is the full class name of a callback implementing
+"SsoUserCreatedCallback":https://www.gentics.com/Content.Node/guides/api-javadoc/com/gentics/api/contentnode/auth/filter/SsoUserCreatedCallback.html.
+When a new user is created by the SSO process, the callback will be executed with the data of the new user.
+The @attributes@ map contains the following information:
+* @firstname@: the "given name" claim in the access token
+* @lastname@: the "family name" claim in the access token
+* @email@: the "email" claim in the access token
+* @roles@: a map containing
+** @realm@: the list of realm roles for the user
+** @resource@: a mapping from resource names to the respective resource roles for the user
+
+The init parameter @initGroups@ is an expression that must return the IDs of the initial groups, new users shall
+be put in. The expression can resolve systemuser attributes via @user.*@ or claims from the access token via
+@attr.*@ (the most interesting attributes probably being the realm roles @attr.roles.realm@, and the resource
+specific roles @attr.roles.resource.RESOURCENAME@).
+
+WARNING: For security reasons, it is not possible to add users to groups 1 or 2.
+
+h4(#keycloak-client). Client side implementation
+
+The same restrictions apply as for the client side implementation for "CAS":#cas-client.
+
+h3. Synchronizing group IDs
+
+Setting `sync_groups` to `true` in the Keycloak configuration section will cause synchronization of user groups on every login
+
+<javascript filename="conf/*.yml">
+keycloak:
+  sync_groups: true
+</javascript>
+
+|_. Name |_. Description |_. Default |
+| keycloak.init_groups | Expression that will return the group IDs for the users. All attributes passed along by the authenticating system will be available in the object +attr+ | attr.group |
+| keycloak.sync_groups | When set to true, groups will be synchronized on every login request, not only when the user is created | false |
+
+h4. Restricting group assignments to nodes
+
+In order to restrict group assignments to nodes/channels, the group IDs must be encoded like +[groupId]|[nodeId]~[nodeId]~[nodeId]...+.
+
+The following example shows the definition of the initial groups statically set to the group +17+ (restricted to nodes +8+ and +11+) and the group +18+ (not restricted to specific nodes):
+
+<javascript>
+keycloak:
+  init_groups: '["17|8~11", 18]'
+</javascript>
+
+h3. Logout
+
+A logout can be performed with the following request
+
+<code>
+POST /rest/auth/logout/{sid}
+</code>
+
+in the response, the session secret cookie is removed.

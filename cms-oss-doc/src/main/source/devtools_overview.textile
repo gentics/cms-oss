@@ -1,0 +1,443 @@
+h2. Devtools overview
+
+This guide explains the basic concepts of development with the Devtools.
+
+After reading this guide, you will know:
+
+* What the Devtools are.
+* Which object types are covered.
+* Layout of packages in the filesystem.
+
+endprologue.
+
+h3. Basic concept
+
+The Devtools allow changing the objects that make up an implementation in the filesystem, instead of the CMS UI. This allows developers and implementors
+to use their favourite editor.
+
+Devtools will handle the following object types:
+* _Datasources_
+* _Tagtypes_
+* _Tagtype Categories_
+* _Object properties_
+* _Templates_
+* _CR Fragments_
+* _ContentRepositories_
+* Static files (like JavaScript, CSS, images, ...)
+* Internal static files (used only be the CMS, but not in the frontend)
+
+The _datasources_, _tagtypes_, _object properties_ and _templates_ are still managed by the CMS and can be created, updated, deleted and used as always.
+Additionally, with the Devtools it is possible to synchronize selected objects into the filesystem of the CMS, where the objects can be edited and the
+changes then be synchronized back into the CMS.
+
+The use of static files in the implementation is a new concept. Those files are not managed by the CMS anymore, they are completely separated from _pages_, _images_
+and _files_ in the CMS (which make up the content). The static files are also not handled by the publish process.
+
+h4. Handling references
+
+References to objects for example in tagtype defaut values are synchronized via the objects global ID. If the target object is not available on the system
+where the devtools package is synchronized into, the reference will be corrected as soon as the target object is created (e.g. when doing a content package
+synchronization after synchronizing the devtools packages).
+
+h3. Packages
+
+Objects and static files are organized in _packages_. Objects are only written to the filesystem if they are part of a _package_. Every _package_ is a directory
+in the filesystem that contains the file representations of all objects in that package.
+
+Packages can be created by creating the package root directory in the filesystem, or using the CMS UI or using the REST API.
+
+Deleting the package root directory in the filesystem removes the package. When the package is deleted using the CMS UI or REST API, the package root directory (and everything within)
+will be deleted. Deleting a package does not affect the contained objects in the CMS.
+
+h3. Sub Packages
+
+Packages may contain sub packages. Sub packages have basically the same structure as packages, but have some restrictions:
+
+* It is not possible to add/remove sub packages to/from a package via the CMS UI or REST API.
+* It is not possible to add/remove objects to/from sub packages via the CMS UI or REST API.
+* CMS objects in sub packages will be merged to the objects of the package when reading the list of objects from the package. Sub packages cannot be accessed
+individually using the CMS UI or the REST API.
+* The CMS treats sub packages as _readonly_. That means files in sub packages will never be modified from the CMS. The only exception is that when
+a package is deleted via the CMS UI or REST API, also the sub packages will be deleted in the filesystem.
+* Static files in sub packages cannot be accessed directly. If sub packages contain static files (JavaScript, CSS, ...)
+some kind of build mechanism must be used to transfer the files into the main package, so that they become available in the CMS and later in the frontend.
+* Sub packages may not contain sub packages themselves.
+
+The basic idea of sub packages is to add common functionality to a project by adding sub packages as dependencies with the help of a
+package manager, like "npm":https://www.npmjs.com/.
+
+h3. Directory layout
+
+The root directory of the packages is @/cms/packages/@ in the server's filesystem. The root directory will contain a directory for every package:
+
+<shell>
+/cms/packages/[package]/
+</shell>
+
+All objects of a specific type will be synchronized into a common subdirectory of the package root, each in its own directory.
+For every object, there will always be the file @gentics_structure.json@ containing meta information. Some types will have additional files and directories.
+
+h4. README.md
+
+In the package root directory, there may be a file @README.md@ containing a package description in "Markdown Syntax":https://en.wikipedia.org/wiki/Markdown.
+
+h4. gentics_package.json
+
+In the package root directory, there may be a file @gentics_package.json@ containing package configuration as JSON.
+
+|_. Attribute |_. Description                                                                                                                                                         |
+| subpackages | Name of the directory (in the package root directory) containing the sub packages. Must not be one of _(datasources, constructs, objectproperties, templates, files)_ |
+
+Example @gentics_package.json@:
+
+<shell filename="/cms/packages/[package]/gentics_package.json">
+{
+  "subpackages": "node_modules"
+}
+</shell>
+
+h4. Sub packages
+
+If the attribute _subpackages_ is set in the file @gentics_package.json@, the sub packages are located in a sub directory of the package's directory.
+
+<shell>
+/cms/packages/[package]/gentics_package.json
+/cms/packages/[package]/[subpackages]/[subpackage]/
+</shell>
+
+h4. Datasources
+
+|_>. Root directory                       | @/cms/packages/[package]/datasources/@ |
+|_>. Object directory name                | _Name_ of the datasource                             |
+|_>. Contents of @gentics_structure.json@ | globalId, type, name and values                      |
+|_>. Additional files/directories         | none                                                 |
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/datasources/Sample Images/gentics_structure.json">
+{
+  "globalId" : "3D6C.d7ad6e65-e795-11e6-97da-0242ac120002",
+  "type" : "statical",
+  "name" : "Sample Images",
+  "values" : [ {
+    "globalId" : "3D6C.d7adb177-e795-11e6-97da-0242ac120002",
+    "key" : "Chrysanthemum",
+    "value" : "Chrysanthemum.jpg"
+  }, ... ]
+}
+</shell>
+
+h4. Tagtypes (aka constructs)
+
+|_>. Root directory                       | @/cms/packages/[package]/constructs/@                                   |
+|_>. Object directory name                | Tagtype _keyword_                                                                     |
+|_>. Contents of @gentics_structure.json@ | globalId, keyword, icon, name, description, flags and parts                           |
+|_>. Additional files/directories         | At least one file for every part that can be filled: @part.[partkeyword].[extension]@ |
+
+The additional files for the part will have names like @part.[partkeyword].[extension]@ where the extension depends on the part type:
+
+Text based parts will either have @.html@ (e.g. for @HTML@, @HTML (long)@, ...) or @.txt@ (e.g. for @Text@, @Text (short)@, ...). All other parts
+(e.g. @URL (page)@, @Overview@, ...) will have @.json@.
+
+The part types @Select (single)@, @Select (multiple)@, @Datasource@, @HTML (custom form)@ and @Text (custom form)@ will have a second file @part.[partkeyword].template.html@
+containing the part template.
+
+The part type @Overview@ will have a second file @part.[partkeyword].ds.json@ containing the overview settings.
+
+Example @part.[partkeyword].ds.json@:
+
+<shell filename="/cms/packages/[package]/constructs/overview/part.overview.ds.json">
+{
+  "restrictedObjectTypes" : [ "page", "file", "folder", "image" ],
+  "restrictedSelectionTypes" : [ "folder", "single", "parent" ],
+  "hideSortOption" : true,
+  "stickyChannel" : true
+}
+</shell>
+
+Example directory structure:
+
+<shell>
+/cms/packages/[package]/constructs/sampleimage/gentics_structure.json
+/cms/packages/[package]/constructs/sampleimage/part.template.html
+...
+</shell>
+
+h5. Tagtype Categories
+
+Tagtype categories are represented within the contstructs.
+
+If a construct is assigned to a category, the gentics_structure.json of this construct will contain the definiton of the category.
+When syncing a devtool package from the filesystem into the CMS the sum of all categories found in all constructs will be available in the CMS.
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/constructs/sampleimage/gentics_structure.json">
+{
+  "globalId" : "3D6C.7f81d6e9-e796-11e6-97da-0242ac120002",
+  "keyword" : "sampleimage",
+  "icon" : "bild.gif",
+  "name" : {
+    "de" : "Beispiel Bild",
+    "en" : "Sample Image"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "mayBeSubtag" : true,
+  "mayContainsSubtags" : false,
+  "autoEnable" : true,
+  "parts" : [ {
+    "globalId" : "3D6C.8cdbeacc-e796-11e6-97da-0242ac120002",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : false,
+    "typeId" : 21,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false
+  }, ... ],
+  "category" : {
+    "globalId" : "3D6C.8cdac3be-e796-11e6-97da-0242ac120002",
+    "name" : {
+      "de" : "Beispiel Kategorie",
+      "en" : "Sample Category"
+    },
+    "sortOrder" : 0
+  }
+}
+</shell>
+
+h4. Object properties
+
+|_>. Root directory                       | @/cms/packages/[package]/objectproperties/@         |
+|_>. Object directory name                | Composed of _type_ and _keyword_ (e.g. @folder.object.navhidden@) |
+|_>. Contents of @gentics_structure.json@ | globalId, type, name, description and constructId                 |
+|_>. Additional files/directories         | none                                                              |
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/objectproperties/folder.object.name_de/gentics_structure.json">
+{
+  "globalId" : "A547.70067",
+  "type" : "folder",
+  "keyword" : "object.name_de",
+  "name" : {
+    "de" : "Name Deutsch",
+    "en" : "German name"
+  },
+  "description" : {
+    "de" : "Deutscher Name des Ordners in der Navigation",
+    "en" : "German name of navigation entry"
+  },
+  "constructId" : "A547.69478"
+}
+</shell>
+
+h4. Templates
+
+|_>. Root directory                       | @/cms/packages/[package]/templates/@                                           |
+|_>. Object directory name                | _Name_ of the template                                                                       |
+|_>. Contents of @gentics_structure.json@ | globalId, channelId, name, description, type, templateTags and objectTags                    |
+|_>. Additional files/directories         | @source.[extension]@ for the template source. Subdirectories @templatetags@ and @objecttags@ |
+
+The extension of the file @source.[extension]@ depends on the type of the template. E.g. @.html@ for @HTML@ templates, @.css@ for @CSS@, etc.
+
+The subdirectories @templatetags@ and @objecttags@ will contain a directory for each tag (named like the keyword), which will contain files for
+every part that can be filled (named analogously like the part files in constructs).
+
+Example directory structure:
+
+<shell>
+/cms/packages/[package]/templates/Sample Template/gentics_structure.json
+/cms/packages/[package]/templates/Sample Template/source.html
+/cms/packages/[package]/templates/Sample Template/templatetags/content/part.text.html
+/cms/packages/[package]/templates/Sample Template/objecttags/object.blog/part.flag.json
+</shell>
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/templates/Sample Template/gentics_structure.json">
+{
+  "globalId" : "3D6C.dca59922-e796-11e6-97da-0242ac120002",
+  "name" : "Sample Template",
+  "type" : "HTML",
+  "templateTags" : [ {
+    "globalId" : "3D6C.07727566-e797-11e6-97da-0242ac120002",
+    "name" : "content",
+    "active" : true,
+    "constructId" : "A547.75403",
+    "editableInPage" : true,
+    "mandatory" : false
+  } ],
+  "objectTags" : [ {
+    "globalId" : "3D6C.a2ba43c0-d80d-11e6-8b5d-ea5d8efab9e8",
+    "name" : "object.blog",
+    "active" : false,
+    "constructId" : "A547.58458"
+  } ]
+}
+</shell>
+
+h4. ContentRepository Fragments
+
+|_>. Root directory                       | @/cms/packages/[package]/cr_fragments/@ |
+|_>. Object directory name                | _Name_ of the fragment                                |
+|_>. Contents of @gentics_structure.json@ | globalId, name, entries with their metadata           |
+|_>. Additional files/directories         | none                                                  |
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/cr_fragments/Sample CR Fragment/gentics_structure.json">
+{
+  "globalId" : "3D6C.0271345a-4a1d-11e8-bc76-00155df038a5",
+  "name" : "Sample CR Fragment",
+  "entries" : [ {
+    "globalId" : "3D6C.12477304-4ecc-11e8-bc76-00155df038a5",
+    "tagname" : "page.tags.teaser",
+    "mapname" : "teaser",
+    "objType" : 10007,
+    "attributeType" : 1,
+    "multivalue" : false,
+    "optimized" : false,
+    "filesystem" : false,
+    "targetType" : 0,
+    "displayfield" : false,
+    "segmentfield" : false,
+    "urlfield" : false,
+    "elasticsearch" : {
+      "basicsearch" : {
+        "type" : "text",
+        "analyzer" : "basicsearch",
+        "search_analyzer" : "basicsearch_search"
+      },
+      "suggest" : {
+        "type" : "text",
+        "analyzer" : "suggest"
+      },
+      "suggestreverse" : {
+        "type" : "text",
+        "analyzer" : "suggestreverse"
+      },
+      "auto" : {
+        "type" : "text",
+        "analyzer" : "autocomplete"
+      }
+    }
+  } ]
+}
+</shell>
+
+h4. ContentRepositories
+
+|_>. Root directory                       | @/cms/packages/[package]/contentrepositories/@ |
+|_>. Object directory name                | _Name_ of the fragment                                       |
+|_>. Contents of @gentics_structure.json@ | globalId, name, metadata, entries with their metadata        |
+|_>. Additional files/directories         | none                                                         |
+
+Example @gentics_structure.json@:
+
+<shell filename="/cms/packages/[package]/contentrepositories/Mesh CR/gentics_structure.json">
+{
+  "globalId" : "3D6C.ac8163a4-4fba-11e9-a103-00155df0382b",
+  "name" : "Mesh CR",
+  "crType" : "mesh",
+  "instantPublishing" : true,
+  "permissionProperty" : "object.roles",
+  "elasticsearch" : {
+    "page" : null,
+    "folder" : null,
+    "file" : null
+  },
+  "projectPerNode" : true,
+  "version" : "2.0",
+  "entries" : [ {
+    "globalId" : "3D6C.ac845f3f-4fba-11e9-a103-00155df0382b",
+    "tagname" : "folder.id",
+    "mapname" : "cms_id",
+    "object" : 10002,
+    "attributeType" : 3,
+    "targetType" : 0,
+    "multivalue" : false,
+    "optimized" : false,
+    "reserved" : true,
+    "filesystem" : false,
+    "segmentfield" : false,
+    "displayfield" : false,
+    "urlfield" : false
+  }
+}
+</shell>
+
+h4. Static files
+
+Every file located in the directory @/cms/packages/[package]/files/@ can be adressed as static file in the implementation.
+The URL must be constructed like @/static/[package]/files/...@.
+
+Example: the image
+<shell>
+/cms/packages/[package]/files/images/desert.jpg
+</shell>
+
+can be used in the source of a template like
+<shell filename="/cms/packages/[package]/templates/Sample Template/source.html">
+<html>
+<body>
+<img src="/static/[package]/files/images/desert.jpg"/>
+</body>
+</html>
+</shell>
+
+The CMS will automatically serve the static files from the packages under those URLs.
+The static files must be made available to the frontend also (this is not done by the CMS).
+
+h4. Internal static files
+
+Every file located in the directory @/cms/packages/[package]/files-internal/@ can be adressed as internal static file in the CMS.
+The URL must be constructed like @/internal/[package]/files/...@.
+
+The CMS will automatically serve the internal static files from the packages under those URLs.
+
+WARNING: Internal files should not be made available in the frontend.
+
+h4. Restrictions
+
+* Depending on the underlying filesystem, some characters are restricted from being used in directory or file names. Therefore, the names and keywords of
+objects must not contain @/@, @\@, @;@, @,@, @:@. Otherwise adding objects to packages might fail.
+* Template names are not unique, but directory names in the filesystem are. Therefore it is not possible to add multiple Templates with the same name to the same package.
+* Keywords of tagparts need not be unique by themselves but since they define the filename of a synchronized part, all tagpart keywords in a tagtype must be unique or the synchronization into the filesystem will fail.
+
+h3. Multichannelling
+
+Regarding multichannelling, there are some restrictions:
+
+* It is not possible to add localized copies of templates to packages (without adding their master template).
+* When a template is added to a package, all its localized copies will also be written to the filesystem.
+* When a template is synchronized from a package back into the CMS, its localized copies will also be synchronized, if the CMS contains the channels,
+the localized copies are bound to. Identification of the channels is based on their global IDs.
+
+The localized copies of templates will be synchronized into subdirectories of the template's directory:
+
+<shell>
+/cms/packages/[package]/templates/Sample Template/channels/[Channel Name]/gentics_structure.json
+...
+</shell>
+
+h3. Page Live Preview
+
+The Live Preview of a page will now reload itself automatically, when a dependency of the page is modified.
+
+WARNING: The automatic reloading depends on Server-Sent Events, which are not supported by Internet Explorer.
+
+h3. Further topics
+
+* "Configuration":devtools_configuration.html
+* "Synchronization details":devtools_synchronization.html
+* "Devtools REST API":restapi/resource_PackageResource.html
+* "Devtools UI":devtools_ui.html

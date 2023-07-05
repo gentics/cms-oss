@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title><% if yield(:page_title).length != 0 %><%= yield(:page_title).sub('Gentics CMS Documentation: ','').sub("\n",'') %><% else %><%= Guides.meta["title"] %><% end %></title>
+
+<link rel="stylesheet" type="text/css" href="stylesheets/style.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+<link rel="stylesheet" type="text/css" href="stylesheets/overrides.style.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/overrides.print.css" media="print" />
+
+
+<link rel="stylesheet" type="text/css" href="stylesheets/syntaxhighlighter/shCore.css" />
+<link rel="stylesheet" type="text/css" href="stylesheets/syntaxhighlighter/shThemeRailsGuides.css" />
+
+<script>
+  (function() {
+    var cx = '009978639127731376014:40zz2hrgrhw';
+    var gcse = document.createElement('script'); gcse.type = 'text/javascript'; gcse.async = true;
+    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
+        '//www.google.com/cse/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
+
+</head>
+<body class="guide">
+  <% if @edge %>
+  <div>
+    <img src="images/edge_badge.png" alt="edge-badge" id="edge-badge" />
+  </div>
+  <% end %>
+  <div id="topNav">
+    <div class="wrapper">
+      <%= yield :top_nav %>
+    </div>
+  </div>
+  <div id="header">
+    <div class="wrapper clearfix">
+      <h1><a href="index.html" title="Return to home page"><%= Guides.meta["title"] %></a></h1>
+      <p class="hide"><a href="#mainCol">Skip navigation</a>.</p>
+      <ul class="nav">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="credits.html">Credits</a></li>
+      </ul>
+    </div>
+  </div>
+  <hr class="hide" />
+
+  <div id="feature">
+    <div class="wrapper">
+      <gcse:search></gcse:search>
+    </div>
+    <div class="wrapper">
+    <% if header_section = yield(:header_section).presence %>
+      <%= header_section %>
+    <% else %>
+      <h2><%= Guides.meta["title"] %></h2>
+      <p><%= Guides.meta["description"] %></p>
+    <% end %>
+      <div id="subCol">
+        <h3 class="chapter"><img src="images/chapters_icon.gif" alt="" />Chapters</h3>
+        <% if index_items = yield(:index_items).presence %>
+          <ol class="chapters">
+            <%= index_items %>
+          </ol>
+        <% elsif !Guides.meta['index'].nil? %>
+          <ol class="chapters">
+            <% Guides.meta['index'].each do |entry| %>
+              <li>
+                <a href="#<%= entry[0].downcase.gsub(/[\W]+/, '-').gsub(/^[\-]+|[\-]+$/, '') %>">
+                  <p><%= entry[0] %></p>
+                </a>
+              </li>
+            <% end %>
+          </ol>
+        <% else %>
+          <p>No Chapters available</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div id="container">
+    <div class="wrapper">
+      <div id="mainCol">
+        <%= yield %>
+      </div>
+    </div>
+  </div>
+
+  <hr class="hide" />
+  <div id="footer">
+    <div class="wrapper">
+      <%= yield :license %>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    // Script to create missing anchor-links
+    (function() {
+      var tags = document.getElementsByTagName('h3');
+      for (var i = 0; i < tags.length; i++) {
+        var tag = tags[i];
+        if (tag.className == '' && tag.id == '') {
+          tag.id = tag.textContent.toLowerCase().replace(/[\W]+/g, '-').replace(/^[\-]+|[\-]+$/g, '');
+        }
+      };
+    })();
+  </script>
+  <script type="text/javascript" src="javascripts/guides.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shCore.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushRuby.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushJScript.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushCss.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushXml.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushSql.js"></script>
+  <script type="text/javascript" src="javascripts/syntaxhighlighter/shBrushPlain.js"></script>
+  <script type="text/javascript">
+    SyntaxHighlighter.all()
+  </script>
+</body>
+</html>

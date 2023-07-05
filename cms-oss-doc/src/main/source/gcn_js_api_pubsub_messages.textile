@@ -1,0 +1,130 @@
+h2. PubSub
+
+Gentics CMS JS API event channels, and how to subscribe for their messages.
+
+endprologue.
+
+h3. Deprecated Channels
+
+WARNING: The following channels are still available for backwards compatibility,
+but you are discouraged from using them, as they are superseded and will
+eventually be phased out.
+
+|_.Deprecated channels    |_.Superseded by                  |
+|+content-inserted+       |+tag.inserted+                   |
+|+content-rendered+       |+tag.rendered+                   |
+|+authentication-required+|+session.authentication-required+|
+|+authenticated+          |+session.authenticated+          |
+|+settion-set+            |+session.sid-set+                |
+
+
+h3. General Channels
+
+|_.General channels|_.Description|_.Arguments
+	|
+|+error-encountered+
+	|When an uncaught error occures from within the library.
+		|"+GCNError+":gcnjsapi/jsdoc/symbols/GCNError.html
+			|
+
+
+h3. Session Channels
+
+|_.Session channels|_.Description|_.Arguments
+	|
+|+session.authentication-required+
+	|When an operation that requires authentication credentials
+	 (eg: "+PageAPI.createTag()+":gcnjsapi/jsdoc/symbols/PageAPI.html#.createTag)
+	 cannot proceed because credentials are missing.
+	 	|proceed, cancel
+			|
+|+session.authenticated+
+	|When a "+GCN.login()+":gcnjsapi/jsdoc/symbols/GCN.html#.login call to the
+	 backend attempt is successfully authenticated.
+		|Server response object with the property 'user' that contains user the
+		 authenticated user's data.
+		 	|
+|+session.sid-set+
+	|Whenever the session SID is set or updated.
+		|Session ID string.
+			|
+
+
+h3. Tag Channels
+
+|_.Tag channels|_.Description|_.Arguments
+	|
+|+tag.inserted+
+	|Triggered at the point immediately after
+	 "+TagAPI.render()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.render or
+	 "+TagAPI.edit()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.edit is invoked,
+		|<ol>
+		 <li>jQuery unit set containing the element onto which the tag was
+		     rendered.
+		 <li>The rendered HTML.
+			 |
+|+tag.rendered+
+	|When a tag has been rendered, either with
+	 "+TagAPI.render()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.render
+	 or
+	 "+TagAPI.edit()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.edit.
+	 Note that when modifying the HTML, at least the root tag of the original HTML must be left untouched.
+		|<ol>
+		 <li>HTML string of rendered tag.
+		 <li>The rendered "+Tag+":gcnjsapi/jsdoc/symbols/TagAPI.html.
+		 <li>A function that must be invoked, and that must received the
+			 (optionally) modified HTML that was passed as the first argument.
+			 |
+|+tag.rendered-for-editing+
+	|When a tag is rendered for editing with
+	 "+TagAPI.edit()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.edit.
+		|Object containing the properties:
+		 <ul>
+		 <li> "+tag+":gcnjsapi/jsdoc/symbols/TagAPI.html : The rendered tag.
+		 <li> +data+: The raw server response data object.
+		 <li> +callback+: The success callback that was passed to the
+			  "+TagAPI.edit()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.edit invocation
+			  that triggered this event.
+		  |
+|+tag.before-deleted+
+	|When "+TagAPI.remove()+":gcnjsapi/jsdoc/symbols/TagAPI.html#.remove is invoked,
+	 before the tag is placed in the list of tags to be deleted.
+		|The "+tag+":gcnjsapi/jsdoc/symbols/TagAPI.html to be deleted.
+			|
+
+
+h3. Page Channels
+
+|_.Page channels|_.Description|_.Arguments
+	|
+|+page.rendered+
+	|When "+PageAPI.preview()+":gcnjsapi/jsdoc/symbols/PageAPI.html#.preview is
+	 called.
+		|<ol>
+		 <li>HTML string of rendered page.
+		 <li>The rendered "+Page+":gcnjsapi/jsdoc/symbols/PageAPI.html.
+		 <li>A function that must be invoked, and that must received the
+			 (optionally) modified HTML that was passed as the first argument.
+			 |
+|+page.before-saved+
+	|When "+PageAPI.save()+":gcnjsapi/jsdoc/symbols/PageAPI.html#.save is
+	 called, before local changes to the object are committed to the server.
+		|The "+page+":gcnjsapi/jsdoc/symbols/PageAPI.html to be saved.
+			|
+|+page.before-published+
+	|When "+PageAPI.publish()+":gcnjsapi/jsdoc/symbols/PageAPI.html#.publish is
+	 called, before request is sent to the server.
+		|The "+page+":gcnjsapi/jsdoc/symbols/PageAPI.html to be publish.
+			|
+
+
+h3. Folder Channels
+
+|_.Folder channels|_.Description|_.Arguments
+	|
+|+folder.before-saved+
+	|When "+FolderAPI.save()+":gcnjsapi/jsdoc/symbols/FolderAPI.html#.save is
+	 called, before local changes to the object are committed to the server.
+		|The "+folder+":gcnjsapi/jsdoc/symbols/FolderAPI.html to be saved.
+			|
+

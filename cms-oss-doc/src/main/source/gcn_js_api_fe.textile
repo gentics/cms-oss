@@ -1,0 +1,299 @@
+h2. Frontend Editing
+
+Frontend Editing is a huge focus of the Gentics CMS JavaScript API.
+We tried to make it as easy as possible to have your editors
+editing contents from the frontend - so this is you guide
+to get you started.
+
+endprologue.
+
+h3. Prerequisites & setting up your page
+
+Some things need to be in place before you may start hacking away:
+
+* You need a Gentics CMS backend up and running with some data ready for editing
+* There should be a user who can access the pages you want to edit
+* You need to be able to connect to Gentics CMS from your page.
+
+h4. Proxy
+
+If the page that includes the Gentics CMS JavaScript API is on a different host than
+the Gentics CMS backend, you need a proxy script to avoid problems
+with cross origin AJAX requests.
+
+The proxy script must be located on the same host as the page that
+includes the Gentics CMS JavaScript API. In the examples below, "[Proxy]" is a
+placeholder for the the path to the proxy script and must be replaced
+for the examples to work.
+
+An "example implementation":https://github.com/gentics/proxy-php is provided.
+
+NOTE: A proxy servlet implementation is provided with Gentics Portal.Node. Please see the
+"documentation for the GCNProxyServlet":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-servletfilters-gcnproxyservlet.html
+for further information.
+
+h3. Basic page
+
+We will start out with a very basic page, which has no funky layout yet,
+but already includes +Aloha Editor+, some plugins and stylesheets along
+with the +Gentics CMS JavaScript API+.
+
+NOTE: There is no script element that includes the +Gentics CMS JS API+ as
+it will be loaded automatically by the +Aloha Editor+ gcn-plugin. Don't
+include the +Gentics CMS JS API+ on a page where the gcn-plugin is loaded,
+since that would load the +Gentics CMS JS API+ twice and may result in
+errors.
+
+<html>
+<head>
+	<meta http-equiv="content-type"
+          content="text/html; charset=UTF-8">
+	<title>
+      Frontend Editing with Gentics CMS JavaScript API & Aloha Editor
+    </title>
+
+	<!-- Loads the Aloha Editor styles -->
+	<link rel="stylesheet"
+      href="/[Proxy]/latest/alohaeditor/css/aloha.css"
+      id="aloha-style-include"
+      type="text/css">
+
+    <!-- Configures the gcn-plugin-->
+    <script>
+    var alohaEditorContextPath = '/[Proxy]';
+    var Aloha = {};
+
+	Aloha.settings = {
+		"plugins": {
+			"gcn": {
+				"webappPrefix": alohaEditorContextPath + "/",
+				"buildRootTimestamp": "latest",
+				"stag_prefix": alohaEditorContextPath + "/"
+			}
+		}
+	};
+    </script>
+
+	<!-- Loads Aloha Editor itself including some plugins -->
+	<script type="text/javascript"
+      src="/[Proxy]/latest/alohaeditor/lib/aloha.js"
+      data-aloha-plugins="common/ui,
+						  common/block,
+						  extra/ribbon,
+						  common/format,
+						  common/highlighteditables,
+						  common/list,
+						  common/link,
+						  common/table,
+						  common/paste,
+						  common/contenthandler,
+						  common/commands,
+						  gcn/gcn-linkbrowser,
+						  gcn/gcn"></script>
+
+	<script type="text/javascript">
+	Aloha.ready(function () {
+        // Replace [Proxy] with the location of the proxy script
+        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/";
+
+		// use Aloha Editor's internal jQuery & expose it
+		window.$ = window.jQuery = window.Aloha.jQuery;
+
+        // and this is where your code goes
+	});
+	</script>
+</head>
+<body>
+	<h1 id="title">Basic Page</h1>
+	<div id="content">Basic Page Content :)</div>
+</body>
+</html>
+
+h3. Implementing frontend editing
+
+h4. Authenticate with the backend
+
+The first thing we want to do is to authenticate with the backend:
+
+<javascript>
+// authenticate with the backend
+GCN.login('[username]', '[password]', function (success, data) {
+	if (success) {
+		// authentication successful
+		alert('Hello, ' + data.user.firstName);
+	} else {
+		// error :(
+		alert('Error during login.');
+		return;
+	}
+});
+</javascript>
+
+Give this code a spin to see if authentication works for you.
+
+NOTE: In a production version of this code you want to use SSO or directly
+set a session id for the library, but to keep things simple we are
+using basic authentication with username and password for this example.
+
+h4. Fetch a page & start editing!
+
+The next step is about fetching the page from the server and starting to
+edit contents.
+
+<javascript>
+// authenticate with the backend
+GCN.login('[username]', '[password]', function (success, data) {
+	if (success) {
+		// load page with id 1 which is part of the demo package
+		GCN.page(1, function (page) {
+			// inside the page there is a tag namend "content"
+			// which will contain all contents
+			// using the .edit() method we will put those
+			// contents into our <div id="content"> and
+			// start editing with aloha right away!
+			page.tag('content').edit('#content');
+		});
+	} else {
+		// error :(
+		alert('Error during login.');
+		return;
+	}
+});
+</javascript>
+
+Paste this code into your page and witness the glory of frontend editing!
+
+h4. Saving your changes
+
+Frontend editing is fine but you also need to be able to save your changes.
+For this purpose we need to add a save button.
+
+<javascript>
+// authenticate with the backend
+GCN.login('[username]', '[password]', function (success, data) {
+	if (success) {
+		// load page with id 1 which is part of the demo package
+		GCN.page(1, function (page) {
+			// inside the page there is a tag namend "content"
+			// which will contain all contents
+			// using the .edit() method we will put those
+			// contents into our <div id="content"> and
+			// start editing with aloha right away!
+			page.tag('content').edit('#content');
+
+			// add a save button
+			$('body')
+				.append('<button id="save">save</button>')
+				.find('#save')
+				.click(function () {
+					// save the page
+					page.save();
+				});
+		});
+	} else {
+		// error :(
+		alert('Error during login.');
+		return;
+	}
+});
+</javascript>
+
+h3. Complete example
+
+Here's the full example in case things got tedious on the way :)
+
+NOTE: Remember this is just a basic implementation of frontend editing
+to get you started on the topic. For your production environment you
+want to add error handling and SSO.
+
+<html>
+<head>
+	<meta http-equiv="content-type"
+          content="text/html; charset=UTF-8">
+	<title>
+      Frontend Editing with Gentics CMS JavaScript API & Aloha Editor
+    </title>
+
+	<!-- Loads the Aloha Editor styles -->
+	<link rel="stylesheet"
+      href="/[Proxy]/latest/alohaeditor/css/aloha.css"
+      id="aloha-style-include"
+      type="text/css">
+
+    <!-- Configures the gcn-plugin-->
+    <script>
+    var alohaEditorContextPath = '/proxy-php';
+    var Aloha = {};
+
+	Aloha.settings = {
+		"plugins": {
+			"gcn": {
+				"links": "backend",
+				"webappPrefix": alohaEditorContextPath + "/",
+				"buildRootTimestamp": "latest",
+				"stag_prefix": alohaEditorContextPath + "/"
+			}
+		}
+	};
+    </script>
+
+	<!-- Loads Aloha Editor itself including some plugins -->
+	<script type="text/javascript"
+      src="/[Proxy]/latest/alohaeditor/lib/aloha.js"
+      data-aloha-plugins="common/ui,
+						  common/block,
+						  extra/ribbon,
+						  common/format,
+						  common/highlighteditables,
+						  common/list,
+						  common/link,
+						  common/table,
+						  common/paste,
+						  common/contenthandler,
+						  common/commands,
+						  gcn/gcn-linkbrowser,
+						  gcn/gcn"></script>
+
+	<script type="text/javascript">
+	Aloha.ready(function () {
+        // Replace [Proxy] with the location of the proxy script
+        GCN.settings.BACKEND_PATH = alohaEditorContextPath + "/";
+
+		// use Aloha Editor's internal jQuery & expose it
+		window.$ = window.jQuery = window.Aloha.jQuery;
+
+		// authenticate with the backend
+		GCN.login('[username]', '[password]', function (success, data) {
+			if (success) {
+				// load page with id 1 which is part of the demo package
+				GCN.page(1, function (page) {
+					// inside the page there is a tag namend "content"
+					// which will contain all contents
+					// using the .edit() method we will put those
+					// contents into our <div id="content"> and
+					// start editing with aloha right away!
+					page.tag('content').edit('#content');
+
+					// add a save button
+					$('body')
+						.append('<button id="save">save</button>')
+						.find('#save')
+						.click(function () {
+							// save the page
+							page.save();
+						});
+				});
+			} else {
+				// error :(
+				alert('Error during login.');
+				return;
+			}
+		});
+	});
+	</script>
+</head>
+<body>
+	<h1 id="title">Basic Page</h1>
+	<div id="content">Basic Page Content :)</div>
+</body>
+</html>

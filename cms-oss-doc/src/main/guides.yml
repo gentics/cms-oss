@@ -1,0 +1,241 @@
+title: Gentics CMS-OSS Documentation
+description: This documentation contains information useful for Gentics CMS implementors, developers and users. Due to extensive changes introduced with Gentics CMS 6.0 some parts of the guides are currently work in progress.
+
+authors:
+  Documentation Team:
+    - name: Norbert Pomaroli
+      nick: norps
+      description: Senior Developer @Gentics
+    - name: Clemens Prerovsky
+      nick: clemens
+      description: Former Head of Development @Gentics
+    - name: Petro Salema
+      nick: petro
+      description: Former Developer @Gentics
+    - name: Johannes Schüth
+      nick: Jotschi
+      description: Former Developer @Gentics
+    - name: Bernhard Kaszt
+      nick: berni
+      description: Former Developer @Gentics
+    - name: Andrea Schauerhuber
+      nick: Andi
+      description: Former Head of Gentics
+    - name: Patrick Klaffenböck
+      nick: pk
+      description: Senior Developer @Gentics
+
+index:
+  General:
+    - title: "Editor and Administration User Interfaces"
+      text: "Overview of Gentics CMS user interfaces"
+      url: userinterfaces
+    - title: "Features"
+      url: feature_overview
+      text: "Overview of Gentics CMS features"
+    - title: "System Requirements"
+      text: "Gentics CMS System Requirements."
+      url: faq_system_requirements
+    - title: "Compatibility List"
+      url: gcn_compatibility_list
+      text: "Contains a list of supported browsers, databases and drivers"
+    - title: "Changelog"
+      text: "The Gentics CMS Changelog (online version)"
+      ext-url: "http://www.gentics.com/Content.Node/changelog"
+    - title: "Downloads"
+      text: "Gentics CMS related downloads"
+      url: downloads
+    - title: "Support"
+      text: "Gentics CMS support related information"
+      url: support
+    - title: "Publishing"
+      text: "How the publish process works"
+      url: publish_process
+    - title: "Third party licenses"
+      text: "List of used licenses"
+      url: licenses
+
+  Administration:
+    - title: "Installing Gentics CMS"
+      url: admin_install
+      text: "Learn how to install Gentics CMS"
+    - title: "Email Sending"
+      url: email_sending
+      text: "Configuration settings for Email Sending capability"
+    - title: "Backup"
+      url: admin_backup
+      text: "Learn how to backup Gentics CMS"
+    - title: "CRSync"
+      url: admin_crsync
+      text: "Synchronizing Content Repositories with the CRSync"
+    - title: "Log Files"
+      url: admin_logs
+      text: "Learn where to find the log files of Gentics CMS"
+    - title: "Configure & control the Scheduler"
+      url: scheduler_api
+      text: "Configure & control the Scheduler including its API"
+    - title: "Monitoring"
+      url: "admin_jmx_monitoring"
+    - title: "ContentRepositories"
+      url: "admin_contentrepositories"
+    - title: Node specific settings
+      url: admin_node_settings
+      text: Explains how node specific settings can be configured and retrieved vir the REST API
+    - title: "Custom Tools"
+      url: "admin_custom_tools"
+      text: "Add custom tools to the new UI"
+    - title: "Custom Proxy"
+      url: "admin_custom_proxy"
+      text: "Forward calls to custom resources"
+    - title: "Docker"
+      url: "admin_docker"
+      text: "Running the CMS docker image"
+    - title: "Clustering"
+      text: "Information on the cluster support"
+      url: "admin_cluster"
+
+  Implementation:
+    - title: "Updating implementations"
+      url: update_tool
+      text: "Guide for safely updating implementations with the UpdateImplementation command-line tool"
+    - title: "Meta Attributes"
+      url: meta_attributes
+      text: "List of meta attributes that can be used in tagtypes and templates"
+    - title: "Part Types"
+      url: gcn_part_types
+      text: "List of all existing part types"
+    - title: "Using Velocity in Tagtypes"
+      url: impl_using_velocity
+      text: "Learn how to use velocity in Tagtypes"
+    - title: "GenticsImageStore"
+      url: feature_genticsimagestore
+      text: "Learn how to use the GenticsImageStore"
+    - title: "Page variants"
+      url: page_variants
+      text: "How page variants work"
+    - title: "SEO URLs"
+      url: seo_urls
+      text: "Generating SEO URLs"
+    - title: "GlobalIdSync Tool"
+      url:   "transport_globalidsync"
+      text:  "Tool for synchronizing global IDs between systems"
+
+  Authentication:
+    - title: "Authentication via REST API"
+      url: rest_auth
+      text: Describes possible authentication methods for the REST API
+    - title: "Keycloak"
+      url: auth_keycloak
+      text: How to authenticate Gentics CMS users using Keycloak
+
+  Fileupload:
+    - title: "File upload"
+      url: fileupload
+      text: "Explains the different file uploaders available"
+
+
+  Java API:
+    - title: "Java API JavaDoc"
+      ext-url: api-javadoc/index.html
+      text: Contains the Gentics CMS Java API Documentation
+
+  REST API:
+    - title: "General"
+      ext-url: rest_general.html
+      text: General information
+    - title: "API Documentation"
+      ext-url: restapi/index.html
+      text: Contains the REST API Documentation
+    - title: "API JavaDoc"
+      ext-url: restapi-javadoc/index.html
+      text: Contains the REST API JavaDoc
+    - title: "Authentication"
+      url: rest_auth
+      text: Describes possible authentication methods for the REST API
+    - title: "Java Client"
+      url: rest_java_client
+      text: Explains the functionality of the REST API Java Client
+    - title: "OpenAPI v.3.0 specification"
+      url: rest_openapi
+      text: Describes the details of the usage of OpenAPI specification files
+
+  Aloha Editor:
+    - title: "Integration with Gentics CMS"
+      url: aloha_gcn_overview
+      text: Explains how the Aloha Editor is integrated in Gentics CMS
+    - title: "Aloha Editor Migration Guide"
+      url: aloha_migration
+      text: Update your existing projects to use Aloha Editor
+    - title: "Integration Plugin"
+      url: aloha_gcn_integration_plugin
+      text: "Explains the configuration and features of the integration plugin"
+    - title: "Aloha Editor Page Link Tag"
+      url: aloha_gcn_alohapagelink
+      text: "How the Aloha Editor Page Link Tag should look like"
+    - title: "Aloha Editor Plugins"
+      url: aloha_gcn_plugins
+      text: "Explains how to load plugins and add new ones"
+    - title: "Aloha Editor Settings"
+      url: aloha_gcn_settings
+      text: "Explains how to set plugin configurations within the node.conf"
+    - title: "Persisting Aloha Editor plugin settings in pages"
+      url: aloha_persist_plugin_settings
+      text: "How to persist plugin settings in page object properties"
+    - title: "Repository Browser configuration"
+      url: aloha_gcn_repository_browser
+      text: "Configuration of several options for the Repository Browser"
+    - title: "Aloha Spellcheck Plugin"
+      url: aloha_spellcheck_plugin
+      text: "Explains the configuration of the spellcheck plugin"
+
+  Gentics CMS JavaScript API:
+    - title: "Overview"
+      url: gcn_js_api_overview
+      text: An overview of the Gentics CMS JavaScript API, and how to use it
+    - title: "API Documentation"
+      ext-url: gcnjsapi/jsdoc/index.html
+      text: Contains the API Documentation
+    - title: "Authentication"
+      url: gcn_js_api_auth
+      text: How authentication works
+    - title: "Frontend Editing"
+      url: gcn_js_api_fe
+      text: How to implement frontend editing from scratch
+    - title: "Pages"
+      url: gcn_js_api_page
+      text: How to work with pages
+    - title: "Tags"
+      url: gcn_js_api_tags
+      text: About Tags and Tag Containers
+    - title: "Folders"
+      url: gcn_js_api_folder
+      text: How to work with folders
+    - title: "Messages"
+      url: gcn_js_api_message
+      text: How to work with inbox messages
+    - title: "Nodes"
+      url: gcn_js_api_node
+      text: How to work with nodes
+    - title: "Files and Images"
+      url: gcn_js_api_filesandimages
+      text: How to work with files and images
+    - title: "Publish/Subscribe"
+      url: gcn_js_api_pubsub
+      text: How the message bus works
+    - title: "Publish/Subscribe Messages"
+      url: gcn_js_api_pubsub_messages
+      text: A list of all pub/sub message and how to use them
+
+  Devtools:
+    - title: "Overview"
+      url: devtools_overview
+      text: An overview of the Devtools
+    - title: "Configuration"
+      url: devtools_configuration
+      text: Configuration of the Devtools
+    - title: "Synchronization details"
+      url: devtools_synchronization
+      text: Details of the synchronization mechanism
+    - title: "UI"
+      url: devtools_ui
+      text: Short description of the devtools UI

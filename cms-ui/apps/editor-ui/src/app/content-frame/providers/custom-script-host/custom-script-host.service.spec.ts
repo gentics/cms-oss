@@ -297,3 +297,4 @@ class MockEntityResolver { }
 class MockI18nNotification { }
 class MockI18nService { }
 class MockErrorHandler { }
+class MockResourceUrlBuilder { }

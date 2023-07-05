@@ -6,7 +6,7 @@ JobContext.set(this)
 
 
 final def mavenRepositoryBase  = "https://repo.apa-it.at/artifactory"
-final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-"
+final def artifactoryUrlPrefix = mavenRepositoryBase + "/gtx-maven-releases-staging-cms-oss"
 final def gitCommitTag         = '[Jenkins | ' + env.JOB_BASE_NAME + ']';
 
 final def testDbManagerHost    = "gcn-testdb-manager.gtx-dev.svc"
@@ -181,7 +181,7 @@ spec:
                             echo 'Warning: The current branch name ' + branchName + ' does not match the patterns hotfix-* or release-*. Pushing to the default Artifactory repository'
                         }
 
-                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix + codeName)
+                        mvnArguments += (codeName == null ? "" : " -DaltDeploymentRepository=lan.releases.staging.gcn::default::" + artifactoryUrlPrefix)
                         mvnGoal = "deploy"
                     } else {
                         // for now, do not build modules in parallel

@@ -1,0 +1,66 @@
+h2. Publish Directory Segments
+
+This feature allows to define, how the publish directories of objects in folders are constructed.
+
+endprologue.
+
+h3. Configuration
+
+If you want to use this feature, you first have to enable it globally in your node.conf
+
+<shell filename="conf/features.yml">
+feature:
+	pub_dir_segment: true
+</shell>
+
+After the feature is activated, the properties dialog for nodes contain a new checkbox _Publish Directory Segments_.
+By checking it, the construction of publish directories can be switched from the default behaviour to the segmentation behaviour.
+
+h3. Default behaviour
+
+The default behaviour for publish directories is that each folder in the CMS has an individual path (e.g. +/+ or +/news/+ or +/home/products/cars/+).
+This means, that there is no coupling of the folder structure in the CMS to the structure of publish directories.
+
+* The path may be empty (+/+)
+* Folders may have the same publish path
+
+Example:
+
+|_. Folder                      |_. publish directory |
+| /Home                         | /                   |
+| /Home/Products                | /products/          |
+| /Home/Fancy Products          | /products/fancy/    |
+| /Home/Fancy Products/Boats    | /products/boats/    |
+| /Home/Fancy Products/Special  | /specialproducts/   |
+
+Will publish the pages like that:
+
+|_. Page                                |_. filename     |_. published as                 |
+| /Home/Products/Startpage              | index.html     | /products/index.html           |
+| /Home/Fancy Products/Boats/Speedboat  | speedboat.html | /products/boats/speedboat.html |
+| /Home/Fancy Products/Special/Supercar | supercar.html  | /specialproducts/supercar.html |
+
+h3. Segmentation behaviour
+
+The alternative construction of publish directories couples the structure of publish directories to the folder structure in the CMS.
+Each folder only defines a single segment of the complete path, which is constructed from the segments of the folder and all its parent folders.
+
+* The segment must not be empty
+* Segments must not contain /
+* Siblings must not have the same segment
+
+Example:
+
+|_. Folder                      |_. publish directory segment |
+| /Home                         | home                        |
+| /Home/Products                | products                    |
+| /Home/Fancy Products          | fancy                       |
+| /Home/Fancy Products/Boats    | boats                       |
+| /Home/Fancy Products/Special  | special                     |
+
+Will publish the pages like that:
+
+|_. Page                                |_. filename     |_. published as                    |
+| /Home/Products/Startpage              | index.html     | /home/products/index.html         |
+| /Home/Fancy Products/Boats/Speedboat  | speedboat.html | /home/fancy/boats/speedboat.html  |
+| /Home/Fancy Products/Special/Supercar | supercar.html  | /home/fancy/special/supercar.html |

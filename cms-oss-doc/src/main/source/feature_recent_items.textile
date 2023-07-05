@@ -1,0 +1,18 @@
+h2. Recent Items
+
+Allows the user to view a list of recently opened folders, pages, images, and files.
+
+endprologue.
+
+h3. Overview
+
+When enabled, shows a list of recently opened folders, pages, images, and files after clicking the corresponding button in the search bar of the editor UI.
+
+!{width:696px}images/gcmsui/feature_recent_items.png!
+
+h3. Configuration
+
+<shell filename="conf/features.yml">
+feature:
+	recent_items: true
+</shell>

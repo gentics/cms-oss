@@ -1,0 +1,208 @@
+h2. Syncing Content Repositories with the CRSync
+
+The CRSync allows you to synchronize various Content Repositories.
+It can be used as a command line tool or from the Scheduler.
+
+endprologue.
+
+h3. Basic Usage
+
+When using the CRSync with the Gentics Portal Connector from the
+command line or directly from Java, the Classpath needs to contain
+all required libraries. Additionally the corresponding JDBC-driver
+for your database has to be available. The CRSync resides at
+@com.gentics.api.portalnode.connector@.
+
+From the command line you want to use the following code to invoke
+the CRSync. This way you don't have to worry about setting a
+correct classpath, as our @java.sh@ script will take care.
+
+<shell>
+/cms$ java -cp cms-server.jar com.gentics.api.portalnode.connector.CRSync
+</shell>
+
+NOTE: Place the JDBC driver at @/cms/libs/@
+
+h4. File synchronization
+
+h5. MySQL
+
+For bigger files it's necessary to increase the MYSQL setting max_allowed_packet because binary conents are read and written from and to the database. This is necessary for the source- and the target system. The setting should be set to at least twice the size of the biggest file.
+
+h5. CRSync:
+
+You can influence the memory usage and the speed of the CRSync by changing the -batchsize parameter. If you have allot of files, it is advised to not set this setting above 50 in order to limit the memory usage. It is also important to start the CRSync with enough memory. In order to do that, you can use the JVM parameters "jmx" and "jms".
+When you are synchronizing allot of big files you should start the JVM at least with 1500 MB.
+
+h3. Parameters
+
+The CRSync is capable of handling the following parameters.
+
+<pre><code>
+ -allowempty                 allow empty source-repository.
+                             Without this flag the sync will fail when the source
+                             is empty, to prevent unintended deletions on
+                             productive environments.
+ -allowaltertable            allow structural changes (quick columns).
+                             Without this flag the sync will fail when the table
+                             structure differs.
+                             Note that the source database might be locked during
+                             altering the sql table structure. Also note that data
+                             might be lost when altering the target database due to
+                             structure incompatibilities.
+ -batchsize                  maximum number of objects sync'ed or deleted in a
+                             single step (default: 100).
+                             Reduce this number if the generated SQL statement
+                             become too large for the database. A higher value will
+                             speedup crsync but needs more memory. You will need at
+                             least enough memory to store your batchsize count of
+                             objects in memory. (You can exclude Text Long and
+                             Binary Content attributes sizes from your object size)
+ -datamodifier               specify a class that implements
+                             com.gentics.api.portalnode.connector.CRSyncModifier
+                             to modify objects before syncing
+ -delete                     when using a rule, remove all other data from target
+                             which do not match the given rule. Note that deleted
+                             source objects will always (with or without this flag)
+                             be removed from target when no rule is given, or the
+                             rule matches the objects.
+ -help                       help
+ -ignoreoptimized            ignore optimized flag for attributetypes.
+                             This allows different quick columns in source and
+                             target content repositories.
+ -rule                       rule to use for sync. Important note for usage with
+                             the delete flag: comparisons on columns with NULL
+                             values is not supported, when the delete flag is set.
+                             This is because negations on NULL values are not
+                             supported in most databases. So take care that all
+                             attributes used in the rule have values in the whole
+                             Content Repository, and none of them is NULL.
+ -sanitycheck2               enable extended sanity check for source and target
+                             repository. When an incompatibility is found in either
+                             the source or the target, the sync will fail.
+ -source                     source properties file OR use source_*
+                             arguments instead.
+ -source_driverClass         source datasource driverClass
+ -source_ds                  source datasource properties file
+ -source_passwd <password>   source datasource password
+ -source_url                 source datasource url
+ -source_username            source datasource username
+ -source_autorepair2         enable autorepair2 for the source database
+ -source_sanitycheck2        enable sanitycheck2 for the source database
+ -target                     target properties file OR use target_*
+                             arguments
+ -target_driverClass         target datasource driverClass
+ -target_ds                  target datasource properties file
+ -target_passwd <password>   target datasource password
+ -target_url                 target datasource url
+ -target_username            target datasource username
+ -target_autorepair2         enable autorepair2 for the target database
+ -target_sanitycheck2        enable sanitycheck2 for the target database
+ -test                       dry run and tell changes
+ -transaction                enable transaction for datasource, possible
+                             values: none (default), source, target, both.
+</code></pre>
+
+Here's a usage example call from the command line:
+
+<shell>
+/cms$ java -cp cms-server.jar com.gentics.api.portalnode.connector.CRSync \
+ 	-source source.properties \
+    -target_url jdbc:mariadb://localhost:3306/crsynctarget \
+    -target_driverClass org.mariadb.jdbc.Driver \
+    -target_username root \
+    -target_passwd secret \
+    -allowAlterTable \
+    -allowEmpty \
+    -delete
+</shell>
+
+NOTE: You maybe also need to configure SSL properties in the MySQL JDBC URL. Read the MySQL SSL documentation for more information.
+
+h4. Usage of @-source_ds@ and @-target_ds@
+
+The parameters @-source_ds@ and @-target_ds@ allow you to
+specify a @*.properties@ file with datasource properties. Available
+datasource properties are descriped in the
+"Gentics Portal.Node SDK Documentation":http://www.gentics.com/help/topic/com.gentics.portalnode.sdk.doc/misc/doc/reference/xhtml/ref-config-portalconfig.html#reference.configuration.portalconfig.datasource
+Here's an example properties file:
+
+<javascript filename="source.properties">
+# connection type
+type = jdbc
+# target URL
+url = jdbc:mariadb://dev6.office:33041/crsync_target
+# datasource driver
+driverClass = org.mariadb.jdbc.Driver
+# username and password
+username = root
+passwd = secret
+</javascript>
+
+h4. Using @-ignoreoptimized@
+
+When starting a synchronization process, first all attribute definitions
+are compared to find differences. @-ignoreoptimized@ changes this behaviour.
+On existing attributes the @optimized@ flag will not be updated. When new
+attributes have been created in the source Content Repository these will
+be created in the target Content Repository too, but without setting the
+optimized flag. However the CRSync will generate all optimized attributes
+in the ContentMap.
+
+If @-ignoreoptimized@ is switched off attributes in the target database will
+only be optimized if they have been optimized in the source. This aeffects
+attribute definitions as well as creating and filling quick columns.
+
+NOTE: The CRSync will intentionally fail with an error message if quick columns
+need to be created in the target database as long as you are not using the option
+@-allowaltertable@.
+
+h3. Common Problems
+
+h4. Handling @java.lang.OutOfMemory@ errors
+
+The CRSync will spawn a Java-process which will have to 64MB of RAM by default.
+Be sure to set an adequate memory limit. As a rule of thumb you should use three
+time the size of the biggest object to be synchronized, which will most likely be
+a video or an image. If you don't use LOB optimization for the datasource please
+multiply this value by the batchsize you set. The maximum filesize can be found
+by using the following SQL statement:
+
+<sql>
+SELECT filesize FROM contentfile ORDER BY filesize DESC LIMIT 1;
+</sql>
+
+h4. Handling @java.sql.SQLException: Out of memory@ errors
+
+In this case the database ran out of memory. Verify memory usage and change the
+database configuration accordingly.
+
+h4. Out-Dated Content Repository Structures
+
+Many problems are caused by trying to sync to out-dated Content Repository structures.
+Make sure that all Content Repository structures are up to date by using the check
+and repair features from the backend.
+
+h3. Logging
+
+The CRSync will rely on @log4j@ for logging. Use the parameter @log4j.configuration@
+to configure logging:
+
+<shell>
+/cms$ java -cp cms-server.jar
+-Dlog4j.configuration=file:/cms/conf/sync.properties \
+com.gentics.api.portalnode.connector.CRSync
+</shell>
+
+Use the following example for @/cms/conf/sync.properties@ to log to
+@/cms/logs/crsync.log@.
+
+<shell filename="/cms/conf/sync.properties">
+log4j.rootLogger=ERROR,A1
+log4j.logger.com.gentics.api.portalnode.connector.CRSync=INFO
+log4j.logger.com.gentics.api.portalnode.connector.CRSyncProgress=INFO
+log4j.appender.A1=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.A1.File=/cms/logs/crsync.log
+log4j.appender.A1.layout=org.apache.log4j.PatternLayout
+log4j.appender.A1.layout.ConversionPattern=%d [%t] %-5p %c - %m%n
+</shell>

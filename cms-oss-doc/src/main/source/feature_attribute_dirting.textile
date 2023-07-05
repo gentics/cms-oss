@@ -1,0 +1,37 @@
+h2. Attribute Dirting
+
+This Feature activates attribute specific dirting and publishing of objects into Content Repositories.
+This can help to reduce publish times.
+
+endprologue.
+
+h3. Configuration
+
+The feature can be activated with the following setting:
+
+<shell filename="conf/features.yml">
+feature:
+  attribute_dirting: true
+</shell>
+
+h3. Dependency Dirting
+
+When objects are dirted due to changed dependencies, only the attributes of the objects, that acually use the changed dependency will
+be dirted and republished.
+
+bq. Example: A page is published into a Content Repository with attributes @content@ and @url@.
+The attribute @url@ has a dependeny on the folder's @pub_dir@, while @content@ has not. After the
+folder's @pub_dir@ is changed, the attribute @url@ of the dependent page is dirted and republished, but not the attribute @content@.
+
+h3. Dirting with the Maintenance Dialog
+
+When objects are dirted using the maintenance dialog, the feature activates an additional textbox, where the attributes to be dirted
+can be entered as comma separated list.
+
+h3. Publishing
+
+* The publish process will only render dirted attributes (which is generally faster than rendering all attributes).
+* Configured publish handlers will get Resolvable instances with only the dirted attributes filled.
+If publish handlers access other attributes they will be fetched from the content repository and set to the object as well (with their old values).
+* When writing objects into Content Repositories only the dirted attributes (and the attributes accessed in publish handlers) will be considered. All other
+attributes of the objects in the Content Repository will be left untouched.

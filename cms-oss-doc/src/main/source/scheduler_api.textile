@@ -1,0 +1,111 @@
+h2. Scheduler
+
+Configure & control the Scheduler
+
+endprologue.
+
+The scheduler is automatically started with Gentics CMS, no further configuration is necessary besides creating tasks and schedules in the admin UI.
+
+h3. Scheduler REST API
+
+The status of the scheduler itself as well as tasks, schedules and executions can be queried and modified via the REST API. For further details see the documentation for the  "scheduler resource":https://www.gentics.com/Content.Node/guides/restapi/resource_SchedulerResource.html.
+
+h3. Scheduler email Notification
+
+In case of errors the Scheduler is able to send notification mails. Use the array @scheduler_job_failure_email@ to configure notifications.
+
+NOTE: The Scheduler will send notification emails whenever a command that has been executed returns any other exit status than 0.
+
+See "eMail Sending with Gentics CMS":https://gentics.com/Content.Node/guides/email_sending.html for the necessary configuration items for sending emails.
+
+<shell filename="conf/*.yml">
+scheduler_job_failure:
+  # Additional recipient address to send a notification to besides the ones listed in the corresponding schedule.
+  to: 'admin@emailaddress.com'
+  # The sender address.
+  from: 'root@myserver.com'
+  # The email subject.
+  subject: 'Scheduler execution failed: #name# (#id#)'
+  # Whether the email body is HTML text (defaults to false).
+  is_html: false
+  # The email body.
+  body: |
+    "Scheduler Run Failed '#name#' (#id#)
+    Command: #cmd#
+    ReturnValue: #returnvalue#
+    StartTime: #starttime#
+    EndTime: #endtime#
+    Output:
+    #output#"
+</shell>
+
+In @"subject"@ and @"body"@ the following placeholders will be replaced with actual data from the schedule and its execution:
+
+|_. Tag |_. Description |
+| #name# | name of the schedule |
+| #id# | id of the schedule |
+| #cmd# | command that has been invoked |
+| #returnvalue# | return value |
+| #output# | output of the command |
+| #starttime# | time the shell script was started |
+| #endtime# | time the shell script finished |
+
+h3. Internal scheduler tasks
+
+The following internal tasks are always available, and do not require a shell script to execute.
+
+h4. @purgelogs@
+
+Will remove old log entries from the system. The following data will be purged:
+
+* User activities
+* Error messages and warnings
+* Scheduler task information
+
+The setting @cn_keeplogs@ allows you to define, when data will be deleted:
+
+<shell filename="conf/*.yml">
+# delete logs older than 12 months (default value)
+cn_keeplogs: 12
+</shell>
+
+h4. @purgeversions@
+
+The command @purgeversions@ will delete page versions older than @cn_versionage@ months.
+
+<shell filename="conf/*.yml">
+# delete page versions older than 12 months (default value)
+cn_versionage: 12
+</shell>
+
+h4. @purgemessages@
+
+The command @purgemessages@ will delete inbox messages older than @keep_inbox_messages@ months.
+
+<shell filename="conf/*.yml">
+# delete inbox messages older than 12 months (default value)
+keep_inbox_messages: 12
+</shell>
+
+h4. @purgewastebin@
+
+The command @purgewastebin@ will remove objects from the wastebin if either
+
+* they reach the maximum age in the wastebin, or
+* the wastebin feature has been turned off again.
+
+The maximum age in the wastebin can be configured globally or per node:
+
+<shell filename="conf/*.yml">
+wastebin_maxage: 604800 # 7 * 24 * 60 * 60 = 7 days (in seconds)
+wastebin_maxage:
+  "1": 60 # objects in node with ID 1 last only 60 seconds
+</shell>
+
+h4. @linkchecker@
+
+This task will execute the link checker. The configuration options are described in the "Link Checker Feature Documentation":https://www.gentics.com/Content.Node/cmp8/guides/feature_link_checker.html#additional-configuration.
+
+h4. @publish@
+
+This task will start a publish run.

@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
@@ -494,7 +495,7 @@ public class ConstructResourceTest {
 		// deletion
 		GenericResponse deleted = supply(() -> new ConstructResourceImpl().delete(response.getConstruct().getId().toString()));
 		assertResponseCodeOk(deleted);
-		
+
 		// check the list contents
 		constructList = supply(() -> new ConstructResourceImpl().list(new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean(), new ConstructParameterBean(), null, null));
 		assertResponseCodeOk(constructList);
@@ -699,6 +700,59 @@ public class ConstructResourceTest {
 	}
 
 	@Test
+	public void testUpdateCategorySortOrder() throws NodeException {
+		operate(() -> setPermissions(
+			com.gentics.contentnode.object.ConstructCategory.TYPE_CONSTRUCT_CATEGORY,
+			Arrays.asList(group),
+			new PermHandler.Permission(PermHandler.PERM_VIEW, PermHandler.PERM_CONSTRUCT_UPDATE).toString()));
+
+		List<String> categoryIds = new ArrayList<>();
+
+		for (int ii = 0; ii < 5; ii++) {
+			ConstructCategoryLoadResponse response = createRandomConstructCategory();
+
+			categoryIds.add(response.getConstructCategory().getId().toString());
+		}
+
+		Collections.reverse(categoryIds);
+
+		IdSetRequest sortRequest = new IdSetRequest();
+
+		sortRequest.setIds(categoryIds);
+
+		ConstructResourceImpl resource = new ConstructResourceImpl();
+		ConstructCategoryListResponse sorted = resource.sortCategories(sortRequest);
+
+		assertResponseCodeOk(sorted);
+		assertThat(sorted.getItems().stream().map(category -> category.getId().toString()).collect(Collectors.toList()))
+			.as("Sorted construct categories")
+			.containsExactlyElementsOf(categoryIds);
+
+		ConstructCategoryListResponse sortedList = resource.listCategories(
+			new SortParameterBean().setSort("+sortorder"),
+			new FilterParameterBean(),
+			new PagingParameterBean(),
+			new EmbedParameterBean());
+
+		assertThat(sortedList.getItems().stream().map(category -> category.getId().toString()).collect(Collectors.toList()))
+			.as("Sorted construct categories listing")
+			.containsExactlyElementsOf(categoryIds);
+
+		Collections.reverse(categoryIds);
+
+		ConstructCategoryListResponse reverseSortedList = resource.listCategories(
+			new SortParameterBean().setSort("-sortorder"),
+			new FilterParameterBean(),
+			new PagingParameterBean(),
+			new EmbedParameterBean());
+
+		assertThat(reverseSortedList.getItems().stream().map(category -> category.getId().toString()).collect(Collectors.toList()))
+			.as("Unsorted construct categories listing")
+			.containsExactlyElementsOf(categoryIds);
+
+	}
+
+	@Test
 	public void testLinkUnlink() throws NodeException {
 		ConstructLoadResponse response = createRandomConstruct(node1);
 		com.gentics.contentnode.rest.model.Construct construct = response.getConstruct();
@@ -734,7 +788,7 @@ public class ConstructResourceTest {
 			}
 		});
 		assertResponseCodeOk(c2list);
-		
+
 		assertThat(c1list.getItems())
 			.as("Node 1 construct IDs").usingElementComparatorOnFields("id").contains(construct);
 		assertThat(c2list.getItems())
@@ -768,7 +822,7 @@ public class ConstructResourceTest {
 			}
 		});
 		assertResponseCodeOk(c2list);
-		
+
 		assertThat(c1list.getItems())
 			.as("Node 1 construct IDs").usingElementComparatorOnFields("id").doesNotContain(construct);
 		assertThat(c2list.getItems())
@@ -1051,14 +1105,14 @@ public class ConstructResourceTest {
 			PagedConstructListResponse nodeConstruct = loadNodeConstructs(node);
 			assertThat(nodeConstruct.getItems()).as("Node constructs").usingElementComparator((a, b) -> a.getId().compareTo(b.getId())).contains(response.getConstruct());
 		}
-		
+
 		return response;
 	}
 
 	protected PagedConstructListResponse loadNodeConstructs(Node node) throws NodeException {
 		return supply(() -> {
 			try {
-				return new NodeResourceImpl().getConstructs(Integer.toString(node.getId()), 
+				return new NodeResourceImpl().getConstructs(Integer.toString(node.getId()),
 						new FilterParameterBean(),
 						new SortParameterBean(), new PagingParameterBean(), new PermsParameterBean());
 			} catch (Exception e) {

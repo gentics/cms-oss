@@ -1,0 +1,44 @@
+h2. Page variants
+
+How they work.
+
+endprologue.
+
+h3. Overview
+
+Page variants allow pages to be managed centrally in different variants. If a certain content is changed 
+on a page, the change will be made to all page variants created from this page.
+
+In order to create a variant of a page, proceed as follows: 
+
+Select [New -> Page variant] in the menu. 
+
+In the dialog window, select the page of which you wish to create a variant. 
+Select a template for the new page and confirm with [OK].
+
+*Example:* If you wish to publish e.g. an alternative version of a page without images, create a page 
+variant of this page based on a "Text only template". The advantage compared with a copy of the 
+page is as follows: If you change the text on the original page, the text change will be automatically
+carried out also on the page variant. This means that the two pages are linked in the system whereas 
+a copy of a page is handled like a new, independent page by the system. 
+Note: Tags that exist only in the template and cannot be changed in the page proper and not 
+adopted in new page variants. 
+
+h3. Possible applications of page variants
+
+Page variants are particularly suitable for different output forms of pages. If you provide e.g. optimized 
+pages for PDAs on your website, create a template to meet the requirements and then assign this to 
+the page variants. You can have pages in different layouts whose contents you only have to manage 
+once. 
+
+h3. How can page variants be created in several folders?
+
+Page variants of one page can be created in several folders. The action menu 
+contains a new item that offers this option. 
+The name, status and template for the original page are thereby adopted.
+
+h3. Page Status
+
+When a page is edited, all pages that are sharing the same content (the page and all its variants) will be automatically locked.
+However, this has no affect on the page status of the other variants, as the status is not shared amongst the various and will only be set to
+"Being edited" on the pages being edited. After unlocking the edited page (publish, save, ...) you will see that the status of the other page variants hasn't changed. New content will be published automatically for all page variants, if the variant is set to the "publish" page status.

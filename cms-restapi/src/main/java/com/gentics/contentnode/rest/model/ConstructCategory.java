@@ -22,6 +22,7 @@ public class ConstructCategory {
 	/**
 	 * Global ID
 	 */
+
 	private String globalId;
 
 	/**
@@ -33,6 +34,11 @@ public class ConstructCategory {
 	 * Language-name pairs
 	 */
 	private Map<String, String> nameI18n;
+
+	/**
+	 * Sort order.
+	 */
+	private Integer sortOrder;
 
 	public ConstructCategory() {}
 
@@ -46,7 +52,7 @@ public class ConstructCategory {
 
 	/**
 	 * Name of this construct category
-	 * 
+	 *
 	 * @return
 	 */
 	public String getName() {
@@ -55,7 +61,7 @@ public class ConstructCategory {
 
 	/**
 	 * Sets the name of this construct category
-	 * 
+	 *
 	 * @param name
 	 */
 	public void setName(String name) {
@@ -64,7 +70,7 @@ public class ConstructCategory {
 
 	/**
 	 * Adds the construct with the given name to the map of constructs of this category
-	 * 
+	 *
 	 * @param name
 	 * @param construct
 	 */
@@ -74,7 +80,7 @@ public class ConstructCategory {
 
 	/**
 	 * Map of constructs for this category
-	 * 
+	 *
 	 * @return
 	 */
 	public Map<String, Construct> getConstructs() {
@@ -83,7 +89,7 @@ public class ConstructCategory {
 
 	/**
 	 * Sets the map with constructs for this category
-	 * 
+	 *
 	 * @param constructs
 	 */
 	public void setConstructs(Map<String, Construct> constructs) {
@@ -140,6 +146,16 @@ public class ConstructCategory {
 			this.nameI18n = new HashMap<>();
 		}
 		this.nameI18n.put(language, name);
+		return this;
+	}
+
+	public Integer getSortOrder() {
+		return sortOrder;
+	}
+
+	public ConstructCategory setSortOrder(Integer sortOrder) {
+		this.sortOrder = sortOrder;
+
 		return this;
 	}
 }

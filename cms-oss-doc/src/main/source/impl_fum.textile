@@ -1,0 +1,169 @@
+h2. File Upload Manipulator
+
+A File Upload Manipulator enables you to modify files, right after an editor finished the upload.
+
+endprologue.
+
+h3. Mode of Operation
+
+WARNING: The File Upload Manipulator will only be invoked for manual uploads that are passed through the backend. This will also apply for proxied uploads that are performed using frontend editing. Uploading files via Pageimport or any other means will *NOT* trigger the File Upload Manipulator.
+
+As soon as the upload is finished Gentics CMS will
+send a POST Request to the File Upload Manipulator
+structured as "described here":#request.
+
+The File Upload Manipulator is then expected to
+process the file and return a status code:
+
+|_. Status Code |_. Description |
+| ACCEPTED | File is available for saving |
+| DENIED | File must not be saved (a virus was found etc.) |
+| POSTPONED | Processing the file will take some time. The File
+Upload Manipulator will issue a HTTP POST request to the
+@postponeurl@ when manipulation is completed. Meanwhile the
+original file is being saved to the CMS and available to be used
+by editors. |
+
+h3. Configuration
+
+<javascript filename="conf/*.yml">
+# The URL where the File Upload Manipulator can be found
+fileupload_manipulator_url: "http://localhost/manipulator.php"
+
+# Options for the HTTP socket.
+# If you set the timeouts too low, the FUM HTTP request can fail.
+fileupload_manipulator_socketoptions:
+  # Time in ms to wait for new data, if this time elapses
+  # and no data was received, the FUM and the
+  # fileupload will fail.
+  socketTimeout: 15000
+  # Timeout in ms to establish a HTTP connection to the FUM.
+  connectionTimeout: 5000
+  # Max number of attempts to establish a connection to the FUM.
+  connectionRetry: 3
+
+# URLs from where the File Upload Manipulator may access
+# Gentics CMS.
+fileupload_manipulator_accept_host:
+  - "127.0.0.1"
+</javascript>
+
+h3. Protocol Description
+
+The protocol relies on JSON requests.
+
+h4. Request
+
+The request to the file Upload Manipulator will contain the following parameters:
+
+|_. Parameter      |_. Description |
+| id               | temporary file name |
+| fileid           | internal file id of Gentics CMS |
+| filename         | Name of the file |
+| mimetype         | The file's mime type |
+| url              | URL where the file can be fetched from |
+| postponeurl      | postback url in case the file takes longer to process |
+| lang             | Language of the user |
+| folder           | Oject that contains information about the folder where
+the file was uploaded to, with the following attributes: "id", "name",
+"nodeid". If the node is a channel, "nodeid" will be the channel ID.
+If the folder is localized, "id" will be the ID of the localized
+version of the folder |
+| user             | User uploading the file |
+| user.id          | ID of the user          |
+| user.firstName   | User's first name |
+| user.lastName    | User's last name |
+| user.description | User's description |
+| user.email       | User's email address |
+
+This is an example request to the File Upload Manipulator right after a
+file has been uploaded.
+
+<javascript>
+{
+	"id":"\/home\/Node\/tmp\/fum2w0USX",
+	"fileid":5099,
+	"filename":"eicar.com",
+	"mimetype":"application\/octet-stream",
+	"url":"http:\/\/localhost\/.Node\/?do=15008&cmd=fetch&filename=fum2w0USX",
+	"postponeurl":"http:\/\/localhost\/.Node\/?do=15008&cmd=postponedone&filename=fum2w0USX",
+	"lang":"de",
+	"folder": {
+		"id":56,
+		"name":"test folder",
+		"nodeid":3
+	},
+	"user": {
+		"id": 4711,
+		"firstName": "John",
+		"lastName": "Doe",
+		"description": "Testuser",
+		"email": "john.doe@somewhere.com"
+	}
+}
+</javascript>
+
+h4. Response
+
+The File Upload Manipulator is expected to generate a JSON response which contains the following parameters:
+
+|_. Parameter |_. Description |
+| *status (required)* | May be one of: *ACCEPTED* (file was accepted and found to need no further modification),
+*DENIED* (file was rejected - eg. may contain a virus) or
+*POSTPONED* (file we be replaced after further processing by using the postback URL) |
+| msg | Will be used as user feedback for status DENIED |
+| filename | the file will be renamed |
+| mimetype | the files mimetype will be changed to this |
+| url | When provided, Gentics CMS will use this to download binary contents for the file |
+
+h4. Postpone Request
+
+If the File Upload Manipulator delivered *POSTPONED* as a status, it can POST
+a request to *postponeurl* that is structured like its first response (see "Response":#response).
+If the File Upload Manipulator sends a postponed response, please make sure, that the implementation
+will copy the temporary file in the url first.
+This is because the temporary file will be deleted after one day, if no response like *ACCEPTED* or  *DENIED* is returned.
+
+h4. Simple Implementation Example
+
+<javascript>
+<?php
+// A Very simple 'File Upload Manipulator' which will check all uploaded files
+// for viruses using the linux virus scanner 'ClamAV' (command 'clamscan'
+// has to be in the PATH)
+
+// read in JSON formatted data ..
+$data = file_get_contents('php://input');
+$req = json_decode($data);
+
+// create a temporary file
+$tmp = tempnam('/Node/tmp', 'clamav');
+// download file from the URL ..
+copy($req->{'url'}, $tmp);
+
+$output = array();
+$exitcode = 0;
+// execute virus scan ..
+exec('clamscan '.$tmp, $output, $exitcode);
+
+// delete temporary file
+unlink($tmp);
+
+$status = 'ACCEPTED';
+$msg = '';
+
+// If exitcode != 0 a virus was detected by clam av
+if( $exitcode > 0) {
+  $status = 'DENIED';
+  // Depending on the User's language return the right error message.
+  if ($req->{'lang'} == 'de') {
+    $msg = 'Es wurde ein Virus in dieser Datei gefunden.';
+  } else {
+    $msg = 'A Virus was detected while scanning the file.';
+  }
+}
+
+echo json_encode(array('status' => $status, 'msg' => $msg));
+?>
+</javascript>
+

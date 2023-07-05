@@ -19,6 +19,7 @@ import com.gentics.contentnode.rest.model.Construct;
 import com.gentics.contentnode.rest.model.ConstructCategory;
 import com.gentics.contentnode.rest.model.request.BulkLinkUpdateRequest;
 import com.gentics.contentnode.rest.model.request.ConstructSortAttribute;
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.SortOrder;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryListResponse;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryLoadResponse;
@@ -68,7 +69,7 @@ public interface ConstructResource {
 	) throws Exception;
 
 	/**
-	 * Load the insertable construct and it's categories for a given constructId 
+	 * Load the insertable construct and it's categories for a given constructId
 	 * @param id construct ID
 	 * @param embed optionally embed the referenced objects (category)
 	 * @return response containing the construct
@@ -273,6 +274,13 @@ public interface ConstructResource {
 	ConstructCategoryListResponse listCategories(@BeanParam SortParameterBean sorting, @BeanParam FilterParameterBean filter,
 			@BeanParam PagingParameterBean paging, @BeanParam EmbedParameterBean embed) throws Exception;
 
+	@POST
+	@Path("/category/sortorder")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Sortorder of construct categories has been set.")
+	})
+	ConstructCategoryListResponse sortCategories(IdSetRequest categoryOrder) throws Exception;
+
 	/**
 	 * Link a set of constructs to the selected nodes
 	 * @param request POST body with source + target IDs
@@ -307,7 +315,7 @@ public interface ConstructResource {
 
 	/**
 	 * Return a list of nodes, linked to the the given Construct
-	 * 
+	 *
 	 * @param constructId
 	 * @return
 	 * @throws Exception

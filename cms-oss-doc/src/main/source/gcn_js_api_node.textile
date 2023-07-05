@@ -1,0 +1,67 @@
+h2. Node
+
+Working with nodes
+
+endprologue.
+
+h3. Load properties 
+
+Load properties from a node
+
+* +NodeAPI.prop()+ 
+
+The prop method can be used to retrieve various properties of a node. Saving of properties is currently not supported and will result in an error.
+
+<javascript>
+	GCN.node(1, function (node) {
+			var defaultFileUploadFolderId = uploadnode.prop('defaultFileFolderId');
+			var hostname = node.prop('host');
+	});
+</javascript>
+
+h3. Retrieving of constructs
+
+Retrieving of constructs that are assigned to given node
+
+* +NodeAPI.constructs()+ 
+
+<javascript>
+	GCN.node(1, function (node) {
+		node.constructs(function (constructs) {
+			console.dir(constructs);
+		});
+	});
+</javascript>
+
+h3. Retrieving of construct categories
+
+* +NodeAPI.constructCategories()+
+
+<javascript>
+	GCN.node(1, function (node) {
+		node.constructCategories(function (constructCategories) {
+			// Prints the object with an key-value pairs of construct categories.
+			console.dir(constructCategories.categories);
+			
+			// The constructCategories field contains an sorted array with category names.
+			console.dir(constructCategories.categorySortorder);
+		});
+	});
+</javascript>
+
+h3. Removal of nodes
+
+* +NodeAPI.remove()+
+
+NOTE: Not yet implemented.
+
+
+h3. Saving of node properties
+
+* +NodeAPI.save()+ 
+
+NOTE: Not yet implemented.
+
+----
+
+

@@ -1,0 +1,53 @@
+h2. Monitoring with JMX
+
+The CMS Server can expose attributes from JMX beans over http in JSON format for monitoring purposes.
+
+endprologue.
+
+h3. Configuration
+
+h4. Access Control
+
+By default, accessing the monitoring data is secured and is only possible from localhost.
+
+<shell filename="conf/*.yml">
+config:
+  accesscontrol:
+    jmx:
+      secured: true
+      allowedfrom: "127.0.0.1, ::1"
+</shell>
+
+|_. Property name               |_. Description |
+| accesscontrol.jmx.secured     | true to secure access, false to disable security     |
+| accesscontrol.jmx.allowedfrom | list of IP addresses that can access monitoring data |
+
+WARNING: Generally, it is not recommended to disable security for the monitoring data.
+
+h4. JMX Beans
+
+The exposed JMX beans can be defined in the configuration files (the following list contains the beans, that are exposed by default):
+
+<shell filename="conf/*.yml">
+jmx:
+  'java.lang:type=Memory':
+    - HeapMemoryUsage
+    - NonHeapMemoryUsage
+    - ObjectPendingFinalizationCount
+  'java.lang:type=Threading': "*"
+  'java.lang:type=OperatingSystem': "*"
+  'com.gentics.contentnode.mbeans:type=Publish,name=PublisherInfo': "*"
+  'com.gentics.contentnode.mbeans:type=System,name=SessionInfo': "*"
+  'com.gentics.contentnode.mbeans:type=System,name=TrxInfo': "*"
+  'Catalina:type=GlobalRequestProcessor,name="ajp-nio-8009"': "*"
+  'Catalina:type=Manager,host=localhost,context=/': "*"
+  'org.glassfish.jersey:type=GCMS,subType=Global,executionTimes=AllRequestTimes': "*"
+</shell>
+
+The key must be the full name of the JMX bean, the value may be an array of exposed attributes, or +"*"+ to expose all attributes.
+
+h3. Accessing JMX beans
+
+The exposed JMX beans can be accessed over an http GET request to +http://[hostname]/jmx+.
+
+The response will contain the monitoring data in JSON format.

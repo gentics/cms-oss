@@ -9,7 +9,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-oss-server</artifactId>
 
 	<packaging>jar</packaging>
@@ -56,7 +56,7 @@
 							<artifactItems>
 								<!-- Aloha Editor Bundle -->
 								<artifactItem>
-									<groupId>com.gentics.cms</groupId>
+									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>cms-aloha-bundle</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
@@ -67,7 +67,7 @@
 
 								<!-- JS Lib -->
 								<artifactItem>
-									<groupId>com.gentics.cms</groupId>
+									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>cms-js-lib</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
@@ -78,7 +78,7 @@
 
 								<!-- Editor UI -->
 								<artifactItem>
-									<groupId>com.gentics.cms</groupId>
+									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>editor-ui</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
@@ -88,7 +88,7 @@
 
 								<!-- Admin UI -->
 								<artifactItem>
-									<groupId>com.gentics.cms</groupId>
+									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>admin-ui</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
@@ -160,7 +160,7 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
@@ -194,30 +194,30 @@
 
 		<!-- Internal Dependencies -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-cache</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-js-lib</artifactId>
 			<type>zip</type>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-aloha-bundle</artifactId>
 			<type>zip</type>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>admin-ui</artifactId>
 			<type>zip</type>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>editor-ui</artifactId>
 			<type>zip</type>
 		</dependency>
@@ -278,7 +278,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-core</artifactId>
 			<type>test-jar</type>
 			<scope>test</scope>

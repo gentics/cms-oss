@@ -1,0 +1,272 @@
+h2. Gentics CMS REST API Java Client
+
+This client facilitates access to the services provided by the Gentics CMS REST API.
+
+It provides helpers for initialization and authentication, as well as exception handling,
+while allowing the user to build complex requests by providing direct access to the
+resource-object of the underlying Jersey Client.
+
+The following document describes the Java client's functionality and provides examples for various common
+use cases.
+
+endprologue.
+
+h3. Maven dependency
+
+The Client can easily be included in any maven project by adding the following dependency:
+
+<javascript filename="pom.xml">
+<dependency>
+	<groupId>com.gentics</groupId>
+	<artifactId>contentnode-restapi</artifactId>
+	<version>[Gentics CMS Version]</version>
+</dependency>
+</javascript>
+
+The +[Gentics CMS Version]+ must exactly match the Gentics CMS Version used on the Server.
+The artifact can be downloaded from the "Gentics Maven Repository":https://maven.gentics.com/.
+
+h3. Using the client
+
+In this guide, the relevant methods of the client are explained and their usage is demonstrated
+with a number of examplary code snippets.
+
+h4. Initialization
+
+The REST API Java Client is part of Gentics CMS and is delivered with the Gentics CMS Shared Libraries.
+It can be used in Java by importing +com.gentics.contentnode.rest.api.client.RestClient+ and is
+initialized by specifying the URI pointing to the base-location of the RESTful service provider.
+
+<javascript>
+RestClient client = new RestClient("http:/[host]/rest/");
+</javascript>
+
+h4. Login
+
+Once the client is initialized, logging into the system works with the following command:
+
+<javascript>
+client.login("myLogin", "myPassword");
+</javascript>
+
+If the login was successful, the necessary cookies are set and the session-ID of the active user
+is stored inside the client and is used for any further requests.
+
+NOTE: Setting the Java client up to work with *single sign-on* requires some additional steps.
+The client's +getJerseyClient()+-method allows a low-level access to the underlying Jersey Client API.
+With this it is possible to define custom filters and add necessary cookies. When the authentication was
+successful, login to the Java client is finished with +client.ssologin()+.
+
+NOTE: When using Rest Clients with the bugfix _SUP-5519_ it is now possible to use multiple logged in clients at once, but
+it is important to note, that this only works, if *no default CookieHandler* has been set.
+
+h4. Version Check
+
+After successfully logging into the system, it is advised to check if the client uses the same version
+of the REST API as is deployed on the server. This is achieved by the client's +assertMatchingVersion+ method.
+Checking for matching versions works as a precaution against problems caused by mismatched interfaces.
+If versions differ, a +RestException+ is thrown by the helper.
+
+<javascript>
+client.assertMatchingVersion();
+</javascript>
+
+h4. Assembling a request
+
+With a call to the client's +base()+, a reference to a Jersey +WebResource+
+is retrieved that can be used as the basis for assembling requests. For information on available
+resources, as well as their corresponding request- and response-objects, see the documentation on
+the "REST API":https://www.gentics.com/Content.Node/guides/restapi/index.html.
+
+NOTE: With the call to the base(), the client effectively relinquishes control to the WebResource.
+Subsequent calls in the chain therefore are not part of this client; detailed information on how to build
+requests with Jersey can be found in the "Jersey Client API":http://jersey.java.net/nonav/documentation/latest/client-api.html.
+
+The method supports chaining, and allows building requests in the following way:
+
+<javascript>
+PageLoadResponse loadResponse = client.base()
+	.path("page")
+	.path("load")
+	.path(myPageId)
+	.request()
+	.get(PageLoadResponse.class);
+</javascript>
+
+By passing the class of the expected +Response+-object, it is possible to assemble requests
+in a generic way.
+
+If a post-request needs data to be sent to the server, this data is stored inside the
+appropriate +Request+-object, and can be attached to the +base+ as an +entity+:
+
+<javascript>
+FolderCreateRequest createRequest = new FolderCreateRequest();
+createRequest.setMotherId(motherId);
+createRequest.setName(folderName);
+
+FolderLoadResponse createResponse = client.base()
+	.path("folder")
+	.path("create")
+	.request()
+	.post(Entity.json(createRequest), FolderLoadResponse.class)
+</javascript>
+
+NOTE: Whenever posting objects as entities, it is strongly recommended to enforce encoding the post body as JSON
+(by explicitly adding MediaType.APPLICATION_JSON_TYPE to the +entity()+ call as seen in the example above.
+
+h4. Checking the response code
+
+Another convenience-method provided by the client is +assertResponse+. After a request was
+sent to the server, this allows to check if it was processed successfully. In that case,
+the assertion passes silently. If, however, a problem has occurred, an error-message
+is thrown. (see "Exceptions":rest_java_client.html#exceptions)
+
+<javascript>
+try {
+	assertResponse(anyResponse);
+} catch(RestException e) {
+	//handle exception
+}
+</javascript>
+
+h4. Processing a response
+
+All data that was returned by the REST service is stored inside the +Response+-object and can
+be accessed with basic Java setters and getters. This includes both general response information
+and specific data objects corresponding to the items listed in the
+"Data Model":http://www.gentics.com/Content.Node/guides/restapi/model.html.
+
+h4. Logout
+
+Logout is simple. With the following call to the server, the active session is ended:
+
+<javascript>
+client.logout();
+</javascript>
+
+h3. Exceptions
+
+Every response from the server providing the RESTful services contains a response code. If this
+code does not equal +OK+, an error has occurred while processing the request. If that happens,
+the helper-methods of the client throw one of several subtypes of a +RestException+.
+
+These exceptions depend on the response-code - possible thrown exceptions therefore are:
+
+|_.Exception|_.Response Code|_.Explanation|
+|InvalidDataRestException|INVALIDDATA|Data for the request was invalid or insufficient|
+|PermissionRestException|PERMISSION|User did not have sufficient permissions to carry out the action|
+|MaintenanceModeRestException|MAINTENANCEMODE|It is not possible to send requests to a system currently in maintenance mode|
+|NotFoundRestException|NOTFOUND|A requested object was not found in the system|
+|FailureRestException|FAILURE|An unexpected error has occurred (example: a database error prevented saving)|
+|AuthRequiredRestException|AUTHREQUIRED|Returned if session identification is missing or invalid|
+
+h3. Example Workflow
+
+The following example shows a complete workflow in action. After initialization and login, a
+folder is created, its name is changed and saved, and in the end the folder is deleted again
+and the user is logged out.
+
+<javascript>
+// Initialize
+RestClient client = new RestClient(HOSTNAME);
+
+// Login
+client.login(LOGIN, PASSWORD);
+
+// Check version
+client.assertMatchingVersion();
+
+// Initialize create-request
+FolderCreateRequest request = new FolderCreateRequest();
+request.setMotherId(MOTHER_ID);
+request.setName(FOLDER_NAME);
+
+// Send request to the server
+FolderLoadResponse createResponse = client.base()
+	.path("folder")
+	.path("create")
+	.request()
+	.post(Entity.json(createRequest), FolderLoadResponse.class);
+client.assertResponse(createResponse);
+
+// Change folder name
+Folder folder = createResponse.getFolder();
+folder.setName(NEW_FOLDER_NAME);
+FolderSaveRequest saveRequest = new FolderSaveRequest();
+saveRequest.setFolder(folder);
+GenericResponse saveResponse = client.base()
+	.path("folder")
+	.path("save")
+	.path(folder.getId())
+	.request()
+	.post(Entity.json(saveRequest), GenericResponse.class);
+client.assertResponse(saveResponse);
+
+// Reload folder
+FolderLoadResponse loadResponse = client.base()
+	.path("folder")
+	.path("load")
+	.path(folder.getId())
+	.request()
+	.get(FolderLoadResponse.class);
+client.assertResponse(loadResponse);
+
+// Delete folder
+GenericResponse deleteResponse = client.base()
+	.path("folder")
+	.path("delete")
+	.path(folder.getId())
+	.request()
+	.post(Entity.json(""),
+	GenericResponse.class);
+client.assertResponse(deleteResponse);
+
+// Logout
+client.logout();
+</javascript>
+
+h3. Handling binary data
+
+Handling of binary data (of files) is a bit tricky, the following code examples show, how this has to be done.
+
+h4. Creating a new file
+<javascript>
+String fileName = "testfile.txt";
+byte[] contents = "Testfile contents".getBytes();
+String description = "This is my testfile";
+String folderId = "4711";
+MultiPart multiPart = new MultiPart();
+// Note: the order of the body parts is relevant
+multiPart.bodyPart(new FormDataBodyPart("fileName", fileName));
+multiPart.bodyPart(new FormDataBodyPart("fileBinaryData", contents,
+	MediaType.APPLICATION_OCTET_STREAM_TYPE));
+multiPart.bodyPart(new FormDataBodyPart("description", description));
+multiPart.bodyPart(new FormDataBodyPart("folderId", folderId));
+FileUploadResponse createResponse = client.base()
+	.path("file")
+	.path("create")
+	.request()
+	.post(Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), FileUploadResponse.class);
+</javascript>
+
+h4. Updating an existing file
+<javascript>
+String fileId = "999";
+String fileName = "testfile.txt";
+byte[] contents = "Testfile contents".getBytes();
+String description = "This is my testfile";
+String folderId = "4711";
+MultiPart multiPart = new MultiPart();
+// Note: the order of the body parts is relevant
+multiPart.bodyPart(new FormDataBodyPart("fileName", fileName));
+multiPart.bodyPart(new FormDataBodyPart("fileBinaryData", contents,
+	MediaType.APPLICATION_OCTET_STREAM_TYPE));
+multiPart.bodyPart(new FormDataBodyPart("description", description));
+multiPart.bodyPart(new FormDataBodyPart("folderId", folderId));
+FileUploadResponse updateResponse = client.base()
+	.path("file")
+	.path("save")
+	.path(fileId)
+	.request()
+	.post(Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE), FileUploadResponse.class);
+</javascript>

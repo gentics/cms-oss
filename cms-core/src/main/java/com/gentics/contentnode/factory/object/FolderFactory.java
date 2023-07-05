@@ -101,6 +101,7 @@ import com.gentics.contentnode.perm.TypePerms;
 import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
@@ -570,7 +571,10 @@ public class FolderFactory extends AbstractFactory {
 					f = f.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(f, new String[] { ObjectTransformer.getString(getNode().getId(), "")}, Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(new TransactionalTriggerEvent(f,
+						new String[] { ObjectTransformer.getString(getNode().getId(), ""),
+								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
+						Events.DELETE | Events.WASTEBIN));
 			}
 
 			// if the folder is a localized copy, it was hiding other folders (which are now "created")
@@ -6990,7 +6994,10 @@ public class FolderFactory extends AbstractFactory {
 				Folder folder = (Folder) it.next();
 
 				ActionLogger.logCmd(ActionLogger.DEL, Folder.TYPE_FOLDER, folder.getId(), null, "Folder.delete()");
-				Events.trigger(folder, new String[] { ObjectTransformer.getString(folder.getNode().getId(), "")}, Events.DELETE);
+				Events.trigger(folder,
+						new String[] { ObjectTransformer.getString(folder.getNode().getId(), ""),
+								MeshPublisher.getMeshUuid(folder), MeshPublisher.getMeshLanguage(folder) },
+						Events.DELETE);
 
 				// if the folder is a localized copy, it was hiding other folders (which are now "created")
 				if (!folder.isMaster()) {

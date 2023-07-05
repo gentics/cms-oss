@@ -1,0 +1,53 @@
+{
+  "globalId" : "A547.69716",
+  "keyword" : "velocity",
+  "icon" : "tag.gif",
+  "name" : {
+    "de" : "Velocity",
+    "en" : "Velocity"
+  },
+  "mayBeSubtag" : false,
+  "mayContainsSubtags" : false,
+  "autoEnable" : false,
+  "newEditor" : true,
+  "parts" : [ {
+    "globalId" : "A547.69722",
+    "name" : {
+      "de" : "Velocity",
+      "en" : "Velocity"
+    },
+    "editable" : false,
+    "typeId" : 33,
+    "order" : 1,
+    "mlId" : 0,
+    "visible" : true,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  }, {
+    "globalId" : "A547.69727",
+    "name" : {
+      "de" : "Template",
+      "en" : "Template"
+    },
+    "keyword" : "template",
+    "editable" : true,
+    "typeId" : 21,
+    "order" : 2,
+    "mlId" : 0,
+    "visible" : false,
+    "required" : false,
+    "inlineEditable" : false,
+    "hideInEditor" : false,
+    "regexId" : 0
+  } ],
+  "category" : {
+    "globalId" : "3D6C.351d4688-4aee-11ed-9fbf-482ae36fb1c5",
+    "name" : {
+      "de" : "Gentics CMP Standard",
+      "en" : "Gentics CMP Default"
+    },
+    "sortOrder" : 0
+  }
+}

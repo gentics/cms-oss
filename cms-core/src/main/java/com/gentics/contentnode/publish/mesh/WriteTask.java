@@ -3,6 +3,7 @@ package com.gentics.contentnode.publish.mesh;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -12,7 +13,7 @@ import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
-import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshNodeTracker;
+//import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshNodeTracker;
 import com.gentics.mesh.core.rest.node.FieldMap;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 
@@ -34,9 +35,19 @@ class WriteTask extends AbstractWriteTask {
 	protected String parentUuid;
 
 	/**
+	 * Local ID of the parent folder
+	 */
+	protected int folderId;
+
+	/**
 	 * Language
 	 */
 	protected String language;
+
+	/**
+	 * Optional alternative mesh languages
+	 */
+	protected Set<String> alternativeMeshLanguages;
 
 	/**
 	 * Flag to mark existing objects
@@ -48,10 +59,10 @@ class WriteTask extends AbstractWriteTask {
 	 */
 	protected FieldMap fields;
 
-	/**
-	 * Tracker to mark when an object was written
-	 */
-	protected MeshNodeTracker tracker;
+//	/**
+//	 * Tracker to mark when an object was written
+//	 */
+//	protected MeshNodeTracker tracker;
 
 	/**
 	 * Optional list of post save operations (e.g. for uploading binary data)
@@ -78,8 +89,8 @@ class WriteTask extends AbstractWriteTask {
 	 * @throws NodeException
 	 */
 	@Override
-	public void perform() throws NodeException {
-		publisher.save(this);
+	public void perform(boolean withSemaphore) throws NodeException {
+		publisher.save(this, withSemaphore, null);
 	}
 
 	/**

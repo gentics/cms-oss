@@ -1,0 +1,220 @@
+h2. Gentics CMS Compatibility List
+
+This list gives an overview over different components and the available support. We suggest that the components that were marked as supported should be used.
+
+Older versions of components may no longer be tested. Please take a look at the archived list for information about older components.
+
+This list was last updated 28.06.2023.
+
+endprologue.
+
+h3. Databases
+
+h4. MariaDB
+
+|_.Minor Version |_.Supported |_.Notes                   |
+| 10.4-10.11     | Yes¹       | Since Gentics CMS 6.0.0  |
+| 10.3           | Yes¹       |                          |
+| 10.2           | Yes        | Since Gentics CMS 5.29.0 |
+| 10.1           | Yes        | Since Gentics CMS 5.25.0 |
+| 10.0           | Yes        | Since Gentics CMS 5.25.0 |
+|  5.5           | Yes        | Since Gentics CMS 5.25.0 |
+
+h4. Oracle MySQL
+
+NOTE: Due to a specific support contract we are obliged to support the latest version of the Oracle MySQL Enterprise Edition Server.
+
+|_.Minor Version |_.Supported |_.Notes                                                                |
+| 5.7            | Yes²       | See note below for additional information                             |
+| 5.6            | Yes²       | Since Gentics CMS 5.12.22 / 5.13.8. See note below for additional information |
+| 5.5            | Yes        | Since Gentics CMS 5.12.22 / 5.13.8. See note below for additional information |
+| 5.1 and below  | No         |                                                                       |
+
+NOTE: Please note that some custom my.cnf mysqld setting must be applied. Please check the "admin installation guide":admin_install.html
+
+* "MySQL Downloads":http://dev.mysql.com/downloads/mysql
+* "Wikipedia MySQL":http://de.wikipedia.org/wiki/MySQL
+
+h3. JDBC Driver
+
+h4. MariaDB Connector/J
+
+|_.Minor Version |_.Tested version |_.Supported |_.Notes                               |
+| 2.7            | 2.7.0           | Yes¹       | Default CMS JDBC connector (shipped) |
+
+NOTE: This is the default JDBC connector used for MariaDB and MySQL databases for the CMS and ContentRepositories
+
+h4. MySQL JDBC Connector
+
+|_.Minor Version |_.Tested version   |_.Supported |_.Notes                                                              |
+| 5.1            | 5.1.41            | Yes        | Using the latest 5.1.x is recommended                               |
+| 5.1            | 5.1.10            | No         | This version contains a bug which could lead to performance issues. |
+| 5.0            | 5.0.5             | No         | -                                                                   |
+
+* "Download MySQL Connector":http://dev.mysql.com/downloads/connector/j/
+
+h3. Operating Systems
+
+h4. Debian Linux
+
+|_.Major Version |_.Version        |_.Supported |_.Notes |
+| 11             | 11.* - Bullseye | Yes¹       | -      |
+| 10             | 10.* - Buster   | Yes        | -      |
+| 9              | 9.* - Stretch   | Yes        | -      |
+| 8 and below    | -               | No         |        |
+
+* "Debian Linux":http://www.debian.org/index.de.html
+
+h4. SUSE Enterprise Linux Server (SLES)
+
+|_.Major Version |_.Supported |_.Notes |
+| 12             | Yes²       | SP2    |
+| 11             | Yes        | -      |
+
+* "Suse Enterprise Linux":https://www.suse.com/products/server/
+
+h4. Red Hat Enterprise Linux (REL)
+
+|_.Major Version |_.Version |_.Supported |_.Notes |
+| 8              | 8.2      | Yes²       | -      |
+| 7              | 7.3      | Yes        | -      |
+| 6              | 6.0      | Yes        | -      |
+
+* "Redhat Enterprise Linux":http://www.redhat.com/products/enterprise-linux/
+
+h3. Java / JVM / JDK
+
+h4. OpenJDK
+
+|_.Minor Version |_.Supported |_.Notes                                                   |
+| 11.0           | Yes        | Since 5.34.0                                             |
+| 1.8 and below  | No         |                                                          |
+
+* "OpenJDK installation":http://openjdk.java.net/install/
+
+h4. Oracle JVM (HotSpot)
+
+|_.Minor Version |_.Supported |_.Notes     |
+| 11.0           | Yes        | Since 5.34.0                                             |
+| 1.8 and below  | No         |            |
+
+* "Oracle Java Downloads":http://www.oracle.com/technetwork/java/javase/downloads/index.html
+* "Wikipedia JSE":http://de.wikipedia.org/wiki/Java_Platform,_Standard_Edition
+* "Wikipedia HotSpot":http://en.wikipedia.org/wiki/HotSpot
+* "Oracle Java Previous Release Downloads":http://www.oracle.com/technetwork/java/javase/archive-139210.html
+
+h3. Browser
+
+h4. Mozilla Firefox
+
+The last released stable version of this browser is supported.
+
+* "Wikipedia Mozilla Firefox":http://en.wikipedia.org/wiki/Firefox
+
+h4. Safari
+
+The last released stable version of this browser is supported.
+
+* "Wikipedia Mozilla Firefox":https://de.wikipedia.org/wiki/Safari_(Browser)
+
+h4. Google Chrome
+
+The last released stable version of this browser is supported.
+
+* "Wikipedia Google Chrome":http://de.wikipedia.org/wiki/Google_Chrome
+
+h4. Microsoft Edge
+
+The last released stable version of this browser is supported.
+
+* "Wikipedia Microsoft Edge":https://de.wikipedia.org/wiki/Microsoft_Edge
+
+h3. Gentics Content.Repository
+
+The following tables also refer to compatibility with CrSync or Portal.Connector.
+
+h4. Databases
+
+h5. MariaDB
+
+See: See: "MariaDB":#mariadb
+
+h5. Oracle MySQL
+
+See: See: "Oracle MySQL":#oracle-mysql
+
+h5. HSQLDB
+
+|_.Major Version |_.Tested version  |_.Supported |_.Notes |
+| 1              | 1.8.0.10         | -          | -      |
+
+* "HSQLDB":http://hsqldb.org/
+
+h5. Oracle Server
+
+|_.Major Version |_.Tested version |_.Supported |
+| 12             | 12.2 (12.2.0.1) | Yes¹ |
+| 11g            | 11g Release 2 (11.2.0.1.0) (1. September 2009) | Yes² |
+| 11g            | 11g Release 2 (11.1.0.6.0) (1. September 2009) | Yes² |
+| 11g            | 11g Release 1 (11.1.0.6.0) (11 July 2007)      |  ?   |
+
+* "Oracle Databases":http://www.oracle.com/technology/software/products/database/index.html
+* "Wikipedia Oracle Server":http://en.wikipedia.org/wiki/Oracle_database
+
+h5. Microsoft SQL Server
+
+|_.Major Version |_.Tested version       |_.Supported |_.Notes                         |
+| 2008           | 2008 (Express)        | Yes¹       | Passed Microsoft Platform Test |
+| 2005           | 2005                  | No         | Passed Microsoft Platform Test |
+
+* "Microsoft Microsoft SQL Server":http://www.microsoft.com/sql/default.mspx
+* "Wikipedia Microsoft SQL Server":http://de.wikipedia.org/wiki/Microsoft_SQL_Server
+
+h4. JDBC Driver
+
+h5. MariaDB JDBC Connector
+
+See: See: "MariaDB Connector/J":#mariadb-connector-j
+
+h5. MySQL JDBC Connector
+
+See: See: "MySQL JDBC Connector":#mysql-jdbc-connector
+
+h5. Oracle JDBC Connector
+
+|_.Minor Version |_.Tested Version |_.Supported |_.Notes |
+| 11.2           | 11.2.0.1.0      | Yes¹       | Supported for releases which were made after 20.04.2009. Only supported for JDK 1.5, JDK 1.6 - Oracle Database 11g R2  |
+| 11.1           | 11.1.0.7.0      | ?          | only for JDK 1.5, JDK 1.6 - Oracle Database 11g R1 |
+| 11.1           | 11.1.0.6.0      | ?          | only for JDK 1.5, JDK 1.6 |
+
+* "Download Oracle JDBC":http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/index.html
+* "Download Oracle Database 11g Release 1(11.1.0.6.0) JDBC Drivers":http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/jdbc_111060.html
+* "Download Oracle Database 10g 10.1.0.5 JDBC Drivers":http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/jdbc101040.html
+* "Download Oracle Database 10g Release 2 (10.2.0.4) JDBC Drivers":http://www.oracle.com/technology/software/tech/java/sqlj_jdbc/htdocs/jdbc_10201.html
+
+h5. Microsoft SQL JDBC Connector
+
+|_.Major Version |_.Version     |_.Supported |_.Notes |
+| 4              | 4.0.2206.100 | Yes²       | MD5: 5223e4328ef17575a2739501eac9c3e1 File: sqljdbc.jar  |
+| 4              | 4.0.2206.100 | Yes¹       | MD5: a99205071acbe2709103b971662992e0 File: sqljdbc4.jar |
+| 3              | 3.0.1301.101 | ?          | MD5: a74c2544129dad3c7fdb8ad729ffdfdb File: sqljdbc.jar  |
+| 3              | 3.0.1301.101 | ?          | MD5: 402130141d5f2cee727f4371e2e8fd8a File: sqljdbc4.jar |
+| 2              | 2.0.1803.100 | ?          | MD5: 81cc767857d85162096d16841d7d46fa File: sqljdbc.jar  |
+| 2              | 2.0.1803.100 | ?          | MD5: 249734b9b7dafaccd92de99eee95d7d6 File: sqljdbc4.jar |
+| 1              | 1.2.2828.100 | No         | MD5: c4abd239210077c9f9e98b832d79bce8 - No longer supported by Microsoft |
+
+* "MSDN Download Source":http://msdn2.microsoft.com/en-us/data/aa937724.aspx
+
+h3. Elasticsearch
+
+|_.Version |_.Supported |_.Notes |
+| 6        | Yes        |        |
+| 5        | Yes        |        |
+
+h3. Footnotes
+
+NOTE: Yes¹ - Tested using automatic tests.
+
+NOTE: Yes² - Tested using periodic manual tests.
+
+-----

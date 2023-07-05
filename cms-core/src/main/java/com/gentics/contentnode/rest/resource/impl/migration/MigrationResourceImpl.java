@@ -75,7 +75,7 @@ import com.gentics.lib.log.NodeLogger;
 
 /**
  * Resource used for performing Tag Type and Template Migrations
- * 
+ *
  * @author Taylor
  */
 @Path("/migration")
@@ -83,7 +83,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#cancelMigration()
 	 */
 	@GET
@@ -102,7 +102,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationStatus()
 	 */
 	@GET
@@ -121,7 +121,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationJobItems(int)
 	 */
 	@GET
@@ -147,7 +147,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationLog(java.lang.String)
 	 */
 	@GET
@@ -178,7 +178,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationLog(java.lang.String)
 	 */
 	@GET
@@ -224,7 +224,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#reinvokeMigration(com.gentics.contentnode.rest.model.request.ttm.TtmMigrationReinvokeRequest)
 	 */
 	@POST
@@ -243,7 +243,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * com.gentics.contentnode.rest.resource.migration.MigrationResource#performTemplateMigration(com.gentics.contentnode.rest.model.request.ttm.TemplateMigrationRequest)
 	 */
@@ -263,7 +263,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#performMigration(com.gentics.contentnode.rest.model.request.TagTypeMigrationRequest)
 	 */
 	@POST
@@ -282,7 +282,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getPartsForTagType(java.lang.String)
 	 */
 	@GET
@@ -319,7 +319,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see com.gentics.contentnode.rest.api.MigrationResource#getMigrationTagTypes(com.gentics.contentnode.rest.model.request.MigrationTagsRequest)
 	 */
 	@POST
@@ -428,7 +428,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see MigrationResource#getPossiblePartMappings(int, int)
 	 */
 	@GET
@@ -702,6 +702,7 @@ public class MigrationResourceImpl extends AuthenticatedContentNodeResource impl
 			Transaction t = TransactionManager.getCurrentTransaction();
 
 			try {
+				// TODO: Is this check reversed?
 				if (NodeConfigRuntimeConfiguration.isFeature(Feature.TAGTYPEMIGRATION)) {
 					throw new FeatureNotLicensedException("The TTM feature is not licensed!");
 				}

@@ -8,7 +8,7 @@
 		<version>6.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>com.gentics.cms</groupId>
+	<groupId>com.gentics.cms-oss</groupId>
 	<artifactId>cms-core</artifactId>
 
 	<organization>
@@ -379,7 +379,7 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.gentics.cms</groupId>
+				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>cms-oss-bom</artifactId>
 				<type>pom</type>
 				<scope>import</scope>
@@ -416,7 +416,7 @@
 		</dependency>
 		<!-- Product dependencies -->
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>base-lib</artifactId>
 			<exclusions>
 				<exclusion>
@@ -426,7 +426,7 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>com.gentics.cms</groupId>
+			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-api</artifactId>
 		</dependency>
 		<dependency>

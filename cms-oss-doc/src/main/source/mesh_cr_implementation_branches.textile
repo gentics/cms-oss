@@ -1,0 +1,108 @@
+h2. Mesh ContentRepository Implementation Branches
+
+If a Mesh ContentRepository has an Implementation Version set, the publish process will create a new Mesh branch (forked off of the last used branch)
+and publish the objects into that new branch.
+
+This allows frontend implementations to still use the old implementation, until deployment of the new implementation is finished from the CMS side.
+
+endprologue.
+
+h3. Branch tags
+
+Branches in Mesh will be tagged in order to allow frontend implementations to select the correct branch when accessing published data.
+
+h4. Tag family _gcmsImplementationVersion_
+
+Tags of the tag family _gcmsImplementationVersion_ specify the implementation version, the branch belongs to. Frontend implementations that support specific implementation versions
+should always take those tags into consideration when selecting the correct branch.
+
+h4. Tag family _gcmsChannelUuid_
+
+Tags of the tag family _gcmsChannelUuid_ specify the UUID of the Gentics CMS channel the branch relates to. Frontend implementations _may_ use those tags to identify
+the branch. However it is recommended to use the branch's hostname or name to identify the branch.
+
+h4. Tag family _gcmsInternal_
+
+Tags of the tag family _gcmsInternal_ are for internal use of the publish process and should not be used in frontend implementations.
+
+h3. Examples
+
+The following example shows the Mesh branches for an implementation with one Node
+
+|_. Node name | Testnode   |
+|_. Hostname  | master.com |
+
+and one channel
+
+|_. Node name | Testchannel |
+|_. Hostname  | channel.com |
+
+which are published into a Mesh ContentRepository with "Project per Node" enabled and "Implementation version" set to "_V 1.0_".
+
+The objects in the master node would be published into the branch (which can be identified by hostname and gcmsImplementationVersion tag):
+
+<shell>
+{
+    "name": "Testnode",
+    "hostname": "master.com",
+    "tags": [
+        {
+            "name": "V 1.0",
+            "tagFamily": "gcmsImplementationVersion"
+        }
+    ]
+}
+</shell>
+
+The objects in the channel would be published into the branch:
+
+<shell>
+{
+    "name": "Testchannel_V_1.0",
+    "hostname": "channel.com",
+    "tags": [
+        {
+            "name": "V 1.0",
+            "tagFamily": "gcmsImplementationVersion"
+        },
+        {
+            "name": "d769f172d12e11e8b93600155df0380b",
+            "tagFamily": "gcmsChannelUuid"
+        }
+    ]
+}
+</shell>
+
+When the "Implementation version" is updated to _V 2.0_ the publish process would create two additional branches:
+
+<shell>
+{
+    "name": "Testnode_V_2.0",
+    "hostname": "master.com",
+    "tags": [
+        {
+            "name": "V 2.0",
+            "tagFamily": "gcmsImplementationVersion"
+        }
+    ]
+}
+</shell>
+
+and
+
+<shell>
+{
+    "name": "Testchannel_V_2.0",
+    "hostname": "channel.com",
+    "tags": [
+        {
+            "name": "V 2.0",
+            "tagFamily": "gcmsImplementationVersion"
+        },
+        {
+            "name": "d769f172d12e11e8b93600155df0380b",
+            "tagFamily": "gcmsChannelUuid"
+        }
+    ]
+}
+</shell>

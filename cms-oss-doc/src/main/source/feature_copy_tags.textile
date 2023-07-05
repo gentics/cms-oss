@@ -1,0 +1,89 @@
+h2. Copy & Paste for Tags
+
+This page will explain the usage of the copy_tags feature.
+
+endprologue.
+
+h3. Overview
+
+The basic idea of this feature is to allow Copy & Paste of Tags from one page to another or within the same page.
+
+h4. Configuration
+
+This feature can either be activated generally (for all nodes)
+
+<shell filename="conf/features.yml">
+# activate copy & paste of tags for all nodes
+feature:
+  copy_tags: true
+</shell>
+
+or only for specific nodes
+
+<shell filename="conf/*.yml">
+# activate copy & paste for node 42 and 99 only
+feature:
+  copy_tags:
+    "42": true
+    "99": true
+</shell>
+
+Additionally, some other things must be configured for the feature to work correctly:
+
+<shell filename="conf/*.yml">
+# The block plugin must allow 'a' as root tag for copying links.
+aloha_settings:
+  plugins:
+    block:
+      rootTags:
+        - "div"
+        - "span"
+        - "a"
+# The feature copy_tags requires the content handler 'gcn-tagcopy' to be the first
+  contentHandler:
+    insertHtml:
+      - "gcn-tagcopy"
+      - "word"
+      - "generic"
+      - "block"
+      - "formatless"
+</shell>
+
+h4. Rendering Tag Annotations
+
+If the feature is activated for a node, the root HTML elements of tags will be annotated with _data-gcn-_ attributes when rendering pages in preview mode.
+If such an annotated root HTML element is selected and copied (using +CTRL-C+), the _data-gcn-_ annotations will also be copied and will enable identification of the tag to be duplicated during pasting.
+
+h4. Sanitize Content Handler
+
+When using a sanitize content handler, it must not remove the annotations, that are necessary to store internal information to links:
+
+* data-gcn-pageid
+* data-gcn-tagid
+* data-gcn-tagname
+* data-gentics-aloha-repository
+* data-gentics-aloha-object-id
+
+If any of those annotations are removed while pasting content that contains links, the links might not be transformed to tags correctly.
+
+h4. Pasting annotated Tags
+
+When content is pasted into editables of pages and the _copy_tags_ feature is enabled (using +CTRL-V+), a special content handler will detect tag annotations and will then create copies of the original tags, which are placed in the edited page.
+If the tag "contains" other tags (references other tags using the _<node [tagname]>_ notation), the referenced (nested) tags will also be copied into the edited page and the references will be updated to the names of the new tags.
+
+WARNING: Tag references other than using the _<node [tagname]>_ notation will +not+ be detected and updated. This especially includes tag references using velocity.
+
+WARNING: Copy & Paste of tags will only work as expected if both the source and target page are hosted on the same CMS system, Copy & Paste across CMS systems is not supported.
+
+If the editor has no permission to view the source page or the source page does not exist or does not contain the annotated tag, the tag will completely be removed from the pasted content (and the user will see an error message).
+
+h4. PubSub channels
+
+When the feature is activated and all tags have been copied, the content handler will publish to the channel _gcn.tagcopy.finished_. The payload will contain the editable.
+Implementations could subscribe to this event like:
+
+<pre>
+	PubSub.sub('gcn.tagcopy.finished', function (data) {
+		// data.editable ...
+	});
+</pre>

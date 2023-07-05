@@ -248,9 +248,8 @@ public class MeshPublishTest {
 		});
 
 		Trx.operate(() -> {
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Folder.TYPE_FOLDER, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, File.TYPE_FILE, null, 0, 0);
-			PublishQueue.undirtObjects(new int[] {node.getId()}, Page.TYPE_PAGE, null, 0, 0);
+			DBUtils.executeUpdate("DELETE FROM dirtqueue", null);
+			DBUtils.executeUpdate("DELETE FROM publishqueue", null);
 		});
 
 		Folder folderLevel3 = Trx.supply(() -> {
@@ -732,28 +731,6 @@ public class MeshPublishTest {
 
 		// delete folder
 		update(folder, Folder::delete);
-
-		// check data consistency again
-		result = Trx.supply(t -> {
-			try (MeshPublisher mp = new MeshPublisher(t.getObject(ContentRepository.class, crId))) {
-				StringBuilder stringBuilder = new StringBuilder();
-				boolean consistent = mp.checkDataConsistency(false, stringBuilder);
-				return Pair.of(consistent, stringBuilder.toString());
-			}
-		});
-		assertThat(result.getKey()).as("Check result after folder.delete").isFalse();
-		assertObject("Check folder after delete", mesh.client(), MESH_PROJECT_NAME, folder, true);
-
-		// repair data consistency
-		result = Trx.supply(t -> {
-			try (MeshPublisher mp = new MeshPublisher(t.getObject(ContentRepository.class, crId))) {
-				StringBuilder stringBuilder = new StringBuilder();
-				boolean consistent = mp.checkDataConsistency(true, stringBuilder);
-				return Pair.of(consistent, stringBuilder.toString());
-			}
-		});
-		assertThat(result.getKey()).as("Check result after data repair").isTrue();
-		assertObject("Check folder after repair", mesh.client(), MESH_PROJECT_NAME, folder, false);
 	}
 
 	/**

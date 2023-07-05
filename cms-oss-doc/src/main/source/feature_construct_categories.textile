@@ -1,0 +1,50 @@
+h2. Tagtype Categories
+
+This page will explain the usage of the construct_categories feature.
+
+endprologue.
+
+h3. Overview
+
+On systems with many tagtypes, organizing them into tagtype categories will help the editors to find the tagtypes more quickly when adding new tags into pages.
+
+Tagtype categories will appear:
+* In the toolbar of the Aloha Editor on the _Insert_ Tab. Every category will create a new menu item. Tagtypes that are not assigned to a tagtype category, will have buttons directly in the toolbar.
+* In the context menu of the Live Editor. The organization is similar to the Aloha Editor.
+* In the dropdown box of the Tagfill Dialog. Tagtypes of the same Category will be grouped together and titled with the category name.
+
+h4. Configuration
+
+This feature is activated by setting
+
+<shell filename="conf/features.yml">
+feature:
+	construct_categories: true
+</shell>
+
+h4. Creating Tagtype Categories
+
+Tagtype categories can be created selecting "Tagtype Categories" in the tree, then clicking "New|Category" in the top menu.
+Enter a (unique) name, click "OK" and the category is created.
+
+NOTE: Since tagtypes are managed system wide and can be shared between different nodes, the same applies for tagtype categories.
+
+h4. Editing Tagtype Categories
+
+To edit the name of a tagtype category, just click on the name in the list of tagtype categories. An edit dialog with the current name prefilled will appear. Modify the name, click "OK" and the change will be applied.
+
+h4. Ordering Tagtype Categories
+
+Tagtype Categories can be ordered by using the "up" and "down" arrows in the tagtype categories list.
+
+h4. Assigning Tagtypes
+
+Tagtypes can be assigned by selecting a tagtype category from the dropdown box when updating the tagtype properties.
+
+h4. Permissions
+
+It is possible to assign/revoke _View Permission_ on Tagtype Categories to/from User Groups. Initially, when a tagtype category is created, all user groups will have the _View Permission_ flag set.
+
+If a user does not have the _View Permission_ flag for a specific tagtype category in any of his groups, he will not see the category (and all contained tagtypes) in the toolbar of Aloha Editor, the context menu of the Live Editor or the Tagfill Dialog.
+
+However, the lack of the _View Permission_ flag does not prevent the user from modifying or deleting tags, and it is even still possible to create tags, by using other means (like the REST API or the Gentics CMS JS API). This flag is merely a means to limit the functionality offered by Aloha Editor, the Live Editor or the Tagfill Dialog.

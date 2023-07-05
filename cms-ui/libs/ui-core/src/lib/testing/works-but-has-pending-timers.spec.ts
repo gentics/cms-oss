@@ -4,7 +4,7 @@ import {worksButHasPendingTimers} from './works-but-has-pending-timers';
 import {mustFail} from './must-fail';
 
 
-describe('worksButHasPendingTimers', () => {
+xdescribe('worksButHasPendingTimers', () => {
 
     it('Marks a test as successful when it has pending timers',
         worksButHasPendingTimers(

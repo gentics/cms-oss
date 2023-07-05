@@ -9,7 +9,7 @@ import {
     OnInit,
     Optional,
     Output,
-    SimpleChanges,
+    SimpleChanges
 } from '@angular/core';
 import { isEqual } from 'lodash-es';
 import { KeyCode } from '../../common';
@@ -18,6 +18,8 @@ import { generateFormProvider } from '../../utils';
 import { BaseFormElementComponent } from '../base-form-element/base-form-element.component';
 
 let uniqueComponentId = 0;
+
+const NO_SET = Symbol();
 
 /**
  * RadioButton wraps the native `<input type="radio">` form element.
@@ -77,7 +79,7 @@ export class RadioButtonComponent
 
     /** If this radio-button is currently checked or not */
     @Input()
-    public checked: boolean;
+    public checked = false;
 
     /**
      * Blur event
@@ -91,17 +93,16 @@ export class RadioButtonComponent
     @Output()
     public focus = new EventEmitter<void>(true);
 
-
     /** If the element is focused via tab/keyboard shortcuts. */
     public tabbedFocus = false;
 
     /** The value that is being written via ngModel/CVA/... and has to be compared to `value`. */
-    protected writtenValue: any;
+    protected writtenValue: any = NO_SET;
 
     /**
      * If the checked state is written via the `checked` input, then this will be turned to true.
      */
-    protected stateless = false;
+    public stateless = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -111,6 +112,7 @@ export class RadioButtonComponent
         modelAttrib: string,
     ) {
         super(changeDetector);
+        this.booleanInputs.push('checked', 'autofocus');
 
         // Pre-set a common input name for grouped input elements
         if (group) {
@@ -175,7 +177,7 @@ export class RadioButtonComponent
             return;
         }
 
-        this.checked = isEqual(this.value, this.writtenValue);
+        this.checked = this.writtenValue !== NO_SET && isEqual(this.value, this.writtenValue);
     }
 
     public onBlur(): void {
@@ -214,6 +216,7 @@ export class RadioButtonComponent
         }
 
         this.checked = true;
+        this.writtenValue = this.value;
         this.triggerChange(this.value);
         if (this.group) {
             this.group.radioSelected(this);

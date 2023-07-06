@@ -17,3 +17,5 @@ the compilation/document parsing has to be done before hand.
 4. All the generated documentation is now saved as json in `./docs.output.json`
 
 **Only after building the documentation can you properly build/service this application.**
+
+For convenience, you can do the steps above with the `npm` tasks `compile:ui-core-docs` and `generate:ui-core-docs` from the Monorepo root.

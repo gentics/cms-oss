@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable } from 'rxjs';
 import { FormEditorConfigurationService } from '..';
-import { FormEditorConfiguration } from '../form-editor-configuration/form-editor-configuration.model';
-
+import { FormEditorConfiguration } from '../../../common';
 import { FormEditorService } from './form-editor.service';
 
 describe('FormEditorService', () => {

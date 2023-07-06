@@ -31,6 +31,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -96,6 +98,7 @@ import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.IdTypeMapRequest;
+import com.gentics.contentnode.rest.model.request.ObjectMoveRequest;
 import com.gentics.contentnode.rest.model.response.ContentPackageListResponse;
 import com.gentics.contentnode.rest.model.response.ContentPackageLoadResponse;
 import com.gentics.contentnode.rest.model.response.FileLoadResponse;
@@ -159,6 +162,7 @@ public class ContentStagingResourceTest {
 	private static Page page31;
 	private static Page page32;
 	private static Folder folder1;
+	private static Folder folder2;
 	private static Page page11;
 	private static ImageFile image1;
 	private static com.gentics.contentnode.object.File file1;
@@ -173,8 +177,7 @@ public class ContentStagingResourceTest {
 			NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 			prefs.setFeature(Feature.CONTENT_STAGING.toString().toLowerCase(), true);
 
-			dbFilesDir = new java.io.File(
-					prefs.getProperty("filepath") + java.io.File.separator + CONTENT_ROOT + java.io.File.separator + "content-packages");
+			dbFilesDir = Paths.get(ConfigurationValue.CONTENT_PACKAGES_PATH.get()).toFile();
 			dbFilesDir.mkdirs();
 		}
 		
@@ -250,6 +253,11 @@ public class ContentStagingResourceTest {
 		folder1 = supply(() -> create(Folder.class, f -> {
 			f.setMotherId(node1.getFolder().getId());
 			f.setName("Folder 1");
+		}));
+
+		folder2 = supply(() -> create(Folder.class, f -> {
+			f.setMotherId(node1.getFolder().getId());
+			f.setName("Folder 2");
 		}));
 
 		page11 = supply(() -> create(Page.class, p -> {
@@ -1242,6 +1250,61 @@ public class ContentStagingResourceTest {
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
 		assertThat(response.getContentPackage().getChannels()).isEqualTo(1);
+	}
+
+	@Test
+	public void testPageMoved() throws Exception {
+		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		String packageName = response.getContentPackage().getName();
+		String page11Id = supply(() -> page11.getGlobalId().toString());
+
+		// Add page
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "page", page11Id, false);
+		});
+		assertResponseOK(response);
+		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFolders()).isEqualTo(2);
+		assertThat(response.getContentPackage().getPages()).isEqualTo(1);
+		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
+		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
+		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+
+		page11 = supply(() -> {
+			ObjectMoveRequest request = new ObjectMoveRequest();
+			request.setAllLanguages(true);
+			request.setFolderId(folder2.getId());
+			assertResponseOK(new PageResourceImpl().move(page11Id, request));
+			return PageResourceImpl.getPage(page11Id);
+		});
+
+		response = supply(() -> {
+			ContentStagingResourceImpl impl = new ContentStagingResourceImpl();
+			assertResponseOK(impl.exportFromCms(packageName, 0L));
+			return impl.read(packageName);
+		});
+		assertResponseOK(response);
+		{
+			// This throws on duplicated pages, which should not happen on page move
+			response.setContentPackage(new StagedContentPackage());
+			Path rootPath = dbFilesDir.toPath().resolve(packageName);
+			ContentStagingResourceImpl.fillContentPackageStatistic(rootPath, response.getContentPackage(), true);
+		}
+		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFolders()).isEqualTo(3); // An extra folder is left after old page location
+		assertThat(response.getContentPackage().getPages()).isEqualTo(1);
+		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
+		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
+		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+
+		page11 = supply(() -> {
+			ObjectMoveRequest request = new ObjectMoveRequest();
+			request.setAllLanguages(true);
+			request.setFolderId(folder1.getId());
+			assertResponseOK(new PageResourceImpl().move(page11Id, request));
+			return PageResourceImpl.getPage(page11Id);
+		});
 	}
 
 	protected ContentPackageLoadResponse directCreate(String name, String description) throws Exception {

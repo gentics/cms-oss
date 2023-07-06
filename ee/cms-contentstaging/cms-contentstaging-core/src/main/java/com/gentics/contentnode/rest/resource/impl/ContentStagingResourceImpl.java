@@ -1205,8 +1205,9 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 			N nodeObject = (N) loadFromDatabase(nodeObjectClass, storedObject.getId());
 
 			if (nodeObject != null) {
+				Path folderPath;
 				if (nodeObject instanceof Node) {
-					currentPath = currentPath.getParent();
+					folderPath = currentPath.getParent();
 				} else {
 					Optional<Node> maybeChannel = nodeObject.maybeHasChannels().flatMap(ch -> {
 						try {
@@ -1216,12 +1217,15 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 						}
 					});
 					try (ChannelTrx ctrx = new ChannelTrx(maybeChannel.orElse(null))) {
-						currentPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
+						folderPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
 					}
 				}
-				addStageable(currentPath, nodeObject, storedObject, modelInflater, Optional.empty(), Optional.ofNullable(deferDeleting));
+				addStageable(folderPath, nodeObject, storedObject, modelInflater, Optional.empty(), Optional.ofNullable(deferDeleting));
 				if (storedObject.hasBinary()) {
-					synchronizeBinary(currentPath, storedObject.getId(), storedObject.getSuffix(), nodeObject.maybeBinary(), Optional.ofNullable(deferDeleting));
+					synchronizeBinary(folderPath, storedObject.getId(), storedObject.getSuffix(), nodeObject.maybeBinary(), Optional.ofNullable(deferDeleting));
+				}
+				if (!currentPath.toString().startsWith(folderPath.toString())) {
+					deferDeleting.add(currentPath);
 				}
 			}
 		} catch (EntityNotFoundException e) {
@@ -1256,9 +1260,12 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				}
 			});
 			try (ChannelTrx ctrx = new ChannelTrx(maybeChannel.orElse(null))) {
-				currentPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
+				Path folderPath = addFolderPath(pathRoot, nodeObject.getFolder(), false, maybeChannel);
+				addVersionedStageable(folderPath, nodeObject, storedObject, modelInflater, Optional.ofNullable(deferDeleting));
+				if (!currentPath.toString().startsWith(folderPath.toString())) {
+					deferDeleting.add(currentPath);
+				}
 			}
-			addVersionedStageable(currentPath, nodeObject, storedObject, modelInflater, Optional.ofNullable(deferDeleting));
 		} catch (EntityNotFoundException e) {
 			// when the object was not found in the CMS (any more), we also want to remove the file in the content package
 			deferDeleting.add(currentPath);
@@ -1424,11 +1431,26 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param cp
 	 */
 	private static void fillContentPackageStatistic(Path path, StagedContentPackage cp) {
+		fillContentPackageStatistic(path, cp, false);
+	}
+
+	/**
+	 * Fill the package statistics. Remove alien (unrecognizable) content from the package. Optionally throw an exception on duplicated content.
+	 * 
+	 * @param path
+	 * @param cp
+	 */
+	public static void fillContentPackageStatistic(Path path, StagedContentPackage cp, boolean throwOnDuplications) {
 		try {
-			Set<String> encounteredIDs = new HashSet<>();
+			Map<String, Path> encounteredIDs = new HashMap<>();
 			Files.walk(path).forEach(i -> {
 				if (encounteredBefore(i, encounteredIDs)) {
-					return;
+					Optional<String> objectId = getObjectId(i);
+					if (throwOnDuplications) {
+						throw new IllegalStateException(String.format("Duplicated element #[%s] found on paths [%s, %s]", objectId.get(), i, encounteredIDs.get(objectId.get())));
+					} else {
+						return;
+					}
 				}
 				if (Files.isRegularFile(i)) {
 					if (i.getFileName().toString().endsWith(PAGE_EXTENSION)) {
@@ -1473,13 +1495,13 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	 * @param encounteredIDs set of already encountered IDs (may be modified)
 	 * @return true iff the path denotes a metadata file and the entity was encountered before
 	 */
-	private static boolean encounteredBefore(Path path, Set<String> encounteredIDs) {
+	private static boolean encounteredBefore(Path path, Map<String, Path> encounteredIDs) {
 		Optional<String> objectId = getObjectId(path);
 		if (objectId.isPresent()) {
-			if (encounteredIDs.contains(objectId.get())) {
+			if (encounteredIDs.containsKey(objectId.get())) {
 				return true;
 			} else {
-				encounteredIDs.add(objectId.get());
+				encounteredIDs.put(objectId.get(), path);
 				return false;
 			}
 		} else {
@@ -2212,7 +2234,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 				Set<String> mismatches = new TreeSet<>();
 				List<Path> haveOrphans = new ArrayList<>();
 				try {
-					Set<String> encounteredIDs = new HashSet<>();
+					Map<String, Path> encounteredIDs = new HashMap<>();
 					List<Pair<String, String>> importedNodes = new ArrayList<>();
 
 					java.util.function.Consumer<? super Path> importNodeFromPath = path -> {

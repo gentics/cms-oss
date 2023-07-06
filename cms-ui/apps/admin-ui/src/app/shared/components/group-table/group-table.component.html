@@ -44,7 +44,7 @@
 
     [selectAllType]="TableSelectAllType.PAGE"
     [selectable]="selectable"
-    [hideActions]="hideActions"
+    [hideActions]="hideActions && (extraActions?.length === 0)"
     [disabled]="disabled"
 
     [columns]="columns"

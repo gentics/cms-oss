@@ -1,10 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Icon } from '@gentics/ui-core';
+import { IconDirective } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { FormEditorConfigurationService, FormEditorMappingService, FormEditorService } from '../../providers';
-import { FormEditorConfiguration } from '../../providers/form-editor-configuration/form-editor-configuration.model';
+import { FormEditorConfiguration } from '../../../common';
 import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
 import { FormEditorElementComponent } from '../form-editor-element/form-editor-element.component';
 import { FormEditorMenuComponent } from '../form-editor-menu/form-editor-menu.component';
@@ -17,8 +17,6 @@ describe('FormEditorComponent', () => {
     let fixture: ComponentFixture<FormEditorComponent>;
 
     let formEditorConfigurationServiceMockConfiguration$Spy;
-    let formEditorMappingServiceMockMapFormBOToFormSpy;
-    let formEditorMappingServiceMockMapFormToFormBOSpy;
 
     beforeEach(waitForAsync(() => {
 
@@ -44,8 +42,6 @@ describe('FormEditorComponent', () => {
 
         // create mock
         const formEditorMappingServiceMock = jasmine.createSpyObj('FormEditorMappingService', ['mapFormBOToForm', 'mapFormToFormBO']);
-        formEditorMappingServiceMockMapFormBOToFormSpy = formEditorMappingServiceMock.mapFormBOToForm;
-        formEditorMappingServiceMockMapFormToFormBOSpy = formEditorMappingServiceMock.mapFormToFormBO;
 
         TestBed.configureTestingModule({
             declarations: [
@@ -54,7 +50,7 @@ describe('FormEditorComponent', () => {
                 FormEditorMenuComponent,
                 FormEditorComponent,
                 FormElementDropZoneComponent,
-                Icon,
+                IconDirective,
                 MockI18nPipe,
             ],
             imports: [
@@ -66,7 +62,7 @@ describe('FormEditorComponent', () => {
                 { provide: FormEditorMappingService, useValue: formEditorMappingServiceMock },
             ],
         })
-        .compileComponents();
+            .compileComponents();
     }));
 
     beforeEach(() => {

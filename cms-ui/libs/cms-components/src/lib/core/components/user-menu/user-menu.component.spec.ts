@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { GtxUserMenuComponent, GtxUserMenuToggleComponent, UILanguage } from '@gentics/cms-components';
 import { I18nLanguage, Normalized, User } from '@gentics/cms-models';
-import { Button, DropdownItem, GenticsUICoreModule, SideMenu } from '@gentics/ui-core';
+import { ButtonComponent, DropdownItemComponent, GenticsUICoreModule, SideMenuComponent } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../testing';
 
 @Component({
@@ -96,7 +96,7 @@ describe('UserMenu', () => {
             testComponent.userMenuOpened = false;
             fixture.detectChanges();
             tick();
-            const menu = get(SideMenu, fixture);
+            const menu = get(SideMenuComponent, fixture);
             expect(menu.opened).toBe(false);
 
             menu.toggle.emit(true);
@@ -112,7 +112,7 @@ describe('UserMenu', () => {
             testComponent.userMenuOpened = true;
             fixture.detectChanges();
             tick();
-            const menu = get(SideMenu, fixture);
+            const menu = get(SideMenuComponent, fixture);
             expect(menu.opened).toBe(true);
 
             menu.toggle.emit(false);
@@ -153,7 +153,7 @@ describe('UserMenu', () => {
                 tick();
 
                 const menu: GtxUserMenuComponent = fixture.debugElement.query(By.directive(GtxUserMenuComponent)).componentInstance;
-                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItem));
+                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItemComponent));
                 expect(dropdownItems.length).toBe(menu.supportedLanguages.length);
 
                 for (let index = 0; index < dropdownItems.length; index++) {
@@ -177,7 +177,7 @@ describe('UserMenu', () => {
                 fixture.detectChanges();
                 tick();
 
-                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItem));
+                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItemComponent));
 
                 // Language 1 should be ticked
                 expect(dropdownItems[0].nativeElement.innerText).toMatch('check');
@@ -200,7 +200,7 @@ describe('UserMenu', () => {
                 fixture.detectChanges();
                 tick();
 
-                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItem));
+                const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItemComponent));
                 dropdownItems[1].triggerEventHandler('click', {});
                 fixture.detectChanges();
                 expect(testComponent.onSetLanguage).toHaveBeenCalledWith(languages[1].code);
@@ -226,7 +226,7 @@ describe('UserMenu', () => {
             fixture.detectChanges();
             tick();
             // Click "more" (vertical dots) button
-            const buttons = fixture.debugElement.queryAll(By.directive(Button));
+            const buttons = fixture.debugElement.queryAll(By.directive(ButtonComponent));
             const dropdownTrigger = buttons.filter(btn => btn.nativeElement.innerText.indexOf('more_vert') >= 0)[0];
             expect(dropdownTrigger).toBeDefined('dropdown trigger not found');
             dropdownTrigger.nativeElement.click();
@@ -234,10 +234,10 @@ describe('UserMenu', () => {
             tick();
 
             // Click "Change Password" dropdown element
-            const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItem));
-            const changeButton = dropdownItems.filter(btn => btn.nativeElement.innerText.indexOf('change_password') >= 0)[0];
-            expect(changeButton).toBeDefined('change button not found');
-            changeButton.triggerEventHandler('click', {});
+            const dropdownItems = fixture.debugElement.queryAll(By.directive(DropdownItemComponent));
+            const changeButtonComponent = dropdownItems.filter(btn => btn.nativeElement.innerText.indexOf('change_password') >= 0)[0];
+            expect(changeButtonComponent).toBeDefined('change button not found');
+            changeButtonComponent.triggerEventHandler('click', {});
         }),
     );
 
@@ -255,11 +255,11 @@ describe('UserMenu', () => {
             testComponent.userMenuOpened = true;
             fixture.detectChanges();
             tick();
-            const buttons = fixture.debugElement.queryAll(By.directive(Button));
-            const logoutButton = buttons.filter(btn => btn.nativeElement.innerText.toLowerCase().indexOf('user.log_out') >= 0)[0];
+            const buttons = fixture.debugElement.queryAll(By.directive(ButtonComponent));
+            const logoutButtonComponent = buttons.filter(btn => btn.nativeElement.innerText.toLowerCase().indexOf('user.log_out') >= 0)[0];
 
-            expect(logoutButton).toBeDefined();
-            logoutButton.triggerEventHandler('click', {});
+            expect(logoutButtonComponent).toBeDefined();
+            logoutButtonComponent.triggerEventHandler('click', {});
             expect(testComponent.onLogoutClick).toHaveBeenCalled();
         }),
     );

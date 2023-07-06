@@ -37,6 +37,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
@@ -119,6 +120,7 @@ public class TemplateResourceTest {
 	private static SystemUser testUser;
 	private static Integer constructId;
 	private static ObjectTagDefinition objectProperty;
+	private static final String TEMPLATE_DEFINITION_NAME = "templateName";
 
 	@Rule
 	public ExceptionChecker exceptionChecker = new ExceptionChecker();
@@ -139,7 +141,7 @@ public class TemplateResourceTest {
 		testGroup = supply(() -> createUserGroup("Testgroup", 2));
 		testUser = supply(() -> createSystemUser("Test", "Test", null, "testuser", "testuser", Arrays.asList(testGroup)));
 
-		objectProperty = supply(() -> createObjectPropertyDefinition(Template.TYPE_TEMPLATE, constructId, "Template Name", "object.templateName"));
+		objectProperty = supply(() -> createObjectPropertyDefinition(Template.TYPE_TEMPLATE, constructId, "Template Name", TEMPLATE_DEFINITION_NAME));
 	}
 
 	@Before
@@ -825,6 +827,48 @@ public class TemplateResourceTest {
 			assertThat(reloaded.getAssignedNodes()).as("Linked Nodes").contains(node);
 		}, PermHandler.PERM_VIEW, PermHandler.PERM_TEMPLATE_VIEW, PermHandler.PERM_TEMPLATE_LINK);
 	}
+
+	@Test
+	public void givenTemplateTagWithoutChanges_ShouldHaveSameUidAndShouldNotCreateNewTags() throws NodeException {
+		Template template = supply(() -> createTemplate(folder, "Template"));
+		consume(Template::unlock, template);
+		setFolderPermissions(PermHandler.PERM_VIEW, PermHandler.PERM_TEMPLATE_VIEW, PermHandler.PERM_TEMPLATE_UPDATE);
+
+		ObjectTag objectTag = supply(()-> template.getObjectTag(TEMPLATE_DEFINITION_NAME));
+		String uid = objectTag.getGlobalId().toString();
+
+		consume(testUser, tmpl -> {
+			com.gentics.contentnode.rest.model.Template model = new com.gentics.contentnode.rest.model.Template();
+			model.setDescription("changed description");
+
+			com.gentics.contentnode.rest.model.Tag restTag = ModelBuilder.getTag(objectTag, false);
+			Map<String, com.gentics.contentnode.rest.model.Tag> restTags = new HashMap<>();
+			restTags.put(objectTag.getName(), restTag);
+			model.setObjectTags(restTags);
+
+			TemplateSaveRequest request = new TemplateSaveRequest();
+			request.setTemplate(model);
+			assertResponseCodeOk(new TemplateResourceImpl().update(tmpl.getId().toString(), request));
+		}, template);
+
+
+		Map<String, ObjectTag> retrievedTemplateObjectTags = template.getObjectTags();
+		ObjectTag objectTagRetrieved = retrievedTemplateObjectTags.get(TEMPLATE_DEFINITION_NAME);
+		String retrievedUid = objectTagRetrieved.getGlobalId().toString();
+
+		assertThat(retrievedUid).isEqualTo(uid);
+
+		// assert no new object tags are created
+		List<Integer> objTagIds =  supply(()-> DBUtils.select("SELECT t.id as id FROM objtag t"
+				+ " LEFT JOIN construct c ON c.id = t.construct_id"
+				+ " WHERE t.obj_id = ? AND t.obj_type = ? AND c.id IS NOT NULL", ps -> {
+			ps.setInt(1, template.getId());
+			ps.setInt(2, Template.TYPE_TEMPLATE);
+		}, DBUtils.IDLIST));
+
+		assertThat(objTagIds.size()).isEqualTo(1);
+	}
+
 
 	@Test
 	public void testUpdateObjectProperty() throws NodeException {

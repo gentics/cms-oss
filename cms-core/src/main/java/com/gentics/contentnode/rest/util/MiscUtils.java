@@ -28,6 +28,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -2404,5 +2409,17 @@ public class MiscUtils {
 		} catch (NodeException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	/**
+	 * Make a new object mapper, with LF newlines, non-nulls serialization, output indentation.
+	 * 
+	 * @return
+	 */
+	public static ObjectMapper newObjectMapper() {
+		return new ObjectMapper()
+				.setDefaultPrettyPrinter(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")))
+				.setSerializationInclusion(Include.NON_NULL)
+				.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 }

@@ -21,9 +21,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -47,6 +45,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.AbstractModel;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.etc.StringUtils;
@@ -138,12 +137,10 @@ public class Synchronizer {
 			PRIORITIES.put(clazz, priority.incrementAndGet());
 		}
 
-		mapper = new ObjectMapper();
+		mapper = MiscUtils.newObjectMapper();
 		SimpleModule module = new SimpleModule();
 		module.addDeserializer(AbstractCRModel.class, new CRModelDeserializer());
 		mapper.registerModule(module);
-		mapper.setSerializationInclusion(Include.NON_EMPTY);
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 
 	/**

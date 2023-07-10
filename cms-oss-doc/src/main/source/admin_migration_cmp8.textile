@@ -511,10 +511,16 @@ Rendering XNL has been removed. All existing XNL Implementations must be replace
 
 h4. Import/Export
 
-TBD
+Use the new "Content Staging":https://www.gentics.com/Content.Node/cmp8/guides/feature_content_staging.html. instead.
 
 h4. SSO with CAS
 
-TBD
+Single-Sign-On is now handled by the "Keycloak integration":rest_auth.html#sso-with-keycloak
 
 h4. Activiti Integration
+
+Use the Activiti API directly.
+
+h4. Auto-Update
+
+See the Gentics infoportal for instructions on how to update "Docker":https://www.gentics.com/infoportal/cmp/operations/docker/updates/, "Kubernetes":https://www.gentics.com/infoportal/cmp/operations/kubernetes/updates/ or "Linux":https://www.gentics.com/infoportal/cmp/operations/linux/updates/ installations.

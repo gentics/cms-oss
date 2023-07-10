@@ -140,9 +140,6 @@ index:
       text: Contains the Gentics CMS Java API Documentation
 
   REST API:
-    - title: "General"
-      ext-url: rest_general.html
-      text: General information
     - title: "API Documentation"
       ext-url: restapi/index.html
       text: Contains the REST API Documentation

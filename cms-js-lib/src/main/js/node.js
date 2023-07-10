@@ -19,14 +19,17 @@
 		for (constructKeyword in constructs) {
 			if (constructs.hasOwnProperty(constructKeyword)) {
 				var construct = constructs[constructKeyword];
-				var constructCategoryName = construct.category;
-				var categorySortorder = construct.categorySortorder;
+				var constructCategory = construct.category;
+				var constructCategoryName, categorySortorder;
 
 				// Use a custom name for constructs that have not been assigned
 				// to a category.
-				if (!constructCategoryName) {
+				if (constructCategory == null) {
 					constructCategoryName = 'GCN_UNCATEGORIZED';
 					categorySortorder = -1;
+				} else {
+					constructCategoryName = constructCategory.name;
+					categorySortorder = constructCategory.sortOrder;
 				}
 
 				// Initialize the inner array of constructs.
@@ -45,20 +48,38 @@
 			}
 		}
 
+		
+		categories.sort(function (a, b) {
+			
+			return a.sortorder - b.sortorder;
+		});
+
+		// Add the sorted category names to the sortorder field
+		for (var category of categories) {
+			var category = categories[i];
+			if (category.sortorder == null || category.sortorder === -1) {
+				category.sortorder = defaultCounter;
+				defaultCounter++;
+			}
+			defaultCounter = Math.max(category.sortorder, defaultCounter);
+			map.categorySortorder.push(category.name);
+		}
+
+		var defaultCounter = 1;
 		// Sort the categories by the sortorder.
 		constructCategoryArray.sort(function (a, b) {
+			defaultCounter = Math.max(a.sortorder || 0, b.sortorder || 0, defaultCounter);
 			return a.sortorder - b.sortorder;
 		});
 
 		// Add the sorted category names to the sortorder field.
-		var k;
-		for (k in constructCategoryArray) {
-			if (constructCategoryArray.hasOwnProperty(k)) {
-				var category = constructCategoryArray[k];
-				if (typeof category.sortorder !== 'undefined' && category.sortorder !== -1) {
-					categoryMap.categorySortorder.push(category.name);
-				}
+		for (var category of constructCategoryArray) {
+			var category = constructCategoryArray[k];
+			if (category.sortorder == null || category.sortorder === -1) {
+				category.sortorder = defaultCounter;
+				defaultCounter++;
 			}
+			categoryMap.categorySortorder.push(category.name);
 		}
 
 		return categoryMap;
@@ -150,7 +171,7 @@
 			node._read(function () {
 				node._authAjax({
 					url: GCN.settings.BACKEND_PATH +
-					     '/rest/construct/list.json?nodeId=' + node.id(),
+					     '/rest/construct?embed=category&nodeId=' + node.id(),
 					type: 'GET',
 					error: function (xhr, status, msg) {
 						var i;

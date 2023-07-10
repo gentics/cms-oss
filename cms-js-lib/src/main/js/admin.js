@@ -23,6 +23,8 @@
 		};
 		var categories = [];
 		var keyword;
+		// Determine the highest sortorder in case we need to default some
+		var defaultCounter = 1;
 
 		for (keyword in constructs) {
 			if (constructs.hasOwnProperty(keyword)) {
@@ -32,12 +34,16 @@
 
 				// Because constructs that have not been assigned to a category
 				// have not real category name.
-				if (constructCategory == null) {
+				if (!constructCategory) {
 					name = 'GCN_UNCATEGORIZED';
 					sortorder = -1;
 				} else {
 					name = constructCategory.name;
 					sortorder = constructCategory.sortOrder;
+				}
+
+				if (sortorder) {
+					defaultCounter = Math.max(sortorder, defaultCounter);
 				}
 
 				// Initialize the inner array of constructs
@@ -55,22 +61,18 @@
 			}
 		}
 
-		var defaultCounter = 1;
 		categories.sort(function (a, b) {
-			defaultCounter = Math.max(a.sortorder || 0, b.sortorder || 0, defaultCounter);
 			return a.sortorder - b.sortorder;
 		});
 
 		// Add the sorted category names to the sortorder field
-		for (var category of categories) {
-			var category = categories[i];
-			if (category.sortorder == null || category.sortorder === -1) {
+		categories.forEach(function(category) {
+			if (typeof category.sortorder === 'number' || category.sortorder === -1) {
 				category.sortorder = defaultCounter;
 				defaultCounter++;
 			}
-			defaultCounter = Math.max(category.sortorder, defaultCounter);
 			map.categorySortorder.push(category.name);
-		}
+		});
 
 		return map;
 	}

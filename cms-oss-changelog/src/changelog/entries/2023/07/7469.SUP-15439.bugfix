@@ -1,1 +1,1 @@
-The JSON output of Devtools items has been normalized to use LF line endings only on all systems. 
+The JSON output of Devtools items has been normalized to use LF line endings only on all systems. It is now exporting all non-null (e.g. including empty) fields.

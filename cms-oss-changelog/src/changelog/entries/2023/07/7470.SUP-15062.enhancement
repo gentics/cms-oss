@@ -1,0 +1,1 @@
+Adding new endpoint *@GET /part* to retrieve all kind of part types (including custom part types).

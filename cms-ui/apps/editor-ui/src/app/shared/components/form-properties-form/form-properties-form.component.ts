@@ -47,21 +47,44 @@ import { SelectedItemHelper } from '../../util/selected-item-helper/selected-ite
     templateUrl: './form-properties-form.tpl.html',
     styleUrls: ['./form-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
-export class FormPropertiesFormComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+})
+export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy {
 
-    @Input() nodeId: number;
-    @Input() folderId: number;
-    @Input() form: Form;
-    @Input() properties: EditableFormProps = {};
-    @Input() languages: Language[];
-    @Input() disabled = false;
-    @Input() disableLanguageSelect = false;
-    @Input() autoUpdateFileName = true;
-    @Input() mode: 'create' | 'edit' = 'edit';
-    @Input() isMultiLang: boolean;
-    @Input() showDetailProperties = false;
-    @Output() changes = new EventEmitter<EditableFormProps>();
+    @Input()
+    public nodeId: number;
+
+    @Input()
+    public folderId: number;
+
+    @Input()
+    public form: Form;
+
+    @Input()
+    public properties: EditableFormProps = {};
+
+    @Input()
+    public languages: Language[];
+
+    @Input()
+    public disabled = false;
+
+    @Input()
+    public disableLanguageSelect = false;
+
+    @Input()
+    public autoUpdateFileName = true;
+
+    @Input()
+    public mode: 'create' | 'edit' = 'edit';
+
+    @Input()
+    public isMultiLang: boolean;
+
+    @Input()
+    public showDetailProperties = false;
+
+    @Output()
+    public changes = new EventEmitter<EditableFormProps>();
 
     formGroup: UntypedFormGroup;
     private subscriptions: Subscription[] = [];
@@ -288,21 +311,6 @@ export class FormPropertiesFormComponent implements OnInit, AfterViewInit, OnCha
             this.formEditorService.activeUiLanguageCode = language;
         }));
 
-    }
-
-    ngAfterViewInit(): void {
-        // workaround to make radio buttons reflect their initial state
-        setTimeout(() => {
-            this.formGroup.get('useInternalSuccessPage').setValue(
-                this.isInternalPageUsed(this.properties.successPageId, this.properties.successNodeId, this.properties.successurl_i18n),
-                { emitEvent: true, onlySelf: true },
-            );
-            this.formGroup.get('useEmailPageTemplate').setValue(
-                this.isEmailTemplateUsed(this.properties.mailsource_pageid, this.properties.mailsource_nodeid, this.properties.mailtemp_i18n),
-                { emitEvent: true, onlySelf: true },
-            );
-            this.changeDetector.detectChanges();
-        }, 50);
     }
 
     ngOnChanges(changes: { [K in keyof this]: SimpleChange }): void {

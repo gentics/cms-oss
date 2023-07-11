@@ -16,17 +16,27 @@
 			categorySortorder: []
 		};
 		var constructCategoryArray = [];
+		// Determine the highest sortorder in case we need to default some
+		var defaultCounter = 1;
+
 		for (constructKeyword in constructs) {
 			if (constructs.hasOwnProperty(constructKeyword)) {
 				var construct = constructs[constructKeyword];
-				var constructCategoryName = construct.category;
-				var categorySortorder = construct.categorySortorder;
+				var constructCategory = construct.category;
+				var constructCategoryName, categorySortorder;
 
 				// Use a custom name for constructs that have not been assigned
 				// to a category.
-				if (!constructCategoryName) {
+				if (!constructCategory) {
 					constructCategoryName = 'GCN_UNCATEGORIZED';
 					categorySortorder = -1;
+				} else {
+					constructCategoryName = constructCategory.name;
+					categorySortorder = constructCategory.sortOrder;
+				}
+
+				if (categorySortorder) {
+					defaultCounter = Math.max(categorySortorder, defaultCounter);
 				}
 
 				// Initialize the inner array of constructs.
@@ -51,15 +61,13 @@
 		});
 
 		// Add the sorted category names to the sortorder field.
-		var k;
-		for (k in constructCategoryArray) {
-			if (constructCategoryArray.hasOwnProperty(k)) {
-				var category = constructCategoryArray[k];
-				if (typeof category.sortorder !== 'undefined' && category.sortorder !== -1) {
-					categoryMap.categorySortorder.push(category.name);
-				}
+		constructCategoryArray.forEach(function(category) {
+			if (typeof category.sortorder === 'number' || category.sortorder === -1) {
+				category.sortorder = defaultCounter;
+				defaultCounter++;
 			}
-		}
+			categoryMap.categorySortorder.push(category.name);
+		});
 
 		return categoryMap;
 	}
@@ -150,7 +158,7 @@
 			node._read(function () {
 				node._authAjax({
 					url: GCN.settings.BACKEND_PATH +
-					     '/rest/construct/list.json?nodeId=' + node.id(),
+					     '/rest/construct?embed=category&nodeId=' + node.id(),
 					type: 'GET',
 					error: function (xhr, status, msg) {
 						var i;
@@ -161,7 +169,7 @@
 					success: function (response) {
 						var i;
 						if (GCN.getResponseCode(response) === 'OK') {
-							node._constructs = GCN.mapConstructs(response.constructs);
+							node._constructs = GCN.mapConstructs(response.items);
 							for (i = 0; i < node._constructLoadHandlers.length; i++) {
 								node._invoke(node._constructLoadHandlers[i].success, [node._constructs]);
 							}

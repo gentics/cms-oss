@@ -83,7 +83,8 @@ public class FolderURLPartType extends UrlPartType {
 	@Override
 	public void fromProperty(Property property) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		setTargetFolder(t.getObject(Folder.class, property.getFolderId()));
+
+		setTargetFolder(t.getObject(Folder.class, property.getFolderId(), -1, false));
 		setNode(t.getObject(Node.class, property.getNodeId()));
 	}
 }

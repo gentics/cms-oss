@@ -18,9 +18,13 @@ successfully in less time, no matter which technology you prefer.
 <p align="center">
 
  <img src="https://img.shields.io/badge/status-stable-brightgreen.svg" alt="stable" />
-
+ 
  <a href="https://www.apache.org/licenses/LICENSE-2.0">
   <img src="https://img.shields.io/:license-apache-brightgreen.svg" alt="License" />
+ </a>
+</a>
+ <a href="https://cla-assistant.io/gentics/cms-oss">
+  <img src="https://cla-assistant.io/readme/badge/gentics/cms-oss" alt="CLA assistant" />
  </a>
 </p>
 
@@ -50,7 +54,7 @@ successfully in less time, no matter which technology you prefer.
 
 ## Gentics CMP
 
-Gentics CMP (Content Management Platform) is composed of the following components: Gentics CMS, Gentics Mesh, and Gentics Portal. Gentics CMS and Mesh are available as both open-source software (OSS) and Enterprise Edition (EE). Gentics Portal Java and PHP can only be acquired with the Enterprise Edition. You can find the EE features here: [Open-Source and Enterprise Edition](https://www.gentics.com/cmp8/infoportal/cmp/ossandee/). For more information about the EE, please contact [sales@gentics.com](mailto:sales@gentics.com).
+Gentics CMP (Content Management Platform) is composed of the following components: Gentics CMS, Gentics Mesh, and Gentics Portal. Gentics CMS and Mesh are available as both open-source software (OSS) and Enterprise Edition (EE). Gentics Portal Java and PHP can only be acquired with the Enterprise Edition. You can find the EE features here: [Open-Source and Enterprise Edition](https://www.gentics.com/infoportal/cmp/ossandee/). For more information about the EE, please contact [sales@gentics.com](mailto:sales@gentics.com).
 
 Here are the links to our open-source projects:
 
@@ -207,7 +211,7 @@ Headless CMS solutions.
 
 # Contributing to Gentics CMS
 
-Please sign TODO CLA Link in order to contribute to Gentics CMS.
+Please sign the [CLA](https://cla-assistant.io/gentics/cms-oss) in order to contribute to Gentics CMS.
 
 # Copyright & License
 

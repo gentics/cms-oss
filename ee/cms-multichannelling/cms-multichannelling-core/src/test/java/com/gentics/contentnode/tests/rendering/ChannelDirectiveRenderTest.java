@@ -77,6 +77,64 @@ public class ChannelDirectiveRenderTest {
 		this.testRenderLink(true);
 	}
 
+	@Test
+	public void testPageResourceRenderTag() throws NodeException {
+		Folder targetFolder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(sourceNode.getFolder(), "TargetFolder"));
+		Template targetTemplate = Trx.supply(() -> ContentNodeTestDataUtils.createTemplate(targetFolder, "TargetPage"));
+		Page targetPage = Trx.supply(() -> ContentNodeTestDataUtils.createPage(targetFolder, targetTemplate, "TargetPage", sourceChannel));
+
+		Trx.operate(t -> t.getObject(targetPage, true).publish());
+
+		Folder sourceFolder = Trx.supply(() -> ContentNodeTestDataUtils.createFolder(sourceNode.getFolder(), "SourceFolder"));
+		Template sourceTemplate = Trx.supply(() -> ContentNodeTestDataUtils.createTemplate(
+			sourceNode.getFolder(),
+			"<node vtl>",
+			"Template",
+			ContentNodeTestDataUtils.createTemplateTag(vtlConstructId, "vtl", true, false),
+			ContentNodeTestDataUtils.createTemplateTag(pageConstructId, "page", true, false)));
+		Page sourcePage = Trx.supply(() -> {
+			Transaction t = TransactionManager.getCurrentTransaction();
+			Page p = ContentNodeTestDataUtils.createPage(sourceFolder, sourceTemplate, "SourcePage");
+
+			p = t.getObject(p, true);
+
+			ContentNodeTestDataUtils.getPartType(PageURLPartType.class, p.getContentTag("page"), "page")
+				.setTargetPage(p);
+
+			String valueText = String.format("#gtx_channel(%s)<PageId:$cms.page.tags.page.parts.page.id>#end", sourceChannel.getId());
+
+			ContentNodeTestDataUtils.getPartType(LongHTMLPartType.class, p.getContentTag("vtl"), "template")
+				.getValueObject()
+				.setValueText(valueText);
+
+			p.save();
+
+			return t.getObject(p);
+		});
+
+		com.gentics.contentnode.rest.model.Page restPage = ModelBuilder.getPage(sourcePage, Collections.singleton(Reference.CONTENT_TAGS));
+
+		Property pageProperty = restPage.getTags().get("page").getProperties().get("page");
+
+		pageProperty.setPageId(targetPage.getId());
+		pageProperty.setNodeId(targetPage.getChannel().getId());
+
+		SystemUser systemUser = Trx.supply(t -> t.getObject(SystemUser.class, 1));
+		PageRenderResponse renderResponse = Trx.supply(systemUser, () -> new PageResourceImpl().renderTag("vtl", sourcePage.getNode().getId(), null, LinksType.backend, restPage));
+
+		assertResponseCodeOk(renderResponse);
+
+		Matcher matcher = Pattern.compile("<PageId:(\\d+)>").matcher(renderResponse.getContent());
+
+		assertThat(matcher.find())
+			.as("Page ID found in rendered content")
+			.isTrue();
+
+		assertThat(matcher.group(1))
+			.as("Rendered page ID")
+			.isEqualTo(targetPage.getId().toString());
+	}
+
 	private void testRenderLink(boolean isGlobalId) throws NodeException {
 		Folder targetFolder = Trx.supply(
 				() -> ContentNodeTestDataUtils.createFolder(targetNode.getFolder(), "TargetFolder"));

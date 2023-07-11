@@ -15,7 +15,7 @@ public class PartType {
   private boolean deprecated;
 
   /**
-   * Method to create an instance from a ResultSelt
+   * Method to create an instance from a ResultSet
    * @return fluent API
    */
   public PartType buildFromResultSet(ResultSet rs) throws SQLException {

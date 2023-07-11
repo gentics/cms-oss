@@ -12,6 +12,7 @@
 # dependencies
 /node_modules
 /node
+**/node
 /apps/*/node/**
 
 # profiling files

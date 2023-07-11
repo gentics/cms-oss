@@ -12,7 +12,7 @@ import javax.ws.rs.Path;
  * Resource for part types
  */
 @Path("/parttype")
-public abstract class PartTypeResource {
+public interface PartTypeResource {
 
   /**
    * List Part types
@@ -22,7 +22,7 @@ public abstract class PartTypeResource {
    * @throws Exception in case of errors
    */
   @GET
-  public abstract List<PartType> list(
+  List<PartType> list(
       @BeanParam FilterParameterBean filter) throws Exception;
 
 }

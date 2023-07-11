@@ -21,7 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 @Produces({MediaType.APPLICATION_JSON})
 @Authenticated
 @Path("/parttype")
-public class PartTypeResourceImpl extends PartTypeResource {
+public class PartTypeResourceImpl implements PartTypeResource {
 
 
   @GET

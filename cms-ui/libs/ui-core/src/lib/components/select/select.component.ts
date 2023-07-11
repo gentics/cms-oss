@@ -164,7 +164,7 @@ export class SelectComponent
     @IncludeToDocs()
     selectItem(groupIndex: number, optionIndex: number): void {
         const option = this.optionGroups[groupIndex] && this.optionGroups[groupIndex].options[optionIndex];
-        if (!this.optionGroups[groupIndex].disabled && option && !option.disabled) {
+        if ((this.optionGroups[groupIndex] && !this.optionGroups[groupIndex].disabled) && option && !option.disabled) {
             this.toggleSelectedOption(option);
             const selectedValues = this.selectedOptions.map(o => o.value);
             this.triggerChange(this.multiple ? selectedValues : selectedValues[0]);

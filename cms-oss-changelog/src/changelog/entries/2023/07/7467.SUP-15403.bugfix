@@ -1,0 +1,2 @@
+Fixing the issue where new object tags are created when merely changing properties of a template. 
+This triggers the generation of new global ids (UID's) for the same object tags, hence causing issues, especially with package synchronization. 

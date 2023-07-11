@@ -2,7 +2,7 @@ import { createI18nRequiredValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChange } from '@angular/core';
 import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { AnyModelType, GtxI18nProperty, Language, Role } from '@gentics/cms-models';
+import { AnyModelType, Language, Role } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 
 @Component({
@@ -58,9 +58,5 @@ export class RolePropertiesComponent extends BasePropertiesComponent<Role> imple
         });
 
         return validator;
-    }
-
-    setActiveI18nTab(languageId: number): void {
-        this.activeTabI18nLanguage = this.supportedLanguages.find(l => l.id === languageId);
     }
 }

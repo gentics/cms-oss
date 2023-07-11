@@ -1,0 +1,20 @@
+{
+  "version": "6.0.0",
+  "date": "30.06.2023",
+  "changeLogEntryFileNames": [
+    "7400.GPU-567.enhancement",
+    "7447.GPU-783.manualchange",
+    "7407.GPU-566.enhancement",
+    "7431.GPU-674.enhancement",
+    "7417.GPU-718.enhancement",
+    "7454.enhancement",
+    "7405.GPU-599.enhancement",
+    "7420.GPU-674.manualchange",
+    "7416.GPU-718.manualchange",
+    "7415.GPU-734.enhancement"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "27.06.2023",
+    "alohaeditor-version": "1.5.0"
+  }
+}

@@ -1490,13 +1490,9 @@ public class ModelBuilder {
 			for (Iterator<com.gentics.contentnode.rest.model.Tag> i = restTags.values().iterator(); i.hasNext();) {
 				com.gentics.contentnode.rest.model.Tag restTag = i.next();
 				Tag tag = null;
+				String tagName = getTagNameOrThrow(restTag);
 
-				// Check whether the tag has a valid name
-				if (restTag.getName() == null) {
-					logger.error("Could not handle tag since it did not contain a valid name {" + restTag.getName() + " }");
-					throw new NodeException("A tag that was specified within the request did not have a name.");
-				}
-				if (restTag.getName().startsWith("object.")) {
+				if (tagName.startsWith("object.")) {
 					String realName = restTag.getName().substring(7);
 					ObjectTag oTag = objectTags.get(realName);
 
@@ -2129,16 +2125,8 @@ public class ModelBuilder {
 
 		if (templateRestTags != null) {
 			for (com.gentics.contentnode.rest.model.TemplateTag restTag : templateRestTags.values()) {
-
-				Tag tag = null;
-
-				// Check whether the tag has a valid name
-				if (restTag.getName() == null) {
-					logger.error("Could not handle tag since it did not contain a valid name {" + restTag.getName() + " }");
-					throw new NodeException("A tag that was specified within the request did not have a name.");
-				}
-
-				TemplateTag templateTag = templateTags.get(restTag.getName());
+				String tagName = getTagNameOrThrow(restTag);
+				TemplateTag templateTag = templateTags.get(tagName);
 
 				if (templateTag == null) {
 
@@ -2160,7 +2148,7 @@ public class ModelBuilder {
 					// and add it to the other tags
 					templateTags.put(restTag.getName(), templateTag);
 				}
-				tag = templateTag;
+				Tag tag = templateTag;
 
 				if (tag != null) {
 					// now set the data from the REST tag
@@ -2183,37 +2171,55 @@ public class ModelBuilder {
 		Map<String, com.gentics.contentnode.rest.model.Tag> objectRestTags = restTemplate.getObjectTags();
 
 		if (objectRestTags != null) {
-		for (com.gentics.contentnode.rest.model.Tag restTag : objectRestTags.values()) {
-
-			Tag tag = null;
-
-			// Check whether the tag has a valid name
-			if (restTag.getName() == null) {
-				logger.error("Could not handle tag since it did not contain a valid name {" + restTag.getName() + " }");
-				throw new NodeException("A tag that was specified within the request did not have a name.");
-			}
-
-			ObjectTag objectTag = objectTags.get(restTag.getName());
-
-			if (objectTag == null) {
-				// did not find the tag, so create a new one
-				objectTag = (ObjectTag) t.createObject(ObjectTag.class);
-				objectTag.setName(restTag.getName());
-				objectTag.setConstructId(restTag.getConstructId());
-
-				// and add it to the other tags
-				objectTags.put(restTag.getName(), objectTag);
-			}
-			tag = objectTag;
-
-			if (tag != null) {
-				// now set the data from the REST tag
+			for (com.gentics.contentnode.rest.model.Tag restTag : objectRestTags.values()) {
+				Tag tag = getOrCreateObjectTag(t, objectTags, restTag);
 				fillRest2Node(restTag, tag);
 			}
 		}
-		}
 
 		return nodeTemplate;
+	}
+
+	/**
+	 * Helper method to get or create an ObjectTag
+	 * @param t the current transaction
+	 * @param objectTags map of ObjectTags to extract the ObjectTag
+	 * @param restTag the rest version of the tag
+	 * @return The sought tag
+	 * @throws NodeException
+	 */
+	private static Tag getOrCreateObjectTag(Transaction t, Map<String, ObjectTag> objectTags, com.gentics.contentnode.rest.model.Tag restTag)
+			throws NodeException {
+		String tagName = getTagNameOrThrow(restTag);
+		ObjectTag objectTag = objectTags.get(tagName);
+
+		if (objectTag == null) {
+			objectTag = objectTags.get(restTag.getName().replace("object.", ""));
+		}
+
+		if (objectTag == null) {
+			objectTag = t.createObject(ObjectTag.class);
+			objectTag.setName(tagName);
+			objectTag.setConstructId(restTag.getConstructId());
+		}
+
+		return objectTag;
+	}
+
+	/**
+	 * Helper to get or throw a tag Name
+	 * @param restTag to get the name from
+	 * @return The tag name
+	 * @throws NodeException
+	 */
+	private static String getTagNameOrThrow(com.gentics.contentnode.rest.model.Tag restTag) throws NodeException {
+		String name = restTag.getName();
+
+		if (name == null) {
+			logger.error("Could not handle tag since it did not contain a valid name.");
+			throw new NodeException("A tag that was specified within the request did not have a name.");
+		}
+		return name;
 	}
 
 	/**

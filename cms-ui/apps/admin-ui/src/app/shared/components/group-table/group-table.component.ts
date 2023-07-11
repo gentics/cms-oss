@@ -74,6 +74,10 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
         }
     }
 
+    protected override applyActions(actions: TableAction<GroupBO>[]): void {
+        this.actions = this.hideActions ? [...this.extraActions] : [...this.extraActions, ...actions];
+    }
+
     protected override createTableActionLoading(): Observable<TableAction<GroupBO>[]> {
         return combineLatest([
             this.actionRebuildTrigger$,

@@ -102,7 +102,8 @@ public class ImageURLPartType extends UrlPartType {
 	@Override
 	public void fromProperty(Property property) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		setTargetImage(t.getObject(ImageFile.class, property.getImageId()));
+
+		setTargetImage(t.getObject(ImageFile.class, property.getImageId(), -1, false));
 		setNode(t.getObject(Node.class, property.getNodeId()));
 	}
 }

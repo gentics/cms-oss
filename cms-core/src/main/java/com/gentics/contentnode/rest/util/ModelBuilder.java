@@ -741,7 +741,9 @@ public class ModelBuilder {
 		}
 
 		// Fill IDs
-		restOverview.setGlobalId(nodeOverview.getGlobalId().toString());
+		if (nodeOverview.getGlobalId() != null) {
+			restOverview.setGlobalId(nodeOverview.getGlobalId().toString());
+		}
 		restOverview.setId(nodeOverview.getId());
 
 		// set the selection type

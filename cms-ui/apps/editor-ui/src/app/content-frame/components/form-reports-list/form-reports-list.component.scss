@@ -44,52 +44,21 @@ $gtx-form-report-table-border-color: #ddd;
 }
 
 .table-wrapper-outer {
-    display: flex;
     width: 100%;
-    min-height: 1px;
+    min-height: 85px;
     flex: 1 1 auto;
 }
 
 .table-wrapper-inner {
-    overflow: hidden;
+    overflow: auto;
     width: 100%;
-    min-height: 1px;
-    flex: 1 1 auto;
+    max-height: 100%;
+    display: block;
 
     table {
         width: auto;
         min-width: 100%;
-    }
-}
-
-// flex table layout to conform to all supported browser
-// because `position: sticky` won't work for `table` in Firefox
-table.flex-table {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-
-    thead,
-    tbody {
-        display: block;
-    }
-    thead {
-        margin-right: 0px;
-    }
-    tbody {
-        flex: 1;
-        overflow-x: auto;
-        overflow-y: hidden;
-    }
-    tr {
-        width: 100%;
-        display: flex;
-
-        th, td {
-            display: flex;
-            flex: 1;
-            align-items: center;
-        }
+        height: initial;
     }
 }
 
@@ -98,14 +67,16 @@ table.data-table {
         height: 24px;
     }
 
+    thead th {
+        z-index: 1;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        border-bottom: 1px solid $gtx-form-report-table-border-color;
+    }
+
     tr {
         border-bottom: none;
-        // indicate table header
-        &:first-child {
-            th, td {
-                border-bottom: 1px solid $gtx-form-report-table-border-color;
-            }
-        }
 
         th, td {
             line-height: 0;
@@ -127,6 +98,7 @@ table.data-table {
                 background-color: white;
                 min-width: 2.3rem;
                 width: 2.3rem;
+                z-index: 2;
 
                 &.left {
                     left: 0;
@@ -175,7 +147,7 @@ table.data-table {
 }
 
 .paginate-wrapper {
-    position: absolute;
+    position: relative !important;
     width: 100%;
     z-index: 1;
     bottom: 0;

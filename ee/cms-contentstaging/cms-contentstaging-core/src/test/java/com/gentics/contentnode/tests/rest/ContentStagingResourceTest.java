@@ -106,6 +106,7 @@ import com.gentics.contentnode.rest.resource.impl.FileResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.FormResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
@@ -128,7 +129,7 @@ public class ContentStagingResourceTest {
 
 	public final static String IMAGE_NAME = "image-dpi66x44-res311x211.jpg";
 
-	public static ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+	public static ObjectMapper mapper = MiscUtils.newObjectMapper();
 
 	/**
 	 * Database context
@@ -1035,7 +1036,7 @@ public class ContentStagingResourceTest {
 		} finally {
 			if (uploadMultiPart != null) {
 				uploadMultiPart.close();
-	}
+			}
 		}
 		ContentPackageListResponse list = supply(() -> {
 			return new ContentStagingResourceImpl().list(null, null, null);

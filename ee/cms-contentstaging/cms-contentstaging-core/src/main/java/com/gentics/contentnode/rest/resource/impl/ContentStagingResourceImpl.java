@@ -79,9 +79,7 @@ import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.etc.BiConsumer;
@@ -192,7 +190,7 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 	/**
 	 * Object Mapper for serialization/deserialization
 	 */
-	private static ObjectMapper mapper = new ObjectMapper().setSerializationInclusion(Include.NON_NULL).enable(SerializationFeature.INDENT_OUTPUT);
+	private static ObjectMapper mapper = MiscUtils.newObjectMapper();
 
 	/**
 	 * Keyed lock to synchronize create/update calls for the same filename

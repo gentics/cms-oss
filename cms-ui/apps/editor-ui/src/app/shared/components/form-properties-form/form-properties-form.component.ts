@@ -275,7 +275,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
                 mailtemp_i18n: !changes.useEmailPageTemplate ? changes.mailtemp_i18n: undefined, // undefined if unused
                 languages: changes.languages,
                 templateContext: changes.templateContext,
-                type: changes.type || this.formGroup.get('type'),
+                type: changes.type || this.form.type || null,
                 elements: changes.elements,
             };
 
@@ -564,18 +564,21 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
      */
     private updateTemplateContextValidator(templateContextOptions: FormElementPropertyOptionConfiguration[] | null): void {
         const templateContextFormControl: AbstractControl | null = this.formGroup.get('templateContext');
-        if (templateContextFormControl) {
-            if (templateContextOptions) {
-                const allowed: string[] = templateContextOptions.map(
-                    (templateContextOption: FormElementPropertyOptionConfiguration) => templateContextOption.key,
-                );
-                templateContextFormControl.setValidators((control: AbstractControl): ValidationErrors | null => {
-                    return allowed.includes(control.value) ? null : { invalidSelection: { value: control.value } } ;
-                });
-            } else {
-                templateContextFormControl.setValidators([]);
-            }
-            templateContextFormControl.updateValueAndValidity();
+        if (!templateContextFormControl) {
+            return;
         }
+        if (!templateContextOptions) {
+            templateContextFormControl.clearValidators();
+            templateContextFormControl.updateValueAndValidity();
+            return;
+        }
+
+        const allowed: string[] = templateContextOptions.map(
+            (templateContextOption: FormElementPropertyOptionConfiguration) => templateContextOption.key,
+        );
+        templateContextFormControl.setValidators((control: AbstractControl): ValidationErrors | null => {
+            return allowed.includes(control.value) ? null : { invalidSelection: { value: control.value } } ;
+        });
+        templateContextFormControl.updateValueAndValidity();
     }
 }

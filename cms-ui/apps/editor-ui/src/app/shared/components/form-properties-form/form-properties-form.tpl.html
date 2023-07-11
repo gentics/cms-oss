@@ -31,10 +31,11 @@
 
         <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
             <gtx-select
-                [label]="'editor.item_template_context_label' | i18n"
+                [label]="('editor.item_template_context_label' | i18n) + '*'"
                 formControlName="templateContext"
                 [gtxDisabled]="disabled"
                 [multiple]="false"
+                [required]="true"
             >
                 <gtx-option
                     *ngFor="let option of formPropertiesConfiguration.template_context_options"

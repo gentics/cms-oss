@@ -100,7 +100,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>templates</id>
+						<id>oss-content</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
@@ -109,7 +109,7 @@
 							<attach>true</attach>
 							<appendAssemblyId>true</appendAssemblyId>
 							<descriptors>
-								<descriptor>${project.basedir}/src/assembly/doc-templates.xml</descriptor>
+								<descriptor>src/assembly/doc-oss-content.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</execution>

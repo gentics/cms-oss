@@ -31,7 +31,7 @@ index:
       text: "Overview of Gentics CMS user interfaces"
       url: userinterfaces
     - title: "Features"
-      url: feature_overview
+      url: oss-feature_overview
       text: "Overview of Gentics CMS features"
     - title: "System Requirements"
       text: "Gentics CMS System Requirements."
@@ -140,9 +140,6 @@ index:
       text: Contains the Gentics CMS Java API Documentation
 
   REST API:
-    - title: "General"
-      ext-url: rest_general.html
-      text: General information
     - title: "API Documentation"
       ext-url: restapi/index.html
       text: Contains the REST API Documentation

@@ -102,7 +102,8 @@ public class FileURLPartType extends UrlPartType {
 	@Override
 	public void fromProperty(Property property) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
-		setTargetFile(t.getObject(File.class, property.getFileId()));
+
+		setTargetFile(t.getObject(File.class, property.getFileId(), -1, false));
 		setNode(t.getObject(Node.class, property.getNodeId()));
 	}
 }

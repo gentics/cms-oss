@@ -25,6 +25,8 @@
         <!-- If the UI module is a library -->
         <ui.library>false</ui.library>
 
+        <!-- If the UI should skip npm install -->
+        <ui.skip.install>false</ui.skip.install>
         <!-- If the UI module should skip the build process -->
         <ui.skip.build>true</ui.skip.build>
         <!-- If the UI module should skip the assembly step -->
@@ -40,6 +42,12 @@
     </properties>
 
 	<modules>
+        <module>libs/cms-models</module>
+        <module>libs/cms-rest-clients-angular</module>
+        <module>libs/image-editor</module>
+        <module>libs/ui-core</module>
+        <module>libs/cms-components</module>
+        <module>libs/form-generator</module>
         <module>apps/admin-ui</module>
         <module>apps/editor-ui</module>
         <module>apps/ct-link-checker</module>
@@ -61,6 +69,10 @@
 						</goals>
 
 						<phase>generate-resources</phase>
+
+                        <configuration>
+                            <skip>${ui.skip.install}</skip>
+                        </configuration>
 					</execution>
 
                     <execution>
@@ -73,6 +85,7 @@
 						<phase>generate-resources</phase>
 
 						<configuration>
+                            <skip>${ui.skip.install}</skip>
 							<arguments>install --no-audit --no-fund</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
@@ -105,7 +118,7 @@
 
 						<configuration>
                             <skip>${ui.skip.build}</skip>
-							<arguments>run build ${project.artifactId} -- --progress=false</arguments>
+							<arguments>run build ${project.artifactId}</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>

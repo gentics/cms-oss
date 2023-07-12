@@ -23,18 +23,27 @@
 		};
 		var categories = [];
 		var keyword;
+		// Determine the highest sortorder in case we need to default some
+		var defaultCounter = 1;
 
 		for (keyword in constructs) {
 			if (constructs.hasOwnProperty(keyword)) {
 				var construct = constructs[keyword];
-				var name = construct.category;
-				var sortorder = construct.categorySortorder;
+				var constructCategory = construct.category;
+				var name, sortorder;
 
 				// Because constructs that have not been assigned to a category
 				// have not real category name.
-				if (!name) {
+				if (!constructCategory) {
 					name = 'GCN_UNCATEGORIZED';
 					sortorder = -1;
+				} else {
+					name = constructCategory.name;
+					sortorder = constructCategory.sortOrder;
+				}
+
+				if (sortorder) {
+					defaultCounter = Math.max(sortorder, defaultCounter);
 				}
 
 				// Initialize the inner array of constructs
@@ -57,16 +66,13 @@
 		});
 
 		// Add the sorted category names to the sortorder field
-		var i;
-		for (i in categories) {
-			if (categories.hasOwnProperty(i)) {
-				var category = categories[i];
-				if (typeof category.sortorder !== 'undefined'
-						&& category.sortorder !== -1) {
-					map.categorySortorder.push(category.name);
-				}
+		categories.forEach(function(category) {
+			if (typeof category.sortorder === 'number' || category.sortorder === -1) {
+				category.sortorder = defaultCounter;
+				defaultCounter++;
 			}
-		}
+			map.categorySortorder.push(category.name);
+		});
 
 		return map;
 	}
@@ -286,14 +292,14 @@
 				this._invoke(success, [this._constructs]);
 			} else {
 				this._authAjax({
-					url: GCN.settings.BACKEND_PATH + '/rest/construct/list.json',
+					url: GCN.settings.BACKEND_PATH + '/rest/construct?embed=category',
 					type: 'GET',
 					error: function (xhr, status, msg) {
 						GCN.handleHttpError(xhr, msg, error);
 					},
 					success: function (response) {
 						if (GCN.getResponseCode(response) === 'OK') {
-							that._constructs = mapConstructs(response.constructs);
+							that._constructs = mapConstructs(response.items);
 							that._invoke(success, [that._constructs]);
 						} else {
 							GCN.handleResponseError(response, error);

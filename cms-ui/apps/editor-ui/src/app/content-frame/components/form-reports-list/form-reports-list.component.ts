@@ -1,5 +1,5 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { dateToFileSystemString } from '@editor-ui/app/common/utils/date-to-string';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { downloadFromBlob } from '@gentics/cms-components';
@@ -9,7 +9,7 @@ import {
     FormDataListResponse,
     FormDownloadInfo,
     FormElementLabelPropertyI18nValues,
-    GcmsUiLanguage
+    GcmsUiLanguage,
 } from '@gentics/cms-models';
 import { FormEditorService, FormReportService } from '@gentics/form-generator';
 import { ModalService } from '@gentics/ui-core';
@@ -47,18 +47,10 @@ import { SimpleDeleteModalComponent } from '../simple-delete-modal/simple-delete
         ]),
     ],
 })
-export class FormReportsListComponent implements OnInit, OnDestroy {
+export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
 
-    private _form: Form;
-
-    get form(): Form {
-        return this._form;
-    }
-
-    @Input() set form(value: Form) {
-        this._form = value;
-        this.formElementLabelPropertyI18nValues$ = this.formReportService.getFormElementLabelPropertyValues(value);
-    }
+    @Input()
+    public form: Form;
 
     icon = 'list';
     selected: string[] = [];
@@ -71,7 +63,7 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     currentPage$ = new BehaviorSubject<number>(1);
 
     paginationConfig: PaginationInstance = {
-        itemsPerPage: 25,
+        itemsPerPage: 15,
         currentPage: 1,
     };
 
@@ -106,8 +98,6 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     ) { }
 
     public ngOnInit(): void {
-
-        this.definePageSizeByClientHeight();
 
         this.subscriptions.push(this.appState.select(state => state.auth.sid).subscribe(sid => {
             this.sid = sid;
@@ -173,12 +163,18 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
         this.reload();
     }
 
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.form) {
+            this.formElementLabelPropertyI18nValues$ = this.formReportService.getFormElementLabelPropertyValues(this.form);
+        }
+    }
+
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     public isFile(entryValue: any): boolean {
-        return entryValue.hasOwnProperty('fileName');
+        return entryValue != null && entryValue.hasOwnProperty('fileName');
     }
 
     public getEntryValue(entryValue: any): string {
@@ -371,7 +367,6 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
     }
 
     pageChanged(newPageNumber: number): void {
-        this.definePageSizeByClientHeight();
         this.allSelected = false;
         this.paginationConfig.currentPage = newPageNumber;
         this.currentPage$.next(newPageNumber);
@@ -408,12 +403,5 @@ export class FormReportsListComponent implements OnInit, OnDestroy {
                 this.reload$.next();
             }
         }));
-    }
-
-    /**
-     * Dynamically calculate pageSize by client height.
-     */
-    private definePageSizeByClientHeight(): void {
-        this.paginationConfig.itemsPerPage = Math.floor(document.body.clientHeight / 60);
     }
 }

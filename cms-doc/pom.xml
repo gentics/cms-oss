@@ -24,7 +24,121 @@
 		<guides.exec.skip>false</guides.exec.skip>
 	</properties>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.gentics.cms-oss</groupId>
+				<artifactId>cms-oss-bom</artifactId>
+				<type>pom</type>
+				<scope>import</scope>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-restapi</artifactId>
+			<version>${cms-oss.version}</version>
+			<classifier>sources</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-cluster-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-contentstaging-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-linkchecker-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-search-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.4.public_draft</version>
+		</dependency>
+		<dependency>
+			<groupId>com.webcohesion.enunciate</groupId>
+			<artifactId>enunciate-core-annotations</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-cluster-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-contentstaging-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-forms-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-linkchecker-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-multichannelling-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms</groupId>
+			<artifactId>cms-search-api</artifactId>
+			<version>${project.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-oss-doc</artifactId>
+			<version>${cms-oss.version}</version>
+			<type>zip</type>
+		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-oss-doc</artifactId>
@@ -37,7 +151,14 @@
 			<artifactId>cms-oss-doc</artifactId>
 			<version>${cms-oss.version}</version>
 			<type>zip</type>
-			<classifier>templates</classifier>
+			<classifier>oss-content</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-restapi</artifactId>
+			<version>${cms-oss.version}</version>
+			<type>jar</type>
+			<classifier>javadoc</classifier>
 		</dependency>
 	</dependencies>
 
@@ -63,6 +184,25 @@
 									</includes>
 								</resource>
 							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.webcohesion.enunciate</groupId>
+				<artifactId>enunciate-maven-plugin</artifactId>
+				<version>${enunciate.version}</version>
+				<executions>
+					<execution>
+						<?m2e ignore?>
+						<id>docs</id>
+						<goals>
+							<goal>docs</goal>
+						</goals>
+						<configuration>
+							<docsDir>${project.build.directory}/output/restapi</docsDir>
+							<docsSubdir>.</docsSubdir>
+							<configFile>src/conf/enunciate.xml</configFile>
 						</configuration>
 					</execution>
 				</executions>
@@ -114,7 +254,7 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>unpack-templates</id>
+						<id>unpack-oss-content</id>
 						<phase>process-resources</phase>
 						<goals>
 							<goal>unpack</goal>
@@ -125,7 +265,7 @@
 									<groupId>com.gentics.cms-oss</groupId>
 									<artifactId>cms-oss-doc</artifactId>
 									<type>zip</type>
-									<classifier>templates</classifier>
+									<classifier>oss-content</classifier>
 									<overWrite>true</overWrite>
 									<outputDirectory>${project.basedir}/target/source</outputDirectory>
 								</artifactItem>

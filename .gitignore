@@ -51,4 +51,7 @@ processlogger.lock
 # VS Code files
 .vscode
 dependency-reduced-pom.xml
-conf
+conf/*
+ui-conf/*
+keys/*
+cache/*

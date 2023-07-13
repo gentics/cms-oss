@@ -199,21 +199,26 @@ Building the CMS Guides locally requires three steps:
 First, the artifacts containing the assets of the guides need to be installed locally:
 
 ```
+docker run --rm -v [workspace]/cms-oss/cms-oss-doc/src/main:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
 cd [workspace]/cms-oss
-mvn -pl cms-oss-doc install -Dguides.exec.skip
+mvn -pl cms-oss-doc -am clean install -Dguides.exec.skip -Dskip.unit.tests
 ```
 
 Then, the maven module needs to be built (without actually building the guides):
 
 ```
 cd [workspace]/cms
-mvn -pl cms-doc clean compile -Dguides.exec.skip
+mvn -pl cms-doc -am clean package -Dguides.exec.skip
 ```
 
-And finally, the guides can be built with
+Now the guides can be built with
 
 ```
 docker run --rm -v [workspace]/cms/cms-doc/target:/guides --entrypoint=/bin/bash -it --user root docker.apa-it.at/gentics/jenkinsbuilds/jenkins-slave -c "cd /guides ; guides build"
 ```
 
-The generated guides can be found at `cms/cms-doc/target/output`.
+After that, build the package again
+```
+mvn -pl cms-doc -am package -Dguides.exec.skip 
+```
+The generated guides can be found at `cms/cms-doc/target/cms-doc-*.zip`.

@@ -1,6 +1,6 @@
 import { RequiredTypePermissions } from '@admin-ui/core';
 import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-info';
-import { Data, Resolve, ResolveData, Route } from '@angular/router';
+import { Data, ResolveData, Route, ResolveFn } from '@angular/router';
 
 import { ConstructorOf } from '../utils/util-types/util-types';
 
@@ -53,7 +53,9 @@ export interface RouteData extends Data {
 
 }
 
-type RouteDataResolvers = { [K in keyof RouteData]?: ConstructorOf<Resolve<RouteData[K]>>; };
+type RouteDataResolvers = { [K in keyof RouteData]?: ConstructorOf<{
+    resolve: ResolveFn<RouteData[K]>;
+}>; };
 
 export interface RouteDataResolve extends ResolveData, RouteDataResolvers {
     // Some properties must be specified statically and cannot be resolved:

@@ -1,6 +1,6 @@
 import { Component, Injectable } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Resolve, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { IndexByKey } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
@@ -39,7 +39,7 @@ class RootComponent { }
 class TestComponent { }
 
 @Injectable()
-class DelayedResolver implements Resolve<BreadcrumbInfo> {
+class DelayedResolver  {
     resolve(): Observable<BreadcrumbInfo> {
         return observableOf({
             title: 'main.resolvedTitle',

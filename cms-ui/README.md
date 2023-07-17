@@ -4,38 +4,45 @@ This mono repo contains all the user interfaces and libraries interacting with t
 
 ## Quick start
 
-- [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
-- [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
+-   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
+-   [Admin UI a.k.a Gentics CMS Admin UI Readme](apps/admin-ui/README.md)
 
 ## General information
 
 ### Commands
 
 **Install dependencies:**
+
 ```bash
 npm install
 ```
 
 **Start or serve an application:**
+
 ```bash
 npm start <app-name>
 ```
+
 The application will run on `localhost:4200` by default.
 
 **Test an application or library:**
 
 To run the unit tests and then terminate the test process:
+
 ```bash
 npm test <app-name/lib-name>
 ```
+
 The test will run for the selected application or library. It is possible to run tests against all applications and libraries without specifying any name.
 
 To run the unit tests in watch mode (rebuild and rerun on every change):
+
 ```bash
 npm run test:watch <app-name/lib-name>
 ```
 
 **Build an application or library:**
+
 ```bash
 npm run build <app-name/lib-name>
 ```
@@ -43,9 +50,11 @@ npm run build <app-name/lib-name>
 This will build the selected application or library in `production` mode. All the built apps/libs destination is the `./dist` folder.
 
 **Adding flags to the commands:**
+
 ```bash
 npm test <app-name/lib-name> -- --flag1 --flag2
 ```
+
 All commands can be extended by passing flags to the underlying scripts. To do so, split the command with `--` then write the desired flags.
 
 ### Structure
@@ -94,8 +103,9 @@ Libraries having their own `package.json` only for packaging purposes, but it's 
 These commands can be used to create new applications in the monorepo. It will generate the application structure and updates the repository configurations.
 
 **Adds a new Angular application with Karma tests and Protractor e2e, using SCSS and Angular routing:**
+
 ```bash
-nx g @nrwl/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
+nx g @nx/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
 ```
 
 ### Add new library
@@ -103,8 +113,9 @@ nx g @nrwl/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-
 These commands can be used to create new libraries in the monorepo. It will generate the library structure and updates the repository configurations.
 
 **Adds a new Angular library with Karma tests, using SCSS:**
+
 ```bash
-nx g @nrwl/angular:lib <lib-name> --unit-test-runner=karma --style=scss
+nx g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 ```
 
 ## Packages
@@ -165,17 +176,19 @@ To maintain compatibility with legacy code, the default `ModelType` for [normali
 
 ## Coding Style
 
-* Make sure that your code editor adheres to the [.editorconfig](./.editorconfig) file. For many editors there are extensions for automatically importing that file (for Visual Studio Code use [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)).
-* Always use relative paths for TypeScript import statements (in Visual Studio Code you can use the setting `"typescript.preferences.importModuleSpecifier": "relative"`).
+-   Make sure that your code editor adheres to the [.editorconfig](./.editorconfig) file. For many editors there are extensions for automatically importing that file (for Visual Studio Code use [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)).
+-   Always use relative paths for TypeScript import statements (in Visual Studio Code you can use the setting `"typescript.preferences.importModuleSpecifier": "relative"`).
 
 ## Package repository settings
 
 Authenticate:
+
 ```bash
 npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
 ```
 
 Setup @gentics scope to the APA IT repository:
+
 ```bash
 npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
 ```

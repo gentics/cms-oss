@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {ActivatedRouteSnapshot, CanDeactivate, RouterStateSnapshot, ParamMap} from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot, ParamMap } from '@angular/router';
 import {ModalService} from '@gentics/ui-core';
 import {ContentFrame} from '../../components/content-frame/content-frame.component';
 import {ConfirmNavigationModal} from '../../components/confirm-navigation-modal/confirm-navigation-modal.component';
@@ -9,7 +9,7 @@ import { EditorStateUrlOptions } from '../../../state';
  * This guard prevents navigating away from the current ContentFrame route if some content is modified.
  */
 @Injectable()
-export class ContentFrameGuard implements CanDeactivate<ContentFrame> {
+export class ContentFrameGuard  {
 
     constructor(private modalService: ModalService) {}
 

@@ -22,13 +22,8 @@
     },
     "defaultProject": "editor-ui",
     "generators": {
-        "@nrwl/angular:application": {
-            "unitTestRunner": "karma",
-            "e2eTestRunner": "protractor"
-        },
-        "@nrwl/angular:library": {
-            "unitTestRunner": "karma"
-        }
+        "@nx/angular:application": {},
+        "@nx/angular:library": {}
     },
     "targetDefaults": {
         "build": {

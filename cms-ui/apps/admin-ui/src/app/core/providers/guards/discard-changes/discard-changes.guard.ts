@@ -1,7 +1,7 @@
 import { DiscardChangesModalComponent } from '@admin-ui/core/components/discard-changes-modal';
 import { AppStateService, CloseEditor } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanDeactivate, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { ModalService } from '@gentics/ui-core';
 
 type BooleanFn = () => boolean;
@@ -22,7 +22,7 @@ export interface OnDiscardChanges {
  * A route guard checking for changes made by the user in an component with changeable elements.
  */
 @Injectable()
-export class DiscardChangesGuard<T extends OnDiscardChanges> implements CanDeactivate<T> {
+export class DiscardChangesGuard<T extends OnDiscardChanges>  {
     constructor(
         private modalService: ModalService,
         private appState: AppStateService,

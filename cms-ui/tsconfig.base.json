@@ -43,12 +43,12 @@
                 "dist/libs/cms-rest-clients-angular/public-api",
                 "libs/cms-rest-clients-angular/src/public-api"
             ],
-            "@gentics/cms-rest-clients-angular/testing": [
-                "libs/cms-rest-clients-angular/src/testing"
-            ],
             "@gentics/cms-rest-clients-angular/*": [
                 "dist/libs/cms-rest-clients-angular/*",
                 "libs/cms-rest-clients-angular/src/*"
+            ],
+            "@gentics/cms-rest-clients-angular/testing": [
+                "libs/cms-rest-clients-angular/src/testing"
             ],
             "@gentics/form-generator": [
                 "dist/libs/form-generator/public-api",

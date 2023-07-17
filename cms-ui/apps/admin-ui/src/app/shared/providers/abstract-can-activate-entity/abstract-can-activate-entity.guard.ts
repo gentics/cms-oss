@@ -1,6 +1,6 @@
 import { EntityOperationsBase } from '@admin-ui/core';
 import { AppStateService, FocusEditor, OpenEditor, SetUIFocusEntity } from '@admin-ui/state';
-import { ActivatedRouteSnapshot, CanActivate, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { EntityIdType, NormalizableEntityType, NormalizableEntityTypesMapBO, Normalized, Raw } from '@gentics/cms-models';
 import { EntityDataServiceBase } from '../entity-data-service-base/entity-data.service.base';
 
@@ -12,7 +12,7 @@ export abstract class AbstractCanActivateEntityGuard<
     O extends EntityOperationsBase<T, T_RAW>,
     T_RAW extends NormalizableEntityTypesMapBO<Raw>[T] = NormalizableEntityTypesMapBO<Raw>[T],
     T_NORM extends NormalizableEntityTypesMapBO<Normalized>[T] = NormalizableEntityTypesMapBO<Normalized>[T],
-> implements CanActivate {
+>  {
 
     /** Name of the entity */
     readonly entityIdentifier: NormalizableEntityType;

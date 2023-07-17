@@ -1,6 +1,6 @@
 import { RouteData } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, CanActivateChild, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
 
@@ -35,7 +35,7 @@ import { PermissionsService, RequiredTypePermissions } from '../../permissions';
  */
 // tslint:enable: jsdoc-format
 @Injectable()
-export class PermissionsGuard implements CanActivate, CanActivateChild {
+export class PermissionsGuard  {
 
     constructor(
         private permissionsService: PermissionsService,

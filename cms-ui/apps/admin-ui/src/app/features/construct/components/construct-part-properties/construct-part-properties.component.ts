@@ -115,7 +115,7 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.TextCustomForm,
     TagPartType.FileUpload,
     TagPartType.FolderUpload,
-    TagPartType.FormList,
+    TagPartType.Form,
 ];
 
 /**

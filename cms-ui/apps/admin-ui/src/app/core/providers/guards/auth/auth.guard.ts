@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
 
@@ -10,7 +10,7 @@ import { AppStateService } from '../../../../state';
  * and preventing navigating to login when already logged in.
  */
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AuthGuard  {
 
     constructor(
         private appState: AppStateService,

@@ -64,7 +64,10 @@ export enum MarkupLanguageType {
 export enum TagPartType {
     /** Used for normal text (without HTML), which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering. */
     Text = 1,
-    /** Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering, unless they occur within HTML tags or immediately follow an HTML tag. */
+    /**
+     * Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into <br> tags while rendering,
+     * unless they occur within HTML tags or immediately follow an HTML tag.
+     */
     TextHtml = 2,
     /** Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering. */
     Html = 3,
@@ -74,13 +77,19 @@ export enum TagPartType {
     UrlImage = 6,
     /**	Reference a file. */
     UrlFile = 8,
-    /** Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field. No conversion will be done while rendering. */
+    /**
+     * Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field.
+     * No conversion will be done while rendering.
+     */
     TextShort = 9,
     /** Variant of the type Text/HTML with a larger textarea in the tagfill dialog. */
     TextHtmlLong = 10,
     /** Render a tag of another page. */
     TagPage = 11,
-    /** The overview part type creates and overview which can be configured using a the provided wizard. WARNING: Cannot be used together with other tag parts that are set as editable. */
+    /**
+     * The overview part type creates and overview which can be configured using a the provided wizard.
+     * WARNING: Cannot be used together with other tag parts that are set as editable.
+     */
     Overview = 13,
     /** Users can enter values (newline separated), and can choose whether to render them as ordered or unordered list. */
     List = 15,
@@ -119,10 +128,11 @@ export enum TagPartType {
     /** The node part is a drop-down menu with the nodes available to the user. */
     Node = 40,
     /** @deprecated */
-    FormList = 41,
-    /** @deprecated */
-    Form = 42,
-    /** The CMS Form part lets the user select a form from the CMS. See Gentics CMS Forms for details. NOTE: Parts of this type can only be used in the new Editor User Interface. */
+    Form = 41,
+    /**
+     * The CMS Form part lets the user select a form from the CMS. See Gentics CMS Forms for details.
+     * NOTE: Parts of this type can only be used in the new Editor User Interface.
+     */
     CmsForm = 42,
 }
 
@@ -157,7 +167,6 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.FolderUpload]: TagPropertyType.FOLDER,
     [TagPartType.Node]: TagPropertyType.NODE,
     [TagPartType.Form]: TagPropertyType.FORM,
-    [TagPartType.FormList]: TagPropertyType.FORMLIST,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
 } as const;
 

@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { filter, switchMap, take } from 'rxjs/operators';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import {
     FormConfigurationI18nString,
     FormEditorConfiguration,
@@ -60,14 +62,17 @@ export class FormEditorConfigurationService {
      * @param type of configuration needed
      * @returns Observable emitting configuration of the corresponding type
      */
-     getConfiguration$ = (type: FormEditorConfigurationType): Observable<FormEditorConfiguration> => {
+    getConfiguration$ = (type: FormEditorConfigurationType): Observable<FormEditorConfiguration> => {
         if (!this.configurationSubjects[type]) {
             this.configurationSubjects[type] = new BehaviorSubject(null);
             this.fetchFormEditorConfiguration(type).subscribe((configuration: FormEditorConfiguration) => {
                 this.configurationSubjects[type].next(configuration);
+            }, err => {
+                this.configurationSubjects[type].error(err);
             });
         }
         return this.configurationSubjects[type].asObservable().pipe(
+            catchError(() => of(null)),
             filter(configuration => configuration !== null),
             take(1),
         );
@@ -79,7 +84,7 @@ export class FormEditorConfigurationService {
             elements: [],
         };
         if (formEditorConfiguration) {
-            if (!!formEditorConfiguration.form_properties) {
+            if (formEditorConfiguration.form_properties) {
                 const prunedFormProperties: FormPropertiesConfiguration = this.validateFormPropertiesConfiguration(
                     formEditorConfiguration.form_properties,
                 );
@@ -107,7 +112,7 @@ export class FormEditorConfigurationService {
 
     private validateFormPropertiesConfiguration = (formPropertiesConfiguration: any): FormPropertiesConfiguration => {
         const prunedFormPropertiesConfiguration: FormPropertiesConfiguration = {};
-        if (!!formPropertiesConfiguration.admin_mail_options) {
+        if (formPropertiesConfiguration.admin_mail_options) {
             if (Array.isArray(formPropertiesConfiguration.admin_mail_options)) {
                 const prunedAdminMailOptions: FormElementPropertyOptionConfiguration[] = [];
                 const options: FormElementPropertyOptionConfiguration[] = formPropertiesConfiguration.admin_mail_options;
@@ -116,20 +121,20 @@ export class FormEditorConfigurationService {
                         if (!!option.value_i18n_ui && this.isFormElementConfigurationI18nString(option.value_i18n_ui)) {
                             prunedAdminMailOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                         } else {
-                            throw new Error(`Form editor configuration contains invalid option value `
+                            throw new Error('Form editor configuration contains invalid option value '
                                 + `'${option.value_i18n_ui}' for form property name 'admin mail options'.`);
                         }
                     } else {
-                        throw new Error(`Form editor configuration contains invalid option key `
+                        throw new Error('Form editor configuration contains invalid option key '
                             + `'${option.key}' for form property name 'admin mail options'.`);
                     }
                 }
                 prunedFormPropertiesConfiguration.admin_mail_options = prunedAdminMailOptions;
             } else {
-                throw new Error(`Form editor configuration contains invalid configuration for form property name 'admin mail options'.`);
+                throw new Error('Form editor configuration contains invalid configuration for form property name \'admin mail options\'.');
             }
         }
-        if (!!formPropertiesConfiguration.template_context_options) {
+        if (formPropertiesConfiguration.template_context_options) {
             if (Array.isArray(formPropertiesConfiguration.template_context_options)) {
                 const prunedTemplateContextOptions: FormElementPropertyOptionConfiguration[] = [];
                 const options: FormElementPropertyOptionConfiguration[] = formPropertiesConfiguration.template_context_options;
@@ -138,17 +143,17 @@ export class FormEditorConfigurationService {
                         if (!!option.value_i18n_ui && this.isFormElementConfigurationI18nString(option.value_i18n_ui)) {
                             prunedTemplateContextOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                         } else {
-                            throw new Error(`Form editor configuration contains invalid option value `
+                            throw new Error('Form editor configuration contains invalid option value '
                              + `'${option.value_i18n_ui}' for form property name 'template context options'.`);
                         }
                     } else {
-                        throw new Error(`Form editor configuration contains invalid option key `
+                        throw new Error('Form editor configuration contains invalid option key '
                          + `'${option.key}' for form property name 'template context options'.`);
                     }
                 }
                 prunedFormPropertiesConfiguration.template_context_options = prunedTemplateContextOptions;
             } else {
-                throw new Error(`Form editor configuration contains invalid configuration for form property name 'template context options'.`);
+                throw new Error('Form editor configuration contains invalid configuration for form property name \'template context options\'.');
             }
         }
         return prunedFormPropertiesConfiguration;
@@ -223,7 +228,7 @@ export class FormEditorConfigurationService {
             throw new Error(`Form editor configuration contains invalid properties for element type '${formElementConfiguration.type}'.`);
         }
 
-        if (!!formElementConfiguration.label_property_ui) {
+        if (formElementConfiguration.label_property_ui) {
             if (this.isValidFormElementPropertyLabelUi(formElementConfiguration.label_property_ui, prunedFormElementConfiguration.properties)) {
                 prunedFormElementConfiguration.label_property_ui = formElementConfiguration.label_property_ui;
             } else {
@@ -241,19 +246,19 @@ export class FormEditorConfigurationService {
 
         if (!!formElementPropertyConfiguration.name && typeof formElementPropertyConfiguration.name === 'string') {
             if (['globalId', 'name', 'type', 'active', 'elements'].includes(formElementPropertyConfiguration.name)) {
-                throw new Error(`Form editor configuration contains invalid property name `
+                throw new Error('Form editor configuration contains invalid property name '
                     + `'${formElementPropertyConfiguration.name}' for element type '${elementType}'. Name must not be 'globalId', 'name', 'type', 'active' or 'elements'.`);
             }
             prunedFormElementPropertyConfigurationName = formElementPropertyConfiguration.name;
         } else {
-            throw new Error(`Form editor configuration contains invalid property name `
+            throw new Error('Form editor configuration contains invalid property name '
                 + `'${formElementPropertyConfiguration.name}' for element type '${elementType}'.`);
         }
 
         if (!!formElementPropertyConfiguration.type && this.isFormElementPropertyTypeConfiguration(formElementPropertyConfiguration.type)) {
             prunedFormElementPropertyConfigurationType = formElementPropertyConfiguration.type;
         } else {
-            throw new Error(`Form editor configuration contains invalid property type `
+            throw new Error('Form editor configuration contains invalid property type '
                 + `'${formElementPropertyConfiguration.type}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
         }
 
@@ -261,15 +266,14 @@ export class FormEditorConfigurationService {
             this.isFormElementConfigurationI18nString(formElementPropertyConfiguration.label_i18n_ui)) {
             prunedFormElementPropertyConfigurationLabelI18NUi = formElementPropertyConfiguration.label_i18n_ui;
         } else {
-            throw new Error(`Form editor configuration contains invalid property i18n UI label `
+            throw new Error('Form editor configuration contains invalid property i18n UI label '
                 + `'${formElementPropertyConfiguration.label_i18n_ui}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
         }
 
         let prunedFormElementPropertyConfiguration: FormElementPropertyConfiguration;
 
         switch (prunedFormElementPropertyConfigurationType) {
-            case FormElementPropertyTypeConfiguration.SELECT:
-
+            case FormElementPropertyTypeConfiguration.SELECT: {
                 const prunedOptions: FormElementPropertyOptionConfiguration[] = [];
                 if (Array.isArray(formElementPropertyConfiguration.options)) {
                     const options: FormElementPropertyOptionConfiguration[] = formElementPropertyConfiguration.options;
@@ -278,17 +282,17 @@ export class FormEditorConfigurationService {
                             if (!!option.value_i18n_ui && this.isFormElementConfigurationI18nString(option.value_i18n_ui)) {
                                 prunedOptions.push({ key: option.key, value_i18n_ui: option.value_i18n_ui });
                             } else {
-                                throw new Error(`Form editor configuration contains invalid option value `
+                                throw new Error('Form editor configuration contains invalid option value '
                                     + `'${option.value_i18n_ui}' for property name '${formElementPropertyConfiguration.name}' `
                                     + `in element type '${elementType}'.`);
                             }
                         } else {
-                            throw new Error(`Form editor configuration contains invalid option key `
+                            throw new Error('Form editor configuration contains invalid option key '
                                 + `'${option.key}' for property name '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                         }
                     }
                 } else {
-                    throw new Error(`Form editor configuration contains invalid options for property name `
+                    throw new Error('Form editor configuration contains invalid options for property name '
                         + `'${formElementPropertyConfiguration.name}' of type 'SELECT' in element type '${elementType}'.`);
                 }
 
@@ -299,18 +303,20 @@ export class FormEditorConfigurationService {
                     options: prunedOptions,
                 }
 
-                if (!!formElementPropertyConfiguration.default_value_i18n) {
+                if (formElementPropertyConfiguration.default_value_i18n) {
                     if (this.isFormElementPropertyDefaultValueI18n(formElementPropertyConfiguration.default_value_i18n, ['string'])) {
                         prunedFormElementPropertyConfigurationSelect.default_value_i18n = formElementPropertyConfiguration.default_value_i18n;
                     } else {
-                        throw new Error(`Form editor configuration contains invalid property default value `
+                        throw new Error('Form editor configuration contains invalid property default value '
                             + `'${formElementPropertyConfiguration.default_value_i18n}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                     }
                 }
 
                 prunedFormElementPropertyConfiguration = prunedFormElementPropertyConfigurationSelect;
                 break;
-            case FormElementPropertyTypeConfiguration.SELECTABLE_OPTIONS:
+            }
+
+            case FormElementPropertyTypeConfiguration.SELECTABLE_OPTIONS: {
                 const prunedFormElementPropertyConfigurationSelectableOptions: FormElementPropertyConfigurationSelectableOptions = {
                     name: prunedFormElementPropertyConfigurationName,
                     type: prunedFormElementPropertyConfigurationType,
@@ -319,17 +325,17 @@ export class FormEditorConfigurationService {
 
                 const labelOverrideProperties = ['key_label_i18n_ui', 'value_label_i18n_ui'];
                 for (const labelOverride of labelOverrideProperties) {
-                    if (!!formElementPropertyConfiguration[labelOverride]) {
+                    if (formElementPropertyConfiguration[labelOverride]) {
                         if (this.isFormElementConfigurationI18nString(formElementPropertyConfiguration[labelOverride])) {
                             prunedFormElementPropertyConfigurationSelectableOptions[labelOverride] = formElementPropertyConfiguration[labelOverride];
                         } else {
-                            throw new Error(`Form editor configuration contains invalid option value `
+                            throw new Error('Form editor configuration contains invalid option value '
                                 + `'${labelOverride}' for property name '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                         }
                     }
                 }
 
-                if (!!formElementPropertyConfiguration.default_value) {
+                if (formElementPropertyConfiguration.default_value) {
                     if (Array.isArray(formElementPropertyConfiguration.default_value)) {
                         prunedFormElementPropertyConfigurationSelectableOptions.default_value = [];
                         const keyValuePairs: FormElementPropertyDefaultKeyI18nValuePair[] = formElementPropertyConfiguration.default_value;
@@ -340,23 +346,25 @@ export class FormEditorConfigurationService {
                                         .default_value
                                         .push({ key: keyValuePair.key, value_i18n: keyValuePair.value_i18n });
                                 } else {
-                                    throw new Error(`Form editor configuration contains invalid property default value `
+                                    throw new Error('Form editor configuration contains invalid property default value '
                                         + `'${keyValuePair.value_i18n}' for property name '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                                 }
                             } else {
-                                throw new Error(`Form editor configuration contains invalid property default value key `
+                                throw new Error('Form editor configuration contains invalid property default value key '
                                     + `'${keyValuePair.key}' for property name '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                             }
                         }
                     } else {
-                        throw new Error(`Form editor configuration contains invalid property default value `
+                        throw new Error('Form editor configuration contains invalid property default value '
                             + `'${formElementPropertyConfiguration.default_value}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                     }
                 }
 
                 prunedFormElementPropertyConfiguration = prunedFormElementPropertyConfigurationSelectableOptions;
                 break;
-            case FormElementPropertyTypeConfiguration.REPOSITORY_BROWSER:
+            }
+
+            case FormElementPropertyTypeConfiguration.REPOSITORY_BROWSER: {
                 // TODO Proper Repository Browser config validation
                 const prunedFormElementPropertyConfigurationRepositoryBrowser: FormElementPropertyConfigurationRepositoryBrowser = {
                     name: prunedFormElementPropertyConfigurationName,
@@ -367,45 +375,48 @@ export class FormEditorConfigurationService {
 
                 prunedFormElementPropertyConfiguration = prunedFormElementPropertyConfigurationRepositoryBrowser;
                 break;
+            }
+
             case FormElementPropertyTypeConfiguration.BOOLEAN:
             case FormElementPropertyTypeConfiguration.NUMBER:
             case FormElementPropertyTypeConfiguration.STRING:
-            default:
+            default: {
                 const prunedFormElementPropertyConfigurationDefault: FormElementPropertyConfigurationDefault = {
                     name: prunedFormElementPropertyConfigurationName,
                     type: prunedFormElementPropertyConfigurationType,
                     label_i18n_ui: prunedFormElementPropertyConfigurationLabelI18NUi,
                 }
-                if (!!formElementPropertyConfiguration.validator) {
+                if (formElementPropertyConfiguration.validator) {
                     if (this.isFormElementPropertyValidatorConfiguration(formElementPropertyConfiguration.validator)) {
                         prunedFormElementPropertyConfigurationDefault.validator = formElementPropertyConfiguration.validator;
                     } else {
-                        throw new Error(`Form editor configuration contains invalid property validator `
+                        throw new Error('Form editor configuration contains invalid property validator '
                             + `'${formElementPropertyConfiguration.validator}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                     }
                 }
 
-                if (!!formElementPropertyConfiguration.default_value_i18n) {
+                if (formElementPropertyConfiguration.default_value_i18n) {
                     if (this.isFormElementPropertyDefaultValueI18n(
                         formElementPropertyConfiguration.default_value_i18n,
                         [prunedFormElementPropertyConfigurationType.toLowerCase()],
                     )) {
                         prunedFormElementPropertyConfigurationDefault.default_value_i18n = formElementPropertyConfiguration.default_value_i18n;
                     } else {
-                        throw new Error(`Form editor configuration contains invalid property default value `
+                        throw new Error('Form editor configuration contains invalid property default value '
                             + `'${formElementPropertyConfiguration.default_value_i18n}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
                     }
                 }
 
                 prunedFormElementPropertyConfiguration = prunedFormElementPropertyConfigurationDefault;
                 break;
+            }
         }
 
-        if (!!formElementPropertyConfiguration.description_i18n_ui) {
+        if (formElementPropertyConfiguration.description_i18n_ui) {
             if (this.isFormElementConfigurationI18nString(formElementPropertyConfiguration.description_i18n_ui)) {
                 prunedFormElementPropertyConfiguration.description_i18n_ui = formElementPropertyConfiguration.description_i18n_ui;
             } else {
-                throw new Error(`Form editor configuration contains invalid property description `
+                throw new Error('Form editor configuration contains invalid property description '
                     + `'${formElementPropertyConfiguration.description_i18n_ui}' for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
             }
         }
@@ -414,7 +425,7 @@ export class FormEditorConfigurationService {
             if (typeof formElementPropertyConfiguration.required === 'boolean') {
                 prunedFormElementPropertyConfiguration.required = formElementPropertyConfiguration.required;
             } else {
-                throw new Error(`Form editor configuration contains invalid property required setting `
+                throw new Error('Form editor configuration contains invalid property required setting '
                     + `for property '${formElementPropertyConfiguration.name}' in element type '${elementType}'.`);
             }
         }
@@ -422,7 +433,7 @@ export class FormEditorConfigurationService {
     }
 
     private isValidFormElementPropertyLabelUi = (formElementPropertyLabelUi: any, formElementProperties: FormElementPropertyConfiguration[]):
-        boolean => {
+    boolean => {
         for (const formElementProperty of formElementProperties) {
             if (formElementProperty.type === FormElementPropertyTypeConfiguration.STRING
                 && formElementPropertyLabelUi === formElementProperty.name) {

@@ -1,9 +1,9 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { HttpClientTestingModule, HttpTestingController, TestRequest } from '@angular/common/http/testing';
+/* eslint-disable no-useless-escape */
+/* eslint-disable @typescript-eslint/naming-convention */
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { CmsFormType } from '@gentics/cms-models';
-import { type } from 'os';
-import { FormEditorConfiguration, FormElementPropertyTypeConfiguration, FormElementPropertyValidatorConfiguration } from './form-editor-configuration.model';
+import { FormEditorConfiguration, FormElementPropertyTypeConfiguration, FormElementPropertyValidatorConfiguration } from '../../../common';
 import { FormEditorConfigurationService } from './form-editor-configuration.service';
 
 /**
@@ -21,6 +21,7 @@ import { FormEditorConfigurationService } from './form-editor-configuration.serv
 describe('FormEditorConfigurationService', () => {
 
     const CUSTOMER_CONFIG_PATH = './../ui-conf/';
+    const NO_VALUE = Symbol('no-value-loaded');
 
     let formEditorConfigurationService: FormEditorConfigurationService;
     let httpTestingController: HttpTestingController;
@@ -54,31 +55,31 @@ describe('FormEditorConfigurationService', () => {
     describe('getConfiguration$', () => {
         it('if no configuration is found, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
 
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', '404');
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if a network error is encountered, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
 
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', 'NETWORK_ERROR');
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if invalid JSON is found, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -86,12 +87,12 @@ describe('FormEditorConfigurationService', () => {
             const BASIC_CONFIGURATION = '{[' as unknown as FormEditorConfiguration;
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if a faulty configuration is found, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -99,12 +100,12 @@ describe('FormEditorConfigurationService', () => {
             const BASIC_CONFIGURATION = {} as FormEditorConfiguration;
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if a correct configuration is found, emit the supplied configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -221,7 +222,7 @@ describe('FormEditorConfigurationService', () => {
 
                 it(`if a faulty configuration for type ${typeConfigPair.type} is found, emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$(typeConfigPair.type).subscribe(response => {
                         result = response;
                     });
@@ -229,12 +230,12 @@ describe('FormEditorConfigurationService', () => {
                     const BASIC_CONFIGURATION = {} as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond(typeConfigPair.configFileName, BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it(`if a correct configuration for type ${typeConfigPair.type} is found, emit the supplied configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$(typeConfigPair.type).subscribe(response => {
                         result = response;
                     });
@@ -251,7 +252,7 @@ describe('FormEditorConfigurationService', () => {
     describe('form editor configuration parsing', () => {
         it('if no elements property is found, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -262,12 +263,12 @@ describe('FormEditorConfigurationService', () => {
             } as unknown as FormEditorConfiguration;
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if elements property is not an array, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -278,12 +279,12 @@ describe('FormEditorConfigurationService', () => {
             } as unknown as FormEditorConfiguration;
             expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
             subscription.unsubscribe();
-            expect(result).toEqual(DEFAULT_CONFIGURATION);
+            expect(result).toEqual(NO_VALUE);
         });
 
         it('if elements property is an array, emit the supplied configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -299,7 +300,7 @@ describe('FormEditorConfigurationService', () => {
 
         it('if no form_properties property is found, emit the supplied configuration with form_properties set to an empty object', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result;
+            let result: FormEditorConfiguration | symbol = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });
@@ -320,7 +321,7 @@ describe('FormEditorConfigurationService', () => {
         describe('form element type', () => {
             it('if no element type is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -340,12 +341,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element type is not a string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -367,16 +368,15 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if there are multiple element types of the same name, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
-
 
                 const BASIC_CONFIGURATION: FormEditorConfiguration = {
                     form_properties: {},
@@ -404,14 +404,14 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element type label i18n', () => {
             it('if no element type label i18n is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -429,16 +429,15 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element type label i18n is null, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
-
 
                 const BASIC_CONFIGURATION: FormEditorConfiguration = {
                     form_properties: {},
@@ -454,12 +453,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element type label i18n is an object, but not a correct form configuration string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -481,14 +480,14 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element description i18n', () => {
             it('if no element description i18n is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -506,16 +505,15 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element description i18n is null, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
-
 
                 const BASIC_CONFIGURATION: FormEditorConfiguration = {
                     form_properties: {},
@@ -531,16 +529,15 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element description i18n is an object, but not a correct form configuration string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
-
 
                 const BASIC_CONFIGURATION: FormEditorConfiguration = {
                     form_properties: {},
@@ -558,14 +555,14 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element label property ui', () => {
             it('if no element label property ui setting is found, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -591,7 +588,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element label property ui is not a string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -612,12 +609,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element label property ui is a string that does not match a property name, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -661,13 +658,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if element label property ui is a string that does match a property name, but that property is not of type STRING,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -711,13 +708,13 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if element label property ui is a string that does match a property name and property is of type STRING,
              emit the supplied configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -770,7 +767,7 @@ describe('FormEditorConfigurationService', () => {
         describe('form element container setting', () => {
             it('if no element container setting is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -790,12 +787,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element container setting is boolean (false), emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -822,7 +819,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element container setting is boolean (true), emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -852,7 +849,7 @@ describe('FormEditorConfigurationService', () => {
         describe('form element cannot contain', () => {
             it('if no element cannot contain setting is found, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -878,7 +875,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element cannot contain setting is not an array, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -899,12 +896,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element cannot contain setting is an array that does not only contain strings, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -926,12 +923,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element cannot contain setting is an array that only contains strings, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -958,7 +955,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element cannot contain setting is faulty but container setting is false anyway, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -990,7 +987,7 @@ describe('FormEditorConfigurationService', () => {
         describe('form element properties', () => {
             it('if no element properties are found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1010,12 +1007,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element properties value is not an array, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1036,12 +1033,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element properties are in an array that does not only contain properties, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1062,12 +1059,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element properties are in an array that only contains properties, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1105,7 +1102,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if no element property name is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1131,16 +1128,15 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is not a string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
-
 
                 const BASIC_CONFIGURATION: FormEditorConfiguration = {
                     form_properties: {},
@@ -1164,12 +1160,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is illegal (globalId), emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1196,12 +1192,12 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is illegal (name), emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1228,12 +1224,12 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is illegal (type), emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1260,12 +1256,12 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is illegal (active), emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1292,12 +1288,12 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property name is illegal (elements), emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1324,12 +1320,12 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if there are multiple element properties of the same name, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1362,14 +1358,14 @@ describe('FormEditorConfigurationService', () => {
                 } as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element property type', () => {
             it('if no element property type is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1395,12 +1391,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property type is not a valid value, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1427,12 +1423,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property type is a valid value, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1491,7 +1487,7 @@ describe('FormEditorConfigurationService', () => {
         describe('form element property label i18n', () => {
             it('if no element property label i18n is found, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1515,12 +1511,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property label i18n is null, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1545,12 +1541,12 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it('if element property label i18n is an object, but not a correct form configuration string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1577,14 +1573,14 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element property description i18n', () => {
             it('if no element property description i18n is found, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1616,7 +1612,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element property description i18n is an object, but not a correct form configuration string, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1646,14 +1642,14 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
         });
 
         describe('form element property required', () => {
             it('if no element property required setting is found, emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1685,7 +1681,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element property required setting is boolean (false), emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1719,7 +1715,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if element property required setting is boolean (true), emit the supplied configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -1757,7 +1753,7 @@ describe('FormEditorConfigurationService', () => {
             describe('form element property validator', () => {
                 it('if no element property validator is found, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -1801,7 +1797,7 @@ describe('FormEditorConfigurationService', () => {
 
                 it('if element property validator is not a valid value, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -1829,12 +1825,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property validator is a valid value, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -1897,7 +1893,7 @@ describe('FormEditorConfigurationService', () => {
             describe('form element property default value i18n', () => {
                 it('if no element property default value i18n is found, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -1941,7 +1937,7 @@ describe('FormEditorConfigurationService', () => {
 
                 it('if element property default value i18n is an object, but not a correct form default value boolean, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -1972,12 +1968,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property default value i18n is an object, but not a correct form default value number, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2008,12 +2004,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property default value i18n is an object, but not a correct form default value string, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2044,7 +2040,7 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
             });
         });
@@ -2053,7 +2049,7 @@ describe('FormEditorConfigurationService', () => {
             describe('form element property options', () => {
                 it('if no element property options is found, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2080,12 +2076,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options value is not an array, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2113,12 +2109,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options is an array that does contain other objects than option configurations, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2145,12 +2141,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options is an array that does contain option configurations without keys, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2182,12 +2178,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options is an array that does contain option configurations with invalid keys, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2220,12 +2216,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options is an array that does contain option configurations without values i18n, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2255,13 +2251,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it(`if element property options is an array that does contain option configurations with untranslated values,
                  emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2292,13 +2288,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it(`if element property options is an array that does contain option configurations with invalid values i18n,
                  emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2331,12 +2327,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property options is an array that does contain option configurations, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2375,7 +2371,7 @@ describe('FormEditorConfigurationService', () => {
             describe('form element property default value i18n', () => {
                 it('if no element property default value i18n is found, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2413,7 +2409,7 @@ describe('FormEditorConfigurationService', () => {
 
                 it('if element property default value i18n is an object, but not a correct default value string, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2443,7 +2439,7 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
             });
         });
@@ -2452,7 +2448,7 @@ describe('FormEditorConfigurationService', () => {
             describe('form element property default value', () => {
                 it('if no element property default value is found, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2484,7 +2480,7 @@ describe('FormEditorConfigurationService', () => {
 
                 it('if element property default value value is not an array, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2512,13 +2508,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it(`if element property default value is an array that does contain other objects than default key value pairs,
                  emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2546,12 +2542,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property default value is an array that does contain default key value pairs without keys, emit a default configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2583,13 +2579,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
-            it(`if element property default value is an array that does contain default key value pairs with invalid keys,
+                it(`if element property default value is an array that does contain default key value pairs with invalid keys,
              emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2622,13 +2618,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it(`if element property default value is an array that does contain default key value pairs without values i18n,
                  emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2658,12 +2654,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
-                it('if element property default value is an array that does contain default key value pairs with untranslated values, emit a default configuration', () => {
+                it(`if element property default value is an array that does contain default key value pairs with untranslated values,
+                    emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2694,12 +2691,13 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
-                it('if element property default value is an array that does contain default key value pairs with invalid values i18n, emit a default configuration', () => {
+                it(`if element property default value is an array that does contain default key value pairs with invalid values i18n,
+                    emit a default configuration`, () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2732,12 +2730,12 @@ describe('FormEditorConfigurationService', () => {
                     } as unknown as FormEditorConfiguration;
                     expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                     subscription.unsubscribe();
-                    expect(result).toEqual(DEFAULT_CONFIGURATION);
+                    expect(result).toEqual(NO_VALUE);
                 });
 
                 it('if element property default value is an array that does contain default key value pairs, emit the supplied configuration', () => {
                     const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                    let result;
+                    let result: FormEditorConfiguration | symbol = NO_VALUE;
                     const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                         result = response;
                     });
@@ -2782,7 +2780,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if form property \'admin_mail_options\' is not an array, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2795,13 +2793,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'admin_mail_options\' is an array that does contain other objects than option configurations,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2813,13 +2811,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'admin_mail_options\' is an array that does contain option configurations without keys,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2836,13 +2834,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'admin_mail_options\' is an array that does contain option configurations with invalid keys,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2860,13 +2858,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'admin_mail_options\' is an array that does contain option configurations without values i18n,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2881,13 +2879,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property 'admin_mail_options' is an array that does contain option configurations with untranslated values,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2903,13 +2901,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property 'admin_mail_options' is an array that does contain option configurations with invalid values i18n,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2927,13 +2925,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'admin_mail_options\' is an array that does contain option configurations,
              emit the supplied configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2958,7 +2956,7 @@ describe('FormEditorConfigurationService', () => {
 
             it('if form property \'template_context_options\' is not an array, emit a default configuration', () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2971,13 +2969,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'template_context_options\' is an array that does contain other objects than option configurations,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -2989,13 +2987,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'template_context_options\' is an array that does contain option configurations without keys,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3012,13 +3010,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'template_context_options\' is an array that does contain option configurations with invalid keys,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3036,13 +3034,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'template_context_options\' is an array that does contain option configurations without values i18n,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3057,13 +3055,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property 'template_context_options' is an array that does contain option configurations with untranslated values,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3079,13 +3077,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property 'template_context_options' is an array that does contain option configurations with invalid values i18n,
              emit a default configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3103,13 +3101,13 @@ describe('FormEditorConfigurationService', () => {
                 } as unknown as FormEditorConfiguration;
                 expectExactlyOneCallForConfigurationAndRespond('form-editor.json', BASIC_CONFIGURATION);
                 subscription.unsubscribe();
-                expect(result).toEqual(DEFAULT_CONFIGURATION);
+                expect(result).toEqual(NO_VALUE);
             });
 
             it(`if form property \'template_context_options\' is an array that does contain option configurations,
              emit the supplied configuration`, () => {
                 const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-                let result;
+                let result: FormEditorConfiguration | symbol = NO_VALUE;
                 const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                     result = response;
                 });
@@ -3135,9 +3133,9 @@ describe('FormEditorConfigurationService', () => {
 
     const expectExactlyOneCallForConfigurationAndRespond = (
         expectedConfigFileName: string,
-        response: FormEditorConfiguration | '404' | 'NETWORK_ERROR',
+        response: FormEditorConfiguration | '404' | 'NETWORK_ERROR',
     ): void => {
-        const request = httpTestingController.expectOne(request => request.url === 'CUSTOMER_CONFIG_PATH' + 'expectedConfigFileName');
+        const request = httpTestingController.expectOne(request => request.url === `${CUSTOMER_CONFIG_PATH}${expectedConfigFileName}`);
         expect(request.request.method).toEqual('GET');
         if (response === '404') {
             request.flush(null, {status: 404, statusText: 'Not Found'});

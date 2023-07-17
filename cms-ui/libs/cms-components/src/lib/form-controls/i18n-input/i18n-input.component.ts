@@ -14,14 +14,14 @@ import {
 import {
     AbstractControl,
     ControlValueAccessor,
-    UntypedFormControl,
     NG_VALIDATORS,
+    UntypedFormControl,
     ValidationErrors,
     Validator,
 } from '@angular/forms';
 import { CmsFormElementI18nValue } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { clone, cloneDeep } from 'lodash-es';
+import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -63,7 +63,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
 
     private cvaChange: (value: any) => void;
     cvaTouch: () => void;
-    private _onValidatorChange: () => void;
+    private validatorChange: () => void;
 
     private i18nData: CmsFormElementI18nValue<string | number | null> = {};
     private valueChangesSubscription: Subscription;
@@ -79,6 +79,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
                 // since the value is already present/updated.
                 const tmp = cloneDeep(this.i18nData || {});
                 tmp[this.language] = value;
+                this.i18nData = tmp;
                 this.triggerChange(tmp);
             }
         });
@@ -94,8 +95,8 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
             }
         }
         if (changes.language || changes.availableLanguages) {
-            if (this._onValidatorChange) {
-                this._onValidatorChange();
+            if (this.validatorChange) {
+                this.validatorChange();
             }
         }
     }
@@ -108,7 +109,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
 
     writeValue(i18nData: CmsFormElementI18nValue<string | number | null>): void {
         // Create a copy, since the original is usually readonly for whatever reason
-        this.i18nData = clone(i18nData || {});
+        this.i18nData = cloneDeep(i18nData || {});
         this.i18nInput.setValue(this.i18nData[this.language] || '', {
             emitEvent: false,
         });
@@ -159,13 +160,13 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
     }
 
     registerOnValidatorChange?(fn: () => void): void {
-        this._onValidatorChange = fn;
+        this.validatorChange = fn;
     }
 
     private validateRequired(control: AbstractControl): ValidationErrors {
         /**
-         * if there is no i18n data, then
-         *  - there is a required error, iff the value is required in the current language
+         * if there is no i18n data, then there is a required error,
+         * if the value is required in the current language
          */
         if (!this.i18nData) {
             if (this.requiredInCurrentLanguage) {
@@ -174,8 +175,8 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         }
 
         /**
-         * if there is no value in the current language, then
-         *  - there is a required error, iff the value is required in the current language
+         * if there is no value in the current language, then there is a required error,
+         * if the value is required in the current language
          */
         if (!this.valuePresent()) {
             if (this.requiredInCurrentLanguage) {
@@ -189,8 +190,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
     private validateTranslated(control: AbstractControl): ValidationErrors {
 
         /**
-         * if there is no i18n data, then
-         *  - there cannot be a translation error
+         * if there is no i18n data, then there cannot be a translation error
          */
         if (!this.i18nData) {
             this.isTranslated = true;
@@ -198,8 +198,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         }
 
         /**
-         * if there are no available languages, then
-         *  - there cannot be a translation error
+         * if there are no available languages, then there cannot be a translation error
          */
         if (!this.availableLanguages) {
             this.isTranslated = true;
@@ -207,8 +206,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         }
 
         /**
-         * if there is a value in the current language, then
-         *  - there is no translation error
+         * if there is a value in the current language, then there is no translation error
          */
         if (this.valuePresent()) {
             this.isTranslated = true;
@@ -216,8 +214,7 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         }
 
         /**
-         * if there there are no other available languages, then
-         *  - there is no translation error
+         * if there there are no other available languages, then there is no translation error
          */
         if (this.availableLanguages.length < 1) {
             this.isTranslated = true;
@@ -225,8 +222,8 @@ export class I18nInputComponent implements ControlValueAccessor, Validator, OnIn
         }
 
         /**
-         * if any other language has this value set (and the current one does not), then
-         *  - there is translation error
+         * if any other language has this value set (and the current one does not),
+         * then there is translation error
          */
         const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
         const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(language));

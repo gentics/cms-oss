@@ -31,10 +31,11 @@
 
         <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
             <gtx-select
-                [label]="'editor.item_template_context_label' | i18n"
+                [label]="('editor.item_template_context_label' | i18n) + '*'"
                 formControlName="templateContext"
                 [gtxDisabled]="disabled"
                 [multiple]="false"
+                [required]="true"
             >
                 <gtx-option
                     *ngFor="let option of formPropertiesConfiguration.template_context_options"
@@ -105,7 +106,10 @@
 
         <ng-container *ngIf="showDetailProperties">
 
-            <h3 class="localized-properties-header">{{ 'editor.item_localized_form_properties' | i18n }}</h3>
+            <h3
+                *ngIf="languages?.length > 1"
+                class="localized-properties-header"
+            >{{ 'editor.item_localized_form_properties' | i18n }}</h3>
 
             <gtx-i18n-input
                 [label]="'editor.item_localized_mail_subject' | i18n"

@@ -20,7 +20,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     public readonly CmsFormElementPropertyType = CmsFormElementPropertyType;
 
     @Input()
-    properties: CmsFormElementProperty[];
+    properties: CmsFormElementProperty[] = [];
 
     @Output()
     propertiesChange: EventEmitter<CmsFormElementProperty[]> = new EventEmitter<CmsFormElementProperty[]>();
@@ -68,6 +68,9 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
     }
 
     ngOnChanges(): void {
+        if (!Array.isArray(this.properties)) {
+            this.properties = [];
+        }
         this.propertiesSubject.next(this.properties);
     }
 
@@ -119,7 +122,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
         this.formGroup = this.formBuilder.group(controlsConfig);
         // improve by listening to changes per form control (not on the whole group)
         this.formGroupSubscription = this.formGroup.valueChanges.subscribe((formValues) => {
-            this.properties.forEach((property: CmsFormElementProperty) => {
+            (this.properties || []).forEach((property: CmsFormElementProperty) => {
                 switch (property.type) {
                     case CmsFormElementPropertyType.SELECTABLE_OPTIONS:
                         property.value = formValues[property.name];
@@ -146,7 +149,7 @@ export class FormElementPropertiesEditorComponent implements OnInit, OnChanges, 
             } else if (status === 'INVALID') {
                 let untranslated = false;
                 let requiredInCurrentLanguage = false;
-                for (let property of this.properties) {
+                for (const property of this.properties) {
                     const control = this.formGroup.controls[property.name];
                     if (control && control.status === 'INVALID') {
                         if (control.hasError('untranslated')) {

@@ -19,7 +19,7 @@ import com.gentics.contentnode.rest.model.Property.Type;
  * PartType 4 - URL (page)
  */
 public class PageURLPartType extends UrlPartType {
-	
+
 	public static int EXTERNAL_URL_TYPE = 4;
 	public static int EXTERNAL_URL_INFO = 0;
 
@@ -113,8 +113,9 @@ public class PageURLPartType extends UrlPartType {
 	@Override
 	public void fromProperty(Property property) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
+
 		if (property.getPageId() != null) {
-			setTargetPage(t.getObject(Page.class, property.getPageId()));
+			setTargetPage(t.getObject(Page.class, property.getPageId(), -1, false));
 			setNode(t.getObject(Node.class, property.getNodeId()));
 		} else {
 			setExternalTarget(property.getStringValue());

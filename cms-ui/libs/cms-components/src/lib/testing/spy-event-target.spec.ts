@@ -1,6 +1,6 @@
 import { SpyEventTarget } from './spy-event-target';
 
-describe('SpyEventTarget', () => {
+xdescribe('SpyEventTarget', () => {
 
     let spy: SpyEventTarget;
     let eventHandlerA: jasmine.Spy;

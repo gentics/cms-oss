@@ -1,7 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { GenticsUICoreModule, InputField } from '@gentics/ui-core';
+import { GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
 import { MultiValueValidityState } from '../../../common';
 import { componentTest, configureComponentTest } from '../../../testing';
 import { StringListComponent } from './string-list.component';
@@ -32,8 +32,8 @@ describe('StringListComponent', () => {
             public onTouchSpy: jasmine.Spy;
 
             constructor() {
-                this.valueChangeSpy = spyOn(this, 'onValueChange');
-                this.onTouchSpy = spyOn(this, 'onTouch');
+                this.valueChangeSpy = spyOn(this, 'onValueChange' as any) as any;
+                this.onTouchSpy = spyOn(this, 'onTouch' as any) as any;
             }
 
             onValueChange(event: any): void { }
@@ -133,7 +133,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputField = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
             changeInput.onInput({ target: changeInputRef } as any);
             fixture.detectChanges();
             tick();
@@ -196,7 +196,7 @@ describe('StringListComponent', () => {
             const inputs = fixture.nativeElement.querySelectorAll('.list .input input');
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
-            const changeInput: InputField = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
             changeInput.onInput({ target: inputRef } as any);
             fixture.detectChanges();
             tick();
@@ -248,9 +248,9 @@ describe('StringListComponent', () => {
             public onTouchSpy: jasmine.Spy;
 
             constructor() {
-                this.formChangeSpy = spyOn(this, 'onFormControlChange');
-                this.valueChangeSpy = spyOn(this, 'onValueChange');
-                this.onTouchSpy = spyOn(this, 'onTouch');
+                this.formChangeSpy = spyOn(this, 'onFormControlChange' as any) as any;
+                this.valueChangeSpy = spyOn(this, 'onValueChange' as any) as any;
+                this.onTouchSpy = spyOn(this, 'onTouch' as any) as any;
                 this.formControl.valueChanges.subscribe(change => this.onFormControlChange(change));
             }
 
@@ -259,7 +259,7 @@ describe('StringListComponent', () => {
             onTouch(): void { }
         }
 
-        beforeEach(async () => {
+        beforeEach(() => {
             configureComponentTest({
                 imports: [
                     GenticsUICoreModule.forRoot(),
@@ -366,7 +366,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputField = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
             changeInput.onInput({ target: changeInputRef } as any);
             fixture.detectChanges();
             tick();
@@ -401,7 +401,7 @@ describe('StringListComponent', () => {
             // Jank way to trigger a change from the input-field we want
             const changeInputRef = inputElements.item(changeIndex);
             changeInputRef.value = changeValue;
-            const changeInput: InputField = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === changeInputRef).componentInstance;
             changeInput.onInput({ target: changeInputRef } as any);
             fixture.detectChanges();
             tick();
@@ -475,7 +475,7 @@ describe('StringListComponent', () => {
             const inputs = fixture.nativeElement.querySelectorAll('.list .input input');
             const inputRef: HTMLInputElement = inputs.item(4);
             inputRef.value = 'change me to something else';
-            const changeInput: InputField = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
+            const changeInput: InputComponent = fixture.debugElement.query(element => element.nativeElement === inputRef).componentInstance;
             changeInput.onInput({ target: inputRef } as any);
             fixture.detectChanges();
             tick();

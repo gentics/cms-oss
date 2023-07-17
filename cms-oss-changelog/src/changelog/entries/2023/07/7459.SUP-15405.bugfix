@@ -1,0 +1,1 @@
+Fixes rendering of @#gtx_channel@ directive after editing when creating a link to a local object in another channel.

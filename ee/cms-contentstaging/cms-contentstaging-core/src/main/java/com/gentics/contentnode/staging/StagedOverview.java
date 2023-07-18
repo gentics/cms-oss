@@ -45,11 +45,6 @@ public class StagedOverview extends StagingBase {
 	private OrderBy orderBy;
 
 	/**
-	 * List of the id's of the selected items
-	 */
-	private List<Integer> selectedItemIds;
-
-	/**
 	 * List of object id's with node id's
 	 */
 	private List<StagedNodeIdObjectId> selectedNodeItemIds;
@@ -134,23 +129,6 @@ public class StagedOverview extends StagingBase {
 	 */
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
-	}
-
-	/**
-	 * Get selected indices.
-	 * @return
-	 */
-	public List<Integer> getSelectedItemIds() {
-		return selectedItemIds;
-	}
-
-	/**
-	 * Set selected indices.
-	 * 
-	 * @param selectedItemIds
-	 */
-	public void setSelectedItemIds(List<Integer> selectedItemIds) {
-		this.selectedItemIds = selectedItemIds;
 	}
 
 	/**

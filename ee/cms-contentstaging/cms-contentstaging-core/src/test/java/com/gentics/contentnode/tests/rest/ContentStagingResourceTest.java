@@ -1,5 +1,6 @@
 package com.gentics.contentnode.tests.rest;
 
+import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
@@ -14,10 +15,14 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createUserGroup;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createformDataBodyPart;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.localize;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRequiredPermissions;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -77,6 +82,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
@@ -86,6 +92,7 @@ import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.OverviewPartType;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
 import com.gentics.contentnode.perm.PermHandler;
+import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.perm.Permissions;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.form.FormResponse;
@@ -111,6 +118,7 @@ import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.contentnode.tests.publish.mesh.form.FormPublishTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
+import com.gentics.contentnode.tests.utils.OverviewHelper;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
@@ -152,6 +160,8 @@ public class ContentStagingResourceTest {
 	private static Node targetChannel;
 	private static Page page1;
 	private static Page page2;
+	private static Page page31;
+	private static Page page32;
 	private static Folder folder1;
 	private static Folder folder2;
 	private static Page page11;
@@ -230,6 +240,16 @@ public class ContentStagingResourceTest {
 			p.getContent().addContentTag(node1ConstructId);
 			p.getContent().addContentTag(bothNodeConstructId);
 		}));
+		page2 = execute(p -> update(p, upd -> {
+			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();
+			overview.setObjectType(Page.TYPE_PAGE);
+			overview.setSelectionType(Overview.SELECTIONTYPE_SINGLE);
+			overview.setMaxObjects(3);
+			overview.setRecursion(true);
+			overview.setOrderKind(Overview.ORDER_NAME);
+			overview.setOrderWay(Overview.ORDERWAY_ASC);
+			OverviewHelper.addOverviewEntriesToOverview(overview, List.of(page1.getId()));
+		}), page2);
 
 		folder1 = supply(() -> create(Folder.class, f -> {
 			f.setMotherId(node1.getFolder().getId());
@@ -265,6 +285,41 @@ public class ContentStagingResourceTest {
 				throw new NodeException(e);
 			}
 		}));
+
+		page31 = supply(() -> create(Page.class, p -> {
+			p.setFolderId(node2.getFolder().getId());
+			p.setTemplateId(template.getId());
+			p.setName("Page 31");
+			p.getContent().addContentTag(node1ConstructId);
+			p.getContent().addContentTag(bothNodeConstructId);
+		}));
+		page32 = supply(() -> create(Page.class, p -> {
+			p.setFolderId(node2.getFolder().getId());
+			p.setTemplateId(template.getId());
+			p.setName("Page 32");
+			p.getContent().addContentTag(node1ConstructId);
+			p.getContent().addContentTag(bothNodeConstructId);
+		}));
+		page31 = execute(p -> update(p, upd -> {
+			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();
+			overview.setObjectType(Page.TYPE_PAGE);
+			overview.setSelectionType(Overview.SELECTIONTYPE_SINGLE);
+			overview.setMaxObjects(3);
+			overview.setRecursion(true);
+			overview.setOrderKind(Overview.ORDER_NAME);
+			overview.setOrderWay(Overview.ORDERWAY_ASC);
+			OverviewHelper.addOverviewEntriesToOverview(overview, List.of(upd.getId(), page32.getId()));
+		}), page31);
+		page32 = execute(p -> update(p, upd -> {
+			Overview overview = getPartType(OverviewPartType.class, upd.getTag("both1"), "ds").getOverview();
+			overview.setObjectType(Page.TYPE_PAGE);
+			overview.setSelectionType(Overview.SELECTIONTYPE_SINGLE);
+			overview.setMaxObjects(3);
+			overview.setRecursion(true);
+			overview.setOrderKind(Overview.ORDER_NAME);
+			overview.setOrderWay(Overview.ORDERWAY_ASC);
+			OverviewHelper.addOverviewEntriesToOverview(overview, List.of(upd.getId(), page31.getId()));
+		}), page32);
 	}
 
 	@AfterClass
@@ -924,6 +979,52 @@ public class ContentStagingResourceTest {
 		assertThat(response.getContentPackage().getImages()).isEqualTo(1);
 		assertThat(response.getContentPackage().getFiles()).isEqualTo(1);
 		assertThat(response.getContentPackage().getForms()).isEqualTo(1);
+	}
+
+	@Test
+	public void testSelfReferencedOverview() throws Exception {
+		String packageNameHuman = DEFAULT_PACKAGE_PREFIX + Long.toString(System.currentTimeMillis());
+		ContentPackageLoadResponse response = directCreate(packageNameHuman, DEFAULT_PACKAGE_DESCRIPTION);
+		String packageName = response.getContentPackage().getName();
+		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page31.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page31.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Page.TYPE_PAGE, page32.getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Folder.TYPE_FOLDER, page32.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW, PermHandler.PERM_PAGE_VIEW).toString()));
+		operate(() -> PermHandler.setPermissions(Node.TYPE_NODE, node2.getFolder().getId(), Arrays.asList(group), Permissions.get(PermHandler.PERM_VIEW).toString()));
+		response = supply(() -> {
+			return new ContentStagingResourceImpl().add(packageName, "folder", node2.getFolder().getGlobalId().toString(), true);
+		});
+		assertResponseOK(response);
+		assertThat(response.getContentPackage().getNodes()).isEqualTo(1);
+		assertThat(response.getContentPackage().getFolders()).isEqualTo(1);
+		assertThat(response.getContentPackage().getPages()).isEqualTo(3);
+		assertThat(response.getContentPackage().getImages()).isEqualTo(0);
+		assertThat(response.getContentPackage().getFiles()).isEqualTo(0);
+		assertThat(response.getContentPackage().getForms()).isEqualTo(0);
+
+		supply(() -> new PageResourceImpl().delete(page31.getGlobalId().toString(), page31.getNode().getId()));
+		supply(() -> new PageResourceImpl().delete(page32.getGlobalId().toString(), page32.getNode().getId()));
+
+		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
+		assertThatThrownBy(() -> supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view))).isInstanceOf(EntityNotFoundException.class);
+
+		supply(() -> new ContentStagingResourceImpl().importIntoCms(packageName, 5000));
+
+		page31 = supply(() -> PageResourceImpl.getPage(page31.getGlobalId().toString(), ObjectPermission.view));
+		page32 = supply(() -> PageResourceImpl.getPage(page32.getGlobalId().toString(), ObjectPermission.view));
+		assertNotNull(page31);
+		assertNotNull(page32);
+
+		operate(() -> {
+			Overview overview31 = getPartType(OverviewPartType.class, page31.getTag("both1"), "ds").getOverview();
+			assertEquals("Page 31 does not contain expected number of items", 2, overview31.getOverviewEntries().size());
+			assertFalse("Page 31 contains no expected values [Page 31] [Page 32]", overview31.getOverviewEntries().stream().anyMatch(entry -> entry.getObjectId().intValue() != page31.getId().intValue() && entry.getObjectId().intValue() != page32.getId().intValue()));
+		});
+		operate(() -> {
+			Overview overview32 = getPartType(OverviewPartType.class, page32.getTag("both1"), "ds").getOverview();
+			assertEquals("Page 32 does not contain expected number of items", 2, overview32.getOverviewEntries().size());
+			assertFalse("Page 32 contains no expected values [Page 31] [Page 32]", overview32.getOverviewEntries().stream().anyMatch(entry -> entry.getObjectId().intValue() != page31.getId().intValue() && entry.getObjectId().intValue() != page32.getId().intValue()));
+		});
 	}
 
 	@Test

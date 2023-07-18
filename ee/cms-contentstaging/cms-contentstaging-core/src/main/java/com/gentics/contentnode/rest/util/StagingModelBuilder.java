@@ -24,6 +24,7 @@ import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -69,6 +70,9 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.model.NodeIdObjectId;
+import com.gentics.contentnode.rest.model.Overview.ListType;
+import com.gentics.contentnode.rest.model.Overview.OrderDirection;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -219,6 +223,104 @@ public class StagingModelBuilder {
 	/**
 	 * Transform the given Overview into its REST Model
 	 *
+	 * @param stagedOverview
+	 *            Node Object
+	 * @param onReferenceNotFound 
+	 * @param mismatches 
+	 * @return REST Model
+	 * @throws NodeException
+	 */
+	public static com.gentics.contentnode.rest.model.Overview getOverview(
+			StagedOverview stagedOverview, Set<String> mismatches, Operator onReferenceNotFound) throws NodeException {
+		if (stagedOverview == null || org.apache.commons.lang.StringUtils.isBlank(stagedOverview.getId())) {
+			return null;
+		}
+
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		com.gentics.contentnode.rest.model.Overview restOverview = ModelBuilder.getOverview(t.getObject(Overview.class, stagedOverview.getId(), true));
+
+		restOverview.setGlobalId(stagedOverview.getId());
+
+		// set the selection type
+		restOverview.setSelectType(stagedOverview.getSelectType());
+
+		// set the type of selected objects
+		restOverview.setListType(stagedOverview.getListType());
+
+		// set the type of order
+		restOverview.setOrderBy(stagedOverview.getOrderBy());
+
+		// set the order direction
+		restOverview.setOrderDirection(stagedOverview.getOrderDirection());
+
+		// set the template's source
+		restOverview.setSource(stagedOverview.getSource());
+
+		// set the entries
+		if (stagedOverview.getSelectedNodeItemIds() != null && stagedOverview.getSelectedNodeItemIds().size() > 0) {
+			// set the type of selected objects
+			ListType listType = restOverview.getListType();
+
+			Class<? extends NodeObject> entryClass = null;
+			if (listType != null) {
+				switch (listType) {
+				case FILE:
+					entryClass = File.class;
+					break;
+				case FOLDER:
+					entryClass = Folder.class;
+					break;
+				case IMAGE:
+					entryClass = ImageFile.class;
+					break;
+				case PAGE:
+					entryClass = Page.class;
+					break;
+				case UNDEFINED:
+					break;
+				}
+			}
+			List<StagedNodeIdObjectId> overviewEntries = stagedOverview.getSelectedNodeItemIds();
+			List<NodeIdObjectId> selectedObjects = new ArrayList<>(overviewEntries.size());
+			List<Integer> selectedItemIds = new ArrayList<>(overviewEntries.size());
+
+			for (StagedNodeIdObjectId entry : overviewEntries) {
+				Integer localId = t.getLocalId(entryClass, entry.getObjectId(), onReferenceNotFound);
+				if (localId != null) {
+					if (org.apache.commons.lang.StringUtils.isNotBlank(entry.getNodeId())) {
+						selectedObjects.add(new NodeIdObjectId(t.getLocalId(Node.class, entry.getNodeId()), localId));
+					} else {
+						selectedItemIds.add(localId);
+					}
+				}
+			}
+
+			// if the sortorder is DESC, we will reverse the order of the entries
+			// (entries will always be set in selection order, not in the real sortorder)
+			if (stagedOverview.getOrderDirection() == OrderDirection.DESC) {
+				Collections.reverse(selectedObjects);
+			}
+			if (selectedObjects.size() > 0) {
+				restOverview.setSelectedNodeItemIds(selectedObjects);
+			}
+			if (selectedItemIds.size() > 0) {
+				restOverview.setSelectedItemIds(selectedItemIds);
+			}
+		}
+
+		// set the maximum number of listed entries
+		restOverview.setMaxItems(stagedOverview.getMaxItems());
+
+		// set the recursive flag
+		restOverview.setRecursive(stagedOverview.getRecursive());
+
+		return restOverview;
+	}
+
+	/**
+	 * Transform the given Overview into its REST Model
+	 *
 	 * @param nodeOverview
 	 *            Node Object
 	 * @return REST Model
@@ -227,6 +329,9 @@ public class StagingModelBuilder {
 	public static StagedOverview getOverview(
 			Overview nodeOverview, StagedOverview restOverview) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
+
+		// ID
+		restOverview.setId(nodeOverview.getGlobalId().toString());
 
 		// set the selection type
 		restOverview.setSelectType(Overview.getSelectType(nodeOverview.getSelectionType()));
@@ -250,14 +355,15 @@ public class StagingModelBuilder {
 		// set the entries
 		List<OverviewEntry> overviewEntries = nodeOverview.getOverviewEntries();
 
-		if (nodeOverview.isStickyChannel()) {
+		// Fill out global IDs
+		{
 			List<StagedNodeIdObjectId> selectedObjects = new ArrayList<>(overviewEntries.size());
 
 			for (OverviewEntry entry : overviewEntries) {
 				StagedNodeIdObjectId id = new StagedNodeIdObjectId();
 				NodeObject object = entry.getObject();
 				id.setObjectId(object.getGlobalId().toString());
-				id.setNodeId(t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString());
+				id.setNodeId(entry.getNodeId() > 0 ? t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString() : null);
 				selectedObjects.add(id);
 			}
 
@@ -268,19 +374,6 @@ public class StagingModelBuilder {
 				Collections.reverse(selectedObjects);
 			}
 			restOverview.setSelectedNodeItemIds(selectedObjects);
-		} else {
-			List<Integer> selectedItemIds = new ArrayList<>(overviewEntries.size());
-			for (OverviewEntry entry : overviewEntries) {
-				selectedItemIds.add(entry.getObjectId());
-			}
-
-			// if the sortorder is DESC, we will reverse the order of the entries
-			// (entries will always be set in selection order, not in the real
-			// sortorder)
-			if (nodeOverview.getOrderWay() == com.gentics.contentnode.object.Overview.ORDERWAY_DESC) {
-				Collections.reverse(selectedItemIds);
-			}
-			restOverview.setSelectedItemIds(selectedItemIds);
 		}
 
 		// set the maximum number of listed entries
@@ -367,7 +460,7 @@ public class StagingModelBuilder {
 		nodeProperty.setImageId(t.getLocalId(ImageFile.class, stagedProperty.getImageId(), onReferenceNotFound));
 		nodeProperty.setNodeId(t.getLocalId(Node.class, stagedProperty.getNodeId(), onReferenceNotFound));
 		nodeProperty.setOptions(stagedProperty.getOptions() != null ? new ArrayList<>(stagedProperty.getOptions()): null);
-		nodeProperty.setOverview((stagedProperty.getOverview() != null && stagedProperty.getOverview().getId() != null) ? ModelBuilder.getOverview(t.getObject(Overview.class, stagedProperty.getOverview().getId(), true)) : null);
+		nodeProperty.setOverview(getOverview(stagedProperty.getOverview(), mismatches, onReferenceNotFound));
 		nodeProperty.setPageId(t.getLocalId(Page.class, stagedProperty.getPageId(), onReferenceNotFound));
 		nodeProperty.setPartId(t.getLocalId(Part.class, stagedProperty.getPartId(), onReferenceNotFound));
 		nodeProperty.setSelectedOptions(stagedProperty.getSelectedOptions() != null ? new ArrayList<>(stagedProperty.getSelectedOptions()): null);

@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { EditableTag, FolderTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -108,13 +107,6 @@ describe('FolderUrlTagPropertyEditor', () => {
                 ValidationErrorInfo,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    FolderUrlTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     beforeEach(() => {
@@ -124,7 +116,12 @@ describe('FolderUrlTagPropertyEditor', () => {
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as FolderTagPartProperty;

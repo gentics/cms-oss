@@ -2,15 +2,15 @@ import { Component, DebugElement, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
-import { FileTagPartProperty, ImageTagPartProperty, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import { Feature, FileTagPartProperty, ImageTagPartProperty, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getExampleFileData, getExampleFolderData, getExampleImageData } from '../../../../../testing/test-data.mock';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
+import { FeaturesState } from '../../../../common/models';
 import { Api, ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
@@ -67,7 +67,7 @@ function checkNoSelectedItemPath(fixture: ComponentFixture<TestComponent>): void
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;
@@ -133,34 +133,29 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 ValidationErrorInfo,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    FileOrImageUrlTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     beforeEach(() => {
         appState = TestBed.get(ApplicationStateService);
         const api = TestBed.get(Api) as Api;
         getItemSpy = spyOn(api.folders, 'getItem');
-        setFeatures({ imagemanipulation2: true, enable_image_upload_in_tagfill: true });
+        setFeatures({ [Feature.IMAGE_MANIPULATION2]: true, [Feature.ENABLE_UPLOAD_IN_TAGFILL]: true });
     });
 
-    function setFeatures(features: { imagemanipulation2: boolean, enable_image_upload_in_tagfill: boolean }): void {
+    function setFeatures(features: Partial<FeaturesState>): void {
         appState.mockState({
-            features: {
-                imagemanipulation2: features.imagemanipulation2,
-                enable_image_upload_in_tagfill: features.enable_image_upload_in_tagfill,
-            } as any,
+            features: features,
         });
     }
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as FileTagPartProperty | ImageTagPartProperty;
@@ -433,7 +428,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                     },
                 ]);
 
-                setFeatures({ imagemanipulation2: false, enable_image_upload_in_tagfill: true });
+                setFeatures({ [Feature.IMAGE_MANIPULATION2]: false, [Feature.ENABLE_UPLOAD_IN_TAGFILL]: true });
                 validateInit(fixture, instance, tag);
 
                 // The upload image button should be shown, the edit image button not.
@@ -452,7 +447,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                     },
                 ]);
 
-                setFeatures({ imagemanipulation2: true, enable_image_upload_in_tagfill: false });
+                setFeatures({ [Feature.IMAGE_MANIPULATION2]: true, [Feature.ENABLE_UPLOAD_IN_TAGFILL]: false });
                 validateInit(fixture, instance, tag);
 
                 // The edit image button should be shown, the upload image button not.
@@ -477,6 +472,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 const uploadButton: DebugElement = fixture.debugElement.query(By.css(UPLOAD_BUTTON_SELECTOR));
                 expect(uploadButton).toBeTruthy();
                 if (uploadButton) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
                     expect(uploadButton.attributes['disabled']).toBeTruthy;
                 }
                 expect(fixture.debugElement.query(By.css(EDIT_IMAGE_BUTTON_SELECTOR))).toBeFalsy();

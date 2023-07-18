@@ -1,8 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import {
@@ -50,13 +49,6 @@ describe('CheckboxTagPropertyEditorComponent', () => {
                 ValidationErrorInfo,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    CheckboxTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     describe('initialization', () => {
@@ -72,7 +64,6 @@ describe('CheckboxTagPropertyEditorComponent', () => {
                 delete tagProperty.booleanValue;
                 expectedValue = false;
             }
-            const origTagProperty = cloneDeep(tagProperty);
 
             instance.tagPart = tagPart;
             fixture.detectChanges();
@@ -304,7 +295,7 @@ function getMockedTag(): EditableTag {
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;

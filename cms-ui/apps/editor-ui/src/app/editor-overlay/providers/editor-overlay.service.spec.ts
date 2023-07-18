@@ -1,6 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ActivatedRoute } from '@angular/router';
 import { CropResizeParameters } from '@gentics/cms-models';
 import { GenticsUIImageEditorModule, ImageTransformParams } from '@gentics/image-editor';
@@ -21,8 +20,7 @@ let appState: TestApplicationState;
 const ITEM_ID = 1;
 const SUBFOLDER_ID = 3;
 const ITEM_NODE = 11;
-
-const mockNodeName = 'MockNode';
+const MOCK_NODE_NAME = 'MockNode';
 
 describe('EditorOverlayService', () => {
 
@@ -51,12 +49,6 @@ describe('EditorOverlayService', () => {
                 { provide: NodeSettingsActionsService, useClass: MockNodeSettingsActions },
                 { provide: ResourceUrlBuilder, useClass: MockResourceUrlBuilder },
             ],
-        });
-
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [ImageEditorModalComponent],
-            },
         });
 
         TestBed.compileComponents();
@@ -193,11 +185,11 @@ class MockFolderActions {
             channelId: 0,
             inherited: false,
             liveUrl: '',
-            inheritedFrom: mockNodeName,
+            inheritedFrom: MOCK_NODE_NAME,
             inheritedFromId: ITEM_NODE,
-            masterNode: mockNodeName,
+            masterNode: MOCK_NODE_NAME,
             masterNodeId: ITEM_NODE,
-            path: `/${mockNodeName}/[Media]/[Images]/`,
+            path: `/${MOCK_NODE_NAME}/[Media]/[Images]/`,
             forceOnline: false,
             online: true,
             broken: false,
@@ -218,13 +210,13 @@ class MockFolderActions {
         });
     }
     getNode(): any {
-        return {name: mockNodeName};
+        return {name: MOCK_NODE_NAME};
     }
     cropAndResizeImage(): void {}
 }
 class MockEntityResolver {
     getNode(): any {
-        return {name: mockNodeName};
+        return {name: MOCK_NODE_NAME};
     }
     getEntity(): any {
         return {
@@ -242,11 +234,11 @@ class MockEntityResolver {
             channelId: 0,
             inherited: false,
             liveUrl: '',
-            inheritedFrom: mockNodeName,
+            inheritedFrom: MOCK_NODE_NAME,
             inheritedFromId: ITEM_NODE,
-            masterNode: mockNodeName,
+            masterNode: MOCK_NODE_NAME,
             masterNodeId: ITEM_NODE,
-            path: `/${mockNodeName}/[Media]/[Images]/`,
+            path: `/${MOCK_NODE_NAME}/[Media]/[Images]/`,
             forceOnline: false,
             online: true,
             broken: false,
@@ -272,7 +264,7 @@ class MockEntityResolver {
 
 @Pipe({name: 'i18n'})
 class MockI18nPipe implements PipeTransform {
-    transform(key: string, params: Object): string {
+    transform(key: string, params: Record<string, any>): string {
         return key + (params ? ':' + JSON.stringify(params) : '');
     }
 }

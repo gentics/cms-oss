@@ -2,7 +2,6 @@ import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { EditableTag, PageTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -40,7 +39,7 @@ const PAGE_B_REMOVED = getExamplePageData({ id: -10 });
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;
@@ -106,23 +105,19 @@ describe('PageUrlTagPropertyEditor', () => {
                 MockI18nPipe,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    PageUrlTagPropertyEditor,
-                ],
-            },
-        });
-    });
 
-    beforeEach(() => {
         const api = TestBed.get(Api) as Api;
         getItemSpy = spyOn(api.folders, 'getItem');
     });
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as PageTagPartProperty;

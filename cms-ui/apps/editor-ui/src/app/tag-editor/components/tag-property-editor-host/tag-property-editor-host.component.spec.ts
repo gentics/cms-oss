@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagPart } from '@gentics/cms-models';
@@ -87,8 +86,8 @@ describe('TagPropertyEditorHostComponent', () => {
 @Component({
     template: `
         <tag-property-editor-host [tagPart]="tagPart"></tag-property-editor-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     tagPart: TagPart;
 }

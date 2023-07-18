@@ -49,45 +49,45 @@ class App extends OriginalApp {
 @Component({
     selector: 'basic-search-bar',
     template: '',
-    })
+})
 class MockBasicSearchBarComponent {}
 
 @Component({
     selector: 'advanced-search-bar',
     template: '',
-    })
+})
 class MockAdvancedSearchBarComponent {}
 
 @Component({
     selector: 'filter-search-bar',
     template: '',
-    // tslint:disable-next-line: no-inputs-metadata-property
+    // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
     inputs: ['activeNode'],
-    })
+})
 class MockFilterSearchBarComponent {}
 
 @Component({
     selector: 'embedded-tools-host',
     template: '',
-    })
+})
 class MockEmbeddedToolHostComponent { }
 
 @Component({
     selector: 'tool-breadcrumb',
     template: '',
-    })
+})
 class MockToolBreadcrumbComponent {}
 
 @Component({
     selector: 'tool-selector',
     template: '',
-    })
+})
 class MockToolSelectorComponent {}
 
 @Component({
     selector: 'chip-search-bar',
     template: '',
-    })
+})
 class MockChipSearchBarComponent {
     @Input()
     chipSearchBarConfig: any;
@@ -98,19 +98,19 @@ class MockChipSearchBarComponent {
 @Component({
     selector: 'favourites-list',
     template: '',
-    })
+})
 class MockFavouritesListComponent {}
 
 @Component({
     selector: 'message-inbox',
     template: '',
-    })
+})
 class MockMessageInboxComponent {}
 
 @Component({
     selector: 'alert-center',
     template: '',
-    })
+})
 class MockAlertCenterComponent {}
 
 class MockEmbeddedToolsService {
@@ -289,7 +289,6 @@ describe('AppComponent', () => {
 
         describe('before logging in', () => {
 
-            // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
             function assertMethodCalledOnInit(getMethodsToTest: () => jasmine.Spy[]): () => void {
                 return componentTest(() => App, fixture => {
                     fixture.detectChanges();
@@ -460,18 +459,20 @@ describe('AppComponent', () => {
                 expect(topBar).not.toBeNull();
             }));
 
-            it('displays the alert center corner action item if link checker feature and tool are available and there are broken links', componentTest(() => App, fixture => {
-                fixture.detectChanges();
-                simulateLogin();
-                simulateLinkChecker(true, true, true, 4);
+            it(
+                'displays the alert center corner action item if link checker feature and tool are available and there are broken links',
+                componentTest(() => App, fixture => {
+                    fixture.detectChanges();
+                    simulateLogin();
+                    simulateLinkChecker(true, true, true, 4);
 
-                fixture.detectChanges();
-                tick(DEBOUNCE_INTERVAL);
-                fixture.detectChanges();
-                const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
+                    fixture.detectChanges();
+                    tick(DEBOUNCE_INTERVAL);
+                    fixture.detectChanges();
+                    const cornerAction = fixture.debugElement.query(By.css('gtx-button.alert-center'));
 
-                expect(cornerAction).not.toBeNull();
-            }));
+                    expect(cornerAction).not.toBeNull();
+                }));
 
             it('does not display the alert center corner action item if link checker feature is not enabled', componentTest(() => App, fixture => {
                 fixture.detectChanges();
@@ -603,7 +604,6 @@ describe('AppComponent', () => {
 
             it('loads the features of a node when folderState.activeNode changes', () => {
                 const fixture = TestBed.createComponent(App);
-                const instance = fixture.componentInstance;
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();
@@ -620,7 +620,6 @@ describe('AppComponent', () => {
 
             it('loads the features of a node when editorState.nodeId changes', () => {
                 const fixture = TestBed.createComponent(App);
-                const instance = fixture.componentInstance;
                 fixture.detectChanges();
                 simulateLogin();
                 fixture.detectChanges();

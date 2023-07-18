@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { EditableTag, PageTagTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyType, TemplateTagTagPartProperty } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
@@ -41,7 +40,7 @@ const TAG_TYPE = {
  *
  * This also tests if the mappings in the TagPropertyEditorResolverService are correct.
  */
- @Component({
+@Component({
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
@@ -72,7 +71,6 @@ class MockFolderActions { }
  */
 describe('TagRefTagPropertyEditor', () => {
 
-    let appState: TestApplicationState;
     let getItemSpy: jasmine.Spy;
     let getTagTypeSpy: jasmine.Spy;
 
@@ -102,17 +100,9 @@ describe('TagRefTagPropertyEditor', () => {
                 ValidationErrorInfo,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    TagRefTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     beforeEach(() => {
-        appState = TestBed.get(ApplicationStateService);
         const api = TestBed.get(Api) as Api;
         getItemSpy = spyOn(api.folders, 'getItem');
         getTagTypeSpy = spyOn(api.tagType, 'getTagType');
@@ -120,7 +110,12 @@ describe('TagRefTagPropertyEditor', () => {
 
     describe('initialization', () => {
 
-        function validateInit(fixture: ComponentFixture<TestComponent>, instance: TestComponent, tag: EditableTag, contextInfo?: Partial<TagEditorContext>): void {
+        function validateInit(
+            fixture: ComponentFixture<TestComponent>,
+            instance: TestComponent,
+            tag: EditableTag,
+            contextInfo?: Partial<TagEditorContext>,
+        ): void {
             const context = getMockedTagEditorContext(tag, contextInfo);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword] as PageTagTagPartProperty | TemplateTagTagPartProperty;
@@ -154,12 +149,12 @@ describe('TagRefTagPropertyEditor', () => {
                         getItemReturnValues.push(
                             throwError({
                                 messages: [ {
-                                  message: 'The specified page was not found.',
-                                  type: 'CRITICAL',
+                                    message: 'The specified page was not found.',
+                                    type: 'CRITICAL',
                                 } ],
                                 responseInfo: {
-                                  responseCode: 'NOTFOUND',
-                                  responseMessage: 'The specified page was not found.',
+                                    responseCode: 'NOTFOUND',
+                                    responseMessage: 'The specified page was not found.',
                                 },
                             }),
                             throwError({
@@ -212,8 +207,8 @@ describe('TagRefTagPropertyEditor', () => {
                                     type: 'WARNING',
                                 } ],
                                 responseInfo: {
-                                  responseCode: 'NOTFOUND',
-                                  responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
+                                    responseCode: 'NOTFOUND',
+                                    responseMessage: `Could not find template with ID ${origTagProperty.templateId}.`,
                                 },
                             }),
                             throwError({
@@ -360,19 +355,19 @@ describe('TagRefTagPropertyEditor', () => {
         );
 
         it('initializes properly for set PAGETAG with page that is no longer available',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            const tag: EditableTag = mockEditableTag<PageTagTagPartProperty>([
-                {
-                    type: TagPropertyType.PAGETAG,
-                    typeId: TagPartType.TagPage,
-                    pageId: PAGE_A.id,
-                    contentTagId: -10,
-                },
-            ]);
+            componentTest(() => TestComponent, (fixture, instance) => {
+                const tag: EditableTag = mockEditableTag<PageTagTagPartProperty>([
+                    {
+                        type: TagPropertyType.PAGETAG,
+                        typeId: TagPartType.TagPage,
+                        pageId: PAGE_A.id,
+                        contentTagId: -10,
+                    },
+                ]);
 
-            validateInit(fixture, instance, tag);
-        }),
-    );
+                validateInit(fixture, instance, tag);
+            }),
+        );
 
         it('initializes properly for unset TEMPLATETAG',
             componentTest(() => TestComponent, (fixture, instance) => {
@@ -417,19 +412,19 @@ describe('TagRefTagPropertyEditor', () => {
         );
 
         it('initializes properly for set TEMPLATETAG with tag that is no longer available',
-        componentTest(() => TestComponent, (fixture, instance) => {
-            const tag: EditableTag = mockEditableTag<TemplateTagTagPartProperty>([
-                {
-                    type: TagPropertyType.TEMPLATETAG,
-                    typeId: TagPartType.TagTemplate,
-                    templateId: TEMPLATE_A.id,
-                    templateTagId: -10,
-                },
-            ]);
+            componentTest(() => TestComponent, (fixture, instance) => {
+                const tag: EditableTag = mockEditableTag<TemplateTagTagPartProperty>([
+                    {
+                        type: TagPropertyType.TEMPLATETAG,
+                        typeId: TagPartType.TagTemplate,
+                        templateId: TEMPLATE_A.id,
+                        templateTagId: -10,
+                    },
+                ]);
 
-            validateInit(fixture, instance, tag);
-        }),
-    );
+                validateInit(fixture, instance, tag);
+            }),
+        );
 
     });
 

@@ -1,24 +1,36 @@
-import { ServiceBase } from '@admin-ui/shared/providers/service-base/service.base';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-use-before-define */
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import * as KC from 'keycloak-js';
-import { Observable } from 'rxjs';
-
+import Keycloak from 'keycloak-js';
+import { Observable, throwError } from 'rxjs';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { API_BASE_URL } from '../../../common/utils/base-urls/base-urls';
 
 /** The Keycloak global is exposed when loading the keycloak.js script from the Keycloak server */
-declare const Keycloak: (config?: string | {}) => KC.KeycloakInstance;
-let keycloak: KC.KeycloakInstance;
+let keycloak: Keycloak;
 
-let _showSSOButton: boolean;
+let showSSOButton: boolean;
 
 const NO_CONFIG_FOUND = 'Keycloak config file not found';
 const SKIP_KEYCLOAK_PARAMETER_NAME = 'skip-sso';
 const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
 
+/**
+ * Enum for the ready state to not have magic numbers.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState
+ */
+enum XMLHttpREquestState {
+    UNSENT = 0,
+    OPENED = 1,
+    HEADERS_RECEIVED = 2,
+    LOADING = 3,
+    DONE = 4,
+}
+
 @Injectable()
-export class KeycloakService extends ServiceBase {
+export class KeycloakService {
 
     /** Keycloak support will be triggered if there is a keycloak.json file in the /config folder of the UI root. */
     static keycloakConfigFile = CUSTOMER_CONFIG_PATH + 'keycloak.json';
@@ -27,7 +39,7 @@ export class KeycloakService extends ServiceBase {
     static uiOverridesConfigFile = CUSTOMER_CONFIG_PATH + 'ui-overrides.json';
 
     /**
-     * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
+     * Initializes Keycloak.
      *
      * This static method should be invoked prior to bootstrapping the app, since it will trigger redirects which will
      * cause multiple app reloads/bootstraps and will also break routing.
@@ -39,18 +51,17 @@ export class KeycloakService extends ServiceBase {
         }
         return loadJSON(KeycloakService.uiOverridesConfigFile)
             .then(uiOverrides => {
-                // tslint:disable-next-line: no-console (the NGXLogger is not available here)
-                console.info(`UI-Overrides config found`);
+                console.info('UI-Overrides config found');
                 if (uiOverrides.showSSOButton && !checkParameter(RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME)) {
-                    _showSSOButton = true;
+                    showSSOButton = true;
                     return checkKeycloakAuthOnLoad('check-sso');
                 } else {
-                    _showSSOButton = false;
+                    showSSOButton = false;
                     return checkKeycloakAuthOnLoad('login-required');
                 }
             })
-            .catch(e => {
-                _showSSOButton = false;
+            .catch(() => {
+                showSSOButton = false;
                 return checkKeycloakAuthOnLoad('login-required');
             });
     }
@@ -60,12 +71,10 @@ export class KeycloakService extends ServiceBase {
     }
 
     get showSSOButton(): boolean {
-        return !!_showSSOButton;
+        return !!showSSOButton;
     }
 
-    constructor(private http: HttpClient) {
-        super();
-    }
+    constructor(private http: HttpClient) {}
 
     /**
      * If Keycloak has been detected and successfully used prior to bootstrapping the app,
@@ -75,23 +84,26 @@ export class KeycloakService extends ServiceBase {
      * Beware, the function does not check whether the token is expired.
      */
     login(): void {
-        if (this.keycloakEnabled) {
-            if (!keycloak.token) {
-                let parameters: string;
-                if (location.search.length > 0) {
-                    parameters = `${location.search}&${RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME}`;
-                } else {
-                    parameters = `?${RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME}`;
-                }
-
-                keycloak.login({
-                    redirectUri: `${location.origin}${location.pathname}${parameters}${location.hash}`,
-                });
-            }
-        } else {
-            console.error(`Keycloak has not been set up. Cannot attempt login.`);
+        if (!this.keycloakEnabled) {
+            console.error('Keycloak has not been set up. Cannot attempt login.');
+            return;
         }
 
+        // Don't need to login if we already are
+        if (keycloak.token) {
+            return;
+        }
+
+        let parameters: string;
+        if (location.search.length > 0) {
+            parameters = `${location.search}&${RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME}`;
+        } else {
+            parameters = `?${RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME}`;
+        }
+
+        keycloak.login({
+            redirectUri: `${location.origin}${location.pathname}${parameters}${location.hash}`,
+        });
     }
 
     /**
@@ -104,29 +116,29 @@ export class KeycloakService extends ServiceBase {
     attemptCmsLogin(): Observable<string> {
         if (this.keycloakEnabled && keycloak.token) {
             const headers = new HttpHeaders({
-                Authorization: 'Bearer ' + keycloak.token,
+                // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/restrict-template-expressions
+                Authorization: `Bearer ${keycloak.token}`,
             });
             return this.http.get(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`, { headers, responseType: 'text' });
         } else {
-            return Observable.throw(`Keycloak has not been set up. Cannot attempt SSO login.`);
+            return throwError('Keycloak has not been set up. Cannot attempt SSO login.');
         }
     }
 
     /**
      * If Keycloak is enabled, logout from keycloak
      */
-    logout(): Promise<void> {
-        if (this.keycloakEnabled) {
-            return new Promise((resolve, reject) => {
-                keycloak.logout().success(() => {
-                    console.log(`Keycloak logout successful`, keycloak);
-                    resolve();
-                }).error((e: any) => {
-                    reject('Keycloak logout failed ' + e);
-                });
-            });
-        } else {
-            return Promise.resolve();
+    async logout(): Promise<void> {
+        if (!this.keycloakEnabled) {
+            return;
+        }
+
+        try {
+            await keycloak.logout();
+            console.log('Keycloak logout successful', keycloak);
+        } catch (error) {
+            console.error('Keycloak logout failed', error);
+            throw error;
         }
     }
 }
@@ -134,46 +146,46 @@ export class KeycloakService extends ServiceBase {
 /**
  * Checks for the existence of a Keycloak config file, and if found runs the Keycloak authentication.
  */
-function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): Promise<any> {
-    return loadJSON(KeycloakService.keycloakConfigFile)
-            .then(keycloakConfig => {
-                // tslint:disable-next-line: no-console (the NGXLogger is not available here)
-                console.info(`Keycloak config found`);
-                const keycloakUrl = keycloakConfig['auth-server-url'];
-                return loadScripts([
-                    `${keycloakUrl}/js/keycloak.js`,
-                    `${keycloakUrl}/js/keycloak-authz.js`,
-                ]);
-            })
-            .then(() => {
-                keycloak = Keycloak(KeycloakService.keycloakConfigFile);
-                return initKeycloak(keycloak, onLoad);
-            })
-            .catch(e => {
-                // Since it is quite usual for no Keycloak.json file to be found in most installations,
-                // we swallow this error. All other errors will be re-thrown.
-                if (e !== NO_CONFIG_FOUND) {
-                    throw e;
-                }
-            });
+async function checkKeycloakAuthOnLoad(onLoad: 'check-sso' | 'login-required'): Promise<any> {
+    try {
+        const keycloakConfig = await loadJSON(KeycloakService.keycloakConfigFile);
+        console.info('Keycloak config found');
+
+        // Load the keycloak scripts from the keycloak instance.
+        // Has to be done this way, sadly
+        const keycloakUrl: string = keycloakConfig['auth-server-url'];
+        await loadScripts([
+            `${keycloakUrl}/js/keycloak.js`,
+            `${keycloakUrl}/js/keycloak-authz.js`,
+        ]);
+
+        keycloak = new Keycloak(KeycloakService.keycloakConfigFile);
+        return initKeycloak(keycloak, onLoad);
+    } catch (error) {
+        // Since it is quite usual for no Keycloak.json file to be found in most installations,
+        // we swallow this error. All other errors will be re-thrown.
+        if (error !== NO_CONFIG_FOUND) {
+            throw error;
+        }
+    }
 }
 
 
 /**
  * Initialize the Keycloak instance and return a promise.
  */
-function initKeycloak(kc: Keycloak.KeycloakInstance, onLoad: 'check-sso' | 'login-required'): Promise<void> {
-    return new Promise((resolve, reject) => {
-        kc.init({ onLoad: onLoad, responseMode: 'fragment', checkLoginIframe: false })
-            .success(() => {
-                // tslint:disable-next-line: no-console (the NGXLogger is not available here)
-                console.log(`Keycloak login successful`, kc);
-                resolve();
-            })
-            .error((e: any) => {
-                reject('Keycloak auth failed ' + e);
-            });
-    });
+async function initKeycloak(keycloak: Keycloak, onLoad: 'check-sso' | 'login-required'): Promise<void> {
+    try {
+        await keycloak.init({
+            onLoad: onLoad,
+            responseMode: 'fragment',
+            checkLoginIframe: false,
+        });
+        console.log('Keycloak login successful', keycloak);
+    } catch (error) {
+        console.error('Keycloak auth failed', error);
+        throw error;
+    }
 }
 
 
@@ -186,29 +198,33 @@ function loadJSON(url: string): Promise<any> {
         xhr.overrideMimeType('application/json');
         xhr.open('GET', url, true);
         xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    let json;
-                    try {
-                        json = JSON.parse(xhr.responseText);
-                        resolve(json);
-                    } catch (e) {
-                        reject(`Keycloak config file was found but could not be parsed.\n`
-                            + `Error: "${e.message}"\n`
-                            + `File contents: \n${xhr.responseText}`);
-                    }
-                } else {
-                    if (xhr.status === 404) {
-                        // log info that the 404 network error can safely be ignored,
-                        // otherwise end-users who look in the console may get confused
-                        // about why KeyCloak is being mentioned if they don't use it
-                        // tslint:disable-next-line: no-console (the NGXLogger is not available here)
-                        console.info(`A keycloak config file was not found. If you are not using keycloak for authentication,` +
-                            ` this notice can safely be ignored.`);
-                    }
-                    reject(NO_CONFIG_FOUND);
-                }
+            if (xhr.readyState !== XMLHttpREquestState.DONE) {
+                return;
             }
+
+            if (xhr.status === 200) {
+                let json;
+                try {
+                    json = JSON.parse(xhr.responseText);
+                    resolve(json);
+                } catch (e) {
+                    reject('Keycloak config file was found but could not be parsed.\n'
+                        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                        + `Error: "${e.message}"\n`
+                        + `File contents: \n${xhr.responseText}`);
+                }
+                return;
+            }
+
+            if (xhr.status === 404) {
+                // log info that the 404 network error can safely be ignored,
+                // otherwise end-users who look in the console may get confused
+                // about why KeyCloak is being mentioned if they don't use it
+                console.info('A keycloak config file was not found. If you are not using keycloak for authentication,' +
+                    ' this notice can safely be ignored.');
+            }
+
+            reject(NO_CONFIG_FOUND);
         };
         xhr.send();
     });
@@ -241,19 +257,18 @@ function loadScript(src: string): Promise<void> {
  * Checks get parameters if keycloak login should be skipped
  */
 function checkParameter(parameterToCheck: string): boolean {
-    if (location && location.search && location.search.length > 0) {
-        const parameters = location.search.substr(1).split('&');
-        for (let parameter of parameters) {
-            const splitParameter = parameter.split('=');
-            // as soon as the parameter is found it is assumed that keycloak should be skipped, regardless of the value
-            if (splitParameter.length >= 1 && decodeURIComponent(splitParameter[0]) === parameterToCheck) {
-                // tslint:disable-next-line: no-console (the NGXLogger is not available here)
-                console.info(`Keycloak will be skipped since the parameter ${parameterToCheck} was found.`);
-                return true;
-            }
-        }
+    if (!location || !location.search || location.search.length < 1) {
         return false;
-    } else {
+    }
+
+    try {
+        const parameters = new URLSearchParams(location.search);
+        const found = parameters.has(parameterToCheck);
+
+        console.info(`Keycloak will be skipped since the parameter ${parameterToCheck} was found.`);
+        return found;
+    } catch (error) {
+        // If parsing fails, then we ignore it
         return false;
     }
 }

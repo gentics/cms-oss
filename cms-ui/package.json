@@ -194,7 +194,7 @@
     "karma-jasmine-html-reporter": "2.0.0",
     "karma-junit-reporter": "^2.0.1",
     "karma-mocha-reporter": "^2.2.5",
-    "keycloak-js": "^8.0.1",
+    "keycloak-js": "^22.0.1",
     "lint-staged": "^9.5.0",
     "ng-packagr": "15.2.2",
     "npm": "^8.11.0",

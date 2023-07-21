@@ -21,7 +21,7 @@ const RETURNED_FROM_LOGIN_BUTTON_PARAMETER_NAME = 'button-back';
  * Enum for the ready state to not have magic numbers.
  * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/readyState
  */
-enum XMLHttpREquestState {
+enum XMLHttpRequestState {
     UNSENT = 0,
     OPENED = 1,
     HEADERS_RECEIVED = 2,
@@ -198,7 +198,7 @@ function loadJSON(url: string): Promise<any> {
         xhr.overrideMimeType('application/json');
         xhr.open('GET', url, true);
         xhr.onreadystatechange = () => {
-            if (xhr.readyState !== XMLHttpREquestState.DONE) {
+            if (xhr.readyState !== XMLHttpRequestState.DONE) {
                 return;
             }
 
@@ -265,7 +265,10 @@ function checkParameter(parameterToCheck: string): boolean {
         const parameters = new URLSearchParams(location.search);
         const found = parameters.has(parameterToCheck);
 
-        console.info(`Keycloak will be skipped since the parameter ${parameterToCheck} was found.`);
+        if (found) {
+            console.info(`Keycloak will be skipped since the parameter "${parameterToCheck}" was found.`);
+        }
+
         return found;
     } catch (error) {
         // If parsing fails, then we ignore it

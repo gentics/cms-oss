@@ -166,7 +166,11 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
     protected override async navigateToEntityDetails(entityId: string | number): Promise<void> {
         await this.router.navigate(
-            ['./', { outlets: { detail: [this.detailPath || this.entityIdentifier, this.activeNode.id, entityId] } }],
+            [
+                `/${AdminUIModuleRoutes.TEMPLATES}`,
+                { [NODE_ID_PARAM]: this.activeNode?.id },
+                { outlets: { detail: [this.detailPath || this.entityIdentifier, this.activeNode.id, entityId] } },
+            ],
             { relativeTo: this.route },
         );
         this.appState.dispatch(new FocusEditor());

@@ -49,8 +49,18 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
     }
 
     protected async navigateToEntityDetails(entityId: string | number): Promise<void> {
+        const fullPath = [];
+        this.route.pathFromRoot.forEach(segment => {
+            const snapshot = segment.snapshot;
+            if (snapshot.outlet === 'primary') {
+                snapshot.url.forEach(part => fullPath.push(part));
+            }
+        });
+        const urlSegments = fullPath.map(part => part.path).filter(str => str != null && str.length > 0);
+        const fullUrl = `/${urlSegments.join('/')}`;
+
         await this.router.navigate(
-            [{ outlets: { detail: [this.detailPath || this.entityIdentifier, entityId] } }],
+            [fullUrl, { outlets: { detail: [this.detailPath || this.entityIdentifier, entityId] } }],
             { relativeTo: this.route },
         );
         this.appState.dispatch(new FocusEditor());

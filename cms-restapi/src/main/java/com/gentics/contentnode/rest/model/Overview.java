@@ -148,6 +148,11 @@ public class Overview implements Serializable {
 	}
 
 	/**
+	 * Global UUID
+	 */
+	private String globalId;
+
+	/**
 	 * ID
 	 */
 	private Integer id;
@@ -434,5 +439,13 @@ public class Overview implements Serializable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public String getGlobalId() {
+		return globalId;
+	}
+
+	public void setGlobalId(String globalId) {
+		this.globalId = globalId;
 	}
 }

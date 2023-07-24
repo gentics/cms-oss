@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import {
     AbstractControl,
     ControlValueAccessor,
@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 import { CmsFormElementI18nValue, CmsFormElementKeyI18nValuePair } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
+import { cloneDeep } from 'lodash-es';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -53,7 +54,7 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     i18nArray = new UntypedFormArray([]);
 
     private cvaChange: (_: any) => void;
-    cvaTouch: any;
+    public cvaTouch: any;
     private validationChange: () => void;
 
     // private i18nData: CmsFormElementKeyI18nValuePair[];
@@ -62,7 +63,10 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     isTranslated = true;
     duplicateKeys = [];
 
-    constructor(private formBuilder: UntypedFormBuilder) {}
+    constructor(
+        private formBuilder: UntypedFormBuilder,
+        protected changeDetector: ChangeDetectorRef,
+    ) {}
 
     ngOnInit(): void {
         this.valueChangesSubscription = this.i18nArray.valueChanges.subscribe((value: CmsFormElementKeyI18nValuePair[]) => {
@@ -87,7 +91,14 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     writeValue(i18nData: CmsFormElementKeyI18nValuePair[]): void {
-        const data = i18nData ? i18nData : [];
+        const data = cloneDeep(i18nData ? i18nData : []);
+
+        if (data.length === this.i18nArray.length) {
+            this.i18nArray.setValue(data, { emitEvent: false });
+            this.i18nArray.updateValueAndValidity();
+            return;
+        }
+
         this.i18nArray.clear();
         data.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
             return this.formBuilder.group({
@@ -147,9 +158,18 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
     }
 
     sortList(e: ISortableEvent): void {
-        const newArray = e.sort(this.i18nArray.value);
+        const currentValue = this.i18nArray.value;
+        const newValue = e.sort([...currentValue], false);
+
+        /*
+         * We need to rebuild the form-array, because the sortable-list will scramble the DOM elements,
+         * and therefore make the elements appear in the wrong order.
+         * With this, we rebuild the form in the correct order and force the list to be rendered again,
+         * but this time in the correct order.
+         * With that, everything is correct again in the DOM and in the data model.
+         */
         this.i18nArray.clear();
-        newArray.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
+        newValue.map((keyI18nValuePair: CmsFormElementKeyI18nValuePair) => {
             return this.formBuilder.group({
                 key: [keyI18nValuePair.key],
                 value_i18n: [keyI18nValuePair.value_i18n],
@@ -157,10 +177,8 @@ export class KeyI18nValueListInputComponent implements ControlValueAccessor, Val
         }).forEach((formGroup: UntypedFormGroup) => {
             this.i18nArray.push(formGroup);
         });
-    }
-
-    identify(index: number, element: UntypedFormGroup): string {
-        return `${index}`;
+        this.i18nArray.updateValueAndValidity();
+        this.changeDetector.markForCheck();
     }
 
     private validateRequired(control: AbstractControl): ValidationErrors {

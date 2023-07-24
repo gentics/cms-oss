@@ -3,6 +3,7 @@ package com.gentics.node.testutils;
 import javax.servlet.Servlet;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -88,7 +89,7 @@ public class ServletAppContext extends ExternalResource {
 		jettyServer.setHandler(handler);
 
 		jettyServer.start();
-		port = jettyServer.getConnectors()[0].getLocalPort();
+		port = ((NetworkConnector)jettyServer.getConnectors()[0]).getLocalPort();
 		baseUri = String.format(baseUriPattern, port);
 		logger.info("HttpServer started");
 	}

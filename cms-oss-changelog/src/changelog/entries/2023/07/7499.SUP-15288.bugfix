@@ -1,0 +1,6 @@
+Some dependencies have been updated:
+* imageio: 3.9.4
+* tika: 1.28.5
+* commons-fileupload: 1.5
+* nekohtml: 1.9.22
+* xml-apis: 1.4.01

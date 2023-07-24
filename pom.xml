@@ -71,9 +71,15 @@
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
 		<mockito.version>3.7.7</mockito.version>
+		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.6.0</jsonpath.version>
 		<log4j.version>2.17.1</log4j.version>
+		<xml.apis.version>1.4.01</xml.apis.version>
+		<imageio.version>3.9.4</imageio.version>
+		<tika.version>1.28.5</tika.version>
+		<commons.fileupload.version>1.5</commons.fileupload.version>
+		<nekohtml.version>1.9.22</nekohtml.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.7</generic-testutils.version>

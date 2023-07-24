@@ -21,6 +21,11 @@ export function iconForItemType(itemType: string, fallback: string = 'help_outli
         case 'contenttag':
         case 'templatetag':
             return 'code';
+        case 'channel':
+            return 'input';
+        case 'node':
+            return 'device_hub';
+
         default:
             return fallback;
     }

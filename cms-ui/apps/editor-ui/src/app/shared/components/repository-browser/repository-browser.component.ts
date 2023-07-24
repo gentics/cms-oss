@@ -45,7 +45,7 @@ import { RepositoryBrowserDataService } from '../../providers';
     styleUrls: ['./repository-browser.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [RepositoryBrowserDataService],
-    })
+})
 export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
     /**
@@ -147,6 +147,22 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
 
     deselectItem(item: RepoItem): void {
         return this.dataService.deselectItem(item);
+    }
+
+    isSelected(item: RepoItem): Observable<boolean> {
+        return this.selected$.pipe(
+            map(selectedItems => {
+                return (selectedItems || []).some(sel => sel.id === item.id && sel.type === item.type);
+            }),
+        );
+    }
+
+    toggleItemSelection(item: RepoItem, to: boolean): void {
+        if (to) {
+            this.selectItem(item);
+        } else {
+            this.deselectItem(item);
+        }
     }
 
     setFilter(filter: string): void {

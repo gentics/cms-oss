@@ -1,4 +1,4 @@
-import { BusinessObject } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BusinessObject } from '@admin-ui/common';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -14,7 +14,7 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
     public activeEntity: string;
 
     protected abstract entityIdentifier: NormalizableEntityType;
-    protected detailPath: string;
+    protected detailPath?: AdminUIEntityDetailRoutes;
 
     protected subscriptions: Subscription[] = [];
 

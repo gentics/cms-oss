@@ -1,7 +1,7 @@
 <div class="gtx-entity-detail">
     <gtx-tabs pure [activeId]="activeTabId$ | async">
         <gtx-tab
-            [id]="DataSourceDetailTabs.properties"
+            [id]="DataSourceDetailTabs.PROPERTIES"
             gtxDetailTabLink
             [title]="'shared.title_properties' | i18n"
         >
@@ -41,7 +41,7 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="DataSourceDetailTabs.entries"
+            [id]="DataSourceDetailTabs.ENTRIES"
             gtxDetailTabLink
             [title]="'shared.title_entries' | i18n"
         >
@@ -75,7 +75,7 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="DataSourceDetailTabs.usageOverview"
+            [id]="DataSourceDetailTabs.USAGE_OVERVIEW"
             gtxDetailTabLink
             [title]="'shared.title_usage_overview' | i18n"
         >

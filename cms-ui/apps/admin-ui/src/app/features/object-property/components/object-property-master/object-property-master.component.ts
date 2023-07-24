@@ -1,4 +1,4 @@
-import { ObjectPropertyBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ObjectPropertyBO } from '@admin-ui/common';
 import { ObjectPropertyTableLoaderService } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
@@ -20,7 +20,7 @@ export class ObjectPropertyMasterComponent extends BaseTableMasterComponent<Obje
     readonly ObjectPropertyMasterTabs = ObjectPropertiesObjectType;
 
     protected entityIdentifier: NormalizableEntityType = 'objectProperty';
-    protected detailPath = 'object-property';
+    protected detailPath = AdminUIEntityDetailRoutes.OBJECT_PROPERTY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

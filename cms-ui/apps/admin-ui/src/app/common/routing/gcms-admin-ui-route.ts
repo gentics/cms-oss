@@ -1,30 +1,50 @@
 import { RequiredTypePermissions } from '@admin-ui/core';
 import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-info';
-import { Data, ResolveData, Route, ResolveFn } from '@angular/router';
-
+import { Data, ResolveData, ResolveFn, Route } from '@angular/router';
 import { ConstructorOf } from '../utils/util-types/util-types';
 
 export enum AdminUIModuleRoutes {
-    LOGIN = 'login',
-    USERS = 'users',
-    GROUPS = 'groups',
-    ROLES = 'roles',
-    FOLDERS = 'folders',
-    NODES = 'nodes',
-    LANGUAGES = 'languages',
-    CONTENT_REPOSITORIES = 'content-repositories',
-    SEARCH_INDEX_MAINTENANCE = 'search-index-maintenance',
-    LOGS = 'logs',
-    SCHEDULER = 'scheduler',
-    CONTENT_MAINTENANCE = 'content-maintenance',
-    MAINTENANCE_MODE = 'maintenance-mode',
-    CONTENT_STAGING = 'content-staging',
-    OBJECT_PROPERTIES = 'object-properties',
     CONSTRUCTS = 'constructs',
-    DATA_SOURCES = 'data-sources',
+    CONTENT_MAINTENANCE = 'content-maintenance',
+    CONTENT_STAGING = 'content-staging',
+    CONTENT_REPOSITORIES = 'content-repositories',
     CR_FRAGMENTS = 'cr-fragments',
+    DATA_SOURCES = 'data-sources',
+    FOLDERS = 'folders',
+    GROUPS = 'groups',
+    LANGUAGES = 'languages',
+    LOGIN = 'login',
+    LOGS = 'logs',
+    MAINTENANCE_MODE = 'maintenance-mode',
+    NODES = 'nodes',
+    OBJECT_PROPERTIES = 'object-properties',
     PACKAGES = 'packages',
+    ROLES = 'roles',
+    SCHEDULER = 'scheduler',
+    SEARCH_INDEX_MAINTENANCE = 'search-index-maintenance',
     TEMPLATES = 'templates',
+    USERS = 'users',
+}
+
+export enum AdminUIEntityDetailRoutes {
+    CONSTRUCT = 'construct',
+    CONSTRUCT_CATEGORY = 'construct-category',
+    CONTENT_PACKAGE = 'package',
+    CONTENT_REPOSITORY = 'content-repository',
+    CR_FRAGMENT = 'cr-fragment',
+    DATA_SOURCE = 'data-source',
+    DEVTOOL_PACKAGE = 'package',
+    FOLDER = 'folder',
+    GROUP = 'group',
+    LANGUAGE = 'language',
+    NODE = 'node',
+    OBJECT_PROPERTY = 'object-property',
+    OBJECT_PROPERTY_CATEGORY = 'object-property-category',
+    ROLE = 'role',
+    SCHEDULE = 'schedule',
+    SCHEDULE_TASK = 'task',
+    TEMPLATE = 'template',
+    USER = 'user',
 }
 
 /**

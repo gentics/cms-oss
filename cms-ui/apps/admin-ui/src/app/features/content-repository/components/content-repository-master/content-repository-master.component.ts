@@ -1,4 +1,4 @@
-import { ContentRepositoryBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ContentRepositoryBO } from '@admin-ui/common';
 import { ContentRepositoryTableLoaderService } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
@@ -16,7 +16,7 @@ import { CreateContentRepositoryModalComponent } from '../create-content-reposit
 export class ContentRepositoryMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> {
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'contentRepository';
-    protected detailPath = 'content-repository';
+    protected detailPath = AdminUIEntityDetailRoutes.CONTENT_REPOSITORY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

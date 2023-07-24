@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle } from '@admin-ui/common';
+import { ContentPackageDetailTabs, createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, ContentPackageOperations, EditorTabTrackerService, ResolveBreadcrumbFn } from '@admin-ui/core';
 import { BaseDetailComponent, ContentPackageDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -11,10 +11,6 @@ import { Observable, of } from 'rxjs';
 import { delay, repeat, takeUntil } from 'rxjs/operators';
 import { ContentPackagePropertiesMode } from '../content-package-properties/content-package-properties.component';
 import { ContentPackageTableLoaderService } from '../../providers';
-
-export enum ContentPackageDetailTabs {
-    PROPERTIES = 'properties',
-}
 
 @Component({
     selector: 'gtx-content-package-detail',

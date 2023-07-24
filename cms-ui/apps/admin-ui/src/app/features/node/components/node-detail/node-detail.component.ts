@@ -6,6 +6,7 @@ import {
     FormGroupTabHandle,
     FormTabHandle,
     LanguageBO,
+    NodeDetailTabs,
     NULL_FORM_TAB_HANDLE,
     sortEntityRow,
     TableLoadEndEvent,
@@ -17,10 +18,10 @@ import {
     FeatureOperations,
     FolderOperations,
     LanguageTableLoaderService,
-    NodeTableLoaderService,
     NodeOperations,
-    ResolveBreadcrumbFn,
+    NodeTableLoaderService,
     PermissionsService,
+    ResolveBreadcrumbFn,
 } from '@admin-ui/core';
 import { FolderDataService, NodeDataService } from '@admin-ui/shared';
 import { BaseDetailComponent } from '@admin-ui/shared/components';
@@ -32,7 +33,7 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { AbstractControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
     Feature,
@@ -65,15 +66,6 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-import { AbstractControl } from '@angular/forms';
-
-export enum NodeDetailTabs {
-    properties = 'properties',
-    publishing = 'publishing',
-    nodeFeatures = 'nodeFeatures',
-    languages = 'languages',
-    packages = 'packages',
-}
 
 /**
  * # NodeDetailComponent
@@ -483,21 +475,21 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         this.fgNodeFeaturesSaveDisabled$ = createFormSaveDisabledTracker(this.fgNodeFeatures);
 
         this.tabHandles = {
-            [NodeDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [NodeDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateNode().then(() => {}),
             }),
-            [NodeDetailTabs.publishing]: new FormGroupTabHandle(this.fgPublishing, {
+            [NodeDetailTabs.PUBLISHING]: new FormGroupTabHandle(this.fgPublishing, {
                 save: () => this.updatePublishing().then(() => {}),
             }),
-            [NodeDetailTabs.nodeFeatures]: new FormGroupTabHandle(this.fgNodeFeatures, {
+            [NodeDetailTabs.FEATURES]: new FormGroupTabHandle(this.fgNodeFeatures, {
                 save: () => this.updateNodeFeatures().then(() => {}),
             }),
-            [NodeDetailTabs.languages]: {
+            [NodeDetailTabs.LANGUAGES]: {
                 isDirty: () => this.isLanguagesChanged,
                 isValid: () => true,
                 save: () => this.updateLanguages().then(() => {}),
             },
-            [NodeDetailTabs.packages]: NULL_FORM_TAB_HANDLE,
+            [NodeDetailTabs.PACKAGES]: NULL_FORM_TAB_HANDLE,
         };
     }
 

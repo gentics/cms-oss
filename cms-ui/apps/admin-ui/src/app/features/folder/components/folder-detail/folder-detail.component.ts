@@ -1,4 +1,4 @@
-import { BO_ID, detailLoading, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { detailLoading, FolderDetailTabs, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import { EditorTabTrackerService, FolderOperations, FolderTrableLoaderService, PermissionsService } from '@admin-ui/core';
 import { BaseDetailComponent, FolderDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
@@ -18,11 +18,6 @@ import {
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-
-export enum FolderDetailTabs {
-    PROPERTIES = 'properties',
-    GROUP_PERMISSIONS = 'groupPermissions',
-}
 
 // *************************************************************************************************
 /**

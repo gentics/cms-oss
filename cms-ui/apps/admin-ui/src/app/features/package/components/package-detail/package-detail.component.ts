@@ -1,4 +1,4 @@
-import { FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { DevtoolPackageDetailTabs, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
@@ -25,15 +25,6 @@ import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { map, publishReplay, refCount, takeUntil } from 'rxjs/operators';
 
-export enum PackageDetailTabs {
-    CONSTRUCTS = 'constructs',
-    CONTENT_REPOSITORIES = 'content-repositories',
-    CR_FRAGMENTS = 'cr-fragments',
-    DATA_SOURCES = 'data-sources',
-    OBJECT_PROPERTIES = 'object-properties',
-    TEMPLATES = 'templates',
-}
-
 // *************************************************************************************************
 /**
  * # PackageDetailComponent
@@ -47,7 +38,7 @@ export enum PackageDetailTabs {
 })
 export class PackageDetailComponent extends BaseDetailComponent<'package', PackageOperations> implements OnInit {
 
-    public readonly PackageDetailTabs = PackageDetailTabs;
+    public readonly DevtoolPackageDetailTabs = DevtoolPackageDetailTabs;
 
     public readonly entityIdentifier: NormalizableEntityType = 'package';
 
@@ -67,12 +58,12 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
     }
 
     get activeFormTab(): FormTabHandle {
-        return this.tabHandles[this.appState.now.ui.editorTab] || PackageDetailTabs.CONSTRUCTS;
+        return this.tabHandles[this.appState.now.ui.editorTab] || DevtoolPackageDetailTabs.CONSTRUCTS;
     }
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<PackageDetailTabs, FormTabHandle>;
+    private tabHandles: Index<DevtoolPackageDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -118,12 +109,12 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
     private initForms(): void {
 
         this.tabHandles = {
-            [PackageDetailTabs.CONSTRUCTS]: NULL_FORM_TAB_HANDLE,
-            [PackageDetailTabs.CONTENT_REPOSITORIES]: NULL_FORM_TAB_HANDLE,
-            [PackageDetailTabs.CR_FRAGMENTS]: NULL_FORM_TAB_HANDLE,
-            [PackageDetailTabs.DATA_SOURCES]: NULL_FORM_TAB_HANDLE,
-            [PackageDetailTabs.OBJECT_PROPERTIES]: NULL_FORM_TAB_HANDLE,
-            [PackageDetailTabs.TEMPLATES]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.CONSTRUCTS]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.CONTENT_REPOSITORIES]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.CR_FRAGMENTS]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.DATA_SOURCES]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.OBJECT_PROPERTIES]: NULL_FORM_TAB_HANDLE,
+            [DevtoolPackageDetailTabs.TEMPLATES]: NULL_FORM_TAB_HANDLE,
         };
     }
 

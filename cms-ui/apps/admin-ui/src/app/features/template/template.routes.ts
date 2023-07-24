@@ -1,8 +1,9 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { TemplateDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { TemplateDetailComponent, TemplateDetailTabs, TemplateMasterComponent } from './components';
+import { TemplateDetailComponent, TemplateMasterComponent } from './components';
 import { CanActivateTemplateGuard } from './providers';
 
 export const TEMPLATE_ROUTES: GcmsAdminUiRoute[] = [
@@ -14,7 +15,7 @@ export const TEMPLATE_ROUTES: GcmsAdminUiRoute[] = [
         },
     },
     {
-        path: 'template',
+        path: AdminUIEntityDetailRoutes.TEMPLATE,
         outlet: 'detail',
         data: {
             typePermissions: [],

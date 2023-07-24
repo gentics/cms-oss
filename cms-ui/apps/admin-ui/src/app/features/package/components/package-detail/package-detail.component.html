@@ -2,7 +2,7 @@
     <gtx-tabs pure [activeId]="activeTabId$ | async">
         <gtx-tab
             gtxDetailTabLink
-            [id]="PackageDetailTabs.CONSTRUCTS"
+            [id]="DevtoolPackageDetailTabs.CONSTRUCTS"
             [title]="'construct.construct_plural' | i18n"
         >
             <gtx-entity-detail-header
@@ -13,7 +13,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-construct-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSTRUCTS"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.CONSTRUCTS"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-construct-table>
@@ -21,7 +21,7 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="PackageDetailTabs.CONTENT_REPOSITORIES"
+            [id]="DevtoolPackageDetailTabs.CONTENT_REPOSITORIES"
             gtxDetailTabLink
             [title]="'contentRepository.contentRepository_plural' | i18n"
         >
@@ -33,7 +33,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-content-repository-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONTENT_REPOSITORIES"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.CONTENT_REPOSITORIES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-content-repository-table>
@@ -42,7 +42,7 @@
 
         <gtx-tab
             gtxDetailTabLink
-            [id]="PackageDetailTabs.CR_FRAGMENTS"
+            [id]="DevtoolPackageDetailTabs.CR_FRAGMENTS"
             [title]="'contentRepositoryFragment.contentRepositoryFragment_plural' | i18n"
         >
             <gtx-entity-detail-header
@@ -53,7 +53,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-cr-fragment-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CR_FRAGMENTS"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.CR_FRAGMENTS"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-cr-fragment-table>
@@ -62,7 +62,7 @@
 
         <gtx-tab
             gtxDetailTabLink
-            [id]="PackageDetailTabs.DATA_SOURCES"
+            [id]="DevtoolPackageDetailTabs.DATA_SOURCES"
             [title]="'dataSource.dataSource_plural' | i18n"
         >
             <gtx-entity-detail-header
@@ -73,7 +73,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-data-source-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.DATA_SOURCES"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.DATA_SOURCES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-data-source-table>
@@ -82,7 +82,7 @@
 
         <gtx-tab
             gtxDetailTabLink
-            [id]="PackageDetailTabs.OBJECT_PROPERTIES"
+            [id]="DevtoolPackageDetailTabs.OBJECT_PROPERTIES"
             [title]="'common.objectProperty_plural' | i18n"
         >
             <gtx-entity-detail-header
@@ -93,7 +93,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-object-property-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.OBJECT_PROPERTIES"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.OBJECT_PROPERTIES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-object-property-table>
@@ -102,7 +102,7 @@
 
         <gtx-tab
             gtxDetailTabLink
-            [id]="PackageDetailTabs.TEMPLATES"
+            [id]="DevtoolPackageDetailTabs.TEMPLATES"
             [title]="'template.template_plural' | i18n"
         >
             <gtx-entity-detail-header
@@ -113,7 +113,7 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-template-table
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.TEMPLATES"
+                    *ngIf="(activeTabId$ | async) == DevtoolPackageDetailTabs.TEMPLATES"
                     [showSearch]="true"
                     [packageName]="currentEntity.id"
                 ></gtx-template-table>

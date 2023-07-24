@@ -1,4 +1,4 @@
-import { AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
 import {
     ConstructOperations,
     ConstructTableLoaderOptions,
@@ -34,6 +34,7 @@ export class ConstructTableComponent
     implements OnChanges {
 
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public dataSourceId: string | number;

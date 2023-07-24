@@ -1,8 +1,8 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, DevtoolPackageDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { PackageDetailComponent, PackageDetailTabs, PackageMasterComponent } from './components';
+import { PackageDetailComponent, PackageMasterComponent } from './components';
 import { CanActivatePackageGuard } from './providers';
 
 export const PACKAGE_ROUTES: GcmsAdminUiRoute[] = [
@@ -11,7 +11,7 @@ export const PACKAGE_ROUTES: GcmsAdminUiRoute[] = [
         component: PackageMasterComponent,
     },
     {
-        path: 'package',
+        path: AdminUIEntityDetailRoutes.DEVTOOL_PACKAGE,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -38,7 +38,7 @@ export const PACKAGE_ROUTES: GcmsAdminUiRoute[] = [
             },
             {
                 path: ':id',
-                redirectTo: `:id/${PackageDetailTabs.CONSTRUCTS}`,
+                redirectTo: `:id/${DevtoolPackageDetailTabs.CONSTRUCTS}`,
                 pathMatch: 'full',
             },
         ],

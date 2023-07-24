@@ -1,8 +1,7 @@
-import { FormGroupTabHandle, FormTabHandle } from '@admin-ui/common';
+import { FormGroupTabHandle, FormTabHandle, LanguageDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
 import { EditorTabTrackerService, LanguageOperations, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core/providers';
-import { BaseDetailComponent } from '@admin-ui/shared/components/base-detail/base-detail.component';
-import { LanguageDataService } from '@admin-ui/shared/providers/language-data';
+import { BaseDetailComponent, LanguageDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
@@ -11,10 +10,6 @@ import { AccessControlledType, GcmsPermission, Index, Language, NormalizableEnti
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import { map, takeUntil, tap } from 'rxjs/operators';
-
-export enum LanguageDetailTabs {
-    properties = 'properties',
-}
 
 // *************************************************************************************************
 /**
@@ -136,7 +131,7 @@ export class LanguageDetailComponent extends BaseDetailComponent<'language', Lan
         });
 
         this.tabHandles = {
-            [LanguageDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [LanguageDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateLanguage().then(() => {}),
             }),
         };

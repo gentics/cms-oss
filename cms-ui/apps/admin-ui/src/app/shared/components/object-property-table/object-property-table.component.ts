@@ -1,4 +1,4 @@
-import { ObjectPropertyBO, typeIdsToName } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ObjectPropertyBO, typeIdsToName } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
     I18nService,
@@ -26,10 +26,12 @@ const ASSIGN_TO_NODES_ACTION = 'assignToNodes';
     templateUrl: './object-property-table.component.html',
     styleUrls: ['./object-property-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ObjectPropertyTableComponent
     extends BasePackageEntityTableComponent<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>
     implements OnChanges {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public type?: ObjectPropertiesObjectType;

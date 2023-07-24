@@ -1,4 +1,4 @@
-import { AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, UserBO } from '@admin-ui/common';
 import { GroupOperations, I18nService, PermissionsService, UserOperations, UserTableLoaderOptions, UserTableLoaderService } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -19,10 +19,11 @@ const REMOVE_FROM_GROUP_ACTION = 'removeFromGroup';
     templateUrl: './user-table.component.html',
     styleUrls: ['./user-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, UserBO, UserTableLoaderOptions> implements OnChanges {
 
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public groupId: number;

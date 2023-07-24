@@ -1,4 +1,5 @@
 import {
+    ConstructDetailTabs,
     createFormSaveDisabledTracker,
     detailLoading,
     FormTabHandle,
@@ -39,11 +40,6 @@ import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { delay, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
 import { ConstructPropertiesMode } from '../construct-properties/construct-properties.component';
-
-export enum ConstructDetailTabs {
-    PROPERTIES = 'properties',
-    PARTS = 'parts',
-}
 
 // *************************************************************************************************
 /**

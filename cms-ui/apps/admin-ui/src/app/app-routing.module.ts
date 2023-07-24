@@ -395,7 +395,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     breadcrumb: {
                         title: 'dashboard.item_tagtypes_constructs',
                     },
-                    // childOutletsForBreadcrumbs: ['detail'],
+                    childOutletsForBreadcrumbs: ['detail'],
                     typePermissions: [
                         {
                             type: AccessControlledType.CONSTRUCT_ADMIN,
@@ -448,23 +448,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
             },
-
-            // {
-            //     path: 'testing',
-            //     canActivate: [PermissionsGuard],
-            //     loadChildren: () => import('./features/testing-do-not-release/testing-do-not-release.module').then(m => m.TestingDoNotReleaseModule),
-            //     data: {
-            //         breadcrumb: {
-            //             title: 'Testing',
-            //             doNotTranslate: true,
-            //         },
-            //         typePermissions: [
-            //             { type: AccessControlledType.maintenance, permissions: GcmsPermission.read },
-            //             { type: AccessControlledType.scheduler, permissions: [GcmsPermission.read, GcmsPermission.setperm] },
-            //         ],
-            //     },
-            // },
-
         ],
     },
     {

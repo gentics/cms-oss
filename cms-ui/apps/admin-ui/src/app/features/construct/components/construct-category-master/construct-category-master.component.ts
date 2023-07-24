@@ -1,4 +1,4 @@
-import { ConstructCategoryBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ConstructCategoryBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
@@ -16,7 +16,7 @@ import { CreateConstructCategoryModalComponent } from '../create-construct-categ
 export class ConstructCategoryMasterComponent extends BaseTableMasterComponent<ConstructCategory, ConstructCategoryBO> implements OnInit {
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'constructCategory';
-    protected detailPath = 'construct-category';
+    protected detailPath = AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

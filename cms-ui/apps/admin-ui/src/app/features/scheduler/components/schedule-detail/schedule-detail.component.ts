@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission, ScheduleDetailTabs } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, EditorTabTrackerService, ResolveBreadcrumbFn, ScheduleOperations } from '@admin-ui/core';
 import { BaseDetailComponent, ScheduleDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -13,11 +13,6 @@ import { combineLatest, Observable, of } from 'rxjs';
 import { delay, distinctUntilChanged, filter, map, repeat, takeUntil } from 'rxjs/operators';
 import { SchedulePropertiesMode } from '../schedule-properties/schedule-properties.component';
 import { ScheduleTableLoaderService } from '../../providers';
-
-export enum ScheduleDetailTabs {
-    PROPERTIES = 'properties',
-    EXECUTIONS = 'executions',
-}
 
 @Component({
     selector: 'gtx-schedule-detail',

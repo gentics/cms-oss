@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, NULL_FORM_TAB_HANDLE, UserDetailTabs } from '@admin-ui/common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
@@ -35,13 +35,6 @@ import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { detailLoading } from '../../../../common/utils/rxjs-loading-operators/detail-loading.operator';
-
-export enum UserDetailTabs {
-    properties = 'properties',
-    permissionsContent = 'permissions-content',
-    permissionsAdmin = 'permissions-admin',
-    userGroups = 'user-groups',
-}
 
 // *************************************************************************************************
 /**
@@ -227,12 +220,12 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
         this.fgPropertiesInit();
 
         this.tabHandles = {
-            [UserDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [UserDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateUser(),
             }),
-            [UserDetailTabs.userGroups]: NULL_FORM_TAB_HANDLE,
-            [UserDetailTabs.permissionsAdmin]: NULL_FORM_TAB_HANDLE,
-            [UserDetailTabs.permissionsContent]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.USER_GROUPS]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.PERMISSIONS_ADMIN]: NULL_FORM_TAB_HANDLE,
+            [UserDetailTabs.PEROMSSIONS_CONTENT]: NULL_FORM_TAB_HANDLE,
         };
     }
 

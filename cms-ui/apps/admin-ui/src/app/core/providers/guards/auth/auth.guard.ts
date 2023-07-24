@@ -1,8 +1,8 @@
+import { AdminUIModuleRoutes } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
-
 import { AppStateService } from '../../../../state';
 
 /**
@@ -20,7 +20,7 @@ export class AuthGuard  {
     canActivate(route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot): boolean | Promise<boolean> | Observable<boolean> {
         const authState = this.appState.now.auth;
 
-        if (route.url.length > 0 && route.url[0].path === 'login') {
+        if (route.url.length > 0 && route.url[0].path === AdminUIModuleRoutes.LOGIN) {
             if (authState.isLoggedIn) {
                 // if logged in and attempting to access the /login route, redirect to the root route.
                 this.router.navigateByUrl('/');
@@ -40,17 +40,16 @@ export class AuthGuard  {
                 filter(auth => !auth.loggingIn),
                 take(1),
                 map(auth => auth.isLoggedIn),
-            )
-            .toPromise()
+            ).toPromise()
                 .then(loginValidated => {
                     if (!loginValidated) {
-                        this.router.navigate(['/login'], { queryParams: { returnUrl: routerState.url } });
+                        this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: routerState.url } });
                     }
                     return loginValidated;
                 });
         }
 
-        this.router.navigate(['/login'], { queryParams: { returnUrl: routerState.url } });
+        this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`], { queryParams: { returnUrl: routerState.url } });
         return false;
     }
 }

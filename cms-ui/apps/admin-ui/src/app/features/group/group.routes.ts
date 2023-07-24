@@ -1,4 +1,5 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { GroupDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
@@ -11,7 +12,7 @@ export const GROUP_ROUTES: GcmsAdminUiRoute[] = [
         component: GroupMasterComponent,
     },
     {
-        path: 'group',
+        path: AdminUIEntityDetailRoutes.GROUP,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -38,7 +39,7 @@ export const GROUP_ROUTES: GcmsAdminUiRoute[] = [
             },
             {
                 path: ':id',
-                redirectTo: ':id/properties',
+                redirectTo: `:id/${GroupDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

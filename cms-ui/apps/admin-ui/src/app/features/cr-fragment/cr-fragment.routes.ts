@@ -1,10 +1,10 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { ContentRepositoryFragmentDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     ContentRepositoryFragmentDetailComponent,
-    ContentRepositoryFragmentDetailTabs,
     ContentRepositoryFragmentMasterComponent,
 } from './components';
 import { CanActivateCRFragmentGuard } from './providers';
@@ -15,7 +15,7 @@ export const CR_FRAGMENT_ROUTES: GcmsAdminUiRoute[] = [
         component: ContentRepositoryFragmentMasterComponent,
     },
     {
-        path: 'cr-fragment',
+        path: AdminUIEntityDetailRoutes.CR_FRAGMENT,
         outlet: 'detail',
         data: {
             typePermissions: [],

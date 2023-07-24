@@ -1,4 +1,4 @@
-import { DataSourceBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, DataSourceBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AnyModelType, DataSource, NormalizableEntityTypesMap } from '@gentics/cms-models';
@@ -10,5 +10,5 @@ import { AnyModelType, DataSource, NormalizableEntityTypesMap } from '@gentics/c
 })
 export class DataSourceMasterComponent extends BaseTableMasterComponent<DataSource, DataSourceBO> {
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'dataSource';
-    protected detailPath = 'data-source';
+    protected detailPath = AdminUIEntityDetailRoutes.DATA_SOURCE;
 }

@@ -1,11 +1,10 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { AdminUIEntityDetailRoutes, ConstructDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     ConstructCategoryDetailComponent,
     ConstructDetailComponent,
-    ConstructDetailTabs,
     ConstructModuleMasterComponent,
 } from './components';
 import { CanActivateConstructCategoryGuard, CanActivateConstructGuard } from './providers';
@@ -28,7 +27,7 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
         component: ConstructModuleMasterComponent,
     },
     {
-        path: 'construct-category',
+        path: AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -56,7 +55,7 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
         ],
     },
     {
-        path: 'construct',
+        path: AdminUIEntityDetailRoutes.CONSTRUCT,
         outlet: 'detail',
         data: {
             typePermissions: [],

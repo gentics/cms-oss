@@ -1,8 +1,9 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { DataSourceDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { DataSourceDetailComponent, DataSourceDetailTabs, DataSourceMasterComponent } from './components';
+import { DataSourceDetailComponent, DataSourceMasterComponent } from './components';
 import { CanActivateDataSourceGuard } from './providers';
 
 export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
@@ -11,7 +12,7 @@ export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
         component: DataSourceMasterComponent,
     },
     {
-        path: 'data-source',
+        path: AdminUIEntityDetailRoutes.DATA_SOURCE,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -38,7 +39,7 @@ export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
             },
             {
                 path: ':id',
-                redirectTo: `:id/${DataSourceDetailTabs.properties}`,
+                redirectTo: `:id/${DataSourceDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

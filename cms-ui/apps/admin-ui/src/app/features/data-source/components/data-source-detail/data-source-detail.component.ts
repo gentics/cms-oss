@@ -1,5 +1,6 @@
 import {
     createFormSaveDisabledTracker,
+    DataSourceDetailTabs,
     DataSourceEntryBO,
     detailLoading,
     FormGroupTabHandle,
@@ -47,12 +48,6 @@ import { TableRow } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, takeUntil, tap } from 'rxjs/operators';
-
-export enum DataSourceDetailTabs {
-    properties = 'properties',
-    entries = 'entries',
-    usageOverview = 'usage-overview',
-}
 
 // *************************************************************************************************
 /**
@@ -243,16 +238,16 @@ export class DataSourceDetailComponent extends BaseDetailComponent<'dataSource',
         this.fgPropertiesInit();
 
         this.tabHandles = {
-            [DataSourceDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [DataSourceDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateDataSource(),
             }),
-            [DataSourceDetailTabs.entries]: {
+            [DataSourceDetailTabs.ENTRIES]: {
                 isDirty: () => this.entriesChanged,
                 isValid: () => true,
                 save: () => this.updateDataSourceEntries(),
                 reset: () => this.resetDataSourceEntries(),
             },
-            [DataSourceDetailTabs.usageOverview]: NULL_FORM_TAB_HANDLE,
+            [DataSourceDetailTabs.USAGE_OVERVIEW]: NULL_FORM_TAB_HANDLE,
         };
     }
 

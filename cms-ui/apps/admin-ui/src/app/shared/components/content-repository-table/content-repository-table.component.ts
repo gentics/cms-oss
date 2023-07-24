@@ -1,4 +1,4 @@
-import { ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
 import {
     ContentRepositoryOperations,
     ContentRepositoryTableLoaderOptions,
@@ -42,12 +42,13 @@ export interface OpenCRDetailEvent {
     templateUrl: './content-repository-table.component.html',
     styleUrls: ['./content-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ContentRepositoryTableComponent
     extends BasePackageEntityTableComponent<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>
     implements OnChanges {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public linkDetails = false;

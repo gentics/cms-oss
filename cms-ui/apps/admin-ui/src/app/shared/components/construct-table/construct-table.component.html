@@ -92,7 +92,7 @@
     <a
         *ngIf="value; else textOnly"
         class="gtx-table-cell-link category-link"
-        [routerLink]="'constructcategory' | gtxEntityDetailRouterLink:value"
+        [routerLink]="AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>
 

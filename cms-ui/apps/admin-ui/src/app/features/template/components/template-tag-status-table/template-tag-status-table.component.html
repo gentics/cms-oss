@@ -66,7 +66,7 @@
     <a
         *ngIf="value && row"
         class="gtx-table-cell-link"
-        [routerLink]="'construct' | gtxEntityDetailRouterLink:row.item.constructId"
+        [routerLink]="AdminUIEntityDetailRoutes.CONSTRUCT | gtxEntityDetailRouterLink:row.item.constructId"
         (click)="cancelEvent($event)"
     >{{ value}}</a>
 </ng-template>

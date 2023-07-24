@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission, ScheduleTaskDetailTabs } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, EditorTabTrackerService, ResolveBreadcrumbFn, ScheduleTaskOperations } from '@admin-ui/core';
 import { BaseDetailComponent, ScheduleTaskDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -10,12 +10,8 @@ import { Index, NormalizableEntityType, Raw, ScheduleTaskBO, SingleInstancePermi
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { delay, map, repeat, takeUntil } from 'rxjs/operators';
-import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule-task-properties.component';
 import { ScheduleTableLoaderService, ScheduleTaskTableLoaderService } from '../../providers';
-
-export enum ScheduleTaskDetailTabs {
-    PROPERTIES = 'properties',
-}
+import { ScheduleTaskPropertiesMode } from '../schedule-task-properties/schedule-task-properties.component';
 
 @Component({
     selector: 'gtx-schedule-task-detail',

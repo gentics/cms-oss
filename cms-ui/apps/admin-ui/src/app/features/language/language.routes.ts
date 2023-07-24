@@ -1,4 +1,4 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, LanguageDetailTabs } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
@@ -11,7 +11,7 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
         component: LanguageMasterComponent,
     },
     {
-        path: 'language',
+        path: AdminUIEntityDetailRoutes.LANGUAGE,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -38,7 +38,7 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
             },
             {
                 path: ':id',
-                redirectTo: ':id/properties',
+                redirectTo: `:id/${LanguageDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

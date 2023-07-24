@@ -1,4 +1,4 @@
-import { ScheduleTaskBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ScheduleTaskBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { NormalizableEntityType, ScheduleTask } from '@gentics/cms-models';
@@ -12,5 +12,5 @@ import { NormalizableEntityType, ScheduleTask } from '@gentics/cms-models';
 export class ScheduleTaskMasterComponent extends BaseTableMasterComponent<ScheduleTask, ScheduleTaskBO> {
 
     protected entityIdentifier: NormalizableEntityType = 'scheduleTask';
-    protected detailPath = 'task';
+    protected detailPath = AdminUIEntityDetailRoutes.SCHEDULE_TASK;
 }

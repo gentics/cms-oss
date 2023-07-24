@@ -1,4 +1,4 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import {
@@ -14,7 +14,7 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
         component: ObjectPropertyModuleMasterComponent,
     },
     {
-        path: 'object-property',
+        path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -35,7 +35,7 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
         ],
     },
     {
-        path: 'object-property-category',
+        path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY,
         outlet: 'detail',
         data: {
             typePermissions: [],

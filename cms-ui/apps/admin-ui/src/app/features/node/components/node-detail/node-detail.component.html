@@ -1,7 +1,7 @@
 <div class="gtx-entity-detail">
     <gtx-tabs pure [activeId]="activeTabId$ | async">
         <gtx-tab
-            [id]="NodeDetailTabs.properties"
+            [id]="NodeDetailTabs.PROPERTIES"
             gtxDetailTabLink
             [title]="'shared.title_properties' | i18n"
         >
@@ -33,7 +33,7 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="NodeDetailTabs.publishing"
+            [id]="NodeDetailTabs.PUBLISHING"
             gtxDetailTabLink
             [title]="'node.title_publishing' | i18n"
         >
@@ -64,7 +64,7 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="NodeDetailTabs.nodeFeatures"
+            [id]="NodeDetailTabs.FEATURES"
             gtxDetailTabLink
             [title]="'node.title_node_features' | i18n"
         >
@@ -98,7 +98,7 @@
 
         <gtx-tab
             #langTab
-            [id]="NodeDetailTabs.languages"
+            [id]="NodeDetailTabs.LANGUAGES"
             [class.disabledArea]="isChildNode"
             gtxDetailTabLink
             [title]="'shared.title_languages' | i18n"
@@ -131,7 +131,7 @@
 
         <gtx-tab
             [hidden]="!(featureDevtoolsIsEnabled$ | async)"
-            [id]="NodeDetailTabs.packages"
+            [id]="NodeDetailTabs.PACKAGES"
             gtxDetailTabLink
             [title]="'node.title_node_packages' | i18n"
         >

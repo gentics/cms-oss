@@ -1,5 +1,5 @@
 import { NormalizableEntityType } from '@gentics/cms-models';
-import { AdminUIModuleRoutes } from '../../routing/gcms-admin-ui-route';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes } from '../../routing/gcms-admin-ui-route';
 
 const createDetailLink = (root: AdminUIModuleRoutes, segments: any[]): any[] => ['/' + root, { outlets: { detail: segments.filter(s => s != null) } } ];
 
@@ -50,35 +50,61 @@ export function buildEntityDetailPath(
 
     switch (type) {
         case 'user':
-            return createDetailLink(AdminUIModuleRoutes.USERS, ['user', id, tab]);
+        case AdminUIEntityDetailRoutes.USER:
+            return createDetailLink(AdminUIModuleRoutes.USERS, [AdminUIEntityDetailRoutes.USER, id, tab]);
+
         case 'construct':
-            return createDetailLink(AdminUIModuleRoutes.CONSTRUCTS, ['construct', id, tab]);
+        case AdminUIEntityDetailRoutes.CONSTRUCT:
+            return createDetailLink(AdminUIModuleRoutes.CONSTRUCTS, [AdminUIEntityDetailRoutes.CONSTRUCT, id, tab]);
+
         case 'template':
-            return createDetailLink(AdminUIModuleRoutes.TEMPLATES, ['template', nodeId, id, tab]);
+        case AdminUIEntityDetailRoutes.TEMPLATE:
+            return createDetailLink(AdminUIModuleRoutes.TEMPLATES, [AdminUIEntityDetailRoutes.TEMPLATE, nodeId, id, tab]);
+
         case 'folder':
-            return createDetailLink(AdminUIModuleRoutes.FOLDERS, ['folder', id, tab]);
+        case AdminUIEntityDetailRoutes.FOLDER:
+            return createDetailLink(AdminUIModuleRoutes.FOLDERS, [AdminUIEntityDetailRoutes.FOLDER, id, tab]);
+
         case 'node':
-            return createDetailLink(AdminUIModuleRoutes.NODES, ['node', id, tab]);
+        case AdminUIEntityDetailRoutes.NODE:
+            return createDetailLink(AdminUIModuleRoutes.NODES, [AdminUIEntityDetailRoutes.NODE, id, tab]);
+
         case 'group':
-            return createDetailLink(AdminUIModuleRoutes.GROUPS, ['group', id, tab]);
+        case AdminUIEntityDetailRoutes.GROUP:
+            return createDetailLink(AdminUIModuleRoutes.GROUPS, [AdminUIEntityDetailRoutes.GROUP, id, tab]);
+
         case 'datasource':
-            return createDetailLink(AdminUIModuleRoutes.DATA_SOURCES, ['data-source', id, tab]);
+        case AdminUIEntityDetailRoutes.DATA_SOURCE:
+            return createDetailLink(AdminUIModuleRoutes.DATA_SOURCES, [AdminUIEntityDetailRoutes.DATA_SOURCE, id, tab]);
+
         case 'constructcategory':
-            return createDetailLink(AdminUIModuleRoutes.CONSTRUCTS, ['construct-category', id, tab]);
+        case AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY:
+            return createDetailLink(AdminUIModuleRoutes.CONSTRUCTS, [AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY, id, tab]);
+
         case 'objectprop':
-            return createDetailLink(AdminUIModuleRoutes.OBJECT_PROPERTIES, ['object-propperty', id, tab]);
+        case AdminUIEntityDetailRoutes.OBJECT_PROPERTY:
+            return createDetailLink(AdminUIModuleRoutes.OBJECT_PROPERTIES, [AdminUIEntityDetailRoutes.OBJECT_PROPERTY, id, tab]);
+
         case 'objectpropcategory':
-            return createDetailLink(AdminUIModuleRoutes.OBJECT_PROPERTIES, ['object-property-category', id, tab]);
+        case AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY:
+            return createDetailLink(AdminUIModuleRoutes.OBJECT_PROPERTIES, [AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY, id, tab]);
+
         case 'schedule':
         case 'schedulerschedule':
-            return createDetailLink(AdminUIModuleRoutes.SCHEDULER, ['schedule', id, tab]);
+        case AdminUIEntityDetailRoutes.SCHEDULE:
+            return createDetailLink(AdminUIModuleRoutes.SCHEDULER, [AdminUIEntityDetailRoutes.SCHEDULE, id, tab]);
+
         case 'scheduleTask':
         case 'schedulertask':
-            return createDetailLink(AdminUIModuleRoutes.SCHEDULER, ['task', id, tab]);
+        case AdminUIEntityDetailRoutes.SCHEDULE_TASK:
+            return createDetailLink(AdminUIModuleRoutes.SCHEDULER, [AdminUIEntityDetailRoutes.SCHEDULE_TASK, id, tab]);
+
         case 'contentrepository':
         case 'contentRepository':
         case 'contentRepositories':
-            return createDetailLink(AdminUIModuleRoutes.CONTENT_REPOSITORIES, ['content-repository', id, tab]);
+        case AdminUIEntityDetailRoutes.CONTENT_REPOSITORY:
+            return createDetailLink(AdminUIModuleRoutes.CONTENT_REPOSITORIES, [AdminUIEntityDetailRoutes.CONTENT_REPOSITORY, id, tab]);
+
         default:
             return [];
     }

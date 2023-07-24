@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, RoleDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
 import { EditorTabTrackerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
 import { RoleDataService } from '@admin-ui/shared';
@@ -19,23 +19,16 @@ import {
     Normalized,
     PagePrivileges,
     Raw,
-    Role,
     RoleBO,
     RolePermissions,
     RoleUpdateRequest,
-    TypePermissions,
+    TypePermissions
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { distinctUntilChanged, map, publishReplay, refCount, switchMap, takeUntil, tap, repeat, delay } from 'rxjs/operators';
+import { delay, distinctUntilChanged, map, publishReplay, refCount, repeat, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
-
-export enum RoleDetailTabs {
-    PROPERTIES = 'properties',
-    PAGE_PRIVILEGES = 'pagePrivileges',
-    FILE_PRIVILEGES = 'filePrivileges',
-}
 
 // *************************************************************************************************
 /**

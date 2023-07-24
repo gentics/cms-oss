@@ -32,6 +32,7 @@ import { forkJoin, Observable, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
 import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { SetBackendLanguage } from './state/ui/ui.actions';
+import { AdminUIModuleRoutes } from './common';
 
 @Component({
     selector: 'gtx-app-root',
@@ -188,7 +189,7 @@ export class AppComponent implements OnDestroy, OnInit {
                 })
                 .then(() => {
                     this.userMenuOpened = false;
-                    this.router.navigate(['/login']);
+                    this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`]);
                 });
         });
     }

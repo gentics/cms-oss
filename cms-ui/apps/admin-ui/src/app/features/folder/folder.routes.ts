@@ -1,4 +1,4 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, FolderDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
@@ -11,7 +11,7 @@ export const FOLDER_ROUTES: GcmsAdminUiRoute[] = [
         component: FolderMasterComponent,
     },
     {
-        path: 'folder',
+        path: AdminUIEntityDetailRoutes.FOLDER,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -38,7 +38,7 @@ export const FOLDER_ROUTES: GcmsAdminUiRoute[] = [
             },
             {
                 path: ':id',
-                redirectTo: ':id/properties',
+                redirectTo: `:id/${FolderDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

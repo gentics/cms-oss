@@ -1,4 +1,4 @@
-import { ObjectPropertyCategoryBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ObjectPropertyCategoryBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
@@ -17,7 +17,7 @@ import { CreateObjectPropertyCategoryModalComponent } from '../create-object-pro
 export class ObjectPropertyCategoryMasterComponent extends BaseTableMasterComponent<ObjectPropertyCategory, ObjectPropertyCategoryBO> {
 
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType>= 'objectPropertyCategory';
-    protected detailPath = 'object-property-category';
+    protected detailPath = AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

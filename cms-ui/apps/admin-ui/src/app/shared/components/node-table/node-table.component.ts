@@ -1,4 +1,4 @@
-import { BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BO_PERMISSIONS, NodeBO } from '@admin-ui/common';
 import {
     I18nNotificationService,
     I18nService,
@@ -22,6 +22,8 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NodeTableComponent extends BaseEntityTableComponent<Node, NodeBO> {
+
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     protected rawColumns: TableColumn<NodeBO>[] = [
         {

@@ -1,24 +1,21 @@
 @import "variables";
 
-.gtx-entity-grid-cell-icon {
+.gtx-table-cell-boolean {
     font-size: 1.2em;
     height: 20px;
     margin: auto 0;
 }
 
-.gtx-entity-grid-cell-icon-true {
+.gtx-table-cell-boolean-true {
     color: $gtx-color-success;
 }
 
-.gtx-entity-grid-cell-icon-false {
+.gtx-table-cell-boolean-false {
     color: $gtx-color-alert;
 }
 
-.gtx-entity-grid-cell-text-long {
-    white-space: normal;
-}
-
-.gtx-entity-grid-link {
+.gtx-table-cell-link,
+.gtx-table-cell-text {
     display: inline-block;
     margin: auto 0;
 }

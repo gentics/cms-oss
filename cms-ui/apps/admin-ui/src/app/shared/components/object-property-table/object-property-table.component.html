@@ -93,7 +93,7 @@
 <ng-template #constructRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'construct' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.construct?.name || value }}</a>
@@ -102,12 +102,14 @@
 <ng-template #categoryRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'objectpropcategory' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>
 </ng-template>
 
 <ng-template #typeRenderer let-value="value">
-    {{ 'common.' + value + '_singular' | i18n | titlecase }}
+    <span class="gtx-table-cell-text">
+        {{ 'common.' + value + '_singular' | i18n | titlecase }}
+    </span>
 </ng-template>

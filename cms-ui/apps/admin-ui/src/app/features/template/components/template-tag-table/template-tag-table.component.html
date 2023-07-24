@@ -74,6 +74,7 @@
 <ng-template #constructRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
+        class="gtx-table-cell-link"
         [routerLink]="'construct' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.construct?.name || value }}</a>
@@ -81,7 +82,7 @@
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + (!!value)"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + (!!value)"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>

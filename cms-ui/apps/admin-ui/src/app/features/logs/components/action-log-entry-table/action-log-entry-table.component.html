@@ -66,7 +66,7 @@
         <gtx-icon [name]="row.item?.type?.name || row.item?.action?.name" class="type-icon"></gtx-icon>
         <a
             *ngIf="row.item?.type?.name !== 'template'"
-            class="gtx-entity-grid-link name"
+            class="gtx-table-cell-link name"
             [routerLink]="row.item | gtxEntityDetailRouterLink"
         >{{ row.item?.type?.label || row.item?.action?.label }}</a>
         <span *ngIf="row.item?.type?.name === 'template'" class="name">{{ row.item?.type?.label || row.item?.action?.label }}</span>
@@ -74,5 +74,7 @@
 </ng-template>
 
 <ng-template #dateRenderer let-value="value">
-    {{ value | i18nDate }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nDate }}
+    </span>
 </ng-template>

@@ -91,7 +91,7 @@
 <ng-template #categoryRenderer let-row="row" let-value="value">
     <a
         *ngIf="value; else textOnly"
-        class="gtx-entity-grid-link category-link"
+        class="gtx-table-cell-link category-link"
         [routerLink]="'constructcategory' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item.category?.name || value }}</a>

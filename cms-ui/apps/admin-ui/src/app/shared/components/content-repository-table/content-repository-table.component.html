@@ -91,22 +91,25 @@
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>
 
 <ng-template #detailLink let-label="label" let-date="date" let-tab="tab" let-item="item">
     <a
         *ngIf="linkDetails; else textRenderer"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:item.id:tab"
         [title]="date > 0 ? (date | i18nDate:'dateTime') : ''"
         (click)="cancelEvent($event)"
     >{{ label }}</a>
 
-<ng-template #textRenderer>
-        <span [title]="date > 0 ? (date | i18nDate:'dateTime') : ''">{{ label }}</span>
+    <ng-template #textRenderer>
+        <span
+            class="gtx-table-cell-text"
+            [title]="date > 0 ? (date | i18nDate:'dateTime') : ''"
+        >{{ label }}</span>
     </ng-template>
 </ng-template>
 

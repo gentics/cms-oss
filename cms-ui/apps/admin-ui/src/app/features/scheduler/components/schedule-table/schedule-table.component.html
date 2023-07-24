@@ -99,17 +99,21 @@
 ></gtx-table>
 
 <ng-template #typeRenderer let-value="value">
-    {{ 'scheduler.scheduleType_' + value | i18n }}
+    <span class="gtx-table-cell-text">
+        {{ 'scheduler.scheduleType_' + value | i18n }}
+    </span>
 </ng-template>
 
 <ng-template #statusRenderer let-value="value">
-    {{ 'scheduler.schedule_status_' + value | i18n }}
+    <span class="gtx-table-cell-text">
+        {{ 'scheduler.schedule_status_' + value | i18n }}
+    </span>
 </ng-template>
 
 <ng-template #resultRenderer let-value="value" let-row="row">
     <a
         *ngIf="value != null"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         (click)="openExecutionDetails(row, $event)"
     >
         {{ 'scheduler.execution_result_' + (value ? 'true' : 'false') | i18n }}
@@ -119,7 +123,7 @@
 <ng-template #taskRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'scheduleTask' | gtxEntityDetailRouterLink:row.item.taskId"
         (click)="cancelEvent($event)"
     >
@@ -128,16 +132,20 @@
 </ng-template>
 
 <ng-template #dateRenderer let-value="value">
-    {{ value | i18nDate }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nDate }}
+    </span>
 </ng-template>
 
 <ng-template #durationRenderer let-value="value">
-    {{ value | duration }}
+    <span class="gtx-table-cell-text">
+        {{ value | duration }}
+    </span>
 </ng-template>
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>

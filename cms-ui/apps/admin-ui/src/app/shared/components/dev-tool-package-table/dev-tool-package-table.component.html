@@ -103,5 +103,7 @@
 ></gtx-table>
 
 <ng-template #numberRenderer let-value="value">
-    {{ value | i18nNumber }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nNumber }}
+    </span>
 </ng-template>

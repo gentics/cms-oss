@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.axis.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.owasp.validator.html.PolicyException;
 import org.xml.sax.SAXException;
 

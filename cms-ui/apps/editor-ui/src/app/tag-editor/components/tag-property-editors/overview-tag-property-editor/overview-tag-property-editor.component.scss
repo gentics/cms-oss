@@ -54,6 +54,8 @@
         @include item-icon-color(file, $gcms-color-file);
         @include item-icon-color(image, $gcms-color-image);
         @include item-icon-color(template, $gcms-color-template);
+        @include item-icon-color(node, $gcms-color-node);
+        @include item-icon-color(channel, $gcms-color-channel);
 
         .item-primary {
             padding-left: 10px;
@@ -62,6 +64,11 @@
             align-items: baseline;
             white-space: nowrap;
         }
+    }
+
+    .item-path {
+        display: inline-block;
+        margin-left: 0.75rem;
     }
 
 }

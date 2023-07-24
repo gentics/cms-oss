@@ -65,11 +65,14 @@
 <ng-template #constructRenderer let-value="value" let-row="row">
     <a
         *ngIf="value && row"
+        class="gtx-table-cell-link"
         [routerLink]="'construct' | gtxEntityDetailRouterLink:row.item.constructId"
         (click)="cancelEvent($event)"
     >{{ value}}</a>
 </ng-template>
 
 <ng-template #numberRenderer let-value="value">
-    {{ value | i18nNumber }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nNumber }}
+    </span>
 </ng-template>

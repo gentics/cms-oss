@@ -272,12 +272,46 @@
 				<artifactId>nekohtml</artifactId>
 				<version>${nekohtml.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.json</groupId>
+				<artifactId>json</artifactId>
+				<version>${org.json.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-beanutils</groupId>
+				<artifactId>commons-beanutils</artifactId>
+				<version>${commons.beanutils.version}</version>
+			</dependency>
+
+			<!-- XML -->
+			<dependency>
+				<groupId>xerces</groupId>
+				<artifactId>xercesImpl</artifactId>
+				<version>${xerces.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>xalan</groupId>
+				<artifactId>xalan</artifactId>
+				<version>${xalan.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>xalan</groupId>
+				<artifactId>serializer</artifactId>
+				<version>${xalan.version}</version>
+			</dependency>
 
 			<!-- XML Utils -->
 			<dependency>
 				<groupId>xml-apis</groupId>
 				<artifactId>xml-apis</artifactId>
 				<version>${xml.apis.version}</version>
+			</dependency>
+
+			<!-- Bcrypt -->
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-core</artifactId>
+				<version>${spring.version}</version>
 			</dependency>
 
 			<!-- Image Utils -->
@@ -338,6 +372,12 @@
 				<groupId>org.assertj</groupId>
 				<artifactId>assertj-core</artifactId>
 				<version>${assertj.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>${hsqldb.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

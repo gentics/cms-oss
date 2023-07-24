@@ -2,5 +2,10 @@ Some dependencies have been updated:
 * imageio: 3.9.4
 * tika: 1.28.5
 * commons-fileupload: 1.5
+* commons-beanutils: 1.9.4
 * nekohtml: 1.9.22
 * xml-apis: 1.4.01
+* org.json: 20230227
+* xalan: 2.7.3
+* xerces: 2.12.2
+* spring-security: 5.7.10

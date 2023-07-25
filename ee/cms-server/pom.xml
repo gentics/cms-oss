@@ -60,8 +60,7 @@
 									<artifactId>ct-link-checker</artifactId>
 									<type>zip</type>
 									<overWrite>true</overWrite>
-									<outputDirectory>${project.build.directory}/classes/webroot/link-checker/
-									</outputDirectory>
+									<outputDirectory>${project.build.directory}/classes/webroot/tools/link-checker/</outputDirectory>
 								</artifactItem>
 							</artifactItems>
 							<includes>**/*</includes>
@@ -175,6 +174,7 @@
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>ct-link-checker</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 

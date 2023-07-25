@@ -95,7 +95,7 @@
             >
                 <thead>
                     <tr>
-                        <th class="icon-checkbox fixed left">
+                        <th class="icon-checkbox">
                             <icon-checkbox
                                 [selected]="allSelected"
                                 [icon]="icon"
@@ -112,7 +112,7 @@
                             </th>
                         </ng-container>
 
-                        <th class="delete-icon fixed right">
+                        <th class="delete-icon">
                             <i
                                 class="material-icons invalid"
                                 [class.disabled]="isNothingSelected()"
@@ -124,7 +124,7 @@
 
                 <tbody>
                     <tr *ngFor="let result of result?.entries | paginate: paginationConfig; trackBy: identify; let i = index">
-                        <td class="icon-checkbox fixed left">
+                        <td class="icon-checkbox fixed sticky-left">
                             <icon-checkbox
                                 [selected]="selected[i] != null"
                                 [icon]="icon"
@@ -147,7 +147,7 @@
                             </ng-container>
                         </td>
 
-                        <td class="delete-icon fixed right">
+                        <td class="delete-icon fixed sticky-right">
                             <i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i>
                         </td>
                     </tr>

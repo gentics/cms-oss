@@ -205,21 +205,25 @@
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-js-lib</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-aloha-bundle</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>admin-ui</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>editor-ui</artifactId>
 			<type>zip</type>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Test Dependencies -->

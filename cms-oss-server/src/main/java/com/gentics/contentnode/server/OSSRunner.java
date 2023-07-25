@@ -5,6 +5,7 @@ import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PLU
 import static com.gentics.contentnode.runtime.ConfigurationValue.GCNJSAPI_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP_PORT;
 import static com.gentics.contentnode.runtime.ConfigurationValue.STATIC_SERVE_LIST;
+import static com.gentics.contentnode.runtime.ConfigurationValue.USE_HTTP2;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,13 +19,16 @@ import javax.servlet.DispatcherType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.rewrite.handler.RedirectRegexRule;
 import org.eclipse.jetty.rewrite.handler.RewriteHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.CustomRequestLog;
 import org.eclipse.jetty.server.ForwardedRequestCustomizer;
+import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Slf4jRequestLogWriter;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
@@ -81,6 +85,7 @@ public class OSSRunner {
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
+		boolean useHttp2 = Boolean.parseBoolean(USE_HTTP2.get());
 
 		// create context
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -137,10 +142,25 @@ public class OSSRunner {
 		errorHandler.addErrorPage(HttpStatus.INTERNAL_SERVER_ERROR_500, "/error/500.html");
 		context.setErrorHandler(errorHandler);
 
+		// set the connection factory up
+		HttpConfiguration httpConfiguration = new HttpConfiguration();
+		HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(httpConfiguration);
+
 		// create server
-		Server server = new Server(port);
+		Server server = new Server();
 		server.setStopAtShutdown(true);
 		server.setHandler(rewriteHandler);
+
+		// create connector
+		ServerConnector serverConnector;
+		if (useHttp2) {
+			HTTP2CServerConnectionFactory h2cConnectionFactory = new HTTP2CServerConnectionFactory(httpConfiguration);
+			serverConnector = new ServerConnector(server, httpConnectionFactory, h2cConnectionFactory);
+		} else {
+			serverConnector = new ServerConnector(server, httpConnectionFactory);
+		}
+		serverConnector.setPort(port);
+		server.addConnector(serverConnector);
 
 		// add the ForwardedRequestCustomizer in order to support the CMS running behind a proxy, which e.g. terminates SSL
 		for (Connector c : server.getConnectors()) {

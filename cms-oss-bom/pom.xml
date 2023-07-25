@@ -48,6 +48,11 @@
 				<artifactId>jetty-server</artifactId>
 				<version>${jetty.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.eclipse.jetty.http2</groupId>
+				<artifactId>http2-server</artifactId>
+				<version>${jetty.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>

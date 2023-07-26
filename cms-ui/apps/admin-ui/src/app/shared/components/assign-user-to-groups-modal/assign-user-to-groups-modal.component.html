@@ -5,8 +5,11 @@
 
     <div class="modal-content">
         <gtx-group-table
-            [(selected)]="userGroupIds"
+            class="group-table"
             [hideActions]="true"
+            [extraActions]="actions"
+            [(selected)]="userGroupIds"
+            (actionClick)="handleActionClick($event)"
         ></gtx-group-table>
     </div>
 

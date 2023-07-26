@@ -76,17 +76,19 @@
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + (value ? 'true' : 'false')"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + (value ? 'true' : 'false')"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>
 
 <ng-template #objectTypeRenderer let-value="value">
-    <ng-container *ngIf="TagmapEntryPropertiesObjectType[value] as objectType">
+    <span *ngIf="TagmapEntryPropertiesObjectType[value] as objectType" class="gtx-table-cell-text">
         {{ 'common.' + (objectType | lowercase) + '_singular' | i18n | titlecase }}
-    </ng-container>
+    </span>
 </ng-template>
 
 <ng-template #attributeRenderer let-value="value">
-    {{ TAGMAP_ENTRY_ATTRIBUTES_MAP[value] | i18n }}
+    <span class="gtx-table-cell-text">
+        {{ TAGMAP_ENTRY_ATTRIBUTES_MAP[value] | i18n }}
+    </span>
 </ng-template>

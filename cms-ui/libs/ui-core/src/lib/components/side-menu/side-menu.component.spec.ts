@@ -2,7 +2,7 @@ import { Component, DebugElement } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SideMenuToggle } from '../../directives/side-menu-toggle/side-menu-toggle.directive';
+import { SideMenuToggleDirective } from '../../directives/side-menu-toggle/side-menu-toggle.directive';
 import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
 import { componentTest } from '../../testing';
 import { SideMenuComponent } from './side-menu.component';
@@ -10,14 +10,14 @@ import { SideMenuComponent } from './side-menu.component';
 describe('SideMenu', () => {
     beforeEach(() => TestBed.configureTestingModule({
         imports: [NoopAnimationsModule],
-        declarations: [SideMenuComponent, TestComponent, SideMenuToggle],
+        declarations: [SideMenuComponent, TestComponent, SideMenuToggleDirective],
         providers: [UserAgentProvider],
         teardown: { destroyAfterEach: false },
     }));
 
     it('does not have the "opened" class when closed',
         componentTest(() => TestComponent, fixture => {
-            let menu: HTMLElement = getMenuElement(fixture);
+            const menu: HTMLElement = getMenuElement(fixture);
             fixture.detectChanges();
             expect(menu.classList).not.toContain('opened');
         }),
@@ -25,7 +25,7 @@ describe('SideMenu', () => {
 
     it('has the "opened" class when open',
         componentTest(() => TestComponent, (fixture, testInstance) => {
-            let menu: HTMLElement = getMenuElement(fixture);
+            const menu: HTMLElement = getMenuElement(fixture);
             testInstance.menuVisible = true;
             fixture.detectChanges();
             expect(menu.classList).toContain('opened');
@@ -51,7 +51,7 @@ describe('SideMenu', () => {
 
     it('emits "toggle" with new state when toggle button is clicked',
         componentTest(() => TestComponent, (fixture, testInstance) => {
-            let buttonDel: DebugElement = getToggleButtonDebugElement(fixture);
+            const buttonDel: DebugElement = getToggleButtonDebugElement(fixture);
 
             testInstance.menuChanged = jasmine.createSpy('menuChanged');
             testInstance.menuVisible = true;
@@ -65,7 +65,7 @@ describe('SideMenu', () => {
 
     it('emits "toggle" with new state when overlay is clicked',
         componentTest(() => TestComponent, (fixture, testInstance) => {
-            let overlay: HTMLElement = fixture.nativeElement.querySelector('.side-menu-overlay');
+            const overlay: HTMLElement = fixture.nativeElement.querySelector('.side-menu-overlay');
             testInstance.menuChanged = jasmine.createSpy('menuChanged');
             testInstance.menuVisible = true;
             fixture.detectChanges();
@@ -79,7 +79,7 @@ describe('SideMenu', () => {
 
     it('does not emit "toggle" when clicking overlay with opened === false',
         componentTest(() => TestComponent, (fixture, testInstance) => {
-            let overlay: HTMLElement = fixture.nativeElement.querySelector('.side-menu-overlay');
+            const overlay: HTMLElement = fixture.nativeElement.querySelector('.side-menu-overlay');
             testInstance.menuChanged = jasmine.createSpy('menuChanged');
             fixture.detectChanges();
             overlay.click();

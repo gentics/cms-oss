@@ -71,7 +71,7 @@ public class FileUtilsTest {
 		fileTypes.put("blihblahblub", "application/octet-stream"); // Random file extension
 		fileTypes.put("exe",  "application/x-msdownload; format=pe32");
 		fileTypes.put("html", "text/html");
-		fileTypes.put("rar",  "application/x-rar-compressed");
+		fileTypes.put("rar",  "application/x-rar-compressed; version=4");
 		fileTypes.put("zip",  "application/zip");
 
 		// OpenOffice-generated

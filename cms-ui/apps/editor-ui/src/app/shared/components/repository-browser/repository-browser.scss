@@ -44,6 +44,29 @@ repository-browser-list + repository-browser-list {
     @media screen and (max-width: $small-screen) {
         max-height: calc(85vh - 170px);
     }
+
+    .root-folder-entry {
+        border-bottom: 1px dotted #ffb84f;
+        display: flex;
+        padding: 10px;
+
+        &.root-folder-type-node {
+            .root-folder-checkbox::ng-deep .item-icon {
+                color: $gcms-color-node;
+            }
+        }
+
+        &.root-folder-type-channel {
+            .root-folder-checkbox::ng-deep .item-icon {
+                color: $gcms-color-channel;
+            }
+        }
+
+
+        .root-folder-name {
+            margin-left: 10px;
+        }
+    }
 }
 
 icon.lock {

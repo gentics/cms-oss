@@ -335,60 +335,60 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 
 		description.setParameter("0", objectPropertyId);
 
-		return Operator.execute(description.toString(), wait, () -> {
-			try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
-				Transaction t = trx.getTransaction();
+		try (Trx trx = ContentNodeHelper.trx()) {
+			return Operator.execute(description.toString(), wait, () -> {
+				try ( AnyChannelTrx aCTrx = new AnyChannelTrx()) {
+					Transaction t = TransactionManager.getCurrentTransaction();
 
-				if (!t.getPermHandler().canDelete(null, ObjectTagDefinition.class, null)) {
-					throw new InsufficientPrivilegesException(
-						I18NHelper.get("objectproperty.nopermission"),
-						null,
-						null,
-						ObjectTagDefinition.TYPE_OBJTAG_DEF,
-						0,
-						PermType.delete);
-				}
+					if (!t.getPermHandler().canDelete(null, ObjectTagDefinition.class, null)) {
+						throw new InsufficientPrivilegesException(
+								I18NHelper.get("objectproperty.nopermission"),
+								null,
+								null,
+								ObjectTagDefinition.TYPE_OBJTAG_DEF,
+								0,
+								PermType.delete);
+					}
 
-				ObjectTagDefinition toDelete = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.delete);
+					ObjectTagDefinition toDelete = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.delete);
 
-				if (toDelete == null) {
-					I18nString message = new CNI18nString("objectproperty.notfound");
+					if (toDelete == null) {
+						I18nString message = new CNI18nString("objectproperty.notfound");
+
+						message.setParameter("0", objectPropertyId);
+
+						throw new EntityNotFoundException(message.toString());
+					}
+
+					// delete all tags based on the definition
+
+					for (ObjectTag tag : toDelete.getObjectTags()) {
+						t.dirtObjectCache(ObjectTag.class, tag.getId(), true);
+
+						NodeObject tagContainer = tag.getNodeObject();
+
+						if (tagContainer != null) {
+							t.dirtObjectCache(tagContainer.getObjectInfo().getObjectClass(), tagContainer.getId(), true);
+						}
+
+						if (tag.isEnabled()) {
+							Events.trigger(tag, null, Events.DELETE);
+						}
+
+						tag.delete();
+					}
+
+					t.dirtObjectCache(ObjectTagDefinition.class, toDelete.getId(), true);
+					toDelete.delete();
+
+					I18nString message = new CNI18nString("objectproperty.delete.success");
 
 					message.setParameter("0", objectPropertyId);
 
-					throw new EntityNotFoundException(message.toString());
+					return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
 				}
-
-				// delete all tags based on the definition
-
-				for (ObjectTag tag : toDelete.getObjectTags()) {
-					t.dirtObjectCache(ObjectTag.class, tag.getId(), true);
-
-					NodeObject tagContainer = tag.getNodeObject();
-
-					if (tagContainer != null) {
-						t.dirtObjectCache(tagContainer.getObjectInfo().getObjectClass(), tagContainer.getId(), true);
-					}
-
-					if (tag.isEnabled()) {
-						Events.trigger(tag, null, Events.DELETE);
-					}
-
-					tag.delete();
-				}
-
-				t.dirtObjectCache(ObjectTagDefinition.class, toDelete.getId(), true);
-				toDelete.delete();
-
-				trx.success();
-
-				I18nString message = new CNI18nString("objectproperty.delete.success");
-
-				message.setParameter("0", objectPropertyId);
-
-				return new GenericResponse(new Message(Type.INFO, message.toString()), new ResponseInfo(ResponseCode.OK, message.toString()));
-			}
-		});
+			});
+		}
 	}
 
 	@Override

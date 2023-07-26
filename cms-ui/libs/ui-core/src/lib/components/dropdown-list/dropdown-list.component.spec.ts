@@ -11,18 +11,18 @@ import { crossBrowserInitKeyboardEvent, KeyboardEventConfig } from '../../testin
 import { ButtonComponent } from '../button/button.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
 import { DropdownContentComponent } from '../dropdown-content/dropdown-content.component';
-import { DropdownItem } from '../dropdown-item/dropdown-item.component';
+import { DropdownItemComponent } from '../dropdown-item/dropdown-item.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
-import { DropdownList } from './dropdown-list.component';
+import { DropdownListComponent } from './dropdown-list.component';
 
 describe('DropdownList Component', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [
-                DropdownList,
+                DropdownListComponent,
                 DropdownContentComponent,
-                DropdownItem,
+                DropdownItemComponent,
                 DropdownTriggerDirective,
                 DropdownContentWrapperComponent,
                 OverlayHostComponent,
@@ -46,7 +46,7 @@ describe('DropdownList Component', () => {
     it('does not add content to the DOM before it is opened',
         componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let contentWrapper: HTMLElement = fixture.nativeElement.querySelector('.dropdown-content-wrapper');
+            const contentWrapper: HTMLElement = fixture.nativeElement.querySelector('.dropdown-content-wrapper');
             expect(contentWrapper).toBeNull();
         }),
     );
@@ -57,7 +57,7 @@ describe('DropdownList Component', () => {
             tick();
             getTrigger(fixture, 0).click();
             tick();
-            let contentWrapper: HTMLElement = fixture.nativeElement.querySelector('.dropdown-content-wrapper');
+            const contentWrapper: HTMLElement = fixture.nativeElement.querySelector('.dropdown-content-wrapper');
             expect(contentWrapper?.parentElement?.parentElement?.classList).toContain('test-component-root');
 
             tick(1000);
@@ -70,7 +70,7 @@ describe('DropdownList Component', () => {
             tick();
             getTrigger(fixture, 0).click();
             tick();
-            let scrollMask: HTMLElement = fixture.nativeElement.querySelector('gtx-scroll-mask');
+            const scrollMask: HTMLElement = fixture.nativeElement.querySelector('gtx-scroll-mask');
             expect(scrollMask.parentElement.classList).toContain('test-component-root');
 
             tick(1000);
@@ -80,7 +80,7 @@ describe('DropdownList Component', () => {
     it('isOpen should report the open state',
         componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
-            let dropdownInstance: DropdownList = fixture.debugElement.query(By.directive(DropdownList)).componentInstance;
+            const dropdownInstance: DropdownListComponent = fixture.debugElement.query(By.directive(DropdownListComponent)).componentInstance;
             tick();
             expect(dropdownInstance.isOpen).toBe(false);
 
@@ -89,7 +89,7 @@ describe('DropdownList Component', () => {
             fixture.detectChanges();
             expect(dropdownInstance.isOpen).toBe(true);
 
-            let firstItem: HTMLElement = getContentListFirstItem(fixture);
+            const firstItem: HTMLElement = getContentListFirstItem(fixture);
             firstItem.click();
             tick(1000);
             expect(dropdownInstance.isOpen).toBe(false);
@@ -120,7 +120,7 @@ describe('DropdownList Component', () => {
             fixture.detectChanges();
             expect(instance.onClose).not.toHaveBeenCalled();
 
-            let firstItem: HTMLElement = getContentListFirstItem(fixture);
+            const firstItem: HTMLElement = getContentListFirstItem(fixture);
             firstItem.click();
             tick(1000);
 
@@ -151,7 +151,7 @@ describe('DropdownList Component', () => {
             getTrigger(fixture, 0).click();
             tick();
             fixture.detectChanges();
-            let firstItem: HTMLElement = getContentListFirstItem(fixture);
+            const firstItem: HTMLElement = getContentListFirstItem(fixture);
 
             expect(fixture.nativeElement.querySelector('.dropdown-content-wrapper')).toBeTruthy();
 
@@ -170,7 +170,7 @@ describe('DropdownList Component', () => {
             getTrigger(fixture, 0).click();
             tick();
             fixture.detectChanges();
-            let firstItem: HTMLElement = getContentListFirstItem(fixture);
+            const firstItem: HTMLElement = getContentListFirstItem(fixture);
 
             expect(fixture.nativeElement.querySelector('.dropdown-content-wrapper')).toBeTruthy();
 
@@ -189,7 +189,7 @@ describe('DropdownList Component', () => {
             getTrigger(fixture, 0).click();
             tick();
             fixture.detectChanges();
-            let dropdownListElement: HTMLElement = fixture.debugElement.query(By.directive(DropdownList)).nativeElement;
+            const dropdownListElement: HTMLElement = fixture.debugElement.query(By.directive(DropdownListComponent)).nativeElement;
 
             expect(fixture.nativeElement.querySelector('.dropdown-content-wrapper')).toBeTruthy();
 
@@ -208,7 +208,7 @@ describe('DropdownList Component', () => {
             getTrigger(fixture, 0).click();
             tick();
             fixture.detectChanges();
-            let dropdownListElement: HTMLElement = fixture.debugElement.query(By.directive(DropdownList)).nativeElement;
+            const dropdownListElement: HTMLElement = fixture.debugElement.query(By.directive(DropdownListComponent)).nativeElement;
 
             expect(fixture.nativeElement.querySelector('.dropdown-content-wrapper')).toBeTruthy();
 
@@ -225,7 +225,7 @@ describe('DropdownList Component', () => {
             tick();
             getTrigger(fixture, 0).click();
             tick();
-            let scrollMask: HTMLElement = fixture.nativeElement.querySelector('gtx-scroll-mask');
+            const scrollMask: HTMLElement = fixture.nativeElement.querySelector('gtx-scroll-mask');
 
             expect(fixture.nativeElement.querySelector('.dropdown-content-wrapper')).toBeTruthy();
 
@@ -322,7 +322,7 @@ describe('DropdownList Component', () => {
             fixture.detectChanges();
 
             const firstItem = fixture.debugElement.queryAll(By.css('.dropdown-content-wrapper gtx-dropdown-item'))[0];
-            expect((firstItem.componentInstance as DropdownItem).disabled).toBe(false);
+            expect((firstItem.componentInstance as DropdownItemComponent).disabled).toBe(false);
             const event = document.createEvent('MouseEvent');
             event.initEvent('click', true, true);
             firstItem.nativeElement.dispatchEvent(event);
@@ -354,7 +354,7 @@ describe('DropdownList Component', () => {
             fixture.detectChanges();
             tick();
 
-            const dropdownElement = fixture.debugElement.query(By.directive(DropdownList)).nativeElement;
+            const dropdownElement = fixture.debugElement.query(By.directive(DropdownListComponent)).nativeElement;
             getTrigger(fixture, 0).click();
             tick();
             fixture.detectChanges();
@@ -476,7 +476,7 @@ const getContentListItem = (fixture: ComponentFixture<TestComponent>, index: num
     Array.from<HTMLElement>(fixture.nativeElement.querySelectorAll('gtx-dropdown-item'))[index];
 
 function dispatchKeyboardEvent(keyCode: number, element: HTMLElement, options?: KeyboardEventConfig): void {
-    let mergedOptions = Object.assign({ keyCode, bubbles: true }, options);
-    let event = crossBrowserInitKeyboardEvent('keydown', mergedOptions);
+    const mergedOptions = Object.assign({ keyCode, bubbles: true }, options);
+    const event = crossBrowserInitKeyboardEvent('keydown', mergedOptions);
     element.dispatchEvent(event);
 }

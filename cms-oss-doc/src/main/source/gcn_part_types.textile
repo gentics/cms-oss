@@ -36,8 +36,8 @@ h3. Overview
 | 31        | Checkbox                | Part type for input of boolean value. |
 | 32        | Datasource              | With this part type, the user can define individual datasources in the tag. |
 | 33        | Velocity                | The velocity part type can be used to evaluate all previously generated text using the velocity markup parser. |
-| 34        | -Breadcrumb-            | This part type can be used to generate breadcrumbs. (deprecated) |
-| 35        | -Navigation-            | The navigation part type can be used to create a custom navigation using a velocity template. (deprecated) |
+| 34        | Breadcrumb            | This part type can be used to generate breadcrumbs. |
+| 35        | Navigation            | The navigation part type can be used to create a custom navigation using a velocity template. |
 | 36        | -HTML (custom form)-    | The custom form part type can be used to create custom form elements. (deprecated) |
 | 37        | -Text (custom form)-    | The custom form part type can be used to create custom form elements. (deprecated) |
 | 38        | -File (Upload)-         | The file upload part type is a URL (file) part type which has an additional file upload button. (deprecated) |

@@ -191,6 +191,10 @@ export const ICON_DEFINITIONS: Index<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     schedulerschedule: {
+        matIconPrimary: 'event',
+        matIconSecondary: null,
+    },
+    schedulerscheduleadmin: {
         matIconPrimary: 'calendar_today',
         matIconSecondary: null,
     },
@@ -423,6 +427,10 @@ export const ICON_DEFINITIONS: Index<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     schedulertask: {
+        matIconPrimary: 'library_books',
+        matIconSecondary: null,
+    },
+    schedulertaskadmin: {
         matIconPrimary: 'library_books',
         matIconSecondary: null,
     },
@@ -703,6 +711,14 @@ export const ICON_DEFINITIONS: Index<GtxIcon, IconDefinition> = {
     },
     [PERM_PREFIX + GcmsPermission.UPDATE_TASK_TEMPLATES]: {
         matIconPrimary: 'assignment',
+        matIconSecondary: 'loop',
+    },
+    [PERM_PREFIX + GcmsPermission.READ_SCHEDULES]: {
+        matIconPrimary: 'calendar_today',
+        matIconSecondary: 'remove_red_eye',
+    },
+    [PERM_PREFIX + GcmsPermission.UPDATE_SCHEDULES]: {
+        matIconPrimary: 'calendar_today',
         matIconSecondary: 'loop',
     },
 

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.gentics</groupId>
 		<artifactId>cms-oss</artifactId>
-		<version>6.0.0-SNAPSHOT</version>
+		<version>6.0.2-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.gentics.cms-oss</groupId>
@@ -620,14 +620,12 @@
 		<dependency>
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
-			<version>2.9.1</version>
 		</dependency>
 
 		<!-- Bcrypt -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
-			<version>5.7.3</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>spring-aop</artifactId>
@@ -676,27 +674,6 @@
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
 			<version>1.5.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.axis</groupId>
-			<artifactId>axis-ant</artifactId>
-			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.axis</groupId>
-			<artifactId>axis-saaj</artifactId>
-			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.axis</groupId>
-			<artifactId>axis</artifactId>
-			<version>1.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.axis</groupId>
-			<artifactId>axis-jaxrpc</artifactId>
-			<version>1.4</version>
 		</dependency>
 
 		<!-- https://github.com/jwtk/jjwt -->

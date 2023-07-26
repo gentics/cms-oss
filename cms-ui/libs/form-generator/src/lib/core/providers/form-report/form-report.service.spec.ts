@@ -1,16 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { Observable } from 'rxjs';
 import { FormEditorConfigurationService, FormEditorMappingService } from '..';
-import { FormEditorConfiguration } from '../form-editor-configuration/form-editor-configuration.model';
-
+import { FormEditorConfiguration } from '../../../common';
 import { FormReportService } from './form-report.service';
 
 describe('FormReportService', () => {
 
     let formEditorConfigurationServiceMockConfiguration$Spy;
-
-    let formEditorMappingServiceMockMapFormBOToFormSpy;
-    let formEditorMappingServiceMockMapFormToFormBOSpy;
 
     beforeEach(() => {
         // create mock, no function spies
@@ -18,7 +14,7 @@ describe('FormReportService', () => {
          * createSpyObj not usable without function spies and does not support property spies declarations in our version
          * replace with https://jasmine.github.io/api/3.6/jasmine.html#.createSpyObj after updating
          */
-         const formEditorConfigurationServiceMock = {
+        const formEditorConfigurationServiceMock = {
             get configuration$(): Observable<FormEditorConfiguration>  {
                 return undefined;
             },
@@ -28,8 +24,6 @@ describe('FormReportService', () => {
 
         // create mock
         const formEditorMappingServiceMock = jasmine.createSpyObj('FormEditorMappingService', ['mapFormBOToForm', 'mapFormToFormBO']);
-        formEditorMappingServiceMockMapFormBOToFormSpy = formEditorMappingServiceMock.mapFormBOToForm;
-        formEditorMappingServiceMockMapFormToFormBOSpy = formEditorMappingServiceMock.mapFormToFormBO;
 
         TestBed.configureTestingModule({
             providers: [

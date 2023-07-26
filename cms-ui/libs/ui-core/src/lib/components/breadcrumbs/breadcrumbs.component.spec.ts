@@ -1,15 +1,14 @@
-import {LocationStrategy} from '@angular/common';
-import {Component} from '@angular/core';
-import {ComponentFixture, getTestBed, TestBed, tick} from '@angular/core/testing';
-import {By} from '@angular/platform-browser';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {of as observableOf} from 'rxjs';
-
-import {componentTest, createClickEvent} from '../../testing';
-import {ButtonComponent} from '../button/button.component';
-import {Icon} from '../../directives/icon/icon.directive';
-import {UserAgentProvider} from '../../providers/user-agent/user-agent-ref';
-import {BreadcrumbsComponent, IBreadcrumbLink, IBreadcrumbRouterLink} from './breadcrumbs.component';
+import { LocationStrategy } from '@angular/common';
+import { Component } from '@angular/core';
+import { ComponentFixture, getTestBed, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { of as observableOf } from 'rxjs';
+import { IconDirective } from '../../directives/icon/icon.directive';
+import { UserAgentProvider } from '../../providers/user-agent/user-agent-ref';
+import { componentTest, createClickEvent } from '../../testing';
+import { ButtonComponent } from '../button/button.component';
+import { BreadcrumbsComponent, IBreadcrumbLink, IBreadcrumbRouterLink } from './breadcrumbs.component';
 
 /**
  * Helper function get text of all <a> tags inside a component
@@ -17,7 +16,7 @@ import {BreadcrumbsComponent, IBreadcrumbLink, IBreadcrumbRouterLink} from './br
 function linkTexts(fixture: ComponentFixture<any>): string[] {
     return Array.prototype.map.call(
         fixture.nativeElement.querySelectorAll('a.breadcrumb'),
-        (a: HTMLAnchorElement) => a.innerText.trim()
+        (a: HTMLAnchorElement) => a.innerText.trim(),
     );
 }
 
@@ -27,7 +26,7 @@ function linkTexts(fixture: ComponentFixture<any>): string[] {
 function linkHrefs(fixture: ComponentFixture<any>): string[] {
     return Array.prototype.map.call(
         fixture.nativeElement.querySelectorAll('a.breadcrumb'),
-        (a: HTMLAnchorElement) => a.getAttribute('href')
+        (a: HTMLAnchorElement) => a.getAttribute('href'),
     );
 }
 
@@ -36,16 +35,16 @@ describe('Breadcrumbs:', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-    imports: [RouterModule.forChild([])],
-    providers: [
-        UserAgentProvider,
-        { provide: Router, useClass: MockRouter },
-        { provide: ActivatedRoute, useClass: MockActivatedRoute },
-        { provide: LocationStrategy, useClass: MockLocationStrategy }
-    ],
-    declarations: [BreadcrumbsComponent, ButtonComponent, Icon, TestComponent],
-    teardown: { destroyAfterEach: false }
-});
+            imports: [RouterModule.forChild([])],
+            providers: [
+                UserAgentProvider,
+                { provide: Router, useClass: MockRouter },
+                { provide: ActivatedRoute, useClass: MockActivatedRoute },
+                { provide: LocationStrategy, useClass: MockLocationStrategy },
+            ],
+            declarations: [BreadcrumbsComponent, ButtonComponent, IconDirective, TestComponent],
+            teardown: { destroyAfterEach: false },
+        });
     });
 
     it('creates a breadcrumbs bar with the link texts provided',
@@ -54,15 +53,15 @@ describe('Breadcrumbs:', () => {
                 { text: "A" },
                 { text: "B" }
             ]'></gtx-breadcrumbs>`,
-            fixture => {
-                fixture.detectChanges();
-                tick(1000);
-                let links = linkTexts(fixture);
+        fixture => {
+            fixture.detectChanges();
+            tick(1000);
+            const links = linkTexts(fixture);
 
-                expect(links.length).toBe(2);
-                expect(links).toEqual(['A', 'B']);
-            }
-        )
+            expect(links.length).toBe(2);
+            expect(links).toEqual(['A', 'B']);
+        },
+        ),
     );
 
     it('uses the href values provided',
@@ -72,23 +71,23 @@ describe('Breadcrumbs:', () => {
                 { text: "B", href: "./relative.html" },
                 { text: "C", href: "#hashlocation" }
             ]'></gtx-breadcrumbs>`,
-            fixture => {
-                fixture.detectChanges();
-                tick(1000);
-                let hrefs = linkHrefs(fixture);
+        fixture => {
+            fixture.detectChanges();
+            tick(1000);
+            const hrefs = linkHrefs(fixture);
 
-                expect(hrefs.length).toBe(3);
-                expect(hrefs).toEqual(['/absolute', './relative.html', '#hashlocation']);
-            }
-        )
+            expect(hrefs.length).toBe(3);
+            expect(hrefs).toEqual(['/absolute', './relative.html', '#hashlocation']);
+        },
+        ),
     );
 
     it('changes the text of the created links with the bound input property',
         componentTest(() => TestComponent, (fixture, component) => {
-            let links = component.links = [
+            const links = component.links = [
                 { text: 'A' },
                 { text: 'B' },
-                { text: 'C' }
+                { text: 'C' },
             ];
 
             fixture.detectChanges();
@@ -99,21 +98,21 @@ describe('Breadcrumbs:', () => {
             component.links = [
                 { text: 'AAA' },
                 { text: 'BBB' },
-                { text: 'CCC' }
+                { text: 'CCC' },
             ];
             fixture.detectChanges();
 
             expect(linkTexts(fixture)).toEqual(['AAA', 'BBB', 'CCC'],
                 'text of breadcrumb links did not change by reference');
-        })
+        }),
     );
 
     it('changes the href of the created links with the bound input property',
         componentTest(() => TestComponent, (fixture, component) => {
-            let links = component.links = [
+            const links = component.links = [
                 { text: 'A', href: '/a' },
                 { text: 'B', href: './b' },
-                { text: 'C', href: '#c' }
+                { text: 'C', href: '#c' },
             ];
 
             fixture.detectChanges();
@@ -134,14 +133,14 @@ describe('Breadcrumbs:', () => {
             component.links = [
                 { text: 'A', href: '/aaa' },
                 { text: 'B', href: './bbb' },
-                { text: 'C', href: '#ccc' }
+                { text: 'C', href: '#ccc' },
             ];
             fixture.detectChanges();
             tick(1000);
 
             expect(linkHrefs(fixture)).toEqual(['/aaa', './bbb', '#ccc'],
                 'href of breadcrumb links did not change by reference');
-        })
+        }),
     );
 
     it('removes the href attribute of links when disabled',
@@ -152,23 +151,23 @@ describe('Breadcrumbs:', () => {
                 { text: 'C', href: '/c' }
             ]" [disabled]="disableBreadcrumbs">
             </gtx-breadcrumbs>`,
-            (fixture, component) => {
-                component.disableBreadcrumbs = false;
-                fixture.detectChanges();
-                tick(1000);
-                expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
+        (fixture, component) => {
+            component.disableBreadcrumbs = false;
+            fixture.detectChanges();
+            tick(1000);
+            expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
 
-                component.disableBreadcrumbs = true;
-                fixture.detectChanges();
-                tick(1000);
-                expect(linkHrefs(fixture)).toEqual([null, null, null]);
+            component.disableBreadcrumbs = true;
+            fixture.detectChanges();
+            tick(1000);
+            expect(linkHrefs(fixture)).toEqual([null, null, null]);
 
-                component.disableBreadcrumbs = false;
-                fixture.detectChanges();
-                tick(1000);
-                expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
-            }
-        )
+            component.disableBreadcrumbs = false;
+            fixture.detectChanges();
+            tick(1000);
+            expect(linkHrefs(fixture)).toEqual(['/a', '/b', '/c']);
+        },
+        ),
     );
 
 
@@ -178,20 +177,20 @@ describe('Breadcrumbs:', () => {
                 [links]="[{ text: 'A', href: '/a' }]"
                 (linkClick)="onLinkClick($event)">
             </gtx-breadcrumbs>`,
-            (fixture, component) => {
-                const onLinkClick = component.onLinkClick = jasmine.createSpy('onLinkClick');
+        (fixture, component) => {
+            const onLinkClick = component.onLinkClick = jasmine.createSpy('onLinkClick');
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(onLinkClick.calls.count()).toBe(0);
+            fixture.detectChanges();
+            tick(1000);
+            expect(onLinkClick.calls.count()).toBe(0);
 
-                let linkToClick = fixture.debugElement.query(By.css('a'));
-                linkToClick.triggerEventHandler('click', createClickEvent());
+            const linkToClick = fixture.debugElement.query(By.css('a'));
+            linkToClick.triggerEventHandler('click', createClickEvent());
 
-                expect(onLinkClick).toHaveBeenCalledTimes(1);
-                expect(onLinkClick).toHaveBeenCalledWith({ text: 'A', href: '/a' });
-            }
-        )
+            expect(onLinkClick).toHaveBeenCalledTimes(1);
+            expect(onLinkClick).toHaveBeenCalledWith({ text: 'A', href: '/a' });
+        },
+        ),
     );
 
     it('does not forward clicks to the "linkClick" EventEmitter when disabled',
@@ -200,102 +199,102 @@ describe('Breadcrumbs:', () => {
                 [links]="[{ text: 'A', href: '/a' }]"
                 (linkClick)="onLinkClick($event)" disabled>
             </gtx-breadcrumbs>`,
-            (fixture, component) => {
-                const onLinkClick = component.onLinkClick = jasmine.createSpy('onLinkClick');
+        (fixture, component) => {
+            const onLinkClick = component.onLinkClick = jasmine.createSpy('onLinkClick');
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(onLinkClick.calls.count()).toBe(0);
+            fixture.detectChanges();
+            tick(1000);
+            expect(onLinkClick.calls.count()).toBe(0);
 
-                let linkToClick = fixture.debugElement.query(By.css('a'));
-                linkToClick.triggerEventHandler('click', createClickEvent());
+            const linkToClick = fixture.debugElement.query(By.css('a'));
+            linkToClick.triggerEventHandler('click', createClickEvent());
 
-                expect(onLinkClick.calls.count()).toBe(0);
-            }
-        )
+            expect(onLinkClick.calls.count()).toBe(0);
+        },
+        ),
     );
 
     it('does not create a back button when there is only one link',
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-            (fixture, component) => {
-                component.links = [
-                    { text: 'X', href: '/x', someKey: 'someValue' }
-                ];
-                component.routerLinks = [];
+        (fixture, component) => {
+            component.links = [
+                { text: 'X', href: '/x', someKey: 'someValue' },
+            ];
+            component.routerLinks = [];
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
+            fixture.detectChanges();
+            tick(1000);
+            expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
 
-                component.links = [];
-                component.routerLinks = [
-                    { text: 'Y', route: ['/route', 'y'] }
-                ];
+            component.links = [];
+            component.routerLinks = [
+                { text: 'Y', route: ['/route', 'y'] },
+            ];
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
-            }
-        )
+            fixture.detectChanges();
+            tick(1000);
+            expect(fixture.nativeElement.querySelector('.back-button')).toBeNull();
+        },
+        ),
     );
 
     it('creates a back button when there are 2 or more links',
         componentTest(() => TestComponent, `
             <gtx-breadcrumbs [links]="links" [routerLinks]="routerLinks">
             </gtx-breadcrumbs>`,
-            (fixture, component) => {
+        (fixture, component) => {
 
-                // Links, but no router links
-                component.links = [
-                    { text: 'X', href: '/x', someKey: 'someValue' },
-                    { text: 'Y', href: '/y', someKey: 'someOtherValue' }
-                ];
-                component.routerLinks = [];
+            // Links, but no router links
+            component.links = [
+                { text: 'X', href: '/x', someKey: 'someValue' },
+                { text: 'Y', href: '/y', someKey: 'someOtherValue' },
+            ];
+            component.routerLinks = [];
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
+            fixture.detectChanges();
+            tick(1000);
+            expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
-                // No links, but router links
-                component.links = [];
-                component.routerLinks = [
-                    { text: 'A', route: ['/route', 'a'] },
-                    { text: 'B', route: ['/route', 'b'] }
-                ];
+            // No links, but router links
+            component.links = [];
+            component.routerLinks = [
+                { text: 'A', route: ['/route', 'a'] },
+                { text: 'B', route: ['/route', 'b'] },
+            ];
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
+            fixture.detectChanges();
+            tick(1000);
+            expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
 
-                // Both links and router links
-                component.links = [
-                    { text: 'X', href: '/x', someKey: 'someValue' }
-                ];
-                component.routerLinks = [
-                    { text: 'A', route: ['/route', 'a'] }
-                ];
+            // Both links and router links
+            component.links = [
+                { text: 'X', href: '/x', someKey: 'someValue' },
+            ];
+            component.routerLinks = [
+                { text: 'A', route: ['/route', 'a'] },
+            ];
 
-                fixture.detectChanges();
-                tick(1000);
-                expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
-            }
-        )
+            fixture.detectChanges();
+            tick(1000);
+            expect(fixture.nativeElement.querySelector('.back-button')).toBeDefined();
+        },
+        ),
     );
 
     it('forwards the "links" input value to the "linkClick" EventEmitter by reference',
         componentTest(() => TestComponent, (fixture, component) => {
             const onLinkClick = component.onLinkClick = jasmine.createSpy('onLinkClick');
             component.links = [
-                { text: 'X', someKey: 'someValue' }
+                { text: 'X', someKey: 'someValue' },
             ];
 
             fixture.detectChanges();
             tick(1000);
             expect(onLinkClick).not.toHaveBeenCalled();
 
-            let linkToClick = fixture.debugElement.query(By.css('a'));
+            const linkToClick = fixture.debugElement.query(By.css('a'));
             expect(linkToClick).not.toBeNull();
 
             linkToClick.triggerEventHandler('click', createClickEvent());
@@ -303,7 +302,7 @@ describe('Breadcrumbs:', () => {
             expect(onLinkClick).toHaveBeenCalledTimes(1);
             expect(onLinkClick).toHaveBeenCalledWith({ text: 'X', someKey: 'someValue' });
             expect(onLinkClick.calls.mostRecent().args[0]).toEqual(component.links[0]);
-        })
+        }),
     );
 
     describe('Router link capabilities', () => {
@@ -312,21 +311,21 @@ describe('Breadcrumbs:', () => {
             componentTest(() => TestComponent, `
                 <gtx-breadcrumbs multilineExpanded='true' [routerLinks]="routerLinks">
                 </gtx-breadcrumbs>`,
-                (fixture, instance) => {
-                    instance.routerLinks = [
-                        { text: 'A', route: ['/TestA/TestB/TestC'] },
-                        { text: 'B', route: ['/TestA', 'TestB', 'TestC'] }
-                    ];
-                    fixture.detectChanges();
-                    tick(1000);
-                    expect(linkTexts(fixture)).toEqual(['A', 'B']);
+            (fixture, instance) => {
+                instance.routerLinks = [
+                    { text: 'A', route: ['/TestA/TestB/TestC'] },
+                    { text: 'B', route: ['/TestA', 'TestB', 'TestC'] },
+                ];
+                fixture.detectChanges();
+                tick(1000);
+                expect(linkTexts(fixture)).toEqual(['A', 'B']);
 
-                    instance.routerLinks.push({ text: 'C', route: ['./TestC'] });
-                    fixture.detectChanges();
-                    tick(1000);
-                    expect(linkTexts(fixture)).toEqual(['A', 'B', 'C']);
-                }
-            )
+                instance.routerLinks.push({ text: 'C', route: ['./TestC'] });
+                fixture.detectChanges();
+                tick(1000);
+                expect(linkTexts(fixture)).toEqual(['A', 'B', 'C']);
+            },
+            ),
         );
 
         it('forwards the "route" property to the routerLink directive',
@@ -336,17 +335,17 @@ describe('Breadcrumbs:', () => {
                     { text: "B", route: "./TestB" },
                     { text: "C", route: ["/TestA", "TestB", "TestC"] }
                 ]'></gtx-breadcrumbs>`,
-                fixture => {
-                    fixture.detectChanges();
-                    tick(1000);
+            fixture => {
+                fixture.detectChanges();
+                tick(1000);
 
-                    let links = Array.from<HTMLAnchorElement>(fixture.nativeElement.querySelectorAll('a.breadcrumb'));
-                    expect(links.length).toBe(3);
+                const links = Array.from<HTMLAnchorElement>(fixture.nativeElement.querySelectorAll('a.breadcrumb'));
+                expect(links.length).toBe(3);
 
-                    let hrefs = links.map(link => link.getAttribute('href'));
-                    expect(hrefs).toEqual(['/TestA/TestB/TestC', './TestB', '/TestA/TestB/TestC']);
-                }
-            )
+                const hrefs = links.map(link => link.getAttribute('href'));
+                expect(hrefs).toEqual(['/TestA/TestB/TestC', './TestB', '/TestA/TestB/TestC']);
+            },
+            ),
         );
 
         it('changes the URL on router link click when enabled',
@@ -355,27 +354,27 @@ describe('Breadcrumbs:', () => {
                     { text: "Link1", route: ["/TestA", "TestB", "TestC"] }
                 ]'>
                 </gtx-breadcrumbs>`,
-                fixture => {
-                    let router: MockRouter = getTestBed().get(Router);
-                    router.createUrlTree = (commands: string[], options: any) => commands;
-                    router.navigateByUrl = jasmine.createSpy('navigateByUrl');
+            fixture => {
+                const router: MockRouter = getTestBed().get(Router);
+                router.createUrlTree = (commands: string[], options: any) => commands;
+                router.navigateByUrl = jasmine.createSpy('navigateByUrl');
 
-                    fixture.detectChanges();
-                    tick();
-                    fixture.detectChanges();
-                    tick(1000);
+                fixture.detectChanges();
+                tick();
+                fixture.detectChanges();
+                tick(1000);
 
-                    let generatedLinks = fixture.debugElement.queryAll(By.css('a'));
-                    expect(generatedLinks.length).toBe(1);
+                const generatedLinks = fixture.debugElement.queryAll(By.css('a'));
+                expect(generatedLinks.length).toBe(1);
 
-                    let nativeLink: HTMLAnchorElement = generatedLinks[0].nativeElement;
-                    let clickEvent = createClickEvent(nativeLink);
-                    nativeLink.dispatchEvent(clickEvent);
+                const nativeLink: HTMLAnchorElement = generatedLinks[0].nativeElement;
+                const clickEvent = createClickEvent(nativeLink);
+                nativeLink.dispatchEvent(clickEvent);
 
-                    expect(router.navigateByUrl)
-                        .toHaveBeenCalledWith(['/TestA', 'TestB', 'TestC'], jasmine.anything());
-                }
-            )
+                expect(router.navigateByUrl)
+                    .toHaveBeenCalledWith(['/TestA', 'TestB', 'TestC'], jasmine.anything());
+            },
+            ),
         );
 
         it('does not change the URL on router link click when disabled',
@@ -384,29 +383,29 @@ describe('Breadcrumbs:', () => {
                     { text: 'Link1', route: ['/TestA', 'TestB', 'TestC'] }
                 ]">
                 </gtx-breadcrumbs>`,
-                (fixture, testComponent) => {
-                    let router: MockRouter = getTestBed().get(Router);
-                    router.createUrlTree = (commands: string[], options: any) => commands;
-                    router.navigateByUrl = jasmine.createSpy('navigateByUrl');
+            (fixture, testComponent) => {
+                const router: MockRouter = getTestBed().get(Router);
+                router.createUrlTree = (commands: string[], options: any) => commands;
+                router.navigateByUrl = jasmine.createSpy('navigateByUrl');
 
-                    fixture.detectChanges();
-                    tick();
-                    fixture.detectChanges();
-                    tick(1000);
+                fixture.detectChanges();
+                tick();
+                fixture.detectChanges();
+                tick(1000);
 
-                    let generatedLinks = fixture.debugElement.queryAll(By.css('a'));
-                    expect(generatedLinks.length).toBe(1);
+                const generatedLinks = fixture.debugElement.queryAll(By.css('a'));
+                expect(generatedLinks.length).toBe(1);
 
-                    expect(router.navigateByUrl).toHaveBeenCalledTimes(0);
+                expect(router.navigateByUrl).toHaveBeenCalledTimes(0);
 
-                    let nativeLink: HTMLAnchorElement = generatedLinks[0].nativeElement;
-                    let clickEvent = createClickEvent(nativeLink);
-                    nativeLink.dispatchEvent(clickEvent);
-                    expect(clickEvent.defaultPrevented).toBe(true);
+                const nativeLink: HTMLAnchorElement = generatedLinks[0].nativeElement;
+                const clickEvent = createClickEvent(nativeLink);
+                nativeLink.dispatchEvent(clickEvent);
+                expect(clickEvent.defaultPrevented).toBe(true);
 
-                    expect(router.navigateByUrl).not.toHaveBeenCalled();
-                }
-            )
+                expect(router.navigateByUrl).not.toHaveBeenCalled();
+            },
+            ),
         );
 
     });
@@ -441,7 +440,7 @@ class MockUsageActions {
             multilineExpanded="true"
             [links]="links"
             (linkClick)="onLinkClick($event)">
-        </gtx-breadcrumbs>`
+        </gtx-breadcrumbs>`,
 })
 class TestComponent {
     links: IBreadcrumbLink[] = [];

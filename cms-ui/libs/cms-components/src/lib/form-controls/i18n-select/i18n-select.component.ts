@@ -48,9 +48,9 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
 
     i18nSelect = new UntypedFormControl();
 
-    private _onChange: (_: any) => void;
-    _onTouched: any;
-    private _onValidatorChange: () => void;
+    private cvaChange: (_: any) => void;
+    cvaTouch: any;
+    private validatorChange: () => void;
 
     private i18nData: CmsFormElementI18nValue<string | null>;
     private valueChangesSubscription: Subscription;
@@ -68,8 +68,9 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
             if (this.i18nData) {
                 const tmp = cloneDeep(this.i18nData || {});
                 tmp[this.language] = value;
-                if (this._onChange) {
-                    this._onChange(tmp);
+                this.i18nData = tmp;
+                if (this.cvaChange) {
+                    this.cvaChange(tmp);
                 }
             }
         });
@@ -82,8 +83,8 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
              * Validating whether the selected option is valid depends on the current select options.
              * Thus, whenever they change, reevaluation is required.
              */
-            if (this._onValidatorChange) {
-                this._onValidatorChange();
+            if (this.validatorChange) {
+                this.validatorChange();
             }
 
             /**
@@ -114,8 +115,8 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
             }
         }
         if (changes.language || changes.availableLanguages) {
-            if (this._onValidatorChange) {
-                this._onValidatorChange();
+            if (this.validatorChange) {
+                this.validatorChange();
             }
         }
     }
@@ -141,11 +142,11 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     }
 
     registerOnChange(fn: (_: any) => void): void {
-        this._onChange = fn;
+        this.cvaChange = fn;
     }
 
     registerOnTouched(fn: any): void {
-        this._onTouched = fn;
+        this.cvaTouch = fn;
     }
 
     setDisabledState?(isDisabled: boolean): void {
@@ -173,13 +174,13 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     }
 
     registerOnValidatorChange?(fn: () => void): void {
-        this._onValidatorChange = fn;
+        this.validatorChange = fn;
     }
 
     private validateRequired(control: AbstractControl): ValidationErrors {
         /**
-         * if there is no i18n data, then
-         *  - there is a required error, iff the value is required in the current language
+         * if there is no i18n data, then there is a required error,
+         * if the value is required in the current language
          */
         if (!this.i18nData) {
             if (this.requiredInCurrentLanguage) {
@@ -188,8 +189,8 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         * if there is no value in the current language, then
-         *  - there is a required error, iff the value is required in the current language
+         * if there is no value in the current language, then there is a required error,
+         * if the value is required in the current language
          */
         if (!this.valuePresent()) {
             if (this.requiredInCurrentLanguage) {
@@ -203,8 +204,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     private validateTranslated(control: AbstractControl): ValidationErrors {
 
         /**
-         * if there is no i18n data, then
-         *  - there cannot be a translation error
+         * if there is no i18n data, then there cannot be a translation error
          */
         if (!this.i18nData) {
             this.isTranslated = true;
@@ -212,8 +212,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         * if there are no available languages, then
-         *  - there cannot be a translation error
+         * if there are no available languages, then there cannot be a translation error
          */
         if (!this.availableLanguages) {
             this.isTranslated = true;
@@ -221,8 +220,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         * if there is a value in the current language, then
-         *  - there is no translation error
+         * if there is a value in the current language, then there is no translation error
          */
         if (this.valuePresent()) {
             this.isTranslated = true;
@@ -230,8 +228,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         * if there there are no other available languages, then
-         *  - there is no translation error
+         * if there there are no other available languages, then there is no translation error
          */
         if (this.availableLanguages.length < 1) {
             this.isTranslated = true;
@@ -239,8 +236,8 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         * if any other language has this value set (and the current one does not), then
-         *  - there is translation error
+         * if any other language has this value set (and the current one does not),
+         * then there is translation error
          */
         const notCurrentLanguages = this.availableLanguages.filter(language => language !== this.language);
         const languagesOfAvailableTranslations = notCurrentLanguages.filter(language => this.valuePresent(language));
@@ -271,8 +268,7 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     private validateSelection(control: AbstractControl): ValidationErrors {
 
         /**
-         * if there is no value in the current language, then
-         *  - there cannot be an invalid selection
+         * if there is no value in the current language, then there cannot be an invalid selection
          */
         if (!this.valuePresent()) {
             this.invalidSelection = false;
@@ -280,29 +276,27 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
         }
 
         /**
-         *  Take note of this exception: In case ngAfterViewInit was not called yet,
-         *  we do not really know which selection options will be there. Without this exception,
-         *  we would assume there to be none, although they will probably be available shortly after.
-         *  In order to avoid a brief moment when the input is highlighted red, we introduced this exception.
+         * Take note of this exception: In case ngAfterViewInit was not called yet,
+         * we do not really know which selection options will be there. Without this exception,
+         * we would assume there to be none, although they will probably be available shortly after.
+         * In order to avoid a brief moment when the input is highlighted red, we introduced this exception.
          */
         if (!this.ngAfterViewInitWasCalled) {
             this.invalidSelection = false;
             return null;
         }
 
-        /** if there are selection options, then
-         *   - there is no invalid selection if the selection is found in the options
+        /** if there are selection options, then there is no invalid selection if the selection is found in the options
          */
         if (this.selectOptions) {
-            let value = this.i18nData[this.language];
+            const value = this.i18nData[this.language];
             if (this.selectOptions.filter(option => option.value === value).length > 0) {
                 this.invalidSelection = false;
                 return null;
             }
         }
 
-        /** if there are no selection options, then
-         *   - all selections are invalid
+        /** if there are no selection options, then all selections are invalid
          */
         this.invalidSelection = true;
         return { invalidSelection: true };

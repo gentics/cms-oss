@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
-import { UntypedFormControl, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { BehaviorSubject } from 'rxjs';
@@ -12,7 +12,7 @@ import { SelectOptionDirective } from '../../directives/select-option/option.dir
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { componentTest } from '../../testing';
-import { crossBrowserInitKeyboardEvent, KeyboardEventConfig } from '../../testing/keyboard-event';
+import { KeyboardEventConfig, crossBrowserInitKeyboardEvent } from '../../testing/keyboard-event';
 import { ButtonComponent } from '../button/button.component';
 import { CheckboxComponent } from '../checkbox/checkbox.component';
 import { DropdownContentWrapperComponent } from '../dropdown-content-wrapper/dropdown-content-wrapper.component';
@@ -21,7 +21,7 @@ import { DropdownListComponent } from '../dropdown-list/dropdown-list.component'
 import { InputComponent } from '../input/input.component';
 import { OverlayHostComponent } from '../overlay-host/overlay-host.component';
 import { ScrollMaskComponent } from '../scroll-mask/scroll-mask.component';
-import { Select } from './select.component';
+import { SelectComponent } from './select.component';
 
 describe('SelectComponent', () => {
 
@@ -29,7 +29,7 @@ describe('SelectComponent', () => {
         TestBed.configureTestingModule({
             imports: [FormsModule, ReactiveFormsModule],
             declarations: [
-                Select,
+                SelectComponent,
                 SelectOptionDirective,
                 SelectOptionGroupDirective,
                 IconDirective,
@@ -112,7 +112,7 @@ describe('SelectComponent', () => {
             tick();
             fixture.detectChanges();
 
-            let placeholder: HTMLElement = fixture.debugElement.query(By.css('.placeholder')).nativeElement;
+            const placeholder: HTMLElement = fixture.debugElement.query(By.css('.placeholder')).nativeElement;
 
             expect(placeholder).toBeDefined();
             expect(placeholder.textContent).toEqual('More...');
@@ -125,9 +125,9 @@ describe('SelectComponent', () => {
             <gtx-select label="testLabel"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            let label: HTMLElement = fixture.nativeElement.querySelector('label');
+            const label: HTMLElement = fixture.nativeElement.querySelector('label');
 
-            expect(label.innerText).toBe('testLabel');
+            expect(label.textContent).toBe('testLabel');
         },
         ),
     );
@@ -137,7 +137,7 @@ describe('SelectComponent', () => {
         <gtx-select label="testLabel"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            let dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
+            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
 
             expect(dropdown.classList).toContain('with-label');
         },
@@ -149,7 +149,7 @@ describe('SelectComponent', () => {
         <gtx-select></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            let dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
+            const dropdown: HTMLElement = fixture.nativeElement.querySelector('gtx-dropdown-trigger');
 
             expect(dropdown.classList).not.toContain('with-label');
         },
@@ -161,7 +161,7 @@ describe('SelectComponent', () => {
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            let viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
 
             expect(viewValue.getAttribute('disabled')).toBe('true');
         },
@@ -173,7 +173,7 @@ describe('SelectComponent', () => {
             <gtx-select label="testLabel" disabled="true"></gtx-select>`,
         fixture => {
             fixture.detectChanges();
-            let viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             viewValue.focus();
             expect(document.activeElement).not.toBe(viewValue);
         },
@@ -185,8 +185,8 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            let viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
-            expect(viewValue.innerText).toContain('Bar');
+            const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            expect(viewValue.textContent).toContain('Bar');
 
             tick(1000);
         }),
@@ -197,8 +197,8 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            let viewValue: HTMLElement = fixture.debugElement.query(By.css('li.selected')).nativeElement;
-            expect(viewValue.innerText).toContain('Bar');
+            const viewValue: HTMLElement = fixture.debugElement.query(By.css('li.selected')).nativeElement;
+            expect(viewValue.textContent).toContain('Bar');
 
             tick(1000);
         }),
@@ -216,9 +216,9 @@ describe('SelectComponent', () => {
             fixture.detectChanges();
             tick();
 
-            let viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value > div')).nativeElement;
+            const viewValue: HTMLElement = fixture.debugElement.query(By.css('.view-value > div')).nativeElement;
 
-            expect(viewValue.innerText).toBe('');
+            expect(viewValue.textContent).toBe('');
 
             tick(1000);
         }),
@@ -235,7 +235,7 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
 
-            let checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map(de => de.componentInstance);
+            const checkboxes: CheckboxComponent[] = fixture.debugElement.queryAll(By.directive(CheckboxComponent)).map(de => de.componentInstance);
 
             expect(checkboxes[0].checked).toBe(false);
             expect(checkboxes[1].checked).toBe(true);
@@ -252,8 +252,8 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
 
-            let selectInstance: Select = fixture.debugElement.query(By.directive(Select)).componentInstance;
-            let listItems = getListItems(fixture);
+            const selectInstance: SelectComponent = fixture.debugElement.query(By.directive(SelectComponent)).componentInstance;
+            const listItems = getListItems(fixture);
 
             listItems[0].click();
             tick();
@@ -269,7 +269,7 @@ describe('SelectComponent', () => {
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
             tick();
-            let fakeInput: HTMLInputElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+            const fakeInput: HTMLInputElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
             spyOn(instance, 'onBlur');
 
             triggerEvent(fakeInput, 'blur');
@@ -286,7 +286,7 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
 
-            let listItems = getListItems(fixture);
+            const listItems = getListItems(fixture);
             instance.onChange = jasmine.createSpy('onChange');
 
             listItems[0].click();
@@ -301,7 +301,33 @@ describe('SelectComponent', () => {
 
     it('emits "change" when a list item is clicked (multiple select)',
         componentTest(() => TestComponent, `
-            <gtx-select multiple="true" [value]="[value]" (valueChange)="onChange($event)">
+            <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
+                <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
+            </gtx-select>
+            <gtx-overlay-host></gtx-overlay-host>`,
+        (fixture, instance) => {
+            fixture.componentInstance.value = ['Bar'];
+            fixture.detectChanges();
+            tick();
+            clickSelectAndOpen(fixture);
+
+            const listItems = getListItems(fixture);
+            const onChange = instance.onChange = jasmine.createSpy('onChange');
+
+            listItems[0].click();
+            tick();
+            expect(onChange.calls.argsFor(0)[0]).toEqual(['Bar', 'Foo']);
+
+            listItems[2].click();
+            tick();
+            expect(onChange.calls.argsFor(1)[0]).toEqual(['Foo', 'Bar', 'Baz']);
+        },
+        ),
+    );
+
+    it('emits "change" with an empty array when a multiselect has no selected options',
+        componentTest(() => TestComponent, `
+            <gtx-select multiple="true" [value]="value" (valueChange)="onChange($event)">
                 <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
             </gtx-select>
             <gtx-overlay-host></gtx-overlay-host>`,
@@ -310,33 +336,8 @@ describe('SelectComponent', () => {
             tick();
             clickSelectAndOpen(fixture);
 
-            let listItems = getListItems(fixture);
-            let onChange = instance.onChange = jasmine.createSpy('onChange');
-
-            listItems[0].click();
-            tick();
-            expect(onChange.calls.argsFor(0)[0]).toEqual(['Bar', 'Foo']);
-
-            listItems[2].click();
-            tick();
-            expect(onChange.calls.argsFor(1)[0]).toEqual(['Bar', 'Foo', 'Baz']);
-        },
-        ),
-    );
-
-    it('emits "change" with an empty array when a multiselect has no selected options',
-        componentTest(() => TestComponent, `
-                <gtx-select multiple="true" [value]="[value]" (valueChange)="onChange($event)">
-                    <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
-                </gtx-select>
-                <gtx-overlay-host></gtx-overlay-host>`,
-        (fixture, instance) => {
-            fixture.detectChanges();
-            tick();
-            clickSelectAndOpen(fixture);
-
-            let listItems = getListItems(fixture);
-            let onChange = instance.onChange = jasmine.createSpy('onChange');
+            const listItems = getListItems(fixture);
+            const onChange = instance.onChange = jasmine.createSpy('onChange');
 
             listItems[1].click();
             tick();
@@ -346,35 +347,53 @@ describe('SelectComponent', () => {
     );
 
     it('updates options when the gtx-options elements change',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.innerText.trim());
+            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
             instance.options.push('Quux');
             fixture.detectChanges();
+            tick(100);
+            await fixture.whenRenderingDone();
+            tick(100);
+            fixture.detectChanges();
+            await fixture.whenRenderingDone();
+            tick(100);
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
-            tick(1000);
         },
         ),
     );
 
     it('updates options when the gtx-options elements change asynchronously',
-        componentTest(() => TestComponent, (fixture, instance) => {
+        componentTest(() => TestComponent, async (fixture, instance) => {
             fixture.detectChanges();
             tick();
             clickSelectAndOpen(fixture);
-            const getOptionText = () => getListItems(fixture).map(el => el.innerText.trim());
+            const getOptionText = () => getListItems(fixture).map(el => el.textContent.trim());
             expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz']);
 
-            setTimeout(() => instance.options.push('Quux'), 500);
+            const tmp = new Promise<void>((r => {
+                setTimeout(() => {
+                    instance.options.push('Quux');
+                    fixture.detectChanges();
+                    fixture.whenRenderingDone().then(() => r());
+                }, 500);
+            }));
             tick(500);
 
             fixture.detectChanges();
-            expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
+            await fixture.whenRenderingDone();
+            await tmp;
             tick(1000);
+
+            fixture.detectChanges();
+            await fixture.whenRenderingDone();
+            tick(1000);
+
+            expect(getOptionText()).toEqual(['Foo', 'Bar', 'Baz', 'Quux']);
         },
         ),
     );
@@ -386,7 +405,7 @@ describe('SelectComponent', () => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Enter);
-                let optionsDropdown = fixture.debugElement.query(By.css('.select-options'));
+                const optionsDropdown = fixture.debugElement.query(By.css('.select-options'));
                 expect(optionsDropdown).toBeTruthy();
                 tick(1000);
             }),
@@ -397,7 +416,7 @@ describe('SelectComponent', () => {
                 fixture.detectChanges();
                 tick();
                 sendKeyDown(fixture, KeyCode.Space);
-                let optionsDropdown = fixture.debugElement.query(By.css('.select-options'));
+                const optionsDropdown = fixture.debugElement.query(By.css('.select-options'));
                 expect(optionsDropdown).toBeTruthy();
                 tick(1000);
             }),
@@ -579,7 +598,7 @@ describe('SelectComponent', () => {
                 tick();
                 clickSelectAndOpen(fixture);
 
-                let listItems = getListItems(fixture);
+                const listItems = getListItems(fixture);
 
                 listItems[0].click();
                 tick();
@@ -609,7 +628,7 @@ describe('SelectComponent', () => {
                 tick();
                 clickSelectAndOpen(fixture);
 
-                let listItems = getListItems(fixture);
+                const listItems = getListItems(fixture);
 
                 listItems[0].click();
                 tick();
@@ -639,8 +658,7 @@ describe('SelectComponent', () => {
                 tick();
                 clickSelectAndOpen(fixture);
 
-                let input: HTMLInputElement = fixture.nativeElement.querySelector('input.select-dropdown');
-                let selectInstance: Select = fixture.debugElement.query(By.directive(Select)).componentInstance;
+                const selectInstance: SelectComponent = fixture.debugElement.query(By.directive(SelectComponent)).componentInstance;
 
                 expect(instance.testForm.get('test')?.value).toBe('Bar');
                 expect(selectInstance.value).toBe('Bar');
@@ -667,7 +685,7 @@ describe('SelectComponent', () => {
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
-                let fakeInput: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+                const fakeInput: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
 
                 expect(instance.testForm.get('test')?.touched).toBe(false);
                 expect(instance.testForm.get('test')?.untouched).toBe(true);
@@ -693,7 +711,7 @@ describe('SelectComponent', () => {
             (fixture, instance) => {
                 fixture.detectChanges();
                 tick();
-                let fakeInput: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
+                const fakeInput: HTMLElement = fixture.debugElement.query(By.css('.view-value')).nativeElement;
 
                 expect(instance.testForm.get('test')?.disabled).toBe(false);
                 expect(fakeInput.getAttribute('disabled')).toBe(null);
@@ -734,11 +752,17 @@ describe('SelectComponent', () => {
                     </gtx-select>
                 </form>
                 <gtx-overlay-host></gtx-overlay-host>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 instance.testForm.reset({ test: 'Bar' }, { emitEvent: false });
+
                 fixture.detectChanges();
-                tick();
-                const displayedText: string = fixture.nativeElement.querySelector('.view-value').innerText;
+                tick(100);
+                await fixture.whenRenderingDone();
+                fixture.detectChanges();
+                tick(100);
+                await fixture.whenRenderingDone();
+
+                const displayedText: string = fixture.nativeElement.querySelector('.view-value').textContent;
                 expect(displayedText).toContain('Bar');
             },
             ),
@@ -755,11 +779,17 @@ describe('SelectComponent', () => {
                 </gtx-select>
             </form>
             <gtx-overlay-host></gtx-overlay-host>`,
-            (fixture, instance) => {
+            async (fixture, instance) => {
                 instance.testForm.reset({ test: 3 }, { emitEvent: false });
+
                 fixture.detectChanges();
-                tick();
-                const displayedText: string = fixture.nativeElement.querySelector('.view-value').innerText;
+                tick(100);
+                await fixture.whenRenderingDone();
+                fixture.detectChanges();
+                tick(100);
+                await fixture.whenRenderingDone();
+
+                const displayedText: string = fixture.nativeElement.querySelector('.view-value').textContent;
                 expect(displayedText).toContain('Three');
             },
             ),
@@ -841,9 +871,9 @@ describe('SelectComponent', () => {
 @Component({
     template: `
         <gtx-select
-            (blur)="onBlur($event)"
-            (change)="onChange($event)"
             [value]="value"
+            (blur)="onBlur($event)"
+            (valueChange)="onChange($event)"
         >
             <gtx-option *ngFor="let option of options" [value]="option">{{ option }}</gtx-option>
         </gtx-select>
@@ -852,7 +882,7 @@ describe('SelectComponent', () => {
 })
 class TestComponent {
 
-    value = 'Bar';
+    value: string | string[] = 'Bar';
     multiValue: string[] = ['Bar', 'Baz'];
     ngModelValue = 'Bar';
     placeholder = 'More...';
@@ -881,7 +911,7 @@ const getListItems = (fixture: ComponentFixture<TestComponent>): HTMLLIElement[]
  * Create an dispatch an 'input' event on the <input> element
  */
 function triggerEvent(el: HTMLElement, eventName: string): void {
-    let event: Event = document.createEvent('Event');
+    const event: Event = document.createEvent('Event');
     event.initEvent(eventName, true, true);
     el.dispatchEvent(event);
 }

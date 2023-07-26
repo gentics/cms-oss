@@ -68,5 +68,7 @@
 ></gtx-table>
 
 <ng-template #dateRenderer let-value="value">
-    {{ value | i18nDate }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nDate }}
+    </span>
 </ng-template>

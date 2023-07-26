@@ -1,3 +1,6 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable id-blacklist */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { TestBed } from '@angular/core/testing';
 import {
     CmsFormElement,
@@ -10,14 +13,13 @@ import {
     Form,
     FormBO,
 } from '@gentics/cms-models';
+import { cloneDeep } from 'lodash-es';
 import {
     FormEditorConfiguration,
     FormElementPropertyTypeConfiguration,
     FormElementPropertyValidatorConfiguration,
 } from '../../../common/models/form-editor-configuration';
-
 import { FormEditorMappingService } from './form-editor-mapping.service';
-import { cloneDeep } from 'lodash-es';
 
 describe('FormEditorMappingService', () => {
 
@@ -561,6 +563,8 @@ describe('FormEditorMappingService', () => {
             }, {
                 name: 'name5',
                 type: FormElementPropertyTypeConfiguration['SELECTABLE_OPTIONS'],
+                key_label_i18n_ui: undefined,
+                value_label_i18n_ui: undefined,
                 label_i18n_ui: {
                     en: 'Selectable Options',
                 },
@@ -611,6 +615,8 @@ describe('FormEditorMappingService', () => {
             }, {
                 name: 'name5',
                 type: FormElementPropertyTypeConfiguration['SELECTABLE_OPTIONS'],
+                key_label_i18n_ui: undefined,
+                value_label_i18n_ui: undefined,
                 label_i18n_ui: {
                     en: 'Selectable Options',
                 },
@@ -706,6 +712,8 @@ describe('FormEditorMappingService', () => {
                 de: 'Vorlage',
                 en: 'Template',
             },
+            mailsource_nodeid: undefined,
+            mailsource_pageid: undefined,
             elements: [],
             type: CmsFormType.GENERIC,
             templateContext: '',
@@ -1032,6 +1040,8 @@ describe('FormEditorMappingService', () => {
                 de: 'successurl_de',
             },
             successurl: 'successurl',
+            mailsource_nodeid: undefined,
+            mailsource_pageid: undefined,
             mailsubject_i18n: {
                 de: 'Betreff',
                 en: 'Subject',
@@ -1120,6 +1130,8 @@ describe('FormEditorMappingService', () => {
         }, {
             name: 'name5',
             type: CmsFormElementPropertyType['SELECTABLE_OPTIONS'],
+            key_label_i18n_ui: undefined,
+            value_label_i18n_ui: undefined,
             label_i18n_ui: {
                 en: 'Selectable Options',
             },
@@ -1206,6 +1218,8 @@ describe('FormEditorMappingService', () => {
         }, {
             name: 'name5',
             type: CmsFormElementPropertyType['SELECTABLE_OPTIONS'],
+            key_label_i18n_ui: undefined,
+            value_label_i18n_ui: undefined,
             label_i18n_ui: {
                 en: 'Selectable Options',
             },
@@ -1295,6 +1309,8 @@ describe('FormEditorMappingService', () => {
         }, {
             name: 'name5',
             type: CmsFormElementPropertyType['SELECTABLE_OPTIONS'],
+            key_label_i18n_ui: undefined,
+            value_label_i18n_ui: undefined,
             label_i18n_ui: {
                 en: 'Selectable Options',
             },
@@ -1397,6 +1413,8 @@ describe('FormEditorMappingService', () => {
         }, {
             name: 'name5',
             type: CmsFormElementPropertyType['SELECTABLE_OPTIONS'],
+            key_label_i18n_ui: undefined,
+            value_label_i18n_ui: undefined,
             label_i18n_ui: {
                 en: 'Selectable Options',
             },
@@ -1506,12 +1524,12 @@ describe('FormEditorMappingService', () => {
         type: 'elementUnknown',
         active: false,
         type_label_i18n_ui: {
-            en: `Unknown Type (elementUnknown)`,
-            de: `Unbekannter Typ (elementUnknown)`,
+            en: 'Unknown Type (elementUnknown)',
+            de: 'Unbekannter Typ (elementUnknown)',
         },
         description_i18n_ui: {
-            en: `An element of unknown type "elementUnknown". This element type is not present in the form editor configuration.`,
-            de: `Ein Element des unbekannten Typs "elementUnknown". Dieser Elementtyp ist nicht in der Form-Editor-Konfiguration vorhanden.`,
+            en: 'An element of unknown type "elementUnknown". This element type is not present in the form editor configuration.',
+            de: 'Ein Element des unbekannten Typs "elementUnknown". Dieser Elementtyp ist nicht in der Form-Editor-Konfiguration vorhanden.',
         },
         label_property_ui: undefined,
         isContainer: false,
@@ -1574,6 +1592,8 @@ describe('FormEditorMappingService', () => {
     const PROPERTY_WITH_TOP_LEVEL_NON_I18N_VALUE_BO: CmsFormElementPropertySelectableOptions = {
         name: 'name5',
         type: CmsFormElementPropertyType['SELECTABLE_OPTIONS'],
+        key_label_i18n_ui: undefined,
+        value_label_i18n_ui: undefined,
         label_i18n_ui: {
             en: 'Selectable Options',
         },

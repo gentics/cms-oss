@@ -77,15 +77,15 @@
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>
 
 <ng-template #crRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'contentRepository' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.contentRepositoryName || value }}</a>
@@ -94,7 +94,7 @@
 <ng-template #masterRenderer let-value="value" let-row="row">
     <a
         *ngIf="value > 0 && value !== row.item.id"
-        class="gtx-entity-grid-link"
+        class="gtx-table-cell-link"
         [routerLink]="'node' | gtxEntityDetailRouterLink:value"
         (click)="cancelEvent($event)"
     >{{ row.item?.masterName || value }}</a>

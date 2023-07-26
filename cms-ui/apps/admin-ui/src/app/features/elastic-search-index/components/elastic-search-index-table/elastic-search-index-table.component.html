@@ -67,11 +67,13 @@
 
 <ng-template #boolIconRenderer let-value="value">
     <icon
-        class="gtx-entity-grid-cell-icon"
-        [ngClass]="'gtx-entity-grid-cell-icon-' + value"
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
     >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>
 
 <ng-template #numberRenderer let-value="value">
-    {{ value | i18nNumber }}
+    <span class="gtx-table-cell-text">
+        {{ value | i18nNumber }}
+    </span>
 </ng-template>

@@ -571,7 +571,14 @@
             "main": "libs/cms-components/src/test.ts",
             "polyfills": "libs/cms-components/src/polyfills.ts",
             "tsConfig": "libs/cms-components/tsconfig.spec.json",
-            "karmaConfig": "libs/cms-components/karma.conf.js"
+            "karmaConfig": "libs/cms-components/karma.conf.js",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "libs/cms-components/src/styles",
+                "libs",
+                "node_modules"
+              ]
+            }
           }
         }
       },
@@ -656,7 +663,14 @@
             "main": "libs/form-generator/src/test.ts",
             "polyfills": "libs/form-generator/src/polyfills.ts",
             "tsConfig": "libs/form-generator/tsconfig.spec.json",
-            "karmaConfig": "libs/form-generator/karma.conf.js"
+            "karmaConfig": "libs/form-generator/karma.conf.js",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "libs/form-generator/src/styles",
+                "libs",
+                "node_modules"
+              ]
+            }
           }
         }
       },

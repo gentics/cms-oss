@@ -6,6 +6,7 @@
         [checked]="checked"
         [disabled]="disabled"
         [required]="required"
+        [value]="value || ''"
         [class.tabbed]="tabbedFocus"
         tabindex="0"
 
@@ -14,5 +15,5 @@
         (change)="onInputChecked($event, input)"
         #input
     />
-    <label [attr.for]="id" (click)="input.click()">{{ label }}</label>
+    <label [attr.for]="id || UNIQUE_ID" (click)="input.click()">{{ label }}</label>
 </div>

@@ -143,19 +143,18 @@ export class SelectComponent
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
-        this.subscriptions.push(
-            this.selectOptions.changes.subscribe(() => {
+        this.subscriptions.push(this.selectOptions.changes.subscribe(() => {
+            setTimeout(() => {
                 this.writeValue(this.value);
                 this.optionGroups = this.buildOptionGroups();
-                this.selectedOptions = this.getInitiallySelectedOptions();
-                this.updateViewValue();
-            }),
-        );
+                this.changeDetector.markForCheck();
+            });
+        }));
+        this.selectOptions.notifyOnChanges();
     }
 
     ngAfterContentInit(): void {
         this.optionGroups = this.buildOptionGroups();
-        this.selectedOptions = this.getInitiallySelectedOptions();
         this.updateViewValue();
     }
 
@@ -165,7 +164,7 @@ export class SelectComponent
     @IncludeToDocs()
     selectItem(groupIndex: number, optionIndex: number): void {
         const option = this.optionGroups[groupIndex] && this.optionGroups[groupIndex].options[optionIndex];
-        if (!this.optionGroups[groupIndex].disabled && option && !option.disabled) {
+        if ((this.optionGroups[groupIndex] && !this.optionGroups[groupIndex].disabled) && option && !option.disabled) {
             this.toggleSelectedOption(option);
             const selectedValues = this.selectedOptions.map(o => o.value);
             this.triggerChange(this.multiple ? selectedValues : selectedValues[0]);
@@ -375,27 +374,6 @@ export class SelectComponent
             });
         }
         return groups;
-    }
-
-    /**
-     * Select any options which match the value passed in via the `value` attribute.
-     */
-    private getInitiallySelectedOptions(): SelectOptionDirective[] {
-        let selectedOptions: SelectOptionDirective[] = [];
-        const flatOptionsList = this.optionGroups.reduce(
-            (options, group) => options.concat(group.options), []);
-
-        if (this.value !== undefined) {
-            if (this.multiple) {
-                if (this.value instanceof Array) {
-                    selectedOptions = flatOptionsList.filter(o => this.valueArray.includes(o.value));
-                }
-            } else {
-                selectedOptions = flatOptionsList.filter(o => this.value === o.value) || [];
-                return flatOptionsList.filter(o => this.value === o.value) || [];
-            }
-        }
-        return selectedOptions;
     }
 
     /**

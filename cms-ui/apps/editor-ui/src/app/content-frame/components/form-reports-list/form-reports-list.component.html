@@ -91,15 +91,15 @@
 
             <table
                 *ngIf="(formElementLabelPropertyI18nValues$ | async) as formElementLabelPropertyI18nValues"
-                class="data-table flex-table"
+                class="data-table"
             >
-                <tbody>
+                <thead>
                     <tr>
-                        <th class="icon-checkbox fixed left">
+                        <th class="icon-checkbox">
                             <icon-checkbox
                                 [selected]="allSelected"
-                                (change)="toggleAllSelect()"
                                 [icon]="icon"
+                                (change)="toggleAllSelect()"
                             ></icon-checkbox>
                         </th>
 
@@ -112,28 +112,44 @@
                             </th>
                         </ng-container>
 
-                        <th class="delete-icon fixed right">
-                            <i [class.disabled]="isNothingSelected()" (click)="deleteMultipleReports()" class="material-icons invalid">delete</i>
+                        <th class="delete-icon">
+                            <i
+                                class="material-icons invalid"
+                                [class.disabled]="isNothingSelected()"
+                                (click)="deleteMultipleReports()"
+                            >delete</i>
                         </th>
                     </tr>
+                </thead>
 
+                <tbody>
                     <tr *ngFor="let result of result?.entries | paginate: paginationConfig; trackBy: identify; let i = index">
-                        <th class="icon-checkbox fixed left">
+                        <td class="icon-checkbox fixed sticky-left">
                             <icon-checkbox
-                                [selected]="selected[i] === null ? false : true"
-                                (change)="changeSelection(i)"
+                                [selected]="selected[i] != null"
                                 [icon]="icon"
+                                (change)="changeSelection(i)"
                             ></icon-checkbox>
-                        </th>
+                        </td>
+
                         <td *ngFor="let key of entryKeys; let j = index">
                             <ng-container *ngIf="entryValues[i]">
-                                <a *ngIf="isFile(entryValues[i][j])" [href]="getFileHref(entryValues[i][j], result)" download>
+                                <a
+                                    *ngIf="isFile(entryValues[i][j]); else regularValue"
+                                    [href]="getFileHref(entryValues[i][j], result)"
+                                    download
+                                >
                                     <span>{{ getEntryValue(entryValues[i][j]) }}</span>
                                 </a>
-                                <span *ngIf="!isFile(entryValues[i][j])">{{ getEntryValue(entryValues[i][j]) }}</span>
+                                <ng-template #regularValue>
+                                    <span>{{ getEntryValue(entryValues[i][j]) }}</span>
+                                </ng-template>
                             </ng-container>
                         </td>
-                        <td class="delete-icon fixed right"><i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i></td>
+
+                        <td class="delete-icon fixed sticky-right">
+                            <i (click)="deleteSingleReport(i)" class="material-icons invalid">delete</i>
+                        </td>
                     </tr>
                 </tbody>
             </table>

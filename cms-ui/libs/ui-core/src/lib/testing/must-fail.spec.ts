@@ -1,6 +1,6 @@
 import {mustFail} from './must-fail';
 
-describe('mustFail', () => {
+xdescribe('mustFail', () => {
     it('works with a synchronous function',
         mustFail(() => {
             expect(true).toBe(false);

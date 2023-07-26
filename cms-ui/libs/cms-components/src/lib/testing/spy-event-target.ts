@@ -62,9 +62,9 @@ export class SpyEventTarget implements EventTarget {
     }
 
     constructor(public name: string = '') {
-        spyOn(this, 'addEventListener').and.callThrough();
-        spyOn(this, 'dispatchEvent').and.callThrough();
-        spyOn(this, 'removeEventListener').and.callThrough();
+        spyOn(this, 'addEventListener' as any).and.callThrough();
+        spyOn(this, 'dispatchEvent' as any).and.callThrough();
+        spyOn(this, 'removeEventListener' as any).and.callThrough();
     }
 
     addEventListener(type: string, listener?: any, useCapture: boolean = false): void {
@@ -128,7 +128,7 @@ export class SpyEventTarget implements EventTarget {
 
         // Some properties of the Event prototype are {writable: false} -> defineProperty.
         // tslint:disable: forin
-        for (let prop in properties) {
+        for (const prop in properties) {
             Object.defineProperty(eventData, prop, {
                 configurable: true,
                 enumerable: true,

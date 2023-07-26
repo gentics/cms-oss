@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { DropdownTriggerDirective } from '../../directives/dropdown-trigger/dropdown-trigger.directive';
-import { Icon } from '../../directives/icon/icon.directive';
+import { IconDirective } from '../../directives/icon/icon.directive';
 import { ConfigService, defaultConfig } from '../../module.config';
 import { OverlayHostService } from '../../providers/overlay-host/overlay-host.service';
 import { componentTest } from '../../testing';
@@ -39,7 +39,7 @@ describe('SplitButtonComponent', () => {
                 DropdownItemComponent,
                 DropdownListComponent,
                 DropdownTriggerDirective,
-                Icon,
+                IconDirective,
                 OverlayHostComponent,
                 ScrollMaskComponent,
                 SplitButtonComponent,

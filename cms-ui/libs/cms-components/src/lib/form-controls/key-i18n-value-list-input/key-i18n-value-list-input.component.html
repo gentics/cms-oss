@@ -21,14 +21,14 @@
     </div>
 
     <gtx-sortable-list (dragEnd)="sortList($event)">
-        <gtx-sortable-item *ngFor="let control of i18nArray.controls; let index = index; trackBy: identify">
+        <gtx-sortable-item *ngFor="let control of i18nArray.controls; let index = index">
             <gtx-contents-list-item>
-                <div class="list-entry-inputs" [formGroup]="control">
+                <div class="list-entry-inputs" [formGroup]="i18nArray.at(index)">
                     <gtx-input
                         [formControlName]="'key'"
                         [required]="true"
-                        [class.duplicateKey]="duplicateKeys.includes(control.value?.key)"
-                        (blur)="_onTouched()"
+                        [class.duplicateKey]="duplicateKeys | gtxIncludes:i18nArray.at(index)?.value?.key"
+                        (blur)="cvaTouch()"
                     ></gtx-input>
 
                     <gtx-i18n-input
@@ -36,7 +36,7 @@
                         [required]="true"
                         [language]="language"
                         [availableLanguages]="availableLanguages"
-                        (blur)="_onTouched()"
+                        (blur)="cvaTouch()"
                     ></gtx-i18n-input>
                 </div>
 

@@ -118,13 +118,11 @@
                             <icon>{{ iconForItemType(item.type) }}</icon>
                         </span>
 
-                        <span class="item-path">
-                            <ng-container *ngIf="item.type !== 'folder'; else folderPath">
-                                {{ item.path || '' }}{{ item.name }}
-                            </ng-container>
-                            <ng-template #folderPath>
-                                {{ item.path }}
-                            </ng-template>
+                        <span class="item-path" [ngSwitch]="item.type">
+                            <ng-container *ngSwitchCase="'folder'">{{ item.path }}</ng-container>
+                            <ng-container *ngSwitchCase="'channel'">{{ item.name }}</ng-container>
+                            <ng-container *ngSwitchCase="'node'">{{ item.name }}</ng-container>
+                            <ng-container *ngSwitchDefault>{{ item.path || '' }}{{ item.name }}</ng-container>
                         </span>
                     </ng-template>
                 </sortable-array-list>

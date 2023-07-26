@@ -69,13 +69,19 @@
 ></gtx-table>
 
 <ng-template #groupRenderer let-row="row">
-    <ng-container *ngFor="let group of row.item.groups; last as last">
-        <ng-template #groupNameTemplate>{{ group.name }}</ng-template>
-        <a
-            *ngIf="linkGroups; else groupNameTemplate"
-            class="gtx-entity-grid-link group-link"
-            [routerLink]="group | gtxEntityDetailRouterLink"
-            (click)="cancelEvent($event)"
-        >{{ group.name }}</a>{{ !last ? ', ' : '' }}
-    </ng-container>
+    <div class="gtx-table-cell-text">
+        <ng-container *ngFor="let group of row.item.groups; last as last">
+            <ng-template #groupNameTemplate>
+                <span class="gtx-table-cell-text">
+                    {{ group.name }}
+                </span>
+            </ng-template>
+            <a
+                *ngIf="linkGroups; else groupNameTemplate"
+                class="gtx-entity-grid-link group-link"
+                [routerLink]="group | gtxEntityDetailRouterLink"
+                (click)="cancelEvent($event)"
+            >{{ group.name }}</a>{{ !last ? ',&nbsp;' : '' }}
+        </ng-container>
+    </div>
 </ng-template>

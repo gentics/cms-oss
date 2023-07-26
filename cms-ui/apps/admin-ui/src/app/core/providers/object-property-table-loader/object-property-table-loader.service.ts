@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../entity-manager';
-import { ObjectPropertyOperations } from '../operations';
+import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 
 export interface ObjectPropertyTableLoaderOptions {
     packageName?: string;
@@ -21,7 +21,7 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: ObjectPropertyOperations,
+        protected handler: ObjectPropertyHandlerService,
     ) {
         super(
             'objectProperty',
@@ -35,7 +35,7 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
     }
 
     public deleteEntity(entityId: string): Promise<void> {
-        return this.operations.delete(entityId).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected loadEntities(
@@ -75,7 +75,7 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
             ...property,
             [BO_ID]: String(property.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: property.name,
+            [BO_DISPLAY_NAME]: this.handler.displayName(property),
         };
     }
 

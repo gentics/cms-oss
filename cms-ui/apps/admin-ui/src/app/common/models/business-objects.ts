@@ -1,4 +1,5 @@
 import {
+    ActionLogEntry,
     ConstructCategory,
     ContentPackage,
     ContentRepository,
@@ -7,35 +8,33 @@ import {
     DataSourceEntry,
     DirtQueueItem,
     ElasticSearchIndex,
+    File,
     Folder,
+    Form,
     GcmsPermission,
     Group,
+    Image,
     IndexByKey,
     Language,
-    ActionLogEntry,
     Node,
+    ObjectProperty,
+    ObjectPropertyCategory,
+    Package,
+    Page,
     PermissionInfo,
     PermissionsSet,
     Raw,
     Role,
-    TagmapEntry,
+    Schedule,
+    ScheduleExecution,
+    ScheduleTask,
+    TagStatus,
     TagType,
-    User,
-    ObjectProperty,
-    ObjectPropertyCategory,
-    Package,
+    TagmapEntry,
     Template,
     TemplateTag,
-    TagStatus,
-    ScheduleExecution,
-    Schedule,
-    ScheduleTask,
-    Page,
-    File,
-    Image,
-    Form,
+    User,
 } from '@gentics/cms-models';
-import { TableRow } from '@gentics/ui-core';
 
 /** Symbol to access the permissions of an object */
 export const BO_PERMISSIONS = Symbol('bo-permissions');
@@ -48,12 +47,6 @@ export const BO_ORIGINAL_SORT_ORDER = Symbol('bo-original-order');
 export const BO_NEW_SORT_ORDER = Symbol('bo-new-order');
 
 export const BO_NODE_ID = Symbol('bo-node-id');
-
-export interface TableSortEvent<T> {
-    row: TableRow<T>;
-    from: number;
-    to: number;
-}
 
 /**
  * A Business-Object is a regular CMS object with additional properties applied.

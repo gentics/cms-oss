@@ -2,6 +2,7 @@ import { ContentRepositoryDetailTabs } from '@admin-ui/common';
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ContentRepositoryDetailComponent, ContentRepositoryMasterComponent } from './components';
 import { CanActivateContentRepositoryGuard } from './providers';
@@ -32,7 +33,7 @@ export const CONTENT_REPOSIROTY_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateContentRepositoryGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

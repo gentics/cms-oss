@@ -3,6 +3,10 @@ export enum ConstructDetailTabs {
     PARTS = 'parts',
 }
 
+export enum ConstructCategoryDetailTabs {
+    PROPERTIES = 'properties',
+}
+
 export enum ContentRepositoryDetailTabs {
     PROPERTIES = 'properties',
     TAGMAP = 'tagmap',
@@ -57,6 +61,14 @@ export enum NodeDetailTabs {
     FEATURES = 'features',
     LANGUAGES = 'languages',
     PACKAGES = 'packages',
+}
+
+export enum ObjectPropertyDetailTabs {
+    PROPERTIES = 'properties',
+}
+
+export enum ObjectPropertyCategoryDetailTabs {
+    PROPERTIES = 'properties',
 }
 
 export enum RoleDetailTabs {

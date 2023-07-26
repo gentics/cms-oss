@@ -2,6 +2,7 @@ import { DataSourceDetailTabs } from '@admin-ui/common';
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { DataSourceDetailComponent, DataSourceMasterComponent } from './components';
 import { CanActivateDataSourceGuard } from './providers';
@@ -32,7 +33,7 @@ export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateDataSourceGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

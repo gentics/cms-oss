@@ -1,6 +1,7 @@
 import { AdminUIEntityDetailRoutes, DevtoolPackageDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { PackageDetailComponent, PackageMasterComponent } from './components';
 import { CanActivatePackageGuard } from './providers';
@@ -31,7 +32,7 @@ export const PACKAGE_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivatePackageGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

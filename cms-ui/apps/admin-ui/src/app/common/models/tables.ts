@@ -26,6 +26,12 @@ export interface TableLoadStartEvent<A = never> {
 
 export interface TableLoadEndEvent<T, A = never> extends TableLoadResponse<T>, TableLoadStartEvent<A> { }
 
+export interface TableSortEvent<T> {
+    row: TableRow<T>;
+    from: number;
+    to: number;
+}
+
 export interface EntityPageResponse<T> {
     entities: T[];
     totalCount: number;

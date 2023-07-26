@@ -1,6 +1,5 @@
-import { FormTabHandle, ObservableStopper } from '@admin-ui/common';
+import { FormTabHandle, ObservableStopper, OnDiscardChanges } from '@admin-ui/common';
 import { ExtendedEntityOperationsBase } from '@admin-ui/core';
-import { OnDiscardChanges } from '@admin-ui/core/providers/guards/discard-changes';
 import { AppStateService, SelectState, SetUIFocusEntity, UIStateModel } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -124,7 +123,7 @@ export abstract class BaseDetailComponent<
     /**
      * Try getting entity from state, otherwise fetch
      */
-    protected getEntity(entityId: number): Observable<T_NORM | void> {
+    protected getEntity(entityId: number): Observable<T_NORM | void> {
         return this.entityData.getEntityFromState(entityId).pipe(
             // if entity doesn't exist, close details and split view
             catchError(() => this.detailsClose()),

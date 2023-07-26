@@ -5,7 +5,7 @@ import {
     I18nNotificationService,
     I18nService,
     LocalTranslateLoader,
-    LoggingHelperService
+    LoggingHelperService,
 } from '@admin-ui/core';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
@@ -13,7 +13,7 @@ import { ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@a
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule } from '@gentics/cms-components';
-import { GcmsRestClientsAngularModule, GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID } from '@gentics/cms-rest-clients-angular';
+import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HotkeyModule } from 'angular2-hotkeys';
@@ -51,6 +51,7 @@ import {
     DataSourceOperations,
     DataSourceTableLoaderService,
     DevToolPackageTableLoaderService,
+    EditorCloserService,
     EditorTabTrackerService,
     ElasticSearchIndexOperations,
     FeatureOperations,
@@ -67,8 +68,8 @@ import {
     MarkupLanguageOperations,
     MessageService,
     NodeTableLoaderService,
-    ObjectPropertyCategoryOperations,
-    ObjectPropertyOperations,
+    ObjectPropertyCategoryHandlerService,
+    ObjectPropertyHandlerService,
     ObjectPropertyTableLoaderService,
     PackageEntitiesManagerService,
     PackageOperations,
@@ -76,6 +77,7 @@ import {
     PermissionsService,
     PermissionsTrableLoaderService,
     RoleOperations,
+    RouteEntityResolverService,
     ScheduleExecutionOperations,
     ScheduleOperations,
     ScheduleTaskOperations,
@@ -143,8 +145,6 @@ const OPERATIONS: any[] = [
     LanguageOperations,
     MarkupLanguageOperations,
     NodeOperations,
-    ObjectPropertyCategoryOperations,
-    ObjectPropertyOperations,
     PackageEntitiesManagerService,
     PackageOperations,
     PageOperations,
@@ -171,6 +171,7 @@ const PROVIDERS: any[] = [
     DebugToolService,
     DevToolPackageTableLoaderService,
     DiscardChangesGuard,
+    EditorCloserService,
     EditorTabTrackerService,
     EditorUiLocalStorageService,
     EntityManagerService,
@@ -186,10 +187,13 @@ const PROVIDERS: any[] = [
     MaintenanceModeService,
     MessageService,
     NodeTableLoaderService,
+    ObjectPropertyHandlerService,
+    ObjectPropertyCategoryHandlerService,
     ObjectPropertyTableLoaderService,
     PermissionsGuard,
     PermissionsService,
     PermissionsTrableLoaderService,
+    RouteEntityResolverService,
     ServerStorageService,
     TagMapEntryTableLoaderService,
     TemplateTableLoaderService,

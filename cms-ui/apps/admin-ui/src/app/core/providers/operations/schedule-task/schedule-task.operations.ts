@@ -7,6 +7,7 @@ import {
     Raw,
     ScheduleTask,
     ScheduleTaskBO,
+    ScheduleTaskCreateRequest,
     ScheduleTaskListOptions,
     ScheduleTaskSaveRequest,
     SingleInstancePermissionType,
@@ -59,7 +60,7 @@ export class ScheduleTaskOperations extends ExtendedEntityOperationsBase<'schedu
         );
     }
 
-    create(body: ScheduleTaskSaveRequest, notification: boolean = true): Observable<ScheduleTaskBO<Raw>> {
+    create(body: ScheduleTaskCreateRequest, notification: boolean = true): Observable<ScheduleTaskBO<Raw>> {
         return this.api.scheduler.createTask(body).pipe(
             map(res => this.mapToBusinessObject(res.item, {
                 [SingleInstancePermissionType.VIEW]: true,

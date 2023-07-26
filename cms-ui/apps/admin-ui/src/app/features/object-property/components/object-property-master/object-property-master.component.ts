@@ -1,10 +1,10 @@
-import { AdminUIEntityDetailRoutes, ObjectPropertyBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
 import { ObjectPropertyTableLoaderService } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NormalizableEntityType, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
+import { ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { CreateObjectPropertyModalComponent } from '../create-object-property-modal/create-object-property-modal.component';
 
@@ -16,10 +16,9 @@ import { CreateObjectPropertyModalComponent } from '../create-object-property-mo
 })
 export class ObjectPropertyMasterComponent extends BaseTableMasterComponent<ObjectProperty, ObjectPropertyBO> {
 
-    // tslint:disable-next-line: variable-name
-    readonly ObjectPropertyMasterTabs = ObjectPropertiesObjectType;
+    public readonly ObjectPropertyMasterTabs = ObjectPropertiesObjectType;
 
-    protected entityIdentifier: NormalizableEntityType = 'objectProperty';
+    protected entityIdentifier = EditableEntity.OBJECT_PROPERTY;
     protected detailPath = AdminUIEntityDetailRoutes.OBJECT_PROPERTY;
 
     constructor(

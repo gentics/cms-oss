@@ -1,9 +1,9 @@
-import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BusinessObject } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BusinessObject, EditableEntity } from '@admin-ui/common';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NormalizableEntityType } from '@gentics/cms-models';
-import { TableRow } from '@gentics/ui-core';
+import { TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
@@ -13,7 +13,7 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
 
     public activeEntity: string;
 
-    protected abstract entityIdentifier: NormalizableEntityType;
+    protected abstract entityIdentifier: NormalizableEntityType | EditableEntity;
     protected detailPath?: AdminUIEntityDetailRoutes;
 
     protected subscriptions: Subscription[] = [];
@@ -49,15 +49,7 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
     }
 
     protected async navigateToEntityDetails(entityId: string | number): Promise<void> {
-        const fullPath = [];
-        this.route.pathFromRoot.forEach(segment => {
-            const snapshot = segment.snapshot;
-            if (snapshot.outlet === 'primary') {
-                snapshot.url.forEach(part => fullPath.push(part));
-            }
-        });
-        const urlSegments = fullPath.map(part => part.path).filter(str => str != null && str.length > 0);
-        const fullUrl = `/${urlSegments.join('/')}`;
+        const fullUrl = getFullPrimaryPath(this.route);
 
         await this.router.navigate(
             [fullUrl, { outlets: { detail: [this.detailPath || this.entityIdentifier, entityId] } }],

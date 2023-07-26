@@ -29,11 +29,11 @@ export enum AdminUIModuleRoutes {
 export enum AdminUIEntityDetailRoutes {
     CONSTRUCT = 'construct',
     CONSTRUCT_CATEGORY = 'construct-category',
-    CONTENT_PACKAGE = 'package',
+    CONTENT_PACKAGE = 'content-package',
     CONTENT_REPOSITORY = 'content-repository',
     CR_FRAGMENT = 'cr-fragment',
     DATA_SOURCE = 'data-source',
-    DEVTOOL_PACKAGE = 'package',
+    DEVTOOL_PACKAGE = 'devtool-package',
     FOLDER = 'folder',
     GROUP = 'group',
     LANGUAGE = 'language',

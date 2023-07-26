@@ -1,12 +1,22 @@
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common';
-import { BreadcrumbResolver } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import {
-    ObjectPropertyCategoryDetailComponent,
-    ObjectPropertyDetailComponent,
+    AdminUIEntityDetailRoutes,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ObjectPropertyCategoryDetailTabs,
+    ObjectPropertyDetailTabs,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_IS_EDITOR_ROUTE,
+    ROUTE_PARAM_ENTITY_ID,
+} from '@admin-ui/common';
+import { EDITOR_TAB, RouteEntityResolverService } from '@admin-ui/core';
+import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
+import {
+    ObjectPropertyCategoryEditorComponent,
+    ObjectPropertyEditorComponent,
     ObjectPropertyModuleMasterComponent,
 } from './components';
-import { CanActivateObjectPropertyCategoryGuard, CanActivateObjectPropertyGuard } from './providers';
 
 export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -21,16 +31,22 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: ':id',
-                component: ObjectPropertyDetailComponent,
+                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
+                component: ObjectPropertyEditorComponent,
                 data: {
                     typePermissions: [],
+                    [ROUTE_IS_EDITOR_ROUTE]: true,
+                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.OBJECT_PROPERTY,
                 },
-                canActivate: [CanActivateObjectPropertyGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
-                    breadcrumb: BreadcrumbResolver,
+                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+            },
+            {
+                path: `:${ROUTE_PARAM_ENTITY_ID}`,
+                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ObjectPropertyDetailTabs.PROPERTIES}`,
+                pathMatch: 'full',
             },
         ],
     },
@@ -42,16 +58,22 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: ':id',
-                component: ObjectPropertyCategoryDetailComponent,
+                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
+                component: ObjectPropertyCategoryEditorComponent,
                 data: {
                     typePermissions: [],
+                    [ROUTE_IS_EDITOR_ROUTE]: true,
+                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.OBJECT_PROPERTY_CATEGORY,
                 },
-                canActivate: [CanActivateObjectPropertyCategoryGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
-                    breadcrumb: BreadcrumbResolver,
+                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+            },
+            {
+                path: `:${ROUTE_PARAM_ENTITY_ID}`,
+                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ObjectPropertyCategoryDetailTabs.PROPERTIES}`,
+                pathMatch: 'full',
             },
         ],
     },

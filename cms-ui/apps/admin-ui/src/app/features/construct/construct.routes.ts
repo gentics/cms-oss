@@ -1,6 +1,7 @@
 import { AdminUIEntityDetailRoutes, ConstructDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     ConstructCategoryDetailComponent,
@@ -47,7 +48,7 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateConstructCategoryGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

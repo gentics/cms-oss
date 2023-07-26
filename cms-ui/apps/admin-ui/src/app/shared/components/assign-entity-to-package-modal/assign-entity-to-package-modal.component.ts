@@ -4,9 +4,9 @@ import {
     ContentRepositoryFragmentOperations,
     ContentRepositoryOperations,
     DataSourceOperations,
-    ObjectPropertyOperations,
+    ObjectPropertyHandlerService,
     PackageOperations,
-    TemplateOperations,
+    TemplateOperations
 } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -40,7 +40,7 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
         private crOperations: ContentRepositoryOperations,
         private crFragmentOperations: ContentRepositoryFragmentOperations,
         private dataSourceOperations: DataSourceOperations,
-        private objectPropertyOperations: ObjectPropertyOperations,
+        private objectPropertyHandler: ObjectPropertyHandlerService,
         private templateOperations: TemplateOperations,
     ) {
         super();
@@ -69,8 +69,8 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
                 );
                 break;
             case 'objectProperty':
-                this.packageChildEntityIds$ = this.objectPropertyOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => entity.id)),
+                this.packageChildEntityIds$ = this.objectPropertyHandler.listFromDevtoolMapped(this.packageId).pipe(
+                    map(res => res.items.map(entity => `${entity.id}`)),
                 );
                 break;
             case 'template':

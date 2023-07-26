@@ -1,5 +1,5 @@
 import { ObjectPropertyBO } from '@admin-ui/common';
-import { ObjectPropertyOperations } from '@admin-ui/core';
+import { ObjectPropertyHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { EntityIdType, Node, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -25,13 +25,14 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        private objectPropertyOperations: ObjectPropertyOperations,
+        private handler: ObjectPropertyHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.objectPropertyOperations.getLinkedNodes(this.objectProperty.globalId).pipe(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.handler.getLinkedNodes(this.objectProperty.globalId).pipe(
             delay(0),
         ).subscribe((res: Node<Raw>[]) => {
             this.nodeIdsSelected = res.map(n => n.id);
@@ -44,7 +45,7 @@ export class AssignNodeRestrictionsToObjectPropertiesModalComponent extends Base
      * If user clicks "assign"
      */
     buttonAssignNodeRestrictonsClicked(): void {
-        this.objectPropertyOperations.changeNodeRestrictions(this.objectProperty.globalId, this.nodeIdsSelected, this.nodeIdsInitial)
+        this.handler.changeNodeRestrictions(this.objectProperty.globalId, this.nodeIdsSelected, this.nodeIdsInitial)
             .toPromise()
             .then(() => {
                 this.closeFn();

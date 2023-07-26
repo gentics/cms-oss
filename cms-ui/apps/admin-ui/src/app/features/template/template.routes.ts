@@ -2,6 +2,7 @@ import { TemplateDetailTabs } from '@admin-ui/common';
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { TemplateDetailComponent, TemplateMasterComponent } from './components';
 import { CanActivateTemplateGuard } from './providers';
@@ -35,7 +36,7 @@ export const TEMPLATE_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateTemplateGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

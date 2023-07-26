@@ -1,14 +1,12 @@
 import { RouteData } from '@admin-ui/common/routing/gcms-admin-ui-route';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
+import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
-
-import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { I18nNotificationService } from '../../i18n-notification';
 import { PermissionsService, RequiredTypePermissions } from '../../permissions';
 
-// tslint:disable: jsdoc-format
 /**
  * A guard to prevent users from navigating to routes, for which they do not have permissions.
  *
@@ -33,41 +31,43 @@ import { PermissionsService, RequiredTypePermissions } from '../../permissions';
     }
    ```
  */
-// tslint:enable: jsdoc-format
 @Injectable()
-export class PermissionsGuard  {
+export class PermissionsGuard {
 
     constructor(
         private permissionsService: PermissionsService,
         private router: Router,
+        private route: ActivatedRoute,
         private i18nNotification: I18nNotificationService,
     ) {}
 
-    canActivate(route: ActivatedRouteSnapshot): Observable<boolean> {
-        return this._canActivate(route);
+    canActivate(): Observable<boolean> {
+        return this.checkUserPermissions(this.route.snapshot);
     }
 
     canActivateChild(route: ActivatedRouteSnapshot): Observable<boolean> {
-        return this._canActivate(route);
+        return this.checkUserPermissions(route);
     }
 
     /**
      * General canActivate method fitting both guard interface implementations.
      */
-    private _canActivate(route: ActivatedRouteSnapshot): Observable<boolean> {
-        const reqPermissions = this.getRequiredPermissions(route);
+    private checkUserPermissions(routeSnapshot: ActivatedRouteSnapshot): Observable<boolean> {
+        const reqPermissions = this.getRequiredPermissions(routeSnapshot);
+
         return this.permissionsService.checkPermissions(reqPermissions).pipe(
             tap(permissionsGranted => {
-                if (!permissionsGranted) {
-                    // if user has not required permissions, cancel routing and display notification
-                    this.i18nNotification.show({message: 'common.no_permissions_for_module', type: 'alert'});
-                    // if user has no permissions for this application's modules, redirect to unauthorized page
-                    this.userCanAccessDashboard().pipe(first()).subscribe(userCanAccessDashboard => {
-                        if (!userCanAccessDashboard) {
-                            this.router.navigateByUrl( 'unauthorized' );
-                        }
-                    });
+                if (permissionsGranted) {
+                    return;
                 }
+                // if user has not required permissions, cancel routing and display notification
+                this.i18nNotification.show({message: 'common.no_permissions_for_module', type: 'alert'});
+                // if user has no permissions for this application's modules, redirect to unauthorized page
+                this.userCanAccessDashboard().pipe(first()).subscribe(userCanAccessDashboard => {
+                    if (!userCanAccessDashboard) {
+                        this.router.navigateByUrl('unauthorized');
+                    }
+                });
             }),
             take(1),
         );

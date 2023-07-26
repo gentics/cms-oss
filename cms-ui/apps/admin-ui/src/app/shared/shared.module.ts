@@ -15,6 +15,7 @@ import {
     AssignPackagesToNodeModalComponent,
     AssignUserToGroupsModalComponent,
     BooleanIconComponent,
+    CRFragmentTableComponent,
     ConfirmDeleteModalComponent,
     ConfirmRemoveUserFromGroupModalComponent,
     ConstructTableComponent,
@@ -26,7 +27,6 @@ import {
     CreateLanguageModalComponent,
     CreateUpdateTagmapEntryModalComponent,
     CreateUserModalComponent,
-    CRFragmentTableComponent,
     DataSourceEntryTableComponent,
     DataSourceTableComponent,
     DevToolPackageTableComponent,
@@ -38,6 +38,7 @@ import {
     GenericRouterOutletComponent,
     GroupTableComponent,
     GroupTrableComponent,
+    I18nPanelGroupComponent,
     IconCheckboxComponent,
     IconComponent,
     LanguageTableComponent,
@@ -67,7 +68,6 @@ import {
     WidgetPublishingProcessTotalComponent,
     WizardComponent,
     WizardModalComponent,
-    I18nPanelGroupComponent,
 } from './components';
 import { ContentItemTrableComponent } from './components/content-item-trable/content-item-trable.component';
 import {
@@ -89,7 +89,6 @@ import {
     ContentPackageDataService,
     ContentRepositoryDataService,
     ContentRepositoryFragmentDataService,
-    ContentRepositoryTagmapEntryDataService,
     ContextMenuService,
     DataSourceConstructDataService,
     DataSourceDataService,
@@ -104,8 +103,6 @@ import {
     NodeDataService,
     NodePackageDataService,
     NotificationService,
-    ObjectPropertyCategoryDataService,
-    ObjectPropertyDataService,
     PackageDataService,
     RoleDataService,
     ScheduleDataService,
@@ -117,7 +114,7 @@ import {
     TemplateTagStatusDataService,
     UserDataService,
     UserGroupDataService,
-    WizardService,
+    WizardService
 } from './providers';
 
 const COMPONENTS: any[] = [
@@ -214,7 +211,6 @@ const PROVIDERS: any[] = [
     ContentPackageDataService,
     ContentRepositoryDataService,
     ContentRepositoryFragmentDataService,
-    ContentRepositoryTagmapEntryDataService,
     ContextMenuService,
     DataSourceConstructDataService,
     DataSourceDataService,
@@ -230,8 +226,6 @@ const PROVIDERS: any[] = [
     NodeDataService,
     NodePackageDataService,
     NotificationService,
-    ObjectPropertyCategoryDataService,
-    ObjectPropertyDataService,
     PackageDataService,
     RoleDataService,
     ScheduleDataService,

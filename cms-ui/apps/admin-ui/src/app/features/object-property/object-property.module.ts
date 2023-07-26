@@ -1,42 +1,37 @@
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import {
     CreateObjectPropertyCategoryModalComponent,
     CreateObjectPropertyModalComponent,
     ObjectPropertyCategortTableComponent,
-    ObjectPropertyCategoryDetailComponent,
+    ObjectPropertyCategoryEditorComponent,
     ObjectPropertyCategoryMasterComponent,
     ObjectPropertyCategoryPropertiesComponent,
-    ObjectPropertyDetailComponent,
+    ObjectPropertyEditorComponent,
     ObjectPropertyMasterComponent,
     ObjectPropertyModuleMasterComponent,
     ObjectpropertyPropertiesComponent,
 } from './components';
 import { OBJECT_PROPERTY_ROUTES } from './object-property.routes';
-import {
-    CanActivateObjectPropertyCategoryGuard,
-    CanActivateObjectPropertyGuard,
-    ObjectPropertyCategoryTableLoaderService,
-} from './providers';
+import { ObjectPropertyCategoryTableLoaderService } from './providers';
 
 @NgModule({
     declarations: [
         CreateObjectPropertyCategoryModalComponent,
         CreateObjectPropertyModalComponent,
-        ObjectPropertyCategoryDetailComponent,
+        ObjectPropertyCategoryEditorComponent,
         ObjectPropertyCategoryMasterComponent,
         ObjectPropertyCategoryPropertiesComponent,
         ObjectPropertyCategortTableComponent,
-        ObjectPropertyDetailComponent,
+        ObjectPropertyEditorComponent,
         ObjectPropertyMasterComponent,
         ObjectPropertyModuleMasterComponent,
         ObjectpropertyPropertiesComponent,
     ],
     providers: [
-        CanActivateObjectPropertyGuard,
-        CanActivateObjectPropertyCategoryGuard,
         ObjectPropertyCategoryTableLoaderService,
+        provideRouter(OBJECT_PROPERTY_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

@@ -1,6 +1,7 @@
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, LanguageDetailTabs } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { LanguageDetailComponent, LanguageMasterComponent } from './components';
 import { CanActivateLanguageGuard } from './providers';
@@ -31,7 +32,7 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateLanguageGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

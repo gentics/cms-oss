@@ -1,5 +1,5 @@
 import { PermissionsGuard } from '@admin-ui/core';
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 
@@ -12,8 +12,8 @@ import { SplitViewRouterOutletComponent } from './shared/components/split-view-r
 const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
     {
         path: '',
-        canActivate: [AuthGuard],
-        canActivateChild: [PermissionsGuard],
+        canActivate: [(route, router) => inject(AuthGuard).canActivate(route, router)],
+        canActivateChild: [(childRouteState) => inject(PermissionsGuard).canActivateChild(childRouteState)],
         component: GenericRouterOutletComponent,
         data: {
             breadcrumb: { title: 'dashboard.dashboard' },
@@ -205,9 +205,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     },
                     typePermissions: [
                         {
-                            // There is not yet a dedicated permission for Elastic Search Index maintenance defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
                             type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                             permissions: [
                                 GcmsPermission.READ,
@@ -228,9 +225,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     },
                     typePermissions: [
                         {
-                            // There is not yet a dedicated permission for Package Management defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
                             type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                             permissions: [
                                 GcmsPermission.READ,
@@ -374,7 +368,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     breadcrumb: {
                         title: 'dashboard.item_object_properties',
                     },
-                    // childOutletsForBreadcrumbs: ['detail'],
+                    childOutletsForBreadcrumbs: ['detail'],
                     typePermissions: [
                         {
                             type: AccessControlledType.OBJECT_PROPERTY_ADMIN,

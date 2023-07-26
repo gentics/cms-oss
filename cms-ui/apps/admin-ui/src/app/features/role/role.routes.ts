@@ -1,6 +1,7 @@
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, RoleDetailTabs } from '@admin-ui/common';
 import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { RoleDetailComponent, RoleMasterComponent } from './components';
 import { CanActivateRoleGuard } from './providers';
@@ -31,7 +32,7 @@ export const ROLE_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateRoleGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

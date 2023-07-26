@@ -1,5 +1,6 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructDataService, LanguageDataService, ObjectPropertyCategoryDataService } from '@admin-ui/shared';
+import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
+import { ConstructDataService, LanguageDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
@@ -19,7 +20,7 @@ import {
     Normalized,
     ObjectPropertiesObjectType,
     ObjectPropertyBO,
-    ObjectPropertyCategoryBO,
+    ObjectPropertyCategory,
     Raw,
     TagTypeBO,
 } from '@gentics/cms-models';
@@ -56,7 +57,7 @@ export class ObjectpropertyPropertiesComponent
 
     public constructs$: Observable<TagTypeBO<Raw>[]>;
     public languages$: Observable<Language[]>;
-    public objectPropertyCategories$: Observable<ObjectPropertyCategoryBO<Raw>[]>;
+    public objectPropertyCategories$: Observable<ObjectPropertyCategory<Raw>[]>;
 
     public multiChannelingEnabled = false;
     public objTagSyncEnabled = false;
@@ -93,7 +94,7 @@ export class ObjectpropertyPropertiesComponent
     constructor(
         changeDetector: ChangeDetectorRef,
         private entityData: ConstructDataService,
-        private categoryData: ObjectPropertyCategoryDataService,
+        private categoryHandler: ObjectPropertyCategoryHandlerService,
         private languageData: LanguageDataService,
         private appState: AppStateService,
     ) {
@@ -109,7 +110,7 @@ export class ObjectpropertyPropertiesComponent
                 id: Number(con.id),
             }))),
         ) as any;
-        this.objectPropertyCategories$ = this.categoryData.watchAllEntities();
+        this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(map(res => res.items));
         this.languages$ = this.languageData.watchSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {

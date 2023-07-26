@@ -8,6 +8,7 @@ export * from './data-source-entry-table-loader/data-source-entry-table-loader.s
 export * from './data-source-table-loader/data-source-table-loader.service';
 export * from './debug-tool/debug-tool.service';
 export * from './dev-tool-package-table-loader/dev-tool-package-table-loader.service';
+export * from './editor-closer/editor-closer.service';
 export * from './editor-tab-tracker/editor-tab-tracker.service';
 export * from './editor-ui-local-storage';
 export * from './entity-manager/entity-manager.service';
@@ -23,13 +24,17 @@ export * from './logging-helper/logging-helper.service';
 export * from './maintenance-mode/maintenance-mode.service';
 export * from './message/message.service';
 export * from './node-table-loader/node-table-loader.service';
+export * from './object-property-category-handler/object-property-category-handler.service';
+export * from './object-property-handler/object-property-handler.service';
 export * from './object-property-table-loader/object-property-table-loader.service';
 export * from './operations';
 export * from './permissions-trable-loader/permissions-trable-loader.service';
 export * from './permissions/permissions.service';
+export * from './route-entity-resolver/route-entity-resolver.service';
 export * from './server-storage/server-storage.service';
 export * from './tag-map-entry-table-loader/tag-map-entry-table-loader.service';
 export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
+

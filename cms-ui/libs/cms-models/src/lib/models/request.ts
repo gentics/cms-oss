@@ -1648,12 +1648,14 @@ export interface ObjectPropertyListOptions extends BaseListOptionsWithPaging<Obj
     type?: number[];
 }
 
+type WriteableObjectProperty = Omit<ObjectProperty<Raw>, 'id' | 'globalId' | 'name' | 'construct' | 'category'>;
+
 /**
  * Request used for saving a `ObjectProperty`.
  */
-export type ObjectPropertyCreateRequest = Partial<ObjectProperty<Raw>>;
+export type ObjectPropertyCreateRequest = WriteableObjectProperty;
 
-export type ObjectPropertyUpdateRequest = ObjectPropertyCreateRequest;
+export type ObjectPropertyUpdateRequest = Partial<Omit<WriteableObjectProperty, 'keyword'>>;
 
 // OBJECTPROPERTYCATEGORIES //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1890,8 +1892,17 @@ export interface SchedulerSuspendRequest {
     allowRun?: number[];
 }
 
-export type ScheduleTaskSaveRequest = Partial<ScheduleTask>;
-export type ScheduleSaveReqeust = Partial<Schedule>;
+type WritableScheduleTask = Omit<ScheduleTask, 'id' | 'creatorId' | 'cdate' | 'editorId' | 'edate' | 'internal'>;
+
+export type ScheduleTaskCreateRequest = WritableScheduleTask;
+
+export type ScheduleTaskSaveRequest = Partial<WritableScheduleTask>;
+
+type WriteableSchedule = Omit<Schedule, 'id' | 'creatorId' | 'cdate' | 'editorId' | 'edate' | 'status' | 'runs' | 'averageTime' | 'lastExecution'>;
+
+export type ScheduleCreateReqeust = WriteableSchedule;
+
+export type ScheduleSaveReqeust = Partial<WriteableSchedule>;
 
 // CONTENT STAGING /////////////////////////////////////////////////////////////////////////////////////////////////////
 

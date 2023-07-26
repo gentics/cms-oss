@@ -1,0 +1,214 @@
+import {
+    EDITABLE_ENTITY_DETAIL_TABS,
+    EditableEntity,
+    EntityEditorHandler,
+    EntityLoadRequestParams,
+    EntityUpdateRequestModel,
+    FormGroupTabHandle,
+    FormTabHandle,
+    OnDiscardChanges,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_PARAM_ENTITY_ID,
+    ROUTE_PARAM_NODE_ID,
+    discard,
+} from '@admin-ui/common';
+import { EDITOR_TAB } from '@admin-ui/core/providers';
+import { AppStateService, FocusEditor, OpenEditor, SetUIFocusEntity } from '@admin-ui/state';
+import { ChangeDetectorRef, Directive, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { UntypedFormControl } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { toValidNumber } from '@gentics/ui-core';
+import { BehaviorSubject, Subscription } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+
+type TabKeys<K extends EditableEntity> = keyof ((typeof EDITABLE_ENTITY_DETAIL_TABS)[K]);
+
+@Directive({  })
+export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> implements OnInit, OnChanges, OnDestroy, OnDiscardChanges {
+
+    public readonly Tabs: typeof EDITABLE_ENTITY_DETAIL_TABS[K];
+
+    // eslint-disable-next-line @angular-eslint/no-input-rename
+    @Input({ alias: ROUTE_PARAM_ENTITY_ID, transform: toValidNumber })
+    public entityId: number;
+
+    // eslint-disable-next-line @angular-eslint/no-input-rename
+    @Input({ alias: ROUTE_PARAM_NODE_ID, transform: toValidNumber })
+    public nodeId: number;
+
+    @Input({ alias: EDITOR_TAB })
+    public editorTab: keyof (typeof EDITABLE_ENTITY_DETAIL_TABS[K]);
+
+    public isLoading = false;
+    public entity: T = null;
+    public entityIsClean = true;
+
+    public tabHandles: { [key in TabKeys<K>]: FormTabHandle } = {} as any;
+    public activeTabHandle: FormTabHandle;
+
+    protected loaderSubscription: Subscription;
+
+    constructor(
+        protected entityKey: K,
+        protected changeDetector: ChangeDetectorRef,
+        protected route: ActivatedRoute,
+        protected router: Router,
+        protected appState: AppStateService,
+        protected handler: EntityEditorHandler<T, K>,
+    ) {
+        this.Tabs = EDITABLE_ENTITY_DETAIL_TABS[entityKey];
+    }
+
+    protected abstract initializeTabHandles(): void;
+    protected abstract onEntityChange(): void;
+
+    /* LIFE CYCLE HOOKS
+     *************************************************************************/
+
+    ngOnInit(): void {
+        this.initializeTabHandles();
+        this.updateActiveTabHandle();
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.entityId || changes.nodeId) {
+            this.appState.dispatch(new SetUIFocusEntity(this.entityKey, this.entityId, this.nodeId));
+            this.appState.dispatch(new OpenEditor());
+            this.appState.dispatch(new FocusEditor());
+        }
+
+        if (changes.entityId) {
+            this.handleEntityLoad(this.route.snapshot.data[ROUTE_ENTITY_RESOLVER_KEY]);
+        }
+
+        if (changes.editorTab && !changes.editorTab.firstChange) {
+            this.updateActiveTabHandle();
+        }
+    }
+
+    ngOnDestroy(): void {
+        if (this.loaderSubscription != null) {
+            this.loaderSubscription.unsubscribe();
+        }
+    }
+
+    /* ON DISCARD CHANGES IMPL
+     *************************************************************************/
+
+    userHasEdited(): boolean {
+        return this.activeTabHandle?.isDirty?.();
+    }
+
+    changesValid(): boolean {
+        return this.activeTabHandle?.isValid?.();
+    }
+
+    updateEntity(): Promise<void> {
+        return this.activeTabHandle?.save?.();
+    }
+
+    resetEntity(): Promise<void> {
+        return this.activeTabHandle?.reset?.();
+    }
+
+    /* TEMPLATE ACTIONS
+     *************************************************************************/
+
+    async detailsClose(): Promise<void> {
+        // this.route.parent.parent assumes that the detail outlet routes have a root and that the specific editor tabs are child routes of this root route.
+        const relativeToRoute = this.route.parent.parent || this.route.parent;
+        const navigationSucceeded = await this.router.navigate([ { outlets: { detail: null } } ], { relativeTo: relativeToRoute });
+        if (navigationSucceeded) {
+            this.appState.dispatch(new SetUIFocusEntity(null, null, null));
+        }
+    }
+
+    /* EDITOR HOOKS
+     *************************************************************************/
+
+    protected createLoadOptions(): EntityLoadRequestParams<K> {
+        return null;
+    }
+
+    protected finalizeEntityToUpdate(entity: T): EntityUpdateRequestModel<K> {
+        return entity;
+    }
+
+    protected onEntityUpdate(): void {
+        return;
+    }
+
+    /* UTIL
+     *************************************************************************/
+
+    protected loadEntity(): Promise<void> {
+        if (this.entityId == null) {
+            return;
+        }
+
+        if (this.loaderSubscription != null) {
+            this.loaderSubscription.unsubscribe();
+            this.loaderSubscription = null;
+        }
+
+        this.isLoading = true;
+        this.changeDetector.markForCheck();
+
+        return new Promise((resolve, reject) => {
+            this.loaderSubscription = this.handler.getMapped(this.entityId, this.createLoadOptions()).subscribe(
+                loadedEntity => {
+                    this.handleEntityLoad(loadedEntity);
+                    this.changeDetector.markForCheck();
+                    resolve();
+                },
+                error => {
+                    this.isLoading = false;
+                    this.changeDetector.markForCheck();
+                    reject(error);
+                },
+            )
+        });
+    }
+
+    protected handleEntityLoad(loadedEntity: T): void {
+        this.entity = loadedEntity;
+
+        // Hacky workaround, but other changes wouldn't work as well.
+        // This updates the route-entity with the newly updated/loaded one, without
+        // causing a route change, and therefore avoiding additional computation.
+        (this.route.data as BehaviorSubject<any>).next({
+            ...this.route.snapshot.data,
+            [ROUTE_ENTITY_RESOLVER_KEY]: loadedEntity,
+        });
+
+        this.onEntityChange();
+        this.entityIsClean = true;
+        this.isLoading = false;
+    }
+
+    protected updateActiveTabHandle(): void {
+        this.activeTabHandle = this.tabHandles[this.editorTab as any];
+    }
+
+    protected createTabHandle(formControl: UntypedFormControl): FormTabHandle {
+        return new FormGroupTabHandle(formControl, {
+            save: () => {
+                const value = formControl.value;
+                formControl.disable();
+                const mapped = this.finalizeEntityToUpdate(value);
+
+                return this.handler.updateMapped(this.entityId, mapped).pipe(
+                    discard(entity => {
+                        this.handleEntityLoad(entity);
+                        this.onEntityUpdate();
+                    }),
+                    finalize(() => formControl.enable()),
+                ).toPromise();
+            },
+            reset: () => {
+                formControl.reset();
+                return Promise.resolve();
+            },
+        })
+    }
+}

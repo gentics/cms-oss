@@ -199,6 +199,10 @@
         "en": "Single Sign On",
         "de": "Single Sign On"
     },
+    "message_read_label":{
+        "en": "Gelesen",
+        "de": "Mark as read"
+    },
     "message_plural": {
         "en": "messages",
         "de": "Nachrichten"

@@ -220,6 +220,9 @@ message_sent:
 message_sent_error:
     en: Error sending message
     de: Nachricht wurde gesendet
+message_read:
+    en: Gelesen
+    de: Mark as read    
 page_variations_created:
     en: '{{count}} {{type}} created'
     de: '{{count}} {{type}} erstellt'

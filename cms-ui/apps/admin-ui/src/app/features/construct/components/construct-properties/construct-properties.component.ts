@@ -1,6 +1,6 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { PermissionsService } from '@admin-ui/core';
-import { ConstructCategoryDataService, NodeDataService } from '@admin-ui/shared';
+import { ConstructCategoryHandlerService, PermissionsService } from '@admin-ui/core';
+import { NodeDataService } from '@admin-ui/shared';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
@@ -18,14 +18,13 @@ import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-com
 import {
     AccessControlledType,
     CmsI18nValue,
-    ConstructCategoryBO,
+    ConstructCategory,
     GcmsPermission,
     GtxI18nProperty,
     Language,
     Node,
     Normalized,
     Raw,
-    TagPart,
     TagTypeBO,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
@@ -106,7 +105,7 @@ export class ConstructPropertiesComponent
     @Output()
     public isValidChange = new EventEmitter<boolean>();
 
-    public constructCategories$: Observable<ConstructCategoryBO<Normalized>[]>;
+    public constructCategories$: Observable<ConstructCategory<Normalized>[]>;
     public nodes$: Observable<Node<Raw>[]>;
 
     public activeTabI18nLanguage: Language;
@@ -114,7 +113,7 @@ export class ConstructPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private categoryData: ConstructCategoryDataService,
+        private categoryHandler: ConstructCategoryHandlerService,
         private nodeData: NodeDataService,
         private permissions: PermissionsService,
     ) {
@@ -125,7 +124,7 @@ export class ConstructPropertiesComponent
         super.ngOnInit();
 
         // load required dependencies into state
-        this.constructCategories$ = this.categoryData.watchAllEntities();
+        this.constructCategories$ = this.categoryHandler.listMapped().pipe(map(res => res.items));
 
         // Load the nodes and filter out all which do not have the required 'update' permission
         this.nodes$ = this.nodeData.watchAllEntities({ perms: true }).pipe(
@@ -237,7 +236,7 @@ export class ConstructPropertiesComponent
             keyword: this.value?.keyword || null,
             icon: this.value?.icon || null,
             nodeIds: this.value?.nodeIds || [],
-            externalEditorUrl: this.value?.externalEditorUrl || null,
+            externalEditorUrl: this.value?.externalEditorUrl || '',
             mayBeSubtag: this.value?.mayBeSubtag || false,
             mayContainSubtags: this.value?.mayContainSubtags || null,
             categoryId: this.value?.categoryId || null,

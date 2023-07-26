@@ -1,12 +1,12 @@
 import { ObservableStopper } from '@admin-ui/common';
 import {
-    ConstructOperations,
+    ConstructHandlerService,
     ContentRepositoryFragmentOperations,
     ContentRepositoryOperations,
     DataSourceOperations,
     ObjectPropertyHandlerService,
     PackageOperations,
-    TemplateOperations
+    TemplateOperations,
 } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -36,7 +36,7 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
 
     constructor(
         private packageOperations: PackageOperations,
-        private constructOperations: ConstructOperations,
+        private constructHandler: ConstructHandlerService,
         private crOperations: ContentRepositoryOperations,
         private crFragmentOperations: ContentRepositoryFragmentOperations,
         private dataSourceOperations: DataSourceOperations,
@@ -49,8 +49,8 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
     ngOnInit(): void {
         switch (this.entityIdentifier) {
             case 'construct':
-                this.packageChildEntityIds$ = this.constructOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => entity.id)),
+                this.packageChildEntityIds$ = this.constructHandler.listFromDevtoolMapped(this.packageId).pipe(
+                    map(res => res.items.map(entity => `${entity.id}`)),
                 );
                 break;
             case 'contentRepository':

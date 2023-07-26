@@ -6,8 +6,8 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
 import { EntityManagerService } from '../entity-manager';
-import { ConstructOperations } from '../operations';
 
 export interface ConstructTableLoaderOptions {
     packageName?: string;
@@ -21,7 +21,7 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: ConstructOperations,
+        protected handler: ConstructHandlerService,
     ) {
         super('construct', entityManager, appState);
     }
@@ -31,7 +31,7 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(entityId).toPromise();
+        return this.handler.delete(entityId).toPromise();
     }
 
     public override storeEntity(entity: ConstructBO, id?: string): void {

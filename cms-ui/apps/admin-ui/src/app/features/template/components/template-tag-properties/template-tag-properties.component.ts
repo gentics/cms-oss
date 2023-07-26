@@ -1,9 +1,9 @@
-import { ConstructDataService } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Raw, TagTypeBO, TagEditorChange } from '@gentics/cms-models';
+import { ConstructHandlerService } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
+import { Raw, TagEditorChange, TagType, TemplateTag } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 
 export enum TemplateTagPropertiesMode {
@@ -18,7 +18,7 @@ export enum TemplateTagPropertiesMode {
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(TemplateTagPropertiesComponent)],
 })
-export class TemplateTagPropertiesComponent implements OnInit, OnDestroy, ControlValueAccessor {
+export class TemplateTagPropertiesComponent extends BasePropertiesComponent<TemplateTag> implements OnInit {
 
     readonly TemplateTagPropertiesMode = TemplateTagPropertiesMode;
 
@@ -35,23 +35,32 @@ export class TemplateTagPropertiesComponent implements OnInit, OnDestroy, Contro
     public tagName: string;
 
     public form: UntypedFormGroup;
-    public constructs$: Observable<TagTypeBO<Raw>[]>;
+    public constructs: TagType<Raw>[] = [];
     public tagEditorBaseUrl: URL;
 
-    private subscriptions = new Subscription();
     private propertiesAreValid = true;
 
     constructor(
-        private constructData: ConstructDataService,
-    ) { }
+        changeDectector: ChangeDetectorRef,
+        private constructHandler: ConstructHandlerService,
+    ) {
+        super(changeDectector);
+    }
 
     ngOnInit(): void {
-        this.constructs$ = this.constructData.watchAllEntities();
+        super.ngOnInit();
+
+        this.subscriptions.push(this.constructHandler.listMapped().subscribe(constructs => {
+            this.constructs = constructs.items;
+        }));
+
         if (!environment.production) {
             this.tagEditorBaseUrl = new URL(environment.editorUrl, window.location.toString());
         }
+    }
 
-        this.form = new UntypedFormGroup({
+    protected createForm(): FormGroup<any> {
+        return new UntypedFormGroup({
             name: new UntypedFormControl('', Validators.required),
             constructId: new UntypedFormControl(null, Validators.required),
             active: new UntypedFormControl(true),
@@ -64,22 +73,16 @@ export class TemplateTagPropertiesComponent implements OnInit, OnDestroy, Contro
                 return { properties: 'invalid' };
             }),
         });
+    }
 
+    protected configureForm(value: TemplateTag, loud?: boolean): void {
         if (this.mode !== TemplateTagPropertiesMode.CREATE) {
             this.form.get('name').disable({ emitEvent: false });
         }
-
-        this.subscriptions.add(this.form.valueChanges.subscribe(value => {
-            this.changeFn(this.form.valid ? value : null);
-        }));
     }
 
-    ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
-    }
-
-    writeValue(obj: any): void {
-        this.form.patchValue(obj || {});
+    protected assembleValue(value: TemplateTag): TemplateTag {
+        return value;
     }
 
     onTagEditorChange(change: TagEditorChange): void {
@@ -101,27 +104,4 @@ export class TemplateTagPropertiesComponent implements OnInit, OnDestroy, Contro
             ctrl.markAsPristine();
         }
     }
-
-    // Noop functions
-    changeFn: (value?: any) => void = () => { };
-    touchFn: () => void = () => { };
-
-    registerOnChange(fn: any): void {
-        this.changeFn = fn;
-    }
-
-    registerOnTouched(fn: any): void {
-        this.touchFn = fn;
-    }
-
-    setDisabledState(isDisabled: boolean): void {
-        if (isDisabled) {
-            if (!this.form.disabled) {
-                this.form.disable({ emitEvent: false });
-            }
-        } else if (this.form.disabled) {
-            this.form.enable({ emitEvent: false });
-        }
-    }
-
 }

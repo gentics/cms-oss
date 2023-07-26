@@ -1,13 +1,11 @@
 import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
 import {
-    ConstructOperations,
     ConstructTableLoaderOptions,
     ConstructTableLoaderService,
     DevToolPackageTableLoaderService,
-    I18nNotificationService,
     I18nService,
     PackageOperations,
-    PermissionsService
+    PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -70,8 +68,6 @@ export class ConstructTableComponent
         packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
-        protected notification: I18nNotificationService,
-        protected operations: ConstructOperations,
     ) {
         super(
             changeDetector,

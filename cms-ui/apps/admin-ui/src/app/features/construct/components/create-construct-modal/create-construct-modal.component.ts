@@ -1,4 +1,4 @@
-import { ConstructOperations, I18nNotificationService } from '@admin-ui/core';
+import { ConstructHandlerService, I18nNotificationService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { LanguageDataService } from '@admin-ui/shared/providers/language-data';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -26,7 +26,7 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private entityOperations: ConstructOperations,
+        private handler: ConstructHandlerService,
         private languageData: LanguageDataService,
         private notification: I18nNotificationService,
     ) {
@@ -54,7 +54,7 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
         this.changeDetector.markForCheck();
 
         const { nodeIds, ...value } = this.form.value;
-        this.subscription.add(this.entityOperations.create(value, nodeIds).subscribe({
+        this.subscription.add(this.handler.create(value, nodeIds).subscribe({
             complete: () => {
                 this.closeFn(true);
             },

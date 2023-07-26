@@ -1,9 +1,9 @@
-import { AdminUIEntityDetailRoutes, ConstructCategoryBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ConstructCategoryBO, EditableEntity } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, ConstructCategory, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { ConstructCategory } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { ConstructCategoryTableLoaderService } from '../../providers';
 import { CreateConstructCategoryModalComponent } from '../create-construct-category-modal/create-construct-category-modal.component';
@@ -15,7 +15,7 @@ import { CreateConstructCategoryModalComponent } from '../create-construct-categ
 })
 export class ConstructCategoryMasterComponent extends BaseTableMasterComponent<ConstructCategory, ConstructCategoryBO> implements OnInit {
 
-    protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'constructCategory';
+    protected entityIdentifier = EditableEntity.CONSTRUCT_CATEGORY;
     protected detailPath = AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY;
 
     constructor(

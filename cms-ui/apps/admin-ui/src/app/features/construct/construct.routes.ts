@@ -1,28 +1,25 @@
-import { AdminUIEntityDetailRoutes, ConstructDetailTabs, GcmsAdminUiRoute } from '@admin-ui/common';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
+import {
+    AdminUIEntityDetailRoutes,
+    ConstructCategoryDetailTabs,
+    ConstructDetailTabs,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_IS_EDITOR_ROUTE,
+    ROUTE_PARAM_ENTITY_ID,
+} from '@admin-ui/common';
+import { EDITOR_TAB, RouteEntityResolverService, runEntityResolver } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
-    ConstructCategoryDetailComponent,
-    ConstructDetailComponent,
+    ConstructCategoryEditorComponent,
+    ConstructEditorComponent,
     ConstructModuleMasterComponent,
 } from './components';
-import { CanActivateConstructCategoryGuard, CanActivateConstructGuard } from './providers';
 
 export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
-    // {
-    //     path: `:${MASTER_TAB_ID}`,
-    //     component: ConstructMasterComponent,
-    //     data: {
-    //         typePermissions: [],
-    //     },
-    // },
-    // {
-    //     path: '',
-    //     redirectTo: ConstructModuleTabs.CONSTRUCTS,
-    //     pathMatch: 'full',
-    // },
     {
         path: '',
         component: ConstructModuleMasterComponent,
@@ -35,8 +32,8 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: ':id',
-                component: ConstructCategoryDetailComponent,
+                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
+                component: ConstructCategoryEditorComponent,
                 data: {
                     typePermissions: [
                         {
@@ -46,12 +43,19 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
                             ],
                         },
                     ],
+                    [ROUTE_IS_EDITOR_ROUTE]: true,
+                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.CONSTRUCT_CATEGORY,
                 },
-                canActivate: [CanActivateConstructCategoryGuard],
                 canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
-                    breadcrumb: BreadcrumbResolver,
+                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
+            },
+            {
+                path: `:${ROUTE_PARAM_ENTITY_ID}`,
+                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ConstructCategoryDetailTabs.PROPERTIES}`,
+                pathMatch: 'full',
             },
         ],
     },
@@ -63,8 +67,8 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: `:id/:${EDITOR_TAB}`,
-                component: ConstructDetailComponent,
+                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
+                component: ConstructEditorComponent,
                 data: {
                     typePermissions: [
                         {
@@ -74,17 +78,18 @@ export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
                             ],
                         },
                     ],
+                    [ROUTE_IS_EDITOR_ROUTE]: true,
+                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.CONSTRUCT,
                 },
-                canActivate: [CanActivateConstructGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
-                    breadcrumb: BreadcrumbResolver,
+                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
             },
-            // Default the tab to properties
             {
-                path: ':id',
-                redirectTo: `:id/${ConstructDetailTabs.PROPERTIES}`,
+                path: `:${ROUTE_PARAM_ENTITY_ID}`,
+                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ConstructDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

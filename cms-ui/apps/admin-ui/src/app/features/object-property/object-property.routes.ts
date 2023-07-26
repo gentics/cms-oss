@@ -9,7 +9,7 @@ import {
     ROUTE_IS_EDITOR_ROUTE,
     ROUTE_PARAM_ENTITY_ID,
 } from '@admin-ui/common';
-import { EDITOR_TAB, RouteEntityResolverService } from '@admin-ui/core';
+import { EDITOR_TAB, RouteEntityResolverService, runEntityResolver } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { inject } from '@angular/core';
 import {
@@ -42,6 +42,7 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
                 resolve: {
                     [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
             },
             {
                 path: `:${ROUTE_PARAM_ENTITY_ID}`,
@@ -69,6 +70,7 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
                 resolve: {
                     [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
             },
             {
                 path: `:${ROUTE_PARAM_ENTITY_ID}`,

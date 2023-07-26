@@ -9,6 +9,7 @@ import {
     EntityPageResponse,
     TableLoadOptions,
 } from '@admin-ui/common';
+import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ConstructCategory } from '@gentics/cms-models';
@@ -18,7 +19,6 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../../../../core/providers/base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../../../../core/providers/entity-manager';
-import { ConstructCategoryOperations } from '../../../../core/providers/operations';
 
 @Injectable()
 export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<ConstructCategory, ConstructCategoryBO> {
@@ -27,7 +27,7 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: ConstructCategoryOperations,
+        protected handler: ConstructCategoryHandlerService,
     ) {
         super('constructCategory', entityManager, appState);
     }
@@ -37,7 +37,7 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(entityId).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ConstructCategoryBO>> {

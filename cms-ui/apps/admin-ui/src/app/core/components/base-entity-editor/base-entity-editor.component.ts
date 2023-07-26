@@ -181,9 +181,15 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
             [ROUTE_ENTITY_RESOLVER_KEY]: loadedEntity,
         });
 
-        this.onEntityChange();
         this.entityIsClean = true;
         this.isLoading = false;
+
+        // For whatever reason, the form doesn't properly update within one tick.
+        // Therefore we have to delay this and then the save button is displayed correctly again.
+        setTimeout(() => {
+            this.onEntityChange();
+            this.changeDetector.markForCheck();
+        });
     }
 
     protected updateActiveTabHandle(): void {
@@ -204,10 +210,6 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
                     }),
                     finalize(() => formControl.enable()),
                 ).toPromise();
-            },
-            reset: () => {
-                formControl.reset();
-                return Promise.resolve();
             },
         })
     }

@@ -1,8 +1,6 @@
 // BaseService and InitializableBaseService are intentionally not included here, because
 // importing one of them from @admin-ui/shared would often create cyclic dependencies.
 
-export * from './construct-category-data/construct-category-data.service';
-export * from './construct-data/construct-data.service';
 export * from './content-item-trable-loader/content-item-trable-loader.service';
 export * from './content-package-data/content-package-data.service';
 export * from './content-repository-data/content-repository-data.service';

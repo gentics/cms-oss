@@ -1,5 +1,5 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ALL_TRANSLATIONS, ConstructOperations, I18nNotificationService } from '@admin-ui/core';
+import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
@@ -33,7 +33,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     constructor(
         private changeDetector: ChangeDetectorRef,
         private languageData: LanguageDataService,
-        private entityOperations: ConstructOperations,
+        private handler: ConstructHandlerService,
         private notifications: I18nNotificationService,
     ) {
         super();
@@ -52,7 +52,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
             const newName: CmsI18nValue = {};
 
             this.supportedLanguages.forEach(lang => {
-                const suffix = ALL_TRANSLATIONS.common?.copy_suffix?.[lang.code] ?? fallbackSuffix;
+                const suffix: string = ALL_TRANSLATIONS.common?.copy_suffix?.[lang.code] ?? fallbackSuffix;
 
                 if ((this.construct.nameI18n || {})[lang.code]) {
                     newName[lang.code] = `${this.construct.nameI18n[lang.code]} ${suffix}`;
@@ -98,8 +98,8 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
         this.loading = true;
         this.form.disable();
 
-        this.subscriptions.push(this.entityOperations.create(body, nodeIds).pipe(
-            switchMap(created => this.entityOperations.update(created.id, {
+        this.subscriptions.push(this.handler.createMapped(body, nodeIds).pipe(
+            switchMap(created => this.handler.updateMapped(created.id, {
                 parts: cleanParts,
             })),
         ).subscribe(() => {

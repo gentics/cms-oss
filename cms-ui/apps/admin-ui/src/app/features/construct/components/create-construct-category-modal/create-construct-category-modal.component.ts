@@ -1,4 +1,5 @@
-import { ConstructCategoryOperations, I18nNotificationService } from '@admin-ui/core';
+import { I18nNotificationService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
 import { ConstructCategoryPropertiesMode } from '@admin-ui/features/construct/components';
 import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -29,7 +30,7 @@ export class CreateConstructCategoryModalComponent
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected entityOperations: ConstructCategoryOperations,
+        protected handler: ConstructCategoryHandlerService,
         private languageData: LanguageDataService,
         protected notifications: I18nNotificationService,
     ) {
@@ -56,7 +57,7 @@ export class CreateConstructCategoryModalComponent
         this.form.disable();
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.entityOperations.create(this.form.value).subscribe({
+        this.subscriptions.push(this.handler.create(this.form.value).subscribe({
             complete: () => {
                 this.closeFn(true);
             },

@@ -83,8 +83,6 @@ import {
     I18nRelativeDatePipe,
 } from './pipes';
 import {
-    ConstructCategoryDataService,
-    ConstructDataService,
     ContentItemTrableLoaderService,
     ContentPackageDataService,
     ContentRepositoryDataService,
@@ -205,8 +203,6 @@ const DECLARATIONS: any[] = [
 ];
 
 const PROVIDERS: any[] = [
-    ConstructDataService,
-    ConstructCategoryDataService,
     ContentItemTrableLoaderService,
     ContentPackageDataService,
     ContentRepositoryDataService,

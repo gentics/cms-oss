@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     EditableEntity,
+    EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
     EntityCreateResponseModel,
@@ -11,11 +13,12 @@ import {
     EntityListResponseModel,
     EntityLoadResponseModel,
     EntityUpdateRequestModel,
+    EntityUpdateRequestParams,
     EntityUpdateResponseModel,
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ConstructCategory, Raw } from '@gentics/cms-models';
+import { ConstructCategory } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -26,8 +29,8 @@ import { I18nNotificationService } from '../i18n-notification';
 @Injectable()
 export class ConstructCategoryHandlerService
     extends BaseEntityHandlerService
-    implements EntityEditorHandler<ConstructCategory<Raw>, EditableEntity.CONSTRUCT_CATEGORY>,
-        EntityListHandler<ConstructCategory<Raw>, EditableEntity.CONSTRUCT_CATEGORY> {
+    implements EntityEditorHandler<EditableEntity.CONSTRUCT_CATEGORY>,
+        EntityListHandler<EditableEntity.CONSTRUCT_CATEGORY> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -37,7 +40,7 @@ export class ConstructCategoryHandlerService
         super(errorHandler);
     }
 
-    displayName(entity: ConstructCategory<Raw>): string {
+    displayName(entity: EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]): string {
         return entity.name;
     }
 
@@ -65,7 +68,7 @@ export class ConstructCategoryHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
-    ): Observable<ConstructCategory> {
+    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.create(data, options).pipe(
             map(res => res.constructCategory),
         );
@@ -81,7 +84,7 @@ export class ConstructCategoryHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<ConstructCategory> {
+    getMapped(id: string | number): Observable<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.get(id).pipe(
             map(res => res.constructCategory),
         );
@@ -90,6 +93,7 @@ export class ConstructCategoryHandlerService
     update(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
+        parms?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.CONSTRUCT_CATEGORY>> {
         return this.api.constructCategory.updateConstructCategoryCategory(id, data).pipe(
             tap(res => {
@@ -111,6 +115,7 @@ export class ConstructCategoryHandlerService
     updateMapped(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
+        params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
     ): Observable<ConstructCategory> {
         return this.update(id, data).pipe(
             map(res => res.constructCategory),
@@ -156,7 +161,7 @@ export class ConstructCategoryHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
-    ): Observable<EntityList<ConstructCategory<Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]>> {
         return this.list(body, params).pipe(
             map(res => ({
                 items: res.items,

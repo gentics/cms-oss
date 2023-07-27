@@ -6,7 +6,7 @@ import { IndexByKey } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink } from '@gentics/ui-core';
 import { Observable, of as observableOf } from 'rxjs';
 import { delay, takeUntil } from 'rxjs/operators';
-import { GcmsAdminUiRoute } from '../../../common/routing/gcms-admin-ui-route';
+import { GcmsAdminUiRoute } from '../../../common/models/routing';
 import { ObservableStopper } from '../../../common/utils/observable-stopper/observable-stopper';
 import { GenericRouterOutletComponent } from '../../../shared/components/generic-router-outlet/generic-router-outlet.component';
 import { AppStateService } from '../../../state';

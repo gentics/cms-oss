@@ -81,7 +81,7 @@ export class DataSourceEntryOperations extends ExtendedEntityOperationsBase<'dat
      */
     updateAll(
         dataSourceEntries: DataSourceEntryListUpdateRequest,
-        dataSourceId: string,
+        dataSourceId: string | number,
         notification: boolean = true,
     ): Observable<DataSourceEntryBO<Raw>[]> {
         return this.api.dataSource.updateEntries(dataSourceId, dataSourceEntries).pipe(

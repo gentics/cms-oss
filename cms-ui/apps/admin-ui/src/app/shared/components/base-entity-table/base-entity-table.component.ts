@@ -1,20 +1,21 @@
 import { BO_DISPLAY_NAME, BO_ID, BusinessObject, TableLoadEndEvent, TableLoadOptions, TableLoadResponse, TableLoadStartEvent } from '@admin-ui/common';
-import { BaseTableLoaderService, I18nService } from '@admin-ui/core';
+import { BaseTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import {
     BaseComponent,
-    cancelEvent,
-    coerceInstance, ModalService,
+    ModalService,
     TableAction,
     TableActionClickEvent,
     TableColumn,
     TableRow,
     TableSelectAllType,
     TableSortOrder,
+    cancelEvent,
+    coerceInstance,
 } from '@gentics/ui-core';
-import { combineLatest, Observable, of, Subject } from 'rxjs';
+import { Observable, Subject, combineLatest, of } from 'rxjs';
 import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
 import { ConfirmDeleteModalComponent } from '../confirm-delete-modal/confirm-delete-modal.component';
 

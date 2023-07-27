@@ -1,11 +1,11 @@
-import { LanguageBO } from '@admin-ui/common';
+import { EditableEntity, LanguageBO } from '@admin-ui/common';
+import { LanguageTableLoaderService } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, Language, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { Language } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { LanguageTableLoaderService } from '@admin-ui/core';
 import { CreateLanguageModalComponent } from '../create-language-modal/create-language-modal.component';
 
 @Component({
@@ -14,7 +14,7 @@ import { CreateLanguageModalComponent } from '../create-language-modal/create-la
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LanguageMasterComponent extends BaseTableMasterComponent<Language, LanguageBO> {
-    protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'language';
+    protected entityIdentifier = EditableEntity.LANGUAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,

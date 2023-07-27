@@ -1,26 +1,32 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     DevtoolEntityListHandler,
     DevtoolEntityListRequestModel,
     DevtoolEntityListRequestParams,
     DevtoolEntityListResponseModel,
     EditableEntity,
+    EditableEntityModels,
     EntityCreateRequestModel,
+    EntityCreateRequestParams,
     EntityCreateResponseModel,
+    EntityDeleteRequestParams,
     EntityEditorHandler,
     EntityList,
     EntityListHandler,
     EntityListRequestModel,
     EntityListRequestParams,
     EntityListResponseModel,
+    EntityLoadRequestParams,
     EntityLoadResponseModel,
     EntityUpdateRequestModel,
+    EntityUpdateRequestParams,
     EntityUpdateResponseModel,
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { EntityIdType, ModelType, Node, ObjectProperty, Raw } from '@gentics/cms-models';
+import { EntityIdType, Node, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
@@ -29,9 +35,9 @@ import { I18nNotificationService } from '../i18n-notification';
 @Injectable()
 export class ObjectPropertyHandlerService
     extends BaseEntityHandlerService
-    implements EntityEditorHandler<ObjectProperty<Raw>, EditableEntity.OBJECT_PROPERTY>,
-        EntityListHandler<ObjectProperty<Raw>, EditableEntity.OBJECT_PROPERTY>,
-        DevtoolEntityListHandler<ObjectProperty<Raw>, EditableEntity.OBJECT_PROPERTY> {
+    implements EntityEditorHandler<EditableEntity.OBJECT_PROPERTY>,
+        EntityListHandler<EditableEntity.OBJECT_PROPERTY>,
+        DevtoolEntityListHandler<EditableEntity.OBJECT_PROPERTY> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -41,12 +47,13 @@ export class ObjectPropertyHandlerService
         super(errorHandler);
     }
 
-    displayName(entity: ObjectProperty<ModelType.Raw>): string {
+    displayName(entity: EditableEntityModels[EditableEntity.OBJECT_PROPERTY]): string {
         return entity.name;
     }
 
     create(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY>,
+        params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.api.objectproperties.createObjectProperty(data).pipe(
             tap(res => {
@@ -67,13 +74,17 @@ export class ObjectPropertyHandlerService
 
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<ObjectProperty<Raw>> {
-        return this.create(data).pipe(
+        params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+        return this.create(data, params).pipe(
             map(res => res.objectProperty),
         );
     }
 
-    get(id: string | number): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY>> {
+    get(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
+    ): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.api.objectproperties.getObjectProperty(id).pipe(
             tap(res => {
                 const name = this.displayName(res.objectProperty);
@@ -83,8 +94,11 @@ export class ObjectPropertyHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<ObjectProperty<Raw>> {
-        return this.get(id).pipe(
+    getMapped(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+        return this.get(id, params).pipe(
             map(res => res.objectProperty),
         );
     }
@@ -92,6 +106,7 @@ export class ObjectPropertyHandlerService
     update(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY>,
+        params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.api.objectproperties.updateObjectProperty(id, data).pipe(
             tap(res => {
@@ -113,13 +128,14 @@ export class ObjectPropertyHandlerService
     updateMapped(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<ObjectProperty<Raw>> {
-        return this.update(id, data).pipe(
+        params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+        return this.update(id, data, params).pipe(
             map(res => res.objectProperty),
         );
     }
 
-    delete(id: string | number): Observable<void> {
+    delete(id: string | number, params?: EntityDeleteRequestParams<EditableEntity.OBJECT_PROPERTY>): Observable<void> {
         return this.api.objectPropertycategories.deleteObjectPropertyCategory(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
@@ -158,7 +174,7 @@ export class ObjectPropertyHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EntityList<ObjectProperty<ModelType.Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]>> {
         return this.list(body, params).pipe(
             map(res => ({
                 items: res.items,
@@ -186,7 +202,7 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: DevtoolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EntityList<ObjectProperty<ModelType.Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]>> {
         return this.listFromDevtool(devtoolPackage, body, params).pipe(
             map(res => ({
                 items: res.items,

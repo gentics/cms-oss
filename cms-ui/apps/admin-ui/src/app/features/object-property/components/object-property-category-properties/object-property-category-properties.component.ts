@@ -58,7 +58,7 @@ export class ObjectPropertyCategoryPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.languages$ = this.languageHandler.watchSupportedLanguages();
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;

@@ -1,14 +1,13 @@
 import { InterfaceOf } from '@admin-ui/common';
-import { RouteData } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { RouteData } from '@admin-ui/common/models/routing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { take } from 'rxjs/operators';
-
-import { PermissionsService, RequiredPermissions } from '../..';
-import { createDelayedObservable } from '../../../../../testing';
-import { I18nNotificationService } from '../../i18n-notification';
-import { MockI18nNotificationService } from '../../i18n-notification/i18n-notification.service.mock';
+import { createDelayedObservable } from '../../../../testing';
+import { PermissionsService, RequiredPermissions } from '../../providers';
+import { I18nNotificationService } from '../../providers/i18n-notification';
+import { MockI18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service.mock';
 import { PermissionsGuard } from './permissions.guard';
 
 const TYPE1 = AccessControlledType.MAINTENANCE;
@@ -27,23 +26,24 @@ describe('PermissionsGuard', () => {
     let permissionsService: MockPermissionsService;
     let permissionsGuard: PermissionsGuard;
 
-    beforeEach(() => {
+    function setUpRouteSnapshot(requiredPermissions: RequiredPermissions | RequiredPermissions[]): ActivatedRouteSnapshot {
+        const data: RouteData = { typePermissions: requiredPermissions };
+        const snapshot: ActivatedRouteSnapshot = { data } as any;
+
         TestBed.configureTestingModule({
             providers: [
                 PermissionsGuard,
                 { provide: I18nNotificationService, useClass: MockI18nNotificationService },
                 { provide: PermissionsService, useClass: MockPermissionsService },
                 { provide: Router, useClass: MockRouter },
+                { provide: ActivatedRoute, useValue: { snapshot } },
             ],
         });
 
-        permissionsGuard = TestBed.get(PermissionsGuard);
-        permissionsService = TestBed.get(PermissionsService);
-    });
+        permissionsGuard = TestBed.inject(PermissionsGuard);
+        permissionsService = TestBed.inject(PermissionsService) as any;
 
-    function setUpRouteSnapshot(requiredPermissions: RequiredPermissions | RequiredPermissions[]): ActivatedRouteSnapshot {
-        const data: RouteData = { typePermissions: requiredPermissions };
-        return { data } as any;
+        return snapshot;
     }
 
     function setUpPermissionsService(permissionsGranted: boolean): void {
@@ -55,7 +55,7 @@ describe('PermissionsGuard', () => {
         setUpPermissionsService(true);
 
         let canActivate: boolean;
-        permissionsGuard.canActivate(route)
+        permissionsGuard.canActivate()
             .pipe(take(1))
             .subscribe(result => canActivate = result);
 
@@ -73,7 +73,7 @@ describe('PermissionsGuard', () => {
         setUpPermissionsService(false);
 
         let canActivate: boolean;
-        permissionsGuard.canActivate(route)
+        permissionsGuard.canActivate()
             .pipe(take(1))
             .subscribe(result => canActivate = result);
 
@@ -85,11 +85,11 @@ describe('PermissionsGuard', () => {
 
     it('shows a notification if the user does not have sufficient permissions', fakeAsync(() => {
         const i18nNotification = TestBed.get(I18nNotificationService) as MockI18nNotificationService;
-        const route = setUpRouteSnapshot({ type: TYPE1, permissions: GcmsPermission.READ });
+        setUpRouteSnapshot({ type: TYPE1, permissions: GcmsPermission.READ });
         setUpPermissionsService(false);
 
         let canActivate: boolean;
-        permissionsGuard.canActivate(route)
+        permissionsGuard.canActivate()
             .pipe(take(1))
             .subscribe(result => canActivate = result);
 

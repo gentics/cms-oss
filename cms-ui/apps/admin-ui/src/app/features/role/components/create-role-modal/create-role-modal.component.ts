@@ -29,7 +29,7 @@ export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnIni
     ngOnInit(): void {
         // instantiate form
         this.form = new UntypedFormControl({}, createNestedControlValidator());
-        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
     /**
      * If user clicks to create a new role

@@ -3,10 +3,10 @@ import {
     ConstructHandlerService,
     ContentRepositoryFragmentOperations,
     ContentRepositoryOperations,
-    DataSourceOperations,
+    DataSourceHandlerService,
     ObjectPropertyHandlerService,
     PackageOperations,
-    TemplateOperations,
+    TemplateOperations
 } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -39,7 +39,7 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
         private constructHandler: ConstructHandlerService,
         private crOperations: ContentRepositoryOperations,
         private crFragmentOperations: ContentRepositoryFragmentOperations,
-        private dataSourceOperations: DataSourceOperations,
+        private dataSourceHandler: DataSourceHandlerService,
         private objectPropertyHandler: ObjectPropertyHandlerService,
         private templateOperations: TemplateOperations,
     ) {
@@ -64,8 +64,8 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
                 );
                 break;
             case 'dataSource':
-                this.packageChildEntityIds$ = this.dataSourceOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => String(entity.id))),
+                this.packageChildEntityIds$ = this.dataSourceHandler.listFromDevtoolMapped(this.packageId).pipe(
+                    map(entities => entities.items.map(entity => String(entity.id))),
                 );
                 break;
             case 'objectProperty':

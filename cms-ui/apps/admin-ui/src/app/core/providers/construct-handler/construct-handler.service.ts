@@ -1,20 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     DevtoolEntityListHandler,
     DevtoolEntityListRequestModel,
     DevtoolEntityListRequestParams,
     DevtoolEntityListResponseModel,
     EditableEntity,
+    EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
     EntityCreateResponseModel,
+    EntityDeleteRequestParams,
     EntityEditorHandler,
     EntityList,
     EntityListHandler,
     EntityListRequestModel,
     EntityListRequestParams,
     EntityListResponseModel,
+    EntityLoadRequestParams,
     EntityLoadResponseModel,
     EntityUpdateRequestModel,
+    EntityUpdateRequestParams,
     EntityUpdateResponseModel,
     discard,
 } from '@admin-ui/common';
@@ -30,9 +35,9 @@ import { I18nNotificationService } from '../i18n-notification';
 @Injectable()
 export class ConstructHandlerService
     extends BaseEntityHandlerService
-    implements EntityEditorHandler<TagType<Raw>, EditableEntity.CONSTRUCT>,
-        EntityListHandler<TagType<Raw>, EditableEntity.CONSTRUCT>,
-        DevtoolEntityListHandler<TagType<Raw>, EditableEntity.CONSTRUCT> {
+    implements EntityEditorHandler<EditableEntity.CONSTRUCT>,
+        EntityListHandler<EditableEntity.CONSTRUCT>,
+        DevtoolEntityListHandler<EditableEntity.CONSTRUCT> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -42,15 +47,15 @@ export class ConstructHandlerService
         super(errorHandler);
     }
 
-    displayName(entity: TagType<AnyModelType>): string {
+    displayName(entity: EditableEntityModels[EditableEntity.CONSTRUCT]): string {
         return entity.name;
     }
 
     create(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT>,
-        options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
+        params?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityCreateResponseModel<EditableEntity.CONSTRUCT>> {
-        return this.api.tagType.createTagType(data, options).pipe(
+        return this.api.tagType.createTagType(data, params).pipe(
             tap(res => {
                 const name = this.displayName(res.construct);
                 this.nameMap[res.construct.id] = name;
@@ -70,13 +75,16 @@ export class ConstructHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT>,
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<TagType> {
+    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
         return this.create(data, options).pipe(
             map(res => res.construct),
         );
     }
 
-    get(id: string | number): Observable<EntityLoadResponseModel<EditableEntity.CONSTRUCT>> {
+    get(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.CONSTRUCT>,
+    ): Observable<EntityLoadResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.getTagType(id).pipe(
             tap(res => {
                 const name = this.displayName(res.construct);
@@ -86,8 +94,11 @@ export class ConstructHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<TagType> {
-        return this.get(id).pipe(
+    getMapped(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.CONSTRUCT>,
+    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
+        return this.get(id, params).pipe(
             map(res => res.construct),
         );
     }
@@ -95,6 +106,7 @@ export class ConstructHandlerService
     update(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT>,
+        params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.tagType.updateTagType(id, data).pipe(
             tap(res => {
@@ -116,13 +128,14 @@ export class ConstructHandlerService
     updateMapped(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT>,
+        params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<TagType> {
-        return this.update(id, data).pipe(
+        return this.update(id, data, params).pipe(
             map(res => res.construct),
         );
     }
 
-    delete(id: string | number): Observable<void> {
+    delete(id: string | number, parms?: EntityDeleteRequestParams<EditableEntity.CONSTRUCT>): Observable<void> {
         return this.api.tagType.deleteTagType(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
@@ -161,7 +174,7 @@ export class ConstructHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.CONSTRUCT>,
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EntityList<TagType<Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT]>> {
         return this.list(body, params).pipe(
             map(res => ({
                 items: res.items,
@@ -189,7 +202,7 @@ export class ConstructHandlerService
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<EditableEntity.CONSTRUCT>,
         params?: DevtoolEntityListRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EntityList<TagType<Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT]>> {
         return this.listFromDevtool(devtoolPackage, body, params).pipe(
             map(res => ({
                 items: res.items,
@@ -198,7 +211,7 @@ export class ConstructHandlerService
         );
     }
 
-    getFromDevtoolMapped(packageId: string, entityId: string): Observable<TagType<Raw>> {
+    getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
         return this.api.devTools.getConstruct(packageId, entityId).pipe(
             map(res => res.construct),
             tap(con => {

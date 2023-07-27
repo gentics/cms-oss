@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
-import { AppStateService } from '../../../../state';
+import { AppStateService } from '../../../state';
 
 /**
  * A guard to prevent users navigating to protected routes when not logged in,

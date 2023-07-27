@@ -180,6 +180,7 @@ export const ROUTE_ENTITY_TYPE_KEY = Symbol('route-entity-type');
 export const ROUTE_PARAM_ENTITY_ID = 'id';
 export const ROUTE_PARAM_NODE_ID = 'nodeId';
 export const ROUTE_IS_EDITOR_ROUTE = Symbol('is-editor');
+export const ROUTE_DETAIL_OUTLET = 'detail';
 
 export enum EntityModelType {
     CREATE_REQUEST_MODEL = 'create-request',
@@ -327,8 +328,8 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_PARAMS]: DataSourceListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: DataSourceListResponse,
         [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: DataSourceListOptions,
+        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: DataSourceListResponse,
     },
     [EditableEntity.DEVTOOL_PACKAGE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: PackageCreateRequest,
@@ -548,7 +549,7 @@ export type EditableEntityAPIModels = {
     },
 };
 
-export const EDITABLE_ENTITY_DETAIL_TABS = {
+export type EditableEntityDetailTabs = {
     [EditableEntity.CONSTRUCT]: ConstructDetailTabs,
     [EditableEntity.CONSTRUCT_CATEGORY]: ConstructCategoryDetailTabs,
     [EditableEntity.CONTENT_PACKAGE]: ContentPackageDetailTabs,
@@ -569,6 +570,27 @@ export const EDITABLE_ENTITY_DETAIL_TABS = {
     [EditableEntity.USER]: UserDetailTabs,
 }
 
+export const EDITABLE_ENTITY_DETAIL_TABS = {
+    [EditableEntity.CONSTRUCT]: ConstructDetailTabs,
+    [EditableEntity.CONSTRUCT_CATEGORY]: ConstructCategoryDetailTabs,
+    [EditableEntity.CONTENT_PACKAGE]: ContentPackageDetailTabs,
+    [EditableEntity.CONTENT_REPOSITORY]: ContentRepositoryDetailTabs,
+    [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragmentDetailTabs,
+    [EditableEntity.DATA_SOURCE]: DataSourceDetailTabs,
+    [EditableEntity.DEVTOOL_PACKAGE]: DevtoolPackageDetailTabs,
+    [EditableEntity.FOLDER]: FolderDetailTabs,
+    [EditableEntity.GROUP]: GroupDetailTabs,
+    [EditableEntity.LANGUAGE]: LanguageDetailTabs,
+    [EditableEntity.NODE]: NodeDetailTabs,
+    [EditableEntity.OBJECT_PROPERTY]: ObjectPropertyDetailTabs,
+    [EditableEntity.OBJECT_PROPERTY_CATEGORY]: ObjectPropertyCategoryDetailTabs,
+    [EditableEntity.ROLE]: RoleDetailTabs,
+    [EditableEntity.SCHEDULE]: ScheduleDetailTabs,
+    [EditableEntity.SCHEDULE_TASK]: ScheduleTaskDetailTabs,
+    [EditableEntity.TEMPLATE]: TemplateDetailTabs,
+    [EditableEntity.USER]: UserDetailTabs,
+};
+
 export type EntityCreateRequestModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.CREATE_REQUEST_MODEL];
 export type EntityCreateRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.CREATE_REQUEST_PARAMS];
 export type EntityCreateResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.CREATE_RESPONSE_MODEL];
@@ -581,7 +603,7 @@ export type EntityUpdateRequestParams<T extends EditableEntity> = EditableEntity
 export type EntityUpdateResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.UPDATE_RESPONSE_MODEL];
 
 export type EntityDeleteRequestModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DELETE_REQUEST_MODEL];
-export type EntityDeleteReqeustParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DELETE_REQUEST_PARAMS];
+export type EntityDeleteRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DELETE_REQUEST_PARAMS];
 
 export type EntityListRequestModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.LIST_REQUEST_MODEL];
 export type EntityListRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.LIST_REQUEST_PARAMS];
@@ -591,18 +613,18 @@ export type DevtoolEntityListRequestModel<T extends EditableEntity> = EditableEn
 export type DevtoolEntityListRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS];
 export type DevtoolEntityListResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL];
 
-export interface EntityEditorHandler<T, K extends EditableEntity> {
+export interface EntityEditorHandler<K extends EditableEntity> {
 
-    displayName(entity: T): string;
+    displayName(entity: EditableEntityModels[K]): string;
 
     create(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<EntityCreateResponseModel<K>>;
-    createMapped(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<T>;
+    createMapped(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<EditableEntityModels[K]>;
 
     get(id: string | number, options?: EntityLoadRequestParams<K>): Observable<EntityLoadResponseModel<K>>;
-    getMapped(id: string | number, options?: EntityLoadRequestParams<K>): Observable<T>;
+    getMapped(id: string | number, options?: EntityLoadRequestParams<K>): Observable<EditableEntityModels[K]>;
 
     update(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<EntityUpdateResponseModel<K>>;
-    updateMapped(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<T>;
+    updateMapped(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<EditableEntityModels[K]>;
 
     delete(id: string | number, data?: EntityDeleteRequestModel<K>, options?: EntityDeleteRequestModel<K>): Observable<void>;
 }
@@ -612,12 +634,12 @@ export interface EntityList<T> {
     totalItems?: number;
 }
 
-export interface EntityListHandler<T, K extends EditableEntity> {
+export interface EntityListHandler<K extends EditableEntity> {
     list(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityListResponseModel<K>>;
-    listMapped(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityList<T>>;
+    listMapped(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityList<EditableEntityModels[K]>>;
 }
 
-export interface DevtoolEntityListHandler<T, K extends EditableEntity> {
+export interface DevtoolEntityListHandler<K extends EditableEntity> {
     listFromDevtool(
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<K>,
@@ -627,5 +649,5 @@ export interface DevtoolEntityListHandler<T, K extends EditableEntity> {
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<K>,
         params?: DevtoolEntityListRequestParams<K>,
-    ): Observable<EntityList<T>>;
+    ): Observable<EntityList<EditableEntityModels[K]>>;
 }

@@ -47,8 +47,8 @@ export class DataSourceApi {
     /**
      * Get a single datasource by id.
      */
-    getDataSource(crId: string): Observable<DataSourceLoadResponse> {
-        return this.apiBase.get(`datasource/${crId}`);
+    getDataSource(dsId: string | number): Observable<DataSourceLoadResponse> {
+        return this.apiBase.get(`datasource/${dsId}`);
     }
 
     /**
@@ -61,14 +61,14 @@ export class DataSourceApi {
     /**
      * Update a single datasource by id.
      */
-    updateDataSource(datasourceId: string, request: DataSourceUpdateRequest): Observable<DataSourceUpdateResponse> {
+    updateDataSource(datasourceId: string | number, request: DataSourceUpdateRequest): Observable<DataSourceUpdateResponse> {
         return this.apiBase.put(`datasource/${datasourceId}`, request);
     }
 
     /**
      * Delete a single datasource by id.
      */
-    deleteDataSource(datasourceId: number): Observable<void> {
+    deleteDataSource(datasourceId: string | number): Observable<void> {
         return this.apiBase.delete(`datasource/${datasourceId}`);
     }
 
@@ -82,28 +82,28 @@ export class DataSourceApi {
     /**
      * Get a single entry by id.
      */
-    getEntry(datasourceId: string, datasourceEntryId: string): Observable<DataSourceEntryLoadResponse> {
+    getEntry(datasourceId: string | number, datasourceEntryId: string | number): Observable<DataSourceEntryLoadResponse> {
         return this.apiBase.get(`datasource/${datasourceId}/entries/${datasourceEntryId}`);
     }
 
     /**
      * Create a new entry.
      */
-    createEntry(datasourceId: string, request: DataSourceEntryCreateRequest): Observable<DataSourceEntryCreateResponse> {
+    createEntry(datasourceId: string | number, request: DataSourceEntryCreateRequest): Observable<DataSourceEntryCreateResponse> {
         return this.apiBase.post(`datasource/${datasourceId}/entries`, request);
     }
 
     /**
      * Update a single entry by id.
      */
-    updateEntries(datasourceId: string, request: DataSourceEntryListUpdateRequest): Observable<DataSourceEntryListUpdateResponse> {
+    updateEntries(datasourceId: string | number, request: DataSourceEntryListUpdateRequest): Observable<DataSourceEntryListUpdateResponse> {
         return this.apiBase.put(`datasource/${datasourceId}/entries`, request);
     }
 
     /**
      * Delete a single entry by id.
      */
-    deleteEntry(datasourceId: string, datasourceEntryId: string): Observable<void> {
+    deleteEntry(datasourceId: string | number, datasourceEntryId: string | number): Observable<void> {
         return this.apiBase.delete(`datasource/${datasourceId}/entries/${datasourceEntryId}`);
     }
 

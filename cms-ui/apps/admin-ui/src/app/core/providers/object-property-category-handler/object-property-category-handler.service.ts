@@ -1,19 +1,24 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     EditableEntity,
+    EditableEntityModels,
     EntityCreateRequestModel,
+    EntityCreateRequestParams,
     EntityCreateResponseModel,
+    EntityDeleteRequestParams,
     EntityEditorHandler,
     EntityList,
     EntityListHandler,
     EntityListRequestModel,
     EntityListRequestParams,
     EntityListResponseModel,
+    EntityLoadRequestParams,
     EntityLoadResponseModel,
     EntityUpdateRequestModel,
+    EntityUpdateRequestParams,
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ModelType, ObjectPropertyCategory, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -24,8 +29,8 @@ import { I18nNotificationService } from '../i18n-notification';
 @Injectable()
 export class ObjectPropertyCategoryHandlerService
     extends BaseEntityHandlerService
-    implements EntityEditorHandler<ObjectPropertyCategory<Raw>, EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-        EntityListHandler<ObjectPropertyCategory<Raw>, EditableEntity.OBJECT_PROPERTY_CATEGORY> {
+    implements EntityEditorHandler<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+        EntityListHandler<EditableEntity.OBJECT_PROPERTY_CATEGORY> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -35,12 +40,13 @@ export class ObjectPropertyCategoryHandlerService
         super(errorHandler);
     }
 
-    displayName(entity: ObjectPropertyCategory<ModelType.Raw>): string {
+    displayName(entity: EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]): string {
         return entity.name;
     }
 
     create(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+        params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityCreateResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.createObjectPropertyCategory(data).pipe(
             tap(res => {
@@ -61,13 +67,17 @@ export class ObjectPropertyCategoryHandlerService
 
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<ObjectPropertyCategory<Raw>> {
-        return this.create(data).pipe(
+        params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+        return this.create(data, params).pipe(
             map(res => res.objectPropertyCategory),
         );
     }
 
-    get(id: string | number): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
+    get(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+    ): Observable<EntityLoadResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.getObjectPropertyCategory(id).pipe(
             tap(res => {
                 const name = this.displayName(res.objectPropertyCategory);
@@ -77,8 +87,11 @@ export class ObjectPropertyCategoryHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<ObjectPropertyCategory<Raw>> {
-        return this.get(id).pipe(
+    getMapped(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+        return this.get(id, params).pipe(
             map(res => res.objectPropertyCategory),
         );
     }
@@ -86,6 +99,7 @@ export class ObjectPropertyCategoryHandlerService
     update(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+        params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>> {
         return this.api.objectPropertycategories.updateObjectPropertyCategory(id, data).pipe(
             tap(res => {
@@ -107,13 +121,14 @@ export class ObjectPropertyCategoryHandlerService
     updateMapped(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<ObjectPropertyCategory<Raw>> {
-        return this.update(id, data).pipe(
+        params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
+    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+        return this.update(id, data, params).pipe(
             map(res => res.objectPropertyCategory),
         );
     }
 
-    delete(id: string | number): Observable<void> {
+    delete(id: string | number, params?: EntityDeleteRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>): Observable<void> {
         return this.api.objectPropertycategories.deleteObjectPropertyCategory(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
@@ -152,7 +167,7 @@ export class ObjectPropertyCategoryHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<EntityList<ObjectPropertyCategory<ModelType.Raw>>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]>> {
         return this.list(body, params).pipe(
             map(res => ({
                 items: res.items,

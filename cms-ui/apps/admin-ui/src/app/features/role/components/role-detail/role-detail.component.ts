@@ -169,7 +169,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
             map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
-        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route).pipe(
             map((tabId: RoleDetailTabs) => !Object.values(RoleDetailTabs).includes(tabId) ? RoleDetailTabs.PROPERTIES : tabId),

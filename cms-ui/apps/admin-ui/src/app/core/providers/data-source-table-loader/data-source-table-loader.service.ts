@@ -6,8 +6,8 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
 import { EntityManagerService } from '../entity-manager';
-import { DataSourceOperations } from '../operations';
 
 export interface DataSourceTableLoaderOptions {
     packageName?: string;
@@ -20,7 +20,7 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: DataSourceOperations,
+        protected handler: DataSourceHandlerService,
     ) {
         super('dataSource', entityManager, appState);
     }
@@ -55,7 +55,7 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(Number(entityId)).pipe(discard()).toPromise();
+        return this.handler.delete(Number(entityId)).pipe(discard()).toPromise();
     }
 
     protected mapToBusinessObject(ds: DataSource<Raw>): DataSourceBO {

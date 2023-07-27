@@ -110,7 +110,7 @@ export class ObjectpropertyPropertiesComponent
         this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(
             map(res => res.items),
         );
-        this.languages$ = this.languageHandler.watchSupportedLanguages();
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;

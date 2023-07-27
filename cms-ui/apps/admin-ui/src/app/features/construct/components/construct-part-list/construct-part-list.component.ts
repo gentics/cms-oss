@@ -1,4 +1,4 @@
-import { DataSourceOperations } from '@admin-ui/core';
+import { DataSourceHandlerService } from '@admin-ui/core';
 import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
@@ -107,7 +107,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     constructor(
         private changeDetector: ChangeDetectorRef,
         private modals: ModalService,
-        private dataSourceDataService: DataSourceOperations,
+        private dataSourceHandler: DataSourceHandlerService,
         private markupLanguageData: MarkupLanguageDataService,
     ) { }
 
@@ -116,11 +116,8 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.markupLanguages = languages;
             this.changeDetector.markForCheck();
         }));
-        this.otherSubscriptions.push(this.dataSourceDataService.getAll().subscribe(datasources => {
-            this.dataSources = datasources.map(ds => ({
-                ...ds,
-                id: Number(ds.id),
-            }));
+        this.otherSubscriptions.push(this.dataSourceHandler.listMapped().subscribe(res => {
+            this.dataSources = res.items;
             this.changeDetector.markForCheck();
         }));
 

@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_dataSource_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-data-source-properties
+        [formControl]="form"
+    ></gtx-data-source-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!this.form.valid"
+        (click)="buttonCreateEntityClicked()"
+        gtxActionAllowed="dataSource.createDataSource"
+    >
+        {{ 'modal.create_dataSource_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

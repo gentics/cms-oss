@@ -89,7 +89,7 @@ function tagPartValidator(parts: typeof CONTROL_INVALID_VALUE | ((TagPart | type
     styleUrls: ['./construct-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructEditorComponent extends BaseEntityEditorComponent<TagType<Raw>, EditableEntity.CONSTRUCT> implements OnInit {
+export class ConstructEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONSTRUCT> implements OnInit {
 
     public readonly ConstructPropertiesMode = ConstructPropertiesMode;
 
@@ -120,7 +120,7 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<TagType<
     override ngOnInit(): void {
         super.ngOnInit();
 
-        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
 
     override onEntityUpdate(): void {

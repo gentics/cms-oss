@@ -1,6 +1,8 @@
 import {
     EDITABLE_ENTITY_DETAIL_TABS,
     EditableEntity,
+    EditableEntityDetailTabs,
+    EditableEntityModels,
     EntityEditorHandler,
     EntityLoadRequestParams,
     EntityUpdateRequestModel,
@@ -21,10 +23,9 @@ import { toValidNumber } from '@gentics/ui-core';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
-type TabKeys<K extends EditableEntity> = keyof ((typeof EDITABLE_ENTITY_DETAIL_TABS)[K]);
-
 @Directive({  })
-export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> implements OnInit, OnChanges, OnDestroy, OnDiscardChanges {
+export abstract class BaseEntityEditorComponent<K extends EditableEntity>
+    implements OnInit, OnChanges, OnDestroy, OnDiscardChanges {
 
     public readonly Tabs: typeof EDITABLE_ENTITY_DETAIL_TABS[K];
 
@@ -37,16 +38,17 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
     public nodeId: number;
 
     @Input({ alias: EDITOR_TAB })
-    public editorTab: keyof (typeof EDITABLE_ENTITY_DETAIL_TABS[K]);
+    public editorTab: EditableEntityDetailTabs[K];
 
     public isLoading = false;
-    public entity: T = null;
+    public entity: EditableEntityModels[K] = null;
     public entityIsClean = true;
 
-    public tabHandles: { [key in TabKeys<K>]: FormTabHandle } = {} as any;
+    public tabHandles: { [key in keyof EditableEntityDetailTabs[K]]: FormTabHandle } = {} as any;
     public activeTabHandle: FormTabHandle;
 
     protected loaderSubscription: Subscription;
+    protected subcriptions: Subscription[] = [];
 
     constructor(
         protected entityKey: K,
@@ -54,7 +56,7 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
         protected route: ActivatedRoute,
         protected router: Router,
         protected appState: AppStateService,
-        protected handler: EntityEditorHandler<T, K>,
+        protected handler: EntityEditorHandler<K>,
     ) {
         this.Tabs = EDITABLE_ENTITY_DETAIL_TABS[entityKey];
     }
@@ -90,6 +92,7 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
         if (this.loaderSubscription != null) {
             this.loaderSubscription.unsubscribe();
         }
+        this.subcriptions.forEach(s => s.unsubscribe());
     }
 
     /* ON DISCARD CHANGES IMPL
@@ -130,7 +133,7 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
         return null;
     }
 
-    protected finalizeEntityToUpdate(entity: T): EntityUpdateRequestModel<K> {
+    protected finalizeEntityToUpdate(entity: EditableEntityModels[K]): EntityUpdateRequestModel<K> {
         return entity;
     }
 
@@ -170,7 +173,7 @@ export abstract class BaseEntityEditorComponent<T, K extends EditableEntity> imp
         });
     }
 
-    protected handleEntityLoad(loadedEntity: T): void {
+    protected handleEntityLoad(loadedEntity: EditableEntityModels[K]): void {
         this.entity = loadedEntity;
 
         // Hacky workaround, but other changes wouldn't work as well.

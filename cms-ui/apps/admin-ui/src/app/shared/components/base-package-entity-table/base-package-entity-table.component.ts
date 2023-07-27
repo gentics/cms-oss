@@ -1,5 +1,5 @@
 import { BusinessObject } from '@admin-ui/common';
-import { BaseTableLoaderService, DevToolPackageTableLoaderService, I18nService, PackageOperations } from '@admin-ui/core';
+import { BaseTableLoaderService, DevToolPackageTableLoaderService, I18nService, PackageOperations } from '@admin-ui/core/providers';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';

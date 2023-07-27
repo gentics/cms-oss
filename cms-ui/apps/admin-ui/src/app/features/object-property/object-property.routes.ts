@@ -4,14 +4,10 @@ import {
     GcmsAdminUiRoute,
     ObjectPropertyCategoryDetailTabs,
     ObjectPropertyDetailTabs,
-    ROUTE_ENTITY_RESOLVER_KEY,
-    ROUTE_ENTITY_TYPE_KEY,
-    ROUTE_IS_EDITOR_ROUTE,
-    ROUTE_PARAM_ENTITY_ID,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+    createEntityEditorRoutes,
 } from '@admin-ui/common';
-import { EDITOR_TAB, RouteEntityResolverService, runEntityResolver } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
-import { inject } from '@angular/core';
 import {
     ObjectPropertyCategoryEditorComponent,
     ObjectPropertyEditorComponent,
@@ -25,58 +21,26 @@ export const OBJECT_PROPERTY_ROUTES: GcmsAdminUiRoute[] = [
     },
     {
         path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY,
-        outlet: 'detail',
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
-                component: ObjectPropertyEditorComponent,
-                data: {
-                    typePermissions: [],
-                    [ROUTE_IS_EDITOR_ROUTE]: true,
-                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.OBJECT_PROPERTY,
-                },
-                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
-                resolve: {
-                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
-                },
-                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
-            },
-            {
-                path: `:${ROUTE_PARAM_ENTITY_ID}`,
-                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ObjectPropertyDetailTabs.PROPERTIES}`,
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.OBJECT_PROPERTY, ObjectPropertyEditorComponent, ObjectPropertyDetailTabs.PROPERTIES),
         ],
     },
     {
         path: AdminUIEntityDetailRoutes.OBJECT_PROPERTY_CATEGORY,
-        outlet: 'detail',
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
-                component: ObjectPropertyCategoryEditorComponent,
-                data: {
-                    typePermissions: [],
-                    [ROUTE_IS_EDITOR_ROUTE]: true,
-                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.OBJECT_PROPERTY_CATEGORY,
-                },
-                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
-                resolve: {
-                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
-                },
-                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
-            },
-            {
-                path: `:${ROUTE_PARAM_ENTITY_ID}`,
-                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${ObjectPropertyCategoryDetailTabs.PROPERTIES}`,
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(
+                EditableEntity.OBJECT_PROPERTY_CATEGORY,
+                ObjectPropertyCategoryEditorComponent,
+                ObjectPropertyCategoryDetailTabs.PROPERTIES,
+            ),
         ],
     },
 ];

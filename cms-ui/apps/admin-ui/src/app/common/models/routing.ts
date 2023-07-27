@@ -1,7 +1,13 @@
 import { RequiredTypePermissions } from '@admin-ui/core';
 import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-info';
-import { Data, ResolveData, ResolveFn, Route } from '@angular/router';
+import { Type } from '@angular/core';
+import { ActivatedRouteSnapshot, CanDeactivateFn, Data, DeprecatedGuard, ResolveData, ResolveFn, Route } from '@angular/router';
 import { ConstructorOf } from '../utils/util-types/util-types';
+import { EditableEntity, EditableEntityModels, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, ROUTE_IS_EDITOR_ROUTE } from './editors';
+
+export const ROUTE_PERMISSIONS_KEY = 'typePermissions';
+export const ROUTE_BREADCRUMB_KEY = 'breadcrumb';
+export const ROUTE_CHILD_BREADCRUMB_OUTLET_KEY = 'childOutletsForBreadcrumbs';
 
 export enum AdminUIModuleRoutes {
     CONSTRUCTS = 'constructs',
@@ -56,21 +62,26 @@ export interface RouteData extends Data {
      * Info for displaying a breadcrumb for this route segment.
      * If this is not set, no breadcrumb is displayed for this segment.
      */
-    breadcrumb?: BreadcrumbInfo;
+    [ROUTE_BREADCRUMB_KEY]?: BreadcrumbInfo;
 
     /**
      * Contains the child outlets, which should be included in the breadcrumbs.
      * If this is not set, PRIMARY_OUTLET is used.
      * This property cannot be set through a Resolve<>.
      */
-    childOutletsForBreadcrumbs?: string | string[];
+    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]?: string | string[];
 
     /**
      * Describes the type permissions that a user needs to have to be able to access this route.
      * This is required if a `PermissionsGuard` is used.
      */
-    typePermissions?: RequiredTypePermissions | RequiredTypePermissions[];
+    [ROUTE_PERMISSIONS_KEY]?: RequiredTypePermissions | RequiredTypePermissions[];
 
+    /** If the route component is a Entity Editor. */
+    [ROUTE_IS_EDITOR_ROUTE]?: boolean;
+
+    /** The entity type of the editor, so the entity can be resolved on load. */
+    [ROUTE_ENTITY_TYPE_KEY]?: EditableEntity;
 }
 
 type RouteDataResolvers = { [K in keyof RouteData]?: ConstructorOf<{
@@ -79,15 +90,19 @@ type RouteDataResolvers = { [K in keyof RouteData]?: ConstructorOf<{
 
 export interface RouteDataResolve extends ResolveData, RouteDataResolvers {
     // Some properties must be specified statically and cannot be resolved:
-    childOutletsForBreadcrumbs?: never;
-    typePermissions?: never;
+    [ROUTE_IS_EDITOR_ROUTE]?: never;
+    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]?: never;
+    [ROUTE_PERMISSIONS_KEY]?: never;
+    [ROUTE_ENTITY_RESOLVER_KEY]?: (route: ActivatedRouteSnapshot) => Promise<EditableEntityModels[EditableEntity]>;
 }
 
 /**
  * The interface used for defining routes in the Gentics CMS Administration User Interface.
  */
-export interface GcmsAdminUiRoute extends Route {
-    children?: GcmsAdminUiRoute[];
+export interface GcmsAdminUiRoute<T = any> extends Route {
+    component?: Type<T>;
+    children?: GcmsAdminUiRoute<any>[];
     data?: RouteData;
     resolve?: RouteDataResolve;
+    canDeactivate?: [CanDeactivateFn<T> | DeprecatedGuard];
 }

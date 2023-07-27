@@ -1,7 +1,5 @@
-import { ContentRepositoryDetailTabs } from '@admin-ui/common';
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { AdminUIEntityDetailRoutes, ContentRepositoryDetailTabs, GcmsAdminUiRoute, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
+import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
 import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ContentRepositoryDetailComponent, ContentRepositoryMasterComponent } from './components';
@@ -14,7 +12,7 @@ export const CONTENT_REPOSIROTY_ROUTES: GcmsAdminUiRoute[] = [
     },
     {
         path: AdminUIEntityDetailRoutes.CONTENT_REPOSITORY,
-        outlet: 'detail',
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },

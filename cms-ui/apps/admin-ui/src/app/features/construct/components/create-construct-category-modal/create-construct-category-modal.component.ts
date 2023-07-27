@@ -41,7 +41,7 @@ export class CreateConstructCategoryModalComponent
         this.form = new UntypedFormControl(null, createNestedControlValidator());
 
         // get available system languages for i18n-properties
-        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
 
     ngOnDestroy(): void {

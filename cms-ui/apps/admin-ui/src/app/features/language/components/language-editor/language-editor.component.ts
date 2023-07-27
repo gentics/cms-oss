@@ -14,7 +14,7 @@ import { Language } from '@gentics/cms-models';
     styleUrls: ['./language-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LanguageEditorComponent extends BaseEntityEditorComponent<Language, EditableEntity.LANGUAGE> {
+export class LanguageEditorComponent extends BaseEntityEditorComponent<EditableEntity.LANGUAGE> {
 
     public fgProperties: FormControl<Language>;
 

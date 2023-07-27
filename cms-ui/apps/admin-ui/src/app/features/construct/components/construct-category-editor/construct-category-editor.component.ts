@@ -17,7 +17,7 @@ import { ConstructCategoryPropertiesMode } from '../construct-category-propertie
     styleUrls: ['./construct-category-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<ConstructCategory, EditableEntity.CONSTRUCT_CATEGORY> implements OnInit {
+export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONSTRUCT_CATEGORY> implements OnInit {
 
     public readonly ConstructCategoryPropertiesMode = ConstructCategoryPropertiesMode;
 
@@ -47,7 +47,7 @@ export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<
     override ngOnInit(): void {
         super.ngOnInit();
 
-        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
 
     override onEntityUpdate(): void {

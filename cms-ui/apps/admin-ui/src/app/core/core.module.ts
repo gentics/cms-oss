@@ -33,6 +33,7 @@ import {
     MessageModalComponent,
     ViewUnauthorizedComponent,
 } from './components';
+import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
     BreadcrumbResolver,
@@ -48,6 +49,7 @@ import {
     CRFragmentTableLoaderService,
     DataSourceConstructOperations,
     DataSourceEntryTableLoaderService,
+    DataSourceHandlerService,
     DataSourceOperations,
     DataSourceTableLoaderService,
     DevToolPackageTableLoaderService,
@@ -94,9 +96,6 @@ import {
 import { DebugToolService } from './providers/debug-tool/debug-tool.service';
 import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
-import { AuthGuard } from './providers/guards/auth/auth.guard';
-import { DiscardChangesGuard } from './providers/guards/discard-changes';
-import { PermissionsGuard } from './providers/guards/permissions/permissions.guard';
 import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from './providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './providers/operations/admin/admin.operations';
@@ -165,6 +164,7 @@ const PROVIDERS: any[] = [
     ConstructCategoryHandlerService,
     ContentRepositoryTableLoaderService,
     CRFragmentTableLoaderService,
+    DataSourceHandlerService,
     DataSourceTableLoaderService,
     DataSourceEntryTableLoaderService,
     DebugToolService,

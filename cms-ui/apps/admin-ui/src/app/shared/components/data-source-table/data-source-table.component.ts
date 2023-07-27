@@ -12,11 +12,10 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, DataSource, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
-import { combineLatest, Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
-import { CreateDataSourceModalComponent } from '../create-data-source-modal/create-data-source-modal.component';
 
 @Component({
     selector: 'gtx-data-source-table',
@@ -101,19 +100,5 @@ export class DataSourceTableComponent
         return {
             packageName: this.packageName,
         };
-    }
-
-    async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
-            CreateDataSourceModalComponent,
-            { closeOnOverlayClick: false, width: '50%' },
-        );
-        const created = await dialog.open();
-
-        if (!created) {
-            return;
-        }
-
-        this.loader.reload();
     }
 }

@@ -1,11 +1,11 @@
-import { RouteData } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { ROUTE_PERMISSIONS_KEY, RouteData } from '@admin-ui/common/models/routing';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
-import { I18nNotificationService } from '../../i18n-notification';
-import { PermissionsService, RequiredTypePermissions } from '../../permissions';
+import { I18nNotificationService } from '../../providers/i18n-notification';
+import { PermissionsService, RequiredTypePermissions } from '../../providers/permissions';
 
 /**
  * A guard to prevent users from navigating to routes, for which they do not have permissions.
@@ -77,7 +77,7 @@ export class PermissionsGuard {
      * @returns permission data from route for permission service to proceed.
      */
     private getRequiredPermissions(route: ActivatedRouteSnapshot): RequiredTypePermissions | RequiredTypePermissions[] {
-        const requiredPermissions = (route.data as RouteData).typePermissions;
+        const requiredPermissions = (route.data as RouteData)[ROUTE_PERMISSIONS_KEY];
         if (requiredPermissions) {
             return requiredPermissions;
         } else {

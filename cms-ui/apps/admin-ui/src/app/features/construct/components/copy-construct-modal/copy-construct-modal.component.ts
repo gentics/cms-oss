@@ -41,7 +41,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     ngOnInit(): void {
         this.loading = true;
 
-        this.subscriptions.push(this.languageHandler.watchSupportedLanguages().subscribe(langs => {
+        this.subscriptions.push(this.languageHandler.getSupportedLanguages().subscribe(langs => {
             langs = langs || [];
             this.supportedLanguages = langs;
             const fallbackLanguage = langs?.[0];

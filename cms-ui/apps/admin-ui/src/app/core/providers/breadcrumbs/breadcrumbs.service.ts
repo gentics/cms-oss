@@ -1,4 +1,4 @@
-import { ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, RouteData } from '@admin-ui/common';
+import { ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, RouteData } from '@admin-ui/common';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
@@ -81,8 +81,8 @@ export class BreadcrumbsService extends InitializableServiceBase {
         do {
             const currSnapshot = currRoute.snapshot;
             const childOutlets = [].concat(
-                _has(currSnapshot, 'data.childOutletsForBreadcrumbs')
-                    ? currSnapshot.data.childOutletsForBreadcrumbs
+                _has(currSnapshot, `data.${ROUTE_CHILD_BREADCRUMB_OUTLET_KEY}`)
+                    ? currSnapshot.data[ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]
                     : PRIMARY_OUTLET,
             );
             const childRoutes = currRoute.children;
@@ -142,10 +142,10 @@ export class BreadcrumbsService extends InitializableServiceBase {
 
                 let ret: RouteSegment;
 
-                if (data.breadcrumb) {
+                if (data[ROUTE_BREADCRUMB_KEY]) {
                     ret = {
                         routerCommands: routerLink,
-                        breadcrumb: data.breadcrumb,
+                        breadcrumb: data[ROUTE_BREADCRUMB_KEY],
                     };
                 } else if (data[ROUTE_ENTITY_RESOLVER_KEY] && data[ROUTE_ENTITY_TYPE_KEY]) {
                     const handler = this.routeEntityResolver.getHandler(data[ROUTE_ENTITY_TYPE_KEY]);

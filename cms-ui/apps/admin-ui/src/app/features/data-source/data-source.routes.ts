@@ -1,11 +1,14 @@
-import { DataSourceDetailTabs } from '@admin-ui/common';
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
-import { inject } from '@angular/core';
+import {
+    AdminUIEntityDetailRoutes,
+    DataSourceDetailTabs,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+    createEntityEditorRoutes,
+} from '@admin-ui/common';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { DataSourceDetailComponent, DataSourceMasterComponent } from './components';
-import { CanActivateDataSourceGuard } from './providers';
+import { DataSourceEditorComponent, DataSourceMasterComponent } from './components';
 
 export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -14,35 +17,21 @@ export const DATA_SOURCE_ROUTES: GcmsAdminUiRoute[] = [
     },
     {
         path: AdminUIEntityDetailRoutes.DATA_SOURCE,
-        outlet: 'detail',
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: `:id/:${EDITOR_TAB}`,
-                component: DataSourceDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.DATA_SOURCE_ADMIN,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateDataSourceGuard],
-                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
-            {
-                path: ':id',
-                redirectTo: `:id/${DataSourceDetailTabs.PROPERTIES}`,
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.DATA_SOURCE, DataSourceEditorComponent, DataSourceDetailTabs.PROPERTIES, {
+                [ROUTE_PERMISSIONS_KEY]: [
+                    {
+                        type: AccessControlledType.DATA_SOURCE_ADMIN,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
 ];

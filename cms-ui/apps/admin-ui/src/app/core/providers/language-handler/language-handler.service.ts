@@ -1,16 +1,21 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
     EditableEntity,
+    EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
     EntityCreateResponseModel,
+    EntityDeleteRequestParams,
     EntityEditorHandler,
     EntityList,
     EntityListHandler,
     EntityListRequestModel,
     EntityListRequestParams,
     EntityListResponseModel,
+    EntityLoadRequestParams,
     EntityLoadResponseModel,
     EntityUpdateRequestModel,
+    EntityUpdateRequestParams,
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
@@ -25,8 +30,8 @@ import { I18nNotificationService } from '../i18n-notification';
 @Injectable()
 export class LanguageHandlerService
     extends BaseEntityHandlerService
-    implements EntityEditorHandler<Language, EditableEntity.LANGUAGE>,
-        EntityListHandler<Language, EditableEntity.LANGUAGE> {
+    implements EntityEditorHandler<EditableEntity.LANGUAGE>,
+        EntityListHandler<EditableEntity.LANGUAGE> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -36,13 +41,13 @@ export class LanguageHandlerService
         super(errorHandler);
     }
 
-    displayName(entity: Language): string {
+    displayName(entity: EditableEntityModels[EditableEntity.LANGUAGE]): string {
         return entity.name;
     }
 
     create(
         data: EntityCreateRequestModel<EditableEntity.LANGUAGE>,
-        options?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
+        params?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityCreateResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.createLanguage(data).pipe(
             tap(res => {
@@ -64,13 +69,13 @@ export class LanguageHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.LANGUAGE>,
         options?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
-    ): Observable<Language> {
+    ): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
         return this.create(data, options).pipe(
             map(res => res.language),
         );
     }
 
-    get(id: string | number): Observable<EntityLoadResponseModel<EditableEntity.LANGUAGE>> {
+    get(id: string | number, params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>): Observable<EntityLoadResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.getLanguage(id).pipe(
             tap(res => {
                 const name = this.displayName(res.language);
@@ -80,8 +85,8 @@ export class LanguageHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<Language> {
-        return this.get(id).pipe(
+    getMapped(id: string | number, params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
+        return this.get(id, params).pipe(
             map(res => res.language),
         );
     }
@@ -89,6 +94,7 @@ export class LanguageHandlerService
     update(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.LANGUAGE>,
+        params?: EntityUpdateRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityUpdateResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.updateLanguage(id, data).pipe(
             tap(res => {
@@ -110,13 +116,14 @@ export class LanguageHandlerService
     updateMapped(
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.LANGUAGE>,
-    ): Observable<Language> {
-        return this.update(id, data).pipe(
+        params?: EntityUpdateRequestParams<EditableEntity.LANGUAGE>,
+    ): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
+        return this.update(id, data, params).pipe(
             map(res => res.language),
         );
     }
 
-    delete(id: string | number): Observable<void> {
+    delete(id: string | number, params?: EntityDeleteRequestParams<EditableEntity.LANGUAGE>): Observable<void> {
         return this.api.language.deleteLanguage(id).pipe(
             tap(() => {
                 const name = this.nameMap[id];
@@ -155,7 +162,7 @@ export class LanguageHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.LANGUAGE>,
         params?: EntityListRequestParams<EditableEntity.LANGUAGE>,
-    ): Observable<EntityList<Language>> {
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.LANGUAGE]>> {
         return this.list(body, params).pipe(
             map(res => ({
                 items: res.items,
@@ -186,7 +193,7 @@ export class LanguageHandlerService
         );
     }
 
-    watchSupportedLanguages(params?: EntityListRequestParams<EditableEntity.LANGUAGE>): Observable<Language[]> {
+    getSupportedLanguages(params?: EntityListRequestParams<EditableEntity.LANGUAGE>): Observable<Language[]> {
         return forkJoin([
             this.listMapped(null as never, params),
             this.getBackendLanguages(),

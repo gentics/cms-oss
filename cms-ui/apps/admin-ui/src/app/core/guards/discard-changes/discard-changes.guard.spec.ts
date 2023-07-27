@@ -1,9 +1,10 @@
+import { OnDiscardChanges } from '@admin-ui/common';
 import { Component } from '@angular/core';
 import { inject, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ModalService } from '@gentics/ui-core';
-import { CoreModule } from '../../../core.module';
-import { DiscardChangesGuard, OnDiscardChanges } from './discard-changes.guard';
+import { CoreModule } from '../../core.module';
+import { DiscardChangesGuard } from './discard-changes.guard';
 
 class MockModalService {
     fromComponent = jasmine.createSpy('ModalService.fromComponent')

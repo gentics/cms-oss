@@ -1,6 +1,6 @@
 import { BooleanFn, OnDiscardChanges } from '@admin-ui/common';
 import { DiscardChangesModalComponent } from '@admin-ui/core/components/discard-changes-modal';
-import { AppStateService, CloseEditor } from '@admin-ui/state';
+import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ModalService } from '@gentics/ui-core';
 

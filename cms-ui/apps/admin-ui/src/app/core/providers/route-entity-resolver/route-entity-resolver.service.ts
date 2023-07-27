@@ -9,11 +9,12 @@ import {
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot } from '@angular/router';
+import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
 import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
+import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
-import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
-import { LanguageHandlerService } from '../language-handler/language-handler.service';
 
 export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot): boolean {
     if (from.component !== to.component) {
@@ -41,6 +42,7 @@ export class RouteEntityResolverService {
     constructor(
         private construct: ConstructHandlerService,
         private constructCat: ConstructCategoryHandlerService,
+        private dataSource: DataSourceHandlerService,
         private lang: LanguageHandlerService,
         private objPropCat: ObjectPropertyCategoryHandlerService,
         private objPro: ObjectPropertyHandlerService,
@@ -61,13 +63,16 @@ export class RouteEntityResolverService {
         return entity;
     }
 
-    public getHandler<K extends EditableEntity>(type: EditableEntity): EntityEditorHandler<EditableEntityModels[K], K> {
+    public getHandler<K extends EditableEntity>(type: EditableEntity): EntityEditorHandler<K> {
         switch (type) {
             case EditableEntity.CONSTRUCT:
                 return this.construct as any;
 
             case EditableEntity.CONSTRUCT_CATEGORY:
                 return this.constructCat as any;
+
+            case EditableEntity.DATA_SOURCE:
+                return this.dataSource as any;
 
             case EditableEntity.OBJECT_PROPERTY:
                 return this.objPro as any;

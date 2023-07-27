@@ -111,7 +111,7 @@ export class NodeApi {
     /**
      * Get list of languages activated for the node
      */
-    getNodeLanguageList(nodeId: number, options?: NodeLanguageListRequest): Observable<ListResponse<Language>> {
+    getNodeLanguageList(nodeId: number | string, options?: NodeLanguageListRequest): Observable<ListResponse<Language>> {
         return this.apiBase.get(`node/${nodeId}/languages`, options);
     }
 

@@ -2,7 +2,6 @@ import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ConstructBO, EntityPageResponse
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { DevToolsConstructListResponse, PagedConstructListRequestOptions, PermissionListResponse, TagType } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
@@ -20,7 +19,6 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
         protected handler: ConstructHandlerService,
     ) {
         super('construct', entityManager, appState);
@@ -72,11 +70,11 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
         let loader: Observable<PermissionListResponse<TagType> | DevToolsConstructListResponse>;
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getConstructs(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevtool(additionalOptions.packageName, null as never, loadOptions);
         } else if (additionalOptions?.dataSourceId) {
-            loader = this.api.dataSource.getConstructs(additionalOptions.dataSourceId, loadOptions as any);
+            loader = this.handler.listFromDataSource(additionalOptions.dataSourceId, null as never, loadOptions as any);
         } else {
-            loader = this.api.tagType.getTagTypes(loadOptions);
+            loader = this.handler.list(null as never, loadOptions);
         }
 
         return loader.pipe(
@@ -97,7 +95,7 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
             ...construct,
             [BO_ID]: String(construct.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: construct.name,
+            [BO_DISPLAY_NAME]: this.handler.displayName(construct),
         };
     }
 

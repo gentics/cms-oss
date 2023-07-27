@@ -24,7 +24,7 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { AnyModelType, EntityIdType, Node, Raw, TagType } from '@gentics/cms-models';
+import { AnyModelType, DataSourceConstructListOptions, DataSourceConstructListResponse, EntityIdType, Node, Raw, TagType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -240,5 +240,20 @@ export class ConstructHandlerService
             targetIds: [`${constructId}`],
             ids: [nodeId],
         }).pipe(discard());
+    }
+
+    listFromDataSource(
+        dataSourceId: string | number,
+        body?: never,
+        params?: DataSourceConstructListOptions
+    ): Observable<DataSourceConstructListResponse> {
+        return this.api.dataSource.getConstructs(dataSourceId, params).pipe(
+            tap(res => {
+                res.items.forEach(con => {
+                    const name = this.displayName(con);
+                    this.nameMap[con.id] = name;
+                });
+            }),
+        );
     }
 }

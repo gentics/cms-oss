@@ -6,8 +6,8 @@ export * from './construct-handler/construct-handler.service';
 export * from './construct-table-loader/construct-table-loader.service';
 export * from './content-repository-table-loader/content-repository-table-loader.service';
 export * from './cr-fragment-table-loader/cr-fragment-table-loader.service';
+export * from './data-source-entry-handler/data-source-entry-handler.service';
 export * from './data-source-handler/data-source-handler.service';
-export * from './data-source-entry-table-loader/data-source-entry-table-loader.service';
 export * from './data-source-table-loader/data-source-table-loader.service';
 export * from './debug-tool/debug-tool.service';
 export * from './dev-tool-package-table-loader/dev-tool-package-table-loader.service';
@@ -40,4 +40,3 @@ export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
-

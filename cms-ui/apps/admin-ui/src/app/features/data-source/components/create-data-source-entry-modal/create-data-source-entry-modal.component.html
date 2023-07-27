@@ -1,11 +1,11 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_language_title' | i18n }}</h5>
+    <h5>{{ 'modal.create_dataSource_entry_title' | i18n }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-language-properties
+    <gtx-data-source-entry-properties
         [formControl]="form"
-    ></gtx-language-properties>
+    ></gtx-data-source-entry-properties>
 </div>
 
 <div class="modal-footer">
@@ -13,9 +13,9 @@
         type="primary"
         [disabled]="!form.valid"
         (click)="buttonCreateEntityClicked()"
-        gtxActionAllowed="language.createLanguage"
+        gtxActionAllowed="dataSource.createDataSourceEntry"
     >
-        {{ 'modal.create_language_button' | i18n }}
+        {{ 'modal.create_dataSource_entry_button' | i18n }}
     </gtx-button>
 
     <gtx-button

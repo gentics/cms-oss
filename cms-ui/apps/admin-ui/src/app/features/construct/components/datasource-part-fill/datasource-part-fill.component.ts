@@ -1,4 +1,3 @@
-import { DataSourceDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { AbstractControl, UntypedFormArray, UntypedFormControl, ValidatorFn } from '@angular/forms';
 import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
@@ -25,7 +24,6 @@ export class DataSourcePartFillComponent extends BaseFormElementComponent<DataSo
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        protected dataSourceData: DataSourceDataService,
     ) {
         super(changeDetector);
     }

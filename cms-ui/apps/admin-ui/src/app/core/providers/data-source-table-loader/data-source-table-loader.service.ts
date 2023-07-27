@@ -55,7 +55,7 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.handler.delete(Number(entityId)).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected mapToBusinessObject(ds: DataSource<Raw>): DataSourceBO {
@@ -63,7 +63,7 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
             ...ds,
             [BO_ID]: String(ds.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: ds.name,
+            [BO_DISPLAY_NAME]: this.handler.displayName(ds),
         };
     }
 

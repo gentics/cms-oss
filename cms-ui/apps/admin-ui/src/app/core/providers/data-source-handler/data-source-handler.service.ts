@@ -163,6 +163,7 @@ export class DataSourceHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
@@ -190,6 +191,7 @@ export class DataSourceHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 

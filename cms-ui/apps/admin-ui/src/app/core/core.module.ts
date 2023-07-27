@@ -47,10 +47,8 @@ import {
     ContentRepositoryTableLoaderService,
     ContentRepositoryTagmapEntryOperations,
     CRFragmentTableLoaderService,
-    DataSourceConstructOperations,
-    DataSourceEntryTableLoaderService,
+    DataSourceEntryHandlerService,
     DataSourceHandlerService,
-    DataSourceOperations,
     DataSourceTableLoaderService,
     DevToolPackageTableLoaderService,
     EditorCloserService,
@@ -100,7 +98,6 @@ import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.
 import { MaintenanceModeService } from './providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './providers/operations/admin/admin.operations';
 import { AuthOperations } from './providers/operations/auth/auth.operations';
-import { DataSourceEntryOperations } from './providers/operations/datasource-entry';
 import { NodeOperations } from './providers/operations/node';
 import { TraceErrorHandler } from './providers/trace-error-handler/trace-error-handler';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
@@ -129,9 +126,6 @@ const OPERATIONS: any[] = [
     ContentRepositoryFragmentTagmapEntryOperations,
     ContentRepositoryOperations,
     ContentRepositoryTagmapEntryOperations,
-    DataSourceConstructOperations,
-    DataSourceEntryOperations,
-    DataSourceOperations,
     ElasticSearchIndexOperations,
     FileOperations,
     FeatureOperations,
@@ -166,7 +160,7 @@ const PROVIDERS: any[] = [
     CRFragmentTableLoaderService,
     DataSourceHandlerService,
     DataSourceTableLoaderService,
-    DataSourceEntryTableLoaderService,
+    DataSourceEntryHandlerService,
     DebugToolService,
     DevToolPackageTableLoaderService,
     DiscardChangesGuard,

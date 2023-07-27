@@ -71,7 +71,7 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
             ...category,
             [BO_ID]: String(category.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: category.name,
+            [BO_DISPLAY_NAME]: this.handler.displayName(category),
             [BO_ORIGINAL_SORT_ORDER]: order,
             [BO_NEW_SORT_ORDER]: order,
         };

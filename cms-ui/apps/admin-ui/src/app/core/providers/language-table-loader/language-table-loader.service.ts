@@ -11,7 +11,6 @@ import {
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Language, LanguageListResponse, NodeLanguageListRequest } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -29,7 +28,6 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
         protected handler: LanguageHandlerService,
     ) {
         super('language', entityManager, appState);
@@ -49,10 +47,10 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
                 loadOptions.q = options.query;
             }
 
-            loader = this.api.node.getNodeLanguageList(additionalOptions.nodeId, loadOptions);
+            loader = this.handler.listFromNode(additionalOptions.nodeId, null as never, loadOptions);
         } else {
             const loadOptions = this.createDefaultOptions(options);
-            loader = this.api.language.getLanguages(loadOptions);
+            loader = this.handler.list(null as never, loadOptions);
         }
 
         return loader.pipe(

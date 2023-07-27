@@ -1,13 +1,13 @@
 import { BO_NEW_SORT_ORDER, createMoveActions, DataSourceEntryBO } from '@admin-ui/common';
-import { DataSourceEntryTableLoaderOptions, DataSourceEntryTableLoaderService, DataSourceOperations, I18nService, PermissionsService } from '@admin-ui/core';
+import { I18nService, PermissionsService } from '@admin-ui/core';
+import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, DataSourceEntry, NormalizableEntityTypesMap, Raw } from '@gentics/cms-models';
 import { ModalService, TableAction, TableColumn } from '@gentics/ui-core';
 import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
-import { BaseSortableEntityTableComponent } from '../base-sortable-entity-table/base-sortable-entity-table.component';
+import { DataSourceEntryTableLoaderOptions, DataSourceEntryTableLoaderService } from '../../providers';
 import { CreateDataSourceEntryModalComponent } from '../create-data-source-entry-modal/create-data-source-entry-modal.component';
 
 @Component({
@@ -52,7 +52,6 @@ export class DataSourceEntryTableComponent
         loader: DataSourceEntryTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
-        protected operations: DataSourceOperations,
     ) {
         super(
             changeDetector,
@@ -103,10 +102,15 @@ export class DataSourceEntryTableComponent
         };
     }
 
+    protected override callToDeleteEntity(id: string): Promise<void> {
+        return (this.loader as DataSourceEntryTableLoaderService).deleteEntry(this.dataSourceId, id);
+    }
+
     async handleCreateButton(): Promise<void> {
         const dialog = await this.modalService.fromComponent(
             CreateDataSourceEntryModalComponent,
             { closeOnOverlayClick: false, width: '50%' },
+            { datasourceId: this.dataSourceId },
         );
         const created = await dialog.open();
 

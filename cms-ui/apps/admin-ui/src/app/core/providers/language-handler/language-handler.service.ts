@@ -19,7 +19,7 @@ import {
     EntityUpdateResponseModel,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { I18nLanguage, Language, Response } from '@gentics/cms-models';
+import { I18nLanguage, Language, NodeLanguageListRequest, NodeLanguagesListResponse, Response } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -151,11 +151,12 @@ export class LanguageHandlerService
     ): Observable<EntityListResponseModel<EditableEntity.LANGUAGE>> {
         return this.api.language.getLanguages(params).pipe(
             tap(res => {
-                res.items.forEach(objCat => {
-                    const name = this.displayName(objCat);
-                    this.nameMap[objCat.id] = name;
+                res.items.forEach(lang => {
+                    const name = this.displayName(lang);
+                    this.nameMap[lang.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
@@ -164,6 +165,35 @@ export class LanguageHandlerService
         params?: EntityListRequestParams<EditableEntity.LANGUAGE>,
     ): Observable<EntityList<EditableEntityModels[EditableEntity.LANGUAGE]>> {
         return this.list(body, params).pipe(
+            map(res => ({
+                items: res.items,
+                totalItems: res.numItems,
+            })),
+        );
+    }
+
+    listFromNode(
+        nodeId: number | string,
+        body?: never,
+        params?: NodeLanguageListRequest,
+    ): Observable<NodeLanguagesListResponse> {
+        return this.api.node.getNodeLanguageList(nodeId, params).pipe(
+            tap(res => {
+                res.items.forEach(lang => {
+                    const name = this.displayName(lang);
+                    this.nameMap[lang.id] = name;
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromNodeMapped(
+        nodeId: number | string,
+        body?: never,
+        params?: NodeLanguageListRequest,
+    ): Observable<EntityList<EditableEntityModels[EditableEntity.LANGUAGE]>> {
+        return this.listFromNode(nodeId, body, params).pipe(
             map(res => ({
                 items: res.items,
                 totalItems: res.numItems,
@@ -184,12 +214,14 @@ export class LanguageHandlerService
     getActiveBackendLanguage(): Observable<string> {
         return this.api.i18n.getActiveUiLanguage().pipe(
             map(response => response.code),
+            this.catchAndRethrowError(),
         );
     }
 
     getBackendLanguages(): Observable<I18nLanguage[]> {
         return this.api.i18n.getAvailableUiLanguages().pipe(
             map(response => response.items),
+            this.catchAndRethrowError(),
         );
     }
 

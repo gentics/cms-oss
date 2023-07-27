@@ -1,24 +1,22 @@
 import {
     BO_DISPLAY_NAME,
     BO_ID,
-    BO_PERMISSIONS,
-    DataSourceEntryBO,
     BO_NEW_SORT_ORDER,
     BO_ORIGINAL_SORT_ORDER,
+    BO_PERMISSIONS,
+    DataSourceEntryBO,
     EntityPageResponse,
     TableLoadOptions,
-    discard,
 } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { DataSourceEntry, Raw } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
-import { EntityManagerService } from '../entity-manager';
-import { DataSourceEntryOperations } from '../operations';
+import { BaseTableLoaderService } from '../../../../core/providers/base-table-loader/base-table-loader.service';
+import { DataSourceEntryHandlerService } from '../../../../core/providers/data-source-entry-handler/data-source-entry-handler.service';
+import { EntityManagerService } from '../../../../core/providers/entity-manager';
 
 export interface DataSourceEntryTableLoaderOptions {
     dataSourceId: string | number;
@@ -31,8 +29,7 @@ export class DataSourceEntryTableLoaderService
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
-        protected operations: DataSourceEntryOperations,
+        protected handler: DataSourceEntryHandlerService,
     ) {
         super('dataSourceEntry', entityManager, appState);
     }
@@ -43,13 +40,13 @@ export class DataSourceEntryTableLoaderService
     ): Observable<EntityPageResponse<DataSourceEntryBO>> {
         // No pagination available
 
-        return this.api.dataSource.getEntries(additionalOptions.dataSourceId).pipe(
+        return this.handler.listMapped(additionalOptions.dataSourceId).pipe(
             map(response => {
                 const entities = response.items.map((entry, index) => this.mapToBusinessObject(entry, index));
 
                 return  {
                     entities,
-                    totalCount: response.numItems,
+                    totalCount: response.totalItems,
                 };
             }),
         );
@@ -63,8 +60,8 @@ export class DataSourceEntryTableLoaderService
         return Promise.reject('Use #deleteEntry instead!');
     }
 
-    public deleteEntry(dsId: string | number, dsEntryId: string | number): Promise<void> {
-        return this.operations.delete(String(dsEntryId), String(dsId)).pipe(discard()).toPromise();
+    public deleteEntry(dsId: string | number, entryId: string | number): Promise<void> {
+        return this.handler.delete(dsId, entryId).toPromise();
     }
 
     public mapToBusinessObject(entry: DataSourceEntry<Raw>, index: number): DataSourceEntryBO {
@@ -72,7 +69,7 @@ export class DataSourceEntryTableLoaderService
             ...entry,
             [BO_ID]: String(entry.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: entry.key,
+            [BO_DISPLAY_NAME]: this.handler.displayName(entry),
             [BO_ORIGINAL_SORT_ORDER]: index,
             [BO_NEW_SORT_ORDER]: index,
         };

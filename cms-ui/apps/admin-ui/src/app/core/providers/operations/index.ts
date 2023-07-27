@@ -5,9 +5,6 @@ export * from './contentrepository-tagmapentry/contentrepository-tagmapentry.ope
 export * from './cr-fragment/cr-fragment.operations' ;
 export * from './content-package/content-package.operations';
 export * from './cr-fragment-tagmapentry/cr-fragment-tagmapentry.operations';
-export * from './datasource/datasource.operations';
-export * from './datasource-construct/datasource-construct.operations';
-export * from './datasource-entry/datasource-entry.operations';
 export * from './elastic-search-index/elastic-search-index.operations';
 export * from './entity-operations-base/entity.operations.base';
 export * from './extended-entity-operations/extended-entity.operations.base';

@@ -2,7 +2,6 @@ import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, Ob
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions, ObjectPropertyListResponse } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
@@ -20,7 +19,6 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
         protected handler: ObjectPropertyHandlerService,
     ) {
         super(
@@ -53,9 +51,9 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
         }
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getObjectproperties(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevtool(additionalOptions.packageName, null as never, loadOptions);
         } else {
-            loader = this.api.objectproperties.getObjectProperties(loadOptions);
+            loader = this.handler.list(null as never, loadOptions);
         }
 
         return loader.pipe(

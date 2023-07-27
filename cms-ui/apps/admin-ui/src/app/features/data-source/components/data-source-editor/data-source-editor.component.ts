@@ -9,8 +9,7 @@ import {
 } from '@admin-ui/common';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import {
-    DataSourceEntryOperations,
-    DataSourceEntryTableLoaderService,
+    DataSourceEntryHandlerService,
     DataSourceHandlerService,
     DataSourceTableLoaderService,
     PermissionsService,
@@ -24,6 +23,7 @@ import { AccessControlledType, DataSource, DataSourceEntryListUpdateRequest, Gcm
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { DataSourceEntryTableLoaderService } from '../../providers';
 
 @Component({
     selector: 'gtx-data-source-editor',
@@ -48,7 +48,7 @@ export class DataSourceEditorComponent extends BaseEntityEditorComponent<Editabl
         handler: DataSourceHandlerService,
         protected tableLoader: DataSourceTableLoaderService,
         protected permissionsService: PermissionsService,
-        protected dataSourceEntryOperations: DataSourceEntryOperations,
+        protected entryHandler: DataSourceEntryHandlerService,
         protected dataSourceEntryLoader: DataSourceEntryTableLoaderService,
     ) {
         super(
@@ -104,7 +104,7 @@ export class DataSourceEditorComponent extends BaseEntityEditorComponent<Editabl
 
     updateDataSourceEntries(): Promise<void> {
         const req: DataSourceEntryListUpdateRequest = this.entryRows.map(row => row.item);
-        return this.dataSourceEntryOperations.updateAll(req, this.entity.id)
+        return this.entryHandler.updateAll(this.entity.id, req)
             .toPromise()
             .then(() => {
                 this.entriesChanged = false;

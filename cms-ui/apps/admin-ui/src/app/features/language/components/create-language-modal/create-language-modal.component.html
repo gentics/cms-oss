@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_language_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-language-properties
+        [formControl]="form"
+    ></gtx-language-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!this.form.valid"
+        (click)="buttonCreateEntityClicked()"
+        gtxActionAllowed="language.createLanguage"
+    >
+        {{ 'modal.create_language_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

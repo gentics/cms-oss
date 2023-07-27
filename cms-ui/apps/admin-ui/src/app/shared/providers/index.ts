@@ -16,7 +16,6 @@ export * from './folder-data/folder-data.service';
 export * from './group-data/group-data.service';
 export * from './group-user-data/group-user-data.service';
 export * from './i18n-relative-date/i18n-relative-date.service';
-export * from './language-data/language-data.service';
 export * from './markup-language-data/markup-language-data.service';
 export * from './node-data/node-data.service';
 export * from './node-package-data/node-package-data.service';

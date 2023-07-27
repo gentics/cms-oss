@@ -7,7 +7,7 @@ import {
     EntityManagerService,
     ErrorHandler,
     FeatureOperations,
-    LanguageOperations,
+    LanguageHandlerService,
     LoggingHelperService,
     MarkupLanguageOperations,
     MessageService,
@@ -21,18 +21,18 @@ import { DebugToolService } from '@admin-ui/core/providers/debug-tool/debug-tool
 import { LogoutCleanupService } from '@admin-ui/core/providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from '@admin-ui/core/providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin.operations';
-import { selectLoginEventOrIsLoggedIn, SelectState } from '@admin-ui/state';
+import { SelectState, selectLoginEventOrIsLoggedIn } from '@admin-ui/state';
 import { AppStateService } from '@admin-ui/state/providers/app-state/app-state.service';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccessControlledType, Feature, GcmsPermission, GcmsUiLanguage, GtxVersion, I18nLanguage, Normalized, User } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
-import { forkJoin, Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { filter, first, map, switchMap, takeUntil } from 'rxjs/operators';
+import { AdminUIModuleRoutes } from './common';
 import { KeycloakService } from './login/providers/keycloak/keycloak.service';
 import { SetBackendLanguage } from './state/ui/ui.actions';
-import { AdminUIModuleRoutes } from './common';
 
 @Component({
     selector: 'gtx-app-root',
@@ -80,7 +80,7 @@ export class AppComponent implements OnDestroy, OnInit {
         private debugToolService: DebugToolService,
         private editorUiLocalStorage: EditorUiLocalStorageService,
         private entityManager: EntityManagerService,
-        private languageOperations: LanguageOperations,
+        private languageHandler: LanguageHandlerService,
         private features: FeatureOperations,
         private logger: NGXLogger,
         private loggingHelper: LoggingHelperService,
@@ -143,7 +143,7 @@ export class AppComponent implements OnDestroy, OnInit {
             takeUntil(this.stopper.stopper$),
         ).subscribe(() => {
             this.onLogin();
-            this.supportedLanguages$ = this.languageOperations.getBackendLanguages();
+            this.supportedLanguages$ = this.languageHandler.getBackendLanguages();
         });
 
         this.debugToolService.init();
@@ -199,7 +199,7 @@ export class AppComponent implements OnDestroy, OnInit {
             .then(modal => modal.open())
             .then(value => {
                 if (value) {
-                    this.languageOperations.setActiveUiLanguage(language).subscribe(() => {
+                    this.languageHandler.setActiveUiLanguage(language).subscribe(() => {
                         this.appState.dispatch(new SetBackendLanguage(language));
                         location.reload(); // changing language requires application reload
                     });
@@ -224,7 +224,7 @@ export class AppComponent implements OnDestroy, OnInit {
     }
 
     private onLogin(): void {
-        let loginOperations: any[] = [
+        const loginOperations: any[] = [
             // Get all features
             this.features.checkAllGlobalFeatures(),
 

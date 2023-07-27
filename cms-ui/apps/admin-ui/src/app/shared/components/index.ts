@@ -23,7 +23,6 @@ export * from './create-cr-fragment-modal/create-cr-fragment-modal.component';
 export * from './create-data-source-entry-modal/create-data-source-entry-modal.component';
 export * from './create-data-source-modal/create-data-source-modal.component';
 export * from './create-group-modal/create-group-modal.component';
-export * from './create-language-modal/create-language-modal.component';
 export * from './create-update-tagmapentry-modal/create-update-tagmapentry-modal.component';
 export * from './create-user-modal/create-user-modal.component';
 export * from './data-source-entry-table/data-source-entry-table.component';

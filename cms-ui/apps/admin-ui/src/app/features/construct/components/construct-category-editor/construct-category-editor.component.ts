@@ -1,7 +1,6 @@
 import { EditableEntity } from '@admin-ui/common';
-import { ConstructCategoryHandlerService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService, LanguageHandlerService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
-import { LanguageDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
@@ -32,7 +31,7 @@ export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<
         router: Router,
         appState: AppStateService,
         handler: ConstructCategoryHandlerService,
-        protected languageData: LanguageDataService,
+        protected languageHandler: LanguageHandlerService,
         protected tableLoader: ConstructCategoryTableLoaderService,
     ) {
         super(
@@ -48,7 +47,7 @@ export class ConstructCategoryEditorComponent extends BaseEntityEditorComponent<
     override ngOnInit(): void {
         super.ngOnInit();
 
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
     }
 
     override onEntityUpdate(): void {

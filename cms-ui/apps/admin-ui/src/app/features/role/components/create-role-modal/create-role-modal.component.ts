@@ -1,5 +1,4 @@
-import { RoleOperations } from '@admin-ui/core';
-import { LanguageDataService } from '@admin-ui/shared';
+import { LanguageHandlerService, RoleOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
@@ -15,9 +14,6 @@ import { Observable } from 'rxjs';
 })
 export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnInit {
 
-    /** Current step (tab) of the entity creation wizzard */
-    currentTab = String(1);
-
     public supportedLanguages$: Observable<Language[]>;
 
     /** form instance */
@@ -25,7 +21,7 @@ export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnIni
 
     constructor(
         private roleOperations: RoleOperations,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
     ) {
         super();
     }
@@ -33,21 +29,8 @@ export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnIni
     ngOnInit(): void {
         // instantiate form
         this.form = new UntypedFormControl({}, createNestedControlValidator());
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
     }
-
-    /** Programmatic tab set */
-    setActiveTab(index: string): void {
-        this.currentTab = String(index);
-    }
-
-    /**
-     * Returns TRUE if parameter index is index of active tab
-     */
-    tabIndexIsActive(index: number): boolean {
-        return this.currentTab === String(index);
-    }
-
     /**
      * If user clicks to create a new role
      */

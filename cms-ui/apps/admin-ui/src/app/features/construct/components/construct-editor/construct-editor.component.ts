@@ -1,7 +1,6 @@
 import { EditableEntity, FormGroupTabHandle, discard } from '@admin-ui/common';
-import { ConstructHandlerService, ConstructTableLoaderService } from '@admin-ui/core';
+import { ConstructHandlerService, ConstructTableLoaderService, LanguageHandlerService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
-import { LanguageDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
@@ -105,7 +104,7 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<TagType<
         router: Router,
         appState: AppStateService,
         handler: ConstructHandlerService,
-        protected languageData: LanguageDataService,
+        protected languageHandler: LanguageHandlerService,
         protected tableLoader: ConstructTableLoaderService,
     ) {
         super(
@@ -121,7 +120,7 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<TagType<
     override ngOnInit(): void {
         super.ngOnInit();
 
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
     }
 
     override onEntityUpdate(): void {

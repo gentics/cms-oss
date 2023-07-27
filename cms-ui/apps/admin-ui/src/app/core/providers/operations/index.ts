@@ -17,7 +17,6 @@ export * from './folder/folder.operations';
 export * from './form/form.operations';
 export * from './group/group.operations';
 export * from './image/image.operations';
-export * from './language/language.operations';
 export * from './markuplanguage/markuplanguage.operations';
 export * from './node/node.operations';
 export * from './package';

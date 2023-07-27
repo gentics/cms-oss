@@ -1,9 +1,8 @@
 import { createFormSaveDisabledTracker, FormGroupTabHandle, FormTabHandle, RoleDetailTabs } from '@admin-ui/common';
 import { detailLoading } from '@admin-ui/common/utils/rxjs-loading-operators/detail-loading.operator';
-import { EditorTabTrackerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
+import { EditorTabTrackerService, LanguageHandlerService, PermissionsService, RoleOperations } from '@admin-ui/core/providers';
 import { RoleDataService } from '@admin-ui/shared';
 import { BaseDetailComponent } from '@admin-ui/shared/components';
-import { LanguageDataService } from '@admin-ui/shared/providers/language-data';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
@@ -22,12 +21,12 @@ import {
     RoleBO,
     RolePermissions,
     RoleUpdateRequest,
-    TypePermissions
+    TypePermissions,
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
-import { delay, distinctUntilChanged, map, publishReplay, refCount, repeat, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { delay, distinctUntilChanged, map, repeat, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { RoleTableLoaderService } from '../../providers';
 
 // *************************************************************************************************
@@ -95,7 +94,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
         roleData: RoleDataService,
         changeDetectorRef: ChangeDetectorRef,
         private roleOperations: RoleOperations,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
         private permissionsService: PermissionsService,
         private editorTabTracker: EditorTabTrackerService,
         private tableLoader: RoleTableLoaderService,
@@ -170,7 +169,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
             map((typePermissions: TypePermissions) => typePermissions.hasPermission(GcmsPermission.READ)),
         );
 
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.watchSupportedLanguages();
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route).pipe(
             map((tabId: RoleDetailTabs) => !Object.values(RoleDetailTabs).includes(tabId) ? RoleDetailTabs.PROPERTIES : tabId),
@@ -180,12 +179,8 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
     }
 
     private initLanguageData(): void {
-        this.languageData.watchAllEntities().pipe(
-            takeUntil(this.stopper.stopper$),
-            publishReplay(1),
-            refCount(),
-        ).subscribe((currentLanguages: Language[]) => {
-            this.currentLanguagesSorted = currentLanguages.sort((languageA: Language, languageB: Language) => {
+        this.languageHandler.listMapped().subscribe((currentLanguages) => {
+            this.currentLanguagesSorted = currentLanguages.items.sort((languageA: Language, languageB: Language) => {
                 return languageA.name.localeCompare(languageB.name);
             });
             this.updatePageLanguagesSortedAndRemainingChildControlNames();

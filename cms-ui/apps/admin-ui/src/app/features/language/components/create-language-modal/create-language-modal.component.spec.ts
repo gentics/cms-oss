@@ -1,5 +1,5 @@
 import { InterfaceOf } from '@admin-ui/common';
-import { I18nService, LanguageOperations } from '@admin-ui/core';
+import { I18nService, LanguageHandlerService } from '@admin-ui/core';
 import { MockI18nServiceWithSpies } from '@admin-ui/core/providers/i18n/i18n.service.mock';
 import { Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -15,13 +15,13 @@ class MockI18nPipe implements PipeTransform {
     }
 }
 
-class MockLanguageOperations implements Partial<InterfaceOf<LanguageOperations>> {
-    createLanguage = jasmine.createSpy('createLanguage').and.returnValue(of({}));
+class MockLanguageOperations implements Partial<InterfaceOf<LanguageHandlerService>> {
+    create = jasmine.createSpy('create').and.returnValue(of({}));
 }
 
 describe('CreateLanguageModalComponent', () => {
     let i18n: MockI18nServiceWithSpies;
-    let languageOperations: MockLanguageOperations;
+    let handler: MockLanguageOperations;
     let component: CreateLanguageModalComponent;
     let fixture: ComponentFixture<CreateLanguageModalComponent>;
 
@@ -37,12 +37,12 @@ describe('CreateLanguageModalComponent', () => {
             ],
             providers: [
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
-                { provide: LanguageOperations, useClass: MockLanguageOperations },
+                { provide: LanguageHandlerService, useClass: MockLanguageOperations },
             ],
         }).compileComponents();
 
         i18n = TestBed.get(I18nService);
-        languageOperations = TestBed.get(LanguageOperations);
+        handler = TestBed.get(LanguageHandlerService);
         fixture = TestBed.createComponent(CreateLanguageModalComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -62,7 +62,7 @@ describe('CreateLanguageModalComponent', () => {
         component.buttonCreateEntityClicked();
         fixture.detectChanges();
 
-        expect(languageOperations.createLanguage).toHaveBeenCalled();
-        expect(languageOperations.createLanguage).toHaveBeenCalledWith({ name: component.form.value.name, code: component.form.value.code });
+        expect(handler.create).toHaveBeenCalled();
+        expect(handler.create).toHaveBeenCalledWith({ name: component.form.value.name, code: component.form.value.code });
     });
 });

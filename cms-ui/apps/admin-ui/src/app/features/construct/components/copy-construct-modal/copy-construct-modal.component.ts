@@ -1,14 +1,13 @@
 import { ConstructBO } from '@admin-ui/common';
-import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService } from '@admin-ui/core';
+import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
-import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
 import { CmsI18nValue, Language, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
-import { first, switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-copy-construct-modal',
@@ -32,7 +31,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
 
     constructor(
         private changeDetector: ChangeDetectorRef,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
         private handler: ConstructHandlerService,
         private notifications: I18nNotificationService,
     ) {
@@ -42,9 +41,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     ngOnInit(): void {
         this.loading = true;
 
-        this.subscriptions.push(this.languageData.watchSupportedLanguages().pipe(
-            first(),
-        ).subscribe(langs => {
+        this.subscriptions.push(this.languageHandler.watchSupportedLanguages().subscribe(langs => {
             langs = langs || [];
             this.supportedLanguages = langs;
             const fallbackLanguage = langs?.[0];

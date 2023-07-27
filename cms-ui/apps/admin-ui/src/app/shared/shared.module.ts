@@ -24,7 +24,6 @@ import {
     CreateDataSourceEntryModalComponent,
     CreateDataSourceModalComponent,
     CreateGroupModalComponent,
-    CreateLanguageModalComponent,
     CreateUpdateTagmapEntryModalComponent,
     CreateUserModalComponent,
     DataSourceEntryTableComponent,
@@ -96,7 +95,6 @@ import {
     GroupDataService,
     GroupUserDataService,
     I18nRelativeDateService,
-    LanguageDataService,
     MarkupLanguageDataService,
     NodeDataService,
     NodePackageDataService,
@@ -112,7 +110,7 @@ import {
     TemplateTagStatusDataService,
     UserDataService,
     UserGroupDataService,
-    WizardService
+    WizardService,
 } from './providers';
 
 const COMPONENTS: any[] = [
@@ -137,7 +135,6 @@ const COMPONENTS: any[] = [
     CreateDataSourceEntryModalComponent,
     CreateDataSourceModalComponent,
     CreateGroupModalComponent,
-    CreateLanguageModalComponent,
     CreateUpdateTagmapEntryModalComponent,
     CreateUserModalComponent,
     DataSourceEntryTableComponent,
@@ -216,7 +213,6 @@ const PROVIDERS: any[] = [
     GroupDataService,
     GroupUserDataService,
     I18nRelativeDateService,
-    LanguageDataService,
     MarkupLanguageDataService,
     NodeDataService,
     NodeDataService,

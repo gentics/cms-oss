@@ -1,6 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
-import { LanguageDataService } from '@admin-ui/shared';
+import { ConstructHandlerService, LanguageHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
@@ -96,7 +95,7 @@ export class ObjectpropertyPropertiesComponent
         changeDetector: ChangeDetectorRef,
         private constructHandler: ConstructHandlerService,
         private categoryHandler: ObjectPropertyCategoryHandlerService,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
         private appState: AppStateService,
     ) {
         super(changeDetector);
@@ -111,7 +110,7 @@ export class ObjectpropertyPropertiesComponent
         this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(
             map(res => res.items),
         );
-        this.languages$ = this.languageData.watchSupportedLanguages();
+        this.languages$ = this.languageHandler.watchSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;

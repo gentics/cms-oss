@@ -13,6 +13,7 @@ import { ConstructHandlerService } from '../construct-handler/construct-handler.
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 
 export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot): boolean {
     if (from.component !== to.component) {
@@ -40,6 +41,7 @@ export class RouteEntityResolverService {
     constructor(
         private construct: ConstructHandlerService,
         private constructCat: ConstructCategoryHandlerService,
+        private lang: LanguageHandlerService,
         private objPropCat: ObjectPropertyCategoryHandlerService,
         private objPro: ObjectPropertyHandlerService,
     ) {}
@@ -69,6 +71,9 @@ export class RouteEntityResolverService {
 
             case EditableEntity.OBJECT_PROPERTY:
                 return this.objPro as any;
+
+            case EditableEntity.LANGUAGE:
+                return this.lang as any;
 
             case EditableEntity.OBJECT_PROPERTY_CATEGORY:
                 return this.objPropCat as any;

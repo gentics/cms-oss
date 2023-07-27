@@ -21,6 +21,7 @@ export * from './group-trable-loader/group-trable-loader';
 export * from './guards';
 export * from './i18n';
 export * from './i18n-notification/i18n-notification.service';
+export * from './language-handler/language-handler.service';
 export * from './language-table-loader/language-table-loader.service';
 export * from './logging-helper/logging-helper.service';
 export * from './maintenance-mode/maintenance-mode.service';

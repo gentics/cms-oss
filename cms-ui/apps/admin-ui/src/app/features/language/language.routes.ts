@@ -1,10 +1,18 @@
-import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute, LanguageDetailTabs } from '@admin-ui/common';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
+import {
+    AdminUIEntityDetailRoutes,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    LanguageDetailTabs,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_IS_EDITOR_ROUTE,
+    ROUTE_PARAM_ENTITY_ID,
+} from '@admin-ui/common';
+import { EDITOR_TAB, RouteEntityResolverService, runEntityResolver } from '@admin-ui/core';
 import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
 import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { LanguageDetailComponent, LanguageMasterComponent } from './components';
-import { CanActivateLanguageGuard } from './providers';
+import { LanguageEditorComponent, LanguageMasterComponent } from './components';
 
 export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -19,8 +27,8 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: `:id/:${EDITOR_TAB}`,
-                component: LanguageDetailComponent,
+                path: `:${ROUTE_PARAM_ENTITY_ID}/:${EDITOR_TAB}`,
+                component: LanguageEditorComponent,
                 data: {
                     typePermissions: [
                         {
@@ -30,16 +38,18 @@ export const LANGUAGE_ROUTES: GcmsAdminUiRoute[] = [
                             ],
                         },
                     ],
+                    [ROUTE_IS_EDITOR_ROUTE]: true,
+                    [ROUTE_ENTITY_TYPE_KEY]: EditableEntity.LANGUAGE,
                 },
-                canActivate: [CanActivateLanguageGuard],
                 canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
-                    breadcrumb: BreadcrumbResolver,
+                    [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
                 },
+                runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
             },
             {
-                path: ':id',
-                redirectTo: `:id/${LanguageDetailTabs.PROPERTIES}`,
+                path: `:${ROUTE_PARAM_ENTITY_ID}`,
+                redirectTo: `:${ROUTE_PARAM_ENTITY_ID}/${LanguageDetailTabs.PROPERTIES}`,
                 pathMatch: 'full',
             },
         ],

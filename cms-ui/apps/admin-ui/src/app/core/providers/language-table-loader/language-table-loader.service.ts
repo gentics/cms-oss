@@ -17,7 +17,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../entity-manager';
-import { LanguageOperations } from '../operations';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 
 export interface LanguageLoaderOptions {
     nodeId?: number;
@@ -30,7 +30,7 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: LanguageOperations,
+        protected handler: LanguageHandlerService,
     ) {
         super('language', entityManager, appState);
     }
@@ -72,7 +72,7 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.deleteLanguage(Number(entityId)).toPromise();
+        return this.handler.delete(entityId).toPromise();
     }
 
     public mapToBusinessObject(lang: Language, index: number = -1): LanguageBO {
@@ -80,7 +80,7 @@ export class LanguageTableLoaderService extends BaseTableLoaderService<Language,
             ...lang,
             [BO_ID]: String(lang.id),
             [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: lang.name,
+            [BO_DISPLAY_NAME]: this.handler.displayName(lang),
             [BO_ORIGINAL_SORT_ORDER]: index,
             [BO_NEW_SORT_ORDER]: index,
         };

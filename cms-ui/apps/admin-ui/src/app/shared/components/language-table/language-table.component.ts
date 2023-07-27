@@ -8,7 +8,6 @@ import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BaseSortableEntityTableComponent } from '../base-sortable-entity-table/base-sortable-entity-table.component';
-import { CreateLanguageModalComponent } from '../create-language-modal/create-language-modal.component';
 
 @Component({
     selector: 'gtx-language-table',
@@ -99,20 +98,6 @@ export class LanguageTableComponent
         return {
             nodeId: this.nodeId,
         };
-    }
-
-    async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
-            CreateLanguageModalComponent,
-            { closeOnOverlayClick: false, width: '50%' },
-        );
-        const created = await dialog.open();
-
-        if (!created) {
-            return;
-        }
-
-        this.loader.reload();
     }
 
     handleNodeLanguageAssignment(): void {

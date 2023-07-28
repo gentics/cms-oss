@@ -816,6 +816,25 @@ public final class ContentNodeTestUtils {
 	@SafeVarargs
 	public static <T extends GenericResponse> T assertRequiredPermissions(UserGroup group, SystemUser user, Supplier<T> action,
 			Triple<Integer, Integer, Integer>... requiredPerms) throws NodeException {
+		return assertRequiredPermissions(group, user, action, ResponseCode.OK, requiredPerms);
+	}
+
+	/**
+	 * Assert that executing the given action with the user (in the group) requires the given permissions.
+	 * First the action is executed with all but one permissions are set and a failure (due to insufficient permissions) is expected.
+	 * The the action is executed with all permissions set and success is expected.
+	 * Executing this method will change the permissions set for the group
+	 * @param group group, which will get the permissions set.
+	 * @param user user to execute the action with
+	 * @param action action to execute
+	 * @param responseCode expected response code
+	 * @param requiredPerms list of required permissions. Each triple consists of objType, objId and permBit.
+	 * @return response of the successful action
+	 * @throws NodeException
+	 */
+	@SafeVarargs
+	public static <T extends GenericResponse> T assertRequiredPermissions(UserGroup group, SystemUser user, Supplier<T> action,
+			ResponseCode responseCode, Triple<Integer, Integer, Integer>... requiredPerms) throws NodeException {
 
 		// filter out null values and duplicates
 		List<Triple<Integer, Integer, Integer>> requiredPermsList = Stream.of(requiredPerms).filter(triple -> triple != null).distinct().collect(Collectors.toList());
@@ -869,7 +888,7 @@ public final class ContentNodeTestUtils {
 		T response = null;
 		try (Trx trx = new Trx(user)) {
 			response = action.supply();
-			assertResponseCodeOk(response);
+			assertResponseCode(response, responseCode);
 		} catch (InsufficientPrivilegesException e) {
 			fail("Action failed due to insufficient privileges");
 		}

@@ -94,13 +94,15 @@ $ALOHA_SETTINGS['plugins']['block']['rootTags'] = array('div', 'span', 'a');
 New format:
 
 <shell filename="aloha.yml">
-aloha_settings:
-  plugins:
-    block:
-      rootTags:
-        - "div"
-        - "span"
-        - "a"
+global:
+  config:
+    aloha_settings:
+      plugins:
+        block:
+          rootTags:
+            - "div"
+            - "span"
+            - "a"
 </shell>
 
 h6. Exceptions

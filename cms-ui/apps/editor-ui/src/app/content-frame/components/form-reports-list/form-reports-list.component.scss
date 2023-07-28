@@ -56,7 +56,7 @@ $gtx-form-report-table-border-color: #ddd;
     display: block;
 
     table {
-        width: auto;
+        width: fit-content;
         min-width: 100%;
         height: initial;
     }
@@ -68,11 +68,33 @@ table.data-table {
     }
 
     thead th {
-        z-index: 1;
+        z-index: 3;
         position: sticky;
         top: 0;
         background: #fff;
         border-bottom: 1px solid $gtx-form-report-table-border-color;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 100%;
+        line-height: 1.4;
+        width: 2.5rem;
+    }
+
+    tbody {
+        th, td {
+            min-width: none !important;
+
+            &,
+            span {
+                line-height: unset !important;
+                white-space: unset !important;
+                word-break: break-all;
+            }
+        }
+
+        th {
+            min-width: 6rem;
+        }
     }
 
     tr {
@@ -81,40 +103,42 @@ table.data-table {
         th, td {
             line-height: 0;
             padding: 0.3rem;
-            min-width: 6rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             border-right: 1px solid rgba($gtx-form-report-table-border-color, 0.25);
             border-bottom: 1px solid rgba($gtx-form-report-table-border-color, 0.25);
+            padding: 5px;
+            justify-content: center;
 
-            // frozen columns
+            &.icon-checkbox {
+                width: 4rem;
+
+                icon-checkbox {
+                    display: flex;
+                    justify-content: center;
+                }
+            }
+
             &.fixed {
                 position: -webkit-sticky;
                 position: sticky;
                 border-bottom: none;
-                padding: 0.3rem 0;
+                padding: 5px;
                 justify-content: center;
                 background-color: white;
-                min-width: 2.3rem;
-                width: 2.3rem;
                 z-index: 2;
 
-                &.left {
+                &.sticky-left {
                     left: 0;
                     box-shadow: 1px 0px 11px -3px rgb(0 0 0 / 15%);
                 }
 
-                &.right {
+                &.sticky-right {
                     right: 0;
                     box-shadow: -1px 0px 11px -3px rgb(0 0 0 / 15%);
                 }
             }
-        }
-
-        td {
-            padding: 5px;
-            justify-content: center;
         }
     }
 

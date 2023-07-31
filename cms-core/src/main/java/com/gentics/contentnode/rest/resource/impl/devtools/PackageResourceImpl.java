@@ -1,7 +1,10 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -166,6 +169,21 @@ public class PackageResourceImpl implements PackageResource {
 			return Response.noContent().build();
 		}
 	}
+
+
+	@Override
+	@GET
+	@Path("/packages/{name}/check")
+	public PackageDependencyList performPackageConsistencyCheck(@PathParam("name") String packageName) throws NodeException {
+		operate(()-> getPackage(packageName));
+
+		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
+		PackageDependencyList dependencyListResponse = new PackageDependencyList();
+		dependencyListResponse.setItems(dependencyChecker.collectDependencies());
+
+		return dependencyListResponse;
+	}
+
 
 	@Override
 	@PUT

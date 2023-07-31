@@ -1,8 +1,10 @@
 package com.gentics.contentnode.tests.devtools;
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.gentics.api.lib.exception.NodeException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -241,6 +243,17 @@ public class PackageResourceTest {
 			}
 		}
 	}
+
+
+	@Test
+	public void givenPackageShouldListDependencies() throws NodeException {
+		operate(()->{
+			PackageResource packageResource = new PackageResourceImpl();
+
+
+		});
+	}
+
 
 	/**
 	 * Add the given number of packages with random names

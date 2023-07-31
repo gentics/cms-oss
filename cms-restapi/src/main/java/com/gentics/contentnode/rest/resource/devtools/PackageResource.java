@@ -109,6 +109,12 @@ public interface PackageResource {
 	})
 	Response delete(@PathParam("name") String name) throws Exception;
 
+
+	@GET
+	@Path("/package/{name}/check")
+	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name) throws Exception;
+
+
 	/**
 	 * Trigger synchronization of all objects in the given package to the filesystem
 	 * @param name name of the package

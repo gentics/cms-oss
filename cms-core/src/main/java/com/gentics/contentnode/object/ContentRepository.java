@@ -105,6 +105,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		cr.setUsername(nodeCR.getUsername());
 		cr.setUsePassword(!ObjectTransformer.isEmpty(nodeCR.getPassword()));
 		cr.setUrl(nodeCR.getUrl());
+		cr.setUseHttp2(nodeCR.isHttp2());
 		cr.setBasepath(nodeCR.getBasepath());
 		cr.setInstantPublishing(nodeCR.isInstantPublishing());
 		cr.setPermissionInformation(nodeCR.isPermissionInformation());
@@ -159,6 +160,9 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			if (!cr.getUsePassword()) {
 				nodeCR.setPassword(null);
 			}
+		}
+		if (cr.getUseHttp2() != null) {
+			nodeCR.setHttp2(cr.getUseHttp2());
 		}
 		if (cr.getUrl() != null) {
 			nodeCR.setUrl(cr.getUrl());
@@ -222,6 +226,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		resolvableProperties.put("username", new NodeObjectProperty<>((o, key) -> o.getUsername()));
 		resolvableProperties.put("url", new NodeObjectProperty<>((o, key) -> o.getUrl()));
 		resolvableProperties.put("basepath", new NodeObjectProperty<>((o, key) -> o.getBasepath()));
+		resolvableProperties.put("http2", new NodeObjectProperty<>((o, key) -> o.isHttp2()));
 		resolvableProperties.put("instantPublishing", new NodeObjectProperty<>((o, key) -> o.isInstantPublishing()));
 		resolvableProperties.put("languageInformation", new NodeObjectProperty<>((o, key) -> o.isLanguageInformation()));
 		resolvableProperties.put("permissionInformation", new NodeObjectProperty<>((o, key) -> o.isPermissionInformation()));
@@ -339,6 +344,23 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("password")
 	public void setPassword(String password) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the HTTP/2 usage flag
+	 * @return flag
+	 */
+	@FieldGetter("http2")
+	public abstract boolean isHttp2();
+
+	/**
+	 * Set the HTTP/2 flag
+	 * @param http2 flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("http2")
+	public void setHttp2(boolean http2) throws ReadOnlyException {
 		failReadOnly();
 	}
 

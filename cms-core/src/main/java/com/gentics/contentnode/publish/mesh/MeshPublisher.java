@@ -204,6 +204,7 @@ import com.gentics.mesh.rest.client.MeshRequest;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
+import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -1091,7 +1092,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 			if (isConsiderGtxUrlField() && MeshURLRenderer.supportsType(type)) {
 				tagmapEntries.get(type).add(new MeshURLRenderer(type));
-		}
+			}
 		}
 
 		if (connect) {
@@ -1107,7 +1108,7 @@ public class MeshPublisher implements AutoCloseable {
 			long readTimeout = ObjectTransformer.getLong(prefs.getProperty("mesh.client.readTimeout"), DEFAULT_TIMEOUT);
 
 			clientConfig = new MeshRestClientConfig.Builder().setHost(host).setPort(port).setSsl(ssl).build();
-			okHttpClient = OkHttpClientProvider.get(callTimeout, connectTimeout, writeTimeout, readTimeout);
+			okHttpClient = OkHttpClientProvider.get(callTimeout, connectTimeout, writeTimeout, readTimeout, cr.isHttp2() ? ProtocolVersion.HTTP_2 : ProtocolVersion.HTTP_1_1);
 			client = new MeshRestOkHttpClientImpl(clientConfig, okHttpClient);
 
 			if (ObjectTransformer.isEmpty(username)) {

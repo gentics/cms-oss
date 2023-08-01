@@ -1,4 +1,12 @@
-import { BO_DISPLAY_NAME, BO_ID, BusinessObject, TableLoadEndEvent, TableLoadOptions, TableLoadResponse, TableLoadStartEvent } from '@admin-ui/common';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BusinessObject,
+    TableLoadEndEvent,
+    TableLoadOptions,
+    TableLoadResponse,
+    TableLoadStartEvent,
+} from '@admin-ui/common';
 import { BaseTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';

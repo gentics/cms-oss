@@ -18,6 +18,7 @@ import { LanguageHandlerService } from '../language-handler/language-handler.ser
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
+import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 
 export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot): boolean {
     if (from.component !== to.component) {
@@ -52,6 +53,7 @@ export class RouteEntityResolverService {
         private construct: ConstructHandlerService,
         private constructCat: ConstructCategoryHandlerService,
         private dataSource: DataSourceHandlerService,
+        private devToolPkg: DevToolPackageHandlerService,
         private lang: LanguageHandlerService,
         private objPropCat: ObjectPropertyCategoryHandlerService,
         private objPro: ObjectPropertyHandlerService,
@@ -93,6 +95,9 @@ export class RouteEntityResolverService {
 
             case EditableEntity.DATA_SOURCE:
                 return this.dataSource as any;
+
+            case EditableEntity.DEV_TOOL_PACKAGE:
+                return this.devToolPkg as any;
 
             case EditableEntity.OBJECT_PROPERTY:
                 return this.objPro as any;

@@ -3,10 +3,10 @@ import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
-    DevtoolEntityListHandler,
-    DevtoolEntityListRequestModel,
-    DevtoolEntityListRequestParams,
-    DevtoolEntityListResponseModel,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
     EditableEntity,
     EditableEntityBusinessObjects,
     EditableEntityModels,
@@ -42,7 +42,7 @@ export class ConstructHandlerService
     extends BaseEntityHandlerService
     implements EntityEditorHandler<EditableEntity.CONSTRUCT>,
         EntityListHandler<EditableEntity.CONSTRUCT>,
-        DevtoolEntityListHandler<EditableEntity.CONSTRUCT> {
+        DevToolEntityHandler<EditableEntity.CONSTRUCT> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -185,6 +185,7 @@ export class ConstructHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
@@ -205,11 +206,11 @@ export class ConstructHandlerService
         );
     }
 
-    listFromDevtool(
+    listFromDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.CONSTRUCT>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<DevtoolEntityListResponseModel<EditableEntity.CONSTRUCT>> {
+        body?: DevToolEntityListRequestModel<EditableEntity.CONSTRUCT>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CONSTRUCT>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.CONSTRUCT>> {
         return this.api.devTools.getConstructs(devtoolPackage, params).pipe(
             tap(res => {
                 res.items.forEach(objCat => {
@@ -217,15 +218,16 @@ export class ConstructHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
-    listFromDevtoolMapped(
+    listFromDevToolMapped(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.CONSTRUCT>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.CONSTRUCT>,
+        body?: DevToolEntityListRequestModel<EditableEntity.CONSTRUCT>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CONSTRUCT>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
-        return this.listFromDevtool(devtoolPackage, body, params).pipe(
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
             map(res => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);
@@ -259,14 +261,56 @@ export class ConstructHandlerService
         return this.api.tagType.linkTagToNode({
             targetIds: [`${constructId}`],
             ids: [nodeId],
-        }).pipe(discard());
+        }).pipe(
+            discard(),
+            this.catchAndRethrowError(),
+        );
     }
 
     unlinkFromNode(constructId: EntityIdType, nodeId: number): Observable<void> {
         return this.api.tagType.unlinkTagFromNode({
             targetIds: [`${constructId}`],
             ids: [nodeId],
-        }).pipe(discard());
+        }).pipe(
+            discard(),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    addToDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.addConstructToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'construct.construct_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.removeConstructFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'construct.construct_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
     }
 
     listFromDataSource(
@@ -281,6 +325,7 @@ export class ConstructHandlerService
                     this.nameMap[con.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 

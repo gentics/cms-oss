@@ -71,7 +71,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: UserTableLoaderService,
+        protected loader: UserTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
         protected operations: UserOperations,

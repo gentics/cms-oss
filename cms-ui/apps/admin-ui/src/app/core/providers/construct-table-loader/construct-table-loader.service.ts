@@ -1,4 +1,4 @@
-import { BO_ID, BO_PERMISSIONS, ConstructBO, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { BO_ID, BO_PERMISSIONS, ConstructBO, EntityList, EntityPageResponse, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { PagedConstructListRequestOptions, TagType } from '@gentics/cms-models';
@@ -14,7 +14,8 @@ export interface ConstructTableLoaderOptions {
 }
 
 @Injectable()
-export class ConstructTableLoaderService extends BaseTableLoaderService<TagType, ConstructBO, ConstructTableLoaderOptions> {
+export class ConstructTableLoaderService extends BaseTableLoaderService<TagType, ConstructBO, ConstructTableLoaderOptions>
+    implements PackageTableEntityLoader<ConstructBO, ConstructTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -70,7 +71,7 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
         let loader: Observable<EntityList<ConstructBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else if (additionalOptions?.dataSourceId) {
             loader = this.handler.listFromDataSourceMapped(additionalOptions.dataSourceId, null as never, loadOptions as any);
         } else {
@@ -85,5 +86,13 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
                 };
             }),
         );
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
     }
 }

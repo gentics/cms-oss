@@ -6,16 +6,16 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { ActivatedRoute, Router } from '@angular/router';
 import { Package, PackageBO } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { CreatePackageModalComponent } from '../create-package-modal/create-package-modal.component';
+import { CreateDevToolPackageModalComponent } from '../create-dev-tool-package-modal/create-dev-tool-package-modal.component';
 
 @Component({
-    selector: 'gtx-package-master',
-    templateUrl: './package-master.component.html',
+    selector: 'gtx-dev-tool-package-master',
+    templateUrl: './dev-tool-package-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PackageMasterComponent extends BaseTableMasterComponent<Package, PackageBO> {
+export class DevToolPackageMasterComponent extends BaseTableMasterComponent<Package, PackageBO> {
 
-    protected entityIdentifier = EditableEntity.DEVTOOL_PACKAGE;
+    protected entityIdentifier = EditableEntity.DEV_TOOL_PACKAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -35,7 +35,7 @@ export class PackageMasterComponent extends BaseTableMasterComponent<Package, Pa
 
     public async handleCreate(): Promise<void> {
         const dialog = await this.modalService.fromComponent(
-            CreatePackageModalComponent,
+            CreateDevToolPackageModalComponent,
             { closeOnOverlayClick: false, width: '50%' },
         );
         const created = await dialog.open();

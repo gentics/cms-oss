@@ -1,4 +1,4 @@
-import { DataSourceBO, discard, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { DataSourceBO, discard, EntityList, EntityPageResponse, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { DataSource, Raw } from '@gentics/cms-models';
@@ -14,7 +14,8 @@ export interface DataSourceTableLoaderOptions {
 }
 
 @Injectable()
-export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSource<Raw>, DataSourceBO, DataSourceTableLoaderOptions> {
+export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSource<Raw>, DataSourceBO, DataSourceTableLoaderOptions>
+    implements PackageTableEntityLoader<DataSourceBO, DataSourceTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -33,7 +34,7 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
         let loader: Observable<EntityList<DataSourceBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
             loader = this.handler.listMapped(null as never, loadOptions);
         }
@@ -54,5 +55,13 @@ export class DataSourceTableLoaderService extends BaseTableLoaderService<DataSou
 
     public deleteEntity(entityId: string | number): Promise<void> {
         return this.handler.delete(entityId).pipe(discard()).toPromise();
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
     }
 }

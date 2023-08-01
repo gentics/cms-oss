@@ -3,10 +3,10 @@ import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
-    DevtoolEntityListHandler,
-    DevtoolEntityListRequestModel,
-    DevtoolEntityListRequestParams,
-    DevtoolEntityListResponseModel,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
     EditableEntity,
     EditableEntityBusinessObjects,
     EditableEntityModels,
@@ -41,7 +41,7 @@ export class ObjectPropertyHandlerService
     extends BaseEntityHandlerService
     implements EntityEditorHandler<EditableEntity.OBJECT_PROPERTY>,
         EntityListHandler<EditableEntity.OBJECT_PROPERTY>,
-        DevtoolEntityListHandler<EditableEntity.OBJECT_PROPERTY> {
+        DevToolEntityHandler<EditableEntity.OBJECT_PROPERTY> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -184,6 +184,7 @@ export class ObjectPropertyHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
@@ -199,11 +200,47 @@ export class ObjectPropertyHandlerService
         );
     }
 
-    listFromDevtool(
+    addToDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<DevtoolEntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'objectProperty.objectProperty_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'objectProperty.objectProperty_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
+        params?: DevToolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.OBJECT_PROPERTY>> {
         return this.api.devTools.getObjectproperties(devtoolPackage, params).pipe(
             tap(res => {
                 res.items.forEach(objCat => {
@@ -211,15 +248,16 @@ export class ObjectPropertyHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
-    listFromDevtoolMapped(
+    listFromDevToolMapped(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
+        body?: DevToolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
+        params?: DevToolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]>> {
-        return this.listFromDevtool(devtoolPackage, body, params).pipe(
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
             map(res => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,

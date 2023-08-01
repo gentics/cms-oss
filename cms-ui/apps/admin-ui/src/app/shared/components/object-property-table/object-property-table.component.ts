@@ -83,7 +83,7 @@ export class ObjectPropertyTableComponent
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
             packageOperations,

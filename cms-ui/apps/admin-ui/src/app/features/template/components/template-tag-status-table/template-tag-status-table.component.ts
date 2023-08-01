@@ -68,7 +68,7 @@ export class TemplateTagStatusTableComponent
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: TemplateTagStatusTableLoaderService,
+        protected loader: TemplateTagStatusTableLoaderService,
         modalService: ModalService,
         protected entityOperations: TemplateTagStatusOperations,
         protected notification: I18nNotificationService,

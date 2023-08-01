@@ -2,12 +2,12 @@ import { PermissionsGuard } from '@admin-ui/core/guards/permissions/permissions.
 import { NgModule, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
+import { ROUTE_DETAIL_OUTLET } from './common';
 import { AdminUIModuleRoutes, GcmsAdminUiRoute, ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_PERMISSIONS_KEY } from './common/models/routing';
 import { ViewUnauthorizedComponent } from './core/components/view-unauthorized/view-unauthorized.component';
 import { AuthGuard } from './core/guards/auth/auth.guard';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { SplitViewRouterOutletComponent } from './shared/components/split-view-router-outlet/split-view-router-outlet.component';
-import { ROUTE_DETAIL_OUTLET, ROUTE_ENTITY_RESOLVER_KEY } from './common';
 
 const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -216,9 +216,9 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
 
             // DevTools Package Management Module
             {
-                path: AdminUIModuleRoutes.PACKAGES,
+                path: AdminUIModuleRoutes.DEV_TOOL_PACKAGES,
                 component: SplitViewRouterOutletComponent,
-                loadChildren: () => import('./features/package/package.module').then(m => m.PackageModule),
+                loadChildren: () => import('./features/dev-tool-package/dev-tool-package.module').then(m => m.DevToolPackageModule),
                 data: {
                     [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.packages',
@@ -226,7 +226,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
                     [ROUTE_PERMISSIONS_KEY]: [
                         {
-                            type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
+                            type: AccessControlledType.DEVTOOL_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],

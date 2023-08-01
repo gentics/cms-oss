@@ -1,4 +1,4 @@
-import { ContentRepositoryBO, discard, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { ContentRepositoryBO, discard, EntityList, EntityPageResponse, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ContentRepository } from '@gentics/cms-models';
@@ -15,7 +15,8 @@ export interface ContentRepositoryTableLoaderOptions {
 
 @Injectable()
 export class ContentRepositoryTableLoaderService
-    extends BaseTableLoaderService<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions> {
+    extends BaseTableLoaderService<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>
+    implements PackageTableEntityLoader<ContentRepositoryBO, ContentRepositoryTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -42,7 +43,7 @@ export class ContentRepositoryTableLoaderService
         let loader: Observable<EntityList<ContentRepositoryBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
             loader = this.handler.listMapped(null as never, loadOptions);
         }
@@ -55,5 +56,13 @@ export class ContentRepositoryTableLoaderService
                 };
             }),
         )
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
     }
 }

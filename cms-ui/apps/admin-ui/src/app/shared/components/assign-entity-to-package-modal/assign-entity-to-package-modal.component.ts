@@ -49,12 +49,12 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
     ngOnInit(): void {
         switch (this.entityIdentifier) {
             case 'construct':
-                this.packageChildEntityIds$ = this.constructHandler.listFromDevtoolMapped(this.packageId).pipe(
+                this.packageChildEntityIds$ = this.constructHandler.listFromDevToolMapped(this.packageId).pipe(
                     map(res => res.items.map(entity => entity.id[BO_ID])),
                 );
                 break;
             case 'contentRepository':
-                this.packageChildEntityIds$ = this.crHandler.listFromDevtoolMapped(this.packageId).pipe(
+                this.packageChildEntityIds$ = this.crHandler.listFromDevToolMapped(this.packageId).pipe(
                     map(res => res.items.map(entity => entity[BO_ID])),
                 );
                 break;
@@ -64,12 +64,12 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
                 );
                 break;
             case 'dataSource':
-                this.packageChildEntityIds$ = this.dataSourceHandler.listFromDevtoolMapped(this.packageId).pipe(
+                this.packageChildEntityIds$ = this.dataSourceHandler.listFromDevToolMapped(this.packageId).pipe(
                     map(entities => entities.items.map(entity => entity[BO_ID])),
                 );
                 break;
             case 'objectProperty':
-                this.packageChildEntityIds$ = this.objectPropertyHandler.listFromDevtoolMapped(this.packageId).pipe(
+                this.packageChildEntityIds$ = this.objectPropertyHandler.listFromDevToolMapped(this.packageId).pipe(
                     map(res => res.items.map(entity => entity.id[BO_ID])),
                 );
                 break;

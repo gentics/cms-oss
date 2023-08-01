@@ -1,4 +1,12 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateBO, applyPermissions } from '@admin-ui/common';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID, BO_PERMISSIONS,
+    EntityPageResponse,
+    PackageTableEntityLoader,
+    TableLoadOptions,
+    TemplateBO,
+    applyPermissions,
+} from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { PagedTemplateListResponse, Template, TemplateListRequest } from '@gentics/cms-models';
@@ -15,7 +23,8 @@ export interface TemplateTableLoaderOptions {
 }
 
 @Injectable()
-export class TemplateTableLoaderService extends BaseTableLoaderService<Template, TemplateBO, TemplateTableLoaderOptions> {
+export class TemplateTableLoaderService extends BaseTableLoaderService<Template, TemplateBO, TemplateTableLoaderOptions>
+    implements PackageTableEntityLoader<TemplateBO, TemplateTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -65,6 +74,14 @@ export class TemplateTableLoaderService extends BaseTableLoaderService<Template,
                 };
             }),
         );
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.removeFromDevTool(devToolPackage, entityId);
     }
 
     public mapToBusinessObject(template: Template): TemplateBO {

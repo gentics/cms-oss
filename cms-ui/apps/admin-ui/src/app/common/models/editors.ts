@@ -181,7 +181,7 @@ export enum EditableEntity {
     CONTENT_REPOSITORY = 'content-repository',
     CR_FRAGMENT = 'cr-fragment',
     DATA_SOURCE = 'data-source',
-    DEVTOOL_PACKAGE = 'devtool-package',
+    DEV_TOOL_PACKAGE = 'devtool-package',
     FOLDER = 'folder',
     GROUP = 'group',
     LANGUAGE = 'language',
@@ -217,9 +217,9 @@ export enum EntityModelType {
     LIST_REQUEST_MODEL = 'list-request',
     LIST_REQUEST_PARAMS = 'list-params',
     LIST_RESPONSE_MODEL = 'list-response',
-    DEVTOOL_LIST_REQUEST_MODEL = 'devtool-list-request',
-    DEVTOOL_LIST_REQUEST_PARAMS = 'devtool-list-params',
-    DEVTOOL_LIST_RESPONSE_MODEL = 'devtool-list-response',
+    DEV_TOOL_LIST_REQUEST_MODEL = 'dev-tool-list-request',
+    DEV_TOOL_LIST_REQUEST_PARAMS = 'dev-tool-list-params',
+    DEV_TOOL_LIST_RESPONSE_MODEL = 'dev-tool-list-response',
 }
 
 export type EditableEntityModels = {
@@ -229,7 +229,7 @@ export type EditableEntityModels = {
     [EditableEntity.CONTENT_REPOSITORY]: ContentRepository<Raw>,
     [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragment<Raw>,
     [EditableEntity.DATA_SOURCE]: DataSource<Raw>,
-    [EditableEntity.DEVTOOL_PACKAGE]: Package<Raw>,
+    [EditableEntity.DEV_TOOL_PACKAGE]: Package<Raw>,
     [EditableEntity.FOLDER]: Folder<Raw>,
     [EditableEntity.GROUP]: Group<Raw>,
     [EditableEntity.LANGUAGE]: Language,
@@ -250,7 +250,7 @@ export type EditableEntityBusinessObjects = {
     [EditableEntity.CONTENT_REPOSITORY]: ContentRepositoryBO,
     [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragmentBO,
     [EditableEntity.DATA_SOURCE]: DataSourceBO,
-    [EditableEntity.DEVTOOL_PACKAGE]: DevToolPackageBO,
+    [EditableEntity.DEV_TOOL_PACKAGE]: DevToolPackageBO,
     [EditableEntity.FOLDER]: FolderBO,
     [EditableEntity.GROUP]: GroupBO,
     [EditableEntity.LANGUAGE]: LanguageBO,
@@ -279,9 +279,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: PagedConstructListRequestOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: PermissionListResponse<TagType>,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: PagedConstructListRequestOptions,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: DevToolsConstructListResponse,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: PagedConstructListRequestOptions,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: DevToolsConstructListResponse,
     },
     [EditableEntity.CONSTRUCT_CATEGORY]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ConstructCategoryCreateRequest,
@@ -297,9 +297,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ConstructCategoryListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ConstructCategoryListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.CONTENT_PACKAGE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ContentPackageCreateRequest,
@@ -315,9 +315,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ContentPackageListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ContentPackageListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.CONTENT_REPOSITORY]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ContentRepositoryCreateRequest,
@@ -333,9 +333,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
     },
     [EditableEntity.CR_FRAGMENT]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ContentRepositoryFragmentCreateRequest,
@@ -351,9 +351,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.DATA_SOURCE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: DataSourceCreateRequest,
@@ -369,11 +369,11 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: DataSourceListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: DataSourceListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: DataSourceListOptions,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: DataSourceListResponse,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: DataSourceListOptions,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: DataSourceListResponse,
     },
-    [EditableEntity.DEVTOOL_PACKAGE]: {
+    [EditableEntity.DEV_TOOL_PACKAGE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: PackageCreateRequest,
         [EntityModelType.CREATE_REQUEST_PARAMS]: never,
         [EntityModelType.CREATE_RESPONSE_MODEL]: PackageCreateResponse,
@@ -381,15 +381,15 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LOAD_RESPONSE_MODEL]: PackageLoadResponse,
         [EntityModelType.UPDATE_REQUEST_MODEL]: PackageUpdateRequest,
         [EntityModelType.UPDATE_REQUEST_PARAMS]: never,
-        [EntityModelType.UPDATE_RESPONSE_MODEL]: PackageLoadResponse,
+        [EntityModelType.UPDATE_RESPONSE_MODEL]: never,
         [EntityModelType.DELETE_REQUEST_MODEL]: never,
         [EntityModelType.DELETE_REQUEST_PARAMS]: never,
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: PackageListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: PackageListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.FOLDER]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: FolderCreateRequest,
@@ -405,9 +405,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: FolderListRequest,
         [EntityModelType.LIST_REQUEST_PARAMS]: FolderListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: FolderListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.GROUP]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: GroupCreateRequest,
@@ -423,9 +423,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: GroupListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: GroupListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.LANGUAGE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: LanguageCreateRequest,
@@ -441,9 +441,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: LanguageListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: LanguageListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.NODE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: NodeCreateRequest,
@@ -459,9 +459,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: NodeListRequestOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: NodeListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.OBJECT_PROPERTY]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ObjectPropertyCreateRequest,
@@ -477,9 +477,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ObjectPropertyListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ObjectPropertyListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: ObjectPropertyListOptions,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: ObjectPropertyListResponse,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: ObjectPropertyListOptions,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: ObjectPropertyListResponse,
     },
     [EditableEntity.OBJECT_PROPERTY_CATEGORY]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ObjectPropertyCategoryCreateRequest,
@@ -495,9 +495,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ObjectPropertyCategoryListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ObjectPropertyCategoryListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.ROLE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: RoleCreateRequest,
@@ -513,9 +513,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: RoleListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: RoleListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.SCHEDULE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ScheduleCreateReqeust,
@@ -531,9 +531,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ScheduleListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ScheduleListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.SCHEDULE_TASK]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ScheduleTaskCreateRequest,
@@ -549,9 +549,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: ScheduleTaskListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ScheduleTaskListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.TEMPLATE]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: TemplateCreateRequest,
@@ -567,9 +567,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: TemplateListRequest,
         [EntityModelType.LIST_RESPONSE_MODEL]: TemplateListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
     [EditableEntity.USER]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: GroupUserCreateRequest,
@@ -585,9 +585,9 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_MODEL]: never,
         [EntityModelType.LIST_REQUEST_PARAMS]: UserListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: UserListResponse,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL]: never,
+        [EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS]: never,
+        [EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL]: never,
     },
 };
 
@@ -598,7 +598,7 @@ export type EditableEntityDetailTabs = {
     [EditableEntity.CONTENT_REPOSITORY]: ContentRepositoryDetailTabs,
     [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragmentDetailTabs,
     [EditableEntity.DATA_SOURCE]: DataSourceDetailTabs,
-    [EditableEntity.DEVTOOL_PACKAGE]: DevtoolPackageDetailTabs,
+    [EditableEntity.DEV_TOOL_PACKAGE]: DevtoolPackageDetailTabs,
     [EditableEntity.FOLDER]: FolderDetailTabs,
     [EditableEntity.GROUP]: GroupDetailTabs,
     [EditableEntity.LANGUAGE]: LanguageDetailTabs,
@@ -619,7 +619,7 @@ export const EDITABLE_ENTITY_DETAIL_TABS = {
     [EditableEntity.CONTENT_REPOSITORY]: ContentRepositoryDetailTabs,
     [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragmentDetailTabs,
     [EditableEntity.DATA_SOURCE]: DataSourceDetailTabs,
-    [EditableEntity.DEVTOOL_PACKAGE]: DevtoolPackageDetailTabs,
+    [EditableEntity.DEV_TOOL_PACKAGE]: DevtoolPackageDetailTabs,
     [EditableEntity.FOLDER]: FolderDetailTabs,
     [EditableEntity.GROUP]: GroupDetailTabs,
     [EditableEntity.LANGUAGE]: LanguageDetailTabs,
@@ -651,9 +651,9 @@ export type EntityListRequestModel<T extends EditableEntity> = EditableEntityAPI
 export type EntityListRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.LIST_REQUEST_PARAMS];
 export type EntityListResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.LIST_RESPONSE_MODEL];
 
-export type DevtoolEntityListRequestModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEVTOOL_LIST_REQUEST_MODEL];
-export type DevtoolEntityListRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS];
-export type DevtoolEntityListResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL];
+export type DevToolEntityListRequestModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEV_TOOL_LIST_REQUEST_MODEL];
+export type DevToolEntityListRequestParams<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEV_TOOL_LIST_REQUEST_PARAMS];
+export type DevToolEntityListResponseModel<T extends EditableEntity> = EditableEntityAPIModels[T][EntityModelType.DEV_TOOL_LIST_RESPONSE_MODEL];
 
 export interface EntityEditorHandler<K extends EditableEntity> {
 
@@ -682,15 +682,24 @@ export interface EntityListHandler<K extends EditableEntity> {
     listMapped(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityList<EditableEntityBusinessObjects[K]>>;
 }
 
-export interface DevtoolEntityListHandler<K extends EditableEntity> {
-    listFromDevtool(
+export interface DevToolEntityHandler<K extends EditableEntity> {
+    addToDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<K>,
-        params?: DevtoolEntityListRequestParams<K>,
-    ): Observable<DevtoolEntityListResponseModel<K>>;
-    listFromDevtoolMapped(
+        entityId: string | number,
+    ): Observable<void>;
+    removeFromDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<K>,
-        params?: DevtoolEntityListRequestParams<K>,
+        entityId: string | number,
+    ): Observable<void>;
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<K>,
+        params?: DevToolEntityListRequestParams<K>,
+    ): Observable<DevToolEntityListResponseModel<K>>;
+    listFromDevToolMapped(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<K>,
+        params?: DevToolEntityListRequestParams<K>,
     ): Observable<EntityList<EditableEntityBusinessObjects[K]>>;
 }

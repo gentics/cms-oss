@@ -3,10 +3,10 @@ import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
-    DevtoolEntityListHandler,
-    DevtoolEntityListRequestModel,
-    DevtoolEntityListRequestParams,
-    DevtoolEntityListResponseModel,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
     EditableEntity,
     EditableEntityBusinessObjects,
     EditableEntityModels,
@@ -39,7 +39,7 @@ export class DataSourceHandlerService
     extends BaseEntityHandlerService
     implements EntityEditorHandler<EditableEntity.DATA_SOURCE>,
         EntityListHandler<EditableEntity.DATA_SOURCE>,
-        DevtoolEntityListHandler<EditableEntity.DATA_SOURCE> {
+        DevToolEntityHandler<EditableEntity.DATA_SOURCE> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -195,28 +195,64 @@ export class DataSourceHandlerService
         );
     }
 
-    listFromDevtool(
+    addToDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.DATA_SOURCE>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
-    ): Observable<DevtoolEntityListResponseModel<EditableEntity.DATA_SOURCE>> {
-        return this.api.devTools.getDataSources(devtoolPackage, params).pipe(
-            tap(res => {
-                res.items.forEach(objCat => {
-                    const name = this.displayName(objCat);
-                    this.nameMap[objCat.id] = name;
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'dataSource.dataSource_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
                 });
             }),
             this.catchAndRethrowError(),
         );
     }
 
-    listFromDevtoolMapped(
+    removeFromDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.DATA_SOURCE>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'dataSource.dataSource_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.DATA_SOURCE>,
+        params?: DevToolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.DATA_SOURCE>> {
+        return this.api.devTools.getDataSources(devtoolPackage, params).pipe(
+            tap(res => {
+                res.items.forEach(ds => {
+                    const name = this.displayName(ds);
+                    this.nameMap[ds.id] = name;
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevToolMapped(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.DATA_SOURCE>,
+        params?: DevToolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]>> {
-        return this.listFromDevtool(devtoolPackage, body, params).pipe(
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
             map(res => ({
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,

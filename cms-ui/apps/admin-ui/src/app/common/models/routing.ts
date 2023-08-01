@@ -31,7 +31,7 @@ export enum AdminUIModuleRoutes {
     MAINTENANCE_MODE = 'maintenance-mode',
     NODES = 'nodes',
     OBJECT_PROPERTIES = 'object-properties',
-    PACKAGES = 'packages',
+    DEV_TOOL_PACKAGES = 'devtool-packages',
     ROLES = 'roles',
     SCHEDULER = 'scheduler',
     SEARCH_INDEX_MAINTENANCE = 'search-index-maintenance',

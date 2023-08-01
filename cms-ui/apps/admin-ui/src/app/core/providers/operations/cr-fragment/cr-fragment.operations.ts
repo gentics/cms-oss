@@ -137,6 +137,46 @@ export class ContentRepositoryFragmentOperations
         )
     }
 
+    addToDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.contentRepositoryFragment[entityId];
+
+        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.contentRepositoryFragment[entityId];
+
+        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
     public mapToBusinessObject(fragment: ContentRepositoryFragment<Raw>, forPackage: boolean = false): ContentRepositoryFragmentBO<Raw> {
         return {
             ...fragment,

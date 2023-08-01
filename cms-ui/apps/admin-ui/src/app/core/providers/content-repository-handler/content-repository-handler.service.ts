@@ -3,10 +3,10 @@ import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
-    DevtoolEntityListHandler,
-    DevtoolEntityListRequestModel,
-    DevtoolEntityListRequestParams,
-    DevtoolEntityListResponseModel,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
     EditableEntity,
     EditableEntityBusinessObjects,
     EditableEntityModels,
@@ -42,7 +42,7 @@ export class ContentRepositoryHandlerService
     extends BaseEntityHandlerService
     implements EntityEditorHandler<EditableEntity.CONTENT_REPOSITORY>,
         EntityListHandler<EditableEntity.CONTENT_REPOSITORY>,
-        DevtoolEntityListHandler<EditableEntity.CONTENT_REPOSITORY> {
+        DevToolEntityHandler<EditableEntity.CONTENT_REPOSITORY> {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -185,6 +185,7 @@ export class ContentRepositoryHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
@@ -205,11 +206,47 @@ export class ContentRepositoryHandlerService
         );
     }
 
-    listFromDevtool(
+    addToDevTool(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.CONTENT_REPOSITORY>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
-    ): Observable<DevtoolEntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepository.contentRepository_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepository.contentRepository_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: this.nameMap[entityId],
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.CONTENT_REPOSITORY>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.devTools.getContentrepositories(devtoolPackage, params).pipe(
             tap(res => {
                 res.items.forEach(objCat => {
@@ -217,15 +254,16 @@ export class ContentRepositoryHandlerService
                     this.nameMap[objCat.id] = name;
                 });
             }),
+            this.catchAndRethrowError(),
         );
     }
 
-    listFromDevtoolMapped(
+    listFromDevToolMapped(
         devtoolPackage: string,
-        body?: DevtoolEntityListRequestModel<EditableEntity.CONTENT_REPOSITORY>,
-        params?: DevtoolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
+        body?: DevToolEntityListRequestModel<EditableEntity.CONTENT_REPOSITORY>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CONTENT_REPOSITORY>,
     ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONTENT_REPOSITORY]>> {
-        return this.listFromDevtool(devtoolPackage, body, params).pipe(
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
             map(res => {
                 const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
                 applyPermissions(items, res);

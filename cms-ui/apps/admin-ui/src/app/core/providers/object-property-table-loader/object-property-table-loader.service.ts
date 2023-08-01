@@ -1,4 +1,4 @@
-import { discard, EntityList, EntityPageResponse, ObjectPropertyBO, TableLoadOptions } from '@admin-ui/common';
+import { discard, EntityList, EntityPageResponse, ObjectPropertyBO, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions } from '@gentics/cms-models';
@@ -14,7 +14,8 @@ export interface ObjectPropertyTableLoaderOptions {
 }
 
 @Injectable()
-export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions> {
+export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>
+    implements PackageTableEntityLoader<ObjectPropertyBO, ObjectPropertyTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
@@ -51,7 +52,7 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
         }
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
             loader = this.handler.listMapped(null as never, loadOptions);
         }
@@ -64,5 +65,13 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
                 };
             }),
         );
+    }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
     }
 }

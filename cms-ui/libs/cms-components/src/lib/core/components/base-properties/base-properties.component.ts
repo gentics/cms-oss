@@ -73,7 +73,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
         // When the initialValue flag is updated, it means that the value may be significantly changed (usually full entity change).
         // Therefore, configure the form with the current value again to properly update the controls.
-        if (changes.initialValue && this.initialValue) {
+        if (changes.initialValue && this.initialValue && this.form) {
             this.configureForm(this.form.value);
             this.form.updateValueAndValidity();
         }

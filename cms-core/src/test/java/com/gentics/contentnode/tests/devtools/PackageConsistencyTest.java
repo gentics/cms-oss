@@ -72,18 +72,11 @@ public class PackageConsistencyTest {
     assertThat(packageSynchronizer).as("package synchronizer").isNotNull();
   }
 
-  // Construct construct = givenPackageWithDependencies();
-  // Construct nodeObject = getConstruct(construct);
-
-  //GlobalId globalId = supply(construct::getGlobalId);
-  // consume(c -> packageSynchronizer.synchronize(c, true), construct);
-  //PackageObject<Construct> constructInPackage = new PackageObject<>(construct);
 
   @Test
   public void givenPackageWithDependenciesShouldContainAllObjects() throws NodeException {
     givenSynchronizedPackage();
     List<PackageDependency> dependencies = packageDependencyChecker.collectDependencies();
-    packageDependencyChecker.performCheck();
 
     // assert completeness
     List<PackageDependency> unmetDependencies = dependencies.stream()
@@ -110,7 +103,6 @@ public class PackageConsistencyTest {
         .stream()
         .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyTyp())
         .findFirst().get();
-
 
 
     // remove one object that should be part of the package

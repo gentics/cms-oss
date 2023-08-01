@@ -1,9 +1,9 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
 import static com.gentics.contentnode.factory.Trx.operate;
-import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -170,7 +170,6 @@ public class PackageResourceImpl implements PackageResource {
 		}
 	}
 
-
 	@Override
 	@GET
 	@Path("/packages/{name}/check")
@@ -178,10 +177,11 @@ public class PackageResourceImpl implements PackageResource {
 		operate(()-> getPackage(packageName));
 
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
-		PackageDependencyList dependencyListResponse = new PackageDependencyList();
-		dependencyListResponse.setItems(dependencyChecker.collectDependencies());
+		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-		return dependencyListResponse;
+		PackageDependencyList response = new PackageDependencyList();
+		response.setItems(dependencies);
+		return response;
 	}
 
 

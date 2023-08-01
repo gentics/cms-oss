@@ -1,138 +1,134 @@
 package com.gentics.contentnode.rest.model.response.devtools;
 
 
-import java.util.ArrayList;
+import com.gentics.contentnode.rest.model.AbstractModel;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement
-public class PackageDependency {
+public class PackageDependency extends AbstractModel {
 
   /**
-   * The list of package dependencies that are referenced by this object.
+   * The keyword of the package object
    */
-  private final List<PackageDependency> referencedDependencies = new ArrayList<>();
+  private String keyword;
+
   /**
-   * The name of the package.
+   * The name of the package object.
    */
   private String name;
-  /**
-   * The globally-unique identifier for the package.
-   */
-  private String globalId;
+
   /**
    * The type of the package.
    */
   private Type dependencyTyp;
   /**
-   * A flag indicating whether the package is in the current package.
+   * A flag indicating whether the object is in the current package.
    */
-  private boolean isInPackage;
+  private Boolean isInPackage;
   /**
-   * A flag indicating whether the package is located in a different package.
+   * A flag indicating whether the object is located in a different package.
    */
-  private boolean isInOtherPackage;
+  private Boolean isInOtherPackage;
+
+  /**
+   * The list of package dependencies that are referenced by this object.
+   */
+  private List<PackageDependency> referencedDependencies;
 
   public PackageDependency() {
 
   }
 
   /**
-   * Gets the name of the package.
+   * Gets the name of the package object.
    *
-   * @return The name of the package.
+   * @return The name of the object.
    */
   public String getName() {
     return name;
   }
 
   /**
-   * Sets the name of the package.
+   * Sets the name of the package object.
    *
-   * @param name The new name of the package.
+   * @param name The new name of the object.
    */
   public void setName(String name) {
     this.name = name;
   }
 
-  /**
-   * Gets the globally-unique identifier for the package.
-   *
-   * @return The global identifier for the package.
-   */
-  public String getGlobalId() {
-    return globalId;
-  }
 
   /**
-   * Sets the globally-unique identifier for the package.
+   * Gets the keyword of the package object.
    *
-   * @param globalId The new global identifier for the package.
+   * @return The name of the object.
    */
-  public void setGlobalId(String globalId) {
-    this.globalId = globalId;
+  public String getKeyword() {
+    return keyword;
   }
 
+
   /**
-   * Gets the type of the package.
+   * Gets the type of the package object.
    *
-   * @return The type of the package.
+   * @return The type of the object.
    */
   public Type getDependencyTyp() {
     return dependencyTyp;
   }
 
   /**
-   * Sets the type of the package.
+   * Sets the type of the package object.
    *
-   * @param dependencyTyp The new type of the package.
+   * @param dependencyTyp The new type of the object.
    */
   public void setDependencyTyp(Type dependencyTyp) {
     this.dependencyTyp = dependencyTyp;
   }
 
   /**
-   * Returns true if the package is in the current package, false otherwise.
+   * Returns true if the object is in the current package, false otherwise.
    *
-   * @return Whether the package is in the current package.
+   * @return Whether the object is in the current package.
    */
-  public boolean isInPackage() {
+  public Boolean isInPackage() {
     return isInPackage;
   }
 
   /**
-   * Sets whether the package is in the current package.
+   * Sets whether the object is in the current package.
    *
-   * @param isInPackage Whether the package is in the current package.
+   * @param isInPackage Whether the object is in the current package.
    */
-  public void setInPackage(boolean isInPackage) {
+  public void setInPackage(Boolean isInPackage) {
     this.isInPackage = isInPackage;
   }
 
   /**
-   * Gets whether the package is located in a different package.
+   * Gets whether the object is located in a different package.
    *
-   * @return True if the package is located in a different package, false otherwise.
+   * @return True if the object is located in a different package, false otherwise.
    */
-  public boolean isInOtherPackage() {
+  public Boolean isInOtherPackage() {
     return isInOtherPackage;
   }
 
   /**
-   * Sets whether the package is located in a different package.
+   * Sets whether the object is located in a different package.
    *
-   * @param isInOtherPackage True if the package is located in a different package, false
-   *                         otherwise.
+   * @param isInOtherPackage True if the object is located in a different package, false
+   * otherwise.
    */
-  public void setInOtherPackage(boolean isInOtherPackage) {
+  public void setInOtherPackage(Boolean isInOtherPackage) {
     this.isInOtherPackage = isInOtherPackage;
   }
 
   /**
    * Gets the list of dependencies that are referenced by this object.
    *
-   * @return The list of package dependencies.
+   * @return The list of object dependencies.
    */
   public List<PackageDependency> getReferencedDependencies() {
     return referencedDependencies;
@@ -143,7 +139,7 @@ public class PackageDependency {
    * Set the list of dependencies that are referenced by this object.
    */
   public void setReferencedDependencies(List<PackageDependency> referencedDependencies) {
-    this.setReferencedDependencies(referencedDependencies);
+    this.referencedDependencies = referencedDependencies;
   }
 
   @XmlType(name = "Type")
@@ -152,7 +148,19 @@ public class PackageDependency {
     TEMPLATE,
     DATASOURCE,
     OBJECT_PROPERTY,
-    CONTENT_REPOSITORY
+    CONTENT_REPOSITORY,
+
+    UNKNOWN;
+
+    public static Type fromString(String value) {
+      try {
+        return Type.valueOf(value);
+      }
+      catch (IllegalArgumentException exception) {
+        return Type.UNKNOWN;
+      }
+    }
+
   }
 
 
@@ -178,8 +186,28 @@ public class PackageDependency {
       return this;
     }
 
+    public Builder withKeyword(String keyword) {
+      dependency.keyword = keyword;
+      return this;
+    }
+
+    public Builder withType(Type type) {
+      dependency.setDependencyTyp(type);
+      return this;
+    }
+
     public Builder withDependencies(List<PackageDependency> dependencies) {
       dependency.setReferencedDependencies(dependencies);
+      return this;
+    }
+
+    public Builder withIsInPackage(boolean isInPackage) {
+      dependency.setInPackage(isInPackage);
+      return this;
+    }
+
+    public Builder withIsInOtherPackage(boolean isInOtherPackage) {
+      dependency.setInOtherPackage(isInOtherPackage);
       return this;
     }
 

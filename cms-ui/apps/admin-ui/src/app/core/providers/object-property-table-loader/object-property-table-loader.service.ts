@@ -1,7 +1,7 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, ObjectPropertyBO, TableLoadOptions } from '@admin-ui/common';
+import { discard, EntityList, EntityPageResponse, ObjectPropertyBO, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions, ObjectPropertyListResponse } from '@gentics/cms-models';
+import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
@@ -44,37 +44,25 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
             ...this.createDefaultOptions(options),
             embed: ['category', 'construct'],
         };
-        let loader: Observable<ObjectPropertyListResponse>;
+        let loader: Observable<EntityList<ObjectPropertyBO>>;
 
         if (additionalOptions?.types) {
             // loadOptions.type = additionalOptions.types;
         }
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtool(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
-            loader = this.handler.list(null as never, loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(property => this.mapToBusinessObject(property));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
     }
-
-    public mapToBusinessObject(property: ObjectProperty): ObjectPropertyBO {
-        return {
-            ...property,
-            [BO_ID]: String(property.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: this.handler.displayName(property),
-        };
-    }
-
 }

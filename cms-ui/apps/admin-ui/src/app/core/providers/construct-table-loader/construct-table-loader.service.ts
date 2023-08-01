@@ -1,7 +1,7 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ConstructBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { BO_ID, BO_PERMISSIONS, ConstructBO, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { DevToolsConstructListResponse, PagedConstructListRequestOptions, PermissionListResponse, TagType } from '@gentics/cms-models';
+import { PagedConstructListRequestOptions, TagType } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
@@ -67,36 +67,23 @@ export class ConstructTableLoaderService extends BaseTableLoaderService<TagType,
             perms: true,
             embed: 'category',
         };
-        let loader: Observable<PermissionListResponse<TagType> | DevToolsConstructListResponse>;
+        let loader: Observable<EntityList<ConstructBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.handler.listFromDevtool(additionalOptions.packageName, null as never, loadOptions);
+            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else if (additionalOptions?.dataSourceId) {
-            loader = this.handler.listFromDataSource(additionalOptions.dataSourceId, null as never, loadOptions as any);
+            loader = this.handler.listFromDataSourceMapped(additionalOptions.dataSourceId, null as never, loadOptions as any);
         } else {
-            loader = this.handler.list(null as never, loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(construct => this.mapToBusinessObject(construct));
-                this.applyPermissions(entities, response as PermissionListResponse<TagType>);
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
     }
-
-    public mapToBusinessObject(construct: TagType): ConstructBO {
-        return {
-            ...construct,
-            [BO_ID]: String(construct.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: this.handler.displayName(construct),
-        };
-    }
-
 }

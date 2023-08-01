@@ -1,6 +1,6 @@
 import {
     EditableEntity,
-    EditableEntityModels,
+    EditableEntityBusinessObjects,
     EntityEditorHandler,
     ROUTE_ENTITY_LOADED,
     ROUTE_ENTITY_RESOLVER_KEY,
@@ -55,7 +55,7 @@ export class RouteEntityResolverService {
         private objPro: ObjectPropertyHandlerService,
     ) {}
 
-    async resolve<K extends EditableEntity>(route: ActivatedRouteSnapshot): Promise<EditableEntityModels[K]> {
+    async resolve<K extends EditableEntity>(route: ActivatedRouteSnapshot): Promise<EditableEntityBusinessObjects[K]> {
         const nav = this.router.getCurrentNavigation();
         const state: any = nav.extras?.state || {};
 
@@ -73,7 +73,7 @@ export class RouteEntityResolverService {
             return null;
         }
 
-        const entity = await handler.getMapped(id).toPromise() as EditableEntityModels[K];
+        const entity = await handler.getMapped(id).toPromise() as EditableEntityBusinessObjects[K];
 
         return entity;
     }

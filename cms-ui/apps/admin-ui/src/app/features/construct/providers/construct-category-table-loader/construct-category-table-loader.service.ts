@@ -1,9 +1,4 @@
 import {
-    BO_DISPLAY_NAME,
-    BO_ID,
-    BO_NEW_SORT_ORDER,
-    BO_ORIGINAL_SORT_ORDER,
-    BO_PERMISSIONS,
     ConstructCategoryBO,
     discard,
     EntityPageResponse,
@@ -44,9 +39,9 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
         const loadOptions = this.createDefaultOptions(options);
         const sortingByOrder = options.sortBy === 'sortOrder' && options.sortOrder === TableSortOrder.ASCENDING;
 
-        return this.api.constructCategory.getConstructCategoryCategories(loadOptions).pipe(
+        return this.handler.list(null as never, loadOptions).pipe(
             map(response => {
-                const entities = response.items.map((category, index) => this.mapToBusinessObject(category, sortingByOrder ? index : null));
+                const entities = response.items.map((category, index) => this.handler.mapToBusinessObject(category, sortingByOrder ? index : null));
 
                 return {
                     entities,
@@ -54,26 +49,5 @@ export class ConstructCategoryTableLoaderService extends BaseTableLoaderService<
                 };
             }),
         );
-    }
-
-    public mapToBusinessObject(category: ConstructCategory, index?: number): ConstructCategoryBO {
-        // This is a workaround for setting a proper sort order initially.
-        // Categories from existing setups have it all set to 0, which would screw
-        // up the sorting fields initially (until sorting is performed once).
-        let order = category.sortOrder;
-        if (index != null) {
-            if (order === 0 && index !== 0) {
-                order = index;
-            }
-        }
-
-        return {
-            ...category,
-            [BO_ID]: String(category.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: this.handler.displayName(category),
-            [BO_ORIGINAL_SORT_ORDER]: order,
-            [BO_NEW_SORT_ORDER]: order,
-        };
     }
 }

@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_NEW_SORT_ORDER,
+    BO_ORIGINAL_SORT_ORDER,
+    BO_PERMISSIONS,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -45,6 +51,20 @@ export class LanguageHandlerService
         return entity.name;
     }
 
+    public mapToBusinessObject(
+        lang: EditableEntityModels[EditableEntity.LANGUAGE],
+        index: number = -1,
+    ): EditableEntityBusinessObjects[EditableEntity.LANGUAGE] {
+        return {
+            ...lang,
+            [BO_ID]: String(lang.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(lang),
+            [BO_ORIGINAL_SORT_ORDER]: index,
+            [BO_NEW_SORT_ORDER]: index,
+        };
+    }
+
     create(
         data: EntityCreateRequestModel<EditableEntity.LANGUAGE>,
         params?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
@@ -69,9 +89,9 @@ export class LanguageHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.LANGUAGE>,
         options?: EntityCreateRequestParams<EditableEntity.LANGUAGE>,
-    ): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.create(data, options).pipe(
-            map(res => res.language),
+            map(res => this.mapToBusinessObject(res.language)),
         );
     }
 
@@ -85,9 +105,12 @@ export class LanguageHandlerService
         );
     }
 
-    getMapped(id: string | number, params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
+    getMapped(
+        id: string | number,
+        params?: EntityLoadRequestParams<EditableEntity.LANGUAGE>,
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.get(id, params).pipe(
-            map(res => res.language),
+            map(res => this.mapToBusinessObject(res.language)),
         );
     }
 
@@ -117,9 +140,9 @@ export class LanguageHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.LANGUAGE>,
         params?: EntityUpdateRequestParams<EditableEntity.LANGUAGE>,
-    ): Observable<EditableEntityModels[EditableEntity.LANGUAGE]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]> {
         return this.update(id, data, params).pipe(
-            map(res => res.language),
+            map(res => this.mapToBusinessObject(res.language)),
         );
     }
 
@@ -163,10 +186,10 @@ export class LanguageHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.LANGUAGE>,
         params?: EntityListRequestParams<EditableEntity.LANGUAGE>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.LANGUAGE]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]>> {
         return this.list(body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );
@@ -192,10 +215,10 @@ export class LanguageHandlerService
         nodeId: number | string,
         body?: never,
         params?: NodeLanguageListRequest,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.LANGUAGE]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.LANGUAGE]>> {
         return this.listFromNode(nodeId, body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );

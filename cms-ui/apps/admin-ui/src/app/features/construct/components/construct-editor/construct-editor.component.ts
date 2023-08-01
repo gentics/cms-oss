@@ -169,7 +169,7 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<Editable
         };
 
         return this.handler.updateMapped(this.entity.id, payload).pipe(
-            discard((updatedEntity: TagType<Raw>) => {
+            discard(updatedEntity => {
                 this.handleEntityLoad(updatedEntity);
                 this.onEntityUpdate();
             }),

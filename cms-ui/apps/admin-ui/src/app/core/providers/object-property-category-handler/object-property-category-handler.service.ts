@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -44,6 +48,18 @@ export class ObjectPropertyCategoryHandlerService
         return entity.name;
     }
 
+    public mapToBusinessObject(
+        category: EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY],
+        index?: number,
+    ): EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY] {
+        return {
+            ...category,
+            [BO_ID]: String(category.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(category),
+        };
+    }
+
     create(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
@@ -68,9 +84,9 @@ export class ObjectPropertyCategoryHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.create(data, params).pipe(
-            map(res => res.objectPropertyCategory),
+            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -90,9 +106,9 @@ export class ObjectPropertyCategoryHandlerService
     getMapped(
         id: string | number,
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.get(id, params).pipe(
-            map(res => res.objectPropertyCategory),
+            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -122,9 +138,9 @@ export class ObjectPropertyCategoryHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]> {
         return this.update(id, data, params).pipe(
-            map(res => res.objectPropertyCategory),
+            map(res => this.mapToBusinessObject(res.objectPropertyCategory)),
         );
     }
 
@@ -167,10 +183,10 @@ export class ObjectPropertyCategoryHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY_CATEGORY>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY_CATEGORY]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY_CATEGORY]>> {
         return this.list(body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );

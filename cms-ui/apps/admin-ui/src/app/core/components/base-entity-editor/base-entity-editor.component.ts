@@ -1,6 +1,7 @@
 import {
     EDITABLE_ENTITY_DETAIL_TABS,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityDetailTabs,
     EditableEntityModels,
     EntityEditorHandler,
@@ -41,7 +42,7 @@ export abstract class BaseEntityEditorComponent<K extends EditableEntity>
     public editorTab: EditableEntityDetailTabs[K];
 
     public isLoading = false;
-    public entity: EditableEntityModels[K] = null;
+    public entity: EditableEntityBusinessObjects[K] = null;
     public entityIsClean = true;
 
     public tabHandles: { [key in keyof EditableEntityDetailTabs[K]]: FormTabHandle } = {} as any;
@@ -173,7 +174,7 @@ export abstract class BaseEntityEditorComponent<K extends EditableEntity>
         });
     }
 
-    protected handleEntityLoad(loadedEntity: EditableEntityModels[K]): void {
+    protected handleEntityLoad(loadedEntity: EditableEntityBusinessObjects[K]): void {
         this.entity = loadedEntity;
 
         // Hacky workaround, but other changes wouldn't work as well.

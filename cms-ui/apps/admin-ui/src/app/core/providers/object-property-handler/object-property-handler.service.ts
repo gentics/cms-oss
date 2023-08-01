@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
     DevtoolEntityListHandler,
     DevtoolEntityListRequestModel,
     DevtoolEntityListRequestParams,
     DevtoolEntityListResponseModel,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -51,6 +55,18 @@ export class ObjectPropertyHandlerService
         return entity.name;
     }
 
+    public mapToBusinessObject(
+        property: EditableEntityModels[EditableEntity.OBJECT_PROPERTY],
+        index?: number,
+    ): EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY] {
+        return {
+            ...property,
+            [BO_ID]: String(property.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(property),
+        };
+    }
+
     create(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
@@ -75,9 +91,9 @@ export class ObjectPropertyHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityCreateRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.create(data, params).pipe(
-            map(res => res.objectProperty),
+            map(res => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -97,9 +113,9 @@ export class ObjectPropertyHandlerService
     getMapped(
         id: string | number,
         params?: EntityLoadRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.get(id, params).pipe(
-            map(res => res.objectProperty),
+            map(res => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -129,9 +145,9 @@ export class ObjectPropertyHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityUpdateRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]> {
         return this.update(id, data, params).pipe(
-            map(res => res.objectProperty),
+            map(res => this.mapToBusinessObject(res.objectProperty)),
         );
     }
 
@@ -174,10 +190,10 @@ export class ObjectPropertyHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: EntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]>> {
         return this.list(body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );
@@ -202,10 +218,10 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<EditableEntity.OBJECT_PROPERTY>,
         params?: DevtoolEntityListRequestParams<EditableEntity.OBJECT_PROPERTY>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.OBJECT_PROPERTY]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.OBJECT_PROPERTY]>> {
         return this.listFromDevtool(devtoolPackage, body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );

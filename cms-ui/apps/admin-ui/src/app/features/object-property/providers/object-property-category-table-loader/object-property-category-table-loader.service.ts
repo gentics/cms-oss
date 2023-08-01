@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, ObjectPropertyCategoryBO, TableLoadOptions } from '@admin-ui/common';
+import { discard, EntityPageResponse, ObjectPropertyCategoryBO, TableLoadOptions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
@@ -28,24 +28,13 @@ export class ObjectPropertyCategoryTableLoaderService extends BaseTableLoaderSer
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<ObjectPropertyCategoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
 
-        return this.handler.list(null as never, loadOptions).pipe(
+        return this.handler.listMapped(null as never, loadOptions).pipe(
             map(response => {
-                const entities = response.items.map(category => this.mapToBusinessObject(category));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
-    }
-
-    public mapToBusinessObject(category: ObjectPropertyCategory): ObjectPropertyCategoryBO {
-        return {
-            ...category,
-            [BO_ID]: String(category.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: this.handler.displayName(category),
-        };
     }
 }

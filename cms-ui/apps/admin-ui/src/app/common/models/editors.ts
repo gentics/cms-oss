@@ -153,6 +153,26 @@ import {
     TemplateDetailTabs,
     UserDetailTabs,
 } from './detail-tabs';
+import {
+    ConstructBO,
+    ConstructCategoryBO,
+    ContentPackageBO,
+    ContentRepositoryBO,
+    ContentRepositoryFragmentBO,
+    DataSourceBO,
+    DevToolPackageBO,
+    FolderBO,
+    GroupBO,
+    LanguageBO,
+    NodeBO,
+    ObjectPropertyBO,
+    ObjectPropertyCategoryBO,
+    RoleBO,
+    ScheduleBO,
+    ScheduleTaskBO,
+    TemplateBO,
+    UserBO,
+} from './business-objects';
 
 export enum EditableEntity {
     CONSTRUCT = 'construct',
@@ -221,6 +241,27 @@ export type EditableEntityModels = {
     [EditableEntity.SCHEDULE_TASK]: ScheduleTask<Raw>,
     [EditableEntity.TEMPLATE]: Template<Raw>,
     [EditableEntity.USER]: User<Raw>,
+}
+
+export type EditableEntityBusinessObjects = {
+    [EditableEntity.CONSTRUCT]: ConstructBO,
+    [EditableEntity.CONSTRUCT_CATEGORY]: ConstructCategoryBO,
+    [EditableEntity.CONTENT_PACKAGE]: ContentPackageBO,
+    [EditableEntity.CONTENT_REPOSITORY]: ContentRepositoryBO,
+    [EditableEntity.CR_FRAGMENT]: ContentRepositoryFragmentBO,
+    [EditableEntity.DATA_SOURCE]: DataSourceBO,
+    [EditableEntity.DEVTOOL_PACKAGE]: DevToolPackageBO,
+    [EditableEntity.FOLDER]: FolderBO,
+    [EditableEntity.GROUP]: GroupBO,
+    [EditableEntity.LANGUAGE]: LanguageBO,
+    [EditableEntity.NODE]: NodeBO,
+    [EditableEntity.OBJECT_PROPERTY]: ObjectPropertyBO,
+    [EditableEntity.OBJECT_PROPERTY_CATEGORY]: ObjectPropertyCategoryBO,
+    [EditableEntity.ROLE]: RoleBO,
+    [EditableEntity.SCHEDULE]: ScheduleBO,
+    [EditableEntity.SCHEDULE_TASK]: ScheduleTaskBO,
+    [EditableEntity.TEMPLATE]: TemplateBO,
+    [EditableEntity.USER]: UserBO,
 }
 
 export type EditableEntityAPIModels = {
@@ -617,15 +658,16 @@ export type DevtoolEntityListResponseModel<T extends EditableEntity> = EditableE
 export interface EntityEditorHandler<K extends EditableEntity> {
 
     displayName(entity: EditableEntityModels[K]): string;
+    mapToBusinessObject(entity: EditableEntityModels[K], index?: number, context?: any): EditableEntityBusinessObjects[K];
 
     create(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<EntityCreateResponseModel<K>>;
-    createMapped(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<EditableEntityModels[K]>;
+    createMapped(data: EntityCreateRequestModel<K>, params?: EntityCreateRequestParams<K>): Observable<EditableEntityBusinessObjects[K]>;
 
     get(id: string | number, options?: EntityLoadRequestParams<K>): Observable<EntityLoadResponseModel<K>>;
-    getMapped(id: string | number, options?: EntityLoadRequestParams<K>): Observable<EditableEntityModels[K]>;
+    getMapped(id: string | number, options?: EntityLoadRequestParams<K>): Observable<EditableEntityBusinessObjects[K]>;
 
     update(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<EntityUpdateResponseModel<K>>;
-    updateMapped(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<EditableEntityModels[K]>;
+    updateMapped(id: string | number, data: EntityUpdateRequestModel<K>, options?: EntityUpdateRequestParams<K>): Observable<EditableEntityBusinessObjects[K]>;
 
     delete(id: string | number, data?: EntityDeleteRequestModel<K>, options?: EntityDeleteRequestModel<K>): Observable<void>;
 }
@@ -637,7 +679,7 @@ export interface EntityList<T> {
 
 export interface EntityListHandler<K extends EditableEntity> {
     list(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityListResponseModel<K>>;
-    listMapped(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityList<EditableEntityModels[K]>>;
+    listMapped(body?: EntityListRequestModel<K>, params?: EntityListRequestParams<K>): Observable<EntityList<EditableEntityBusinessObjects[K]>>;
 }
 
 export interface DevtoolEntityListHandler<K extends EditableEntity> {
@@ -650,5 +692,5 @@ export interface DevtoolEntityListHandler<K extends EditableEntity> {
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<K>,
         params?: DevtoolEntityListRequestParams<K>,
-    ): Observable<EntityList<EditableEntityModels[K]>>;
+    ): Observable<EntityList<EditableEntityBusinessObjects[K]>>;
 }

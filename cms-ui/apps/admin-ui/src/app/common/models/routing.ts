@@ -3,7 +3,14 @@ import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-
 import { Type } from '@angular/core';
 import { ActivatedRouteSnapshot, CanDeactivateFn, Data, DeprecatedGuard, ResolveData, ResolveFn, Route } from '@angular/router';
 import { ConstructorOf } from '../utils/util-types/util-types';
-import { EditableEntity, EditableEntityModels, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, ROUTE_IS_EDITOR_ROUTE } from './editors';
+import {
+    EditableEntity,
+    EditableEntityBusinessObjects,
+    ROUTE_ENTITY_LOADED,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_IS_EDITOR_ROUTE,
+} from './editors';
 
 export const ROUTE_PERMISSIONS_KEY = 'typePermissions';
 export const ROUTE_BREADCRUMB_KEY = 'breadcrumb';
@@ -96,7 +103,7 @@ export interface RouteDataResolve extends ResolveData, RouteDataResolvers {
     [ROUTE_IS_EDITOR_ROUTE]?: never;
     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]?: never;
     [ROUTE_PERMISSIONS_KEY]?: never;
-    [ROUTE_ENTITY_RESOLVER_KEY]?: (route: ActivatedRouteSnapshot) => Promise<EditableEntityModels[EditableEntity]>;
+    [ROUTE_ENTITY_RESOLVER_KEY]?: (route: ActivatedRouteSnapshot) => Promise<EditableEntityBusinessObjects[EditableEntity]>;
 }
 
 /**

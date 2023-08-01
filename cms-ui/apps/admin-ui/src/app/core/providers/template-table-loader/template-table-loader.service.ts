@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateBO } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions, TemplateBO, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { PagedTemplateListResponse, Template, TemplateListRequest } from '@gentics/cms-models';
@@ -57,7 +57,7 @@ export class TemplateTableLoaderService extends BaseTableLoaderService<Template,
         return loader.pipe(
             map(response => {
                 const entities = response.items.map(template => this.mapToBusinessObject(template));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
 
                 return {
                     entities,

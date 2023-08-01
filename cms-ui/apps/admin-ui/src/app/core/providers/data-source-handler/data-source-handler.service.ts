@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
     DevtoolEntityListHandler,
     DevtoolEntityListRequestModel,
     DevtoolEntityListRequestParams,
     DevtoolEntityListResponseModel,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -49,6 +53,18 @@ export class DataSourceHandlerService
         return entity.name;
     }
 
+    public mapToBusinessObject(
+        ds: EditableEntityModels[EditableEntity.DATA_SOURCE],
+        index?: number,
+    ): EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE] {
+        return {
+            ...ds,
+            [BO_ID]: String(ds.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(ds),
+        };
+    }
+
     create(
         data: EntityCreateRequestModel<EditableEntity.DATA_SOURCE>,
         params?: EntityCreateRequestParams<EditableEntity.DATA_SOURCE>,
@@ -73,9 +89,9 @@ export class DataSourceHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.DATA_SOURCE>,
         options?: EntityCreateRequestParams<EditableEntity.DATA_SOURCE>,
-    ): Observable<EditableEntityModels[EditableEntity.DATA_SOURCE]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.create(data, options).pipe(
-            map(res => res.datasource),
+            map(res => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -92,9 +108,9 @@ export class DataSourceHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<EditableEntityModels[EditableEntity.DATA_SOURCE]> {
+    getMapped(id: string | number): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.get(id).pipe(
-            map(res => res.datasource),
+            map(res => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -124,9 +140,9 @@ export class DataSourceHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.DATA_SOURCE>,
         params?: EntityUpdateRequestParams<EditableEntity.DATA_SOURCE>,
-    ): Observable<EditableEntityModels[EditableEntity.DATA_SOURCE]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.update(id, data, params).pipe(
-            map(res => res.datasource),
+            map(res => this.mapToBusinessObject(res.datasource)),
         );
     }
 
@@ -170,10 +186,10 @@ export class DataSourceHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.DATA_SOURCE>,
         params?: EntityListRequestParams<EditableEntity.DATA_SOURCE>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.DATA_SOURCE]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]>> {
         return this.list(body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );
@@ -199,20 +215,20 @@ export class DataSourceHandlerService
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<EditableEntity.DATA_SOURCE>,
         params?: DevtoolEntityListRequestParams<EditableEntity.DATA_SOURCE>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.DATA_SOURCE]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]>> {
         return this.listFromDevtool(devtoolPackage, body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );
     }
 
-    getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityModels[EditableEntity.DATA_SOURCE]> {
+    getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityBusinessObjects[EditableEntity.DATA_SOURCE]> {
         return this.api.devTools.getDataSource(packageId, entityId).pipe(
-            map(res => res.datasource),
+            map(res => this.mapToBusinessObject(res.datasource)),
             tap(con => {
-                this.nameMap[con.id] = this.displayName(con);
+                this.nameMap[con.id] = con[BO_DISPLAY_NAME];
             }),
             this.catchAndRethrowError(),
         );

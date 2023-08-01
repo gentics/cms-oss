@@ -17,6 +17,7 @@ import {
     EditorTabTrackerService,
     FeatureOperations,
     FolderOperations,
+    LanguageHandlerService,
     LanguageTableLoaderService,
     NodeOperations,
     NodeTableLoaderService,
@@ -139,7 +140,8 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         private featureOperations: FeatureOperations,
         private folderOperations: FolderOperations,
         private editorTabTracker: EditorTabTrackerService,
-        private languageLoader: LanguageTableLoaderService,
+        private languageHandler: LanguageHandlerService,
+        private languageTableLoader: LanguageTableLoaderService,
         private modalService: ModalService,
         private nodeLoader: NodeTableLoaderService,
         private permissions: PermissionsService,
@@ -390,7 +392,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             detailLoading(this.appState),
             discard(() => {
                 // Force languages to reload
-                this.languageLoader.reload();
+                this.languageTableLoader.reload();
                 this.isLanguagesChanged = false;
                 this.changeDetectorRef.markForCheck();
             }),
@@ -417,8 +419,8 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             const languages = await dialog.open();
             if (Array.isArray(languages)) {
                 this.languageRows = languages
-                    .map(lang => this.languageLoader.mapToBusinessObject(lang))
-                    .map(bo => this.languageLoader.mapToTableRow(bo));
+                    .map(lang => this.languageHandler.mapToBusinessObject(lang))
+                    .map(bo => this.languageTableLoader.mapToTableRow(bo));
                 this.isLanguagesChanged = false;
                 this.changeDetectorRef.markForCheck();
             }

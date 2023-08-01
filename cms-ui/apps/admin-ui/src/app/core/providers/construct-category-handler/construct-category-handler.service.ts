@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_NEW_SORT_ORDER,
+    BO_ORIGINAL_SORT_ORDER,
+    BO_PERMISSIONS,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -18,7 +24,6 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ConstructCategory } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -42,6 +47,30 @@ export class ConstructCategoryHandlerService
 
     displayName(entity: EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]): string {
         return entity.name;
+    }
+
+    public mapToBusinessObject(
+        category: EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY],
+        index?: number,
+    ): EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY] {
+        // This is a workaround for setting a proper sort order initially.
+        // Categories from existing setups have it all set to 0, which would screw
+        // up the sorting fields initially (until sorting is performed once).
+        let order = category.sortOrder;
+        if (index != null) {
+            if (order === 0 && index !== 0) {
+                order = index;
+            }
+        }
+
+        return {
+            ...category,
+            [BO_ID]: String(category.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(category),
+            [BO_ORIGINAL_SORT_ORDER]: order,
+            [BO_NEW_SORT_ORDER]: order,
+        };
     }
 
     create(
@@ -68,9 +97,9 @@ export class ConstructCategoryHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
-    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.create(data, options).pipe(
-            map(res => res.constructCategory),
+            map(res => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
@@ -84,9 +113,9 @@ export class ConstructCategoryHandlerService
         );
     }
 
-    getMapped(id: string | number): Observable<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]> {
+    getMapped(id: string | number): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.get(id).pipe(
-            map(res => res.constructCategory),
+            map(res => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
@@ -116,9 +145,9 @@ export class ConstructCategoryHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
         params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
-    ): Observable<ConstructCategory> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]> {
         return this.update(id, data).pipe(
-            map(res => res.constructCategory),
+            map(res => this.mapToBusinessObject(res.constructCategory)),
         );
     }
 
@@ -161,10 +190,10 @@ export class ConstructCategoryHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.CONSTRUCT_CATEGORY>,
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT_CATEGORY>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT_CATEGORY]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT_CATEGORY]>> {
         return this.list(body, params).pipe(
             map(res => ({
-                items: res.items,
+                items: (res.items || []).map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
         );

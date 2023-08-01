@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
     DevtoolEntityListHandler,
     DevtoolEntityListRequestModel,
     DevtoolEntityListRequestParams,
     DevtoolEntityListResponseModel,
     EditableEntity,
+    EditableEntityBusinessObjects,
     EditableEntityModels,
     EntityCreateRequestModel,
     EntityCreateRequestParams,
@@ -21,6 +25,7 @@ import {
     EntityUpdateRequestModel,
     EntityUpdateRequestParams,
     EntityUpdateResponseModel,
+    applyPermissions,
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
@@ -51,6 +56,18 @@ export class ConstructHandlerService
         return entity.name;
     }
 
+    public mapToBusinessObject(
+        construct: EditableEntityModels[EditableEntity.CONSTRUCT],
+        index?: number,
+    ): EditableEntityBusinessObjects[EditableEntity.CONSTRUCT] {
+        return {
+            ...construct,
+            [BO_ID]: String(construct.id),
+            [BO_PERMISSIONS]: [],
+            [BO_DISPLAY_NAME]: this.displayName(construct),
+        };
+    }
+
     create(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT>,
         params?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
@@ -75,9 +92,9 @@ export class ConstructHandlerService
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.CONSTRUCT>,
         options?: EntityCreateRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.create(data, options).pipe(
-            map(res => res.construct),
+            map(res => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -97,9 +114,9 @@ export class ConstructHandlerService
     getMapped(
         id: string | number,
         params?: EntityLoadRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.get(id, params).pipe(
-            map(res => res.construct),
+            map(res => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -129,9 +146,9 @@ export class ConstructHandlerService
         id: string | number,
         data: EntityUpdateRequestModel<EditableEntity.CONSTRUCT>,
         params?: EntityUpdateRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<TagType> {
+    ): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.update(id, data, params).pipe(
-            map(res => res.construct),
+            map(res => this.mapToBusinessObject(res.construct)),
         );
     }
 
@@ -174,12 +191,17 @@ export class ConstructHandlerService
     listMapped(
         body?: EntityListRequestModel<EditableEntity.CONSTRUCT>,
         params?: EntityListRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
         return this.list(body, params).pipe(
-            map(res => ({
-                items: res.items,
-                totalItems: res.numItems,
-            })),
+            map(res => {
+                const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
+                applyPermissions(items, res);
+
+                return {
+                    items,
+                    totalItems: res.numItems,
+                };
+            }),
         );
     }
 
@@ -202,20 +224,25 @@ export class ConstructHandlerService
         devtoolPackage: string,
         body?: DevtoolEntityListRequestModel<EditableEntity.CONSTRUCT>,
         params?: DevtoolEntityListRequestParams<EditableEntity.CONSTRUCT>,
-    ): Observable<EntityList<EditableEntityModels[EditableEntity.CONSTRUCT]>> {
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
         return this.listFromDevtool(devtoolPackage, body, params).pipe(
-            map(res => ({
-                items: res.items,
-                totalItems: res.numItems,
-            })),
+            map(res => {
+                const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
+                applyPermissions(items, res);
+
+                return {
+                    items,
+                    totalItems: res.numItems,
+                };
+            }),
         );
     }
 
-    getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityModels[EditableEntity.CONSTRUCT]> {
+    getFromDevtoolMapped(packageId: string, entityId: string): Observable<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]> {
         return this.api.devTools.getConstruct(packageId, entityId).pipe(
-            map(res => res.construct),
+            map(res => this.mapToBusinessObject(res.construct)),
             tap(con => {
-                this.nameMap[con.id] = this.displayName(con);
+                this.nameMap[con.id] = con[BO_DISPLAY_NAME];
             }),
             this.catchAndRethrowError(),
         );
@@ -245,7 +272,7 @@ export class ConstructHandlerService
     listFromDataSource(
         dataSourceId: string | number,
         body?: never,
-        params?: DataSourceConstructListOptions
+        params?: DataSourceConstructListOptions,
     ): Observable<DataSourceConstructListResponse> {
         return this.api.dataSource.getConstructs(dataSourceId, params).pipe(
             tap(res => {
@@ -253,6 +280,24 @@ export class ConstructHandlerService
                     const name = this.displayName(con);
                     this.nameMap[con.id] = name;
                 });
+            }),
+        );
+    }
+
+    listFromDataSourceMapped(
+        dataSourceId: string | number,
+        body?: never,
+        params?: DataSourceConstructListOptions,
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CONSTRUCT]>> {
+        return this.listFromDataSource(dataSourceId, body, params).pipe(
+            map(res => {
+                const items = res.items.map((item, index) => this.mapToBusinessObject(item, index));
+                applyPermissions(items, res);
+
+                return {
+                    items,
+                    totalItems: res.numItems,
+                };
             }),
         );
     }

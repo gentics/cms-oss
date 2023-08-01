@@ -1,9 +1,9 @@
 import { AppStateService } from '@admin-ui/state';
-import { BaseListOptionsWithPaging, NormalizableEntityType, PagingSortOrder, PermissionListResponse } from '@gentics/cms-models';
+import { BaseListOptionsWithPaging, NormalizableEntityType, PagingSortOrder } from '@gentics/cms-models';
 import { TableRow, TableSortOrder } from '@gentics/ui-core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { BO_ID, BO_PERMISSIONS, BusinessObject, EntityPageResponse, TableEntityLoader, TableLoadOptions, TableLoadResponse } from '../../../common/models';
+import { BO_ID, BusinessObject, EntityPageResponse, TableEntityLoader, TableLoadOptions, TableLoadResponse } from '../../../common/models';
 import { EntityManagerService } from '../entity-manager';
 
 export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = never> implements TableEntityLoader<O> {
@@ -102,20 +102,6 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
                 return PagingSortOrder.Desc
             default:
                 return PagingSortOrder.None;
-        }
-    }
-
-    protected applyPermissions(bos: O[], response: PermissionListResponse<any>): void {
-        if (!response?.perms) {
-            return;
-        }
-
-        for (const bo of bos) {
-            const perms = response.perms[bo[BO_ID]];
-            if (!perms) {
-                continue;
-            }
-            bo[BO_PERMISSIONS] = perms;
         }
     }
 

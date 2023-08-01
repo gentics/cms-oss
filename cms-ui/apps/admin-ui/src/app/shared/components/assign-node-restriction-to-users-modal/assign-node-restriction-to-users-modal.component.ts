@@ -1,10 +1,10 @@
 import { I18nService } from '@admin-ui/core';
 import { GroupUserDataService } from '@admin-ui/shared/providers/group-user-data/group-user-data.service';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UserGroupNodeRestrictionsResponse } from '@gentics/cms-models';
-import { BaseModal, IModalDialog } from '@gentics/ui-core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { delay, tap } from 'rxjs/operators';
+import { BaseModal } from '@gentics/ui-core';
+import { BehaviorSubject } from 'rxjs';
+import { delay } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-assign-node-restriction-to-users-modal',

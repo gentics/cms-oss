@@ -6,6 +6,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { of } from 'rxjs';
+import { LanguagePropertiesComponent } from '../language-properties/language-properties.component';
 import { CreateLanguageModalComponent } from './create-language-modal.component';
 
 @Pipe({ name: 'i18n' })
@@ -16,11 +17,10 @@ class MockI18nPipe implements PipeTransform {
 }
 
 class MockLanguageOperations implements Partial<InterfaceOf<LanguageHandlerService>> {
-    create = jasmine.createSpy('create').and.returnValue(of({}));
+    createMapped = jasmine.createSpy('createMapped').and.returnValue(of({}));
 }
 
 describe('CreateLanguageModalComponent', () => {
-    let i18n: MockI18nServiceWithSpies;
     let handler: MockLanguageOperations;
     let component: CreateLanguageModalComponent;
     let fixture: ComponentFixture<CreateLanguageModalComponent>;
@@ -34,6 +34,7 @@ describe('CreateLanguageModalComponent', () => {
             declarations: [
                 MockI18nPipe,
                 CreateLanguageModalComponent,
+                LanguagePropertiesComponent,
             ],
             providers: [
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
@@ -41,8 +42,7 @@ describe('CreateLanguageModalComponent', () => {
             ],
         }).compileComponents();
 
-        i18n = TestBed.get(I18nService);
-        handler = TestBed.get(LanguageHandlerService);
+        handler = TestBed.inject(LanguageHandlerService) as any;
         fixture = TestBed.createComponent(CreateLanguageModalComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -62,7 +62,7 @@ describe('CreateLanguageModalComponent', () => {
         component.buttonCreateEntityClicked();
         fixture.detectChanges();
 
-        expect(handler.create).toHaveBeenCalled();
-        expect(handler.create).toHaveBeenCalledWith({ name: component.form.value.name, code: component.form.value.code });
+        expect(handler.createMapped).toHaveBeenCalled();
+        expect(handler.createMapped).toHaveBeenCalledWith({ name: component.form.value.name, code: component.form.value.code });
     });
 });

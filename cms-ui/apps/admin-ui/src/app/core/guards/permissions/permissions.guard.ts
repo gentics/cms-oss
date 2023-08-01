@@ -4,7 +4,7 @@ import { ActivatedRoute, ActivatedRouteSnapshot, Router } from '@angular/router'
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { first, take, tap } from 'rxjs/operators';
-import { I18nNotificationService } from '../../providers/i18n-notification';
+import { I18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service';
 import { PermissionsService, RequiredTypePermissions } from '../../providers/permissions';
 
 /**

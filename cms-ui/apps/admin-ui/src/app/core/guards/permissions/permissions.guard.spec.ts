@@ -6,7 +6,7 @@ import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { take } from 'rxjs/operators';
 import { createDelayedObservable } from '../../../../testing';
 import { PermissionsService, RequiredPermissions } from '../../providers';
-import { I18nNotificationService } from '../../providers/i18n-notification';
+import { I18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service';
 import { MockI18nNotificationService } from '../../providers/i18n-notification/i18n-notification.service.mock';
 import { PermissionsGuard } from './permissions.guard';
 
@@ -25,6 +25,7 @@ describe('PermissionsGuard', () => {
 
     let permissionsService: MockPermissionsService;
     let permissionsGuard: PermissionsGuard;
+    let i18nNotification: MockI18nNotificationService;
 
     function setUpRouteSnapshot(requiredPermissions: RequiredPermissions | RequiredPermissions[]): ActivatedRouteSnapshot {
         const data: RouteData = { typePermissions: requiredPermissions };
@@ -42,6 +43,7 @@ describe('PermissionsGuard', () => {
 
         permissionsGuard = TestBed.inject(PermissionsGuard);
         permissionsService = TestBed.inject(PermissionsService) as any;
+        i18nNotification = TestBed.inject(I18nNotificationService) as any;
 
         return snapshot;
     }
@@ -84,7 +86,6 @@ describe('PermissionsGuard', () => {
     }));
 
     it('shows a notification if the user does not have sufficient permissions', fakeAsync(() => {
-        const i18nNotification = TestBed.get(I18nNotificationService) as MockI18nNotificationService;
         setUpRouteSnapshot({ type: TYPE1, permissions: GcmsPermission.READ });
         setUpPermissionsService(false);
 

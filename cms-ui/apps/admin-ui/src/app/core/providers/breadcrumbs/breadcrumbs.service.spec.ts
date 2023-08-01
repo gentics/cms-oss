@@ -13,6 +13,7 @@ import { AppStateService } from '../../../state';
 import { TestAppState, assembleTestAppStateImports } from '../../../state/utils/test-app-state';
 import { I18nService } from '../i18n/i18n.service';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
+import { RouteEntityResolverService } from '../route-entity-resolver/route-entity-resolver.service';
 import { BreadcrumbInfo } from './breadcrumb-info';
 import { BreadcrumbsService } from './breadcrumbs.service';
 
@@ -182,6 +183,8 @@ const EXPECTED_BREADCRUMBS: IndexByKey<IBreadcrumbRouterLink> = {
 };
 Object.freeze(EXPECTED_BREADCRUMBS);
 
+class MockRouteEntityResolverService {}
+
 describe('BreadcrumbsService', () => {
 
     let breadcrumbs: BreadcrumbsService;
@@ -206,6 +209,7 @@ describe('BreadcrumbsService', () => {
                 BreadcrumbsService,
                 DelayedResolver,
                 TestAppState,
+                { provide: RouteEntityResolverService, useClass: MockRouteEntityResolverService },
                 { provide: AppStateService, useExisting: TestAppState },
                 MockI18nServiceWithSpies,
                 { provide: I18nService, useExisting: MockI18nServiceWithSpies },

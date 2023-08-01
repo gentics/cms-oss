@@ -39,10 +39,10 @@ xdescribe('DiscardChangesGuard', () => {
             ],
         }).compileComponents();
 
-        modalService = TestBed.get(ModalService);
+        modalService = TestBed.inject(ModalService) as any;
     });
 
-    it('should inject', inject([DiscardChangesGuard], (guard: DiscardChangesGuard<TestComponent>) => {
+    it('should inject', inject([DiscardChangesGuard], (guard: DiscardChangesGuard) => {
         expect(guard).toBeTruthy();
     }));
 

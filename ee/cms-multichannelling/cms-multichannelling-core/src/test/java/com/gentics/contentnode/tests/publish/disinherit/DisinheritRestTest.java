@@ -42,6 +42,7 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
 import com.gentics.contentnode.rest.model.response.DisinheritResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.utils.MCTestedType;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -260,6 +261,64 @@ public class DisinheritRestTest {
 	}
 
 	/**
+	 * Test getting the info for an object in a disinherited folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void getInfoInDisinheritedFolder() throws NodeException {
+		// disinherit the folder
+		consume(f -> MCTestedType.folder.disinherit(f, channel), folder);
+
+		DisinheritResponse response = null;
+		if (testObject instanceof Folder) {
+			response = assertRequiredPermissions(group, user, () -> {
+				return testedType.getInheritance(testObject);
+			},
+					Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW));
+		} else {
+			response = assertRequiredPermissions(group, user, () -> {
+				return testedType.getInheritance(testObject);
+			},
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW));
+		}
+
+		assertThat(response.isExclude()).as("Excluded").isFalse();
+		assertThat(response.isDisinheritDefault()).as("Disinherit default").isFalse();
+		assertThat(response.getDisinherit()).as("Disinherited").containsOnly(channelId);
+		assertThat(response.getInheritable()).as("Inheritable").isEmpty();
+	}
+
+	/**
+	 * Test getting the info for an object in an excluded folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void getInfoInExcludedFolder() throws NodeException {
+		// exclude the folder
+		consume(f -> MCTestedType.folder.exclude(f), folder);
+
+		DisinheritResponse response = null;
+		if (testObject instanceof Folder) {
+			response = assertRequiredPermissions(group, user, () -> {
+				return testedType.getInheritance(testObject);
+			},
+					Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW));
+		} else {
+			response = assertRequiredPermissions(group, user, () -> {
+				return testedType.getInheritance(testObject);
+			},
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW));
+		}
+
+		assertThat(response.isExclude()).as("Excluded").isTrue();
+		assertThat(response.isDisinheritDefault()).as("Disinherit default").isFalse();
+		assertThat(response.getDisinherit()).as("Disinherited").isEmpty();
+		assertThat(response.getInheritable()).as("Inheritable").isEmpty();
+	}
+
+	/**
 	 * Test excluding an object
 	 * @throws NodeException
 	 */
@@ -403,6 +462,123 @@ public class DisinheritRestTest {
 					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
 					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW),
 					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_DELETE));
+		}
+	}
+
+	/**
+	 * Try reinheriting an object in a disinherited folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void tryReinheritInDisinheritedFolder() throws NodeException {
+		// disinherit the folder
+		consume(f -> MCTestedType.folder.disinherit(f, channel), folder);
+
+		if (testObject instanceof Folder) {
+			if (recursive) {
+				assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel), ResponseCode.INVALIDDATA,
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_FOLDER_DELETE));
+			} else {
+				assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel), ResponseCode.INVALIDDATA,
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE));
+			}
+		} else {
+			assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel), ResponseCode.INVALIDDATA,
+					Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_DELETE));
+		}
+	}
+
+	/**
+	 * Reinherit an object in an excluded folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void reinheritInExcludedFolder() throws NodeException {
+		// exclude the folder
+		consume(f -> MCTestedType.folder.exclude(f), folder);
+
+		if (testObject instanceof Folder) {
+			if (recursive) {
+				assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel),
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_FOLDER_DELETE));
+			} else {
+				assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel),
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE));
+			}
+		} else {
+			assertRequiredPermissions(group, user, () -> testedType.reinherit(testObject, channel),
+					Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_DELETE));
+		}
+	}
+
+	/**
+	 * Exclude an object in a disinherited folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void excludeInDisinheritedFolder() throws NodeException {
+		// disinherit the folder
+		consume(f -> MCTestedType.folder.disinherit(f, channel), folder);
+
+		if (testObject instanceof Folder) {
+			if (recursive) {
+				assertRequiredPermissions(group, user, () -> testedType.exclude(testObject),
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, subFolderId, PermHandler.PERM_FOLDER_DELETE));
+			} else {
+				assertRequiredPermissions(group, user, () -> testedType.exclude(testObject),
+						Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW),
+						Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_FOLDER_DELETE));
+			}
+		} else {
+			assertRequiredPermissions(group, user, () -> testedType.exclude(testObject),
+					Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_DELETE));
+		}
+	}
+
+	/**
+	 * Try including an object in an excluded folder
+	 * @throws NodeException
+	 */
+	@Test
+	public void tryIncludeInExcludedFolder() throws NodeException {
+		// exclude the folder
+		consume(f -> MCTestedType.folder.exclude(f), folder);
+
+		if (testObject instanceof Folder) {
+			assertRequiredPermissions(group, user, () -> testedType.include(testObject), ResponseCode.INVALIDDATA,
+					Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+					Triple.of(Folder.TYPE_FOLDER, testObjectId, PermHandler.PERM_VIEW));
+		} else {
+			assertRequiredPermissions(group, user, () -> testedType.include(testObject), ResponseCode.INVALIDDATA,
+					Triple.of(Node.TYPE_NODE, nodeRootFolderId, PermHandler.PERM_INHERITANCE),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_VIEW),
+					Triple.of(Folder.TYPE_FOLDER, folderId, PermHandler.PERM_PAGE_VIEW));
 		}
 	}
 }

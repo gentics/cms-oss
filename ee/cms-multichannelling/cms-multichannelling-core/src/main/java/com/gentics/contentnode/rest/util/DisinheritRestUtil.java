@@ -14,9 +14,9 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.AutoCommit;
+import com.gentics.contentnode.factory.ChannelTreeSegment;
 import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -32,6 +32,7 @@ import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.rest.InsufficientPrivilegesMapper;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.DisinheritRequest;
 import com.gentics.contentnode.rest.model.response.DisinheritResponse;
@@ -87,6 +88,8 @@ public class DisinheritRestUtil {
 	public static <U, T extends Disinheritable<U>> DisinheritResponse get(Class<T> clazz, String id) throws NodeException {
 		try {
 			T obj = getObject(clazz, id, ObjectPermission.view);
+			NodeObject parent = obj.getParentObject();
+			ChannelTreeSegment parentSegment = new ChannelTreeSegment((Disinheritable<?>) parent, true);
 
 			Set<Node> disinheritedChannels = obj.getDisinheritedChannels();
 			List<Integer> disinheritedNodeIds = new ArrayList<>();
@@ -104,7 +107,8 @@ public class DisinheritRestUtil {
 			Collection<Node> inheritableNodes = masterChannel.getAllChannels();
 			List<Integer> inheritableNodeIds = new ArrayList<>();
 			for (Node node : inheritableNodes) {
-				if (ObjectPermission.view.checkObject(obj, node)) {
+				// check whether the folder of the object is visible in the node
+				if (parentSegment.contains(node) && ObjectPermission.view.checkObject(obj, node)) {
 					inheritableNodeIds.add(node.getId());
 				}
 			}

@@ -19,7 +19,7 @@ public enum ConfigurationValue {
 	/**
 	 * Use HTTP/2 for connections
 	 */
-	USE_HTTP2("USE_HTTP2", "com.gentics.contentnode.http.useH2", "server.useH2", () -> "false"),
+	HTTP2("HTTP2", "com.gentics.contentnode.http2", "server.http2", () -> "false"),
 
 	/**
 	 * Configuration path

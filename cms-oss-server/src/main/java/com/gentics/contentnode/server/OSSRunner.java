@@ -5,7 +5,7 @@ import static com.gentics.contentnode.runtime.ConfigurationValue.ALOHAEDITOR_PLU
 import static com.gentics.contentnode.runtime.ConfigurationValue.GCNJSAPI_PATH;
 import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP_PORT;
 import static com.gentics.contentnode.runtime.ConfigurationValue.STATIC_SERVE_LIST;
-import static com.gentics.contentnode.runtime.ConfigurationValue.USE_HTTP2;
+import static com.gentics.contentnode.runtime.ConfigurationValue.HTTP2;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,7 +85,7 @@ public class OSSRunner {
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
-		boolean useHttp2 = Boolean.parseBoolean(USE_HTTP2.get());
+		boolean useHttp2 = Boolean.parseBoolean(HTTP2.get());
 
 		// create context
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

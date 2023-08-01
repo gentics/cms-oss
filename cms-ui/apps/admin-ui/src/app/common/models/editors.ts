@@ -180,6 +180,7 @@ export const ROUTE_ENTITY_TYPE_KEY = Symbol('route-entity-type');
 export const ROUTE_PARAM_ENTITY_ID = 'id';
 export const ROUTE_PARAM_NODE_ID = 'nodeId';
 export const ROUTE_IS_EDITOR_ROUTE = Symbol('is-editor');
+export const ROUTE_ENTITY_LOADED = Symbol('route-entity-loaded');
 export const ROUTE_DETAIL_OUTLET = 'detail';
 
 export enum EntityModelType {

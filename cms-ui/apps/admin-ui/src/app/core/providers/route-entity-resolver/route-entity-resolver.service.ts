@@ -2,13 +2,15 @@ import {
     EditableEntity,
     EditableEntityModels,
     EntityEditorHandler,
+    ROUTE_ENTITY_LOADED,
+    ROUTE_ENTITY_RESOLVER_KEY,
     ROUTE_ENTITY_TYPE_KEY,
     ROUTE_IS_EDITOR_ROUTE,
     ROUTE_PARAM_ENTITY_ID,
     ROUTE_PARAM_NODE_ID,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
 import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
 import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
@@ -33,6 +35,10 @@ export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRou
         return false;
     }
 
+    if (to.data[ROUTE_ENTITY_LOADED]) {
+        return false;
+    }
+
     return true;
 }
 
@@ -40,6 +46,7 @@ export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRou
 export class RouteEntityResolverService {
 
     constructor(
+        private router: Router,
         private construct: ConstructHandlerService,
         private constructCat: ConstructCategoryHandlerService,
         private dataSource: DataSourceHandlerService,
@@ -49,6 +56,14 @@ export class RouteEntityResolverService {
     ) {}
 
     async resolve<K extends EditableEntity>(route: ActivatedRouteSnapshot): Promise<EditableEntityModels[K]> {
+        const nav = this.router.getCurrentNavigation();
+        const state: any = nav.extras?.state || {};
+
+        // If the entity is already provided to the route, then we don't need to fetch it again.
+        if (state?.[ROUTE_ENTITY_LOADED]) {
+            return state[ROUTE_ENTITY_RESOLVER_KEY];
+        }
+
         const id = route.paramMap.get(ROUTE_PARAM_ENTITY_ID);
         const type: K = route.data[ROUTE_ENTITY_TYPE_KEY];
 

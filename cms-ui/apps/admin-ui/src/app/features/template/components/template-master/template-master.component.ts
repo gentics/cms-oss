@@ -1,4 +1,4 @@
-import { AdminUIModuleRoutes, BO_PERMISSIONS, NodeBO, TemplateBO } from '@admin-ui/common';
+import { AdminUIModuleRoutes, BO_PERMISSIONS, NodeBO, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY, TemplateBO } from '@admin-ui/common';
 import {
     ErrorHandler,
     I18nNotificationService,
@@ -10,10 +10,10 @@ import {
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { AnyModelType, GcmsPermission, Node, NormalizableEntityTypesMap, Raw, Template } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { ModalService, TableAction, TableActionClickEvent, TableRow } from '@gentics/ui-core';
+import { ModalService, TableAction, TableActionClickEvent, TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
@@ -164,15 +164,23 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         }
     }
 
-    protected override async navigateToEntityDetails(entityId: string | number): Promise<void> {
-        await this.router.navigate(
-            [
-                `/${AdminUIModuleRoutes.TEMPLATES}`,
-                { [NODE_ID_PARAM]: this.activeNode?.id },
-                { outlets: { detail: [this.detailPath || this.entityIdentifier, this.activeNode.id, entityId] } },
-            ],
-            { relativeTo: this.route },
-        );
+    protected override async navigateToEntityDetails(row: TableRow<TemplateBO>): Promise<void> {
+        const fullUrl = getFullPrimaryPath(this.route);
+        const commands: any[] = [
+            fullUrl,
+            { [NODE_ID_PARAM]: this.activeNode?.id },
+            { outlets: { detail: [this.detailPath || this.entityIdentifier, row.id] } },
+        ];
+        const extras: NavigationExtras = { relativeTo: this.route };
+
+        if (this.navigateWithEntity()) {
+            extras.state = {
+                [ROUTE_ENTITY_LOADED]: true,
+                [ROUTE_ENTITY_RESOLVER_KEY]: row.item,
+            };
+        }
+
+        await this.router.navigate(commands, extras);
         this.appState.dispatch(new FocusEditor());
     }
 
@@ -200,7 +208,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         if (created) {
             this.templateTableLoader.reload();
-            this.navigateToEntityDetails(created.id);
+            this.navigateToEntityDetails({ item: created as any, id: `${created.id}` });
         }
     }
 

@@ -1,7 +1,7 @@
-import { AdminUIEntityDetailRoutes, BusinessObject, EditableEntity } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, BusinessObject, EditableEntity, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY } from '@admin-ui/common';
 import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import { TableRow, getFullPrimaryPath } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
@@ -34,7 +34,7 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
     }
 
     public handleRowClick(row: TableRow<O>): void {
-        this.navigateToEntityDetails(row.id);
+        this.navigateToEntityDetails(row);
     }
 
     protected setupActiveEntityWatcher(): void {
@@ -48,13 +48,26 @@ export abstract class BaseTableMasterComponent<T, O = T & BusinessObject> implem
         }));
     }
 
-    protected async navigateToEntityDetails(entityId: string | number): Promise<void> {
-        const fullUrl = getFullPrimaryPath(this.route);
+    protected navigateWithEntity(): boolean {
+        return true;
+    }
 
-        await this.router.navigate(
-            [fullUrl, { outlets: { detail: [this.detailPath || this.entityIdentifier, entityId] } }],
-            { relativeTo: this.route },
-        );
+    protected async navigateToEntityDetails(row: TableRow<O>): Promise<void> {
+        const fullUrl = getFullPrimaryPath(this.route);
+        const commands: any[] = [
+            fullUrl,
+            { outlets: { detail: [this.detailPath || this.entityIdentifier, row.id] } },
+        ];
+        const extras: NavigationExtras = { relativeTo: this.route };
+
+        if (this.navigateWithEntity()) {
+            extras.state = {
+                [ROUTE_ENTITY_LOADED]: true,
+                [ROUTE_ENTITY_RESOLVER_KEY]: row.item,
+            };
+        }
+
+        await this.router.navigate(commands, extras);
         this.appState.dispatch(new FocusEditor());
     }
 }

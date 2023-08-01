@@ -3,7 +3,7 @@ import { BreadcrumbInfo } from '@admin-ui/core/providers/breadcrumbs/breadcrumb-
 import { Type } from '@angular/core';
 import { ActivatedRouteSnapshot, CanDeactivateFn, Data, DeprecatedGuard, ResolveData, ResolveFn, Route } from '@angular/router';
 import { ConstructorOf } from '../utils/util-types/util-types';
-import { EditableEntity, EditableEntityModels, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, ROUTE_IS_EDITOR_ROUTE } from './editors';
+import { EditableEntity, EditableEntityModels, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, ROUTE_IS_EDITOR_ROUTE } from './editors';
 
 export const ROUTE_PERMISSIONS_KEY = 'typePermissions';
 export const ROUTE_BREADCRUMB_KEY = 'breadcrumb';
@@ -82,6 +82,9 @@ export interface RouteData extends Data {
 
     /** The entity type of the editor, so the entity can be resolved on load. */
     [ROUTE_ENTITY_TYPE_KEY]?: EditableEntity;
+
+    /** If the entity has already been loaded/resolved. */
+    [ROUTE_ENTITY_LOADED]?: boolean;
 }
 
 type RouteDataResolvers = { [K in keyof RouteData]?: ConstructorOf<{

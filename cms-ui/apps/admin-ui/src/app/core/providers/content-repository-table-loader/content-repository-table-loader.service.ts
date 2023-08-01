@@ -1,13 +1,13 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, ContentRepositoryBO, discard, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { ContentRepositoryBO, discard, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ContentRepository, ContentRepositoryListResponse } from '@gentics/cms-models';
+import { ContentRepository } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
 import { EntityManagerService } from '../entity-manager';
-import { ContentRepositoryOperations } from '../operations';
 
 export interface ContentRepositoryTableLoaderOptions {
     packageName?: string;
@@ -21,7 +21,7 @@ export class ContentRepositoryTableLoaderService
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: ContentRepositoryOperations,
+        protected handler: ContentRepositoryHandlerService,
     ) {
         super('contentRepository', entityManager, appState);
     }
@@ -31,7 +31,7 @@ export class ContentRepositoryTableLoaderService
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.operations.delete(entityId).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected loadEntities(
@@ -39,33 +39,21 @@ export class ContentRepositoryTableLoaderService
         additionalOptions: ContentRepositoryTableLoaderOptions,
     ): Observable<EntityPageResponse<ContentRepositoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
-        let loader: Observable<ContentRepositoryListResponse>;
+        let loader: Observable<EntityList<ContentRepositoryBO>>;
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getContentrepositories(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevtoolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
-            loader = this.api.contentrepositories.getContentrepositories(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(cr => this.mapToBusinessObject(cr));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         )
     }
-
-    public mapToBusinessObject(cr: ContentRepository): ContentRepositoryBO {
-        return {
-            ...cr,
-            [BO_ID]: String(cr.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: cr.name,
-        };
-    }
-
 }

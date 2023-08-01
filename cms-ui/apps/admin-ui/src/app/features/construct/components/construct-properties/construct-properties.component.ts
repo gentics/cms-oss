@@ -92,7 +92,6 @@ export class ConstructPropertiesComponent
     extends BasePropertiesComponent<ConstructPropertiesFormData>
     implements AfterViewInit, OnChanges, OnInit {
 
-    // tslint:disable-next-line: variable-name
     readonly ConstructPropertiesMode = ConstructPropertiesMode;
     readonly CONSTRUCT_ICONS = CONSTRUCT_ICONS;
 
@@ -101,9 +100,6 @@ export class ConstructPropertiesComponent
 
     @Input()
     public supportedLanguages: Language[];
-
-    @Output()
-    public isValidChange = new EventEmitter<boolean>();
 
     public constructCategories$: Observable<ConstructCategory<Normalized>[]>;
     public nodes$: Observable<Node<Raw>[]>;

@@ -1,6 +1,5 @@
 export * from './admin/admin.operations';
 export * from './auth/auth.operations';
-export * from './contentrepository/contentrepository.operations';
 export * from './contentrepository-tagmapentry/contentrepository-tagmapentry.operations';
 export * from './cr-fragment/cr-fragment.operations' ;
 export * from './content-package/content-package.operations';

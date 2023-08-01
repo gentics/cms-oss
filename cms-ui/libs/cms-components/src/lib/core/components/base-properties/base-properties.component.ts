@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormGroup, UntypedFormGroup } from '@angular/forms';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
@@ -7,7 +7,7 @@ import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/opera
 import { CONTROL_INVALID_VALUE } from '../../../common';
 
 @Component({ template: '' })
-export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit {
+export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -66,6 +66,17 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
     public ngOnInit(): void {
         this.initializeForm();
+    }
+
+    public ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        // When the initialValue flag is updated, it means that the value may be significantly changed (usually full entity change).
+        // Therefore, configure the form with the current value again to properly update the controls.
+        if (changes.initialValue && this.initialValue) {
+            this.configureForm(this.form.value);
+            this.form.updateValueAndValidity();
+        }
     }
 
     /**

@@ -1,59 +1,32 @@
-import { ContentRepositoryOperations } from '@admin-ui/core';
+import { ContentRepositoryBO } from '@admin-ui/common';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { ContentRepositoryBO, ContentRepositoryCreateRequest } from '@gentics/cms-models';
-import { IModalDialog } from '@gentics/ui-core';
+import { createNestedControlValidator } from '@gentics/cms-components';
+import { BaseModal, IModalDialog } from '@gentics/ui-core';
+import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
 @Component({
     selector: 'gtx-create-content-repository-modal',
     templateUrl: './create-content-repository-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CreateContentRepositoryModalComponent implements IModalDialog, OnInit {
+export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepositoryBO> implements IModalDialog, OnInit {
+
+    public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
 
     /** form instance */
     form: UntypedFormControl;
 
-    isValid: boolean;
-
     constructor(
-        private contentRepositoryOperations: ContentRepositoryOperations,
-    ) { }
+        private handler: ContentRepositoryHandlerService,
+    ) {
+        super();
+    }
 
     ngOnInit(): void {
-        const payload: ContentRepositoryCreateRequest = {
-            name: '',
-            crType: null,
-            dbType: '',
-            username: '',
-            password: '',
-            usePassword: false,
-            url: '',
-            basepath: '',
-            instantPublishing: false,
-            languageInformation: false,
-            permissionInformation: false,
-            permissionProperty: '',
-            defaultPermission: '',
-            diffDelete: false,
-            elasticsearch: null,
-            projectPerNode: false,
-        };
         // instantiate form
-        this.form = new UntypedFormControl(payload);
-    }
-
-    closeFn = (entityCreated: ContentRepositoryBO) => {};
-    cancelFn = () => {};
-
-    registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = (entityCreated: ContentRepositoryBO) => {
-            close(entityCreated);
-        };
-    }
-
-    registerCancelFn(cancel: (val?: any) => void): void {
-        this.cancelFn = cancel;
+        this.form = new UntypedFormControl({}, createNestedControlValidator());
     }
 
     /**
@@ -65,7 +38,7 @@ export class CreateContentRepositoryModalComponent implements IModalDialog, OnIn
     }
 
     private createEntity(): Promise<ContentRepositoryBO> {
-        return this.contentRepositoryOperations.create(this.form.value).toPromise();
+        return this.handler.createMapped(this.form.value).toPromise();
     }
 
 }

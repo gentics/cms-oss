@@ -334,8 +334,8 @@ export type EditableEntityAPIModels = {
         [EntityModelType.LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
         [EntityModelType.LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
         [EntityModelType.DEVTOOL_LIST_REQUEST_MODEL]: never,
-        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: never,
-        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: never,
+        [EntityModelType.DEVTOOL_LIST_REQUEST_PARAMS]: ContentRepositoryListOptions,
+        [EntityModelType.DEVTOOL_LIST_RESPONSE_MODEL]: ContentRepositoryListResponse,
     },
     [EditableEntity.CR_FRAGMENT]: {
         [EntityModelType.CREATE_REQUEST_MODEL]: ContentRepositoryFragmentCreateRequest,

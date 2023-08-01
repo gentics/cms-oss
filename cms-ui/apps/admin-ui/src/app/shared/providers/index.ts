@@ -3,7 +3,6 @@
 
 export * from './content-item-trable-loader/content-item-trable-loader.service';
 export * from './content-package-data/content-package-data.service';
-export * from './content-repository-data/content-repository-data.service';
 export * from './context-menu/context-menu.service';
 export * from './cr-fragment-data/cr-fragment-data.service';
 export * from './entity-data-service-base/entity-data.service.base';

@@ -1,38 +1,41 @@
 <div class="gtx-entity-detail">
-    <gtx-tabs pure [activeId]="activeTabId$ | async">
+    <gtx-tabs pure [activeId]="editorTab">
         <gtx-tab
-            [id]="ContentRepositoryDetailTabs.PROPERTIES"
+            [id]="Tabs.PROPERTIES"
             gtxDetailTabLink
             [title]="'shared.title_properties' | i18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: currentEntity?.name }"
-                    saveActionAllowedId="contentRepository.updateContentRepositoryInstance"
-                    [saveActionAllowedInstanceId]="currentEntity?.id"
-                    [saveDisabled]="fgProperties?.invalid"
-                    (saveClick)="btnSavePropertiesOnClick()"
+                    [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
+                    saveActionAllowedId="construct.updateConstructInstance"
+                    [saveActionAllowedInstanceId]="entity?.id"
+                    [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
+                    (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-content-repository-properties
+                        *ngIf="entity"
                         class="properties"
                         [formControl]="fgProperties"
-                        [mode]="TagmapEntryPropertiesMode.UPDATE"
+                        [mode]="ContentRepositoryPropertiesMode.UPDATE"
+                        [crType]="entity?.crType"
+                        [(initialValue)]="entityIsClean"
                     ></gtx-content-repository-properties>
                 </div>
             </div>
         </gtx-tab>
 
         <gtx-tab
-            [id]="ContentRepositoryDetailTabs.TAGMAP"
+            [id]="Tabs.TAGMAP"
             gtxDetailTabLink
             [title]="'shared.title_tagmap' | i18n"
         >
-            <div class="detail-tab-wrapper">
+            <div class="parts-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_tagmap_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [title]="'shared.title_tagmap_of_entity' | i18n: { entityName: entity?.name }"
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
@@ -40,28 +43,28 @@
                     <gtx-tag-map-entry-table
                         [showSearch]="true"
                         [parentType]="'contentRepository'"
-                        [parentId]="currentEntity.id"
-                        [displayFields]="currentEntity.crType === ContentRepositoryType.MESH ? TagmapEntryDisplayFields.MESH : TagmapEntryDisplayFields.SQL"
+                        [parentId]="entity.id"
+                        [displayFields]="entity.crType === ContentRepositoryType.MESH ? TagmapEntryDisplayFields.MESH : TagmapEntryDisplayFields.SQL"
                     ></gtx-tag-map-entry-table>
                 </div>
             </div>
         </gtx-tab>
 
         <gtx-tab
-            [id]="ContentRepositoryDetailTabs.DATA_CHECK_RESULT"
+            [id]="Tabs.DATA_CHECK_RESULT"
             gtxDetailTabLink
             [title]="'contentRepository.dataCheckResult' | i18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_dataCheckResult_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [title]="'shared.title_dataCheckResult_of_entity' | i18n: { entityName: entity?.name }"
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-textarea
                         class="gtx-logs-container"
-                        [value]="(currentEntity?.dataCheckResult || '').trim()"
+                        [value]="(entity?.dataCheckResult || '').trim()"
                         [disabled]="true"
                     ></gtx-textarea>
                 </div>
@@ -69,25 +72,24 @@
         </gtx-tab>
 
         <gtx-tab
-            [id]="ContentRepositoryDetailTabs.STURCTURE_CHECK_RESULT"
+            [id]="Tabs.STURCTURE_CHECK_RESULT"
             gtxDetailTabLink
             [title]="'contentRepository.structureCheckResult' | i18n"
         >
             <div class="detail-tab-wrapper">
                 <gtx-entity-detail-header
-                    [title]="'shared.title_structureCheckResult_of_entity' | i18n: { entityName: currentEntity?.name }"
+                    [title]="'shared.title_structureCheckResult_of_entity' | i18n: { entityName: entity?.name }"
                     (cancelClick)="detailsClose()"
                 ></gtx-entity-detail-header>
 
                 <div class="gtx-entity-details-tab-content-body">
                     <gtx-textarea
                         class="gtx-logs-container"
-                        [value]="(currentEntity?.checkResult || '').trim()"
+                        [value]="(entity?.checkResult || '').trim()"
                         [disabled]="true"
                     ></gtx-textarea>
                 </div>
             </div>
         </gtx-tab>
-
     </gtx-tabs>
 </div>

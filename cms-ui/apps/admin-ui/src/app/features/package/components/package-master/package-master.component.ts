@@ -1,9 +1,10 @@
+import { EditableEntity } from '@admin-ui/common';
 import { DevToolPackageTableLoaderService } from '@admin-ui/core';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NormalizableEntityType, Package, PackageBO } from '@gentics/cms-models';
+import { Package, PackageBO } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { CreatePackageModalComponent } from '../create-package-modal/create-package-modal.component';
 
@@ -14,7 +15,7 @@ import { CreatePackageModalComponent } from '../create-package-modal/create-pack
 })
 export class PackageMasterComponent extends BaseTableMasterComponent<Package, PackageBO> {
 
-    protected entityIdentifier: NormalizableEntityType = 'package';
+    protected entityIdentifier = EditableEntity.DEVTOOL_PACKAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,

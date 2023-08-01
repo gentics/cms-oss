@@ -17,6 +17,7 @@ import { DataSourceHandlerService } from '../data-source-handler/data-source-han
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
+import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
 
 export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot): boolean {
     if (from.component !== to.component) {
@@ -47,6 +48,7 @@ export class RouteEntityResolverService {
 
     constructor(
         private router: Router,
+        private contentRepository: ContentRepositoryHandlerService,
         private construct: ConstructHandlerService,
         private constructCat: ConstructCategoryHandlerService,
         private dataSource: DataSourceHandlerService,
@@ -80,6 +82,9 @@ export class RouteEntityResolverService {
 
     public getHandler<K extends EditableEntity>(type: EditableEntity): EntityEditorHandler<K> {
         switch (type) {
+            case EditableEntity.CONTENT_REPOSITORY:
+                return this.contentRepository as any;
+
             case EditableEntity.CONSTRUCT:
                 return this.construct as any;
 

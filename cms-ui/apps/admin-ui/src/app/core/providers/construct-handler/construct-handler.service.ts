@@ -29,7 +29,7 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { AnyModelType, DataSourceConstructListOptions, DataSourceConstructListResponse, EntityIdType, Node, Raw, TagType } from '@gentics/cms-models';
+import { DataSourceConstructListOptions, DataSourceConstructListResponse, EntityIdType, Node } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';

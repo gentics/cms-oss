@@ -81,7 +81,6 @@ import {
 import {
     ContentItemTrableLoaderService,
     ContentPackageDataService,
-    ContentRepositoryDataService,
     ContentRepositoryFragmentDataService,
     ContextMenuService,
     EntityExistsValidator,
@@ -193,7 +192,6 @@ const DECLARATIONS: any[] = [
 const PROVIDERS: any[] = [
     ContentItemTrableLoaderService,
     ContentPackageDataService,
-    ContentRepositoryDataService,
     ContentRepositoryFragmentDataService,
     ContextMenuService,
     EntityExistsValidator,

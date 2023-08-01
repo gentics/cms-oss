@@ -1,12 +1,12 @@
-import { ObservableStopper } from '@admin-ui/common';
+import { BO_ID, ObservableStopper } from '@admin-ui/common';
 import {
     ConstructHandlerService,
     ContentRepositoryFragmentOperations,
-    ContentRepositoryOperations,
+    ContentRepositoryHandlerService,
     DataSourceHandlerService,
     ObjectPropertyHandlerService,
     PackageOperations,
-    TemplateOperations
+    TemplateOperations,
 } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
@@ -37,7 +37,7 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
     constructor(
         private packageOperations: PackageOperations,
         private constructHandler: ConstructHandlerService,
-        private crOperations: ContentRepositoryOperations,
+        private crHandler: ContentRepositoryHandlerService,
         private crFragmentOperations: ContentRepositoryFragmentOperations,
         private dataSourceHandler: DataSourceHandlerService,
         private objectPropertyHandler: ObjectPropertyHandlerService,
@@ -50,12 +50,12 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
         switch (this.entityIdentifier) {
             case 'construct':
                 this.packageChildEntityIds$ = this.constructHandler.listFromDevtoolMapped(this.packageId).pipe(
-                    map(res => res.items.map(entity => `${entity.id}`)),
+                    map(res => res.items.map(entity => entity.id[BO_ID])),
                 );
                 break;
             case 'contentRepository':
-                this.packageChildEntityIds$ = this.crOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => String(entity.id))),
+                this.packageChildEntityIds$ = this.crHandler.listFromDevtoolMapped(this.packageId).pipe(
+                    map(res => res.items.map(entity => entity[BO_ID])),
                 );
                 break;
             case 'contentRepositoryFragment':
@@ -65,12 +65,12 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
                 break;
             case 'dataSource':
                 this.packageChildEntityIds$ = this.dataSourceHandler.listFromDevtoolMapped(this.packageId).pipe(
-                    map(entities => entities.items.map(entity => String(entity.id))),
+                    map(entities => entities.items.map(entity => entity[BO_ID])),
                 );
                 break;
             case 'objectProperty':
                 this.packageChildEntityIds$ = this.objectPropertyHandler.listFromDevtoolMapped(this.packageId).pipe(
-                    map(res => res.items.map(entity => `${entity.id}`)),
+                    map(res => res.items.map(entity => entity.id[BO_ID])),
                 );
                 break;
             case 'template':

@@ -4,6 +4,7 @@ export * from './breadcrumbs';
 export * from './construct-category-handler/construct-category-handler.service';
 export * from './construct-handler/construct-handler.service';
 export * from './construct-table-loader/construct-table-loader.service';
+export * from './content-repository-handler/content-repository-handler.service';
 export * from './content-repository-table-loader/content-repository-table-loader.service';
 export * from './cr-fragment-table-loader/cr-fragment-table-loader.service';
 export * from './data-source-entry-handler/data-source-entry-handler.service';
@@ -40,3 +41,4 @@ export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
+

@@ -23,6 +23,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.factory.MultichannellingFactory;
+import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.NoObjectTagSync;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -872,7 +873,11 @@ public abstract class ContentFile extends AbstractContentObject implements Image
 
 	@Override
 	public Node getNode() throws NodeException {
-		return getFolder().getNode();
+		Folder folder;
+		try (NoMcTrx noMc = new NoMcTrx()) {
+			folder = getFolder();
+		}
+		return folder.getNode();
 	}
 
 	@Override

@@ -2,11 +2,12 @@
     <h5>{{ 'modal.inheritance_title' | i18n }} {{ item.type | i18n | capitalize }} "{{ item.name }}"</h5>
 </div>
 <div class="modal-content">
-    <gtx-checkbox [label]="'modal.general_inheritance_label' | i18n" [(ngModel)]="generalInheritance" (change)="changeGeneralInheritance($event)"></gtx-checkbox>
+    <gtx-checkbox [label]="'modal.general_inheritance_label' | i18n" [(ngModel)]="generalInheritance"></gtx-checkbox>
+    <gtx-checkbox [label]="'modal.disinherit_default_label' | i18n" [(ngModel)]="disinheritDefault"></gtx-checkbox>
     <div *ngIf="0 < item.inheritable.length">
         <h6>{{ 'modal.inheritance_channels_title' | i18n }}</h6>
         <div *ngFor="let nodeId of item.inheritable">
-            <gtx-checkbox [disabled]="generalInheritance" [label]="getChannelLabel(nodeId) | i18n:{ channel: nodes[nodeId]?.name }"
+            <gtx-checkbox [disabled]="!generalInheritance" [label]="getChannelLabel(nodeId) | i18n:{ channel: nodes[nodeId]?.name }"
                           [(ngModel)]="inheritedChannels[nodeId]"></gtx-checkbox>
         </div>
     </div>

@@ -1,5 +1,5 @@
 import { BusinessObject, PackageTableEntityLoader } from '@admin-ui/common';
-import { DevToolPackageTableLoaderService, I18nService, PackageOperations } from '@admin-ui/core/providers';
+import { DevToolPackageTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
@@ -23,7 +23,6 @@ export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject,
         loader: BasePackageEntityTableComponent<T, O, A>,
         modalService: ModalService,
         protected contextMenu: ContextMenuService,
-        protected packageOperations: PackageOperations,
         protected packageTableLoader: DevToolPackageTableLoaderService,
     ) {
         super(

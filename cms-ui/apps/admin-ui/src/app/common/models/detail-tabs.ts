@@ -29,7 +29,7 @@ export enum DataSourceDetailTabs {
     USAGE_OVERVIEW = 'usage-overview',
 }
 
-export enum DevtoolPackageDetailTabs {
+export enum DevToolPackageDetailTabs {
     CONSTRUCTS = 'constructs',
     CONTENT_REPOSITORIES = 'content-repositories',
     CR_FRAGMENTS = 'cr-fragments',

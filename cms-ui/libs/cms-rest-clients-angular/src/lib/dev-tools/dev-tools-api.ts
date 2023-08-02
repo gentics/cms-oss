@@ -126,7 +126,7 @@ export class DevToolsApi {
     /**
      * Add an existing package to a node
      */
-    addPackageToNode(nodeId: number, packageName: string): Observable<void> {
+    addPackageToNode(nodeId: string | number, packageName: string): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/nodes/${nodeId}/packages/${sanitizedPackageName}`, null) as unknown as Observable<void>;
     }
@@ -134,7 +134,7 @@ export class DevToolsApi {
     /**
      * Remove an existing package from a node
      */
-    removePackageFromNode(nodeId: number, packageName: string): Observable<void> {
+    removePackageFromNode(nodeId: string | number, packageName: string): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/nodes/${nodeId}/packages/${sanitizedPackageName}`);
     }

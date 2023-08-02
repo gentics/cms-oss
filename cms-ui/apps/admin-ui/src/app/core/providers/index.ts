@@ -12,6 +12,7 @@ export * from './data-source-handler/data-source-handler.service';
 export * from './data-source-table-loader/data-source-table-loader.service';
 export * from './debug-tool/debug-tool.service';
 export * from './dev-tool-package-handler/dev-tool-package-handler.service';
+export * from './dev-tool-package-manager/dev-tool-package-manager.service';
 export * from './dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 export * from './editor-closer/editor-closer.service';
 export * from './editor-tab-tracker/editor-tab-tracker.service';

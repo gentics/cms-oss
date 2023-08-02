@@ -20,11 +20,12 @@ import {
     EntityUpdateRequestModel,
     EntityUpdateRequestParams,
     EntityUpdateResponseModel,
+    discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { PackageListOptions, PackageListResponse, PackageSyncOptions } from '@gentics/cms-models';
+import { PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { Observable, of } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
@@ -61,7 +62,6 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         };
     }
 
-
     create(
         data: EntityCreateRequestModel<EditableEntity.DEV_TOOL_PACKAGE>,
         params?: EntityCreateRequestParams<EditableEntity.DEV_TOOL_PACKAGE>,
@@ -79,7 +79,6 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
             })),
         );
     }
-
 
     createMapped(
         data: EntityCreateRequestModel<EditableEntity.DEV_TOOL_PACKAGE>,
@@ -180,6 +179,62 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
         );
     }
 
+    /**
+     * Add an existing package to a node
+     */
+    assignToNode(nodeId: string | number, devToolPackages: string | string[]): Observable<void> {
+        const request = (name: string): Observable<void> => {
+            return this.api.devTools.addPackageToNode(nodeId, name).pipe(
+                // display toast notification
+                tap(() => this.notification.show({
+                    type: 'success',
+                    message: 'package.package_successfully_added_to_node',
+                    translationParams: { name },
+                })),
+            );
+        };
+        let stream: Observable<void>;
+        if (Array.isArray(devToolPackages) && devToolPackages.length > 0) {
+            stream = forkJoin(devToolPackages.map(name => request(name))).pipe(
+                discard(),
+            );
+        }
+        if (typeof devToolPackages === 'string') {
+            stream = request(devToolPackages);
+        }
+        return stream.pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+    /**
+     * Remove (an) existing package(s) from a node
+     */
+    unassignFromNode(nodeId: string | number, devToolPackages: string | string[]): Observable<void> {
+        const request = (name: string): Observable<void> => {
+            return this.api.devTools.removePackageFromNode(nodeId, name).pipe(
+                // display toast notification
+                tap(() => this.notification.show({
+                    type: 'success',
+                    message: 'package.package_successfully_removed_from_node',
+                    translationParams: { name },
+                })),
+            );
+        };
+        let stream: Observable<void>;
+        if (Array.isArray(devToolPackages) && devToolPackages.length > 0) {
+            stream = forkJoin(devToolPackages.map(name => request(name))).pipe(
+                discard(),
+            );
+        }
+        if (typeof devToolPackages === 'string') {
+            stream = request(devToolPackages);
+        }
+        return stream.pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
     listFromNode(
         nodeId: string | number,
         body?: never,
@@ -206,6 +261,48 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
                 items: res.items.map((item, index) => this.mapToBusinessObject(item, index)),
                 totalItems: res.numItems,
             })),
+        );
+    }
+
+    /**
+     * Get the current status information for the automatic synchronization
+     */
+    getSyncState(): Observable<PackageSyncResponse> {
+        return this.api.devTools.getSyncState();
+    }
+
+    /**
+     * Start the sync
+     */
+    startSync(): Observable<PackageSyncResponse> {
+        return this.api.devTools.startSync().pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'package.autosync_activate_message',
+                    type: 'success',
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    /**
+     * Stop the sync, if it was started by the current user
+     */
+    stopSync(): Observable<PackageSyncResponse> {
+        return this.api.devTools.stopSync().pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'package.autosync_deactivate_message',
+                    type: 'success',
+                });
+            }),
+            // Hacky workaround because the backend may not respond with a body
+            map(res => ({
+                ...(res || {}),
+                enabled: res?.enabled || false,
+            } as any)),
+            this.catchAndRethrowError(),
         );
     }
 

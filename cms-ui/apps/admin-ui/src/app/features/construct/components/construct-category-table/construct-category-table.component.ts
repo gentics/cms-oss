@@ -1,4 +1,4 @@
-import { BO_NEW_SORT_ORDER, ConstructCategoryBO, createMoveActions } from '@admin-ui/common';
+import { BO_NEW_SORT_ORDER, ConstructCategoryBO, EditableEntity, createMoveActions } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseSortableEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -36,6 +36,7 @@ export class ConstructCategoryTableComponent extends BaseSortableEntityTableComp
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'constructCategory';
+    protected focusEntityType = EditableEntity.CONSTRUCT_CATEGORY;
 
     public sortBy = 'sortorder';
 

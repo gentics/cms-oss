@@ -1,10 +1,9 @@
-import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO, EditableEntity } from '@admin-ui/common';
 import {
     ConstructTableLoaderOptions,
     ConstructTableLoaderService,
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
@@ -57,6 +56,7 @@ export class ConstructTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'construct';
+    protected focusEntityType = EditableEntity.CONSTRUCT;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -65,7 +65,6 @@ export class ConstructTableComponent
         loader: ConstructTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -76,7 +75,6 @@ export class ConstructTableComponent
             loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

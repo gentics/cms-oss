@@ -1,4 +1,4 @@
-import { ObjectPropertyCategoryBO } from '@admin-ui/common';
+import { EditableEntity, ObjectPropertyCategoryBO } from '@admin-ui/common';
 import { I18nService, PermissionsService } from '@admin-ui/core';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -26,6 +26,7 @@ export class ObjectPropertyCategortTableComponent extends BaseEntityTableCompone
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'objectPropertyCategory';
+    protected focusEntityType = EditableEntity.OBJECT_PROPERTY_CATEGORY;
 
     constructor(
         changeDetector: ChangeDetectorRef,

@@ -1,4 +1,4 @@
-import { createMoveActions, LanguageBO } from '@admin-ui/common';
+import { createMoveActions, EditableEntity, LanguageBO } from '@admin-ui/common';
 import { I18nService, LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
@@ -40,6 +40,7 @@ export class LanguageTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'language';
+    protected focusEntityType = EditableEntity.LANGUAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,

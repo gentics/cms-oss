@@ -5,7 +5,6 @@ import {
     ContentRepositoryTableLoaderService,
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
@@ -107,7 +106,6 @@ export class ContentRepositoryTableComponent
         loader: ContentRepositoryTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected router: Router,
         protected route: ActivatedRoute,
@@ -121,7 +119,6 @@ export class ContentRepositoryTableComponent
             loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

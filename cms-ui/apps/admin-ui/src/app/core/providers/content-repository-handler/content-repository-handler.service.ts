@@ -180,9 +180,9 @@ export class ContentRepositoryHandlerService
     ): Observable<EntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.contentrepositories.getContentrepositories(params).pipe(
             tap(res => {
-                res.items.forEach(objCat => {
-                    const name = this.displayName(objCat);
-                    this.nameMap[objCat.id] = name;
+                res.items.forEach(cr => {
+                    const name = this.displayName(cr);
+                    this.nameMap[cr.id] = name;
                 });
             }),
             this.catchAndRethrowError(),
@@ -249,9 +249,9 @@ export class ContentRepositoryHandlerService
     ): Observable<DevToolEntityListResponseModel<EditableEntity.CONTENT_REPOSITORY>> {
         return this.api.devTools.getContentrepositories(devtoolPackage, params).pipe(
             tap(res => {
-                res.items.forEach(objCat => {
-                    const name = this.displayName(objCat);
-                    this.nameMap[objCat.id] = name;
+                res.items.forEach(cr => {
+                    const name = this.displayName(cr);
+                    this.nameMap[cr.id] = name;
                 });
             }),
             this.catchAndRethrowError(),

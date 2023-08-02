@@ -1,10 +1,9 @@
-import { DataSourceBO } from '@admin-ui/common';
+import { DataSourceBO, EditableEntity } from '@admin-ui/common';
 import {
     DataSourceTableLoaderOptions,
     DataSourceTableLoaderService,
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
@@ -35,6 +34,7 @@ export class DataSourceTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'dataSource';
+    protected focusEntityType = EditableEntity.DATA_SOURCE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -43,7 +43,6 @@ export class DataSourceTableComponent
         loader: DataSourceTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -54,7 +53,6 @@ export class DataSourceTableComponent
             loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

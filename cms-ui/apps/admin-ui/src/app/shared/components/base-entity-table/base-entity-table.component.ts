@@ -2,6 +2,7 @@ import {
     BO_DISPLAY_NAME,
     BO_ID,
     BusinessObject,
+    EditableEntity,
     TableLoadEndEvent,
     TableLoadOptions,
     TableLoadResponse,
@@ -80,6 +81,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
 
     protected abstract rawColumns: TableColumn<O>[];
     protected abstract entityIdentifier: NormalizableEntityType;
+    protected focusEntityType: NormalizableEntityType | EditableEntity;
 
     // Table data
     public columns: TableColumn<O>[] = [];
@@ -402,7 +404,7 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
         for (const singleEntity of entities) {
             // If the current entity is being edited right now, then we need to close the editor.
             if (this.activeEntity === singleEntity[BO_ID]) {
-                this.appState.dispatch(new SetUIFocusEntity(this.entityIdentifier, undefined));
+                this.appState.dispatch(new SetUIFocusEntity(this.focusEntityType || this.entityIdentifier, undefined));
             }
             await this.callToDeleteEntity(singleEntity[BO_ID]);
         }

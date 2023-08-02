@@ -1,6 +1,6 @@
 import { ChangesOf } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
-import { GcmsPermission, Index } from '@gentics/cms-models';
+import { GcmsPermission } from '@gentics/cms-models';
 
 const PERM_PREFIX = 'perm.';
 
@@ -69,7 +69,7 @@ interface IconDefinition {
 }
 
 // tslint:disable: object-literal-key-quotes
-export const ICON_DEFINITIONS: Index<GtxIcon, IconDefinition> = {
+export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
     'content-node': {
         matIconPrimary: 'device_hub',
         matIconSecondary: 'settings',

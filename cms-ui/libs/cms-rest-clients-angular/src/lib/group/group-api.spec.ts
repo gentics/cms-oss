@@ -7,7 +7,6 @@ import {
     GroupPermissionsListOptions,
     GroupSetPermissionsRequest,
     GroupUserCreateRequest,
-    Omit,
 } from '@gentics/cms-models';
 import { MockApiBase } from '../util/api-base.mock';
 import { GroupApi } from './group-api';

@@ -9,6 +9,7 @@ export * from '@gentics/cms-models';
 export * from './actions';
 export * from './chip-search';
 export * from './events';
+export * from './list';
 export * from './page';
 export * from './repository-browser';
 export * from './staging';

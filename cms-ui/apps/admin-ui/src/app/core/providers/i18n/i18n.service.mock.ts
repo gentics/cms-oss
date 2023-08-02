@@ -1,5 +1,5 @@
 import { InterfaceOf } from '@admin-ui/common/utils/util-types/util-types';
-import { GcmsUiLanguage, Omit } from '@gentics/cms-models';
+import { GcmsUiLanguage } from '@gentics/cms-models';
 import { Observable, of as observableOf } from 'rxjs';
 import { I18nService, JoinOptions } from './i18n.service';
 

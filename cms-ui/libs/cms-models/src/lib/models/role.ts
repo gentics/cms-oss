@@ -1,5 +1,5 @@
 import { GcmsUiLanguage } from '../gcms-ui-bridge';
-import { DefaultModelType, Index, ModelType } from './type-util';
+import { DefaultModelType, ModelType } from './type-util';
 
 interface BaseRole<T extends ModelType = DefaultModelType> {
     /** Name of the role in the current language. Only available when loading a role. */
@@ -8,10 +8,10 @@ interface BaseRole<T extends ModelType = DefaultModelType> {
     description: string;
 
     /** Name of the role in all possible translations */
-    nameI18n: Index<GcmsUiLanguage, string>;
+    nameI18n: Record<GcmsUiLanguage, string>;
 
     /** Description in all possible translations */
-    descriptionI18n: Index<GcmsUiLanguage, string>;
+    descriptionI18n: Record<GcmsUiLanguage, string>;
 }
 
 /** Data model as defined by backend. */
@@ -21,7 +21,10 @@ export interface Role<T extends ModelType = DefaultModelType> extends BaseRole<T
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface RoleBO<T extends ModelType = DefaultModelType> extends BaseRole<T> {
     /** Internal ID of the object property definition */
     id: string;
@@ -31,7 +34,7 @@ export interface RoleBO<T extends ModelType = DefaultModelType> extends BaseRole
 /** @see https://www.gentics.com/Content.Node/guides/restapi/json_RolePermissionsModel.html */
 export interface RolePermissions {
     page: PagePrivileges;
-    pageLanguages: Index<string, PagePrivileges>;
+    pageLanguages: Record<string, PagePrivileges>;
     file: FilePrivileges;
 }
 

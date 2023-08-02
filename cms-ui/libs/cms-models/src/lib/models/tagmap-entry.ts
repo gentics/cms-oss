@@ -53,7 +53,10 @@ export interface TagmapEntry<T extends ModelType = DefaultModelType> extends Tag
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface TagmapEntryBO<T extends ModelType = DefaultModelType> extends TagmapEntryBase<T> {
     /** Internal ID of the object property definition */
     id: string;

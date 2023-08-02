@@ -32,7 +32,10 @@ export interface ActionLogEntry<T extends ModelType = DefaultModelType> extends 
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface LogsBO<T extends ModelType = DefaultModelType> extends ActionLogEntryBase<T> {
     /** Internal ID of the object property definition */
     id: string;

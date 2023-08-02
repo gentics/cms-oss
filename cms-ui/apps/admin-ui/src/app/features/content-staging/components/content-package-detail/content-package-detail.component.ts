@@ -5,12 +5,12 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ContentPackageBO, Index, NormalizableEntityType, Normalized, Raw } from '@gentics/cms-models';
+import { ContentPackageBO, NormalizableEntityType, Normalized, Raw } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of } from 'rxjs';
 import { delay, repeat, takeUntil } from 'rxjs/operators';
-import { ContentPackagePropertiesMode } from '../content-package-properties/content-package-properties.component';
 import { ContentPackageTableLoaderService } from '../../providers';
+import { ContentPackagePropertiesMode } from '../content-package-properties/content-package-properties.component';
 
 @Component({
     selector: 'gtx-content-package-detail',
@@ -35,7 +35,7 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<ContentPackageDetailTabs, FormTabHandle>;
+    private tabHandles: Record<ContentPackageDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

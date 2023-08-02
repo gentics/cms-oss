@@ -1,4 +1,4 @@
-import { Index, IndexByKey, Omit } from '../../type-util';
+import { IndexByKey } from '../../type-util';
 import { GcmsPermission } from './permissions';
 
 /**
@@ -21,7 +21,7 @@ export enum GcmsRolePrivilege {
 /**
  * Maps each `GcmsRolePrivilege` to its value for a user/role.
  */
-export type GcmsRolePrivilegeMap = Index<GcmsRolePrivilege, boolean>;
+export type GcmsRolePrivilegeMap = Record<GcmsRolePrivilege, boolean>;
 
 /**
  * Collects all role privilege maps for a user.
@@ -43,7 +43,7 @@ export interface GcmsRolePrivilegeMapCollection {
 }
 
 /** Maps each privilege to its corresponding GcmsPermission. */
-export const GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP: Index<GcmsRolePrivilege, GcmsPermission> = Object.freeze({
+export const GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP: Record<GcmsRolePrivilege, GcmsPermission> = Object.freeze({
     createitems: GcmsPermission.CREATE_ITEMS,
     readitems: GcmsPermission.READ_ITEMS,
     updateitems: GcmsPermission.UPDATE_ITEMS,

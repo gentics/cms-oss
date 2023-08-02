@@ -1,4 +1,3 @@
-import { Group } from '../../group';
 import { AccessControlledType, GcmsPermission } from './permissions';
 import { RoleAssignment } from './roles';
 

@@ -9,7 +9,6 @@ import {
     AccessControlledType,
     Folder,
     GcmsPermission,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
@@ -55,7 +54,7 @@ export class FolderDetailComponent extends BaseDetailComponent<'folder', FolderO
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<FolderDetailTabs, FormTabHandle>;
+    private tabHandles: Record<FolderDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

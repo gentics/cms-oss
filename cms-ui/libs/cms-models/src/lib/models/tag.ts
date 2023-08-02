@@ -1,6 +1,6 @@
 import { schema } from 'normalizr';
 import { CmsI18nValue } from './cms-i18n-value';
-import { InstancePermissionItem, InstancePermissionMap } from './permissions';
+import { InstancePermissionItem } from './permissions';
 import { TagPart, TagPartProperty } from './tag-part';
 import { DefaultModelType, IndexByKey, ModelType } from './type-util';
 import { User } from './user';
@@ -183,7 +183,10 @@ export interface TagType<T extends ModelType = DefaultModelType> extends TagType
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface TagTypeBO<T extends ModelType = DefaultModelType> extends TagTypeBase<T>, InstancePermissionItem {
     /** Internal ID of the object property definition */
     id: string;
@@ -225,7 +228,8 @@ export interface TagStatus {
 }
 
 /**
- * Business-Object representation of a Tag-Status
+ * Business-Object representation of a Tag-Status.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface TagStatusBO extends TagStatus {
     /** Pseudo ID - is actually the `name` property, but is required for internal application usage. */

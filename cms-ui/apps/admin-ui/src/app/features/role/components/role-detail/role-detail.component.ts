@@ -12,7 +12,6 @@ import {
     AccessControlledType,
     AnyModelType,
     GcmsPermission,
-    Index,
     Language,
     NormalizableEntityTypesMap,
     Normalized,
@@ -21,7 +20,7 @@ import {
     RoleBO,
     RolePermissions,
     RoleUpdateRequest,
-    TypePermissions,
+    TypePermissions
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
@@ -84,7 +83,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<RoleDetailTabs, FormTabHandle>;
+    private tabHandles: Record<RoleDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -297,7 +296,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
             translatepage: rolePermissions.page.translatepage,
         }, { onlySelf: false, emitEvent: false });
 
-        const pageLanguagesPrivileges: Index<string, PagePrivileges> = rolePermissions.pageLanguages;
+        const pageLanguagesPrivileges: Record<string, PagePrivileges> = rolePermissions.pageLanguages;
         const updatedPageLanguagesPrivileges: string[] = [];
 
         const pageLanguagesFormGroup: UntypedFormGroup = (this.fgPagePrivileges.get('pageLanguages') as UntypedFormGroup);

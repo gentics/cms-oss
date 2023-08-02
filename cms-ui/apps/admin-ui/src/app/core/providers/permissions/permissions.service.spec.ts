@@ -7,7 +7,6 @@ import {
     AccessControlledType,
     GcmsPermission,
     GcmsPermissionsMap,
-    Index,
     InstancePermissions,
     InstancePermissionsImpl,
     PermissionResponse,
@@ -385,7 +384,7 @@ describe('PermissionsService', () => {
             getInstancePermissionsSpy = spyOn(permissionsService, 'getInstancePermissions');
         });
 
-        function setUpTypePermissions(mockedPermissions: Partial<Index<AccessControlledType, Partial<GcmsPermissionsMap>>>): void {
+        function setUpTypePermissions(mockedPermissions: Partial<Record<AccessControlledType, Partial<GcmsPermissionsMap>>>): void {
             getTypePermissionsSpy.and.callFake(
                 type => createDelayedObservable(new TypePermissionsImpl(type, { permissions: mockedPermissions[type] })),
             );

@@ -19,7 +19,6 @@ import {
     GcmsRolePrivilegeMapCollection,
     Image,
     ImagePermissions,
-    Index,
     InheritableItem,
     InstancePermissions,
     Item,
@@ -37,7 +36,7 @@ import {
     TypePermissions,
     UniformInstancePermissions,
     UniformTypePermissions,
-    getNoPermissions,
+    getNoPermissions
 } from '@gentics/cms-models';
 import { cloneDeep, isEqual } from 'lodash';
 import { Observable, combineLatest, forkJoin, of as observableOf } from 'rxjs';
@@ -949,7 +948,7 @@ export class PermissionService {
      * @param languageString language code
      */
     private checkGroupAndRolePagePermission(
-        perm: Partial<Index<GcmsPermission, boolean>> | undefined,
+        perm: Partial<Record<GcmsPermission, boolean>> | undefined,
         role: GcmsRolePrivilegeMapCollection | undefined,
         permissionName: GcmsPermission | GcmsRolePrivilege,
         languageString?: string,

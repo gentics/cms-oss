@@ -23,12 +23,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     AccessControlledType,
     GcmsPermission,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
     TypePermissions,
-    User,
+    User
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NGXLogger } from 'ngx-logger';
@@ -80,7 +79,7 @@ export class UserDetailComponent extends BaseDetailComponent<'user', UserOperati
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<UserDetailTabs, FormTabHandle>;
+    private tabHandles: Record<UserDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

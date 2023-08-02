@@ -16,7 +16,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     ContentRepositoryFragmentBO,
     ContentRepositoryFragmentUpdateRequest,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
@@ -50,7 +49,7 @@ export class ContentRepositoryFragmentDetailComponent
 
     activeTabId$: Observable<string>;
 
-    private tabHandles: Index<ContentRepositoryFragmentDetailTabs, FormTabHandle>;
+    private tabHandles: Record<ContentRepositoryFragmentDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

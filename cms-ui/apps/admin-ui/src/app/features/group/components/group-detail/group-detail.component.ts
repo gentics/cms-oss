@@ -16,7 +16,6 @@ import {
     AccessControlledType,
     GcmsPermission,
     Group,
-    Index,
     NormalizableEntityType,
     Normalized,
     Raw,
@@ -64,7 +63,7 @@ export class GroupDetailComponent extends BaseDetailComponent<'group', GroupOper
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<GroupDetailTabs, FormTabHandle>;
+    private tabHandles: Record<GroupDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

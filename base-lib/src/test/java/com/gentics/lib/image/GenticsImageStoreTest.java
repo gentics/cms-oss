@@ -18,6 +18,7 @@ import java.net.URI;
 import java.util.Properties;
 
 import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
 
 import com.gentics.contentnode.tests.category.BaseLibTest;
 import org.junit.Before;
@@ -126,6 +127,13 @@ public class GenticsImageStoreTest {
 	}
 
 	@Test
+	public void TestSimpleWebP() throws ServletException, IOException {
+		String fn = "blume.webp";
+
+		assertTrue(utils.doOperation(fn, 200, 200, "smart"));
+	}
+
+	@Test
 	public void testSimpleJPG() throws Exception {
 		String fn = "blume2.jpeg";
 
@@ -163,6 +171,15 @@ public class GenticsImageStoreTest {
 		int[] referencedim = { 158, 188 };
 
 		executeTestCase(fn, "255bc97f387c372f2a5e92667dc76441", "prop", targetdim, referencedim);
+	}
+
+	@Test
+	public void testPropWebP() throws Exception {
+		String fn = "blume.webp";
+		int[] targetdim = { 200, 188 };
+		int[] referencedim = { 158, 188 };
+
+		executeTestCase(fn, "18b7214aa55c9e1b313d02c018ade264", "prop", targetdim, referencedim);
 	}
 
 	@Test
@@ -215,6 +232,13 @@ public class GenticsImageStoreTest {
 		String fn = "blume2.jpeg";
 
 		executeTestCase(fn, "de680238edf7b47b1f4b3ae0563eef68", "force");
+	}
+
+	@Test
+	public void testForceWebP() throws Exception {
+		String fn = "blume.webp";
+
+		executeTestCase(fn, "8ad3aa0c8d1ec4a56e38b1b14737cff6", "force");
 	}
 
 	@Test

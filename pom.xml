@@ -79,6 +79,7 @@
 		<xalan.version>2.7.3</xalan.version>
 		<xml.apis.version>1.4.01</xml.apis.version>
 		<imageio.version>3.9.4</imageio.version>
+		<imageio.webp.version>0.1.6</imageio.webp.version>
 		<tika.version>1.28.5</tika.version>
 		<commons.fileupload.version>1.5</commons.fileupload.version>
 		<commons.beanutils.version>1.9.4</commons.beanutils.version>
@@ -87,7 +88,7 @@
 		<org.json.version>20230227</org.json.version>
 
 		<!-- TODO: integrate generic-testutils -->
-		<generic-testutils.version>1.15.7</generic-testutils.version>
+		<generic-testutils.version>1.15.8-SNAPSHOT</generic-testutils.version>
 		<skip.integration.tests>false</skip.integration.tests>
 		<skip.unit.tests>false</skip.unit.tests>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -150,17 +150,10 @@ public class PackageDependency extends AbstractModel {
     OBJECT_PROPERTY,
     CONTENT_REPOSITORY,
 
+    TEMPLATE_TAG,
+    OBJECT_TAG_DEFINITION,
+
     UNKNOWN;
-
-    public static Type fromString(String value) {
-      try {
-        return Type.valueOf(value);
-      }
-      catch (IllegalArgumentException exception) {
-        return Type.UNKNOWN;
-      }
-    }
-
   }
 
 

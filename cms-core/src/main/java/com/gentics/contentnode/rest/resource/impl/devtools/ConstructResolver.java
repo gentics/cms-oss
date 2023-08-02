@@ -1,6 +1,5 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
-import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.PackageObject;
@@ -13,7 +12,6 @@ import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Ty
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ConstructResolver extends AbstractDependencyResolver {
@@ -61,8 +59,9 @@ public class ConstructResolver extends AbstractDependencyResolver {
           .withGlobalId(part.getGlobalId().toString())
           .withKeyword(part.getKeyname())
           .withName(part.getName().toString())
-          .withIsInPackage(isInPackage(packageSynchronizer,
-              part.getInfoInt())) //todo: is this mapping ok  part.info_int  to datasource.id ?
+          .withIsInPackage(
+              isInPackage(packageSynchronizer, Datasource.class, resolveUuid(part.getInfoInt())))
+          //todo: is this mapping ok  part.info_int  to datasource.id ?
           .withType(
               Type.DATASOURCE) //todo: check me (is a multi select also a datasource in this context) ? // map all to DS ok?
           .build();
@@ -75,46 +74,24 @@ public class ConstructResolver extends AbstractDependencyResolver {
 
 
   /**
-   * Get the datasource for the given local ID, global ID or name from the package
-   *
-   * @param synchronizer package
-   * @param datasourceId local ID, global ID or name
-   * @return true if datasource is in package
-   * @throws NodeException
-   */
-  private boolean isInPackage(PackageSynchronizer synchronizer, int datasourceId)
-      throws NodeException {
-    Optional<String> resolvedUuidOpt = resolveUuid(datasourceId);
-    if(!resolvedUuidOpt.isPresent()){
-      return false;
-    }
-
-    String resolvedUuid = resolvedUuidOpt.get();
-
-    return synchronizer.getObjects(Datasource.class).stream().anyMatch(d ->
-        resolvedUuid.equals(ObjectTransformer.getString(d.getObject().getId(), null))
-            || resolvedUuid.equals(ObjectTransformer.getString(d.getObject().getGlobalId(), null))
-            || resolvedUuid.equals(d.getObject().getName()));
-  }
-
-  /**
    * Utility method to map datasourceId to the uuid of a datasource
+   *
    * @param datasourceId numeric id that should be mapped to an uuid
    * @return the mapped uuid
    * @throws NodeException
    */
-  private Optional<String> resolveUuid(int datasourceId) throws NodeException {
+  private String resolveUuid(int datasourceId) throws NodeException {
     if (datasourceId == 0) {
-      return Optional.empty();
+      return "";
     }
 
     return DBUtils.select("SELECT `uuid` FROM `datasource` WHERE `id` = ?", (ps) -> {
       ps.setInt(1, datasourceId);
     }, (resultSet) -> {
       if (resultSet.next()) {
-        return Optional.of(resultSet.getString("uuid"));
+        return resultSet.getString("uuid");
       }
-      return Optional.empty();
+      return "";
     });
   }
 

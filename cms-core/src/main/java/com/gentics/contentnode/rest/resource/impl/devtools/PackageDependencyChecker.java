@@ -66,8 +66,6 @@ public class PackageDependencyChecker {
   }
 
 
-
-
   public String getPackageName() {
     return packageName;
   }

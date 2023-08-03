@@ -1,1 +1,1 @@
-export * from './lib/mesh-rest-client.service';
+export * from './lib';

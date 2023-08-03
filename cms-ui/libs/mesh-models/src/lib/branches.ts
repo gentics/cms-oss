@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { PermissionInfo } from '@gentics/cms-models';
-import { BasicListOptions, PagingMetaInfo } from './common';
+import { BasicListOptions, PagingMetaInfo, PermissionInfo } from './common';
 import { TagReference } from './tags';
 import { UserReference } from './users';
 

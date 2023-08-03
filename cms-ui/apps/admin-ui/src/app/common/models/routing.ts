@@ -15,6 +15,9 @@ import {
 export const ROUTE_PERMISSIONS_KEY = 'typePermissions';
 export const ROUTE_BREADCRUMB_KEY = 'breadcrumb';
 export const ROUTE_CHILD_BREADCRUMB_OUTLET_KEY = 'childOutletsForBreadcrumbs';
+export const ROUTE_MANAGEMENT_OUTLET = 'management';
+export const ROUTE_PARAM_MESH_TAB = 'activeTab';
+export const ROUTE_PATH_MESH = 'mesh';
 
 export enum AdminUIModuleRoutes {
     CONSTRUCTS = 'constructs',

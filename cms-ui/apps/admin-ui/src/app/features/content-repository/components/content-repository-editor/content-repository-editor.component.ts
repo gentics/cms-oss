@@ -1,13 +1,20 @@
-import { EditableEntity, EditableEntityModels, EntityUpdateRequestModel, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
+import {
+    EditableEntity,
+    EditableEntityModels,
+    EntityUpdateRequestModel,
+    NULL_FORM_TAB_HANDLE,
+    ROUTE_MANAGEMENT_OUTLET,
+    ROUTE_PATH_MESH,
+} from '@admin-ui/common';
 import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import { TagmapEntryDisplayFields } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { createNestedControlValidator } from '@gentics/cms-components';
-import { ContentRepositoryType } from '@gentics/cms-models';
+import { ContentRepositoryType, Feature } from '@gentics/cms-models';
 import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
 @Component({
@@ -16,13 +23,15 @@ import { ContentRepositoryPropertiesMode } from '../content-repository-propertie
     styleUrls: ['./content-repository-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONTENT_REPOSITORY> {
+export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<EditableEntity.CONTENT_REPOSITORY> implements OnInit {
 
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
     public readonly ContentRepositoryType = ContentRepositoryType;
     public readonly TagmapEntryDisplayFields = TagmapEntryDisplayFields;
+    public readonly ROUTE_MESH_OUTLET = ROUTE_MANAGEMENT_OUTLET;
 
     public fgProperties: UntypedFormControl;
+    public meshFeatureEnabled = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -42,6 +51,19 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
         );
     }
 
+    ngOnInit(): void {
+        super.ngOnInit();
+
+        this.subcriptions.push(this.appState.select(state => state.features.global[Feature.MESH_CR]).subscribe(enabled => {
+            this.meshFeatureEnabled = enabled;
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    public handleMeshLogin(): void {
+        this.router.navigate([{ outlets: { [ROUTE_MANAGEMENT_OUTLET]: [ROUTE_PATH_MESH] } }], { relativeTo: this.route });
+    }
+
     protected initializeTabHandles(): void {
         this.fgProperties = new UntypedFormControl({
             ...this.entity,
@@ -52,6 +74,7 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
         this.tabHandles[this.Tabs.TAGMAP] = NULL_FORM_TAB_HANDLE;
         this.tabHandles[this.Tabs.DATA_CHECK_RESULT] = NULL_FORM_TAB_HANDLE;
         this.tabHandles[this.Tabs.STURCTURE_CHECK_RESULT] = NULL_FORM_TAB_HANDLE;
+        this.tabHandles[this.Tabs.MANAGEMENT] = NULL_FORM_TAB_HANDLE;
     }
 
     override onEntityUpdate(): void {

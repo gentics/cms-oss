@@ -1,0 +1,39 @@
+<div *ngIf="loggedIn; else loginForm" class="content">
+    <ng-content></ng-content>
+</div>
+
+<ng-template #loginForm>
+    <div class="login-wrapper">
+        <div class="login">
+            <div class="login-form" [formGroup]="form">
+                <gtx-input
+                    class="login-input"
+                    [label]="'dashboard.user_name' | i18n"
+                    formControlName="username"
+                    autofocus
+                ></gtx-input>
+
+                <gtx-input
+                    class="login-input"
+                    [label]="'dashboard.password' | i18n"
+                    formControlName="password"
+                    type="password"
+                ></gtx-input>
+
+                <gtx-button
+                    class="login-button"
+                    size="large"
+                    [disabled]="!form.valid || loading"
+                    (click)="loginWithFormCredentials()"
+                >{{ 'dashboard.log_in' | i18n }}</gtx-button>
+            </div>
+
+            <gtx-button
+                class="login-button"
+                size="large"
+                [disabled]="!canLoginWithCR || loading"
+                (click)="loginWithContentRepository()"
+            >{{ 'mesh.login_with_cr' | i18n }}</gtx-button>
+        </div>
+    </div>
+</ng-template>

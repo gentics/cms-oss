@@ -19,6 +19,7 @@ export function createEntityEditorRoutes<K extends EditableEntity>(
     component: Type<BaseEntityEditorComponent<K>>,
     defaultTab: EditableEntityDetailTabs[K],
     data?: Partial<RouteData>,
+    children?: GcmsAdminUiRoute[],
 ): GcmsAdminUiRoute<BaseEntityEditorComponent<K>>[] {
     return [
         {
@@ -35,6 +36,7 @@ export function createEntityEditorRoutes<K extends EditableEntity>(
                 [ROUTE_ENTITY_RESOLVER_KEY]: (route) => inject(RouteEntityResolverService).resolve(route),
             },
             runGuardsAndResolvers: (from, to) => runEntityResolver(from, to),
+            children,
         },
         {
             path: `:${ROUTE_PARAM_ENTITY_ID}`,

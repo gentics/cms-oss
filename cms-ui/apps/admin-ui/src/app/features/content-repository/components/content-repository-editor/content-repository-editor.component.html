@@ -91,5 +91,23 @@
                 </div>
             </div>
         </gtx-tab>
+
+        <gtx-tab
+            *ngIf="meshFeatureEnabled && entity.crType === ContentRepositoryType.MESH"
+            [id]="Tabs.MANAGEMENT"
+            gtxDetailTabLink
+            [title]="'contentRepository.management' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_management_of_entity' | i18n: { entityName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div *ngIf="editorTab === Tabs.MANAGEMENT" class="gtx-entity-details-tab-content-body">
+                <gtx-mesh-login-gate [repository]="entity" (login)="handleMeshLogin()">
+                    <router-outlet [name]="ROUTE_MESH_OUTLET"></router-outlet>
+                </gtx-mesh-login-gate>
+            </div>
+        </gtx-tab>
     </gtx-tabs>
 </div>

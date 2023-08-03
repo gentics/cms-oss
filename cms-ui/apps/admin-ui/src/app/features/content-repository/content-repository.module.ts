@@ -1,3 +1,4 @@
+import { MeshModule } from '@admin-ui/mesh/mesh.module';
 import { NgModule } from '@angular/core';
 import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
@@ -22,6 +23,7 @@ import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
     imports: [
         SharedModule,
         RouterModule.forChild(CONTENT_REPOSIROTY_ROUTES),
+        MeshModule,
     ],
 })
 export class ContentRepositoryModule {}

@@ -1,0 +1,38 @@
+{
+    "login_with_cr": {
+        "de": "Mit gespeicherten Daten einloggen",
+        "en": "Login with saved Credentials"
+    },
+    "management_tab_overview": {
+        "de": "Übersicht",
+        "en": "Overview"
+    },
+    "management_tab_users": {
+        "de": "Benutzer",
+        "en": "Users"
+    },
+    "management_tab_groups": {
+        "de": "Gruppen",
+        "en": "Groups"
+    },
+    "management_tab_roles": {
+        "de": "Rollen",
+        "en": "Roles"
+    },
+    "management_tab_permissions": {
+        "de": "Berechtigungen",
+        "en": "Permissions"
+    },
+    "management_tab_projects": {
+        "de": "Projekte",
+        "en": "Projects"
+    },
+    "management_tab_schemas": {
+        "de": "Schemas",
+        "en": "Schemas"
+    },
+    "management_tab_microschemas": {
+        "de": "Microschemas",
+        "en": "Microschemas"
+    }
+}

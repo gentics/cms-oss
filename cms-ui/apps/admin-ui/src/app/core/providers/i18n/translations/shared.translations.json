@@ -515,6 +515,10 @@
         "en": "Datacheck result of \"{{ entityName }}\"",
         "de": "Datenprüfergebnis von „{{ entityName }}“"
     },
+    "title_management_of_entity": {
+        "en": "Management of \"{{ entityName }}\"",
+        "de": "Verwaltung von „{{ entityName }}“"
+    },
     "title_properties_of_folder": {
         "en": "Properties of Folder \"{{ entityName }}\"",
         "de": "Eigenschaften von Ordner „{{ entityName }}“"

@@ -21,6 +21,7 @@ import { AngularMeshClientDriver } from './angular-mesh-client-driver';
 export class MeshRestClientService {
 
     private driver: AngularMeshClientDriver;
+    private config: MeshClientConnection;
     private client: MeshRestClient;
 
     constructor(
@@ -31,6 +32,15 @@ export class MeshRestClientService {
 
     init(config: MeshClientConnection, apiKey?: string): void {
         this.client = new MeshRestClient(this.driver, config, apiKey);
+        this.config = config;
+    }
+
+    isInitialized(): boolean {
+        return this.client != null;
+    }
+
+    getConfig(): MeshClientConnection {
+        return this.config;
     }
 
     get auth(): MeshAuthAPI {

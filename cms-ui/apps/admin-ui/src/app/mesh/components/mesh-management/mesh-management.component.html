@@ -1,0 +1,41 @@
+<div class="wrapper">
+    <gtx-grouped-tabs
+        class="tabs"
+        pure
+        [activeId]="activeTab"
+        (tabChange)="changeTab($event)"
+    >
+        <gtx-tab-pane [id]="MeshMangementTabs.OVERVIEW" [label]="'mesh.management_tab_overview' | i18n">
+            OVERVIEW!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.USERS" [label]="'mesh.management_tab_users' | i18n">
+            USERS!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.GROUPS" [label]="'mesh.management_tab_groups' | i18n">
+            GROUPS!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.ROLES" [label]="'mesh.management_tab_roles' | i18n">
+            ROLES!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.PERMISSIONS" [label]="'mesh.management_tab_permissions' | i18n">
+            PERMISSIONS!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.PROJECTS" [label]="'mesh.management_tab_projects' | i18n">
+            PROJECTS!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.SCHEMAS" [label]="'mesh.management_tab_schemas' | i18n">
+            SCHEMAS!
+        </gtx-tab-pane>
+
+        <gtx-tab-pane [id]="MeshMangementTabs.MICROSCHEMAS" [label]="'mesh.management_tab_microschemas' | i18n">
+            MICROSCHEMAS!
+        </gtx-tab-pane>
+    </gtx-grouped-tabs>
+</div>
+

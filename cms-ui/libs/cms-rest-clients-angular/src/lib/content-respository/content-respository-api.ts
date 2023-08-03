@@ -9,6 +9,7 @@ import {
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
     EntityIdType,
+    Response,
     TagmapEntryCreateRequest,
     TagmapEntryCreateResponse,
     TagmapEntryListOptions,
@@ -220,4 +221,9 @@ export class ContentrespositoryApi {
         return this.apiBase.delete(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`);
     }
 
+    loginToMeshInstance(
+        contentRepositoryId: EntityIdType,
+    ): Observable<Response> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/login`, null);
+    }
 }

@@ -28,11 +28,10 @@ public abstract class AbstractDependencyResolver {
 
   /**
    * Checks if an entity is part of the synchronized package.
-   * @param synchronizer  The synchronizer that will look for objects in the Filesystem
+   * @param synchronizer The synchronizer that will look for objects in the Filesystem
    * @param clazz A class that is synchronizeable. The synchronizer will look exclusively for this class.
-   * @param id The id the synchonizer will look for.
-   * @return
-   * @param <T>
+   * @param id The object id the synchonizer will look for.
+   * @return true if the object of the given class and id is in the package (i.e.: synced as package object)
    * @throws NodeException
    */
    <T extends SynchronizableNodeObject> boolean isInPackage(PackageSynchronizer synchronizer, Class<T> clazz, String id)

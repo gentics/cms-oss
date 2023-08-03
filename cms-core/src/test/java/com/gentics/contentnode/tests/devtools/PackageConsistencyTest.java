@@ -80,7 +80,7 @@ public class PackageConsistencyTest {
 
     // assert completeness
     List<PackageDependency> unmetDependencies = dependencies.stream()
-        .filter(dependency -> !dependency.isInPackage()).collect(Collectors.toList());
+        .filter(dependency -> !dependency.getIsInPackage()).collect(Collectors.toList());
 
     assertThat(unmetDependencies).isNotEmpty();
   }
@@ -95,13 +95,13 @@ public class PackageConsistencyTest {
 
     // assert dependency collection
     PackageDependency constructDependency = dependencies.stream()
-        .filter(packageDependency -> Type.CONSTRUCT == packageDependency.getDependencyTyp())
+        .filter(packageDependency -> Type.CONSTRUCT == packageDependency.getDependencyType())
         .findFirst().get();
 
     //todo: assert uid also
     PackageDependency referencedDependency = constructDependency.getReferencedDependencies()
         .stream()
-        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyTyp())
+        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyType())
         .findFirst().get();
 
 
@@ -119,7 +119,7 @@ public class PackageConsistencyTest {
 
     PackageDependency checkedDependency = constructDependency.getReferencedDependencies()
         .stream()
-        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyTyp())
+        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyType())
         .findFirst().get();
 
     assertThat(checkedDependency).hasFieldOrPropertyWithValue("isInPackage", "false");
@@ -200,7 +200,7 @@ public class PackageConsistencyTest {
     List<PackageDependency> dependencies = new ArrayList<>();
     PackageDependency dependency = new PackageDependency();
     dependency.setName("[Manual] Contentpage");
-    dependency.setDependencyTyp(Type.TEMPLATE);
+    dependency.setDependencyType(Type.TEMPLATE);
 
     PackageDependency referencedDependency = new PackageDependency.Builder()
         .withName("construct")

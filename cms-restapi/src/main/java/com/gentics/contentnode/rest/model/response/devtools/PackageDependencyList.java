@@ -24,7 +24,7 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
    * Gets whether the package is complete.
    * @return True if the package is complete, false otherwise.
    */
-  public boolean isPackageComplete() {
+  public boolean getPackageIsComplete() {
     return packageIsComplete;
   }
 
@@ -32,17 +32,9 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
    * Sets whether the package is complete.
    * @param packageIsComplete True if the package is complete, false otherwise.
    */
-  public void setPackageComplete(boolean packageIsComplete) {
+  public void setPackageIsComplete(boolean packageIsComplete) {
     this.packageIsComplete = packageIsComplete;
   }
 
-
-/*  private ConsistencyStatus status;
-
-
-  enum ConsistencyStatus  {
-    CONSISTENT,
-    NOT_CONSISTENT
-  }*/
 
 }

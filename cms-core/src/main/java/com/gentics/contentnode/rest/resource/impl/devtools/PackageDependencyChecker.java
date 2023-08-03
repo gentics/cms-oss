@@ -35,7 +35,7 @@ public class PackageDependencyChecker {
     this.packageSynchronizer = Synchronizer.getPackage(packageName);
   }
 
-  public List<PackageDependency> collectDependencies() {
+  public List<PackageDependency> collectDependencies() throws NodeException {
     List<PackageDependency> dependencies = new ArrayList<>();
 
     try (Trx trx = ContentNodeHelper.trx()) {
@@ -51,8 +51,6 @@ public class PackageDependencyChecker {
           logger.error(e);
         }
       }
-    } catch (NodeException e) {
-      logger.error(e);
     }
 
     return dependencies;

@@ -22,7 +22,7 @@ public class PackageDependency extends AbstractModel {
   /**
    * The type of the package.
    */
-  private Type dependencyTyp;
+  private Type dependencyType;
   /**
    * A flag indicating whether the object is in the current package.
    */
@@ -75,17 +75,17 @@ public class PackageDependency extends AbstractModel {
    *
    * @return The type of the object.
    */
-  public Type getDependencyTyp() {
-    return dependencyTyp;
+  public Type getDependencyType() {
+    return dependencyType;
   }
 
   /**
    * Sets the type of the package object.
    *
-   * @param dependencyTyp The new type of the object.
+   * @param dependencyType The new type of the object.
    */
-  public void setDependencyTyp(Type dependencyTyp) {
-    this.dependencyTyp = dependencyTyp;
+  public void setDependencyType(Type dependencyType) {
+    this.dependencyType = dependencyType;
   }
 
   /**
@@ -93,7 +93,7 @@ public class PackageDependency extends AbstractModel {
    *
    * @return Whether the object is in the current package.
    */
-  public Boolean isInPackage() {
+  public Boolean getIsInPackage() {
     return isInPackage;
   }
 
@@ -102,7 +102,7 @@ public class PackageDependency extends AbstractModel {
    *
    * @param isInPackage Whether the object is in the current package.
    */
-  public void setInPackage(Boolean isInPackage) {
+  public void setIsInPackage(Boolean isInPackage) {
     this.isInPackage = isInPackage;
   }
 
@@ -111,7 +111,7 @@ public class PackageDependency extends AbstractModel {
    *
    * @return True if the object is located in a different package, false otherwise.
    */
-  public Boolean isInOtherPackage() {
+  public Boolean getIsInOtherPackage() {
     return isInOtherPackage;
   }
 
@@ -121,7 +121,7 @@ public class PackageDependency extends AbstractModel {
    * @param isInOtherPackage True if the object is located in a different package, false
    * otherwise.
    */
-  public void setInOtherPackage(Boolean isInOtherPackage) {
+  public void setIsInOtherPackage(Boolean isInOtherPackage) {
     this.isInOtherPackage = isInOtherPackage;
   }
 
@@ -149,10 +149,8 @@ public class PackageDependency extends AbstractModel {
     DATASOURCE,
     OBJECT_PROPERTY,
     CONTENT_REPOSITORY,
-
     TEMPLATE_TAG,
     OBJECT_TAG_DEFINITION,
-
     UNKNOWN;
   }
 
@@ -185,7 +183,7 @@ public class PackageDependency extends AbstractModel {
     }
 
     public Builder withType(Type type) {
-      dependency.setDependencyTyp(type);
+      dependency.setDependencyType(type);
       return this;
     }
 
@@ -195,12 +193,12 @@ public class PackageDependency extends AbstractModel {
     }
 
     public Builder withIsInPackage(boolean isInPackage) {
-      dependency.setInPackage(isInPackage);
+      dependency.setIsInPackage(isInPackage);
       return this;
     }
 
     public Builder withIsInOtherPackage(boolean isInOtherPackage) {
-      dependency.setInOtherPackage(isInOtherPackage);
+      dependency.setIsInOtherPackage(isInOtherPackage);
       return this;
     }
 

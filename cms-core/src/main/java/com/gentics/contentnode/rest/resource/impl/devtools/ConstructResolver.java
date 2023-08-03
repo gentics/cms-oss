@@ -16,15 +16,13 @@ import java.util.stream.Collectors;
 
 public class ConstructResolver extends AbstractDependencyResolver {
 
-  // todo: is this correct? only filter for ds? check other field as well?
-  public final static List<Integer> DEPENDENCIES = Arrays.asList(
-      Part.DATASOURCE, Part.SELECTSINGLE, Part.SELECTMULTIPLE);
+  private final Class<Construct> CLAZZ = Construct.class;
 
 
   @Override
   public List<PackageDependency> resolve(PackageSynchronizer packageSynchronizer)
       throws NodeException {
-    List<PackageObject<Construct>> packageObjects = packageSynchronizer.getObjects(Construct.class);
+    List<PackageObject<Construct>> packageObjects = packageSynchronizer.getObjects(CLAZZ);
     List<PackageDependency> resolvedDependencyList = new ArrayList<>();
 
     for (PackageObject<Construct> packageObject : packageObjects) {
@@ -47,6 +45,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
 
   private List<PackageDependency> resolveReferences(PackageSynchronizer packageSynchronizer,
       Construct construct) throws NodeException {
+    final List<Integer> DEPENDENCIES = Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE);
     List<PackageDependency> referencedDependencies = new ArrayList<>();
 
     List<Part> datasourceParts = construct.getParts().stream().filter(
@@ -61,9 +60,9 @@ public class ConstructResolver extends AbstractDependencyResolver {
           .withName(part.getName().toString())
           .withIsInPackage(
               isInPackage(packageSynchronizer, Datasource.class, resolveUuid(part.getInfoInt())))
-          //todo: is this mapping ok  part.info_int  to datasource.id ?
+          //todo: is this mapping ok  part.info_int to datasource.id ?
           .withType(
-              Type.DATASOURCE) //todo: check me (is a multi select also a datasource in this context) ? // map all to DS ok?
+              Type.DATASOURCE)
           .build();
 
       referencedDependencies.add(referencedDependency);

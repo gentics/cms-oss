@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -179,9 +180,8 @@ public class PackageResourceImpl implements PackageResource {
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
 		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-		PackageDependencyList response = new PackageDependencyList();
-		response.setItems(dependencies);
-		return response;
+		return ListBuilder.from(dependencies, (x)-> x)
+				.to(new PackageDependencyList());
 	}
 
 

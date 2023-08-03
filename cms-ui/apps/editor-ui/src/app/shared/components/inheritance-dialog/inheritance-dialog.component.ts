@@ -30,22 +30,18 @@ export class InheritanceDialog implements OnInit, IModalDialog {
     item: InheritableItem;
     nodes: { [id: number]: Node };
     generalInheritance: boolean;
+    disinheritDefault: boolean;
     inheritedChannels: { [id: number]: boolean } = {};
 
     constructor() {}
 
     ngOnInit(): void {
-        this.generalInheritance = this.item.excluded;
+        this.generalInheritance = !this.item.excluded;
+        this.disinheritDefault = this.item.disinheritDefault;
 
         this.item.inheritable.forEach(channelId => {
             this.inheritedChannels[channelId] = -1 === this.item.disinherit.indexOf(channelId);
         });
-
-        if (this.generalInheritance) {
-            this.item.inheritable.forEach(channelId => {
-                this.inheritedChannels[channelId] = true;
-            });
-        }
     }
 
     getChannelLabel(nodeId: number): string {
@@ -54,7 +50,8 @@ export class InheritanceDialog implements OnInit, IModalDialog {
 
     saveSettings(recursive: boolean = false): void {
         let returnValue: InheritanceRequest = {
-            exclude: this.generalInheritance,
+            exclude: !this.generalInheritance,
+            disinheritDefault: this.disinheritDefault,
             disinherit: [],
             reinherit: [],
         };
@@ -70,14 +67,6 @@ export class InheritanceDialog implements OnInit, IModalDialog {
             }
         });
         this.closeFn(returnValue);
-    }
-
-    changeGeneralInheritance(generalInheritance: boolean): void {
-        if (generalInheritance) {
-            this.item.inheritable.forEach(channelId => {
-                this.inheritedChannels[channelId] = true;
-            });
-        }
     }
 
     closeFn(val: any): void { }

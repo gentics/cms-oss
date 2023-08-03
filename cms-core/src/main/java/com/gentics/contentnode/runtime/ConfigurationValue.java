@@ -17,6 +17,11 @@ public enum ConfigurationValue {
 	HTTP_PORT("HTTP_PORT", "com.gentics.contentnode.http.port", "server.port", () -> "8080"),
 
 	/**
+	 * Use HTTP/2 for connections
+	 */
+	HTTP2("HTTP2", "com.gentics.contentnode.http2", "server.http2", () -> "false"),
+
+	/**
 	 * Configuration path
 	 */
 	CONF_PATH("CONF_PATH", "com.gentics.contentnode.config.path", () -> "conf", path -> StringUtils.appendIfMissing(path, "/")),

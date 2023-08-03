@@ -19,6 +19,8 @@ import com.gentics.mesh.core.rest.MeshEvent;
 import com.gentics.mesh.etc.config.MeshOptions;
 import com.gentics.mesh.etc.config.search.ElasticSearchOptions;
 import com.gentics.mesh.rest.client.MeshRestClient;
+import com.gentics.mesh.rest.client.MeshRestClientConfig;
+import com.gentics.mesh.rest.client.ProtocolVersion;
 
 /**
  * Mesh Context that starts a Mesh container
@@ -113,7 +115,12 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	@Override
 	public void start() {
 		super.start();
-		client = MeshRestClient.create(getContainerIpAddress(), getMappedPort(8080), false);
+		client = MeshRestClient.create(new MeshRestClientConfig.Builder()
+				.setHost(getContainerIpAddress())
+				.setPort(getMappedPort(8080))
+				.setSsl(false)
+				.setProtocolVersion(ProtocolVersion.HTTP_2)
+				.build());
 		client.setLogin("admin", "admin");
 		client.login().blockingGet();
 	}

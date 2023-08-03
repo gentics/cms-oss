@@ -245,6 +245,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected boolean projectPerNode;
 
+		@DataField("http2")
+		@Updateable
+		protected boolean http2;
+
 		@DataField("version")
 		@Updateable
 		protected String version;
@@ -394,6 +398,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public String getVersion() {
 			return version;
+		}
+
+		@Override
+		public boolean isHttp2() {
+			return http2;
 		}
 
 		@Override
@@ -1018,6 +1027,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setElasticsearch(String elasticsearch) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.elasticsearch, elasticsearch)) {
 				this.elasticsearch = elasticsearch;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setHttp2(boolean http2) throws ReadOnlyException {
+			if (this.http2 != http2) {
+				this.http2 = http2;
 				this.modified = true;
 			}
 		}

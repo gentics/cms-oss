@@ -1,5 +1,7 @@
 package com.gentics.contentnode.devtools.model;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.isSingleProperty;
+
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -92,29 +94,22 @@ public abstract class AbstractCRModel extends ContentRepositoryModel {
 
 	@Override
 	public String getUrl() {
-		return null;
+		return isSingleProperty(super.getUrl()).orElse(null);
 	}
 
 	@Override
 	public void setUrl(String url) {
-	}
-
-	@Override
-	public Boolean getUsePassword() {
-		return null;
-	}
-
-	@Override
-	public void setUsePassword(Boolean usePassword) {
+		isSingleProperty(url).ifPresent(super::setUrl);
 	}
 
 	@Override
 	public String getUsername() {
-		return null;
+		return isSingleProperty(super.getUsername()).orElse(null);
 	}
 
 	@Override
 	public void setUsername(String username) {
+		isSingleProperty(username).ifPresent(super::setUsername);
 	}
 
 	/**

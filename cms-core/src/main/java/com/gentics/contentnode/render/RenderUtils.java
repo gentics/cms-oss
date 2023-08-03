@@ -1,5 +1,7 @@
 package com.gentics.contentnode.render;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -87,7 +89,7 @@ public class RenderUtils {
 			Node masterNode = node.getMaster();
 			if (masterNode.doPublishContentmap()) {
 				ContentRepository cr = masterNode.getContentRepository();
-				String meshPreviewUrl = masterNode.getMeshPreviewUrl();
+				String meshPreviewUrl = substituteSingleProperty(masterNode.getMeshPreviewUrl());
 
 				if (cr != null && cr.getCrType() == Type.mesh && !StringUtils.isEmpty(meshPreviewUrl)) {
 					String previewUrl = FilePublisher.getPath(false, true, meshPreviewUrl, node.getPublishDir(), ObjectTransformer.getString(page.getFolder().get("path"), null));

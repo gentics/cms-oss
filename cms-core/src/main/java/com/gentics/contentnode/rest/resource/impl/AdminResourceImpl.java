@@ -4,6 +4,7 @@ import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkBody;
 import static com.gentics.contentnode.rest.util.MiscUtils.comparator;
 import static com.gentics.contentnode.rest.util.MiscUtils.filterByPermission;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -184,7 +185,7 @@ public class AdminResourceImpl implements AdminResource {
 							versionInfo = CmpVersionUtils.createVersionInfo(
 								req,
 								meshVersion,
-								CmpVersionUtils.getPortalVersion(node.getMeshPreviewUrl()));
+								CmpVersionUtils.getPortalVersion(substituteSingleProperty(node.getMeshPreviewUrl())));
 						} catch (Exception e) {
 							logger.error("Could not get version for the node {" + node.getMeshPreviewUrl() + "}", e);
 							versionInfo = new CmpVersionInfo().setCompatibility(CmpCompatibility.UNKNOWN);

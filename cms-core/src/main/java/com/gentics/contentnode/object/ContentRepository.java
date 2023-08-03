@@ -103,7 +103,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		cr.setCrType(nodeCR.getCrType());
 		cr.setDbType(nodeCR.getDbType());
 		cr.setUsername(nodeCR.getUsername());
-		cr.setUsePassword(!ObjectTransformer.isEmpty(nodeCR.getPassword()));
+		if (nodeCR.isPasswordProperty()) {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.property);
+			cr.setPasswordProperty(nodeCR.getPassword());
+		} else if (ObjectTransformer.isEmpty(nodeCR.getPassword())) {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.none);
+		} else {
+			cr.setPasswordType(ContentRepositoryModel.PasswordType.value);
+		}
 		cr.setUrl(nodeCR.getUrl());
 		cr.setUseHttp2(nodeCR.isHttp2());
 		cr.setBasepath(nodeCR.getBasepath());
@@ -153,12 +160,24 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		if (cr.getUsername() != null) {
 			nodeCR.setUsername(cr.getUsername());
 		}
-		if (cr.getPassword() != null) {
-			nodeCR.setPassword(cr.getPassword());
-		}
-		if (cr.getUsePassword() != null) {
-			if (!cr.getUsePassword()) {
+		if (cr.getPasswordType() != null) {
+			switch(cr.getPasswordType()) {
+			case none:
 				nodeCR.setPassword(null);
+				nodeCR.setPasswordProperty(false);
+				break;
+			case property:
+				if (cr.getPasswordProperty() != null) {
+					nodeCR.setPassword(cr.getPasswordProperty());
+				}
+				nodeCR.setPasswordProperty(true);
+				break;
+			case value:
+				if (cr.getPassword() != null) {
+					nodeCR.setPassword(cr.getPassword());
+				}
+				nodeCR.setPasswordProperty(false);
+				break;
 			}
 		}
 		if (cr.getUseHttp2() != null) {
@@ -344,6 +363,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("password")
 	public void setPassword(String password) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@FieldGetter("password_is_property")
+	public abstract boolean isPasswordProperty();
+
+	@FieldSetter("password_is_property")
+	public void setPasswordProperty(boolean passwordProperty) throws ReadOnlyException {
 		failReadOnly();
 	}
 

@@ -24,6 +24,7 @@ import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel.PasswordType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.rest.resource.ContentRepositoryResource;
@@ -112,6 +113,7 @@ public class ContentNodeMeshCRUtils {
 			crModel.setUrl(String.format("%s:%d/%s", host, port, projectName));
 			crModel.setUsername(MESH_USERNAME);
 			crModel.setPassword(MESH_PASSWORD);
+			crModel.setPasswordType(PasswordType.value);
 			ContentRepositoryResponse response = crResource.add(crModel);
 			ContentNodeRESTUtils.assertResponseOK(response);
 			return response.getContentRepository().getId();

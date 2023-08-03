@@ -4,6 +4,7 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_CHANGE_PERM;
 import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_DELETE;
 import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_UPDATE;
 import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -233,6 +234,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected String password;
 
+		@DataField("password_is_property")
+		@Updateable
+		protected boolean passwordProperty;
+
 		@DataField("url")
 		@Updateable
 		protected String url;
@@ -378,6 +383,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public String getPassword() {
 			return password;
+		}
+
+		@Override
+		public boolean isPasswordProperty() {
+			return passwordProperty;
 		}
 
 		@Override
@@ -613,7 +623,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			}
 
 			Map<String, String> datasourceProperties = new HashMap<String, String>();
-			datasourceProperties.put("attribute.path", basepath);
+			datasourceProperties.put("attribute.path", substituteSingleProperty(basepath));
 			datasourceProperties.put("sanitycheck", "false");
 			datasourceProperties.put("autorepair", "false");
 			datasourceProperties.put("sanitycheck2", "false");
@@ -820,10 +830,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 						+ dbType + "} in configuration.");
 			}
 
-			handleProperties.put("url", url);
+			handleProperties.put("url", substituteSingleProperty(url));
 			handleProperties.put("driverClass", driverClass);
-			handleProperties.put("username", username);
-			handleProperties.put("passwd", password);
+			handleProperties.put("username", substituteSingleProperty(username));
+			handleProperties.put("passwd", isPasswordProperty() ? substituteSingleProperty(password) : password);
 			handleProperties.put("type", "jdbc");
 			handleProperties.put(SQLHandle.PARAM_NAME, name);
 			handleProperties.put(SQLHandle.PARAM_FETCHSIZE, config.getDefaultPreferences().getProperty("contentrepository_fetchsize"));
@@ -1011,6 +1021,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setPassword(String password) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.password, password)) {
 				this.password = password;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setPasswordProperty(boolean passwordProperty) throws ReadOnlyException {
+			if (this.passwordProperty != passwordProperty) {
+				this.passwordProperty = passwordProperty;
 				this.modified = true;
 			}
 		}

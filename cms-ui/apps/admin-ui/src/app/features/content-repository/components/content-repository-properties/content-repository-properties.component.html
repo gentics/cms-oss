@@ -45,14 +45,33 @@
             formControlName="username"
         ></gtx-input>
 
-        <gtx-checkbox
-            *ngIf="form.get('usePassword').enabled"
-            formControlName="usePassword"
-            [label]="'contentRepository.usePassword' | i18n"
-        ></gtx-checkbox>
+        <gtx-select
+            *ngIf="form.get('passwordType').enabled"
+            [label]="('contentRepository.passwordType' | i18n) + ' *'"
+            formControlName="passwordType"
+            [clearable]="false"
+        >
+            <gtx-option *ngFor="let type of PASSWORD_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+
+        <!-- passwordProperty -->
+        <gtx-input
+            *ngIf="form.get('passwordProperty').enabled"
+            type="text"
+            maxlength="255"
+            [label]="'contentRepository.passwordProperty' | i18n"
+            formControlName="passwordProperty"
+        ></gtx-input>
+
+        <span
+            *ngIf="form.get('passwordProperty')?.hasError('pattern')"
+            class="container-validator-errors"
+        >
+            {{ 'contentRepository.passwordProperty_pattern' | i18n }}
+        </span>
 
         <div
-            [hidden]="!form.value.usePassword"
+            [hidden]="!form.get('password').enabled"
             class="gtx-password-box"
         >
             <gtx-input

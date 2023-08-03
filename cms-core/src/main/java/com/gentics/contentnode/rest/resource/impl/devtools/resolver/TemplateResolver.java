@@ -1,8 +1,7 @@
-package com.gentics.contentnode.rest.resource.impl.devtools;
+package com.gentics.contentnode.rest.resource.impl.devtools.resolver;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.devtools.PackageObject;
-import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ObjectTag;
@@ -84,6 +83,12 @@ public class TemplateResolver extends AbstractDependencyResolver {
     return tag.getConstruct().getGlobalId().toString();
   }
 
+  /**
+   * Maps dependency type to the implementation class (package entity class)
+   * @param tag
+   * @return
+   * @throws NodeException
+   */
   private Class<? extends SynchronizableNodeObject> getSynchronizationClass(Tag tag)
       throws NodeException {
     if (tag instanceof ObjectTag) {

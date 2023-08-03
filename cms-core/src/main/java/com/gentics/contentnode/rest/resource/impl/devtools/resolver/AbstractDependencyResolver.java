@@ -1,10 +1,11 @@
-package com.gentics.contentnode.rest.resource.impl.devtools;
+package com.gentics.contentnode.rest.resource.impl.devtools.resolver;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import java.util.List;
@@ -14,8 +15,18 @@ public abstract class AbstractDependencyResolver {
   /**
    * The synchronizer that will look for objects in the Filesystem
    */
-  PackageSynchronizer synchronizer;
+  protected PackageSynchronizer synchronizer;
 
+
+  protected Class<? extends SynchronizableNodeObject> CLAZZ; // todo: remove
+
+
+
+  /**
+   * Resolves all objects and gather all dependencies of the class
+   * @return List of packages dependencies and their references
+   * @throws NodeException
+   */
   public abstract List<PackageDependency> resolve() throws NodeException;
 
 
@@ -37,7 +48,7 @@ public abstract class AbstractDependencyResolver {
   }
 
 
-  static class Builder {
+  public static class Builder {
 
     AbstractDependencyResolver resolver;
 
@@ -47,7 +58,11 @@ public abstract class AbstractDependencyResolver {
         this.resolver = new ConstructResolver();
       } else if (clazz.equals(Template.class)) {
         this.resolver = new TemplateResolver();
-      } else {
+      }
+      else if (clazz.equals(ObjectTagDefinition.class)) {
+        this.resolver = new ObjectPropertyResolver();
+      }
+      else {
         throw new NodeException("Could not find appropriate resolver for class: " + clazz);
       }
     }

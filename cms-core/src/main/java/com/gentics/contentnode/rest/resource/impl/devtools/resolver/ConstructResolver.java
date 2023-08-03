@@ -1,4 +1,4 @@
-package com.gentics.contentnode.rest.resource.impl.devtools;
+package com.gentics.contentnode.rest.resource.impl.devtools.resolver;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;

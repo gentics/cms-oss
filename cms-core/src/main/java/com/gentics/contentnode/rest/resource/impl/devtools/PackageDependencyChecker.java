@@ -13,6 +13,7 @@ import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.cr.CrFragment;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.resource.impl.devtools.resolver.AbstractDependencyResolver;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +23,7 @@ import java.util.List;
 public class PackageDependencyChecker {
 
   public final static List<Class<? extends SynchronizableNodeObject>> DEPENDENCY_CLASSES = Arrays.asList(
-      Datasource.class, Construct.class, ObjectTagDefinition.class,
-      Template.class, CrFragment.class, ContentRepository.class);
+      Construct.class, ObjectTagDefinition.class, Template.class);
 
   public static NodeLogger logger = NodeLogger.getNodeLogger(PackageDependencyChecker.class);
   private final PackageSynchronizer packageSynchronizer;
@@ -39,17 +39,12 @@ public class PackageDependencyChecker {
     try (Trx trx = ContentNodeHelper.trx()) {
       List<PackageDependency> dependencies = new ArrayList<>();
       for (Class<? extends SynchronizableNodeObject> dependencyClass : DEPENDENCY_CLASSES) {
-        try {
           AbstractDependencyResolver resolver = new AbstractDependencyResolver
               .Builder(dependencyClass)
               .withSynchronizer(packageSynchronizer)
               .build();
 
           dependencies.addAll(resolver.resolve());
-
-        } catch (NodeException e) {
-          logger.error(e);
-        }
       }
       return dependencies;
     }

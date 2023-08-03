@@ -3,7 +3,6 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.PackageObject;
-import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Part;
@@ -20,14 +19,14 @@ public class ConstructResolver extends AbstractDependencyResolver {
 
 
   @Override
-  public List<PackageDependency> resolve(PackageSynchronizer packageSynchronizer)
+  public List<PackageDependency> resolve()
       throws NodeException {
-    List<PackageObject<Construct>> packageObjects = packageSynchronizer.getObjects(CLAZZ);
+    List<PackageObject<Construct>> packageObjects = synchronizer.getObjects(CLAZZ);
     List<PackageDependency> resolvedDependencyList = new ArrayList<>();
 
     for (PackageObject<Construct> packageObject : packageObjects) {
       Construct construct = packageObject.getObject();
-      List<PackageDependency> references = resolveReferences(packageSynchronizer, construct);
+      List<PackageDependency> references = resolveReferences(construct);
 
       PackageDependency dependency = new PackageDependency.Builder()
           .withGlobalId(construct.getGlobalId().toString())
@@ -43,8 +42,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
     return resolvedDependencyList;
   }
 
-  private List<PackageDependency> resolveReferences(PackageSynchronizer packageSynchronizer,
-      Construct construct) throws NodeException {
+  private List<PackageDependency> resolveReferences(Construct construct) throws NodeException {
     final List<Integer> DEPENDENCIES = Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE);
     List<PackageDependency> referencedDependencies = new ArrayList<>();
 
@@ -59,7 +57,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
           .withKeyword(part.getKeyname())
           .withName(part.getName().toString())
           .withIsInPackage(
-              isInPackage(packageSynchronizer, Datasource.class, resolveUuid(part.getInfoInt())))
+              isInPackage(Datasource.class, resolveUuid(part.getInfoInt())))
           //todo: is this mapping ok  part.info_int to datasource.id ?
           .withType(
               Type.DATASOURCE)

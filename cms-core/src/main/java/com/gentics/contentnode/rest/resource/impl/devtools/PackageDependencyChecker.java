@@ -36,24 +36,23 @@ public class PackageDependencyChecker {
   }
 
   public List<PackageDependency> collectDependencies() throws NodeException {
-    List<PackageDependency> dependencies = new ArrayList<>();
-
     try (Trx trx = ContentNodeHelper.trx()) {
+      List<PackageDependency> dependencies = new ArrayList<>();
       for (Class<? extends SynchronizableNodeObject> dependencyClass : DEPENDENCY_CLASSES) {
         try {
-          AbstractDependencyResolver resolver = AbstractDependencyResolver.getResolver(
-              dependencyClass);
+          AbstractDependencyResolver resolver = new AbstractDependencyResolver
+              .Builder(dependencyClass)
+              .withSynchronizer(packageSynchronizer)
+              .build();
 
-          dependencies.addAll(
-                resolver.resolve(this.packageSynchronizer));
+          dependencies.addAll(resolver.resolve());
 
         } catch (NodeException e) {
           logger.error(e);
         }
       }
+      return dependencies;
     }
-
-    return dependencies;
   }
 
   public boolean performCheck() {

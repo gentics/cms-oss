@@ -137,6 +137,9 @@ public class NodeStagingTest implements ContentStagingMethods {
 		testAttribute("pageLanguageCode", node, Node::getPageLanguageCode, Node::setPageLanguageCode, PageLanguageCode.FILENAME, PageLanguageCode.PATH);
 		testAttribute("pageUrls", node, n -> UrlRenderWay.fromValue(n.getUrlRenderWayPages()), (n, v) -> n.setUrlRenderWayPages(v.getValue()), UrlRenderWay.PORTAL, UrlRenderWay.STATIC_DYNAMIC);
 		testAttribute("fileUrls", node, n -> UrlRenderWay.fromValue(n.getUrlRenderWayFiles()), (n, v) -> n.setUrlRenderWayFiles(v.getValue()), UrlRenderWay.STATIC_WITH_DOMAIN, UrlRenderWay.STATIC_WITHOUT_DOMAIN);
+
+		// test staging of properties, which support property substitution
+		testAttribute("meshPreviewUrl", node, Node::getMeshPreviewUrl, Node::setMeshPreviewUrl, "${sys:mesh.preview.url}", "${sys:mesh.alternative.preview.url}");
 	}
 
 	/**

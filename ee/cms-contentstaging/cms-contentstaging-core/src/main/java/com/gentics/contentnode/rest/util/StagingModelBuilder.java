@@ -1,5 +1,9 @@
 package com.gentics.contentnode.rest.util;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.isSingleProperty;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -815,6 +819,9 @@ public class StagingModelBuilder {
 
 		node.setHttps(stagedNode.isHttps());
 
+		unwrap(() -> isSingleProperty(stagedNode.getMeshPreviewUrl())
+				.ifPresent(meshPreviewUrl -> wrap(() -> node.setMeshPreviewUrl(meshPreviewUrl))));
+
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(stagedNode.isPubDirSegment());
 		}
@@ -1004,6 +1011,8 @@ public class StagingModelBuilder {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.DEVTOOLS) && Synchronizer.getStatus() == Synchronizer.Status.UP) {
 			node.setPackages(Synchronizer.getPackages(nodeNode));
 		}
+
+		isSingleProperty(nodeNode.getMeshPreviewUrl()).ifPresent(node::setMeshPreviewUrl);
 
 		return node;
 	}

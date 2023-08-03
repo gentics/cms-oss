@@ -53,6 +53,8 @@ public class StagedNode extends StagingBase {
 
 	private Set<String> packages = new TreeSet<>();
 
+	private String meshPreviewUrl;
+
 	/**
 	 * Publish directory
 	 * @return publish directory
@@ -406,6 +408,14 @@ public class StagedNode extends StagingBase {
 	 */
 	public void setPackages(Set<String> packages) {
 		this.packages = packages;
+	}
+
+	public String getMeshPreviewUrl() {
+		return meshPreviewUrl;
+	}
+
+	public void setMeshPreviewUrl(String meshPreviewUrl) {
+		this.meshPreviewUrl = meshPreviewUrl;
 	}
 
 	@XmlTransient

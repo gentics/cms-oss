@@ -5,6 +5,7 @@
  */
 package com.gentics.contentnode.rest.model.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -58,6 +59,12 @@ public class Message implements Serializable {
 	 * Sender of the message (if the message was sent by another user)
 	 */
 	private User sender;
+
+	/**
+	 * This is a boolean variable that indicates if the message is instant.
+	 */
+	@JsonProperty("isInstantMessage")
+	private boolean isInstantMessage;
 
 	/**
 	 * Default constructor needed for JAXB
@@ -207,11 +214,31 @@ public class Message implements Serializable {
 		return String.format("%s: %s", type, message);
 	}
 
+
+	/**
+	 * Helper function to determine if a message is an instant message.
+	 * If the messages is expired, it is not considered as an instant message
+	 * @return returns true if the message is expired, false otherwise
+	 */
+	public boolean isExpired(int instantTimeMinutes) {
+		// The timestamp is in seconds, hence the current timestamp
+		// and the instant time are converted to seconds as well
+		return (System.currentTimeMillis() / 1000) > this.timestamp + (instantTimeMinutes * 60L);
+	}
+
+	/**
+	 * Sets the value of the isInstantMessage variable.
+	 * @param instantMessage a boolean value that represents if the message is instant
+	 */
+	public void setInstantMessage(boolean instantMessage) {
+		this.isInstantMessage = instantMessage;
+	}
+
 	/**
 	 * Severity for a message
 	 */
 	@XmlType(name = "MessageType")
-	public static enum Type {
+	public enum Type {
 
 		/**
 		 * Used for messages which display serious errors that stop the user to work.

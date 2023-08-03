@@ -17,6 +17,9 @@ export interface Message<T extends ModelType = DefaultModelType> extends Respons
 
     /** Whether a message is read or not. Added by the UI, not returned by the API. */
     unread: boolean;
+
+    /** Whether a message is an instant message or not. */
+    isInstantMessage: boolean;
 }
 
 export interface MessageFromServer {
@@ -24,5 +27,6 @@ export interface MessageFromServer {
     message: string;
     sender: User<Raw>;
     timestamp: number;
+    isInstantMessage: boolean;
     type: 'INFO';
 }

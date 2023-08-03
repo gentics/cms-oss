@@ -42,6 +42,11 @@ public class MessageSendRequest implements Serializable {
 	private List<Integer> toGroupId;
 
 	/**
+	 * The number of minutes a message is considered as instant message
+	 */
+	private int instantTimeMinutes;
+
+	/**
 	 * Create an empty instance
 	 */
 	public MessageSendRequest() {}
@@ -83,6 +88,22 @@ public class MessageSendRequest implements Serializable {
 	 */
 	public List<Integer> getToUserId() {
 		return toUserId;
+	}
+
+	/**
+	 * Gets the value of the instantTimeMinutes field.
+	 * @return The value of the instantTimeMinutes field.
+	 */
+	public int getInstantTimeMinutes() {
+		return this.instantTimeMinutes;
+	}
+
+	/**
+	 * Sets the value of the instantTimeMinutes field.
+	 * @param instantTimeMinutes The value to set the instantTimeMinutes field to.
+	 */
+	public void setInstantTimeMinutes(int instantTimeMinutes) {
+		this.instantTimeMinutes = instantTimeMinutes;
 	}
 
 	public void setMessage(String message) {

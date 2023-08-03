@@ -641,6 +641,90 @@
         }
       }
     },
+    "mesh-models": {
+      "projectType": "library",
+      "root": "libs/mesh-models",
+      "sourceRoot": "libs/mesh-models/src",
+      "prefix": "gtx",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "tsConfig": "libs/mesh-models/tsconfig.lib.json",
+            "project": "libs/mesh-models/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/mesh-models/src/test.ts",
+            "tsConfig": "libs/mesh-models/tsconfig.spec.json",
+            "karmaConfig": "libs/mesh-models/karma.conf.js"
+          }
+        }
+      },
+      "schematics": {
+        "@nx/angular:component": {
+          "styleext": "scss"
+        }
+      }
+    },
+    "mesh-rest-client": {
+      "projectType": "library",
+      "root": "libs/mesh-rest-client",
+      "sourceRoot": "libs/mesh-rest-client/src",
+      "prefix": "gtx",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "tsConfig": "libs/mesh-rest-client/tsconfig.lib.json",
+            "project": "libs/mesh-rest-client/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/mesh-rest-client/src/test.ts",
+            "tsConfig": "libs/mesh-rest-client/tsconfig.spec.json",
+            "karmaConfig": "libs/mesh-rest-client/karma.conf.js"
+          }
+        }
+      },
+      "schematics": {
+        "@nx/angular:component": {
+          "styleext": "scss"
+        }
+      }
+    },
+    "mesh-rest-client-angular": {
+      "projectType": "library",
+      "root": "libs/mesh-rest-client-angular",
+      "sourceRoot": "libs/mesh-rest-client-angular/src",
+      "prefix": "gtx",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "tsConfig": "libs/mesh-rest-client-angular/tsconfig.lib.json",
+            "project": "libs/mesh-rest-client-angular/ng-package.json"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/mesh-rest-client-angular/src/test.ts",
+            "tsConfig": "libs/mesh-rest-client-angular/tsconfig.spec.json",
+            "karmaConfig": "libs/mesh-rest-client-angular/karma.conf.js"
+          }
+        }
+      },
+      "schematics": {
+        "@nx/angular:component": {
+          "styleext": "scss"
+        }
+      }
+    },
     "form-generator": {
       "projectType": "library",
       "root": "libs/form-generator",

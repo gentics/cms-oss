@@ -71,6 +71,18 @@
                 "libs/ui-core/src/public-api"
             ],
             "@gentics/ui-core/*": ["libs/ui-core/src/lib/*"],
+            "@gentics/mesh-models": [
+                "dist/libs/mesh-models/public-api",
+                "libs/mesh-models/src/public-api"
+            ],
+            "@gentics/mesh-rest-client": [
+                "dist/libs/mesh-rest-client/public-api",
+                "libs/mesh-rest-client/src/public-api"
+            ],
+            "@gentics/mesh-rest-client-angular": [
+                "dist/libs/mesh-rest-client-angular/public-api",
+                "libs/mesh-rest-client-angular/src/public-api"
+            ],
             "jszip": ["node_modules/jszip/dist/jszip.min.js"],
             "lodash": ["node_modules/lodash-es"]
         }

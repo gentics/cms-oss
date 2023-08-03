@@ -139,6 +139,11 @@ public class PackageDependency extends AbstractModel {
    * Set the list of dependencies that are referenced by this object.
    */
   public void setReferencedDependencies(List<PackageDependency> referencedDependencies) {
+    // do not add empty list to json response
+    if(referencedDependencies.isEmpty()) {
+      this.referencedDependencies = null;
+      return;
+    }
     this.referencedDependencies = referencedDependencies;
   }
 

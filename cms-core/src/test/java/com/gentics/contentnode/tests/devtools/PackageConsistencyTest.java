@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -46,7 +45,7 @@ public class PackageConsistencyTest {
   @ClassRule
   public static DBTestContext testContext = new DBTestContext();
   protected static Node node;
-  private final PackageDependencyChecker packageDependencyChecker = new PackageDependencyChecker(
+  private final PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(
       PACKAGE_NAME);
   @Rule
   public PackageSynchronizerContext syncContext = new PackageSynchronizerContext();
@@ -76,13 +75,9 @@ public class PackageConsistencyTest {
   @Test
   public void givenPackageWithDependenciesShouldContainAllObjects() throws NodeException {
     givenSynchronizedPackage();
-    List<PackageDependency> dependencies = packageDependencyChecker.collectDependencies();
+    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-    // assert completeness
-    List<PackageDependency> unmetDependencies = dependencies.stream()
-        .filter(dependency -> !dependency.getIsInPackage()).collect(Collectors.toList());
-
-    assertThat(unmetDependencies).isNotEmpty();
+    assertThat(dependencyChecker.isPackageComplete(dependencies)).isTrue();
   }
 
 
@@ -91,7 +86,7 @@ public class PackageConsistencyTest {
       throws NodeException {
     // setup
     List<SynchronizableNodeObject> packageObjects = givenSynchronizedPackage();
-    List<PackageDependency> dependencies = packageDependencyChecker.collectDependencies();
+    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
     // assert dependency collection
     PackageDependency constructDependency = dependencies.stream()
@@ -113,9 +108,8 @@ public class PackageConsistencyTest {
     assertThat(packageSynchronizer.syncAllFromFilesystem(Construct.class)).isGreaterThan(0);
 
 
-
     // datasource that is referenced by a construct is missing and should be detected
-    packageDependencyChecker.performCheck();
+    dependencyChecker.isPackageComplete(dependencies);
 
     PackageDependency checkedDependency = constructDependency.getReferencedDependencies()
         .stream()
@@ -139,7 +133,7 @@ public class PackageConsistencyTest {
 
     // construct that is referenced by a template is missing and should be detected
 
-    List<PackageDependency> dependencies = packageDependencyChecker.collectDependencies();
+    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
     // todo: assertions
   }

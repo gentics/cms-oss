@@ -1,6 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
 import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
@@ -174,14 +175,28 @@ public class PackageResourceImpl implements PackageResource {
 	@Override
 	@GET
 	@Path("/packages/{name}/check")
-	public PackageDependencyList performPackageConsistencyCheck(@PathParam("name") String packageName) throws NodeException {
-		operate(()-> getPackage(packageName));
+	public PackageDependencyList performPackageConsistencyCheck(
+			@PathParam("name") String packageName,
+			@BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging
+	) throws NodeException {
+		operate(() -> getPackage(packageName));
 
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
 		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-		return ListBuilder.from(dependencies, (x)-> x)
-				.to(new PackageDependencyList());
+		if (filter != null && "incomplete".equals(filter.query)) {
+			dependencies = filterMissingDependencies(dependencies);
+		}
+
+		return ListBuilder.from(dependencies, (x) -> x)
+				// todo: implement sorting & filtering
+				//.filter(ResolvableFilter.get(filter, "keyword", "name", "dependencyType"))
+				//.sort(ResolvableComparator.get(sorting, "keyword", "name", "dependencyType"))
+				.page(paging)
+				.to(new PackageDependencyList().withPackageIsComplete(
+						dependencyChecker.isPackageComplete(dependencies))); //todo: this is filtered twice
 	}
 
 

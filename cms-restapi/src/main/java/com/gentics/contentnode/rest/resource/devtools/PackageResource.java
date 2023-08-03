@@ -112,7 +112,10 @@ public interface PackageResource {
 
 	@GET
 	@Path("/package/{name}/check")
-	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name) throws Exception;
+	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name,
+			@BeanParam FilterParameterBean filter,
+			@BeanParam SortParameterBean sorting,
+			@BeanParam PagingParameterBean paging) throws Exception;
 
 
 	/**

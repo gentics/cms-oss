@@ -32,8 +32,9 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
    * Sets whether the package is complete.
    * @param packageIsComplete True if the package is complete, false otherwise.
    */
-  public void setPackageIsComplete(boolean packageIsComplete) {
+  public PackageDependencyList withPackageIsComplete(boolean packageIsComplete) {
     this.packageIsComplete = packageIsComplete;
+    return this;
   }
 
 

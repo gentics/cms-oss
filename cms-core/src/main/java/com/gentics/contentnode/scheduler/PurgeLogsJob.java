@@ -20,7 +20,7 @@ import com.gentics.lib.log.NodeLogger;
 /**
  * Scheduler task to purge old logs
  */
-public class PurgeLogsJob {
+public class PurgeLogsJob extends AbstractPurgeJob {
 	/**
 	 * The logger
 	 */
@@ -72,7 +72,7 @@ public class PurgeLogsJob {
 	 * @throws NodeException
 	 */
 	protected void purgeLogCmd(int timestamp) throws NodeException {
-		operate(() -> deleteWithPK("logcmd", "id", "timestamp < ?", new Object[] { timestamp }));
+		batchedPurge(logger, "logcmd", timestamp, "timestamp < ?", new Object[] { timestamp });
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class PurgeLogsJob {
 	 * @throws NodeException
 	 */
 	protected void purgeLogError(int timestamp) throws NodeException {
-		operate(() -> deleteWithPK("logerror", "id", "timestamp < ?", new Object[] { timestamp }));
+		batchedPurge(logger, "logerror", timestamp, "timestamp < ?", new Object[] { timestamp });
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class PurgeLogsJob {
 	 * @throws NodeException
 	 */
 	protected void purgeSchedulerExecution(int timestamp) throws NodeException {
-		operate(() -> deleteWithPK("scheduler_execution", "id", "starttime < ? AND endtime > ?",
-				new Object[] { timestamp, 0 }));
+		batchedPurge(logger, "scheduler_execution", timestamp, "starttime < ? AND endtime > ?",
+				new Object[] { timestamp, 0 });
 	}
 }

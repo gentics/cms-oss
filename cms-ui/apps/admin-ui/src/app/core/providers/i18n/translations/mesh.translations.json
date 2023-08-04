@@ -34,5 +34,93 @@
     "management_tab_microschemas": {
         "de": "Microschemas",
         "en": "Microschemas"
+    },
+    "serverInfo": {
+        "de": "Server Information",
+        "en": "Server Information"
+    },
+    "serverConfig": {
+        "de": "Server Konfiguration",
+        "en": "Server Configuration"
+    },
+    "serverInfo_meshVersion": {
+        "de": "Mesh Version",
+        "en": "Mesh Version"
+    },
+    "serverInfo_meshNodeName": {
+        "de": "Mesh Node Name",
+        "en": "Mesh Node Name"
+    },
+    "serverInfo_databaseVendor": {
+        "de": "Datenbank Anbieter",
+        "en": "Database Vendor"
+    },
+    "serverInfo_databaseVersion": {
+        "de": "Datenbank Version",
+        "en": "Database Version"
+    },
+    "serverInfo_databaseRevision": {
+        "de": "Datenbank Revision",
+        "en": "Database Revision"
+    },
+    "serverInfo_vertxVersion": {
+        "de": "Vert.x Verison",
+        "en": "Vert.x Version"
+    },
+    "serverInfo_searchVendor": {
+        "de": "Suche Anbieter",
+        "en": "Search Vendor"
+    },
+    "serverInfo_searchVersion": {
+        "de": "Suche Version",
+        "en": "Search Version"
+    },
+    "serverStatus": {
+        "de": "Server Status",
+        "en": "Server Status"
+    },
+    "serverStatus_STARTING": {
+        "de": "Startet",
+        "en": "Starting"
+    },
+    "serverStatus_WAITING_FOR_CLUSTER": {
+        "de": "Warten auf Cluster",
+        "en": "Waiting for Cluster"
+    },
+    "serverStatus_READY": {
+        "de": "Verfügbar",
+        "en": "Ready"
+    },
+    "serverStatus_SHUTTING_DOWN": {
+        "de": "Am Herunterfahren",
+        "en": "Shutting down"
+    },
+    "serverStatus_BACKUP": {
+        "de": "Backup",
+        "en": "Backup"
+    },
+    "serverStatus_RESTORE": {
+        "de": "Wiederherstellung",
+        "en": "Restore"
+    },
+    "coordination": {
+        "de": "Koorindation",
+        "en": "Coordination"
+    },
+    "coordinatorMode": {
+        "de": "Modus",
+        "en": "Mode"
+    },
+    "coordinatorMode_DISABLED": {
+        "de": "Deaktiviert",
+        "en": "Disabled"
+    },
+    "coordinatorMode_CUD": {
+        "de": "CUD",
+        "en": "CUD"
+    },
+    "coordinatorMode_ALL": {
+        "de": "Alle",
+        "en": "All"
     }
 }

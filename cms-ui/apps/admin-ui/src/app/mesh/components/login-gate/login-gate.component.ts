@@ -21,11 +21,13 @@ export class LoginGateComponent implements OnInit, OnChanges {
     @Input()
     public repository: ContentRepository;
 
+    @Input()
+    public loggedIn = false;
+
     @Output()
-    public login = new EventEmitter<void>();
+    public loggedInChange = new EventEmitter<boolean>();
 
     public initialized = false;
-    public loggedIn = false;
     public canLoginWithCR = false;
     public loading = false;
 
@@ -75,7 +77,7 @@ export class LoginGateComponent implements OnInit, OnChanges {
             this.loggedIn = me.username !== 'anonymous';
             this.changeDetector.markForCheck();
             if (this.loggedIn) {
-                this.login.emit();
+                this.loggedInChange.emit(true);
             }
         }).catch(err => {
             // eslint-disable-next-line no-console
@@ -106,7 +108,7 @@ export class LoginGateComponent implements OnInit, OnChanges {
             this.loggedIn = true;
             this.form.enable();
             this.changeDetector.markForCheck();
-            this.login.emit();
+            this.loggedInChange.emit(true);
         }).catch(err => {
             // eslint-disable-next-line no-console
             console.debug('Error while logging in to mesh', err);

@@ -1,0 +1,17 @@
+.tabs {
+    margin: 0;
+    height: auto;
+    display: flex;
+
+    &::ng-deep {
+        .grouped-tabs {
+            float: unset;
+            flex: 0 0;
+        }
+
+        .grouped-tab-content {
+            float: unset;
+            flex: 1 1 auto;
+        }
+    }
+}

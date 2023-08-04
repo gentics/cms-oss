@@ -1,0 +1,14 @@
+<gtx-mesh-login-gate
+    [repository]="repository"
+    [loggedIn]="loggedIn"
+    (loggedInChange)="handleMeshLogin($event)"
+>
+    <div class="management-container">
+        <div class="management-content">
+            <router-outlet [name]="ROUTE_MANAGEMENT_OUTLET"></router-outlet>
+        </div>
+        <div class="management-controls">
+            <gtx-button (click)="logout()">logout</gtx-button>
+        </div>
+    </div>
+</gtx-mesh-login-gate>

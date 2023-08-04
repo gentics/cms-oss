@@ -4,12 +4,17 @@ import {
     BranchListResponse,
     BranchResponse,
     BranchUpdateRequest,
+    ClusterConfigResponse,
+    ClusterStatusResponse,
+    CoordinatorConfig,
+    CoordinatorMasterResponse,
     GenericMessageResponse,
     GroupCreateRequest,
     GroupListOptions,
     GroupListResponse,
     GroupResponse,
     GroupUpdateRequest,
+    LocalConfigModel,
     LoginResponse,
     MicroschemaCreateRequest,
     MicroschemaListOptions,
@@ -23,6 +28,7 @@ import {
     NodeResponse,
     NodeUpdateRequest,
     NodeVersionsResponse,
+    PluginListResponse,
     ProjectCreateRequest,
     ProjectListOptions,
     ProjectListResponse,
@@ -41,6 +47,8 @@ import {
     SchemaListResponse,
     SchemaResponse,
     SchemaUpdateRequest,
+    ServerInfoModel,
+    StatusResponse,
     TagListResponse,
     TagListUpdateRequest,
     UserCreateRequest,
@@ -179,4 +187,24 @@ export interface MeshProjectMicroschemaAPI {
     get(project: string, uuid: string): Promise<MicroschemaResponse>;
     assign(project: string, uuid: string): Promise<MicroschemaResponse>;
     unassign(project: string, uuid: string): Promise<GenericMessageResponse>;
+}
+
+export interface MeshServerAPI {
+    info(): Promise<ServerInfoModel>;
+    config(): Promise<LocalConfigModel>;
+    status(): Promise<StatusResponse>;
+}
+
+export interface MeshCoordinatorAPI {
+    config(): Promise<CoordinatorConfig>;
+    master(): Promise<CoordinatorMasterResponse>;
+}
+
+export interface MeshClusterAPI {
+    config(): Promise<ClusterConfigResponse>;
+    status(): Promise<ClusterStatusResponse>;
+}
+
+export interface MeshPluginAPI {
+    list(): Promise<PluginListResponse>;
 }

@@ -3,8 +3,6 @@ import {
     EditableEntityModels,
     EntityUpdateRequestModel,
     NULL_FORM_TAB_HANDLE,
-    ROUTE_MANAGEMENT_OUTLET,
-    ROUTE_PATH_MESH,
 } from '@admin-ui/common';
 import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
@@ -28,7 +26,6 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
     public readonly ContentRepositoryPropertiesMode = ContentRepositoryPropertiesMode;
     public readonly ContentRepositoryType = ContentRepositoryType;
     public readonly TagmapEntryDisplayFields = TagmapEntryDisplayFields;
-    public readonly ROUTE_MESH_OUTLET = ROUTE_MANAGEMENT_OUTLET;
 
     public fgProperties: UntypedFormControl;
     public meshFeatureEnabled = false;
@@ -58,10 +55,6 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
             this.meshFeatureEnabled = enabled;
             this.changeDetector.markForCheck();
         }));
-    }
-
-    public handleMeshLogin(): void {
-        this.router.navigate([{ outlets: { [ROUTE_MANAGEMENT_OUTLET]: [ROUTE_PATH_MESH] } }], { relativeTo: this.route });
     }
 
     protected initializeTabHandles(): void {

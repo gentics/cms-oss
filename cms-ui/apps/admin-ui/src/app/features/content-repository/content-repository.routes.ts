@@ -11,7 +11,7 @@ import {
     ROUTE_PERMISSIONS_KEY,
     createEntityEditorRoutes,
 } from '@admin-ui/common';
-import { MeshManagementComponent } from '@admin-ui/mesh';
+import { ManagementTabsComponent } from '@admin-ui/mesh';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ContentRepositoryEditorComponent, ContentRepositoryMasterComponent } from './components';
 
@@ -46,7 +46,7 @@ export const CONTENT_REPOSIROTY_ROUTES: GcmsAdminUiRoute[] = [
                     children: [
                         {
                             path: `:${ROUTE_PARAM_MESH_TAB}`,
-                            component: MeshManagementComponent,
+                            component: ManagementTabsComponent,
                             data: {
                                 [ROUTE_PERMISSIONS_KEY]: [],
                             },

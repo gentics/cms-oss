@@ -4,15 +4,19 @@ import {
     MeshAuthAPI,
     MeshBranchAPI,
     MeshClientConnection,
+    MeshClusterAPI,
+    MeshCoordinatorAPI,
     MeshGroupAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
+    MeshPluginAPI,
     MeshProjectAPI,
     MeshProjectMicroschemaAPI,
     MeshProjectSchemaAPI,
     MeshRestClient,
     MeshRoleAPI,
     MeshSchemaAPI,
+    MeshServerAPI,
     MeshUserAPI,
 } from '@gentics/mesh-rest-client';
 import { AngularMeshClientDriver } from './angular-mesh-client-driver';
@@ -85,5 +89,21 @@ export class MeshRestClientService {
 
     get projectMicroschemas(): MeshProjectMicroschemaAPI {
         return this.client.projectMicroschemas;
+    }
+
+    get server(): MeshServerAPI {
+        return this.client.server;
+    }
+
+    get coordinator(): MeshCoordinatorAPI {
+        return this.client.coordinator;
+    }
+
+    get cluster(): MeshClusterAPI {
+        return this.client.cluster;
+    }
+
+    get plugins(): MeshPluginAPI {
+        return this.client.plugins;
     }
 }

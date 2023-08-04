@@ -3,12 +3,12 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
-    selector: 'gtx-mesh-management',
-    templateUrl: './mesh-management.component.html',
-    styleUrls: ['./mesh-management.component.scss'],
+    selector: 'gtx-mesh-management-tabs',
+    templateUrl: './management-tabs.component.html',
+    styleUrls: ['./management-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshManagementComponent {
+export class ManagementTabsComponent {
 
     public readonly MeshMangementTabs = MeshMangementTabs;
 

@@ -1,0 +1,46 @@
+<gtx-grouped-tabs
+    class="tabs"
+    pure
+    [activeId]="activeTab"
+    (tabChange)="changeTab($event)"
+>
+    <gtx-tab-pane [id]="MeshMangementTabs.OVERVIEW">
+        <ng-template gtx-tab-label><icon left>dashboard</icon>{{ 'mesh.management_tab_overview' | i18n }}</ng-template>
+        <gtx-mesh-server-overview></gtx-mesh-server-overview>
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.USERS">
+        <ng-template gtx-tab-label><icon left>person</icon>{{ 'mesh.management_tab_users' | i18n }}</ng-template>
+        USERS!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.GROUPS">
+        <ng-template gtx-tab-label><icon left>group</icon>{{ 'mesh.management_tab_groups' | i18n }}</ng-template>
+        GROUPS!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.ROLES">
+        <ng-template gtx-tab-label><icon left>fact_check</icon>{{ 'mesh.management_tab_roles' | i18n }}</ng-template>
+        ROLES!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.PERMISSIONS">
+        <ng-template gtx-tab-label><icon left>lock</icon>{{ 'mesh.management_tab_permissions' | i18n }}</ng-template>
+        PERMISSIONS!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.PROJECTS">
+        <ng-template gtx-tab-label><icon left>topic</icon>{{ 'mesh.management_tab_projects' | i18n }}</ng-template>
+        PROJECTS!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.SCHEMAS">
+        <ng-template gtx-tab-label><icon left>view_compact</icon>{{ 'mesh.management_tab_schemas' | i18n }}</ng-template>
+        SCHEMAS!
+    </gtx-tab-pane>
+
+    <gtx-tab-pane [id]="MeshMangementTabs.MICROSCHEMAS">
+        <ng-template gtx-tab-label><icon left>view_module</icon>{{ 'mesh.management_tab_microschemas' | i18n }}</ng-template>
+        MICROSCHEMAS!
+    </gtx-tab-pane>
+</gtx-grouped-tabs>

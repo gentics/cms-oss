@@ -226,4 +226,10 @@ export class ContentrespositoryApi {
     ): Observable<Response> {
         return this.apiBase.post(`contentrepositories/${contentRepositoryId}/login`, null);
     }
+
+    logoutFromMeshInstance(
+        contentRepositoryId: EntityIdType,
+    ): Observable<Response> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/logout`, null);
+    }
 }

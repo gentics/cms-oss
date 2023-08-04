@@ -2,12 +2,20 @@ import { SharedModule } from '@admin-ui/shared/shared.module';
 import { CommonModule } from '@angular/common';
 import { NgModule, Provider, Type } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
-import { LoginGateComponent, MeshManagementComponent } from './components';
+import {
+    LoginGateComponent,
+    ManagementComponent,
+    ManagementTabsComponent,
+    ServerOverviewComponent,
+} from './components';
 
 const COMPONENTS: Type<any>[] = [
     LoginGateComponent,
-    MeshManagementComponent,
+    ManagementComponent,
+    ManagementTabsComponent,
+    ServerOverviewComponent,
 ];
 
 const DECLARATIONS = [
@@ -28,6 +36,7 @@ const SERVICES: Provider[] = [
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
+        RouterModule.forChild([]),
         MeshRestClientModule,
         SharedModule,
     ],

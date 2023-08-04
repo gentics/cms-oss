@@ -104,9 +104,7 @@
             ></gtx-entity-detail-header>
 
             <div *ngIf="editorTab === Tabs.MANAGEMENT" class="gtx-entity-details-tab-content-body">
-                <gtx-mesh-login-gate [repository]="entity" (login)="handleMeshLogin()">
-                    <router-outlet [name]="ROUTE_MESH_OUTLET"></router-outlet>
-                </gtx-mesh-login-gate>
+                <gtx-mesh-management [repository]="entity"></gtx-mesh-management>
             </div>
         </gtx-tab>
     </gtx-tabs>

@@ -1,0 +1,16 @@
+.management-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .management-content {
+        flex: 1 1 auto;
+        min-height: 1px;
+        min-width: 1px;
+    }
+
+    .management-controls {
+        flex: 0 0;
+        padding: 1rem 1.5rem;
+    }
+}

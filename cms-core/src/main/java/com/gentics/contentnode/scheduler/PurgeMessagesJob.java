@@ -20,7 +20,7 @@ import com.gentics.lib.log.NodeLogger;
 /**
  * Scheduler task to purge old inbox messages
  */
-public class PurgeMessagesJob {
+public class PurgeMessagesJob extends AbstractPurgeJob {
 	/**
 	 * The logger
 	 */
@@ -70,6 +70,6 @@ public class PurgeMessagesJob {
 	 * @throws NodeException
 	 */
 	protected void purgeMessages(int timestamp) throws NodeException {
-		operate(() -> deleteWithPK("msg", "id", "timestamp < ?", new Object[] { timestamp }));
+		batchedPurge(logger, "msg", timestamp, "timestamp < ?", new Object[] { timestamp });
 	}
 }

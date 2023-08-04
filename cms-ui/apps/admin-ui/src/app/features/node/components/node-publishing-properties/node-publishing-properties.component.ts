@@ -1,9 +1,9 @@
 import { FormControlOnChangeFn, ObservableStopper } from '@admin-ui/common';
 import { DisableableControlValueAccessor } from '@admin-ui/shared/directives/action-allowed/action-allowed.directive';
 import { SelectState } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, forwardRef, OnDestroy, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { ContentRepository, GtxNodePageLanguageCode, Index, IndexById, Normalized } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
+import { ContentRepository, GtxNodePageLanguageCode, IndexById, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { isEqual as _isEqual } from 'lodash';
 import { Observable } from 'rxjs';
@@ -98,9 +98,9 @@ export class NodePublishingPropertiesComponent implements OnInit, OnChanges, OnD
         return !this.fgPublishing.get('fileSystemFiles').value;
     }
 
-    private fileSystemControls: Index<FileSystemControlNames, UntypedFormControl>;
-    private contentrepositoriesystemControls: Index<ContentRepositoryControlNames, UntypedFormControl>;
-    private seoSystemControls: Index<SeoControlNames, UntypedFormControl>;
+    private fileSystemControls: Record<FileSystemControlNames, UntypedFormControl>;
+    private contentrepositoriesystemControls: Record<ContentRepositoryControlNames, UntypedFormControl>;
+    private seoSystemControls: Record<SeoControlNames, UntypedFormControl>;
 
     private stopper = new ObservableStopper();
 

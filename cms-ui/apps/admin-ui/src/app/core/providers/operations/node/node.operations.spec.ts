@@ -5,7 +5,6 @@ import { createDelayedError, createDelayedObservable, subscribeSafely } from '@a
 import { TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import {
     GcmsTestData,
-    Index,
     Language,
     Node,
     NodeCopyRequest,
@@ -341,7 +340,7 @@ describe('NodeOperations', () => {
 
     describe('updateNodeFeatures()', () => {
 
-        let featuresUpdate: Partial<Index<NodeFeature, boolean>>;
+        let featuresUpdate: Partial<Record<NodeFeature, boolean>>;
 
         beforeEach(() => {
             featuresUpdate = {

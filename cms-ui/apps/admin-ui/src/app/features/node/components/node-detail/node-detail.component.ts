@@ -39,7 +39,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
     Feature,
     Folder,
-    Index,
     IndexById,
     Language,
     Node,
@@ -126,7 +125,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<NodeDetailTabs, FormTabHandle>;
+    private tabHandles: Record<NodeDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -455,7 +454,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     /**
      * Set new value of form 'Node Features'
      */
-    private fgNodeFeaturesUpdate(features: IndexById<Partial<Index<NodeFeature, boolean>>>, availFeatures: NodeFeatureModel[]): void {
+    private fgNodeFeaturesUpdate(features: IndexById<Partial<Record<NodeFeature, boolean>>>, availFeatures: NodeFeatureModel[]): void {
         const nodeFeaturesGroup: any = {};
 
         availFeatures.forEach(feature => {

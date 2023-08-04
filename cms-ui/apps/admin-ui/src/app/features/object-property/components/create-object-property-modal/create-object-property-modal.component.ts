@@ -1,7 +1,7 @@
-import { ObjectPropertyOperations } from '@admin-ui/core';
+import { ObjectPropertyHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { ObjectPropertyBO, ObjectPropertyCreateRequest } from '@gentics/cms-models';
+import { ObjectProperty, ObjectPropertyCreateRequest } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
 import { ObjectpropertyPropertiesMode } from '../object-property-properties/object-property-properties.component';
 
@@ -18,7 +18,7 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
     form: UntypedFormControl;
 
     constructor(
-        private objectPropertyOperations: ObjectPropertyOperations,
+        private handler: ObjectPropertyHandlerService,
     ) { }
 
     ngOnInit(): void {
@@ -39,11 +39,11 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
         this.form = new UntypedFormControl(payload);
     }
 
-    closeFn = (entityCreated: ObjectPropertyBO) => {};
+    closeFn = (entityCreated: ObjectProperty) => {};
     cancelFn = () => {};
 
     registerCloseFn(close: (val?: any) => void): void {
-        this.closeFn = (entityCreated: ObjectPropertyBO) => {
+        this.closeFn = (entityCreated: ObjectProperty) => {
             close(entityCreated);
         };
     }
@@ -60,8 +60,8 @@ export class CreateObjectPropertyModalComponent implements IModalDialog, OnInit 
             .then(objectPropertyCreated => this.closeFn(objectPropertyCreated));
     }
 
-    private createEntity(): Promise<ObjectPropertyBO> {
-        return this.objectPropertyOperations.create(this.form.value).toPromise();
+    private createEntity(): Promise<ObjectProperty> {
+        return this.handler.createMapped(this.form.value).toPromise();
     }
 
 }

@@ -62,14 +62,6 @@ describe('GenticsTagEditorComponent', () => {
                 mockPipes('objTagName'),
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    GenticsTagEditorComponent,
-                    TextTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     it('creates the correct number of tag property editors and initializes them correctly',
@@ -309,7 +301,7 @@ describe('GenticsTagEditorComponent', () => {
 
             // Try to change the non-editable TagProperty by firing the TagPropertiesChanged event from another property.
             const onTagPropChangeFn: TagPropertiesChangedFn = registerOnChangeSpies[0].calls.argsFor(0)[0];
-            let changes: Partial<TagPropertyMap> = { };
+            const changes: Partial<TagPropertyMap> = { };
             changes[nonEditableTagPart.keyword] = {
                 ...nonEditableTagProperty,
                 stringValue: 'Property changed',
@@ -517,6 +509,7 @@ describe('GenticsTagEditorComponent', () => {
             expect(validatorSpy.calls.count()).toBe(1);
             expect(validatorSpy.calls.argsFor(0)[0]).toEqual(change[tagPart1Key]);
             expect(actualValidationResults).toEqual(expectedValidationResults);
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             writeChangedValuesSpies.forEach(spy => expect(spy.calls.count()).toBe(0));
             validatorSpy.calls.reset();
 
@@ -651,12 +644,12 @@ describe('GenticsTagEditorComponent', () => {
             const onTagProp1ChangeFn: TagPropertiesChangedFn = registerOnChangeSpies[1].calls.argsFor(0)[0];
 
             // Change the value of tagProperty1.
-            let change: Partial<TagPropertyMap> = { };
+            const change: Partial<TagPropertyMap> = { };
             change[tagPart1Key] = {
                 ...origTag.properties[tagPart1Key],
                 stringValue: 'modified value',
             } as StringTagPartProperty;
-            let changeClone = cloneDeep(change);
+            const changeClone = cloneDeep(change);
             onTagProp1ChangeFn(change);
             fixture.detectChanges();
             tick();
@@ -742,7 +735,7 @@ describe('GenticsTagEditorComponent', () => {
             });
 
             // Change the value of tagProperty1.
-            let change: Partial<TagPropertyMap> = { };
+            const change: Partial<TagPropertyMap> = { };
             change[tagPart1Key] = {
                 ...origTag.properties[tagPart1Key],
                 stringValue: 'modified value',
@@ -769,7 +762,7 @@ describe('GenticsTagEditorComponent', () => {
                     const index = currPropEditorIndex;
                     let onChangeSpy = spyOn(componentInstance.instance, 'registerOnChange');
 
-                    let writeChangedValuesSpy = spyOn(componentInstance.instance, 'writeChangedValues').and.callFake(() => {
+                    const writeChangedValuesSpy = spyOn(componentInstance.instance, 'writeChangedValues').and.callFake(() => {
                         if (writeChangedValuesSpy.calls.count() > 1) {
                             fail('onTagPropertyChanged() call should not be allowed during initialization');
                         }
@@ -1123,8 +1116,8 @@ function validateMockedTag(tag: EditableTag): void {
 @Component({
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })
     tagEditorHost: TagEditorHostComponent;

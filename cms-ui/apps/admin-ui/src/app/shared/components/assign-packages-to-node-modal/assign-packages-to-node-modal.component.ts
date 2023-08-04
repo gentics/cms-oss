@@ -1,8 +1,9 @@
-import { PackageOperations } from '@admin-ui/core';
+import { BO_ID } from '@admin-ui/common';
+import { DevToolPackageHandlerService, DevToolPackageManagerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { first, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-assign-packages-to-node-modal',
@@ -20,18 +21,17 @@ export class AssignPackagesToNodeModalComponent extends BaseModal<boolean> imple
     packageIdsCurrent: string[] = [];
 
     constructor(
-        private entityOperations: PackageOperations,
+        private handler: DevToolPackageHandlerService,
+        private manager: DevToolPackageManagerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.packageIds$ = this.entityOperations.getPackagesOfNode(this.nodeId).pipe(
-            map(entities => entities.map(entity => entity.id)),
+        this.packageIds$ = this.handler.listFromNodeMapped(this.nodeId).pipe(
+            map(pkgs => pkgs.items.map(entity => entity[BO_ID])),
         );
-        this.packageIds$.pipe(
-            first(),
-        ).subscribe(ids => {
+        this.packageIds$.subscribe(ids => {
             this.packageIdsInitial = ids;
             this.packageIdsCurrent = [...this.packageIdsInitial];
         });
@@ -51,10 +51,10 @@ export class AssignPackagesToNodeModalComponent extends BaseModal<boolean> imple
     }
 
     private changePackagesOfNode(): Promise<boolean> {
-        return this.entityOperations.changePackagesOfNode(
+        return this.manager.manageNodeAssignment(
             this.nodeId,
-            this.packageIdsCurrent,
             this.packageIdsInitial,
+            this.packageIdsCurrent,
         ).toPromise();
     }
 

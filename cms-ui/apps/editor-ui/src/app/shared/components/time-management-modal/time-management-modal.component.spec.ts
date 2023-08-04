@@ -1,6 +1,6 @@
+/* eslint-disable id-blacklist */
 import { ChangeDetectorRef, Component, EventEmitter, NO_ERRORS_SCHEMA } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { SetUILanguageAction } from '@editor-ui/app/state';
 import { Form, FormRequestOptions, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
@@ -49,12 +49,6 @@ describe('TimeManagementModal', () => {
                 I18nDatePipe,
             ],
             schemas: [NO_ERRORS_SCHEMA],
-        });
-
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [TimeManagementModal],
-            },
         });
 
         modalService = TestBed.get(ModalService);
@@ -435,7 +429,7 @@ describe('TimeManagementModal', () => {
 
 @Component({
     template: '<gtx-overlay-host></gtx-overlay-host>',
-    })
+})
 class TestComponent {
 
 }
@@ -473,15 +467,17 @@ class MockI18nService {
 }
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string {
+        return this.lang;
+    }
     set currentLang(lang: string) {
         this.onLangChange.emit({
-            lang: this._lang = lang,
+            lang: this.lang = lang,
             translations: {},
         });
     }
     get():  Observable<string | any> { return of(this.currentLang); }
-    private _lang: string;
+    private lang: string;
 }
 
 class MockPermissionService {

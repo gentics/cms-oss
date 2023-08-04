@@ -1,0 +1,27 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <div class="columns small-6">
+        <gtx-input
+            type="text"
+            [required]="true"
+            maxlength="50"
+            [label]="('shared.dataSource_entry_key' | i18n) + ' *'"
+            [placeholder]="'shared.enter_dataSource_entry_key' | i18n"
+            formControlName="key"
+        ></gtx-input>
+    </div>
+
+    <div class="columns small-6">
+        <gtx-input
+            type="text"
+            [required]="true"
+            maxlength="50"
+            [label]="('shared.dataSource_entry_value' | i18n) + ' *'"
+            [placeholder]="'shared.enter_dataSource_entry_value' | i18n"
+            formControlName="value"
+        ></gtx-input>
+    </div>
+</form>

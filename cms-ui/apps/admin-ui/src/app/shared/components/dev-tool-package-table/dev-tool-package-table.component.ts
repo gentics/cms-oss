@@ -1,5 +1,11 @@
-import { DevToolPackageBO } from '@admin-ui/common';
-import { DevToolPackageTableLoaderOptions, DevToolPackageTableLoaderService, I18nService, PackageOperations, PermissionsService } from '@admin-ui/core';
+import { DevToolPackageBO, EditableEntity } from '@admin-ui/common';
+import {
+    DevToolPackageHandlerService,
+    DevToolPackageTableLoaderOptions,
+    DevToolPackageTableLoaderService,
+    I18nService,
+    PermissionsService,
+} from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap, Package, PackageSyncResponse } from '@gentics/cms-models';
@@ -86,6 +92,7 @@ export class DevToolPackageTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'package';
+    protected focusEntityType = EditableEntity.DEV_TOOL_PACKAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -94,7 +101,7 @@ export class DevToolPackageTableComponent
         loader: DevToolPackageTableLoaderService,
         modalService: ModalService,
         protected permissions: PermissionsService,
-        protected operations: PackageOperations,
+        protected handler: DevToolPackageHandlerService,
     ) {
         super(
             changeDetector,
@@ -125,7 +132,7 @@ export class DevToolPackageTableComponent
                 this.changeDetector.markForCheck();
             }),
             debounceTime(1_000),
-            switchMap(() => this.operations.getSyncState()),
+            switchMap(() => this.handler.getSyncState()),
         ).subscribe(res => {
             this.syncEnabled = res.enabled;
             this.syncLoading = false;
@@ -222,9 +229,9 @@ export class DevToolPackageTableComponent
 
         let op: Observable<PackageSyncResponse>;
         if (this.syncEnabled) {
-            op = this.operations.stopSync();
+            op = this.handler.stopSync();
         } else {
-            op = this.operations.startSync();
+            op = this.handler.startSync();
         }
 
         this.syncLoading = true;
@@ -269,15 +276,15 @@ export class DevToolPackageTableComponent
     }
 
     protected syncPackageToFilesystem(packageName: string | string[]): Promise<void> {
-        return this.operations.syncPackageToFilesystem(packageName, { wait: 5_000 });
+        return this.handler.syncPackageToFilesystem(packageName, { wait: 5_000 });
     }
 
     protected syncPackageFromFilesystem(packageName: string | string[]): Promise<void> {
-        return this.operations.syncPackageFromFilesystem(packageName, { wait: 5_000 });
+        return this.handler.syncPackageFromFilesystem(packageName, { wait: 5_000 });
     }
 
     protected unassignPackageFromNode(packageName: string | string[]): Promise<void> {
-        return this.operations.removePackageFromNode(this.nodeId, packageName).toPromise()
+        return this.handler.unassignFromNode(this.nodeId, packageName).toPromise()
             .then(() => {
                 this.removeFromSelection(packageName);
                 this.loadTrigger.next();

@@ -203,7 +203,7 @@ export class ContentrespositoryApi {
      */
     addContentRepositoryToFragment(
         contentRepositoryId: EntityIdType,
-        crFragmentId: string,
+        crFragmentId: EntityIdType,
     ): Observable<void> {
         return this.apiBase.put(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`, {}).pipe(
             map(() => {}),
@@ -215,7 +215,7 @@ export class ContentrespositoryApi {
      */
     removeContentRepositoryFromFragment(
         contentRepositoryId: EntityIdType,
-        crFragmentId: string,
+        crFragmentId: EntityIdType,
     ): Observable<void> {
         return this.apiBase.delete(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`);
     }

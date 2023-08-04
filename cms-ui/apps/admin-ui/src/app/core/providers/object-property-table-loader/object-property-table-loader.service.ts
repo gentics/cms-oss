@@ -1,13 +1,12 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, discard, EntityPageResponse, ObjectPropertyBO, TableLoadOptions } from '@admin-ui/common';
+import { discard, EntityList, EntityPageResponse, ObjectPropertyBO, PackageTableEntityLoader, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions, ObjectPropertyListResponse } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { ObjectPropertiesObjectType, ObjectProperty, ObjectPropertyListOptions } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
 import { EntityManagerService } from '../entity-manager';
-import { ObjectPropertyOperations } from '../operations';
+import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
 
 export interface ObjectPropertyTableLoaderOptions {
     packageName?: string;
@@ -15,13 +14,13 @@ export interface ObjectPropertyTableLoaderOptions {
 }
 
 @Injectable()
-export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions> {
+export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<ObjectProperty, ObjectPropertyBO, ObjectPropertyTableLoaderOptions>
+    implements PackageTableEntityLoader<ObjectPropertyBO, ObjectPropertyTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: GcmsApi,
-        protected operations: ObjectPropertyOperations,
+        protected handler: ObjectPropertyHandlerService,
     ) {
         super(
             'objectProperty',
@@ -35,7 +34,7 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
     }
 
     public deleteEntity(entityId: string): Promise<void> {
-        return this.operations.delete(entityId).pipe(discard()).toPromise();
+        return this.handler.delete(entityId).pipe(discard()).toPromise();
     }
 
     protected loadEntities(
@@ -46,37 +45,33 @@ export class ObjectPropertyTableLoaderService extends BaseTableLoaderService<Obj
             ...this.createDefaultOptions(options),
             embed: ['category', 'construct'],
         };
-        let loader: Observable<ObjectPropertyListResponse>;
+        let loader: Observable<EntityList<ObjectPropertyBO>>;
 
         if (additionalOptions?.types) {
             // loadOptions.type = additionalOptions.types;
         }
 
         if (additionalOptions?.packageName) {
-            loader = this.api.devTools.getObjectproperties(additionalOptions.packageName, loadOptions);
+            loader = this.handler.listFromDevToolMapped(additionalOptions.packageName, null as never, loadOptions);
         } else {
-            loader = this.api.objectproperties.getObjectProperties(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(property => this.mapToBusinessObject(property));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
     }
 
-    public mapToBusinessObject(property: ObjectProperty): ObjectPropertyBO {
-        return {
-            ...property,
-            [BO_ID]: String(property.id),
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: property.name,
-        };
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.addToDevTool(devToolPackage, entityId);
     }
 
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.handler.removeFromDevTool(devToolPackage, entityId);
+    }
 }

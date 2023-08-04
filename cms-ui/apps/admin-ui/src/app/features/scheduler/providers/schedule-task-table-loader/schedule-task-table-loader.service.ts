@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, ScheduleTaskBO, TableLoadOptions } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, ScheduleTaskBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService, ScheduleTaskOperations } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
@@ -46,7 +46,7 @@ export class ScheduleTaskTableLoaderService extends BaseTableLoaderService<Sched
         return this.api.scheduler.listTasks(loadOptions).pipe(
             map(response => {
                 const entities = response.items.map(task => this.mapToBusinessObject(task));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
                 entities.forEach(task => this.store[task[BO_ID]] = task);
 
                 return {

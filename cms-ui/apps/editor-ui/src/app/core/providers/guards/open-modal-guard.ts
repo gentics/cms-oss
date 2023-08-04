@@ -1,5 +1,5 @@
 import {Injectable, Type} from '@angular/core';
-import {ActivatedRouteSnapshot, CanActivate, CanDeactivate, RouterStateSnapshot, CanActivateChild} from '@angular/router';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import {ModalService} from '@gentics/ui-core';
 
 /**
@@ -7,7 +7,7 @@ import {ModalService} from '@gentics/ui-core';
  * beneath them.
  */
 @Injectable()
-export class OpenModalGuard implements CanDeactivate<Type<any>>, CanActivate, CanActivateChild {
+export class OpenModalGuard  {
 
     constructor(private modalService: ModalService) {}
 

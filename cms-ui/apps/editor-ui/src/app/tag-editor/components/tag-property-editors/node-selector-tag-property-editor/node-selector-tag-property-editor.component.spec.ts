@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { Node, NodeTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
 import { DropdownContentWrapperComponent, GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
@@ -46,13 +45,6 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
                 NodeSelectorTagPropertyEditor,
                 ValidationErrorInfo,
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    NodeSelectorTagPropertyEditor,
-                ],
-            },
         });
     });
 
@@ -152,7 +144,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
             instance: TestComponent, tag: EditableTag, initialValue?: number): void {
             const context = getMockedTagEditorContext(tag);
 
-            let state: TestApplicationState = fixture.debugElement.injector.get(ApplicationStateService) as any;
+            const state: TestApplicationState = fixture.debugElement.injector.get(ApplicationStateService) as any;
 
             state.mockState({
                 folder: {
@@ -204,7 +196,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
 
             const dropdownContent = fixture.nativeElement.query(By.directive(DropdownContentWrapperComponent));
 
-            let selectOption = dropdownContent.queryAll(By.css('.select-option'))[1].nativeElement;
+            const selectOption = dropdownContent.queryAll(By.css('.select-option'))[1].nativeElement;
 
             selectOption.click();
             fixture.detectChanges();
@@ -326,7 +318,7 @@ function getMockedTag(): EditableTag {
         <gtx-overlay-host></gtx-overlay-host>
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;
@@ -338,7 +330,7 @@ class MockEntityResolver {
     getNode(id: number): Node {
         return {
             id: id,
-            name: 'Node' + id,
+            name: `Node ${id}`,
         } as any;
     }
 }

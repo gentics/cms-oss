@@ -1,5 +1,4 @@
 import { SimpleChange } from '@angular/core';
-import { Omit } from '@gentics/cms-models';
 
 // This file contains useful utility types used throughout the application.
 // tslint:disable: jsdoc-format

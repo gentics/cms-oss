@@ -1,0 +1,28 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="editorTab">
+        <gtx-tab
+            [id]="Tabs.PROPERTIES"
+            gtxDetailTabLink
+            [title]="'shared.title_properties' | i18n"
+        >
+            <gtx-entity-detail-header
+                [title]="'shared.title_properties_of_entity' | i18n: { entityName: entity?.name }"
+                saveActionAllowedId="objectProperty.updateObjectpropertyInstance"
+                [saveActionAllowedInstanceId]="entity?.id"
+                [saveDisabled]="fgProperties?.pristine || fgProperties?.invalid"
+                (saveClick)="tabHandles?.[Tabs.PROPERTIES]?.save?.()"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-object-property-properties
+                    *ngIf="entity"
+                    class="properties"
+                    [formControl]="fgProperties"
+                    [mode]="ObjectpropertyPropertiesMode.UPDATE"
+                    [(initialValue)]="entityIsClean"
+                ></gtx-object-property-properties>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

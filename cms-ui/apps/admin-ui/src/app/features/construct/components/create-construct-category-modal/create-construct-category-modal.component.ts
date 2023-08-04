@@ -1,8 +1,9 @@
-import { ConstructCategoryOperations, I18nNotificationService } from '@admin-ui/core';
+import { I18nNotificationService, LanguageHandlerService } from '@admin-ui/core';
+import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/construct-category-handler/construct-category-handler.service';
 import { ConstructCategoryPropertiesMode } from '@admin-ui/features/construct/components';
-import { LanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { UntypedFormControl, Validators } from '@angular/forms';
+import { UntypedFormControl } from '@angular/forms';
+import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -29,18 +30,18 @@ export class CreateConstructCategoryModalComponent
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected entityOperations: ConstructCategoryOperations,
-        private languageData: LanguageDataService,
+        protected handler: ConstructCategoryHandlerService,
+        private languageHandler: LanguageHandlerService,
         protected notifications: I18nNotificationService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl(null, Validators.required);
+        this.form = new UntypedFormControl(null, createNestedControlValidator());
 
         // get available system languages for i18n-properties
-        this.supportedLanguages$ = this.languageData.watchSupportedLanguages();
+        this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
 
     ngOnDestroy(): void {
@@ -56,7 +57,7 @@ export class CreateConstructCategoryModalComponent
         this.form.disable();
         this.changeDetector.markForCheck();
 
-        this.subscriptions.push(this.entityOperations.create(this.form.value).subscribe({
+        this.subscriptions.push(this.handler.create(this.form.value).subscribe({
             complete: () => {
                 this.closeFn(true);
             },

@@ -1,4 +1,3 @@
-import { Index } from '../../type-util';
 import { GcmsRolePrivilegeMapCollection } from './privileges';
 
 /**
@@ -154,7 +153,7 @@ export const INVERSE_GCMS_PERMISSIONS = Object.entries(GcmsPermission)
  * If a `GcmsPermission` is not contained in the map, it is not applicable to the `AccessControlledType`,
  * for which it represents the permissions.
  */
-export type GcmsPermissionsMap = Partial<Index<GcmsPermission, boolean>>;
+export type GcmsPermissionsMap = Partial<Record<GcmsPermission, boolean>>;
 
 /**
  * Collects non-language specific and language specific permissions for a user.

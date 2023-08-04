@@ -18,7 +18,10 @@ export interface DataSourceEntry<T extends ModelType = DefaultModelType> extends
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface DataSourceEntryBO<T extends ModelType = DefaultModelType> extends DataSourceEntryBase<T> {
     /** Internal ID of the object property definition */
     id: string;

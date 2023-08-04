@@ -80,7 +80,10 @@ export interface Template<T extends ModelType = DefaultModelType> extends Templa
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface TemplateBO<T extends ModelType = DefaultModelType> extends TemplateBase<T>, InstancePermissionItem {
     /** Internal ID of the object property definition */
     id: string;

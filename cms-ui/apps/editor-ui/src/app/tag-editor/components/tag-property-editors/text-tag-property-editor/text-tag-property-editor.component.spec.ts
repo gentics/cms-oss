@@ -1,8 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { EditableTag, StringTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
@@ -46,13 +45,6 @@ describe('TextTagPropertyEditorComponent', () => {
                 ValidationErrorInfo,
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    TextTagPropertyEditor,
-                ],
-            },
-        });
     });
 
     describe('initialization', () => {
@@ -84,6 +76,7 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that an InputField is used for Text(short) and that there is no Textarea
             const inputElement = editorElement.query(By.directive(InputComponent));
             expect(inputElement).toBeTruthy();
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             expect(editorElement.query(By.directive(TextareaComponent))).toBeFalsy;
 
             // Make sure that the initial values are correct.
@@ -156,6 +149,7 @@ describe('TextTagPropertyEditorComponent', () => {
             // Make sure that a Textarea is used for Text and that there is no InputField.
             const textAreaElement = editorElement.query(By.directive(TextareaComponent));
             expect(textAreaElement).toBeTruthy();
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             expect(editorElement.query(By.directive(InputComponent))).toBeFalsy;
 
             // Make sure that the initial values are correct.
@@ -602,7 +596,7 @@ function triggerBlurEvent(element: HTMLElement): void {
     template: `
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;

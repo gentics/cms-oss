@@ -1,24 +1,23 @@
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
 import {
-    ContentRepositoryDetailComponent,
+    ContentRepositoryEditorComponent,
     ContentRepositoryMasterComponent,
     ContentRepositoryPropertiesComponent,
     CreateContentRepositoryModalComponent,
 } from './components';
 import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
-import { CanActivateContentRepositoryGuard } from './providers';
 
 @NgModule({
     declarations: [
-        ContentRepositoryDetailComponent,
+        ContentRepositoryEditorComponent,
         ContentRepositoryMasterComponent,
         ContentRepositoryPropertiesComponent,
         CreateContentRepositoryModalComponent,
     ],
     providers: [
-        CanActivateContentRepositoryGuard,
+        provideRouter(CONTENT_REPOSIROTY_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

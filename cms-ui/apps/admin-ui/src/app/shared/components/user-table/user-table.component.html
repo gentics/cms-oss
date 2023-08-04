@@ -79,7 +79,7 @@
             <a
                 *ngIf="linkGroups; else groupNameTemplate"
                 class="gtx-entity-grid-link group-link"
-                [routerLink]="group | gtxEntityDetailRouterLink"
+                [routerLink]="AdminUIEntityDetailRoutes.GROUP | gtxEntityDetailRouterLink:group.id"
                 (click)="cancelEvent($event)"
             >{{ group.name }}</a>{{ !last ? ',&nbsp;' : '' }}
         </ng-container>

@@ -1,4 +1,4 @@
-import { ContentPackageBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ContentPackageBO } from '@admin-ui/common';
 import { BaseTableMasterComponent } from '@admin-ui/shared/components/base-table-master/base-table-master.component';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ContentPackage, NormalizableEntityType } from '@gentics/cms-models';
@@ -12,5 +12,5 @@ import { ContentPackage, NormalizableEntityType } from '@gentics/cms-models';
 export class ContentPackageMasterComponent extends BaseTableMasterComponent<ContentPackage, ContentPackageBO> {
 
     protected entityIdentifier: NormalizableEntityType = 'contentPackage';
-    protected detailPath = 'package';
+    protected detailPath = AdminUIEntityDetailRoutes.CONTENT_PACKAGE;
 }

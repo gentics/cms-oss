@@ -106,7 +106,7 @@ export class DevToolsApi {
     /**
      * Get all package assigned to a node
      */
-    getPackagesOfNode(nodeId: number, options?: PackageListOptions): Observable<PackageListResponse> {
+    getPackagesOfNode(nodeId: string | number, options?: PackageListOptions): Observable<PackageListResponse> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);
@@ -126,7 +126,7 @@ export class DevToolsApi {
     /**
      * Add an existing package to a node
      */
-    addPackageToNode(nodeId: number, packageName: string): Observable<void> {
+    addPackageToNode(nodeId: string | number, packageName: string): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/nodes/${nodeId}/packages/${sanitizedPackageName}`, null) as unknown as Observable<void>;
     }
@@ -134,7 +134,7 @@ export class DevToolsApi {
     /**
      * Remove an existing package from a node
      */
-    removePackageFromNode(nodeId: number, packageName: string): Observable<void> {
+    removePackageFromNode(nodeId: string | number, packageName: string): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/nodes/${nodeId}/packages/${sanitizedPackageName}`);
     }
@@ -175,7 +175,7 @@ export class DevToolsApi {
     /**
      * Get a single construct
      */
-    getConstruct(packageName: string, constructGlobalId: string): Observable<ConstructLoadResponse> {
+    getConstruct(packageName: string, constructGlobalId: string | number): Observable<ConstructLoadResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/constructs/${constructGlobalId}`);
     }
@@ -183,7 +183,7 @@ export class DevToolsApi {
     /**
      * Add an existing construct to a package
      */
-    addConstructToPackage(packageName: string, constructGlobalId: string): Observable<void> {
+    addConstructToPackage(packageName: string, constructGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/constructs/${constructGlobalId}`, null) as unknown as Observable<void>;
     }
@@ -191,7 +191,7 @@ export class DevToolsApi {
     /**
      * Remove an existing construct from a package
      */
-    removeConstructFromPackage(packageName: string, constructGlobalId: string): Observable<void> {
+    removeConstructFromPackage(packageName: string, constructGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/constructs/${constructGlobalId}`);
     }
@@ -215,7 +215,7 @@ export class DevToolsApi {
     /**
      * Get a single contentRepository
      */
-    getContentRepository(packageName: string, contentRepositoryGlobalId: string): Observable<ContentRepositoryResponse> {
+    getContentRepository(packageName: string, contentRepositoryGlobalId: string | number): Observable<ContentRepositoryResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/contentrepositories/${contentRepositoryGlobalId}`);
     }
@@ -223,7 +223,7 @@ export class DevToolsApi {
     /**
      * Add an existing contentRepository to a package
      */
-    addContentRepositoryToPackage(packageName: string, contentRepositoryGlobalId: string): Observable<void> {
+    addContentRepositoryToPackage(packageName: string, contentRepositoryGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(
             `devtools/packages/${sanitizedPackageName}/contentrepositories/${contentRepositoryGlobalId}`,
@@ -234,7 +234,7 @@ export class DevToolsApi {
     /**
      * Remove an existing contentRepository from a package
      */
-    removeContentRepositoryFromPackage(packageName: string, contentRepositoryGlobalId: string): Observable<void> {
+    removeContentRepositoryFromPackage(packageName: string, contentRepositoryGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/contentrepositories/${contentRepositoryGlobalId}`);
     }
@@ -258,7 +258,7 @@ export class DevToolsApi {
     /**
      * Get a single cr_fragment
      */
-    getContentRepositoryFragment(packageName: string, crfragmentGlobalId: string): Observable<ContentRepositoryFragmentResponse> {
+    getContentRepositoryFragment(packageName: string, crfragmentGlobalId: string | number): Observable<ContentRepositoryFragmentResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/cr_fragments/${crfragmentGlobalId}`);
     }
@@ -266,7 +266,7 @@ export class DevToolsApi {
     /**
      * Add an existing cr_fragment to a package
      */
-    addContentRepositoryFragmentToPackage(packageName: string, crfragmentGlobalId: string): Observable<void> {
+    addContentRepositoryFragmentToPackage(packageName: string, crfragmentGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/cr_fragments/${crfragmentGlobalId}`, null) as unknown as Observable<void>;
     }
@@ -274,7 +274,7 @@ export class DevToolsApi {
     /**
      * Remove an existing cr_fragment from a package
      */
-    removeContentRepositoryFragmentFromPackage(packageName: string, crfragmentGlobalId: string): Observable<void> {
+    removeContentRepositoryFragmentFromPackage(packageName: string, crfragmentGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/cr_fragments/${crfragmentGlobalId}`);
     }
@@ -298,7 +298,7 @@ export class DevToolsApi {
     /**
      * Get a single dataSource
      */
-    getDataSource(packageName: string, dataSourceGlobalId: string): Observable<DataSourceLoadResponse> {
+    getDataSource(packageName: string, dataSourceGlobalId: string | number): Observable<DataSourceLoadResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/datasources/${dataSourceGlobalId}`);
     }
@@ -306,7 +306,7 @@ export class DevToolsApi {
     /**
      * Add an existing dataSource to a package
      */
-    addDataSourceToPackage(packageName: string, dataSourceGlobalId: string): Observable<void> {
+    addDataSourceToPackage(packageName: string, dataSourceGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/datasources/${dataSourceGlobalId}`, null) as unknown as Observable<void>;
     }
@@ -339,7 +339,7 @@ export class DevToolsApi {
     /**
      * Get a single objectProperty
      */
-    getObjectProperty(packageName: string, objectPropertyGlobalId: string): Observable<ObjectPropertyLoadResponse> {
+    getObjectProperty(packageName: string, objectPropertyGlobalId: string | number): Observable<ObjectPropertyLoadResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/objectproperties/${objectPropertyGlobalId}`);
     }
@@ -347,7 +347,7 @@ export class DevToolsApi {
     /**
      * Add an existing objectProperty to a package
      */
-    addObjectPropertyToPackage(packageName: string, objectPropertyGlobalId: string): Observable<void> {
+    addObjectPropertyToPackage(packageName: string, objectPropertyGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/objectproperties/${objectPropertyGlobalId}`, null) as unknown as Observable<void>;
     }
@@ -355,7 +355,7 @@ export class DevToolsApi {
     /**
      * Remove an existing objectProperty from a package
      */
-    removeObjectPropertyFromPackage(packageName: string, objectPropertyGlobalId: string): Observable<void> {
+    removeObjectPropertyFromPackage(packageName: string, objectPropertyGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/objectproperties/${objectPropertyGlobalId}`);
     }
@@ -379,7 +379,7 @@ export class DevToolsApi {
     /**
      * Get a single template
      */
-    getTemplate(packageName: string, templateGlobalId: string): Observable<TemplateResponse> {
+    getTemplate(packageName: string, templateGlobalId: string | number): Observable<TemplateResponse> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/templates/${templateGlobalId}`);
     }
@@ -387,7 +387,7 @@ export class DevToolsApi {
     /**
      * Add an existing template to a package
      */
-    addTemplateToPackage(packageName: string, templateGlobalId: string): Observable<void> {
+    addTemplateToPackage(packageName: string, templateGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/templates/${templateGlobalId}`, null) as unknown as Observable<void>;
     }
@@ -395,7 +395,7 @@ export class DevToolsApi {
     /**
      * Remove an existing template from a package
      */
-    removeTemplateFromPackage(packageName: string, templateGlobalId: string): Observable<void> {
+    removeTemplateFromPackage(packageName: string, templateGlobalId: string | number): Observable<void> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.delete(`devtools/packages/${sanitizedPackageName}/templates/${templateGlobalId}`);
     }

@@ -1,22 +1,22 @@
-import { PermissionsGuard } from '@admin-ui/core';
-import { NgModule } from '@angular/core';
+import { PermissionsGuard } from '@admin-ui/core/guards/permissions/permissions.guard';
+import { NgModule, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-
-import { AdminUIModuleRoutes, GcmsAdminUiRoute } from './common/routing/gcms-admin-ui-route';
+import { ROUTE_DETAIL_OUTLET } from './common';
+import { AdminUIModuleRoutes, GcmsAdminUiRoute, ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_PERMISSIONS_KEY } from './common/models/routing';
 import { ViewUnauthorizedComponent } from './core/components/view-unauthorized/view-unauthorized.component';
-import { AuthGuard } from './core/providers/guards/auth/auth.guard';
+import { AuthGuard } from './core/guards/auth/auth.guard';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { SplitViewRouterOutletComponent } from './shared/components/split-view-router-outlet/split-view-router-outlet.component';
 
 const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
     {
         path: '',
-        canActivate: [AuthGuard],
-        canActivateChild: [PermissionsGuard],
+        canActivate: [(route, router) => inject(AuthGuard).canActivate(route, router)],
+        canActivateChild: [(childRouteState) => inject(PermissionsGuard).canActivateChild(childRouteState)],
         component: GenericRouterOutletComponent,
         data: {
-            breadcrumb: { title: 'dashboard.dashboard' },
+            [ROUTE_BREADCRUMB_KEY]: { title: 'dashboard.dashboard' },
         },
         children: [
             {
@@ -25,7 +25,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: ViewUnauthorizedComponent,
                 data: {
                     // empty array will allow route without any permissions
-                    typePermissions: [],
+                    [ROUTE_PERMISSIONS_KEY]: [],
                 },
             },
             {
@@ -33,7 +33,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 pathMatch: 'full',
                 loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule),
                 data: {
-                    typePermissions: [
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.ADMIN,
                             permissions: [
@@ -54,11 +54,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/user/user.module').then(m => m.UserModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_users',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.USER_ADMIN,
                             permissions: [
@@ -75,11 +75,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/group/group.module').then(m => m.GroupModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_groups',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.GROUP_ADMIN,
                             permissions: [
@@ -96,11 +96,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/role/role.module').then(m => m.RoleModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_roles',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.ROLE,
                             permissions: [
@@ -117,11 +117,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/folder/folder.module').then(m => m.FolderModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_folders',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONTENT_ADMIN,
                             permissions: [
@@ -138,11 +138,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/language/language.module').then(m => m.LanguageModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_languages',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.LANGUAGE_ADMIN,
                             permissions: [
@@ -159,10 +159,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/logs/logs.module').then(m => m.LogsModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_logs',
                     },
-                    typePermissions: [
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.ACTION_LOG,
                             permissions: [
@@ -179,11 +179,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/node/node.module').then(m => m.NodeModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_node_management',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONTENT,
                             permissions: [
@@ -200,14 +200,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/elastic-search-index/elastic-search-status.module').then(m => m.ElasticSearchStatusModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.search_index_maintenance',
                     },
-                    typePermissions: [
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
-                            // There is not yet a dedicated permission for Elastic Search Index maintenance defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
                             type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                             permissions: [
                                 GcmsPermission.READ,
@@ -219,19 +216,17 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
 
             // DevTools Package Management Module
             {
-                path: AdminUIModuleRoutes.PACKAGES,
+                path: AdminUIModuleRoutes.DEV_TOOL_PACKAGES,
                 component: SplitViewRouterOutletComponent,
-                loadChildren: () => import('./features/package/package.module').then(m => m.PackageModule),
+                loadChildren: () => import('./features/dev-tool-package/dev-tool-package.module').then(m => m.DevToolPackageModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.packages',
                     },
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
-                            // There is not yet a dedicated permission for Package Management defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
-                            type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
+                            type: AccessControlledType.DEVTOOL_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],
@@ -246,10 +241,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/data-source/data-source.module').then(m => m.DataSourceModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.data_sources',
                     },
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.DATA_SOURCE_ADMIN,
                             permissions: [
@@ -266,10 +262,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/maintenance-mode/maintenance-mode.module').then(m => m.MaintenanceModeModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.maintenance_mode',
                     },
-                    typePermissions: [
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.SYSTEM_MAINTANANCE,
                             permissions: [
@@ -286,10 +282,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/content-maintenance/content-maintenance.module').then(m => m.ContentmaintenanceModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.contentmaintenance',
                     },
-                    typePermissions: [
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.MAINTENANCE,
                             permissions: [
@@ -306,11 +302,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/content-repository/content-repository.module').then(m => m.ContentRepositoryModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.contentrepositories',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
                             permissions: [
@@ -328,11 +324,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 loadChildren: () => import('./features/cr-fragment/cr-fragment.module')
                     .then(m => m.ContentRepositoryFragmentModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_cr_fragments',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
                             permissions: [
@@ -350,11 +346,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 loadChildren: () => import('./features/template/template.module')
                     .then(m => m.TemplateModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_templates',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.ADMIN,
                             permissions: [
@@ -371,11 +367,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/object-property/object-property.module').then(m => m.ObjectPropertyModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_object_properties',
                     },
-                    // childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.OBJECT_PROPERTY_ADMIN,
                             permissions: [
@@ -392,11 +388,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/construct/construct.module').then(m => m.ConstructModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_tagtypes_constructs',
                     },
-                    // childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONSTRUCT_ADMIN,
                             permissions: [
@@ -413,11 +409,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/content-staging/content-staging.module').then(m => m.ContentStagingModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.item_content_staging',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.CONSTRUCT_ADMIN,
                             permissions: [
@@ -434,11 +430,11 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                 component: SplitViewRouterOutletComponent,
                 loadChildren: () => import('./features/scheduler/scheduler.module').then(m => m.SchedulerModule),
                 data: {
-                    breadcrumb: {
+                    [ROUTE_BREADCRUMB_KEY]: {
                         title: 'dashboard.scheduler',
                     },
-                    childOutletsForBreadcrumbs: ['detail'],
-                    typePermissions: [
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
                         {
                             type: AccessControlledType.SCHEDULER,
                             permissions: [
@@ -448,23 +444,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
             },
-
-            // {
-            //     path: 'testing',
-            //     canActivate: [PermissionsGuard],
-            //     loadChildren: () => import('./features/testing-do-not-release/testing-do-not-release.module').then(m => m.TestingDoNotReleaseModule),
-            //     data: {
-            //         breadcrumb: {
-            //             title: 'Testing',
-            //             doNotTranslate: true,
-            //         },
-            //         typePermissions: [
-            //             { type: AccessControlledType.maintenance, permissions: GcmsPermission.read },
-            //             { type: AccessControlledType.scheduler, permissions: [GcmsPermission.read, GcmsPermission.setperm] },
-            //         ],
-            //     },
-            // },
-
         ],
     },
     {

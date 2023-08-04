@@ -1,11 +1,4 @@
 /**
- * Represents a generic index type that maps keys to their values.
- */
-export type Index<K extends string | number, V> = {
-    [P in K]: V;
-};
-
-/**
  * Represents an index type that maps string keys to their values.
  */
 export interface IndexByKey<V> {
@@ -31,6 +24,8 @@ export type RecursivePartial<T> = {
  * Raw model objects may contain nested entities, while normalized ones do not.
  * E.g., in a raw `Page` object the `publisher` is a `User` object,
  * while in a normalized `Page`, the `publisher` is a number, the ID of the publisher.
+ *
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export enum ModelType {
     /** Indicates a raw model type, as returned by the REST API. */
@@ -40,10 +35,16 @@ export enum ModelType {
     Normalized,
 }
 
-/** Shorthand for indicating a raw model type, as returned by the REST API. */
+/**
+ * Shorthand for indicating a raw model type, as returned by the REST API.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
+ */
 export type Raw = ModelType.Raw;
 
-/** Shorthand for indicating a normalized model type, as stored in the AppState. */
+/**
+ * Shorthand for indicating a normalized model type, as stored in the AppState.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
+ */
 export type Normalized = ModelType.Normalized;
 
 /**
@@ -60,10 +61,15 @@ export type Normalized = ModelType.Normalized;
  * // Consider doing this instead:
  * doSomething<T extends ModelType>(page: Page<T>): Page<T>
  * ```
+ *
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export type AnyModelType = ModelType.Raw | ModelType.Normalized;
 
-/** The default `ModelType` that is used if none is specified. */
+/**
+ * The default `ModelType` that is used if none is specified.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
+ */
 export type DefaultModelType = AnyModelType;
 
 /**
@@ -82,14 +88,20 @@ export type DefaultModelType = AnyModelType;
  * @param T The `ModelType` of the enclosing model type.
  * @param R The type to be used if T is `ModelType.Raw`.
  * @param N The type to be used if T is `ModelType.Normalized`.
+ *
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export type Normalizable<T, R, N> = T extends Raw ? R : N;
 
-/** The Symbol used to store the information whether an entity is normalized. */
+/**
+ * The Symbol used to store the information whether an entity is normalized.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
+ */
 export const IS_NORMALIZED = Symbol('Entity.isNormalized');
 
 /**
  * Used to ease the identification of normalized entity types.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export interface NormalizableEntity<T extends ModelType> {
 
@@ -104,26 +116,8 @@ export interface NormalizableEntity<T extends ModelType> {
 }
 
 /**
- * Exclude property from type.
- * @note In TypeScript 3.5, the Omit type was added to the standard library. Remove when updated.
- *
- * @example
- *    interface Test {
- *        a: string;
- *        b: number;
- *        c: boolean;
- *    }
- *
- *    // Omit a single property:
- *    type OmitA = Omit<Test, 'a'>; // Equivalent to: {b: number, c: boolean}
- *
- *    // Or, to omit multiple properties:
- *    type OmitAB = Omit<Test, 'a'|'b'>; // Equivalent to: {c: boolean}
- */
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-
-/**
  * Preprocessor function for the options of normalizr schemas.
+ * @deprecated Normalization of models should be done on a application level based on the business logic.
  */
 export const normalizrPreProcessEntity = (entity: any) => {
     return {
@@ -131,12 +125,3 @@ export const normalizrPreProcessEntity = (entity: any) => {
         [IS_NORMALIZED]: true,
     } as NormalizableEntity<Normalized>;
 };
-
-/**
- * GCMSUI component `item-list-row` has different states
- * causing different component behavior.
- */
-export enum ItemListRowMode {
-    DEFAULT = 'DEFAULT',
-    SELECT = 'SELECT',
-}

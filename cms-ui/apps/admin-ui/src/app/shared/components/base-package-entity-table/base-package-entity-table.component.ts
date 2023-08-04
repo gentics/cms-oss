@@ -1,5 +1,5 @@
-import { BusinessObject } from '@admin-ui/common';
-import { BaseTableLoaderService, DevToolPackageTableLoaderService, I18nService, PackageOperations } from '@admin-ui/core';
+import { BusinessObject, PackageTableEntityLoader } from '@admin-ui/common';
+import { DevToolPackageTableLoaderService, I18nService } from '@admin-ui/core/providers';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
@@ -20,17 +20,16 @@ export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject,
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: BaseTableLoaderService<T, O, A>,
+        loader: BasePackageEntityTableComponent<T, O, A>,
         modalService: ModalService,
         protected contextMenu: ContextMenuService,
-        protected packageOperations: PackageOperations,
         protected packageTableLoader: DevToolPackageTableLoaderService,
     ) {
         super(
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
         );
     }
@@ -63,8 +62,11 @@ export abstract class BasePackageEntityTableComponent<T, O = T & BusinessObject,
     }
 
     protected async unassignFromPackage(ids: string[]): Promise<void> {
-        await this.packageOperations.removeEntitiesFromPackage(this.packageName, this.entityIdentifier as any, ids).toPromise();
-        this.removeFromSelection(ids);
+        for (const id of ids) {
+            await (this.loader as any as PackageTableEntityLoader<O, A>).removeFromDevToolPackage(this.packageName, id).toPromise();
+            this.removeFromSelection(id);
+        }
+
         this.loader.reload();
         // Also update the package table, as the count has updated
         this.packageTableLoader.reload();

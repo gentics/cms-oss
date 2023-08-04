@@ -9,7 +9,7 @@ import {
     Output,
     ViewChild,
 } from '@angular/core';
-import { ItemLanguageClickEvent, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
+import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
 import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction, FolderActionsService, WastebinActionsService } from '@editor-ui/app/state';
 import {
     File,
@@ -18,7 +18,6 @@ import {
     Form,
     Image,
     Item,
-    ItemListRowMode,
     Language,
     Node as NodeModel,
     Normalized,
@@ -49,7 +48,7 @@ type AllowedItemType =
     templateUrl: './item-list-row.component.html',
     styleUrls: ['./item-list-row.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ItemListRowComponent implements OnInit {
 
     readonly UIMode = UIMode;

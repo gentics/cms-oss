@@ -198,7 +198,7 @@ export class UIStateModule {
     @ActionDefinition(SetUIFocusEntity)
     setUIFocusedEntity(ctx: StateContext<UIStateModel>, action: SetUIFocusEntity): void {
         ctx.setState(patch({
-            focusEntityType: action.focusEntityType,
+            focusEntityType: action.focusEntityType as any,
             focusEntityId: action.focusEntityId,
             focusEntityNodeId: action.focusEntityNodeId || null,
         }));

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { RepositoryBrowserOptions } from '../repository-browser';
 import { ExternalLink } from './external-link';
 import { Folder } from './folder';
@@ -53,9 +54,9 @@ export interface FormQueuedActionPublish extends FormQueuedActionTakeOffline {
 }
 
 export interface FormQueuedActionRequestPublishAt {
-     at: number;
-     alllang: boolean;
-     keepVersion: boolean;
+    at: number;
+    alllang: boolean;
+    keepVersion: boolean;
 }
 
 export interface FormQueuedActionRequestTakeOfflineAt {
@@ -240,6 +241,7 @@ export interface Form<T extends ModelType = DefaultModelType> extends FormBase<T
 
 /**
  * Represents a form in the CMS with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface FormBO<T extends ModelType = DefaultModelType> extends FormBase<T> {
     /** Inner form data */
@@ -298,6 +300,7 @@ export interface CmsFormData extends CmsFormDataBase {
 
 /**
  * Form-specific data and form elements with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface CmsFormDataBO extends CmsFormDataBase {
     /** Form type */
@@ -332,6 +335,7 @@ export interface CmsFormElement extends CmsFormElementBase {
 
 /**
  * Basic CMS form element interface with frontend extensions.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface CmsFormElementBO extends CmsFormElementBase {
     /** Human-readable Element type name. */
@@ -410,8 +414,8 @@ interface CmsFormElementPropertyBase {
 
 export interface CmsFormElementPropertyDefault extends CmsFormElementPropertyBase {
     type: CmsFormElementPropertyType.BOOLEAN
-        | CmsFormElementPropertyType.NUMBER
-        | CmsFormElementPropertyType.STRING;
+    | CmsFormElementPropertyType.NUMBER
+    | CmsFormElementPropertyType.STRING;
     validation?: CmsFormElementValidator;
     value_i18n?: CmsFormElementI18nValue<string | number | boolean | null>;
 }

@@ -1,9 +1,10 @@
-import { ConstructCategoryDataService } from '@admin-ui/shared';
+import { ConstructCategoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
-import { ConstructCategoryBO } from '@gentics/cms-models';
+import { ConstructCategory, ConstructCategoryBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'gtx-assign-constructs-to-category-modal',
@@ -14,15 +15,15 @@ import { Observable } from 'rxjs';
 export class AssignConstructsToCategoryModalComponent extends BaseModal<false | ConstructCategoryBO[]> implements OnInit {
 
     public form = new UntypedFormControl(null, Validators.required);
-    public categories$: Observable<ConstructCategoryBO[]>;
+    public categories$: Observable<ConstructCategory[]>;
 
     constructor(
-        private categoryData: ConstructCategoryDataService,
+        private handler: ConstructCategoryHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.categories$ = this.categoryData.watchAllEntities();
+        this.categories$ = this.handler.listMapped().pipe(map(res => res.items));
     }
 }

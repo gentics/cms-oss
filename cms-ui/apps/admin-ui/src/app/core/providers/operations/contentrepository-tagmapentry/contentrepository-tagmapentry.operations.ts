@@ -1,4 +1,4 @@
-import { ContentRepositoryOperations, EntityManagerService, I18nNotificationService } from '@admin-ui/core';
+import { EntityManagerService, I18nNotificationService } from '@admin-ui/core';
 import { Injectable, Injector } from '@angular/core';
 import {
     EntityIdType,

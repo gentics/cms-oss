@@ -1,16 +1,16 @@
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import {
     AssignConstructsToCategoryModalComponent,
     AssignConstructsToNodesModalComponent,
     BooleanPartFillComponent,
-    ConstructCategoryDetailComponent,
+    ConstructCategoryEditorComponent,
     ConstructCategoryMasterComponent,
     ConstructCategoryPropertiesComponent,
     ConstructCategorySortModal,
     ConstructCategoryTableComponent,
-    ConstructDetailComponent,
+    ConstructEditorComponent,
     ConstructMasterComponent,
     ConstructModuleMasterComponent,
     ConstructPartFillComponent,
@@ -33,7 +33,7 @@ import {
     SelectPartSettingsComponent,
     StringPartFillComponent,
 } from './components';
-import { CanActivateConstructCategoryGuard, CanActivateConstructGuard, ConstructCategoryTableLoaderService } from './providers';
+import { ConstructCategoryTableLoaderService } from './providers';
 import { CONSTRUCT_ROUTES } from './construct.routes';
 
 @NgModule({
@@ -41,12 +41,12 @@ import { CONSTRUCT_ROUTES } from './construct.routes';
         AssignConstructsToCategoryModalComponent,
         AssignConstructsToNodesModalComponent,
         BooleanPartFillComponent,
-        ConstructCategoryDetailComponent,
+        ConstructCategoryEditorComponent,
         ConstructCategoryMasterComponent,
         ConstructCategoryPropertiesComponent,
         ConstructCategorySortModal,
         ConstructCategoryTableComponent,
-        ConstructDetailComponent,
+        ConstructEditorComponent,
         ConstructMasterComponent,
         ConstructModuleMasterComponent,
         ConstructPartFillComponent,
@@ -70,9 +70,8 @@ import { CONSTRUCT_ROUTES } from './construct.routes';
         StringPartFillComponent,
     ],
     providers: [
-        CanActivateConstructGuard,
-        CanActivateConstructCategoryGuard,
         ConstructCategoryTableLoaderService,
+        provideRouter(CONSTRUCT_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

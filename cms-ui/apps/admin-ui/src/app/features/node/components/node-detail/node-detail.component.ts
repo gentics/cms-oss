@@ -6,6 +6,7 @@ import {
     FormGroupTabHandle,
     FormTabHandle,
     LanguageBO,
+    NodeDetailTabs,
     NULL_FORM_TAB_HANDLE,
     sortEntityRow,
     TableLoadEndEvent,
@@ -16,11 +17,12 @@ import {
     EditorTabTrackerService,
     FeatureOperations,
     FolderOperations,
+    LanguageHandlerService,
     LanguageTableLoaderService,
-    NodeTableLoaderService,
     NodeOperations,
-    ResolveBreadcrumbFn,
+    NodeTableLoaderService,
     PermissionsService,
+    ResolveBreadcrumbFn,
 } from '@admin-ui/core';
 import { FolderDataService, NodeDataService } from '@admin-ui/shared';
 import { BaseDetailComponent } from '@admin-ui/shared/components';
@@ -32,12 +34,11 @@ import {
     OnInit,
     Type,
 } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
+import { AbstractControl, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
     Feature,
     Folder,
-    Index,
     IndexById,
     Language,
     Node,
@@ -65,15 +66,6 @@ import { AssignLanguagesToNodeModal } from '../assign-languages-to-node-modal/as
 import { NodeFeaturesFormData } from '../node-features/node-features.component';
 import { NodePropertiesFormData } from '../node-properties/node-properties.component';
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
-import { AbstractControl } from '@angular/forms';
-
-export enum NodeDetailTabs {
-    properties = 'properties',
-    publishing = 'publishing',
-    nodeFeatures = 'nodeFeatures',
-    languages = 'languages',
-    packages = 'packages',
-}
 
 /**
  * # NodeDetailComponent
@@ -133,7 +125,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         return this.tabHandles[this.appState.now.ui.editorTab];
     }
 
-    private tabHandles: Index<NodeDetailTabs, FormTabHandle>;
+    private tabHandles: Record<NodeDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,
@@ -147,7 +139,8 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         private featureOperations: FeatureOperations,
         private folderOperations: FolderOperations,
         private editorTabTracker: EditorTabTrackerService,
-        private languageLoader: LanguageTableLoaderService,
+        private languageHandler: LanguageHandlerService,
+        private languageTableLoader: LanguageTableLoaderService,
         private modalService: ModalService,
         private nodeLoader: NodeTableLoaderService,
         private permissions: PermissionsService,
@@ -398,7 +391,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             detailLoading(this.appState),
             discard(() => {
                 // Force languages to reload
-                this.languageLoader.reload();
+                this.languageTableLoader.reload();
                 this.isLanguagesChanged = false;
                 this.changeDetectorRef.markForCheck();
             }),
@@ -425,8 +418,8 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             const languages = await dialog.open();
             if (Array.isArray(languages)) {
                 this.languageRows = languages
-                    .map(lang => this.languageLoader.mapToBusinessObject(lang))
-                    .map(bo => this.languageLoader.mapToTableRow(bo));
+                    .map(lang => this.languageHandler.mapToBusinessObject(lang))
+                    .map(bo => this.languageTableLoader.mapToTableRow(bo));
                 this.isLanguagesChanged = false;
                 this.changeDetectorRef.markForCheck();
             }
@@ -461,7 +454,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     /**
      * Set new value of form 'Node Features'
      */
-    private fgNodeFeaturesUpdate(features: IndexById<Partial<Index<NodeFeature, boolean>>>, availFeatures: NodeFeatureModel[]): void {
+    private fgNodeFeaturesUpdate(features: IndexById<Partial<Record<NodeFeature, boolean>>>, availFeatures: NodeFeatureModel[]): void {
         const nodeFeaturesGroup: any = {};
 
         availFeatures.forEach(feature => {
@@ -483,21 +476,21 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
         this.fgNodeFeaturesSaveDisabled$ = createFormSaveDisabledTracker(this.fgNodeFeatures);
 
         this.tabHandles = {
-            [NodeDetailTabs.properties]: new FormGroupTabHandle(this.fgProperties, {
+            [NodeDetailTabs.PROPERTIES]: new FormGroupTabHandle(this.fgProperties, {
                 save: () => this.updateNode().then(() => {}),
             }),
-            [NodeDetailTabs.publishing]: new FormGroupTabHandle(this.fgPublishing, {
+            [NodeDetailTabs.PUBLISHING]: new FormGroupTabHandle(this.fgPublishing, {
                 save: () => this.updatePublishing().then(() => {}),
             }),
-            [NodeDetailTabs.nodeFeatures]: new FormGroupTabHandle(this.fgNodeFeatures, {
+            [NodeDetailTabs.FEATURES]: new FormGroupTabHandle(this.fgNodeFeatures, {
                 save: () => this.updateNodeFeatures().then(() => {}),
             }),
-            [NodeDetailTabs.languages]: {
+            [NodeDetailTabs.LANGUAGES]: {
                 isDirty: () => this.isLanguagesChanged,
                 isValid: () => true,
                 save: () => this.updateLanguages().then(() => {}),
             },
-            [NodeDetailTabs.packages]: NULL_FORM_TAB_HANDLE,
+            [NodeDetailTabs.PACKAGES]: NULL_FORM_TAB_HANDLE,
         };
     }
 

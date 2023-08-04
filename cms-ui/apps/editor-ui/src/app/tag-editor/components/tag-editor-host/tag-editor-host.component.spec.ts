@@ -43,14 +43,6 @@ describe('TagEditorHostComponent', () => {
                 mockPipes('objTagName'),
             ],
         });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    CustomTagEditorHostComponent,
-                    GenticsTagEditorComponent,
-                ],
-            },
-        });
     });
 
     describe('editTag()', () => {
@@ -308,7 +300,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the TagEditor is actually displayed.
                 fixture.detectChanges();
                 tick();
-                let tagEditor = fixture.debugElement.query(By.directive(GenticsTagEditorComponent));
+                const tagEditor = fixture.debugElement.query(By.directive(GenticsTagEditorComponent));
                 expect(tagEditor).toBeTruthy();
 
                 testOnChangeFnCalls(tag, onChangeFn, reportedChangedStates);
@@ -342,7 +334,7 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the TagEditor is actually displayed.
                 fixture.detectChanges();
                 tick();
-                let tagEditor = fixture.debugElement.query(By.directive(CustomTagEditorHostComponent));
+                const tagEditor = fixture.debugElement.query(By.directive(CustomTagEditorHostComponent));
                 expect(tagEditor).toBeTruthy();
 
                 testOnChangeFnCalls(tag, onChangeFn, reportedChangedStates);
@@ -355,8 +347,8 @@ describe('TagEditorHostComponent', () => {
 @Component({
     template: `
         <tag-editor-host #tagEditorHost></tag-editor-host>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('tagEditorHost', { static: true })
     tagEditorHost: TagEditorHostComponent;

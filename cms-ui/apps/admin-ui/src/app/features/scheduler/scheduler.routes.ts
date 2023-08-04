@@ -1,13 +1,12 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import { ROUTE_DETAIL_OUTLET, ScheduleDetailTabs, ScheduleTaskDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/models/routing';
+import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
+import { inject } from '@angular/core';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
     ScheduleDetailComponent,
-    ScheduleDetailTabs,
-    SchedulerModuleMasterComponent,
     ScheduleTaskDetailComponent,
-    ScheduleTaskDetailTabs,
+    SchedulerModuleMasterComponent,
 } from './components';
 import { CanActivateScheduleGuard, CanActivateScheduleTaskGuard } from './providers';
 
@@ -17,8 +16,8 @@ export const SCHEDULER_ROUTES: GcmsAdminUiRoute[] = [
         component: SchedulerModuleMasterComponent,
     },
     {
-        path: 'schedule',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.SCHEDULE,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },
@@ -38,7 +37,7 @@ export const SCHEDULER_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateScheduleGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },
@@ -51,7 +50,7 @@ export const SCHEDULER_ROUTES: GcmsAdminUiRoute[] = [
         ],
     },
     {
-        path: 'task',
+        path: AdminUIEntityDetailRoutes.SCHEDULE_TASK,
         outlet: 'detail',
         data: {
             typePermissions: [],
@@ -72,7 +71,7 @@ export const SCHEDULER_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
                 canActivate: [CanActivateScheduleTaskGuard],
-                canDeactivate: [DiscardChangesGuard],
+                canDeactivate: [(routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent)],
                 resolve: {
                     breadcrumb: BreadcrumbResolver,
                 },

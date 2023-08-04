@@ -1,5 +1,4 @@
-import { DataSourceDataService } from '@admin-ui/shared';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSource, IndexById, Raw, SelectSetting } from '@gentics/cms-models';
@@ -14,32 +13,28 @@ import { Subscription } from 'rxjs';
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SelectPartSettingsComponent)],
 })
-export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnInit, OnDestroy {
+export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
 
+    @Input()
+    public dataSources: DataSource<Raw>[] = [];
     public dataSourceMap: IndexById<DataSource<Raw>> = {};
 
     private entriesSubscription: Subscription;
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private dataSourceData: DataSourceDataService,
         private api: GcmsApi,
     ) {
         super(changeDetector);
     }
 
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        this.subscriptions.push(this.dataSourceData.watchAllEntities().subscribe(dataSources => {
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.dataSources) {
             this.dataSourceMap = {};
-            dataSources.forEach((ds: any) => {
-                // the dataSource-data service converts the ids to strings.
-                // the select does strict checking however, so we have to convert them back to numbers
-                ds.id = Number(ds.id);
+            (this.dataSources || []).forEach(ds => {
                 this.dataSourceMap[ds.id] = ds;
             });
-        }));
+        }
     }
 
     ngOnDestroy(): void {

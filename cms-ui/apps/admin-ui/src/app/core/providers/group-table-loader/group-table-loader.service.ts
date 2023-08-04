@@ -1,4 +1,4 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, GroupBO, TableLoadOptions } from '@admin-ui/common';
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, GroupBO, TableLoadOptions, applyPermissions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Group, GroupListOptions, GroupListResponse, Raw } from '@gentics/cms-models';
@@ -64,7 +64,7 @@ export class GroupTableLoaderService extends BaseTableLoaderService<Group<Raw>, 
         return loader.pipe(
             map(response => {
                 const entities = response.items.map(group => this.mapToBusinessObject(group));
-                this.applyPermissions(entities, response);
+                applyPermissions(entities, response);
 
                 return {
                     entities,

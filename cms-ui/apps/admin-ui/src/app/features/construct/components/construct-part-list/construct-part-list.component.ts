@@ -1,3 +1,5 @@
+import { DataSourceHandlerService } from '@admin-ui/core';
+import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
     ChangeDetectionStrategy,
@@ -11,7 +13,7 @@ import {
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
 import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
-import { Language, Raw, TagPart } from '@gentics/cms-models';
+import { DataSource, Language, MarkupLanguage, Raw, TagPart } from '@gentics/cms-models';
 import { ModalService, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
 import { cloneDeep } from 'lodash-es';
@@ -89,21 +91,36 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     public displayItems: DisplayItem[] = [];
     public allCollapsed = true;
 
+    public markupLanguages: MarkupLanguage<Raw>[];
+    public dataSources: DataSource<Raw>[];
+
     protected internalParts: TagPart[] = [];
     protected clonedParts: TagPart[] = [];
 
     private disabled = false;
     private subscription: Subscription;
     private partSubscriptions: Subscription[] = [];
+    private otherSubscriptions: Subscription[] = [];
     private cvaChange: (value: any) => void;
     private cvaTouch: () => void;
 
     constructor(
         private changeDetector: ChangeDetectorRef,
         private modals: ModalService,
+        private dataSourceHandler: DataSourceHandlerService,
+        private markupLanguageData: MarkupLanguageDataService,
     ) { }
 
     ngOnInit(): void {
+        this.otherSubscriptions.push(this.markupLanguageData.watchAllEntities().subscribe(languages => {
+            this.markupLanguages = languages;
+            this.changeDetector.markForCheck();
+        }));
+        this.otherSubscriptions.push(this.dataSourceHandler.listMapped().subscribe(res => {
+            this.dataSources = res.items;
+            this.changeDetector.markForCheck();
+        }));
+
         this.form = new UntypedFormArray([], (ctl) => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             if ((ctl.value || []).find(value => value === CONTROL_INVALID_VALUE)) {
@@ -149,6 +166,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.partSubscriptions.forEach(s => s.unsubscribe());
             this.partSubscriptions = [];
         }
+        this.otherSubscriptions.forEach(s => s.unsubscribe());
     }
 
     writeValue(parts: any): void {

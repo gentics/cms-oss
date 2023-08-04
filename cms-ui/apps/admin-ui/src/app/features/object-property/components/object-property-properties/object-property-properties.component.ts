@@ -1,5 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { ConstructDataService, LanguageDataService, ObjectPropertyCategoryDataService } from '@admin-ui/shared';
+import { ConstructHandlerService, LanguageHandlerService, ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import {
     ChangeDetectionStrategy,
@@ -19,8 +19,9 @@ import {
     Normalized,
     ObjectPropertiesObjectType,
     ObjectPropertyBO,
-    ObjectPropertyCategoryBO,
+    ObjectPropertyCategory,
     Raw,
+    TagType,
     TagTypeBO,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
@@ -54,9 +55,9 @@ export class ObjectpropertyPropertiesComponent
     @Output()
     public isValidChange = new EventEmitter<boolean>();
 
-    public constructs$: Observable<TagTypeBO<Raw>[]>;
+    public constructs$: Observable<TagType<Raw>[]>;
     public languages$: Observable<Language[]>;
-    public objectPropertyCategories$: Observable<ObjectPropertyCategoryBO<Raw>[]>;
+    public objectPropertyCategories$: Observable<ObjectPropertyCategory<Raw>[]>;
 
     public multiChannelingEnabled = false;
     public objTagSyncEnabled = false;
@@ -92,9 +93,9 @@ export class ObjectpropertyPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private entityData: ConstructDataService,
-        private categoryData: ObjectPropertyCategoryDataService,
-        private languageData: LanguageDataService,
+        private constructHandler: ConstructHandlerService,
+        private categoryHandler: ObjectPropertyCategoryHandlerService,
+        private languageHandler: LanguageHandlerService,
         private appState: AppStateService,
     ) {
         super(changeDetector);
@@ -103,14 +104,13 @@ export class ObjectpropertyPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.constructs$ = this.entityData.watchAllEntities().pipe(
-            map(constructs => constructs.map(con => ({
-                ...con,
-                id: Number(con.id),
-            }))),
-        ) as any;
-        this.objectPropertyCategories$ = this.categoryData.watchAllEntities();
-        this.languages$ = this.languageData.watchSupportedLanguages();
+        this.constructs$ = this.constructHandler.listMapped().pipe(
+            map(res => res.items),
+        );
+        this.objectPropertyCategories$ = this.categoryHandler.listMapped().pipe(
+            map(res => res.items),
+        );
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;

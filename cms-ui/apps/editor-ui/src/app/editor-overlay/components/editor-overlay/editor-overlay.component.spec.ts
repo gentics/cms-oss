@@ -1,6 +1,5 @@
 import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ActivatedRoute } from '@angular/router';
 import { GenticsUIImageEditorModule } from '@gentics/image-editor';
 import { GenticsUICoreModule, IModalInstance } from '@gentics/ui-core';
@@ -18,8 +17,8 @@ import { EditorOverlay } from './editor-overlay.component';
     template: `
     <editor-overlay #editor></editor-overlay>
     <gtx-overlay-host></gtx-overlay-host>
-  `
-    })
+  `,
+})
 class TestComponent {
     @ViewChild('editor', { static: true })
     editor: EditorOverlay;
@@ -32,8 +31,7 @@ const PARENTFOLDER_ID = 2;
 const SUBFOLDER_ID = 3;
 const ITEM_NODE = 11;
 const DIFFERENT_NODE = 22;
-
-const mockNodeName = 'MockNode';
+const MOCK_NODE_NAME = 'MockNode';
 
 describe('EditorOverlayComponent', () => {
     let component: TestComponent;
@@ -60,12 +58,6 @@ describe('EditorOverlayComponent', () => {
                 { provide: EntityResolver, useClass: MockEntityResolver },
                 { provide: NodeSettingsActionsService, useClass: MockNodeSettingsActions },
             ],
-        });
-
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [ImageEditorModalComponent],
-            },
         });
 
         TestBed.compileComponents();
@@ -149,7 +141,7 @@ class MockNavigationService {
 
 class MockEntityResolver {
     getNode(): any {
-        return {name: mockNodeName};
+        return {name: MOCK_NODE_NAME};
     }
     getEntity(): any {
         return {
@@ -167,11 +159,11 @@ class MockEntityResolver {
             channelId: 0,
             inherited: false,
             liveUrl: '',
-            inheritedFrom: mockNodeName,
+            inheritedFrom: MOCK_NODE_NAME,
             inheritedFromId: ITEM_NODE,
-            masterNode: mockNodeName,
+            masterNode: MOCK_NODE_NAME,
             masterNodeId: ITEM_NODE,
-            path: `/${mockNodeName}/[Media]/[Images]/`,
+            path: `/${MOCK_NODE_NAME}/[Media]/[Images]/`,
             forceOnline: false,
             online: true,
             broken: false,

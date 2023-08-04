@@ -1,6 +1,6 @@
 import { AdminUIModuleRoutes } from '@admin-ui/common';
 import { AuthOperations, PermissionsService } from '@admin-ui/core';
-import { AppStateService, CloseEditor } from '@admin-ui/state';
+import { AppStateService, CloseEditor, SetUIFocusEntity } from '@admin-ui/state';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AccessControlledType, Feature, GcmsPermission } from '@gentics/cms-models';
@@ -46,6 +46,9 @@ export class DashboardComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        // In case that any item is still focused, we need to clear it
+        this.appState.dispatch(new SetUIFocusEntity(null, null, null));
+
         this.contentRepositoriesModuleEnabled$ = this.permissions.checkPermissions({
             type: AccessControlledType.CONTENT_ADMIN,
             permissions: GcmsPermission.READ,
@@ -131,7 +134,7 @@ export class DashboardComponent implements OnInit {
     onLogoutClick(): void {
         this.authOps.logout(this.appState.now.auth.sid)
             .then(() => {
-                this.router.navigate(['/login']);
+                this.router.navigate([`/${AdminUIModuleRoutes.LOGIN}`]);
             });
     }
 

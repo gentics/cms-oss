@@ -1,13 +1,13 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, DevToolPackageBO, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { DevToolPackageBO, EntityList, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Package, PackageListResponse } from '@gentics/cms-models';
+import { Package } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseTableLoaderService } from '../base-table-loader/base-table-loader.service';
+import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 import { EntityManagerService } from '../entity-manager/entity-manager.service';
-import { PackageOperations } from '../operations/package/package.operations';
 
 export interface DevToolPackageTableLoaderOptions {
     nodeId?: number;
@@ -20,7 +20,7 @@ export class DevToolPackageTableLoaderService extends BaseTableLoaderService<Pac
         entityManager: EntityManagerService,
         appState: AppStateService,
         protected api: GcmsApi,
-        protected operations: PackageOperations,
+        protected handler: DevToolPackageHandlerService,
     ) {
         super('package', entityManager, appState);
     }
@@ -30,7 +30,7 @@ export class DevToolPackageTableLoaderService extends BaseTableLoaderService<Pac
     }
 
     public deleteEntity(entityId: string): Promise<void> {
-        return this.operations.removePackage(entityId).toPromise();
+        return this.handler.delete(entityId).toPromise();
     }
 
     protected loadEntities(
@@ -38,32 +38,21 @@ export class DevToolPackageTableLoaderService extends BaseTableLoaderService<Pac
         additionalOptions?: DevToolPackageTableLoaderOptions,
     ): Observable<EntityPageResponse<DevToolPackageBO>> {
         const loadOptions = this.createDefaultOptions(options);
-        let loader: Observable<PackageListResponse>;
+        let loader: Observable<EntityList<DevToolPackageBO>>;
 
         if (additionalOptions?.nodeId) {
-            loader = this.api.devTools.getPackagesOfNode(additionalOptions.nodeId, loadOptions);
+            loader = this.handler.listFromNodeMapped(additionalOptions.nodeId, null as never, loadOptions);
         } else {
-            loader = this.api.devTools.getPackages(loadOptions);
+            loader = this.handler.listMapped(null as never, loadOptions);
         }
 
         return loader.pipe(
             map(response => {
-                const entities = response.items.map(pkg => this.mapToBusinessObject(pkg));
-
                 return {
-                    entities,
-                    totalCount: response.numItems,
+                    entities: response.items,
+                    totalCount: response.totalItems,
                 };
             }),
         );
-    }
-
-    public mapToBusinessObject(pkg: Package): DevToolPackageBO {
-        return {
-            ...pkg,
-            [BO_ID]: pkg.name,
-            [BO_PERMISSIONS]: [],
-            [BO_DISPLAY_NAME]: pkg.name,
-        };
     }
 }

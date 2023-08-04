@@ -1,4 +1,5 @@
 import {
+    ContentRepositoryHandlerService,
     EntityManagerService,
     ErrorHandler,
     GroupOperations,
@@ -28,7 +29,7 @@ import { OPTIONS_CONFIG } from '../../../state/state-store.config';
 import { STATE_MODULES } from '../../../state/state.module';
 import { TestAppState } from '../../../state/utils/test-app-state/test-app-state.mock';
 import { ActionAllowedDirective } from '../../directives';
-import { ContentRepositoryDataService, GroupDataService, GroupUserDataService, NodeDataService, NotificationService, WizardService } from '../../providers';
+import { GroupDataService, GroupUserDataService, NodeDataService, NotificationService, WizardService } from '../../providers';
 import { BooleanIconComponent } from '../boolean-icon/boolean-icon.component';
 import { IconComponent } from '../icon/icon.component';
 import { NodeTableComponent } from '../node-table/node-table.component';
@@ -47,10 +48,6 @@ const MOCK_USER_RESTRICTIONS = [
 ];
 
 class MockActivatedRoute {}
-
-class MockContentRepositoryDataService {
-    ensureEntitiesLoaded = jasmine.createSpy('ensureEntitiesLoaded').and.callFake(() => createDelayedObservable(true));
-}
 
 class MockErrorHandler {}
 
@@ -123,7 +120,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
             providers: [
                 { provide: ActivatedRoute, useClass: MockActivatedRoute },
                 { provide: AppStateService, useClass: TestAppState },
-                { provide: ContentRepositoryDataService, useClass: MockContentRepositoryDataService },
+                ContentRepositoryHandlerService,
                 { provide: EntityManagerService, useClass: MockEntityManagerService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 GroupDataService,
@@ -154,7 +151,7 @@ xdescribe('AssignNodeRestrictionsToUsersModalComponent', () => {
 
     it('should return the right data after calling buttonAssignNodeRestrictonsClicked()',
         componentTest(() => TestComponent, (fixture, instance) => {
-            let groupUserDataSpy = spyOn(groupUserData, 'changeUserNodeRestrictions').and.returnValue(
+            const groupUserDataSpy = spyOn(groupUserData, 'changeUserNodeRestrictions').and.returnValue(
                 of(MOCK_USER_RESTRICTIONS) as any,
             );
 

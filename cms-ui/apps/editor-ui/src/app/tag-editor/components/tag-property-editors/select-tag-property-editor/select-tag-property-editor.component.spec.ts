@@ -1,8 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { SelectOption, SelectTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
@@ -42,13 +41,6 @@ describe('SelectTagPropertyEditorComponent', () => {
                 SelectTagPropertyEditor,
                 ValidationErrorInfo,
             ],
-        });
-        TestBed.overrideModule(BrowserDynamicTestingModule, {
-            set: {
-                entryComponents: [
-                    SelectTagPropertyEditor,
-                ],
-            },
         });
     });
 
@@ -266,7 +258,7 @@ describe('SelectTagPropertyEditorComponent', () => {
 
             const dropdownContent = fixture.debugElement.query(By.directive(DropdownContentWrapperComponent));
 
-            let selectOption = dropdownContent.queryAll(By.css('.select-option'))[2].nativeElement;
+            const selectOption = dropdownContent.queryAll(By.css('.select-option'))[2].nativeElement;
 
             selectOption.click();
             fixture.detectChanges();
@@ -477,7 +469,7 @@ function getMockedMultipleTag(): EditableTag {
         <gtx-overlay-host></gtx-overlay-host>
         <tag-property-editor-host #tagPropEditorHost [tagPart]="tagPart"></tag-property-editor-host>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('tagPropEditorHost', { static: true })
     tagPropEditorHost: TagPropertyEditorHostComponent;

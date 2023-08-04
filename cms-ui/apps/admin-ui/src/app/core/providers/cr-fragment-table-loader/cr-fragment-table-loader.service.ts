@@ -67,4 +67,12 @@ export class CRFragmentTableLoaderService
             [BO_DISPLAY_NAME]: fragment.name,
         };
     }
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.addToDevTool(devToolPackage, entityId);
+    }
+
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void> {
+        return this.operations.removeFromDevTool(devToolPackage, entityId);
+    }
 }

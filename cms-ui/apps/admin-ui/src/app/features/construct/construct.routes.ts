@@ -1,92 +1,61 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import {
+    AdminUIEntityDetailRoutes,
+    ConstructCategoryDetailTabs,
+    ConstructDetailTabs,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_PERMISSIONS_KEY,
+    createEntityEditorRoutes,
+} from '@admin-ui/common';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import {
-    ConstructCategoryDetailComponent,
-    ConstructDetailComponent,
-    ConstructDetailTabs,
+    ConstructCategoryEditorComponent,
+    ConstructEditorComponent,
     ConstructModuleMasterComponent,
 } from './components';
-import { CanActivateConstructCategoryGuard, CanActivateConstructGuard } from './providers';
 
 export const CONSTRUCT_ROUTES: GcmsAdminUiRoute[] = [
-    // {
-    //     path: `:${MASTER_TAB_ID}`,
-    //     component: ConstructMasterComponent,
-    //     data: {
-    //         typePermissions: [],
-    //     },
-    // },
-    // {
-    //     path: '',
-    //     redirectTo: ConstructModuleTabs.CONSTRUCTS,
-    //     pathMatch: 'full',
-    // },
     {
         path: '',
         component: ConstructModuleMasterComponent,
     },
     {
-        path: 'construct-category',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.CONSTRUCT_CATEGORY,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: ':id',
-                component: ConstructCategoryDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.CONSTRUCT_ADMIN,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateConstructCategoryGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
+            ...createEntityEditorRoutes(EditableEntity.CONSTRUCT_CATEGORY, ConstructCategoryEditorComponent, ConstructCategoryDetailTabs.PROPERTIES, {
+                [ROUTE_PERMISSIONS_KEY]: [
+                    {
+                        type: AccessControlledType.CONSTRUCT_ADMIN,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
     {
-        path: 'construct',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.CONSTRUCT,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
-            typePermissions: [],
+            [ROUTE_PERMISSIONS_KEY]: [],
         },
         children: [
-            {
-                path: `:id/:${EDITOR_TAB}`,
-                component: ConstructDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.CONSTRUCT_ADMIN,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateConstructGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
-            // Default the tab to properties
-            {
-                path: ':id',
-                redirectTo: `:id/${ConstructDetailTabs.PROPERTIES}`,
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.CONSTRUCT, ConstructEditorComponent, ConstructDetailTabs.PROPERTIES, {
+                [ROUTE_PERMISSIONS_KEY]: [
+                    {
+                        type: AccessControlledType.CONSTRUCT_ADMIN,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
 ];

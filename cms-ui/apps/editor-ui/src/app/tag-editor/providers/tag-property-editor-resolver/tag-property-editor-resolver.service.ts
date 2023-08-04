@@ -6,7 +6,6 @@ import { DataSourceTagPropertyEditor } from '../../components/tag-property-edito
 import { FileOrImageUrlTagPropertyEditor } from '../../components/tag-property-editors/file-or-image-url-tag-property-editor/file-or-image-url-tag-property-editor.component';
 import { FolderUrlTagPropertyEditor } from '../../components/tag-property-editors/folder-url-tag-property-editor/folder-url-tag-property-editor.component';
 import { FormTagPropertyEditorComponent } from '../../components/tag-property-editors/form-tag-property-editor/form-tag-property-editor.component';
-import { FormlistTagPropertyEditor } from '../../components/tag-property-editors/formlist-tag-property-editor/formlist-tag-property-editor.component';
 import { ListTagPropertyEditor } from '../../components/tag-property-editors/list-tag-property-editor/list-tag-property-editor.component';
 import { NodeSelectorTagPropertyEditor } from '../../components/tag-property-editors/node-selector-tag-property-editor/node-selector-tag-property-editor.component';
 import { OverviewTagPropertyEditor } from '../../components/tag-property-editors/overview-tag-property-editor/overview-tag-property-editor.component';
@@ -41,7 +40,6 @@ DEFAULT_EDITORS.set(TagPartType.UrlPage, PageUrlTagPropertyEditor);
 
 DEFAULT_EDITORS.set(TagPartType.SelectMultiple, SelectTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.SelectSingle, SelectTagPropertyEditor);
-DEFAULT_EDITORS.set(TagPartType.FormList, FormlistTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.Form, FormTagPropertyEditorComponent);
 
 DEFAULT_EDITORS.set(TagPartType.TagPage, TagRefTagPropertyEditor);

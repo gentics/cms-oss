@@ -1,11 +1,10 @@
-import { ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
 import {
-    ContentRepositoryOperations,
+    ContentRepositoryHandlerService,
     ContentRepositoryTableLoaderOptions,
     ContentRepositoryTableLoaderService,
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
@@ -17,11 +16,11 @@ import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import {
-    AssignCRFragmentsToContentRepositoryModal,
-} from '../assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
-import {
     AssignContentrepositoriesToNodesModalComponent,
 } from '../assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
+import {
+    AssignCRFragmentsToContentRepositoryModal,
+} from '../assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BasePackageEntityTableComponent, UNASSIGN_FROM_PACKAGE_ACTION } from '../base-package-entity-table/base-package-entity-table.component';
 
@@ -42,12 +41,13 @@ export interface OpenCRDetailEvent {
     templateUrl: './content-repository-table.component.html',
     styleUrls: ['./content-repository-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ContentRepositoryTableComponent
     extends BasePackageEntityTableComponent<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>
     implements OnChanges {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public linkDetails = false;
@@ -106,21 +106,19 @@ export class ContentRepositoryTableComponent
         loader: ContentRepositoryTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected router: Router,
         protected route: ActivatedRoute,
         protected permissions: PermissionsService,
-        protected operations: ContentRepositoryOperations,
+        protected handler: ContentRepositoryHandlerService,
     ) {
         super(
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }
@@ -227,25 +225,25 @@ export class ContentRepositoryTableComponent
                 return;
 
             case DATA_CHECK_ACTION:
-                this.operations.checkData(event.item.id).toPromise().then(() => {
+                this.handler.checkData(event.item.id).toPromise().then(() => {
                     this.reload();
                 });
                 return;
 
             case DATA_REPAIR_ACTION:
-                this.operations.repairData(event.item.id).toPromise().then(() => {
+                this.handler.repairData(event.item.id).toPromise().then(() => {
                     this.reload();
                 });
                 return;
 
             case STRUCTURE_CHECK_ACTION:
-                this.operations.checkStructure(event.item.id).toPromise().then(() => {
+                this.handler.checkStructure(event.item.id).toPromise().then(() => {
                     this.reload();
                 });
                 return;
 
             case STRUCTURE_REPAIR_ACTION:
-                this.operations.repairStructure(event.item.id).toPromise().then(() => {
+                this.handler.repairStructure(event.item.id).toPromise().then(() => {
                     this.reload();
                 });
                 return;

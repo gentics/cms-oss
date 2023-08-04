@@ -5,7 +5,7 @@
     "admin-ui": {
       "projectType": "application",
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "style": "scss",
           "styleext": "scss"
         }
@@ -130,7 +130,7 @@
     "ct-link-checker": {
       "projectType": "application",
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "style": "scss"
         }
       },
@@ -252,7 +252,7 @@
     "editor-ui": {
       "projectType": "application",
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "style": "scss"
         }
       },
@@ -378,7 +378,7 @@
     "image-editor-demo": {
       "projectType": "application",
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "style": "scss"
         }
       },
@@ -465,7 +465,7 @@
     "ui-core-docs": {
       "projectType": "application",
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "style": "scss"
         }
       },
@@ -493,10 +493,7 @@
             "assets": ["apps/ui-core-docs/src/assets"],
             "styles": ["apps/ui-core-docs/src/styles.scss"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "libs",
-                "node_modules"
-              ]
+              "includePaths": ["libs", "node_modules"]
             }
           },
           "defaultConfiguration": "development",
@@ -583,7 +580,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }
@@ -611,7 +608,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }
@@ -639,7 +636,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }
@@ -675,7 +672,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }
@@ -707,7 +704,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }
@@ -742,7 +739,7 @@
         }
       },
       "schematics": {
-        "@nrwl/angular:component": {
+        "@nx/angular:component": {
           "styleext": "scss"
         }
       }

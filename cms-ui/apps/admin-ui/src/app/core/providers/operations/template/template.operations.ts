@@ -1,4 +1,18 @@
-import { applyInstancePermissions, discard, PackageEntityOperations } from '@admin-ui/common';
+import {
+    applyInstancePermissions,
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
+    discard,
+    EditableEntity,
+    EditableEntityBusinessObjects,
+    EntityList,
+    PackageEntityOperations,
+} from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
 import {
@@ -28,7 +42,8 @@ import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 @Injectable()
 export class TemplateOperations
     extends ExtendedEntityOperationsBase<'template'>
-    implements PackageEntityOperations<TemplateBO<Raw>>
+    implements PackageEntityOperations<TemplateBO<Raw>>,
+        DevToolEntityHandler<EditableEntity.TEMPLATE>
 {
 
     constructor(
@@ -208,6 +223,78 @@ export class TemplateOperations
     hasDeletePermission(templateId: EntityIdType): Observable<boolean> {
         return this.api.permissions.getTemplateDeletePermissions(templateId).pipe(
             map(res => res.granted),
+        );
+    }
+
+    addToDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.template[entityId];
+
+        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'template.template_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.template[entityId];
+
+        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'template.template_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.TEMPLATE>,
+        params?: DevToolEntityListRequestParams<EditableEntity.TEMPLATE>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.TEMPLATE>> {
+        return this.api.devTools.getTemplates(devtoolPackage, params).pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevToolMapped(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.TEMPLATE>,
+        params?: DevToolEntityListRequestParams<EditableEntity.TEMPLATE>,
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.TEMPLATE]>> {
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
+            map(res => {
+                const items = res.items.map(item => ({
+                    ...item,
+                    [BO_ID]: String(item.id),
+                    [BO_PERMISSIONS]: [],
+                    [BO_DISPLAY_NAME]: item.name,
+                }));
+
+                return {
+                    items,
+                    totalItems: res.numItems,
+                };
+            }),
         );
     }
 

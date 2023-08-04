@@ -1,9 +1,13 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
-import { BreadcrumbResolver, EDITOR_TAB } from '@admin-ui/core';
-import { DiscardChangesGuard } from '@admin-ui/core/providers/guards/discard-changes';
+import {
+    AdminUIEntityDetailRoutes,
+    ContentRepositoryDetailTabs,
+    EditableEntity,
+    GcmsAdminUiRoute,
+    ROUTE_DETAIL_OUTLET,
+    createEntityEditorRoutes,
+} from '@admin-ui/common';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
-import { ContentRepositoryDetailComponent, ContentRepositoryMasterComponent } from './components';
-import { CanActivateContentRepositoryGuard } from './providers';
+import { ContentRepositoryEditorComponent, ContentRepositoryMasterComponent } from './components';
 
 export const CONTENT_REPOSIROTY_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -11,36 +15,22 @@ export const CONTENT_REPOSIROTY_ROUTES: GcmsAdminUiRoute[] = [
         component: ContentRepositoryMasterComponent,
     },
     {
-        path: 'content-repository',
-        outlet: 'detail',
+        path: AdminUIEntityDetailRoutes.CONTENT_REPOSITORY,
+        outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],
         },
         children: [
-            {
-                path: `:id/:${EDITOR_TAB}`,
-                component: ContentRepositoryDetailComponent,
-                data: {
-                    typePermissions: [
-                        {
-                            type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
-                            permissions: [
-                                GcmsPermission.READ,
-                            ],
-                        },
-                    ],
-                },
-                canActivate: [CanActivateContentRepositoryGuard],
-                canDeactivate: [DiscardChangesGuard],
-                resolve: {
-                    breadcrumb: BreadcrumbResolver,
-                },
-            },
-            {
-                path: ':id',
-                redirectTo: ':id/properties',
-                pathMatch: 'full',
-            },
+            ...createEntityEditorRoutes(EditableEntity.CONTENT_REPOSITORY, ContentRepositoryEditorComponent, ContentRepositoryDetailTabs.PROPERTIES, {
+                typePermissions: [
+                    {
+                        type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+                        permissions: [
+                            GcmsPermission.READ,
+                        ],
+                    },
+                ],
+            }),
         ],
     },
 ];

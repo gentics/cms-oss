@@ -27,17 +27,17 @@ export class LanguageApi {
     }
 
     /** Load the language with given id */
-    getLanguage(id: number): Observable<LanguageResponse> {
+    getLanguage(id: number | string): Observable<LanguageResponse> {
         return this.apiBase.get(`language/${id}`);
     }
 
     /** Delete the language with given id */
-    deleteLanguage(id: number): Observable<void> {
+    deleteLanguage(id: number | string): Observable<void> {
         return this.apiBase.delete(`language/${id}`);
     }
 
     /** Update the language with given id */
-    updateLanguage(id: number, language: LanguageUpdateRequest): Observable<LanguageResponse> {
+    updateLanguage(id: number | string, language: LanguageUpdateRequest): Observable<LanguageResponse> {
         return this.apiBase.put(`language/${id}`, language);
     }
 }

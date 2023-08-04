@@ -2,15 +2,12 @@ import {
     blacklistValidator,
     createI18nRequiredValidator,
 } from '@admin-ui/common';
-import { DataSourceDataService, MarkupLanguageDataService } from '@admin-ui/shared';
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
     OnChanges,
-    OnInit,
     Output,
     SimpleChange,
 } from '@angular/core';
@@ -22,7 +19,7 @@ import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlVali
 import {
     AnyModelType,
     CmsI18nValue,
-    DataSourceBO,
+    DataSource,
     Language,
     MarkupLanguage,
     Normalized,
@@ -37,7 +34,6 @@ import {
     TagPartValidatorId,
 } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
 
 export interface TagPartPropertiesFormData {
     /** Part keyword */
@@ -115,7 +111,7 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.TextCustomForm,
     TagPartType.FileUpload,
     TagPartType.FolderUpload,
-    TagPartType.FormList,
+    TagPartType.Form,
 ];
 
 /**
@@ -133,15 +129,12 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
 })
 export class ConstructPartPropertiesComponent
     extends BasePropertiesComponent<TagPart>
-    implements OnInit, OnChanges {
+    implements OnChanges {
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
     public readonly REMOVED_CONSTRUCT_PART_TYPES = REMOVED_CONSTRUCT_PART_TYPES;
-    // tslint:disable-next-line: variable-name
     public readonly TagPartTypePropertyType = TagPartTypePropertyType;
-    // tslint:disable-next-line: variable-name
     public readonly ConstructPartPropertiesComponentMode = ConstructPartPropertiesMode;
-    // tslint:disable-next-line: variable-name
     public readonly TagPartValidatorConfigs = TagPartValidatorConfigs;
 
     @Input()
@@ -149,6 +142,12 @@ export class ConstructPartPropertiesComponent
 
     @Input()
     public supportedLanguages: Language[];
+
+    @Input()
+    public markupLanguages: MarkupLanguage<Raw>[] = [];
+
+    @Input()
+    public dataSources: DataSource<Raw>[] = [];
 
     @Input()
     public keywordBlacklist: string[];
@@ -159,32 +158,10 @@ export class ConstructPartPropertiesComponent
     @Output()
     public isValidChange = new EventEmitter<boolean>();
 
-    /** entity relation */
-    public markupLanguages$: Observable<MarkupLanguage<Raw>[]>
-
-    /** entity relation */
-    public dataSources$: Observable<DataSourceBO<Raw>[]>
-
     public activeTabI18nLanguage: Language;
     public invalidLanguages: string[] = [];
 
     protected override delayedSetup = true;
-
-    constructor(
-        changeDetector: ChangeDetectorRef,
-        private dataSourceDataService: DataSourceDataService,
-        private markupLanguageData: MarkupLanguageDataService,
-    ) {
-        super(changeDetector);
-    }
-
-    ngOnInit(): void {
-        super.ngOnInit();
-
-        // fetch dependencies
-        this.markupLanguages$ = this.markupLanguageData.watchAllEntities();
-        this.dataSources$ = this.dataSourceDataService.watchAllEntities();
-    }
 
     ngOnChanges(changes: Record<keyof ConstructPartPropertiesComponent, SimpleChange>): void {
         super.ngOnChanges(changes);

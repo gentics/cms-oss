@@ -1,18 +1,50 @@
-import { ObservableStopper } from '@admin-ui/common';
-import {
-    ConstructOperations,
-    ContentRepositoryFragmentOperations,
-    ContentRepositoryOperations,
-    DataSourceOperations,
-    ObjectPropertyOperations,
-    PackageOperations,
-    TemplateOperations,
-} from '@admin-ui/core';
+import { EditableEntity, ObservableStopper } from '@admin-ui/common';
+import { DevToolPackageManagerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { NormalizableEntityType } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+
+function entityIdentifierToEditableEntity(identifier: NormalizableEntityType): EditableEntity {
+    switch (identifier) {
+        case 'construct':
+            return EditableEntity.CONSTRUCT;
+        case 'constructCategory':
+            return EditableEntity.CONSTRUCT_CATEGORY;
+        case 'contentPackage':
+            return EditableEntity.CONTENT_PACKAGE;
+        case 'contentRepository':
+            return EditableEntity.CONTENT_REPOSITORY;
+        case 'contentRepositoryFragment':
+            return EditableEntity.CR_FRAGMENT;
+        case 'dataSource':
+            return EditableEntity.DATA_SOURCE;
+        case 'folder':
+            return EditableEntity.FOLDER;
+        case 'language':
+            return EditableEntity.LANGUAGE;
+        case 'node':
+            return EditableEntity.NODE;
+        case 'objectProperty':
+            return EditableEntity.OBJECT_PROPERTY;
+        case 'objectPropertyCategory':
+            return EditableEntity.OBJECT_PROPERTY_CATEGORY;
+        case 'role':
+            return EditableEntity.ROLE;
+        case 'schedule':
+            return EditableEntity.SCHEDULE;
+        case 'scheduleTask':
+            return EditableEntity.SCHEDULE_TASK;
+        case 'package':
+            return EditableEntity.DEV_TOOL_PACKAGE;
+        case 'template':
+            return EditableEntity.TEMPLATE;
+        case 'user':
+            return EditableEntity.USER;
+        default:
+            return null;
+    }
+}
 
 @Component({
     selector: 'gtx-assign-entity-to-package-modal',
@@ -35,53 +67,13 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
     private stopper = new ObservableStopper();
 
     constructor(
-        private packageOperations: PackageOperations,
-        private constructOperations: ConstructOperations,
-        private crOperations: ContentRepositoryOperations,
-        private crFragmentOperations: ContentRepositoryFragmentOperations,
-        private dataSourceOperations: DataSourceOperations,
-        private objectPropertyOperations: ObjectPropertyOperations,
-        private templateOperations: TemplateOperations,
+        private manager: DevToolPackageManagerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        switch (this.entityIdentifier) {
-            case 'construct':
-                this.packageChildEntityIds$ = this.constructOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => entity.id)),
-                );
-                break;
-            case 'contentRepository':
-                this.packageChildEntityIds$ = this.crOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => String(entity.id))),
-                );
-                break;
-            case 'contentRepositoryFragment':
-                this.packageChildEntityIds$ = this.crFragmentOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => String(entity.id))),
-                );
-                break;
-            case 'dataSource':
-                this.packageChildEntityIds$ = this.dataSourceOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => String(entity.id))),
-                );
-                break;
-            case 'objectProperty':
-                this.packageChildEntityIds$ = this.objectPropertyOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => entity.id)),
-                );
-                break;
-            case 'template':
-                this.packageChildEntityIds$ = this.templateOperations.getAllFromPackage(this.packageId).pipe(
-                    map(entities => entities.map(entity => entity.id)),
-                );
-                break;
-
-            default:
-                break;
-        }
+        this.packageChildEntityIds$ = this.manager.getSelectedEntityIds(this.packageId, entityIdentifierToEditableEntity(this.entityIdentifier));
 
         this.packageChildEntityIds$.toPromise().then(ids => {
             this.packageChildEntitySelectedIdsInitial = ids;
@@ -106,46 +98,12 @@ export class AssignEntityToPackageModalComponent extends BaseModal<void> impleme
             .then(() => this.closeFn());
     }
 
-    private changeConstructsOfPackage(): Promise<void> {
-        switch (this.entityIdentifier) {
-            case 'construct':
-                return this.packageOperations.changeConstructOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            case 'contentRepository':
-                return this.packageOperations.changeContentRepositoryOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            case 'contentRepositoryFragment':
-                return this.packageOperations.changeContentRepositoryFragmentOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            case 'dataSource':
-                return this.packageOperations.changeDataSourceOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            case 'objectProperty':
-                return this.packageOperations.changeObjectPropertyOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            case 'template':
-                return this.packageOperations.changeTemplateOfPackage(
-                    this.packageId,
-                    this.packageChildEntitySelectedIdsCurrent,
-                    this.packageChildEntitySelectedIdsInitial,
-                ).toPromise();
-            default:
-                throw new Error(`Unknown entityIdentifier: ${this.entityIdentifier}`);
-        }
+    private changeConstructsOfPackage(): Promise<boolean> {
+        return this.manager.manageSelection(
+            this.packageId,
+            entityIdentifierToEditableEntity(this.entityIdentifier),
+            this.packageChildEntitySelectedIdsInitial,
+            this.packageChildEntitySelectedIdsCurrent,
+        ).toPromise();
     }
 }

@@ -1,4 +1,4 @@
-import { createMoveActions, LanguageBO } from '@admin-ui/common';
+import { createMoveActions, EditableEntity, LanguageBO } from '@admin-ui/common';
 import { I18nService, LanguageLoaderOptions, LanguageTableLoaderService, PermissionsService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
@@ -8,7 +8,6 @@ import { combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { DELETE_ACTION } from '../base-entity-table/base-entity-table.component';
 import { BaseSortableEntityTableComponent } from '../base-sortable-entity-table/base-sortable-entity-table.component';
-import { CreateLanguageModalComponent } from '../create-language-modal/create-language-modal.component';
 
 @Component({
     selector: 'gtx-language-table',
@@ -41,6 +40,7 @@ export class LanguageTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'language';
+    protected focusEntityType = EditableEntity.LANGUAGE;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -99,20 +99,6 @@ export class LanguageTableComponent
         return {
             nodeId: this.nodeId,
         };
-    }
-
-    async handleCreateButton(): Promise<void> {
-        const dialog = await this.modalService.fromComponent(
-            CreateLanguageModalComponent,
-            { closeOnOverlayClick: false, width: '50%' },
-        );
-        const created = await dialog.open();
-
-        if (!created) {
-            return;
-        }
-
-        this.loader.reload();
     }
 
     handleNodeLanguageAssignment(): void {

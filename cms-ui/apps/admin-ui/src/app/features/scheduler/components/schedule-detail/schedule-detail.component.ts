@@ -1,4 +1,4 @@
-import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission } from '@admin-ui/common';
+import { createFormSaveDisabledTracker, FormTabHandle, hasInstancePermission, ScheduleDetailTabs } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, EditorTabTrackerService, ResolveBreadcrumbFn, ScheduleOperations } from '@admin-ui/core';
 import { BaseDetailComponent, ScheduleDataService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -6,18 +6,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } f
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { createNestedControlValidator } from '@gentics/cms-components';
-import { Index, NormalizableEntityType, Raw, ScheduleBO, SingleInstancePermissionType } from '@gentics/cms-models';
+import { NormalizableEntityType, Raw, ScheduleBO, SingleInstancePermissionType } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of } from 'rxjs';
 import { delay, distinctUntilChanged, filter, map, repeat, takeUntil } from 'rxjs/operators';
-import { SchedulePropertiesMode } from '../schedule-properties/schedule-properties.component';
 import { ScheduleTableLoaderService } from '../../providers';
-
-export enum ScheduleDetailTabs {
-    PROPERTIES = 'properties',
-    EXECUTIONS = 'executions',
-}
+import { SchedulePropertiesMode } from '../schedule-properties/schedule-properties.component';
 
 @Component({
     selector: 'gtx-schedule-detail',
@@ -45,7 +40,7 @@ export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', Sch
     activeTabId$: Observable<string>;
     activeExecId$: Observable<number>;
 
-    private tabHandles: Index<ScheduleDetailTabs, FormTabHandle>;
+    private tabHandles: Record<ScheduleDetailTabs, FormTabHandle>;
 
     constructor(
         logger: NGXLogger,

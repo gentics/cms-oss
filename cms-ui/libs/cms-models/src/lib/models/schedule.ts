@@ -59,6 +59,9 @@ export interface Schedule<T extends ModelType = DefaultModelType> extends BaseSc
     id: number;
 }
 
+/**
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface ScheduleBO<T extends ModelType = DefaultModelType> extends BaseSchedule<T>, InstancePermissionItem {
     /** ID of the Schedule, but as string */
     id: string;

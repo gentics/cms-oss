@@ -1,13 +1,10 @@
-import { AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, BO_PERMISSIONS, ConstructBO, EditableEntity } from '@admin-ui/common';
 import {
-    ConstructOperations,
     ConstructTableLoaderOptions,
     ConstructTableLoaderService,
     DevToolPackageTableLoaderService,
-    I18nNotificationService,
     I18nService,
-    PackageOperations,
-    PermissionsService
+    PermissionsService,
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -34,6 +31,7 @@ export class ConstructTableComponent
     implements OnChanges {
 
     public readonly AdminUIModuleRoutes = AdminUIModuleRoutes;
+    public readonly AdminUIEntityDetailRoutes = AdminUIEntityDetailRoutes;
 
     @Input()
     public dataSourceId: string | number;
@@ -58,6 +56,7 @@ export class ConstructTableComponent
         },
     ];
     protected entityIdentifier: keyof NormalizableEntityTypesMap<AnyModelType> = 'construct';
+    protected focusEntityType = EditableEntity.CONSTRUCT;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -66,20 +65,16 @@ export class ConstructTableComponent
         loader: ConstructTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
-        protected notification: I18nNotificationService,
-        protected operations: ConstructOperations,
     ) {
         super(
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

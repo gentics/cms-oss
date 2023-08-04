@@ -1,7 +1,7 @@
 import { InterfaceOf, ObservableStopper } from '@admin-ui/common';
 import { AppStateService, INITIAL_AUTH_STATE } from '@admin-ui/state';
-import { assembleTestAppStateImports, TestAppState } from '@admin-ui/state/utils/test-app-state';
-import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils/test-app-state';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
@@ -10,9 +10,9 @@ import { SetUILanguage, SetUISettings } from '../../../state/ui/ui.actions';
 import { EditorUiLocalStorageService } from '../editor-ui-local-storage';
 import { I18nService } from '../i18n';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
-import { LanguageOperations } from '../operations/language';
+import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ServerStorageService } from '../server-storage';
-import { ADMIN_UI_SETTINGS_PREFIX, UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
+import { UI_SETTINGS_DEBOUNCE_MS, UserSettingsService } from './user-settings.service';
 
 const LOCAL_STORAGE_UI_LANGUAGE = 'en';
 const I18N_SERVICE_INFERRED_LANGUAGE = 'de';
@@ -31,7 +31,7 @@ class MockServerStorageService implements Partial<InterfaceOf<ServerStorageServi
     set = jasmine.createSpy('set').and.callFake(() => Promise.resolve());
 }
 
-class MockLanguageOperations implements Partial<InterfaceOf<LanguageOperations>> {
+class MockLanguageHandlerService implements Partial<InterfaceOf<LanguageHandlerService>> {
     getActiveBackendLanguage = jasmine.createSpy('getActiveBackendLanguage').and.returnValue(of('de').pipe(first()));
 }
 
@@ -56,7 +56,7 @@ describe('UserSettingsService', () => {
                 { provide: I18nService, useExisting: MockI18nServiceWithSpies },
                 MockServerStorageService,
                 { provide: ServerStorageService, useExisting: MockServerStorageService },
-                { provide: LanguageOperations, useClass: MockLanguageOperations },
+                { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
             ],
         });
 

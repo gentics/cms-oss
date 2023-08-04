@@ -1,0 +1,123 @@
+<div class="gtx-entity-detail">
+    <gtx-tabs pure [activeId]="editorTab">
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="Tabs.CONSTRUCTS"
+            [title]="'construct.construct_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.constructs_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-construct-table
+                    *ngIf="editorTab === Tabs.CONSTRUCTS"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-construct-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            [id]="Tabs.CONTENT_REPOSITORIES"
+            gtxDetailTabLink
+            [title]="'contentRepository.contentRepository_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.contentrepositories_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-content-repository-table
+                *ngIf="editorTab === Tabs.CONTENT_REPOSITORIES"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-content-repository-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="Tabs.CR_FRAGMENTS"
+            [title]="'contentRepositoryFragment.contentRepositoryFragment_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.contentRepositoryFragments_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-cr-fragment-table
+                    *ngIf="editorTab === Tabs.CR_FRAGMENTS"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-cr-fragment-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="Tabs.DATA_SOURCES"
+            [title]="'dataSource.dataSource_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.dataSources_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-data-source-table
+                    *ngIf="editorTab === Tabs.DATA_SOURCES"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-data-source-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="Tabs.OBJECT_PROPERTIES"
+            [title]="'common.objectProperty_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.objectproperties_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-object-property-table
+                    *ngIf="editorTab === Tabs.OBJECT_PROPERTIES"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-object-property-table>
+            </div>
+        </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="Tabs.TEMPLATES"
+            [title]="'template.template_plural' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.templates_of_package' | i18n: { packageName: entity?.name }"
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-template-table
+                    *ngIf="editorTab === Tabs.TEMPLATES"
+                    [showSearch]="true"
+                    [packageName]="entity.name"
+                ></gtx-template-table>
+            </div>
+        </gtx-tab>
+    </gtx-tabs>
+</div>

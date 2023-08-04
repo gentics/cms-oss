@@ -21,7 +21,7 @@ import {
     ErrorHandler,
     FeatureOperations,
     GtxActivityManagerActivity,
-    LanguageOperations,
+    LanguageHandlerService,
     MarkupLanguageOperations,
     MessageService,
     PermissionsService,
@@ -82,7 +82,7 @@ class MockAdminOperations implements Partial<InterfaceOf<AdminOperations>> {
 }
 
 class MockLoggingHelperService extends InitializableService { }
-class MockLanguageOperations implements Partial<InterfaceOf<LanguageOperations>> {
+class MockLanguageHandlerService implements Partial<InterfaceOf<LanguageHandlerService>> {
     getBackendLanguages = jasmine.createSpy('getBackendLanguages').and.stub();
 }
 
@@ -197,7 +197,7 @@ describe('AppComponent', () => {
                 { provide: EntityManagerService, useClass: MockEntityManager },
                 { provide: FeatureOperations, useClass: MockFeatureOperations },
                 { provide: I18nService, useClass: MockI18nServiceWithSpies },
-                { provide: LanguageOperations, useClass: MockLanguageOperations },
+                { provide: LanguageHandlerService, useClass: MockLanguageHandlerService },
                 { provide: LoggingHelperService, useClass: MockLoggingHelperService },
                 { provide: LogoutCleanupService, useClass: MockLogoutCleanupService },
                 { provide: MaintenanceModeService, useClass: MockMaintenanceModeService },

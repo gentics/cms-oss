@@ -1,4 +1,4 @@
-import { GcmsAdminUiRoute } from '@admin-ui/common/routing/gcms-admin-ui-route';
+import { GcmsAdminUiRoute } from '@admin-ui/common/models/routing';
 import { ContentMaintenanceComponent } from './components';
 
 export const CONTENT_MAINTENANCE_ROUTES: GcmsAdminUiRoute[] = [

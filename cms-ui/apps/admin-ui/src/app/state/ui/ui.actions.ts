@@ -2,6 +2,7 @@ import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, Users
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import type { UIStateSettings } from './ui.state';
+import { EditableEntity } from '@admin-ui/common';
 
 const UI: keyof AppState = 'ui';
 
@@ -81,7 +82,7 @@ export class DisableFocusMode {
 export class SetUIFocusEntity {
     static readonly type = 'SetUIFocusEntity';
     constructor(
-        public focusEntityType: NormalizableEntityType,
+        public focusEntityType: NormalizableEntityType | EditableEntity,
         public focusEntityId: EntityIdType,
         public focusEntityNodeId?: number,
     ) {}

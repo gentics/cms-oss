@@ -26,12 +26,31 @@ export interface TableLoadStartEvent<A = never> {
 
 export interface TableLoadEndEvent<T, A = never> extends TableLoadResponse<T>, TableLoadStartEvent<A> { }
 
+export interface TableSortEvent<T> {
+    row: TableRow<T>;
+    from: number;
+    to: number;
+}
+
 export interface EntityPageResponse<T> {
     entities: T[];
     totalCount: number;
 }
 
-export interface TableEntityLoader<T> {
+export interface TableEntityLoader<T, A = never> {
 
-    loadTablePage(options: TableLoadOptions): Observable<TableLoadResponse<T>>;
+    readonly reload$: Observable<void>;
+
+    loadTablePage(options: TableLoadOptions, additionalOptions?: A): Observable<TableLoadResponse<T>>;
+    reload(): void;
+
+    getEntityById(entityId: string | number): T;
+    canDelete(entityId: string | number): Promise<boolean>;
+    deleteEntity(entityId: string | number): Promise<void>
+}
+
+export interface PackageTableEntityLoader<T, A = never> extends TableEntityLoader<T, A>  {
+
+    addToDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void>;
+    removeFromDevToolPackage(devToolPackage: string, entityId: string | number): Observable<void>;
 }

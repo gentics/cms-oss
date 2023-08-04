@@ -1,4 +1,18 @@
-import { LOAD_FOR_PACKAGE_LIST, PackageEntityOperations } from '@admin-ui/common';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
+    DevToolEntityHandler,
+    DevToolEntityListRequestModel,
+    DevToolEntityListRequestParams,
+    DevToolEntityListResponseModel,
+    EditableEntity,
+    EditableEntityBusinessObjects,
+    EntityList,
+    LOAD_FOR_PACKAGE_LIST,
+    PackageEntityOperations,
+    applyPermissions,
+} from '@admin-ui/common';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable, Injector } from '@angular/core';
 import {
@@ -20,7 +34,8 @@ import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
 @Injectable()
 export class ContentRepositoryFragmentOperations
     extends ExtendedEntityOperationsBase<'contentRepositoryFragment'>
-    implements PackageEntityOperations<ContentRepositoryFragmentBO<Raw>>
+    implements PackageEntityOperations<ContentRepositoryFragmentBO<Raw>>,
+        DevToolEntityHandler<EditableEntity.CR_FRAGMENT>
 {
 
     constructor(
@@ -135,6 +150,79 @@ export class ContentRepositoryFragmentOperations
             }),
             this.catchAndRethrowError(),
         )
+    }
+
+    addToDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.contentRepositoryFragment[entityId];
+
+        return this.api.devTools.addContentRepositoryFragmentToPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_added_to_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    removeFromDevTool(
+        devtoolPackage: string,
+        entityId: string | number,
+    ): Observable<void> {
+        const entity = this.appState.now.entity.contentRepositoryFragment[entityId];
+
+        return this.api.devTools.removeContentRepositoryFragmentFromPackage(devtoolPackage, entityId).pipe(
+            tap(() => {
+                this.notification.show({
+                    message: 'contentRepositoryFragment.contentRepositoryFragment_successfully_removed_from_package',
+                    type: 'success',
+                    translationParams: {
+                        name: entity.name,
+                    },
+                });
+            }),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevTool(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.CR_FRAGMENT>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CR_FRAGMENT>,
+    ): Observable<DevToolEntityListResponseModel<EditableEntity.CR_FRAGMENT>> {
+        return this.api.devTools.getContentRepositoryFragments(devtoolPackage, params).pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+    listFromDevToolMapped(
+        devtoolPackage: string,
+        body?: DevToolEntityListRequestModel<EditableEntity.CR_FRAGMENT>,
+        params?: DevToolEntityListRequestParams<EditableEntity.CR_FRAGMENT>,
+    ): Observable<EntityList<EditableEntityBusinessObjects[EditableEntity.CR_FRAGMENT]>> {
+        return this.listFromDevTool(devtoolPackage, body, params).pipe(
+            map(res => {
+                const items = res.items.map(item => ({
+                    ...item,
+                    [BO_ID]: String(item.id),
+                    [BO_PERMISSIONS]: [],
+                    [BO_DISPLAY_NAME]: item.name,
+                }));
+                applyPermissions(items, res);
+
+                return {
+                    items,
+                    totalItems: res.numItems,
+                };
+            }),
+        );
     }
 
     public mapToBusinessObject(fragment: ContentRepositoryFragment<Raw>, forPackage: boolean = false): ContentRepositoryFragmentBO<Raw> {

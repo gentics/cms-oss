@@ -23,6 +23,9 @@ export interface ContentPackage<T extends ModelType = DefaultModelType> extends 
     pages?: number;
 }
 
+/**
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface ContentPackageBO<T extends ModelType = DefaultModelType> extends ContentPackage<T> {
     id: string;
 }

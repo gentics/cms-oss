@@ -22,7 +22,10 @@ export interface ConstructCategory<T extends ModelType = DefaultModelType> exten
     id: number;
 }
 
-/** Data model as defined by frontend. */
+/**
+ * Data model as defined by frontend.
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export interface ConstructCategoryBO<T extends ModelType = DefaultModelType> extends ConstructCategoryBase<T> {
     /** Internal ID of the object property definition */
     id: string;

@@ -2,7 +2,6 @@ import { BO_PERMISSIONS, TemplateBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
     I18nService,
-    PackageOperations,
     PermissionsService,
     TemplateTableLoaderOptions,
     TemplateTableLoaderService,
@@ -46,7 +45,6 @@ export class TemplateTableComponent
         loader: TemplateTableLoaderService,
         modalService: ModalService,
         contextMenu: ContextMenuService,
-        packageOperations: PackageOperations,
         packageTableLoader: DevToolPackageTableLoaderService,
         protected permissions: PermissionsService,
     ) {
@@ -54,10 +52,9 @@ export class TemplateTableComponent
             changeDetector,
             appState,
             i18n,
-            loader,
+            loader as any,
             modalService,
             contextMenu,
-            packageOperations,
             packageTableLoader,
         );
     }

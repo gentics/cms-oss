@@ -124,7 +124,7 @@
     <a
         *ngIf="value > 0"
         class="gtx-table-cell-link"
-        [routerLink]="'scheduleTask' | gtxEntityDetailRouterLink:row.item.taskId"
+        [routerLink]="AdminUIEntityDetailRoutes.SCHEDULE_TASK | gtxEntityDetailRouterLink:row.item.taskId"
         (click)="cancelEvent($event)"
     >
         {{ row.item.task?.name || row.item.taskId }}

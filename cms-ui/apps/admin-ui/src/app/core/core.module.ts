@@ -5,7 +5,7 @@ import {
     I18nNotificationService,
     I18nService,
     LocalTranslateLoader,
-    LoggingHelperService
+    LoggingHelperService,
 } from '@admin-ui/core';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
@@ -13,7 +13,7 @@ import { ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@a
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule } from '@gentics/cms-components';
-import { GcmsRestClientsAngularModule, GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID } from '@gentics/cms-rest-clients-angular';
+import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HotkeyModule } from 'angular2-hotkeys';
@@ -33,24 +33,27 @@ import {
     MessageModalComponent,
     ViewUnauthorizedComponent,
 } from './components';
+import { AuthGuard, DiscardChangesGuard, PermissionsGuard } from './guards';
 import {
     ActivityManagerService,
     BreadcrumbResolver,
-    ConstructCategoryOperations,
-    ConstructOperations,
+    ConstructCategoryHandlerService,
+    ConstructHandlerService,
     ConstructTableLoaderService,
     ContentPackageOperations,
     ContentRepositoryFragmentOperations,
     ContentRepositoryFragmentTagmapEntryOperations,
-    ContentRepositoryOperations,
+    ContentRepositoryHandlerService,
     ContentRepositoryTableLoaderService,
     ContentRepositoryTagmapEntryOperations,
     CRFragmentTableLoaderService,
-    DataSourceConstructOperations,
-    DataSourceEntryTableLoaderService,
-    DataSourceOperations,
+    DataSourceEntryHandlerService,
+    DataSourceHandlerService,
     DataSourceTableLoaderService,
+    DevToolPackageHandlerService,
+    DevToolPackageManagerService,
     DevToolPackageTableLoaderService,
+    EditorCloserService,
     EditorTabTrackerService,
     ElasticSearchIndexOperations,
     FeatureOperations,
@@ -62,20 +65,19 @@ import {
     GroupTableLoaderService,
     GroupTrableLoaderService,
     ImageOperations,
-    LanguageOperations,
+    LanguageHandlerService,
     LanguageTableLoaderService,
     MarkupLanguageOperations,
     MessageService,
     NodeTableLoaderService,
-    ObjectPropertyCategoryOperations,
-    ObjectPropertyOperations,
+    ObjectPropertyCategoryHandlerService,
+    ObjectPropertyHandlerService,
     ObjectPropertyTableLoaderService,
-    PackageEntitiesManagerService,
-    PackageOperations,
     PageOperations,
     PermissionsService,
     PermissionsTrableLoaderService,
     RoleOperations,
+    RouteEntityResolverService,
     ScheduleExecutionOperations,
     ScheduleOperations,
     ScheduleTaskOperations,
@@ -92,14 +94,10 @@ import {
 import { DebugToolService } from './providers/debug-tool/debug-tool.service';
 import { EditorUiLocalStorageService } from './providers/editor-ui-local-storage/editor-ui-local-storage.service';
 import { EntityManagerService } from './providers/entity-manager/entity-manager.service';
-import { AuthGuard } from './providers/guards/auth/auth.guard';
-import { DiscardChangesGuard } from './providers/guards/discard-changes';
-import { PermissionsGuard } from './providers/guards/permissions/permissions.guard';
 import { LogoutCleanupService } from './providers/logout-cleanup/logout-cleanup.service';
 import { MaintenanceModeService } from './providers/maintenance-mode/maintenance-mode.service';
 import { AdminOperations } from './providers/operations/admin/admin.operations';
 import { AuthOperations } from './providers/operations/auth/auth.operations';
-import { DataSourceEntryOperations } from './providers/operations/datasource-entry';
 import { NodeOperations } from './providers/operations/node';
 import { TraceErrorHandler } from './providers/trace-error-handler/trace-error-handler';
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
@@ -123,16 +121,10 @@ const COMPONENTS: any[] = [
 const OPERATIONS: any[] = [
     AdminOperations,
     AuthOperations,
-    ConstructOperations,
-    ConstructCategoryOperations,
     ContentPackageOperations,
     ContentRepositoryFragmentOperations,
     ContentRepositoryFragmentTagmapEntryOperations,
-    ContentRepositoryOperations,
     ContentRepositoryTagmapEntryOperations,
-    DataSourceConstructOperations,
-    DataSourceEntryOperations,
-    DataSourceOperations,
     ElasticSearchIndexOperations,
     FileOperations,
     FeatureOperations,
@@ -140,13 +132,8 @@ const OPERATIONS: any[] = [
     FormOperations,
     GroupOperations,
     ImageOperations,
-    LanguageOperations,
     MarkupLanguageOperations,
     NodeOperations,
-    ObjectPropertyCategoryOperations,
-    ObjectPropertyOperations,
-    PackageEntitiesManagerService,
-    PackageOperations,
     PageOperations,
     RoleOperations,
     ScheduleOperations,
@@ -163,14 +150,21 @@ const PROVIDERS: any[] = [
     AuthGuard,
     BreadcrumbResolver,
     BreadcrumbsService,
+    ConstructHandlerService,
     ConstructTableLoaderService,
+    ConstructCategoryHandlerService,
+    ContentRepositoryHandlerService,
     ContentRepositoryTableLoaderService,
     CRFragmentTableLoaderService,
+    DataSourceHandlerService,
     DataSourceTableLoaderService,
-    DataSourceEntryTableLoaderService,
+    DataSourceEntryHandlerService,
     DebugToolService,
+    DevToolPackageHandlerService,
+    DevToolPackageManagerService,
     DevToolPackageTableLoaderService,
     DiscardChangesGuard,
+    EditorCloserService,
     EditorTabTrackerService,
     EditorUiLocalStorageService,
     EntityManagerService,
@@ -180,16 +174,20 @@ const PROVIDERS: any[] = [
     GroupTrableLoaderService,
     I18nNotificationService,
     I18nService,
+    LanguageHandlerService,
     LanguageTableLoaderService,
     LoggingHelperService,
     LogoutCleanupService,
     MaintenanceModeService,
     MessageService,
     NodeTableLoaderService,
+    ObjectPropertyHandlerService,
+    ObjectPropertyCategoryHandlerService,
     ObjectPropertyTableLoaderService,
     PermissionsGuard,
     PermissionsService,
     PermissionsTrableLoaderService,
+    RouteEntityResolverService,
     ServerStorageService,
     TagMapEntryTableLoaderService,
     TemplateTableLoaderService,

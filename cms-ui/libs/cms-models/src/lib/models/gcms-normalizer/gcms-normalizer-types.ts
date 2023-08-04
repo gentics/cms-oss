@@ -26,7 +26,7 @@ import { ScheduleTask, ScheduleTaskBO } from '../schedule-task';
 import { TagStatus, TagStatusBO, TagType, TagTypeBO, TemplateTag } from '../tag';
 import { TagmapEntry, TagmapEntryBO } from '../tagmap-entry';
 import { Template, TemplateBO } from '../template';
-import { DefaultModelType, Index, IndexById, ModelType, Normalized } from '../type-util';
+import { DefaultModelType, IndexById, ModelType, Normalized } from '../type-util';
 import { User } from '../user';
 
 /** Maps the names of normalizable model types to their interfaces. */
@@ -67,6 +67,7 @@ export interface NormalizableEntityTypesMap<T extends ModelType = DefaultModelTy
 /**
  * Maps the names of normalizable model types to their interfaces.
  * This Business Object version is defined for substituted `id` properties mapped by frontend.
+ * @deprecated Create your own application specific type/business object instead.
  */
 export interface NormalizableEntityTypesMapBO<T extends ModelType = DefaultModelType> {
     construct: TagTypeBO<T>;
@@ -114,8 +115,11 @@ export type NormalizableEntityType = keyof NormalizableEntityTypesMap;
 export type NormalizedEntityStore = {
     [K in NormalizableEntityType]: IndexById<NormalizableEntityTypesMap<Normalized>[K]>
 };
+/**
+ * @deprecated Create your own application specific type/business object instead.
+ */
 export type NormalizedEntityStoreBO = {
-    [K in NormalizableEntityType]: Index<EntityIdType, NormalizableEntityTypesMap<Normalized>[K]>
+    [K in NormalizableEntityType]: Record<EntityIdType, NormalizableEntityTypesMap<Normalized>[K]>
 };
 
 /**

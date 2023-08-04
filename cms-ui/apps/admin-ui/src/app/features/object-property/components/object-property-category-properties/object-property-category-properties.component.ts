@@ -1,5 +1,5 @@
 import { createI18nRequiredValidator } from '@admin-ui/common';
-import { LanguageDataService } from '@admin-ui/shared';
+import { LanguageHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
@@ -50,7 +50,7 @@ export class ObjectPropertyCategoryPropertiesComponent
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        private languageData: LanguageDataService,
+        private languageHandler: LanguageHandlerService,
     ) {
         super(changeDetector);
     }
@@ -58,7 +58,7 @@ export class ObjectPropertyCategoryPropertiesComponent
     ngOnInit(): void {
         super.ngOnInit();
 
-        this.languages$ = this.languageData.watchSupportedLanguages();
+        this.languages$ = this.languageHandler.getSupportedLanguages();
 
         this.subscriptions.push(this.languages$.subscribe(languages => {
             this.languages = languages;

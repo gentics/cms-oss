@@ -25,7 +25,6 @@ export * from './item';
 export * from './language';
 export * from './logs';
 export * from './markup-language';
-export * from './mesh';
 export * from './mesh-form';
 export * from './message';
 export * from './node';

@@ -1,3 +1,5 @@
+import { UserReference } from './users';
+
 export interface PagingMetaInfo {
     /** Number of the current page. */
     currentPage: number;
@@ -29,19 +31,28 @@ export interface BasicListOptions extends PagingOptions, SortingOptions {
     branch?: string;
 }
 
+export enum Permission {
+    CREATE = 'create',
+    DELETE = 'delete',
+    PUBLISH = 'publish',
+    READ = 'read',
+    READ_PUBLISHED = 'readPublished',
+    UPDATE = 'update',
+}
+
 export interface PermissionInfo {
     /** Flag which indicates whether the create permission is granted. */
-    create: boolean;
-    /** Flag which indicates whether the delete permission is granted. */
-    delete: boolean;
-    /** Flag which indicates whether the publish permission is granted. */
-    publish?: boolean;
+    [Permission.CREATE]: boolean;
     /** Flag which indicates whether the read permission is granted. */
-    read: boolean;
-    /** Flag which indicates whether the read published permission is granted. */
-    readPublished?: boolean;
+    [Permission.READ]: boolean;
     /** Flag which indicates whether the update permission is granted. */
-    update: boolean;
+    [Permission.UPDATE]: boolean;
+    /** Flag which indicates whether the delete permission is granted. */
+    [Permission.DELETE]: boolean;
+    /** Flag which indicates whether the publish permission is granted. */
+    [Permission.PUBLISH]?: boolean;
+    /** Flag which indicates whether the read published permission is granted. */
+    [Permission.READ_PUBLISHED]?: boolean;
 }
 
 /**
@@ -67,3 +78,17 @@ export interface GenericMessageResponse {
     /** Map of i18n properties which were used to construct the provided message */
     properties?: { [key: string]: any };
 }
+
+export interface Entity {
+    /** ISO8601 formatted created date string. */
+    created: string;
+    /** User reference of the creator of the element. */
+    creator: UserReference;
+    /** ISO8601 formatted edited date string. */
+    edited: string;
+    /** User reference of the creator of the element. */
+    editor: UserReference;
+    /** Uuid of the element */
+    uuid: string;
+}
+

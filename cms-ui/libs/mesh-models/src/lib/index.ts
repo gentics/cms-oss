@@ -2,6 +2,7 @@ export * from './auth';
 export * from './binaries';
 export * from './branches';
 export * from './common';
+export * from './errors';
 export * from './fields';
 export * from './graphql';
 export * from './groups';

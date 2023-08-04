@@ -35,6 +35,7 @@ import {
     TemplateTag,
     User,
 } from '@gentics/cms-models';
+import { Permission } from '@gentics/mesh-models';
 
 /** Symbol to access the permissions of an object */
 export const BO_PERMISSIONS = Symbol('bo-permissions');
@@ -66,7 +67,7 @@ export interface BusinessObject {
      */
     [BO_ID]: string;
     /** The permissions the user has to this object */
-    [BO_PERMISSIONS]: GcmsPermission[];
+    [BO_PERMISSIONS]: (GcmsPermission | Permission)[];
     /** The display name to use for this object */
     [BO_DISPLAY_NAME]: string;
 }

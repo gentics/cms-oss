@@ -1,3 +1,4 @@
+import { GenericErrorResponse } from '@gentics/mesh-models';
 import { RequestMethod } from './models';
 
 export class RequestFailedError extends Error {
@@ -8,7 +9,7 @@ export class RequestFailedError extends Error {
         public url: string,
         public responseCode: number,
         public rawBody?: string,
-        public data?: Record<string, any>,
+        public data?: GenericErrorResponse,
         public bodyError?: Error,
     ) {
         super (message);

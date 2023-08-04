@@ -1,3 +1,4 @@
+import { GenericErrorResponse } from '@gentics/mesh-models';
 import { RequestFailedError } from '../errors';
 import { MeshClientDriver, RequestMethod } from '../models';
 
@@ -23,7 +24,7 @@ export class MeshFetchDriver implements MeshClientDriver {
         }
 
         let raw: string;
-        let parsed: Record<string, any>;
+        let parsed: GenericErrorResponse;
         let bodyError: Error;
 
         try {

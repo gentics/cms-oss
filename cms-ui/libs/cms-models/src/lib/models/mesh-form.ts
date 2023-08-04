@@ -1,4 +1,4 @@
-import { MeshPagingMetaInfo, MeshSchemaResponse } from './mesh';
+import { PagingMetaInfo, SchemaResponse } from '@gentics/mesh-models';
 
 export interface GtxForm {
     name: string;
@@ -11,11 +11,11 @@ export interface GtxFormWithUuid extends GtxForm {
     uuid: string;
 }
 
-export interface GtxFormResponse extends Omit<MeshSchemaResponse, 'fields'> {
+export interface GtxFormResponse extends Omit<SchemaResponse, 'fields'> {
     fields: GtxForm;
 }
 
-export interface FormgeneratorListResponse extends MeshPagingMetaInfo {
+export interface FormgeneratorListResponse extends PagingMetaInfo {
     forms: GtxFormWithUuid[];
 }
 

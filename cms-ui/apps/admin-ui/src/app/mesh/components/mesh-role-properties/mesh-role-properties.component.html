@@ -1,0 +1,10 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+    class="row small-12 medium-12"
+>
+    <gtx-input
+        [label]="'common.name' | i18n"
+        formControlName="name"
+    ></gtx-input>
+</form>

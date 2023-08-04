@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ 'modal.create_role_title' | i18n }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-role-properties
+        [mode]="mode"
+        [formControl]="form"
+    ></gtx-mesh-role-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form.valid && form.enabled"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ 'modal.create_role_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

@@ -12,6 +12,7 @@
         .grouped-tab-content {
             float: unset;
             flex: 1 1 auto;
+            max-width: unset !important;
         }
     }
 }

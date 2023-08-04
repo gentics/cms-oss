@@ -8,13 +8,20 @@ import {
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,
+    MeshRoleModal,
+    MeshRolePropertiesComponent,
+    MeshRoleTableComponent,
     ServerOverviewComponent,
 } from './components';
+import { MeshRoleTableLoaderService } from './providers';
 
 const COMPONENTS: Type<any>[] = [
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,
+    MeshRoleModal,
+    MeshRolePropertiesComponent,
+    MeshRoleTableComponent,
     ServerOverviewComponent,
 ];
 
@@ -23,7 +30,7 @@ const DECLARATIONS = [
 ];
 
 const SERVICES: Provider[] = [
-
+    MeshRoleTableLoaderService,
 ];
 
 @NgModule({

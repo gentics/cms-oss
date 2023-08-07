@@ -169,14 +169,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case property:
 				if (cr.getPasswordProperty() != null) {
 					nodeCR.setPassword(cr.getPasswordProperty());
+					nodeCR.setPasswordProperty(true);
 				}
-				nodeCR.setPasswordProperty(true);
 				break;
 			case value:
 				if (cr.getPassword() != null) {
 					nodeCR.setPassword(cr.getPassword());
+					nodeCR.setPasswordProperty(false);
 				}
-				nodeCR.setPasswordProperty(false);
 				break;
 			}
 		}

@@ -1,14 +1,12 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
-import { I18nNotificationService, I18nService } from '@admin-ui/core';
+import { I18nService } from '@admin-ui/core';
 import { MeshGroupBO, MeshRoleBO } from '@admin-ui/mesh/common';
-import { MeshRoleTableLoaderService } from '@admin-ui/mesh/providers';
+import { MeshGroupHandlerService, MeshRoleTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { AnyModelType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { Permission, Role } from '@gentics/mesh-models';
-import { RequestFailedError } from '@gentics/mesh-rest-client';
-import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -19,6 +17,7 @@ import { SelectGroupModal } from '../select-group-modal/select-group-modal.compo
 const EDIT_ACTION = 'edit';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
 const UNASSIGN_FROM_GROUPS_ACTION = 'unassignFromGroup';
+const MANAGE_GROUPS_ACTION = 'manageGroups';
 
 @Component({
     selector: 'gtx-mesh-role-table',
@@ -50,8 +49,7 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
         i18n: I18nService,
         loader: MeshRoleTableLoaderService,
         modalService: ModalService,
-        protected mesh: MeshRestClientService,
-        protected notification: I18nNotificationService,
+        protected handler: MeshGroupHandlerService,
     ) {
         super(
             changeDetector,
@@ -76,21 +74,27 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
                         single: true,
                     },
                     {
+                        id: MANAGE_GROUPS_ACTION,
+                        icon: 'group',
+                        label: this.i18n.instant('mesh.manage_group_assignment'),
+                        enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        type: 'secondary',
+                        single: true,
+                    },
+                    {
                         id: ASSIGN_TO_GROUPS_ACTION,
                         icon: 'link',
                         label: this.i18n.instant('mesh.assignRolesToGroups'),
-                        enabled: (item) => item == null || item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        enabled: true,
                         type: 'secondary',
-                        single: true,
                         multiple: true,
                     },
                     {
                         id: UNASSIGN_FROM_GROUPS_ACTION,
                         icon: 'link_off',
                         label: this.i18n.instant('mesh.unassignRolesFromGroups'),
-                        enabled: (item) => item == null || item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        enabled: true,
                         type: 'secondary',
-                        single: true,
                         multiple: true,
                     },
                     {
@@ -118,18 +122,54 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
             case EDIT_ACTION:
                 this.openModal(MeshRolePropertiesMode.EDIT, event.item);
                 return;
-            case ASSIGN_TO_GROUPS_ACTION:
-                this.assignToGroups(this.getAffectedEntityIds(event));
+
+            case MANAGE_GROUPS_ACTION:
+                this.manageGroupAssignment(event.item);
                 return;
+
+            case ASSIGN_TO_GROUPS_ACTION:
+                this.handleAssignToGroupsAction(this.getAffectedEntityIds(event));
+                return;
+
             case UNASSIGN_FROM_GROUPS_ACTION:
-                this.unassignToGroups(this.getAffectedEntityIds(event));
+                this.handleUnassignToGroupsAction(this.getAffectedEntityIds(event));
                 return;
         }
 
         super.handleAction(event);
     }
 
-    async assignToGroups(roleIds: string[]): Promise<void> {
+    async manageGroupAssignment(role: MeshRoleBO): Promise<void> {
+        const assignedGroupIds = role.groups.map(group => group.uuid);
+
+        const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
+            title: 'mesh.manage_group_assignment',
+            multiple: true,
+            selected: (role.groups || []).map(group => group.uuid),
+        });
+
+        const groups: MeshGroupBO[] = await dialog.open();
+        const newGroupIds = groups.map(group => group.uuid);
+
+        const toAssign = groups.filter(group => !assignedGroupIds.includes(group.uuid));
+        const toRemove = role.groups.filter(group => !newGroupIds.includes(group.uuid));
+
+        // Nothing to do
+        if (toAssign.length === 0 && toRemove.length === 0) {
+            return;
+        }
+
+        for (const group of toAssign) {
+            this.handler.assignRoleToGroup(role, group);
+        }
+        for (const group of toRemove) {
+            this.handler.unassignRoleFromGroup(role, group);
+        }
+
+        this.reload();
+    }
+
+    async handleAssignToGroupsAction(roleIds: string[]): Promise<void> {
         const roles = this.loader.getEntitiesByIds(roleIds);
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.assignRolesToGroups',
@@ -143,44 +183,14 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
 
         for (const group of groups) {
             for (const role of roles) {
-                try {
-                    await this.mesh.groups.assignRole(group.uuid, role.uuid);
-                    this.notification.show({
-                        type: 'success',
-                        message: 'mesh.assign_role_to_group_success',
-                        translationParams: {
-                            roleName: role.name,
-                            groupName: group.name,
-                        },
-                    });
-                } catch (err) {
-                    let message: string;
-                    let params: Record<string, string> = {};
-
-                    if (err instanceof RequestFailedError) {
-                        message = err.data.message;
-                    } else {
-                        message = 'mesh.assign_role_to_group_error';
-                        params = {
-                            roleName: role.name,
-                            groupName: group.name,
-                        };
-                    }
-
-                    this.notification.show({
-                        type: 'alert',
-                        delay: 10_000,
-                        message,
-                        translationParams: params,
-                    });
-                }
+                this.handler.assignRoleToGroup(role, group);
             }
         }
 
         this.reload();
     }
 
-    async unassignToGroups(roleIds: string[]): Promise<void> {
+    async handleUnassignToGroupsAction(roleIds: string[]): Promise<void> {
         const roles = this.loader.getEntitiesByIds(roleIds);
         const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
             title: 'mesh.unassignRolesFromGroups',
@@ -194,37 +204,7 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
 
         for (const group of groups) {
             for (const role of roles) {
-                try {
-                    await this.mesh.groups.unassignRole(group.uuid, role.uuid);
-                    this.notification.show({
-                        type: 'success',
-                        message: 'mesh.unassign_role_from_group_success',
-                        translationParams: {
-                            roleName: role.name,
-                            groupName: group.name,
-                        },
-                    });
-                } catch (err) {
-                    let message: string;
-                    let params: Record<string, string> = {};
-
-                    if (err instanceof RequestFailedError) {
-                        message = err.data.message;
-                    } else {
-                        message = 'mesh.unassign_role_from_group_error';
-                        params = {
-                            roleName: role.name,
-                            groupName: group.name,
-                        };
-                    }
-
-                    this.notification.show({
-                        type: 'alert',
-                        delay: 10_000,
-                        message,
-                        translationParams: params,
-                    });
-                }
+                this.handler.unassignRoleFromGroup(role, group);
             }
         }
 

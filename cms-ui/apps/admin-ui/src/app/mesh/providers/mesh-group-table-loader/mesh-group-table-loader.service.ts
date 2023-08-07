@@ -3,18 +3,22 @@ import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Group, GroupResponse, Permission } from '@gentics/mesh-models';
-import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, from, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { MeshGroupBO } from '../../common';
+import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
+
+export interface MeshGroupTableLoaderOptions {
+    users?: boolean;
+}
 
 @Injectable()
-export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, MeshGroupBO> {
+export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, MeshGroupBO, MeshGroupTableLoaderOptions> {
 
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: MeshRestClientService,
+        protected handler: MeshGroupHandlerService,
     ) {
         super(
             null,
@@ -28,17 +32,17 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.api.roles.delete(String(entityId)).then(() => {});
+        return this.handler.delete(entityId as any);
     }
 
-    protected loadEntities(options: TableLoadOptions, additionalOptions?: never): Observable<EntityPageResponse<MeshGroupBO>> {
-        return from(this.api.groups.list({
+    protected loadEntities(options: TableLoadOptions, additionalOptions?: MeshGroupTableLoaderOptions): Observable<EntityPageResponse<MeshGroupBO>> {
+        return from(this.handler.list({
             page: options.page + 1,
             perPage: options.perPage,
-            order: options.sortOrder?.toUpperCase?.() as any,
+            order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,
         })).pipe(
-            map(res => {
+            map((res) => {
                 const entities: MeshGroupBO[] = res.data.map(group => ({
                     ...group,
                     [BO_ID]: group.uuid,
@@ -51,6 +55,25 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
                     // eslint-disable-next-line no-underscore-dangle
                     totalCount: res._metainfo.totalCount,
                 };
+            }),
+            switchMap(page => {
+                if (!(additionalOptions?.users ?? false)) {
+                    return of(page);
+                }
+
+                return forkJoin(page.entities.map(group => {
+                    return from(this.handler.getUsers(group.uuid).then(userRes => {
+                        group.users = userRes.data;
+                        return group;
+                    }));
+                })).pipe(
+                    map(mapped => {
+                        return {
+                            ...page,
+                            entities: mapped,
+                        };
+                    }),
+                );
             }),
         );
     }

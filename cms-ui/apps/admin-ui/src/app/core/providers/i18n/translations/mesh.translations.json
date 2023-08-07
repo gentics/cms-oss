@@ -135,6 +135,26 @@
         "de": "Rolle „{{ entityName }}“ aktualisieren",
         "en": "Update Role \"{{ entityName }}\""
     },
+    "manage_group_assignment": {
+        "de": "Gruppenzuweisung verwalten",
+        "en": "Manage Group assignment"
+    },
+    "manage_role_assignment": {
+        "de": "Rollenzuweisung verwalten",
+        "en": "Manage Role assignment"
+    },
+    "manage_user_assignment": {
+        "de": "Benutzterzuweisung verwalten",
+        "en": "Manage User assignment"
+    },
+    "create_group_title": {
+        "de": "Neue Gruppe erstelle",
+        "en": "Create new Group"
+    },
+    "update_group": {
+        "de": "Gruppe „{{ entityName }}“ aktualisieren",
+        "en": "Update Group \"{{ entityName }}\""
+    },
     "assign_role_to_group_success": {
         "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
         "en": "Successfully assigned Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
@@ -150,5 +170,29 @@
     "unassign_role_from_group_error": {
         "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
         "en": "Could not unassign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "create_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created Group \"{{ entityName }}\"!"
+    },
+    "update_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated Group \"{{ entityName }}\"!"
+    },
+    "delete_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted Group \"{{ entityName }}\"!"
+    },
+    "create_role_success": {
+        "de": "Rolle „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created Role \"{{ entityName }}\"!"
+    },
+    "update_role_success": {
+        "de": "Rolle „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated Role \"{{ entityName }}\"!"
+    },
+    "delete_role_success": {
+        "de": "Rolle „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted Role \"{{ entityName }}\"!"
     }
 }

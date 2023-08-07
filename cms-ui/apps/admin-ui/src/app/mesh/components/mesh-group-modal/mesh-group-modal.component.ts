@@ -1,38 +1,38 @@
-import { MeshRoleHandlerService } from '@admin-ui/mesh/providers';
+import { MeshGroupHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
-import { Role } from '@gentics/mesh-models';
+import { Group } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
-import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-properties.component';
+import { MeshGroupPropertiesMode } from '../mesh-group-properties/mesh-group-properties.component';
 
 @Component({
-    selector: 'gtx-mesh-role-modal',
-    templateUrl: './mesh-role-modal.component.html',
-    styleUrls: ['./mesh-role-modal.component.scss'],
+    selector: 'gtx-mesh-group-modal',
+    templateUrl: './mesh-group-modal.component.html',
+    styleUrls: ['./mesh-group-modal.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshRoleModal extends BaseModal<Role> implements OnInit {
+export class MeshGroupModal extends BaseModal<Group> implements OnInit {
 
-    public readonly MeshRolePropertiesMode = MeshRolePropertiesMode;
-
-    @Input()
-    public mode: MeshRolePropertiesMode;
+    public readonly MeshGroupPropertiesMode = MeshGroupPropertiesMode;
 
     @Input()
-    public role: Role;
+    public mode: MeshGroupPropertiesMode;
+
+    @Input()
+    public group: Group;
 
     public form: FormControl;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected handler: MeshRoleHandlerService,
+        protected handler: MeshGroupHandlerService,
     ) {
         super();
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.role, createNestedControlValidator());
+        this.form = new FormControl(this.group, createNestedControlValidator());
     }
 
     buttonCreateEntityClicked(): void {
@@ -40,9 +40,9 @@ export class MeshRoleModal extends BaseModal<Role> implements OnInit {
         this.form.disable();
         this.changeDetector.markForCheck();
 
-        const op = this.mode === MeshRolePropertiesMode.CREATE
+        const op = this.mode === MeshGroupPropertiesMode.CREATE
             ? this.handler.create(val)
-            : this.handler.update(this.role.uuid, val);
+            : this.handler.update(this.group.uuid, val);
 
         op.then(res => {
             this.closeFn(res);

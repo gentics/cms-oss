@@ -121,6 +121,10 @@ export interface MeshGroupAPI {
     getRoles(uuid: string, params?: RoleListOptions): Promise<RoleListResponse>;
     assignRole(uuid: string, roleUuid: string): Promise<GroupResponse>;
     unassignRole(uuid: string, roleUuid: string): Promise<void>;
+
+    getUsers(uuid: string, params?: UserListOptions): Promise<UserListResponse>;
+    assignUser(uuid: string, userUuid: string): Promise<GroupResponse>;
+    unassignUser(uuid: string, userUuid: string): Promise<void>;
 }
 
 export interface MeshProjectAPI {

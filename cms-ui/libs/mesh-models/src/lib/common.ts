@@ -21,7 +21,7 @@ export interface SortingOptions {
      * Field name to sort the result by.
      */
     sortBy?: string;
-    order?: 'UNSORTED' | 'ASC' | 'DESC';
+    order?: '' | 'asc' | 'desc';
 }
 
 export interface BasicListOptions extends PagingOptions, SortingOptions {

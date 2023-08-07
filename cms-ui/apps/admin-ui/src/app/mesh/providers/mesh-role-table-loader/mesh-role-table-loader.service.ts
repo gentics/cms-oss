@@ -3,10 +3,10 @@ import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Permission, Role, RoleResponse } from '@gentics/mesh-models';
-import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshRoleBO } from '../../common';
+import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
 
 @Injectable()
 export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, MeshRoleBO> {
@@ -14,7 +14,7 @@ export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, Mes
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected api: MeshRestClientService,
+        protected handler: MeshRoleHandlerService,
     ) {
         super(
             null,
@@ -28,14 +28,14 @@ export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, Mes
     }
 
     public deleteEntity(entityId: string | number): Promise<void> {
-        return this.api.roles.delete(String(entityId)).then(() => {});
+        return this.handler.delete(entityId as any);
     }
 
     protected loadEntities(options: TableLoadOptions, additionalOptions?: never): Observable<EntityPageResponse<MeshRoleBO>> {
-        return from(this.api.roles.list({
+        return from(this.handler.list({
             page: options.page + 1,
             perPage: options.perPage,
-            order: options.sortOrder?.toUpperCase?.() as any,
+            order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,
         })).pipe(
             map(res => {

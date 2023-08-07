@@ -132,6 +132,10 @@ export class MeshRestClient {
         getRoles: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
         assignRole: (uuid, roleUuid) => this.performReqeust(POST, `/groups/${uuid}/roles/${roleUuid}`),
         unassignRole: (uuid, roleUuid) => this.performReqeust(DELETE, `/groups/${uuid}/roles/${roleUuid}`),
+
+        getUsers: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}/users`, null, params),
+        assignUser: (uuid, userUuid) => this.performReqeust(POST, `/groups/${uuid}/users/${userUuid}`),
+        unassignUser: (uuid, userUuid) => this.performReqeust(DELETE, `/groups/${uuid}/users/${userUuid}`),
     } as const;
 
     public projects: MeshProjectAPI = {

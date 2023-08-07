@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, ExpandableNode, PagingMetaInfo, PermissionInfo } from './common';
+import { BasicListOptions, Entity, ExpandableNode, PagingMetaInfo, PermissionInfo } from './common';
 import { GroupReference } from './groups';
 
 export interface UserAPITokenResponse {
@@ -75,15 +75,7 @@ export interface UserResetTokenResponse {
     token: string;
 }
 
-export interface UserResponse {
-    /** ISO8601 formatted created date string. */
-    created: string;
-    /** User reference of the creator of the element. */
-    creator: UserReference;
-    /** ISO8601 formatted edited date string. */
-    edited: string;
-    /** User reference of the creator of the element. */
-    editor: UserReference;
+export interface User extends Entity {
     /** Email address of the user */
     emailAddress?: string;
     /**
@@ -96,8 +88,6 @@ export interface UserResponse {
     firstname?: string;
     /** When true, the user needs to change their password on the next login. */
     forcedPasswordChange: boolean;
-    /** List of group references to which the user belongs. */
-    groups: GroupReference[];
     /** Lastname of the user. */
     lastname?: string;
     /**
@@ -105,14 +95,17 @@ export interface UserResponse {
      * remove the assigned node from the user
      */
     nodeReference?: ExpandableNode;
+    /** Username of the user. */
+    username: string;
+}
+
+export interface UserResponse extends User {
+    /** List of group references to which the user belongs. */
+    groups: GroupReference[];
     permissions: PermissionInfo;
     rolePerms: PermissionInfo;
     /** Hashsum of user roles which can be used for user permission caching. */
     rolesHash: string;
-    /** Username of the user. */
-    username: string;
-    /** Uuid of the element */
-    uuid: string;
 }
 
 export interface UserUpdateRequest {

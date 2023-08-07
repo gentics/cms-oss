@@ -23,12 +23,12 @@ export interface GroupReference {
     uuid: string;
 }
 
-export interface Group {
+export interface Group extends Entity {
     /** Name of the group */
     name: string;
 }
 
-export interface GroupResponse extends Entity, Group {
+export interface GroupResponse extends Group {
     permissions: PermissionInfo;
     rolePerms: PermissionInfo;
     /** List of role references */

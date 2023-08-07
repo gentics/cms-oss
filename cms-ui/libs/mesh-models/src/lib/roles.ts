@@ -44,10 +44,12 @@ export interface RoleReference {
     uuid: string;
 }
 
-export interface Role extends Entity {
+export interface EditableRoleProperties {
     /** Name of the role. */
     name: string;
 }
+
+export interface Role extends EditableRoleProperties, Entity { }
 
 export interface RoleResponse extends Role {
     /** List of groups which are assigned to the role. */

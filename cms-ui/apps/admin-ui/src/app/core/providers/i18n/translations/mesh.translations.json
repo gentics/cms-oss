@@ -123,13 +123,21 @@
         "de": "Alle",
         "en": "All"
     },
-    "assignRolesToGroups": {
+    "assign_roles_to_groups": {
         "de": "Rollen zu Gruppen zuweisen",
         "en": "Assign Roles to Groups"
     },
-    "unassignRolesFromGroups": {
+    "unassign_roles_from_groups": {
         "de": "Rollen von Gruppen entfernen",
         "en": "Unassign Roles from Groups"
+    },
+    "assign_users_to_groups": {
+        "de": "Benutzer zu Gruppen zuweisen",
+        "en": "Assign Users to Groups"
+    },
+    "unassign_users_from_groups": {
+        "de": "Benutzer von Gruppen entfernen",
+        "en": "Unassign Users from Groups"
     },
     "update_role": {
         "de": "Rolle „{{ entityName }}“ aktualisieren",
@@ -170,6 +178,22 @@
     "unassign_role_from_group_error": {
         "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
         "en": "Could not unassign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "assign_user_to_group_success": {
+        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
+        "en": "Successfully assigned User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "assign_user_to_group_error": {
+        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
+        "en": "Could not assign User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "unassign_user_from_group_success": {
+        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
+        "en": "Successfully unassigned User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "unassign_user_from_group_error": {
+        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
+        "en": "Could not unassign User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
     },
     "create_group_success": {
         "de": "Gruppe „{{ entityName }}“ erfolgreich erstellt!",

@@ -1,0 +1,43 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <div class="row">
+        <gtx-input
+            class="columns small-6"
+            [label]="('shared.user_name' | i18n) + '*'"
+            [required]="true"
+            formControlName="username"
+        ></gtx-input>
+
+        <gtx-input
+            class="columns small-6"
+            [label]="'shared.email' | i18n"
+            formControlName="emailAddress"
+        ></gtx-input>
+    </div>
+
+    <div *ngIf="mode === MeshUserPropertiesMode.CREATE" class="row">
+        <gtx-password-confirm-input
+            class="columns small-12"
+            [label]="'user.password' | i18n"
+            [required]="true"
+            formControlName="password"
+        ></gtx-password-confirm-input>
+    </div>
+
+    <div class="row">
+        <gtx-input
+            class="columns small-6"
+            [label]="'shared.first_name' | i18n"
+            formControlName="firstname"
+        ></gtx-input>
+
+        <gtx-input
+            class="columns small-6"
+            [label]="'shared.last_name' | i18n"
+            formControlName="lastname"
+        ></gtx-input>
+    </div>
+
+</form>

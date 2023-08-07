@@ -14,8 +14,12 @@ import {
     MeshRoleModal,
     MeshRolePropertiesComponent,
     MeshRoleTableComponent,
+    MeshUserModal,
+    MeshUserPropertiesComponent,
+    MeshUserTableComponent,
     SelectGroupModal,
     SelectRoleModal,
+    SelectUserModal,
     ServerOverviewComponent,
 } from './components';
 import {
@@ -23,6 +27,8 @@ import {
     MeshGroupTableLoaderService,
     MeshRoleHandlerService,
     MeshRoleTableLoaderService,
+    MeshUserHandlerService,
+    MeshUserTableLoaderService,
 } from './providers';
 
 const COMPONENTS: Type<any>[] = [
@@ -35,8 +41,12 @@ const COMPONENTS: Type<any>[] = [
     MeshRoleModal,
     MeshRoleTableComponent,
     MeshRolePropertiesComponent,
+    MeshUserModal,
+    MeshUserPropertiesComponent,
+    MeshUserTableComponent,
     SelectGroupModal,
     SelectRoleModal,
+    SelectUserModal,
     ServerOverviewComponent,
 ];
 
@@ -49,6 +59,8 @@ const SERVICES: Provider[] = [
     MeshGroupTableLoaderService,
     MeshRoleHandlerService,
     MeshRoleTableLoaderService,
+    MeshUserHandlerService,
+    MeshUserTableLoaderService,
 ];
 
 @NgModule({

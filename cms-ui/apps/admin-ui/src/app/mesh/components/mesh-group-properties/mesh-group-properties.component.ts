@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
-import { Group, Role } from '@gentics/mesh-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { EditableGroupProperties } from '@gentics/mesh-models';
+import { FormProperties, generateFormProvider } from '@gentics/ui-core';
 
 export enum MeshGroupPropertiesMode {
     CREATE,
@@ -16,24 +16,24 @@ export enum MeshGroupPropertiesMode {
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(MeshGroupPropertiesComponent)],
 })
-export class MeshGroupPropertiesComponent extends BasePropertiesComponent<Group> {
+export class MeshGroupPropertiesComponent extends BasePropertiesComponent<EditableGroupProperties> {
 
     public readonly MeshGroupPropertiesMode = MeshGroupPropertiesMode;
 
     @Input()
     public mode: MeshGroupPropertiesMode;
 
-    protected createForm(): FormGroup<any> {
-        return new FormGroup({
+    protected createForm(): FormGroup<FormProperties<EditableGroupProperties>> {
+        return new FormGroup<FormProperties<EditableGroupProperties>>({
             name: new FormControl(this.value?.name, Validators.required),
         });
     }
 
-    protected configureForm(value: Role, loud?: boolean): void {
+    protected configureForm(_value: EditableGroupProperties, _loud?: boolean): void {
         // no-op
     }
 
-    protected assembleValue(value: Role): Role {
+    protected assembleValue(value: EditableGroupProperties): EditableGroupProperties {
         return value;
     }
 }

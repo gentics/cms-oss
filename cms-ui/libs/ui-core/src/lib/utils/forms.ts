@@ -1,4 +1,4 @@
-import { UntypedFormGroup } from '@angular/forms';
+import { UntypedFormGroup, AbstractControl } from '@angular/forms';
 
 export function setControlsEnabled(
     group: UntypedFormGroup,
@@ -24,3 +24,21 @@ export function setControlsEnabled(
         }
     }
 }
+
+/**
+ * Utility type which is ment to be used on typed FormGroups, to properly
+ * enforce the typings and required fields:
+ * ```typescript
+ * type MyEntity = {
+ *      name: string;
+ *      description: string;
+ *      version: number;
+ * }
+ * const form = new FormGroup<FormProperties<MyEntity>>({
+ *      // ...
+ * });
+ * ```
+ */
+export type FormProperties<T> = {
+    [P in keyof T]: AbstractControl<T[P]>;
+};

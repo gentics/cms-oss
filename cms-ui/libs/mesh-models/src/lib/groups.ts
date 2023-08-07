@@ -23,10 +23,12 @@ export interface GroupReference {
     uuid: string;
 }
 
-export interface Group extends Entity {
+export interface EditableGroupProperties {
     /** Name of the group */
     name: string;
 }
+
+export interface Group extends EditableGroupProperties, Entity {}
 
 export interface GroupResponse extends Group {
     permissions: PermissionInfo;
@@ -35,7 +37,4 @@ export interface GroupResponse extends Group {
     roles: RoleReference[];
 }
 
-export interface GroupUpdateRequest {
-    /** New name of the group */
-    name: string;
-}
+export interface GroupUpdateRequest extends EditableGroupProperties { }

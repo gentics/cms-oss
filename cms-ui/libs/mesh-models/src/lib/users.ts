@@ -16,11 +16,6 @@ export interface UserCreateRequest {
     firstname?: string;
     /** When true, the user needs to change their password on the next login. */
     forcedPasswordChange?: boolean;
-    /**
-     * Optional group id for the user. If provided the user will automatically be
-     * assigned to the identified group.
-     */
-    groupUuid?: string;
     /** Lastname of the user. */
     lastname?: string;
     /**
@@ -61,9 +56,9 @@ export interface UserPermissionResponse {
 /** User reference of the creator of the element. */
 export interface UserReference {
     /** Firstname of the user */
-    firstName?: string;
+    firstname?: string;
     /** Lastname of the user */
-    lastName?: string;
+    lastname?: string;
     /** Uuid of the user */
     uuid: string;
 }
@@ -75,19 +70,11 @@ export interface UserResetTokenResponse {
     token: string;
 }
 
-export interface User extends Entity {
+export interface EditableUserProperties {
     /** Email address of the user */
     emailAddress?: string;
-    /**
-     * Flag which indicates whether the user is enabled or disabled. Disabled users can
-     * no longer log into Gentics Mesh. Deleting a user user will not remove it. Instead
-     * the user will just be disabled.
-     */
-    enabled: boolean;
     /** Firstname of the user. */
     firstname?: string;
-    /** When true, the user needs to change their password on the next login. */
-    forcedPasswordChange: boolean;
     /** Lastname of the user. */
     lastname?: string;
     /**
@@ -97,9 +84,19 @@ export interface User extends Entity {
     nodeReference?: ExpandableNode;
     /** Username of the user. */
     username: string;
+    /** When true, the user needs to change their password on the next login. */
+    forcedPasswordChange?: boolean;
 }
 
+export interface User extends EditableUserProperties, Entity { }
+
 export interface UserResponse extends User {
+    /**
+     * Flag which indicates whether the user is enabled or disabled. Disabled users can
+     * no longer log into Gentics Mesh. Deleting a user user will not remove it. Instead
+     * the user will just be disabled.
+     */
+    enabled: boolean;
     /** List of group references to which the user belongs. */
     groups: GroupReference[];
     permissions: PermissionInfo;
@@ -108,23 +105,12 @@ export interface UserResponse extends User {
     rolesHash: string;
 }
 
-export interface UserUpdateRequest {
-    /** New email address of the user */
-    emailAddress?: string;
-    /** New firstname of the user */
-    firstname?: string;
-    /** When true, the user needs to change their password on the next login. */
-    forcedPasswordChange?: boolean;
-    /** New lastname of the user */
-    lastname?: string;
+export interface UserUpdateRequest extends EditableUserProperties {
     /**
-     * New node reference of the user. This can also explicitly set to null in order to
-     * remove the assigned node from the user
+     * Optional group id for the user. If provided the user will automatically be
+     * assigned to the identified group.
      */
-    nodeReference?: ExpandableNode;
-    oldPassword?: string;
+    groupUuid?: string;
     /** New password of the user */
     password?: string;
-    /** New username of the user */
-    username?: string;
 }

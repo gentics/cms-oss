@@ -11,12 +11,12 @@
 
     <gtx-tab-pane [id]="MeshMangementTabs.USERS">
         <ng-template gtx-tab-label><icon left>person</icon>{{ 'mesh.management_tab_users' | i18n }}</ng-template>
-        USERS!
+        <gtx-mesh-user-table></gtx-mesh-user-table>
     </gtx-tab-pane>
 
     <gtx-tab-pane [id]="MeshMangementTabs.GROUPS">
         <ng-template gtx-tab-label><icon left>group</icon>{{ 'mesh.management_tab_groups' | i18n }}</ng-template>
-        <gtx-mesh-group-table></gtx-mesh-group-table>
+        <gtx-mesh-group-table [users]="true"></gtx-mesh-group-table>
     </gtx-tab-pane>
 
     <gtx-tab-pane [id]="MeshMangementTabs.ROLES">

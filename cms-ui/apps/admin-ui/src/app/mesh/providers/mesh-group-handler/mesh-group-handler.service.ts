@@ -1,4 +1,5 @@
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { getUserName } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import {
     GroupCreateRequest,
@@ -10,6 +11,7 @@ import {
     RoleReference,
     UserListOptions,
     UserListResponse,
+    UserReference,
 } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
@@ -23,6 +25,16 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         protected mesh: MeshRestClientService,
     ) {
         super(errorHandler, notification);
+    }
+
+    public async get(uuid: string): Promise<GroupResponse> {
+        try {
+            const res = await this.mesh.groups.get(uuid);
+            this.nameMap[res.uuid] = res.name;
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
     }
 
     public async create(body: GroupCreateRequest): Promise<GroupResponse> {
@@ -77,8 +89,8 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
     public async list(params?: GroupListOptions): Promise<GroupListResponse> {
         try {
             const res = await this.mesh.groups.list(params);
-            for (const role of res.data) {
-                this.nameMap[role.uuid] = role.name
+            for (const group of res.data) {
+                this.nameMap[group.uuid] = group.name
             }
             return res;
         } catch (err) {
@@ -86,11 +98,11 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    async getUsers(uuid: string, params?: UserListOptions): Promise<UserListResponse> {
+    async getUsers(uuid: string, _params?: UserListOptions): Promise<UserListResponse> {
         return this.mesh.groups.getUsers(uuid);
     }
 
-    async assignRoleToGroup(role: RoleReference, group: GroupReference): Promise<void> {
+    async assignRole(group: GroupReference, role: RoleReference): Promise<void> {
         try {
             await this.mesh.groups.assignRole(group.uuid, role.uuid);
             this.notification.show({
@@ -106,7 +118,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    async unassignRoleFromGroup(role: RoleReference, group: GroupReference): Promise<void> {
+    async unassignRole(group: GroupReference, role: RoleReference): Promise<void> {
         try {
             await this.mesh.groups.unassignRole(group.uuid, role.uuid);
             this.notification.show({
@@ -114,6 +126,38 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
                 message: 'mesh.unassign_role_from_group_success',
                 translationParams: {
                     roleName: role.name,
+                    groupName: group.name,
+                },
+            });
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    async assignUser(group: GroupReference, user: UserReference): Promise<void> {
+        try {
+            await this.mesh.groups.assignUser(group.uuid, user.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.assign_user_to_group_success',
+                translationParams: {
+                    roleName: getUserName(user),
+                    groupName: group.name,
+                },
+            });
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    async unassignUser(group: GroupReference, user: UserReference): Promise<void> {
+        try {
+            await this.mesh.groups.unassignUser(group.uuid, user.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.unassign_user_from_group_success',
+                translationParams: {
+                    userName: getUserName(user),
                     groupName: group.name,
                 },
             });

@@ -1,11 +1,12 @@
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import { getUserName } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
-import { RoleCreateRequest, RoleListOptions, RoleListResponse, RoleResponse, RoleUpdateRequest } from '@gentics/mesh-models';
+import { UserCreateRequest, UserListOptions, UserListResponse, UserResponse, UserUpdateRequest } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
 
 @Injectable()
-export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
+export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -15,44 +16,46 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         super(errorHandler, notification);
     }
 
-    public async get(uuid: string): Promise<RoleResponse> {
+    public async get(uuid: string): Promise<UserResponse> {
         try {
-            const res = await this.mesh.roles.get(uuid);
-            this.nameMap[res.uuid] = res.name;
+            const res = await this.mesh.users.get(uuid);
+            this.nameMap[res.uuid] = getUserName(res);
             return res;
         } catch (err) {
             this.handleError(err);
         }
     }
 
-    public async create(body: RoleCreateRequest): Promise<RoleResponse> {
+    public async create(body: UserCreateRequest): Promise<UserResponse> {
         try {
-            const res = await this.mesh.roles.create(body);
+            const res = await this.mesh.users.create(body);
+            const name = getUserName(res);
             this.notification.show({
                 type: 'success',
                 message: 'mesh.create_role_success',
                 translationParams: {
-                    entityName: res.name,
+                    entityName: name,
                 },
             });
-            this.nameMap[res.uuid] = res.name;
+            this.nameMap[res.uuid] = name;
             return res;
         } catch (err) {
             this.handleError(err);
         }
     }
 
-    public async update(uuid: string, body: RoleUpdateRequest): Promise<RoleResponse> {
+    public async update(uuid: string, body: UserUpdateRequest): Promise<UserResponse> {
         try {
-            const res = await this.mesh.roles.update(uuid, body);
+            const res = await this.mesh.users.update(uuid, body);
+            const name = getUserName(res);
             this.notification.show({
                 type: 'success',
                 message: 'mesh.update_role_success',
                 translationParams: {
-                    entityName: res.name,
+                    entityName: name,
                 },
             });
-            this.nameMap[res.uuid] = res.name;
+            this.nameMap[res.uuid] = name;
             return res;
         } catch (err) {
             this.handleError(err);
@@ -61,7 +64,7 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.roles.delete(uuid);
+            await this.mesh.users.delete(uuid);
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
@@ -76,11 +79,11 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public async list(params?: RoleListOptions): Promise<RoleListResponse> {
+    public async list(params?: UserListOptions): Promise<UserListResponse> {
         try {
-            const res = await this.mesh.roles.list(params);
-            for (const role of res.data) {
-                this.nameMap[role.uuid] = role.name
+            const res = await this.mesh.users.list(params);
+            for (const user of res.data) {
+                this.nameMap[user.uuid] = getUserName(user);
             }
             return res;
         } catch (err) {

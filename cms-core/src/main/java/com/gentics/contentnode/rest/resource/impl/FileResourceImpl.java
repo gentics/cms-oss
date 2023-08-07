@@ -21,6 +21,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.DisinheritUtils;
@@ -142,6 +143,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -525,16 +527,16 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 
 				Integer finalFileId = fileId;
-				String finalMimeType = mimeType;
-				InputStream inputStream = getFileInputStream(isImage, request.getInputStream(), node);
+				AtomicReference<String> mediaType = new AtomicReference<>(mimeType);
+				InputStream inputStream = getFileInputStream(isImage, request.getInputStream(), mediaType, node);
 
 				return (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
 					if (finalFileId == null) {
 						// Create a new file
-						return createFile(inputStream, folderId, nodeId, sanitizedFilename, finalMimeType, description, null, Collections.emptySet(), Collections.emptyMap());
+						return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
-						return saveFile(inputStream, finalFileId, sanitizedFilename, finalMimeType, description, null, Collections.emptySet(), Collections.emptyMap());
+						return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
 					}
 				});
 			}
@@ -616,10 +618,9 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 			NodeLogger.getNodeLogger(getClass()).debug("Post Data: " + metaData);
 			// Extract values from the fileDataBodyPart
-			String mediaType = fileDataBodyPart.getMediaType().toString();
-			String subMediaType = fileDataBodyPart.getMediaType().getSubtype();
-
-			boolean isImage = subMediaType.equals("image");
+			String partMediaType = fileDataBodyPart.getMediaType().toString();
+			String mainMediaType = fileDataBodyPart.getMediaType().getType().toString();
+			boolean isImage =  mainMediaType.equals("image");
 
 			if (ObjectTransformer.isEmpty(metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY))) {
 				String partFilename = fileDataBodyPart.getContentDisposition().getFileName();
@@ -668,13 +669,15 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 
 				// If webp conversion is enabled and this is an image, the input stream has to be converted to webp.
-				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, folder.getNode())) {
+				AtomicReference<String> mediaType = new AtomicReference<>(partMediaType);
+
+				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, mediaType, folder.getNode())) {
 					if (fileId == 0) {
 						// Create a new file
-						return createFile(in, folderId, nodeId, filename, mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
+						return createFile(in, folderId, nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
-						return saveFile(in, fileId, filename, mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
+						return saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
 					}
 				}
 			}
@@ -789,15 +792,16 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> {
 				try (ChannelTrx ctrx = new ChannelTrx(nodeId)) {
+					AtomicReference<String> mediaType = new AtomicReference<>(null);
 
-					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), folder.getNode())) {
+					try (InputStream fileDataInputStream = getFileInputStream(isImage, getMethod.getResponseBodyAsStream(), mediaType, folder.getNode())) {
 						if (finalFileId == 0) {
 							// Create a new file
 							return createFile(fileDataInputStream, request.getFolderId(), request.getNodeId(), request.getName(),
-								null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
 						} else {
 							// Save data to an existing file
-							return saveFile(fileDataInputStream, finalFileId, request.getName(), null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+							return saveFile(fileDataInputStream, finalFileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
 						}
 					} catch (IOException e) {
 						throw new NodeException(e);
@@ -825,7 +829,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param inputStream The input stream to convert.
 	 * @return The possibly converted input stream.
 	 */
-	private InputStream getFileInputStream(boolean isImage, InputStream inputStream, Node node) throws IOException {
+	private InputStream getFileInputStream(boolean isImage, InputStream inputStream, AtomicReference<String> mediaType, Node node) throws IOException {
 		if (!isImage || !NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
 			return inputStream;
 		}
@@ -834,6 +838,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		ByteArrayOutputStream convertedData = new ByteArrayOutputStream();
 
 		ImageIO.write(source, "webp", convertedData);
+
+		mediaType.set("image/webp");
 
 		return new ByteArrayInputStream(convertedData.toByteArray());
 	}
@@ -917,15 +923,17 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * 		filename otherwise.
 	 */
 	private String adjustFilename(boolean isImage, String filename, Integer nodeId, Integer folderId) throws NodeException {
-		try (ChannelTrx trx = new ChannelTrx(nodeId)) {
-			Folder folder = TransactionManager.getCurrentTransaction().getObject(Folder.class, folderId);
+		return Trx.supply(() -> {
+			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+				Folder folder = TransactionManager.getCurrentTransaction().getObject(Folder.class, folderId);
 
-			if (folder == null) {
-				throw new EntityNotFoundException("No folder with ID `" + folderId + "'");
+				if (folder == null) {
+					throw new EntityNotFoundException("No folder with ID `" + folderId + "'");
+				}
+
+				return adjustFilename(isImage, filename, folder.getNode());
 			}
-
-			return adjustFilename(isImage, filename, folder.getNode());
-		}
+		});
 	}
 
 	/**

@@ -2321,6 +2321,12 @@ public class FolderFactory extends AbstractFactory {
 				sql.append(" AND (contentfile.nice_url REGEXP ? OR contentfile_alt_url.url REGEXP ?)");
 			}
 
+			if (!StringUtils.isEmpty(search.getMimeType())) {
+				sql.append(" AND contentfile.filetype ")
+					.append(search.isExcludeMimeType() ? "<>" : "=")
+					.append(" ?");
+			}
+
 			return sql;
 		}
 
@@ -2387,6 +2393,10 @@ public class FolderFactory extends AbstractFactory {
 			if (!StringUtils.isEmpty(search.getNiceUrlSearch())) {
 				stmt.setObject(pCounter++, search.getNiceUrlSearch());
 				stmt.setObject(pCounter++, search.getNiceUrlSearch());
+			}
+
+			if (!StringUtils.isEmpty(search.getMimeType())) {
+				stmt.setObject(pCounter++, search.getMimeType());
 			}
 
 			return pCounter;

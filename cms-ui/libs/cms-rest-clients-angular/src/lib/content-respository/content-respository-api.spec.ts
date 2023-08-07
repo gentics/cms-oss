@@ -32,7 +32,6 @@ describe('ContentRepositoryApi', () => {
             crType: 'mesh',
             dbType: 'mysql',
             username: 'root',
-            usePassword: false,
             url: 'jdbc:mariadb://db:3306/contentRepository',
             basepath: '',
             instantPublishing: true,

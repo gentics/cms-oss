@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, PagingMetaInfo, PermissionInfo } from './common';
+import { BasicListOptions, Entity, PagingMetaInfo, PermissionInfo } from './common';
 import { RoleReference } from './roles';
-import { UserReference } from './users';
 
 export interface GroupCreateRequest {
     /** Name of the group. */
@@ -24,23 +23,16 @@ export interface GroupReference {
     uuid: string;
 }
 
-export interface GroupResponse {
-    /** ISO8601 formatted created date string. */
-    created: string;
-    /** User reference of the creator of the element. */
-    creator: UserReference;
-    /** ISO8601 formatted edited date string. */
-    edited: string;
-    /** User reference of the creator of the element. */
-    editor: UserReference;
+export interface Group {
     /** Name of the group */
     name: string;
+}
+
+export interface GroupResponse extends Entity, Group {
     permissions: PermissionInfo;
     rolePerms: PermissionInfo;
     /** List of role references */
     roles: RoleReference[];
-    /** Uuid of the element */
-    uuid: string;
 }
 
 export interface GroupUpdateRequest {

@@ -1,5 +1,5 @@
 <div class="modal-title">
-    <h5>{{ 'modal.create_role_title' | i18n }}</h5>
+    <h5>{{ (mode === MeshRolePropertiesMode.CREATE ? 'modal.create_role_title' : 'mesh.update_role') | i18n: { entityName: role?.name } }}</h5>
 </div>
 
 <div class="modal-content">
@@ -15,7 +15,7 @@
         [disabled]="!form.valid && form.enabled"
         (click)="buttonCreateEntityClicked()"
     >
-        {{ 'modal.create_role_button' | i18n }}
+        {{ (mode === MeshRolePropertiesMode.CREATE ? 'modal.create_role_button' : 'modal.update_button') | i18n }}
     </gtx-button>
 
     <gtx-button

@@ -9,6 +9,9 @@ import {
     CoordinatorConfig,
     CoordinatorMasterResponse,
     GenericMessageResponse,
+    GraphQLOptions,
+    GraphQLRequest,
+    GraphQLResponse,
     GroupCreateRequest,
     GroupListOptions,
     GroupListResponse,
@@ -114,6 +117,10 @@ export interface MeshGroupAPI {
     get(uuid: string): Promise<GroupResponse>;
     update(uuid: string, body: GroupUpdateRequest): Promise<GroupResponse>;
     delete(uuid: string): Promise<GenericMessageResponse>;
+
+    getRoles(uuid: string, params?: RoleListOptions): Promise<RoleListResponse>;
+    assignRole(uuid: string, roleUuid: string): Promise<GroupResponse>;
+    unassignRole(uuid: string, roleUuid: string): Promise<void>;
 }
 
 export interface MeshProjectAPI {
@@ -208,3 +215,5 @@ export interface MeshClusterAPI {
 export interface MeshPluginAPI {
     list(): Promise<PluginListResponse>;
 }
+
+export type MeshGraphQLAPI = (project: string, body: GraphQLRequest, params?: GraphQLOptions) => Promise<GraphQLResponse>;

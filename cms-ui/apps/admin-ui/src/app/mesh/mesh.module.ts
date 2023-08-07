@@ -8,20 +8,24 @@ import {
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,
+    MeshGroupTableComponent,
     MeshRoleModal,
     MeshRolePropertiesComponent,
     MeshRoleTableComponent,
+    SelectGroupModal,
     ServerOverviewComponent,
 } from './components';
-import { MeshRoleTableLoaderService } from './providers';
+import { MeshGroupTableLoaderService, MeshRoleTableLoaderService } from './providers';
 
 const COMPONENTS: Type<any>[] = [
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,
+    MeshGroupTableComponent,
     MeshRoleModal,
     MeshRolePropertiesComponent,
     MeshRoleTableComponent,
+    SelectGroupModal,
     ServerOverviewComponent,
 ];
 
@@ -30,6 +34,7 @@ const DECLARATIONS = [
 ];
 
 const SERVICES: Provider[] = [
+    MeshGroupTableLoaderService,
     MeshRoleTableLoaderService,
 ];
 

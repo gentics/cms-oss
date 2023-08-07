@@ -6,6 +6,7 @@ import {
     MeshClientConnection,
     MeshClusterAPI,
     MeshCoordinatorAPI,
+    MeshGraphQLAPI,
     MeshGroupAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
@@ -105,5 +106,9 @@ export class MeshRestClientService {
 
     get plugins(): MeshPluginAPI {
         return this.client.plugins;
+    }
+
+    get graphql(): MeshGraphQLAPI {
+        return this.client.graphql;
     }
 }

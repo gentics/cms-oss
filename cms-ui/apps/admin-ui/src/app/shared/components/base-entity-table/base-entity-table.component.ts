@@ -50,6 +50,9 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selected: string[] = [];
 
     @Input()
+    public multiple = true;
+
+    @Input()
     public activeEntity: string;
 
     @Input()

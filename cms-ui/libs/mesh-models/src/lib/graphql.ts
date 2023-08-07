@@ -11,6 +11,11 @@ export interface GraphQLError {
     type: string;
 }
 
+export interface GraphQLOptions {
+    /** Specify whether search should wait for the search to be idle before responding. */
+    wait?: boolean;
+}
+
 export interface GraphQLRequest {
     /** GraphQL operation name. */
     operationName?: string;

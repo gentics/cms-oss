@@ -16,6 +16,8 @@ import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-proper
 })
 export class MeshRoleModal extends BaseModal<Role> implements OnInit {
 
+    public readonly MeshRolePropertiesMode = MeshRolePropertiesMode;
+
     @Input()
     public mode: MeshRolePropertiesMode;
 

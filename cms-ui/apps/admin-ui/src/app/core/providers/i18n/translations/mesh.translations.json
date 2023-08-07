@@ -122,5 +122,33 @@
     "coordinatorMode_ALL": {
         "de": "Alle",
         "en": "All"
+    },
+    "assignRolesToGroups": {
+        "de": "Rollen zu Gruppen zuweisen",
+        "en": "Assign Roles to Groups"
+    },
+    "unassignRolesFromGroups": {
+        "de": "Rollen von Gruppen entfernen",
+        "en": "Unassign Roles from Groups"
+    },
+    "update_role": {
+        "de": "Rolle „{{ entityName }}“ aktualisieren",
+        "en": "Update Role \"{{ entityName }}\""
+    },
+    "assign_role_to_group_success": {
+        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
+        "en": "Successfully assigned Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "assign_role_to_group_error": {
+        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
+        "en": "Could not assign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "unassign_role_from_group_success": {
+        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
+        "en": "Successfully unassigned Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
+    },
+    "unassign_role_from_group_error": {
+        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
+        "en": "Could not unassign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
     }
 }

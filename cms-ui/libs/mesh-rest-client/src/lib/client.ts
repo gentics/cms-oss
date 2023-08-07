@@ -1,5 +1,6 @@
 import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_AUTHORIZATION, HTTP_HEADER_CONTENT_TYPE, POST } from './internal';
 import {
+    MeshGraphQLAPI,
     MeshAPIVersion,
     MeshAuthAPI,
     MeshBranchAPI,
@@ -122,21 +123,15 @@ export class MeshRestClient {
     } as const;
 
     public groups: MeshGroupAPI = {
-        list: (params?) => {
-            return this.performReqeust(GET, '/groups', null, params);
-        },
-        create: (body) => {
-            return this.performReqeust(POST, '/groups', body);
-        },
-        get: (uuid) => {
-            return this.performReqeust(GET, `/groups/${uuid}`);
-        },
-        update: (uuid, body) => {
-            return this.performReqeust(POST, `/groups/${uuid}`, body);
-        },
-        delete: (uuid) => {
-            return this.performReqeust(DELETE, `/groups/${uuid}`);
-        },
+        list: (params?) => this.performReqeust(GET, '/groups', null, params),
+        create: (body) => this.performReqeust(POST, '/groups', body),
+        get: (uuid) => this.performReqeust(GET, `/groups/${uuid}`),
+        update: (uuid, body) => this.performReqeust(POST, `/groups/${uuid}`, body),
+        delete: (uuid) => this.performReqeust(DELETE, `/groups/${uuid}`),
+
+        getRoles: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
+        assignRole: (uuid, roleUuid) => this.performReqeust(POST, `/groups/${uuid}/roles/${roleUuid}`),
+        unassignRole: (uuid, roleUuid) => this.performReqeust(DELETE, `/groups/${uuid}/roles/${roleUuid}`),
     } as const;
 
     public projects: MeshProjectAPI = {
@@ -282,4 +277,6 @@ export class MeshRestClient {
     public plugins: MeshPluginAPI = {
         list: () => this.performReqeust(GET, '/admin/plugins'),
     } as const;
+
+    public graphql: MeshGraphQLAPI = (project, body, params) => this.performReqeust(POST, `/${project}/graphql`, body, params);
 }

@@ -183,6 +183,10 @@
         "en": "Project per Node",
         "de": "Projekt pro Node"
     },
+    "property_http2": {
+        "en": "Use HTTP/2",
+        "de": "HTTP/2 verwenden"
+    },
     "property_statusDate": {
         "en": "Statusdate",
         "de": "Statusdatum"

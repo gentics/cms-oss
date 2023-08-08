@@ -5,7 +5,8 @@ import { Injectable } from '@angular/core';
 import { Group, GroupResponse, Permission } from '@gentics/mesh-models';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { MeshGroupBO } from '../../common';
+import { toPermissionArray } from '@admin-ui/mesh/utils';
+import { MBO_PERMISSION_PATH, MBO_TYPE, MeshGroupBO, MeshType } from '../../common';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
 
 export interface MeshGroupTableLoaderOptions {
@@ -47,7 +48,9 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
                     ...group,
                     [BO_ID]: group.uuid,
                     [BO_DISPLAY_NAME]: group.name,
-                    [BO_PERMISSIONS]: this.getPermissions(group),
+                    [BO_PERMISSIONS]: toPermissionArray(group.permissions),
+                    [MBO_PERMISSION_PATH]: `groups/${group.uuid}`,
+                    [MBO_TYPE]: MeshType.GROUP,
                 }));
 
                 return {
@@ -76,11 +79,5 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
                 );
             }),
         );
-    }
-
-    protected getPermissions(group: GroupResponse): Permission[] {
-        return Object.entries((group.permissions || {}))
-            .filter(([, value]) => value)
-            .map(([key]) => key as Permission);
     }
 }

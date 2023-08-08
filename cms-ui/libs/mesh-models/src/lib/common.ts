@@ -31,6 +31,15 @@ export interface BasicListOptions extends PagingOptions, SortingOptions {
     branch?: string;
 }
 
+export interface PermissionListOptions {
+    /**
+     * The role query parameter take a UUID of a role and may be used to add permission information to the response
+     * via the rolePerm property which lists the permissions for the specified role on the element.
+     * This may be useful when you are logged in as admin but you want to retrieve the editor role permissions on a given node.
+     */
+    role?: string;
+}
+
 export enum Permission {
     CREATE = 'create',
     DELETE = 'delete',

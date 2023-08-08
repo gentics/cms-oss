@@ -20,6 +20,7 @@ import {
     MeshServerAPI,
     MeshUserAPI,
     RequestMethod,
+    MeshPermissionAPI,
 } from './models';
 import { toRelativePath, trimTrailingSlash } from './utils';
 
@@ -114,6 +115,13 @@ export class MeshRestClient {
         getUsers: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}/users`, null, params),
         assignUser: (uuid, userUuid) => this.performReqeust(POST, `/groups/${uuid}/users/${userUuid}`),
         unassignUser: (uuid, userUuid) => this.performReqeust(DELETE, `/groups/${uuid}/users/${userUuid}`),
+    } as const;
+
+    public permissions: MeshPermissionAPI = {
+        get: (roleUuid, path) => this.performReqeust(GET, `/roles/${roleUuid}/permissions/${path}`),
+        set: (roleUuid, path, body) => this.performReqeust(POST, `/roles/${roleUuid}/permissions/${path}`, body),
+
+        check: (userUuid, path) => this.performReqeust(GET, `/user/${userUuid}/permissions/${path}`),
     } as const;
 
     public projects: MeshProjectAPI = {

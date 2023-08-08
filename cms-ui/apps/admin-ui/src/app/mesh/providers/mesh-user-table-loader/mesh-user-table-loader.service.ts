@@ -1,12 +1,12 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
-import { getUserName } from '@admin-ui/mesh/utils';
+import { getUserName, toPermissionArray } from '@admin-ui/mesh/utils';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { Permission, User, UserResponse } from '@gentics/mesh-models';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MeshUserBO } from '../../common';
+import { MBO_PERMISSION_PATH, MBO_TYPE, MeshType, MeshUserBO } from '../../common';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
 
 @Injectable()
@@ -44,7 +44,9 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
                     ...user,
                     [BO_ID]: user.uuid,
                     [BO_DISPLAY_NAME]: getUserName(user),
-                    [BO_PERMISSIONS]: this.getPermissions(user),
+                    [BO_PERMISSIONS]: toPermissionArray(user.permissions),
+                    [MBO_PERMISSION_PATH]: `users/${user.uuid}`,
+                    [MBO_TYPE]: MeshType.USER,
                 }));
 
                 return {
@@ -54,11 +56,5 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
                 };
             }),
         );
-    }
-
-    protected getPermissions(user: UserResponse): Permission[] {
-        return Object.entries((user.permissions || {}))
-            .filter(([, value]) => value)
-            .map(([key]) => key as Permission);
     }
 }

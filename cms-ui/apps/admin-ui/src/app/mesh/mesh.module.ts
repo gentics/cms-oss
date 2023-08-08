@@ -30,10 +30,12 @@ import {
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
     MeshRoleHandlerService,
+    MeshRolePermissionsTrableLoaderService,
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
 } from './providers';
+import { MeshIconPipe } from './pipes';
 
 const COMPONENTS: Type<any>[] = [
     CopyTokenModal,
@@ -58,14 +60,20 @@ const COMPONENTS: Type<any>[] = [
     ServerOverviewComponent,
 ];
 
+const PIPES: Type<any>[] = [
+    MeshIconPipe,
+];
+
 const DECLARATIONS = [
     ...COMPONENTS,
+    ...PIPES,
 ];
 
 const SERVICES: Provider[] = [
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
     MeshRoleHandlerService,
+    MeshRolePermissionsTrableLoaderService,
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,

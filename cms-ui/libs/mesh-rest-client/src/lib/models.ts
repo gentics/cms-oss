@@ -42,6 +42,8 @@ import {
     RoleCreateRequest,
     RoleListOptions,
     RoleListResponse,
+    RolePermissionRequest,
+    RolePermissionResponse,
     RoleResponse,
     RoleUpdateRequest,
     SchemaChanges,
@@ -128,6 +130,13 @@ export interface MeshGroupAPI {
     getUsers(uuid: string, params?: UserListOptions): Promise<UserListResponse>;
     assignUser(uuid: string, userUuid: string): Promise<GroupResponse>;
     unassignUser(uuid: string, userUuid: string): Promise<void>;
+}
+
+export interface MeshPermissionAPI {
+    get(roleUuid: string, path: string): Promise<RolePermissionResponse>;
+    set(roleUuid: string, path: string, body: RolePermissionRequest): Promise<GenericMessageResponse>;
+
+    check(userUuid: string, path: string): Promise<RolePermissionResponse>;
 }
 
 export interface MeshProjectAPI {

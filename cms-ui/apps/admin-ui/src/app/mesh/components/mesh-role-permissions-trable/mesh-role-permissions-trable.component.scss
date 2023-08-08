@@ -1,0 +1,62 @@
+@import '../../../shared/components/base-entity-trable/base-entity-trable.component.scss';
+@import 'variables';
+
+.name-wrapper {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+
+    .type-icon {
+        display: inline-block;
+        font-size: 20px;
+        height: 24px;
+        margin-right: 0.5rem;
+
+        &::ng-deep .gtx-icon {
+            font-size: inherit !important;
+        }
+    }
+
+    .name {
+        margin-top: 1px;
+        display: inline-block;
+    }
+}
+
+.gtx-perm-icon::ng-deep {
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    font-size: 18px;
+
+    .gtx-icon {
+        font-size: inherit !important;
+    }
+}
+
+.permissions-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+
+    .permission-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin: auto 0.25rem;
+        color: $gtx-color-dark-gray;
+
+        &.granted {
+            color: $gtx-color-primary;
+        }
+
+        icon {
+            font-size: inherit;
+            width: inherit;
+            height: inherit;
+            color: inherit;
+        }
+    }
+}

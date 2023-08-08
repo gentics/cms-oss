@@ -10,6 +10,7 @@ import {
     MeshGroupAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
+    MeshPermissionAPI,
     MeshPluginAPI,
     MeshProjectAPI,
     MeshProjectMicroschemaAPI,
@@ -62,6 +63,10 @@ export class MeshRestClientService {
 
     get groups(): MeshGroupAPI {
         return this.client.groups;
+    }
+
+    get permissions(): MeshPermissionAPI {
+        return this.client.permissions;
     }
 
     get projects(): MeshProjectAPI {

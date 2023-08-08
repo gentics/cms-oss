@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, Entity, PagingMetaInfo, PermissionInfo } from './common';
+import { BasicListOptions, Entity, PagingMetaInfo, PermissionInfo, PermissionListOptions } from './common';
 import { RoleReference } from './roles';
 
 export interface GroupCreateRequest {
@@ -7,7 +7,7 @@ export interface GroupCreateRequest {
     name: string;
 }
 
-export interface GroupListOptions extends BasicListOptions { }
+export interface GroupListOptions extends BasicListOptions, PermissionListOptions { }
 
 export interface GroupListResponse {
     /** Paging information of the list result. */

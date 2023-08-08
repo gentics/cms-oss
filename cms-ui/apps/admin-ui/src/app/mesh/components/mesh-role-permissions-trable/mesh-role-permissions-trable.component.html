@@ -1,0 +1,46 @@
+<gtx-trable
+    class="entity-trable"
+
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [multiple]="multiple"
+    [inlineExpansion]="inlineExpansion"
+    [inlineSelection]="inlineSelection"
+
+    [columns]="columns"
+    [rows]="rows"
+    [active]="activeEntity"
+    [selected]="selection"
+
+    [renderers]="{
+        name: nameRenderer,
+        '__fallback__': permissionRenderer
+    }"
+
+    (loadRow)="loadRow($event)"
+    (rowClick)="handleRowClick($event)"
+    (rowExpand)="updateRowExpansion($event)"
+    (actionClick)="handleActionClick($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+></gtx-trable>
+
+<ng-template #nameRenderer let-value="value" let-row="row">
+    <div class="name-wrapper">
+        <icon class="gtx-type-icon type-icon">{{ row.item | gtxMeshIcon }}</icon>
+        <span class="name">{{ value }}</span>
+    </div>
+</ng-template>
+
+<ng-template #permissionRenderer let-value="value" let-row="row">
+    <div class="permissions-wrapper">
+        <div
+            *ngFor="let perm of row.item[MBO_AVILABLE_PERMISSIONS]"
+            class="permission-icon"
+            [class.granted]="row.item[MBO_ROLE_PERMISSIONS] | gtxIncludes:perm"
+        >
+            <icon>{{ perm | gtxMeshIcon }}</icon>
+        </div>
+    </div>
+</ng-template>

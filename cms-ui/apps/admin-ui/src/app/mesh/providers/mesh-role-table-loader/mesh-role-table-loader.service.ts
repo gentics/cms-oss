@@ -5,7 +5,8 @@ import { Injectable } from '@angular/core';
 import { Permission, Role, RoleResponse } from '@gentics/mesh-models';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MeshRoleBO } from '../../common';
+import { toPermissionArray } from '@admin-ui/mesh/utils';
+import { MBO_PERMISSION_PATH, MBO_TYPE, MeshRoleBO, MeshType } from '../../common';
 import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
 
 @Injectable()
@@ -43,7 +44,9 @@ export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, Mes
                     ...role,
                     [BO_ID]: role.uuid,
                     [BO_DISPLAY_NAME]: role.name,
-                    [BO_PERMISSIONS]: this.getPermissions(role),
+                    [BO_PERMISSIONS]: toPermissionArray(role.permissions),
+                    [MBO_PERMISSION_PATH]: `roles/${role.uuid}`,
+                    [MBO_TYPE]: MeshType.ROLE,
                 }));
 
                 return {
@@ -53,11 +56,5 @@ export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, Mes
                 };
             }),
         );
-    }
-
-    protected getPermissions(role: RoleResponse): Permission[] {
-        return Object.entries((role.permissions || {}))
-            .filter(([, value]) => value)
-            .map(([key]) => key as Permission);
     }
 }

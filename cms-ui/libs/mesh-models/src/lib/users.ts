@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, Entity, ExpandableNode, PagingMetaInfo, PermissionInfo } from './common';
+import { BasicListOptions, Entity, ExpandableNode, PagingMetaInfo, PermissionInfo, PermissionListOptions } from './common';
 import { GroupReference } from './groups';
 
 export interface UserAPITokenResponse {
@@ -29,7 +29,7 @@ export interface UserCreateRequest {
     username: string;
 }
 
-export interface UserListOptions extends BasicListOptions { }
+export interface UserListOptions extends BasicListOptions, PermissionListOptions { }
 
 export interface UserListResponse {
     /** Paging information of the list result. */

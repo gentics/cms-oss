@@ -20,8 +20,9 @@
     <div *ngIf="mode === MeshUserPropertiesMode.CREATE" class="row">
         <gtx-password-confirm-input
             class="columns small-12"
-            [label]="'user.password' | i18n"
-            [required]="true"
+            [label]="('user.password' | i18n) + '*'"
+            [confirmLabel]="'mesh.confirm_addition' | i18n: { label: ('user.password' | i18n) }"
+            [missmatchText]="'mesh.password_missmatch' | i18n"
             formControlName="password"
         ></gtx-password-confirm-input>
     </div>
@@ -38,6 +39,20 @@
             [label]="'shared.last_name' | i18n"
             formControlName="lastname"
         ></gtx-input>
+    </div>
+
+    <div class="row">
+        <gtx-checkbox
+            class="columns small-6"
+            [label]="'mesh.force_password_reset' | i18n"
+            formControlName="forcedPasswordChange"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            class="columns small-6"
+            [label]="'mesh.admin_permissions' | i18n"
+            formControlName="admin"
+        ></gtx-checkbox>
     </div>
 
 </form>

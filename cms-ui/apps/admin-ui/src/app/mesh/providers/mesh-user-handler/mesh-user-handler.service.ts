@@ -1,7 +1,7 @@
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import { getUserName } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
-import { UserCreateRequest, UserListOptions, UserListResponse, UserResponse, UserUpdateRequest } from '@gentics/mesh-models';
+import { UserAPITokenResponse, UserCreateRequest, UserListOptions, UserListResponse, UserResponse, UserUpdateRequest } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
 
@@ -85,6 +85,15 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
             for (const user of res.data) {
                 this.nameMap[user.uuid] = getUserName(user);
             }
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async createAPIToken(uuid: string): Promise<UserAPITokenResponse> {
+        try {
+            const res = await this.mesh.users.createAPIToken(uuid);
             return res;
         } catch (err) {
             this.handleError(err);

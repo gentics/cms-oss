@@ -16,7 +16,7 @@
         [disabled]="disabled"
         (click)="handleCreateButton()"
     >
-        <icon left>add</icon> {{ 'shared.create_new_role_button' | i18n }}
+        <icon left>add</icon> {{ 'shared.create_new_user_button' | i18n }}
     </gtx-button>
 
     <gtx-button
@@ -32,7 +32,7 @@
 </div>
 
 <div *ngIf="selectable" class="entity-table-selection">
-    {{ 'role.info_selected_roles' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
+    {{ 'shared.info_selected_users' | i18n:{ amountSelected: selected?.length, amountTotal: totalCount } }}
 </div>
 
 <gtx-progress-bar class="load-bar" [active]="loading"></gtx-progress-bar>

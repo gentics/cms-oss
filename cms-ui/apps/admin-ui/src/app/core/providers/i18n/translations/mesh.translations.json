@@ -123,6 +123,50 @@
         "de": "Alle",
         "en": "All"
     },
+    "admin_permissions": {
+        "de": "Administrator Berechtigungen",
+        "en": "Administrator Permissions"
+    },
+    "force_password_reset": {
+        "de": "Benutzer muss Passwort beim nächsten Login ändern",
+        "en": "Force user to change password on login"
+    },
+    "confirm_addition": {
+        "de": "{{ label }} bestätigen",
+        "en": "Confirm {{ label }}"
+    },
+    "password_missmatch": {
+        "en": "Passwords don not match",
+        "de": "Passwörter nicht ident"
+    },
+    "create_api_token": {
+        "de": "Neuen API Token erstellen",
+        "en": "Create new API Token"
+    },
+    "create_api_token_warning": {
+        "de": "Sind Sie sicher, dass Sie einen neuen API Token für den Benuzter „{{ user }}“ erstellen möchten?<br/><b>Der zuvor erstelle Token wird somit invalide, und nur der neue Token kann dann benutzt werden.</b><br/>Möchten Sie fortfahren?",
+        "en": "Are you sure you want to create a new API Token for the User \"{{ user }}\"?<br/><b>The previously created Token will become invalid and cannot be used anymore.</b><br/>Do you wish to proceed?"
+    },
+    "api_token": {
+        "de": "API Token",
+        "en": "API Token"
+    },
+    "api_token_from": {
+        "de": "API Token von „{{ user }}“",
+        "en": "API Token of \"{{ user }}\""
+    },
+    "copy_token": {
+        "de": "Token kopieren",
+        "en": "Copy Token"
+    },
+    "copy_token_success": {
+        "de": "Token wurde in die Zwischenablage kopiert",
+        "en": "The Token has been copied to the Clipboard"
+    },
+    "copy_token_error": {
+        "de": "Der Token konnte nicht kopiert werden",
+        "en": "The Token could not be copied"
+    },
     "assign_roles_to_groups": {
         "de": "Rollen zu Gruppen zuweisen",
         "en": "Assign Roles to Groups"

@@ -20,6 +20,12 @@ export class PasswordConfirmInputComponent
     public visible = false;
 
     @Input()
+    public confirmLabel: string = null;
+
+    @Input()
+    public missmatchText: string = null;
+
+    @Input()
     public initialValue = false;
 
     @Output()
@@ -46,11 +52,13 @@ export class PasswordConfirmInputComponent
 
     updatePassword(value: string): void {
         this.actualPassword = value;
+        this.triggerTouch();
         this.checkAndTrigger();
     }
 
     updateConfirmation(value: string): void {
         this.confirmationValue = value;
+        this.triggerTouch();
         this.checkAndTrigger();
     }
 

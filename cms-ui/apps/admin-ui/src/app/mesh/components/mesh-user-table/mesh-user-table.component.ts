@@ -1,7 +1,7 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { MeshUserBO } from '@admin-ui/mesh/common';
-import { MeshUserHandlerService, MeshUserTableLoaderService } from '@admin-ui/mesh/providers';
+import { MeshGroupBO, MeshUserBO } from '@admin-ui/mesh/common';
+import { MeshGroupHandlerService, MeshUserHandlerService, MeshUserTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
@@ -10,13 +10,17 @@ import { Permission, User } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { getUserName } from '@admin-ui/mesh/utils';
 import { MeshUserModal } from '../mesh-user-modal/mesh-user-modal.component';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
+import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
+import { CopyTokenModal } from '../copy-token-modal/copy-token-modal.component';
 
 const EDIT_ACTION = 'edit';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
 const UNASSIGN_FROM_GROUPS_ACTION = 'unassignFromGroup';
 const MANAGE_GROUPS_ACTION = 'manageGroups';
+const CREATE_API_TOKEN_ACTION = 'createApiToken';
 
 @Component({
     selector: 'gtx-mesh-user-table',
@@ -61,6 +65,7 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
         loader: MeshUserTableLoaderService,
         modalService: ModalService,
         protected handler: MeshUserHandlerService,
+        protected groupHandler: MeshGroupHandlerService,
     ) {
         super(
             changeDetector,
@@ -82,6 +87,14 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
                         label: this.i18n.instant('common.edit'),
                         enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
                         type: 'primary',
+                        single: true,
+                    },
+                    {
+                        id: CREATE_API_TOKEN_ACTION,
+                        icon: 'vpn_key',
+                        label: this.i18n.instant('mesh.create_api_token'),
+                        enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        type: 'warning',
                         single: true,
                     },
                     {
@@ -134,6 +147,10 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
                 this.openModal(MeshUserPropertiesMode.EDIT, event.item);
                 return;
 
+            case CREATE_API_TOKEN_ACTION:
+                this.createApiToken(event.item);
+                return;
+
             case MANAGE_GROUPS_ACTION:
                 this.manageGroupAssignment(event.item);
                 return;
@@ -150,80 +167,112 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
         super.handleAction(event);
     }
 
-    /* eslint-disable */
-    async manageGroupAssignment(role: MeshUserBO): Promise<void> {
-        const assignedGroupIds = role.groups.map(group => group.uuid);
+    async createApiToken(user: MeshUserBO): Promise<void> {
+        const dialog = await this.modalService.dialog({
+            title: this.i18n.instant('mesh.create_api_token'),
+            body: this.i18n.instant('mesh.create_api_token_warning', {
+                user: getUserName(user),
+            }),
+            buttons: [
+                {
+                    label: this.i18n.instant('shared.confirm_button'),
+                    type: 'warning',
+                    returnValue: true,
+                },
+                {
+                    label: this.i18n.instant('common.cancel_button'),
+                    type: 'secondary',
+                    returnValue: false,
+                },
+            ],
+        });
+        const shouldProceed = await dialog.open();
+        if (!shouldProceed) {
+            return;
+        }
 
-        // const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
-        //     title: 'mesh.manage_group_assignment',
-        //     multiple: true,
-        //     selected: (role.groups || []).map(group => group.uuid),
-        // });
-
-        // const groups: MeshGroupBO[] = await dialog.open();
-        // const newGroupIds = groups.map(group => group.uuid);
-
-        // const toAssign = groups.filter(group => !assignedGroupIds.includes(group.uuid));
-        // const toRemove = role.groups.filter(group => !newGroupIds.includes(group.uuid));
-
-        // // Nothing to do
-        // if (toAssign.length === 0 && toRemove.length === 0) {
-        //     return;
-        // }
-
-        // for (const group of toAssign) {
-        //     this.handler.assignRoleToGroup(role, group);
-        // }
-        // for (const group of toRemove) {
-        //     this.handler.unassignRoleFromGroup(role, group);
-        // }
-
-        // this.reload();
+        const res = await this.handler.createAPIToken(user.uuid);
+        const copyModal = await this.modalService.fromComponent(CopyTokenModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+        }, {
+            token: res.token,
+            user: user,
+        });
+        await copyModal.open();
     }
 
-    async handleAssignToGroupsAction(roleIds: string[]): Promise<void> {
-        // const roles = this.loader.getEntitiesByIds(roleIds);
-        // const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
-        //     title: 'mesh.assign_roles_to_groups',
-        //     multiple: true,
-        // });
+    async manageGroupAssignment(user: MeshUserBO): Promise<void> {
+        const assignedGroupIds = user.groups.map(group => group.uuid);
 
-        // const groups: MeshGroupBO[] = await dialog.open();
-        // if (groups.length === 0) {
-        //     return;
-        // }
+        const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
+            title: 'mesh.manage_group_assignment',
+            multiple: true,
+            selected: (user.groups || []).map(group => group.uuid),
+        });
 
-        // for (const group of groups) {
-        //     for (const role of roles) {
-        //         this.handler.assignRoleToGroup(role, group);
-        //     }
-        // }
+        const groups: MeshGroupBO[] = await dialog.open();
+        const newGroupIds = groups.map(group => group.uuid);
 
-        // this.reload();
+        const toAssign = groups.filter(group => !assignedGroupIds.includes(group.uuid));
+        const toRemove = user.groups.filter(group => !newGroupIds.includes(group.uuid));
+
+        // Nothing to do
+        if (toAssign.length === 0 && toRemove.length === 0) {
+            return;
+        }
+
+        for (const group of toAssign) {
+            this.groupHandler.assignUser(group, user);
+        }
+        for (const group of toRemove) {
+            this.groupHandler.unassignUser(group, user);
+        }
+
+        this.reload();
     }
 
-    async handleUnassignToGroupsAction(roleIds: string[]): Promise<void> {
-        // const roles = this.loader.getEntitiesByIds(roleIds);
-        // const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
-        //     title: 'mesh.unassign_roles_from_groups',
-        //     multiple: true,
-        // });
+    async handleAssignToGroupsAction(userIds: string[]): Promise<void> {
+        const users = this.loader.getEntitiesByIds(userIds);
+        const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
+            title: 'mesh.assign_users_to_groups',
+            multiple: true,
+        });
 
-        // const groups: MeshGroupBO[] = await dialog.open();
-        // if (groups.length === 0) {
-        //     return;
-        // }
+        const groups: MeshGroupBO[] = await dialog.open();
+        if (groups.length === 0) {
+            return;
+        }
 
-        // for (const group of groups) {
-        //     for (const role of roles) {
-        //         this.handler.unassignRoleFromGroup(role, group);
-        //     }
-        // }
+        for (const group of groups) {
+            for (const user of users) {
+                this.groupHandler.assignUser(group, user);
+            }
+        }
 
-        // this.reload();
+        this.reload();
     }
 
-    /* eslint-enable */
+    async handleUnassignToGroupsAction(userIds: string[]): Promise<void> {
+        const users = this.loader.getEntitiesByIds(userIds);
+        const dialog = await this.modalService.fromComponent(SelectGroupModal, {}, {
+            title: 'mesh.unassign_users_from_groups',
+            multiple: true,
+        });
+
+        const groups: MeshGroupBO[] = await dialog.open();
+        if (groups.length === 0) {
+            return;
+        }
+
+        for (const group of groups) {
+            for (const user of users) {
+                this.groupHandler.unassignUser(group, user);
+            }
+        }
+
+        this.reload();
+    }
 
     async openModal(mode: MeshUserPropertiesMode, user?: User): Promise<void> {
         const dialog = await this.modalService.fromComponent(MeshUserModal, {}, {

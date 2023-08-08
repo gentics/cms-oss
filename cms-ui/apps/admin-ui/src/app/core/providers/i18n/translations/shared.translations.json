@@ -803,6 +803,10 @@
         "en": "Value",
         "de": "Wert"
     },
+    "confirm_button": {
+        "en": "Confirm",
+        "de": "Bestätigen"
+    },
     "confirm_selection": {
         "en": "Confirm",
         "de": "Bestätigen"

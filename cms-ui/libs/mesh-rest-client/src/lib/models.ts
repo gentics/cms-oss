@@ -54,6 +54,7 @@ import {
     StatusResponse,
     TagListResponse,
     TagListUpdateRequest,
+    UserAPITokenResponse,
     UserCreateRequest,
     UserListOptions,
     UserListResponse,
@@ -101,6 +102,8 @@ export interface MeshUserAPI {
     get(uuid: string): Promise<UserResponse>;
     update(uuid: string, body: UserUpdateRequest): Promise<UserResponse>;
     delete(uuid: string): Promise<GenericMessageResponse>;
+
+    createAPIToken(uuid: string): Promise<UserAPITokenResponse>;
 }
 
 export interface MeshRoleAPI {

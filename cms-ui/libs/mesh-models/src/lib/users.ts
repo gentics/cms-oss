@@ -77,6 +77,8 @@ export interface EditableUserProperties {
     firstname?: string;
     /** Lastname of the user. */
     lastname?: string;
+    /** If the user is a administrator. */
+    admin?: boolean;
     /**
      * New node reference of the user. This can also explicitly set to null in order to
      * remove the assigned node from the user

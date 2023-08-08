@@ -78,48 +78,26 @@ export class MeshRestClient {
     }
 
     public auth: MeshAuthAPI = {
-        login: (username, password) => {
-            return this.performReqeust(POST, '/auth/login', { username, password });
-        },
-        me: () => {
-            return this.performReqeust(GET, '/auth/me');
-        },
+        login: (username, password) => this.performReqeust(POST, '/auth/login', { username, password }),
+        me: () => this.performReqeust(GET, '/auth/me'),
     } as const;
 
     public users: MeshUserAPI = {
-        list: (params?) => {
-            return this.performReqeust(GET, '/users', null, params);
-        },
-        create: (body) => {
-            return this.performReqeust(POST, '/users', body);
-        },
-        get: (uuid) => {
-            return this.performReqeust(GET, `/users/${uuid}`);
-        },
-        update: (uuid, body) => {
-            return this.performReqeust(POST, `/users/${uuid}`, body);
-        },
-        delete: (uuid) => {
-            return this.performReqeust(DELETE, `/users/${uuid}`);
-        },
+        list: (params?) => this.performReqeust(GET, '/users', null, params),
+        create: (body) => this.performReqeust(POST, '/users', body),
+        get: (uuid) => this.performReqeust(GET, `/users/${uuid}`),
+        update: (uuid, body) => this.performReqeust(POST, `/users/${uuid}`, body),
+        delete: (uuid) => this.performReqeust(DELETE, `/users/${uuid}`),
+
+        createAPIToken: (uuid) => this.performReqeust(POST, `/users/${uuid}/token`),
     } as const;
 
     public roles: MeshRoleAPI = {
-        list: (params?) => {
-            return this.performReqeust(GET, '/roles', null, params);
-        },
-        create: (body) => {
-            return this.performReqeust(POST, '/roles', body);
-        },
-        get: (uuid) => {
-            return this.performReqeust(GET, `/roles/${uuid}`);
-        },
-        update: (uuid, body) => {
-            return this.performReqeust(POST, `/roles/${uuid}`, body);
-        },
-        delete: (uuid) => {
-            return this.performReqeust(DELETE, `/roles/${uuid}`);
-        },
+        list: (params?) => this.performReqeust(GET, '/roles', null, params),
+        create: (body) => this.performReqeust(POST, '/roles', body),
+        get: (uuid) => this.performReqeust(GET, `/roles/${uuid}`),
+        update: (uuid, body) => this.performReqeust(POST, `/roles/${uuid}`, body),
+        delete: (uuid) => this.performReqeust(DELETE, `/roles/${uuid}`),
     } as const;
 
     public groups: MeshGroupAPI = {

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/cms-components';
 import { UserUpdateRequest } from '@gentics/mesh-models';
 import { FormProperties, generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
@@ -28,6 +28,7 @@ export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpd
 
         if (changes.mode && this.form) {
             setControlsEnabled(this.form, ['password'], this.mode === MeshUserPropertiesMode.CREATE, { emitEvent: false });
+            this.updatePasswordValidators();
         }
     }
 
@@ -37,8 +38,9 @@ export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpd
             firstname: new FormControl(this.value?.firstname),
             lastname: new FormControl(this.value?.lastname),
             emailAddress: new FormControl(this.value?.emailAddress, Validators.email),
+            admin: new FormControl(this.value?.admin ?? false),
             forcedPasswordChange: new FormControl(this.value?.forcedPasswordChange ?? false),
-            password: new FormControl(this.value?.password || '', [Validators.required, createNestedControlValidator()]),
+            password: new FormControl(this.value?.password || '', this.getPasswordValidators()),
         });
     }
 
@@ -48,5 +50,19 @@ export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpd
 
     protected assembleValue(value: UserUpdateRequest): UserUpdateRequest {
         return value;
+    }
+
+    protected updatePasswordValidators(): void {
+        this.form.get('password').setValidators(this.getPasswordValidators());
+    }
+
+    protected getPasswordValidators(): ValidatorFn[] {
+        const validators: ValidatorFn[] = [
+            createNestedControlValidator(),
+        ];
+        if (this.mode === MeshUserPropertiesMode.CREATE) {
+            validators.push(Validators.required);
+        }
+        return validators;
     }
 }

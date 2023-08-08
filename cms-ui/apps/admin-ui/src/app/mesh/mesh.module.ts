@@ -5,6 +5,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import {
+    CopyTokenModal,
+    CopyValueComponent,
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,
@@ -32,6 +34,8 @@ import {
 } from './providers';
 
 const COMPONENTS: Type<any>[] = [
+    CopyTokenModal,
+    CopyValueComponent,
     LoginGateComponent,
     ManagementComponent,
     ManagementTabsComponent,

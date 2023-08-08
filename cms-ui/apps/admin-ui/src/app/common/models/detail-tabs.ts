@@ -106,7 +106,6 @@ export enum MeshMangementTabs {
     USERS = 'users',
     GROUPS = 'groups',
     ROLES = 'roles',
-    PERMISSIONS = 'permissions',
     PROJECTS = 'projects',
     SCHEMAS = 'schemas',
     MICROSCHEMAS = 'microschemas',

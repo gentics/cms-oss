@@ -103,7 +103,12 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
             this.form.setValue({
                 ...this.form.value,
                 datasourceId: dsId,
-                options: res.items,
+                options: res.items.map(option => ({
+                    // "id" in the response context is the ID in the global CMS, while dsId is the one inside the Datasource
+                    id: option.dsId,
+                    key: option.key,
+                    value: option.value,
+                })),
             });
             this.form.updateValueAndValidity();
             this.changeDetector.markForCheck();

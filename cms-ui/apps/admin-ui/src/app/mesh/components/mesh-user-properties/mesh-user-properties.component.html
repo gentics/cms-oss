@@ -5,7 +5,7 @@
     <div class="row">
         <gtx-input
             class="columns small-6"
-            [label]="('shared.user_name' | i18n) + '*'"
+            [label]="('shared.user_name' | i18n) + ' *'"
             [required]="true"
             formControlName="username"
         ></gtx-input>
@@ -17,14 +17,25 @@
         ></gtx-input>
     </div>
 
-    <div *ngIf="mode === MeshUserPropertiesMode.CREATE" class="row">
-        <gtx-password-confirm-input
-            class="columns small-12"
-            [label]="('user.password' | i18n) + '*'"
-            [confirmLabel]="'mesh.confirm_addition' | i18n: { label: ('user.password' | i18n) }"
-            [missmatchText]="'mesh.password_missmatch' | i18n"
-            formControlName="password"
-        ></gtx-password-confirm-input>
+    <div class="columns small-12">
+        <div class="row password-row">
+            <gtx-checkbox
+                *ngIf="mode === MeshUserPropertiesMode.EDIT"
+                class="columns small-12 password-checkbox"
+                [label]="'mesh.update_password' | i18n"
+                [checked]="updatePassword"
+                (change)="togglePasswordSet()"
+            ></gtx-checkbox>
+
+            <gtx-password-confirm-input
+                *ngIf="form.get('password').enabled"
+                class="columns small-12"
+                [label]="('user.password' | i18n) + ' *'"
+                [confirmLabel]="'mesh.confirm_addition' | i18n: { label: ('user.password' | i18n) }"
+                [missmatchText]="'mesh.password_missmatch' | i18n"
+                formControlName="password"
+            ></gtx-password-confirm-input>
+        </div>
     </div>
 
     <div class="row">

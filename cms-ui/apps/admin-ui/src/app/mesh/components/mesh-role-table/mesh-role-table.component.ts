@@ -13,8 +13,10 @@ import { map } from 'rxjs/operators';
 import { MeshRoleModal } from '../mesh-role-modal/mesh-role-modal.component';
 import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
+import { MeshRolePermissionsModal } from '../mesh-role-permissions-modal/mesh-role-permissions-modal.component';
 
 const EDIT_ACTION = 'edit';
+const MANAGE_PERMISSIONS_ACTION = 'managePermissions';
 const ASSIGN_TO_GROUPS_ACTION = 'assignToGroups';
 const UNASSIGN_FROM_GROUPS_ACTION = 'unassignFromGroup';
 const MANAGE_GROUPS_ACTION = 'manageGroups';
@@ -75,6 +77,14 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
                         single: true,
                     },
                     {
+                        id: MANAGE_PERMISSIONS_ACTION,
+                        icon: 'lock',
+                        label: this.i18n.instant('mesh.manage_role_permissions'),
+                        enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        type: 'secondary',
+                        single: true,
+                    },
+                    {
                         id: MANAGE_GROUPS_ACTION,
                         icon: 'group',
                         label: this.i18n.instant('mesh.manage_group_assignment'),
@@ -124,6 +134,10 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
                 this.openModal(MeshRolePropertiesMode.EDIT, event.item);
                 return;
 
+            case MANAGE_PERMISSIONS_ACTION:
+                this.managePermissions(event.item);
+                return;
+
             case MANAGE_GROUPS_ACTION:
                 this.manageGroupAssignment(event.item);
                 return;
@@ -138,6 +152,13 @@ export class MeshRoleTableComponent extends BaseEntityTableComponent<Role, MeshR
         }
 
         super.handleAction(event);
+    }
+
+    async managePermissions(role: MeshRoleBO): Promise<void> {
+        const dialog = await this.modalService.fromComponent(MeshRolePermissionsModal, {}, {
+            role: role,
+        });
+        await dialog.open();
     }
 
     async manageGroupAssignment(role: MeshRoleBO): Promise<void> {

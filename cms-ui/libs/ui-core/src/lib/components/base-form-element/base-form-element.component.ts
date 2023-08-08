@@ -48,6 +48,14 @@ export abstract class BaseFormElementComponent<T>
     @Output()
     public touch = new EventEmitter<void>();
 
+    /**
+     * Since Angular 16, the #setDisabledState function is getting called initially with the disabled state.
+     * Even if it's false.
+     * To not lock our form and then unlock it again for no reason (and pushing a change which shouldn't occur),
+     * we check here if it has been called once already.
+     */
+    protected hasSetInitialDisabled = false;
+
     /** Internal values for control-value accessor impl */
     private cvaChange: (value: T) => void;
     private cvaTouch: () => void;
@@ -139,5 +147,6 @@ export abstract class BaseFormElementComponent<T>
             this.changeDetector.markForCheck();
             this.onDisabledChange();
         }
+        this.hasSetInitialDisabled = true;
     }
 }

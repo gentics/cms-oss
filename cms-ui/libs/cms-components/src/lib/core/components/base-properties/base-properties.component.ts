@@ -84,17 +84,16 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected initializeForm(): void {
         this.form = this.createForm();
-
         this.configureForm(this.value);
 
         // For some reason, changes from `configureForm` are only really applied,
         // when this is done a tick later. No idea why.
         setTimeout(() => {
-            this.form.updateValueAndValidity();
             if (this.delayedSetup) {
                 this.setupFormSubscription();
             }
-            this.form.markAsPristine();
+
+            this.form.updateValueAndValidity();
         });
 
         if (!this.delayedSetup) {
@@ -107,18 +106,13 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap(value => {
-                    this.configureForm(value);
-
-                    // See comment above
-                    setTimeout(() => {
-                        this.form.updateValueAndValidity();
-                        this.changeDetector.markForCheck();
-                    });
-                }),
+                tap(value => this.configureForm(value)),
+                map(() => this.form.value),
             ),
             this.form.statusChanges,
         ]).pipe(
+            // Do not emit values if the disabled state hasn't initialized yet
+            filter(() => this.hasSetInitialDisabled && this.value != null),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value, status]) => {
@@ -132,7 +126,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
-            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.value, value))) {
+            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(value, this.value))) {
                 this.triggerChange(value);
             }
             // Set it, in case that the parent-component has no binding for it
@@ -176,19 +170,19 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
-                tmpObj[controlName] = this.value?.[controlName] || null;
+                if (this.value != null && this.value.hasOwnProperty(controlName)) {
+                    tmpObj[controlName] = this.value[controlName];
+                }
             });
-            this.form.setValue(tmpObj);
+            this.form.patchValue(tmpObj);
         }
     }
 
     public override setDisabledState(isDisabled: boolean): void {
         super.setDisabledState(isDisabled);
 
-        if (isDisabled) {
-            this.form.disable({ emitEvent: false });
-        } else {
-            this.form.enable({ emitEvent: false });
+        if (this.form) {
+            this.form.updateValueAndValidity();
         }
     }
 

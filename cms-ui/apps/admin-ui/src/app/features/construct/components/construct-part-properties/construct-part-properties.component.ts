@@ -11,10 +11,7 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
-import {
-    UntypedFormControl,
-    UntypedFormGroup, Validators,
-} from '@angular/forms';
+import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {
     AnyModelType,
@@ -33,7 +30,7 @@ import {
     TagPartValidatorConfigs,
     TagPartValidatorId,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export interface TagPartPropertiesFormData {
     /** Part keyword */
@@ -187,6 +184,11 @@ export class ConstructPartPropertiesComponent
                 this.form.get('partOrder').updateValueAndValidity();
             }
         }
+
+        if (changes.mode && this.form) {
+            // Disable the keyword control if it's not creating a new one
+            setControlsEnabled(this.form, ['keyword'], this.mode === ConstructPartPropertiesMode.CREATE, { onlySelf: true, emitEvent: false });
+        }
     }
 
     protected createForm(): UntypedFormGroup {
@@ -258,44 +260,22 @@ export class ConstructPartPropertiesComponent
         }
 
         const options = { emitEvent: loud };
-        // Disable the keyword control if it's not creating a new one
-        const keywordCtl = this.form.get('keyword');
 
-        if (this.mode === ConstructPartPropertiesMode.CREATE) {
-            keywordCtl.enable(options);
-        } else {
-            keywordCtl.disable(options);
-        }
-
-        // Text/HTML Controls
-        const markupCtl = this.form.get('markupLanguageId');
-        const regexCtl = this.form.get('regex');
-
-        // Select Controls
-        const selectSettingsCtl = this.form.get('selectSettings');
-
-        // Overview Controls
-        const overviewSettingsCtl = this.form.get('overviewSettings');
-
-        // Default properties Control
-        const defaultPropertyCtl = this.form.get('defaultProperty');
-
-        // Disable specific controls first, and enable them once they are required below
-        markupCtl.disable(options);
-        regexCtl.disable(options);
-        selectSettingsCtl.disable(options);
-        overviewSettingsCtl.disable(options);
-        defaultPropertyCtl.disable(options);
+        let markupEnabled = false;
+        let regexEnabled = false;
+        let selectSettingsEnabled = false;
+        let overviewSettingsEnabled = false;
+        let defaultPropertyEnabled = false;
 
         switch (value?.typeId) {
             case TagPartType.SelectSingle:
             case TagPartType.SelectMultiple:
-                defaultPropertyCtl.enable(options);
-                selectSettingsCtl.enable(options);
+                defaultPropertyEnabled = true;
+                selectSettingsEnabled = true;
                 break;
 
             case TagPartType.DataSource:
-                defaultPropertyCtl.enable(options);
+                defaultPropertyEnabled = true;
                 break;
 
             case TagPartType.List:
@@ -305,29 +285,36 @@ export class ConstructPartPropertiesComponent
                 break;
 
             case TagPartType.Overview:
-                overviewSettingsCtl.enable(options);
+                defaultPropertyEnabled = true;
+                overviewSettingsEnabled = true;
                 break;
 
             case TagPartType.TextHtml:
             case TagPartType.TextHtmlLong:
             case TagPartType.Html:
             case TagPartType.HtmlLong:
-                defaultPropertyCtl.enable(options);
-                markupCtl.enable(options);
+                defaultPropertyEnabled = true;
+                markupEnabled = true;
 
             // eslint-disable-next-line no-fallthrough
             case TagPartType.Text:
             case TagPartType.TextShort:
-                defaultPropertyCtl.enable(options);
-                regexCtl.enable(options);
+                defaultPropertyEnabled = true;
+                regexEnabled = true;
                 break;
 
             default:
                 if (value?.typeId) {
-                    defaultPropertyCtl.enable(options);
+                    defaultPropertyEnabled = true;
                 }
                 break;
         }
+
+        setControlsEnabled(this.form, ['markupLanguageId'], markupEnabled, options);
+        setControlsEnabled(this.form, ['regex'], regexEnabled, options);
+        setControlsEnabled(this.form, ['selectSettings'], selectSettingsEnabled, options);
+        setControlsEnabled(this.form, ['overviewSettings'], overviewSettingsEnabled, options);
+        setControlsEnabled(this.form, ['defaultProperty'], defaultPropertyEnabled, options);
     }
 
     protected assembleValue(formData: any): TagPart<Normalized> {

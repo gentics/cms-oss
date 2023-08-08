@@ -7,6 +7,8 @@ export * from './mesh-group-modal/mesh-group-modal.component';
 export * from './mesh-group-properties/mesh-group-properties.component';
 export * from './mesh-group-table/mesh-group-table.component';
 export * from './mesh-role-modal/mesh-role-modal.component';
+export * from './mesh-role-permissions-modal/mesh-role-permissions-modal.component';
+export * from './mesh-role-permissions-trable/mesh-role-permissions-trable.component';
 export * from './mesh-role-properties/mesh-role-properties.component';
 export * from './mesh-role-table/mesh-role-table.component';
 export * from './mesh-user-modal/mesh-user-modal.component';

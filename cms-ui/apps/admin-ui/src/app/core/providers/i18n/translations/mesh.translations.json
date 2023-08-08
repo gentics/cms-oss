@@ -135,6 +135,10 @@
         "de": "{{ label }} bestätigen",
         "en": "Confirm {{ label }}"
     },
+    "update_password": {
+        "en": "Update Password",
+        "de": "Passwort aktualisieren"
+    },
     "password_missmatch": {
         "en": "Passwords don not match",
         "de": "Passwörter nicht ident"
@@ -198,6 +202,10 @@
     "manage_user_assignment": {
         "de": "Benutzterzuweisung verwalten",
         "en": "Manage User assignment"
+    },
+    "manage_role_permissions": {
+        "de": "Rollen Berechtigungen verwalten",
+        "en": "Manage Role permissions"
     },
     "create_group_title": {
         "de": "Neue Gruppe erstelle",

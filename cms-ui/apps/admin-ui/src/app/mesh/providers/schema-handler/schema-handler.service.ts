@@ -13,10 +13,12 @@ import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import {
     ListResponse,
+    ProjectReference,
     SchemaCreateRequest,
     SchemaListOptions,
     SchemaListResponse,
     SchemaLoadOptions,
+    SchemaReference,
     SchemaResponse,
     SchemaUpdateRequest,
 } from '@gentics/mesh-models';
@@ -143,5 +145,50 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
                 data: res.data.map((schema, index) => this.mapToBusinessObject(schema, index)),
             };
         });
+    }
+
+    public async listFromProject(project: string, params?: SchemaListOptions): Promise<SchemaListResponse> {
+        try {
+            const res = await this.mesh.projectSchemas.list(project, params);
+            for (const schema of res.data) {
+                this.nameMap[schema.uuid] = schema.name;
+            }
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async assignToProject(project: ProjectReference, schema: SchemaReference): Promise<SchemaResponse> {
+        try {
+            const res = await this.mesh.projectSchemas.assign(project.name, schema.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.assign_schema_to_project_success',
+                translationParams: {
+                    projectName: project.name,
+                    schemaName: schema.name,
+                },
+            });
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async unassignFromProject(project: ProjectReference, schema: SchemaReference): Promise<void> {
+        try {
+            await this.mesh.projectSchemas.unassign(project.name, schema.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.unassign_schema_from_project_success',
+                translationParams: {
+                    projectName: project.name,
+                    schemaName: schema.name,
+                },
+            });
+        } catch (err) {
+            this.handleError(err);
+        }
     }
 }

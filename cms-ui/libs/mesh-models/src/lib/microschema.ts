@@ -26,6 +26,11 @@ export interface MicroschemaListOptions extends BasicListOptions { }
 
 export type MicroschemaListResponse = ListResponse<MicroschemaResponse>;
 
+export interface MicroschemaReference {
+    uuid?: string;
+    name?: string;
+}
+
 export interface MicroschemaResponse extends Microschema {}
 
 export interface MicroschemaUpdateRequest extends Partial<EditableMicroschemaProperties> {

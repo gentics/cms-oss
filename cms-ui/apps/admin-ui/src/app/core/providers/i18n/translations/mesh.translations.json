@@ -168,6 +168,22 @@
         "de": "Der Token konnte nicht kopiert werden",
         "en": "The Token could not be copied"
     },
+    "branch_ssl": {
+        "de": "HTTPS aktiviert",
+        "en": "HTTPS enabled"
+    },
+    "branch_hostname": {
+        "de": "Hostname",
+        "en": "Hostname"
+    },
+    "branch_pathPrefix": {
+        "de": "Unterverzeichniss",
+        "en": "Path Suffix"
+    },
+    "branch_schema": {
+        "de": "Schema",
+        "en": "Schema"
+    },
 
     "create_role": {
         "de": "Neue Rolle erstellen",
@@ -205,37 +221,21 @@
         "de": "Rollen zu Gruppen zuweisen",
         "en": "Assign roles to groups"
     },
-    "unassign_roles_from_groups": {
-        "de": "Rollen von Gruppen entfernen",
-        "en": "Unassign roles from groups"
-    },
-    "assign_users_to_groups": {
-        "de": "Benutzer zu Gruppen zuweisen",
-        "en": "Assign users to groups"
-    },
-    "unassign_users_from_groups": {
-        "de": "Benutzer von Gruppen entfernen",
-        "en": "Unassign users from groups"
-    },
-    "manage_group_assignment": {
-        "de": "Gruppenzuweisung verwalten",
-        "en": "Manage group assignment"
-    },
     "assign_role_to_group_success": {
         "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
         "en": "Successfully assigned role \"{{ roleName }}\" to group \"{{ groupName }}\"!"
     },
-    "assign_role_to_group_error": {
-        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
-        "en": "Could not assign role \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    "unassign_roles_from_groups": {
+        "de": "Rollen von Gruppen entfernen",
+        "en": "Unassign roles from groups"
     },
     "unassign_role_from_group_success": {
         "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
         "en": "Successfully unassigned role \"{{ roleName }}\" from group \"{{ groupName }}\"!"
     },
-    "unassign_role_from_group_error": {
-        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
-        "en": "Could not unassign role \"{{ roleName }}\" from group \"{{ groupName }}\"!"
+    "manage_group_assignment": {
+        "de": "Gruppenzuweisung verwalten",
+        "en": "Manage group assignment"
     },
 
     "create_group": {
@@ -287,25 +287,25 @@
         "de": "Benutzer „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted user \"{{ entityName }}\"!"
     },
+    "manage_user_assignment": {
+        "de": "Benutzterzuweisung verwalten",
+        "en": "Manage user assignment"
+    },
+    "assign_users_to_groups": {
+        "de": "Benutzer zu Gruppen zuweisen",
+        "en": "Assign users to groups"
+    },
     "assign_user_to_group_success": {
         "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
         "en": "Successfully assigned user \"{{ roleName }}\" to group \"{{ groupName }}\"!"
     },
-    "assign_user_to_group_error": {
-        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
-        "en": "Could not assign user \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    "unassign_users_from_groups": {
+        "de": "Benutzer von Gruppen entfernen",
+        "en": "Unassign users from groups"
     },
     "unassign_user_from_group_success": {
         "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
         "en": "Successfully unassigned user \"{{ roleName }}\" from group \"{{ groupName }}\"!"
-    },
-    "unassign_user_from_group_error": {
-        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
-        "en": "Could not unassign user \"{{ roleName }}\" from group \"{{ groupName }}\"!"
-    },
-    "manage_user_assignment": {
-        "de": "Benutzterzuweisung verwalten",
-        "en": "Manage user assignment"
     },
 
     "create_schema": {
@@ -315,6 +315,10 @@
     "update_schema": {
         "de": "Schema „{{ entityName }}“ aktualisieren",
         "en": "Update schema \"{{ entityName }}\""
+    },
+    "select_schema": {
+        "de": "Schema auswählen",
+        "en": "Select schema"
     },
     "info_selected_schemas": {
         "de": "{{amountSelected}} von {{amountTotal}} Schemen ausgewählt",
@@ -331,6 +335,26 @@
     "delete_schema_success": {
         "de": "Schema „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted schema \"{{ entityName }}\"!"
+    },
+    "manage_schema_assignment": {
+        "de": "Schemenzuweisung verwalten",
+        "en": "Manage schema assignment"
+    },
+    "assign_schemas_to_projects": {
+        "de": "Schemen zu Projekten zuweisen",
+        "en": "Assign schemas to projects"
+    },
+    "assign_schema_to_project_success": {
+        "de": "Schema „{{ schemaName }}“ erfolgreich dem Projekt „{{ projectName }}“ zugewiesen!",
+        "en": "Successfully assigned schema \"{{ schemaName }}\" to project \"{{ projectName }}\"!"
+    },
+    "unassign_schemas_from_projects": {
+        "de": "Schemen von Projekten entfernen",
+        "en": "Unassign schemas from projects"
+    },
+    "unassign_schema_from_project_success": {
+        "de": "Schema „{{ schemaName }}“ erfolgreich aus dem Project „{{ projectName }}“ entfernt!",
+        "en": "Successfully unassigned schema \"{{ schemaName }}\" from project \"{{ projectName }}\"!"
     },
 
     "create_microschema": {
@@ -356,5 +380,50 @@
     "delete_microschema_success": {
         "de": "Microschema „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted microschema \"{{ entityName }}\"!"
+    },
+    "manage_microschema_assignment": {
+        "de": "Microschemenzuweisung verwalten",
+        "en": "Manage microschema assignment"
+    },
+    "assign_microschemas_to_projects": {
+        "de": "Microschemen zu Projekten zuweisen",
+        "en": "Assign microschemas to projects"
+    },
+    "assign_microschema_to_project_success": {
+        "de": "Microschema „{{ microschemaName }}“ erfolgreich dem Projekt „{{ projectName }}“ zugewiesen!",
+        "en": "Successfully assigned microschema \"{{ microschemaName }}\" to project \"{{ projectName }}\"!"
+    },
+    "unassign_microschemas_from_projects": {
+        "de": "Microschemen von Projekten entfernen",
+        "en": "Unassign microschemas from projects"
+    },
+    "unassign_microschema_from_project_success": {
+        "de": "Microschema „{{ microschemaName }}“ erfolgreich aus dem Project „{{ projectName }}“ entfernt!",
+        "en": "Successfully unassigned microschema \"{{ microschemaName }}\" from project \"{{ projectName }}\"!"
+    },
+
+    "create_project": {
+        "de": "Neues Projekt erstellen",
+        "en": "Create new project"
+    },
+    "update_project": {
+        "de": "Projekt „{{ entityName }}“ aktualisieren",
+        "en": "Update project \"{{ entityName }}\""
+    },
+    "info_selected_projects": {
+        "de": "{{amountSelected}} von {{amountTotal}} Projekte ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} projects selected"
+    },
+    "create_project_success": {
+        "de": "Projekt „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created project \"{{ entityName }}\"!"
+    },
+    "update_project_success": {
+        "de": "Projekt „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated project \"{{ entityName }}\"!"
+    },
+    "delete_project_success": {
+        "de": "Projekt „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted project \"{{ entityName }}\"!"
     }
 }

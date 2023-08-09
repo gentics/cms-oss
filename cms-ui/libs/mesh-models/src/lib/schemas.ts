@@ -7,7 +7,7 @@ import {
     ListResponse,
     PartialEntityLoadOptions,
     VersionedEntity,
-    VersionedEntityOptions
+    VersionedEntityOptions,
 } from './common';
 import { FieldSchema } from './fields';
 
@@ -72,7 +72,7 @@ export type SchemaListResponse = ListResponse<SchemaResponse>;
 /**
  * Reference to the schema of the root node. Creating a project will also
  * automatically create the base node of the project and link the schema to the
- * initial branch  of the project.
+ * initial branch of the project.
  */
 export interface SchemaReference {
     name?: string;

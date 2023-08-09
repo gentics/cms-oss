@@ -17,8 +17,10 @@ import {
     MicroschemaListOptions,
     MicroschemaListResponse,
     MicroschemaLoadOptions,
+    MicroschemaReference,
     MicroschemaResponse,
     MicroschemaUpdateRequest,
+    ProjectReference,
     SchemaCreateRequest,
     SchemaLoadOptions,
 } from '@gentics/mesh-models';
@@ -145,5 +147,50 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
                 data: res.data.map((microschema, index) => this.mapToBusinessObject(microschema, index)),
             };
         });
+    }
+
+    public async listFromProject(project: string, params?: MicroschemaListOptions): Promise<MicroschemaListResponse> {
+        try {
+            const res = await this.mesh.projectMicroschemas.list(project, params);
+            for (const microschema of res.data) {
+                this.nameMap[microschema.uuid] = microschema.name;
+            }
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async assignToProject(project: ProjectReference, microschema: MicroschemaReference): Promise<MicroschemaResponse> {
+        try {
+            const res = await this.mesh.projectMicroschemas.assign(project.name, microschema.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.assign_microschema_to_project_success',
+                translationParams: {
+                    projectName: project.name,
+                    microschemaName: microschema.name,
+                },
+            });
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async unassignFromProject(project: ProjectReference, microschema: MicroschemaReference): Promise<void> {
+        try {
+            await this.mesh.projectMicroschemas.unassign(project.name, microschema.uuid);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.unassign_microschema_from_project_success',
+                translationParams: {
+                    projectName: project.name,
+                    microschemaName: microschema.name,
+                },
+            });
+        } catch (err) {
+            this.handleError(err);
+        }
     }
 }

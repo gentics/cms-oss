@@ -7,5 +7,7 @@ export * from './mesh-user-handler/mesh-user-handler.service';
 export * from './mesh-user-table-loader/mesh-user-table-loader.service';
 export * from './microschema-handler/microschema-handler.service';
 export * from './microschema-table-loader/microschema-table-loader.service';
+export * from './project-handler/project-handler.service';
+export * from './project-table-loader/project-table-loader.service';
 export * from './schema-handler/schema-handler.service';
 export * from './schema-table-loader/schema-table-loader.service';

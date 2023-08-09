@@ -67,6 +67,7 @@ import {
     UserLoadOptions,
     UserResponse,
     UserUpdateRequest,
+    ProjectLoadOptions,
 } from '@gentics/mesh-models';
 
 export interface MeshClientDriver {
@@ -147,7 +148,7 @@ export interface MeshPermissionAPI {
 export interface MeshProjectAPI {
     list(params?: ProjectListOptions): Promise<ProjectListResponse>;
     create(body: ProjectCreateRequest): Promise<ProjectResponse>;
-    get(project: string): Promise<ProjectResponse>;
+    get(project: string, params?: ProjectLoadOptions): Promise<ProjectResponse>;
     update(project: string, body: ProjectUpdateRequest): Promise<ProjectResponse>;
     delete(project: string): Promise<GenericMessageResponse>;
 }
@@ -207,14 +208,14 @@ export interface MeshProjectSchemaAPI {
     list(project: string, params?: SchemaListOptions): Promise<SchemaListResponse>;
     get(project: string, uuid: string): Promise<SchemaResponse>;
     assign(project: string, uuid: string): Promise<SchemaResponse>;
-    unassign(project: string, uuid: string): Promise<GenericMessageResponse>;
+    unassign(project: string, uuid: string): Promise<void>;
 }
 
 export interface MeshProjectMicroschemaAPI {
     list(project: string, params?: MicroschemaListOptions): Promise<MicroschemaListResponse>;
     get(project: string, uuid: string): Promise<MicroschemaResponse>;
     assign(project: string, uuid: string): Promise<MicroschemaResponse>;
-    unassign(project: string, uuid: string): Promise<GenericMessageResponse>;
+    unassign(project: string, uuid: string): Promise<void>;
 }
 
 export interface MeshServerAPI {

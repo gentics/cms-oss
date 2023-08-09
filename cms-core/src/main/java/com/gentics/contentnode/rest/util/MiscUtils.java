@@ -2414,12 +2414,21 @@ public class MiscUtils {
 	/**
 	 * Make a new object mapper, with LF newlines, non-nulls serialization, output indentation.
 	 * 
-	 * @return
+	 * @return mapper instance
 	 */
 	public static ObjectMapper newObjectMapper() {
+		return newObjectMapper(Include.NON_NULL);
+	}
+
+	/**
+	 * Make a new object mapper, with LF newlines, given serialization inclusion and output indentation.
+	 * @param serializationInclusion serialization inclusion
+	 * @return mapper instance
+	 */
+	public static ObjectMapper newObjectMapper(Include serializationInclusion) {
 		return new ObjectMapper()
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")))
-				.setSerializationInclusion(Include.NON_NULL)
+				.setSerializationInclusion(serializationInclusion)
 				.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 }

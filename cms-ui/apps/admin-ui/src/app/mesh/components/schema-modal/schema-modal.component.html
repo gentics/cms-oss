@@ -1,12 +1,12 @@
 <div class="modal-title">
-    <h5>{{ (mode === MeshUserPropertiesMode.CREATE ? 'mesh.create_user' : 'mesh.update_user') | i18n: { entityName: name } }}</h5>
+    <h5>{{ (mode === SchemaPropertiesMode.CREATE ? 'mesh.create_schema' : 'mesh.update_schema') | i18n: { entityName: schema?.name } }}</h5>
 </div>
 
 <div class="modal-content">
-    <gtx-mesh-user-properties
+    <gtx-mesh-schema-properties
         [mode]="mode"
         [formControl]="form"
-    ></gtx-mesh-user-properties>
+    ></gtx-mesh-schema-properties>
 </div>
 
 <div class="modal-footer">
@@ -15,7 +15,7 @@
         [disabled]="!form.valid && form.enabled"
         (click)="buttonCreateEntityClicked()"
     >
-        {{ (mode === MeshUserPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
+        {{ (mode === SchemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
     </gtx-button>
 
     <gtx-button

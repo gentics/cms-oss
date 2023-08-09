@@ -15,6 +15,7 @@ import {
     GroupCreateRequest,
     GroupListOptions,
     GroupListResponse,
+    GroupLoadOptions,
     GroupResponse,
     GroupUpdateRequest,
     LocalConfigModel,
@@ -42,6 +43,7 @@ import {
     RoleCreateRequest,
     RoleListOptions,
     RoleListResponse,
+    RoleLoadOptions,
     RolePermissionRequest,
     RolePermissionResponse,
     RoleResponse,
@@ -50,6 +52,7 @@ import {
     SchemaCreateRequest,
     SchemaListOptions,
     SchemaListResponse,
+    SchemaLoadOptions,
     SchemaResponse,
     SchemaUpdateRequest,
     ServerInfoModel,
@@ -60,6 +63,7 @@ import {
     UserCreateRequest,
     UserListOptions,
     UserListResponse,
+    UserLoadOptions,
     UserResponse,
     UserUpdateRequest,
 } from '@gentics/mesh-models';
@@ -101,7 +105,7 @@ export interface MeshAuthAPI {
 export interface MeshUserAPI {
     list(params?: UserListOptions): Promise<UserListResponse>;
     create(body: UserCreateRequest): Promise<UserResponse>;
-    get(uuid: string): Promise<UserResponse>;
+    get(uuid: string, params?: UserLoadOptions): Promise<UserResponse>;
     update(uuid: string, body: UserUpdateRequest): Promise<UserResponse>;
     delete(uuid: string): Promise<GenericMessageResponse>;
 
@@ -111,7 +115,7 @@ export interface MeshUserAPI {
 export interface MeshRoleAPI {
     list(params?: RoleListOptions): Promise<RoleListResponse>;
     create(body: RoleCreateRequest): Promise<RoleResponse>;
-    get(uuid: string): Promise<RoleResponse>;
+    get(uuid: string, params?: RoleLoadOptions): Promise<RoleResponse>;
     update(uuid: string, body: RoleUpdateRequest): Promise<RoleResponse>;
     delete(uuid: string): Promise<GenericMessageResponse>;
 }
@@ -119,7 +123,7 @@ export interface MeshRoleAPI {
 export interface MeshGroupAPI {
     list(params?: GroupListOptions): Promise<GroupListResponse>;
     create(body: GroupCreateRequest): Promise<GroupResponse>;
-    get(uuid: string): Promise<GroupResponse>;
+    get(uuid: string, params?: GroupLoadOptions): Promise<GroupResponse>;
     update(uuid: string, body: GroupUpdateRequest): Promise<GroupResponse>;
     delete(uuid: string): Promise<GenericMessageResponse>;
 
@@ -142,15 +146,25 @@ export interface MeshPermissionAPI {
 export interface MeshProjectAPI {
     list(params?: ProjectListOptions): Promise<ProjectListResponse>;
     create(body: ProjectCreateRequest): Promise<ProjectResponse>;
-    get(uuidOrName: string): Promise<ProjectResponse>;
-    update(uuidOrName: string, body: ProjectUpdateRequest): Promise<ProjectResponse>;
-    delete(uuidOrName: string): Promise<GenericMessageResponse>;
+    get(project: string): Promise<ProjectResponse>;
+    update(project: string, body: ProjectUpdateRequest): Promise<ProjectResponse>;
+    delete(project: string): Promise<GenericMessageResponse>;
+
+    listSchemas(project: string): Promise<SchemaListResponse>;
+    getSchema(project: string, uuid: string): Promise<SchemaResponse>;
+    assignSchema(project: string, uuid: string): Promise<SchemaResponse>;
+    unassignSchema(project: string, uuid: string): Promise<void>;
+
+    listMicroschemas(project: string): Promise<MicroschemaListResponse>;
+    getMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
+    assignMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
+    unassignMicroschema(project: string, uuid: string): Promise<void>;
 }
 
 export interface MeshSchemaAPI {
     list(params?: SchemaListOptions): Promise<SchemaListResponse>;
     create(body: SchemaCreateRequest): Promise<SchemaResponse>;
-    get(uuid: string): Promise<SchemaResponse>;
+    get(uuid: string, params?: SchemaLoadOptions): Promise<SchemaResponse>;
     update(uuid: string, body: SchemaUpdateRequest): Promise<SchemaResponse>;
     delete(uuid: string): Promise<void>;
 

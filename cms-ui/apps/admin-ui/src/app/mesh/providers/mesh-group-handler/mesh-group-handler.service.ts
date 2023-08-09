@@ -1,13 +1,25 @@
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
-import { getUserName } from '@admin-ui/mesh/utils';
+import {
+    BASIC_ENTITY_PERMISSIONS,
+    MBO_AVILABLE_PERMISSIONS,
+    MBO_PERMISSION_PATH,
+    MBO_ROLE_PERMISSIONS,
+    MBO_TYPE,
+    MeshGroupBO,
+    MeshType,
+} from '@admin-ui/mesh/common';
+import { getUserDisplayName, toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import {
     GroupCreateRequest,
     GroupListOptions,
     GroupListResponse,
+    GroupLoadOptions,
     GroupReference,
     GroupResponse,
     GroupUpdateRequest,
+    ListResponse,
     RoleReference,
     UserListOptions,
     UserListResponse,
@@ -27,14 +39,34 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         super(errorHandler, notification);
     }
 
-    public async get(uuid: string): Promise<GroupResponse> {
+    public mapToBusinessObject(
+        group: GroupResponse,
+        _index?: number,
+    ): MeshGroupBO {
+        return {
+            ...group,
+            [BO_ID]: group.uuid,
+            [BO_PERMISSIONS]: toPermissionArray(group.permissions),
+            [BO_DISPLAY_NAME]: group.name,
+            [MBO_TYPE]: MeshType.GROUP,
+            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_ROLE_PERMISSIONS]: toPermissionArray(group.rolePerms),
+            [MBO_PERMISSION_PATH]: `groups/${group.uuid}`,
+        };
+    }
+
+    public async get(uuid: string, params?: GroupLoadOptions): Promise<GroupResponse> {
         try {
-            const res = await this.mesh.groups.get(uuid);
+            const res = await this.mesh.groups.get(uuid, params);
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public getMapped(uuid: string, params?: GroupLoadOptions): Promise<MeshGroupBO> {
+        return this.get(uuid, params).then(group => this.mapToBusinessObject(group));
     }
 
     public async create(body: GroupCreateRequest): Promise<GroupResponse> {
@@ -53,6 +85,10 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
+    public createMapped(body: GroupCreateRequest): Promise<MeshGroupBO> {
+        return this.create(body).then(group => this.mapToBusinessObject(group));
+    }
+
     public async update(uuid: string, body: GroupUpdateRequest): Promise<GroupResponse> {
         try {
             const res = await this.mesh.groups.update(uuid, body);
@@ -67,6 +103,10 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public updateMapped(uuid: string, body: GroupUpdateRequest): Promise<MeshGroupBO> {
+        return this.update(uuid, body).then(group => this.mapToBusinessObject(group));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -96,6 +136,16 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public listMapped(params?: GroupListOptions): Promise<ListResponse<MeshGroupBO>> {
+        return this.list(params).then(res => {
+            return {
+                // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
+                _metainfo: res._metainfo,
+                data: res.data.map((group, index) => this.mapToBusinessObject(group, index)),
+            };
+        });
     }
 
     async getUsers(uuid: string, _params?: UserListOptions): Promise<UserListResponse> {
@@ -141,7 +191,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
                 type: 'success',
                 message: 'mesh.assign_user_to_group_success',
                 translationParams: {
-                    roleName: getUserName(user),
+                    roleName: getUserDisplayName(user),
                     groupName: group.name,
                 },
             });
@@ -157,7 +207,7 @@ export class MeshGroupHandlerService extends BaseMeshEntitiyHandlerService {
                 type: 'success',
                 message: 'mesh.unassign_user_from_group_success',
                 translationParams: {
-                    userName: getUserName(user),
+                    userName: getUserDisplayName(user),
                     groupName: group.name,
                 },
             });

@@ -1,6 +1,6 @@
 import { User, UserReference } from '@gentics/mesh-models';
 
-export function getUserName(user: User | UserReference): string {
+export function getUserDisplayName(user: User | UserReference): string {
     let out = '';
 
     if (user.firstname) {

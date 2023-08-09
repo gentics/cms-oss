@@ -44,11 +44,11 @@
 	<modules>
         <module>libs/cms-models</module>
         <module>libs/cms-rest-clients-angular</module>
-        <module>libs/image-editor</module>
         <module>libs/mesh-models</module>
         <module>libs/mesh-rest-client</module>
         <module>libs/mesh-rest-client-angular</module>
         <module>libs/ui-core</module>
+        <module>libs/image-editor</module>
         <module>libs/cms-components</module>
         <module>libs/form-generator</module>
         <module>apps/admin-ui</module>

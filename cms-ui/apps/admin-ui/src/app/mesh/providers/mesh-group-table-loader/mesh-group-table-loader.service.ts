@@ -1,12 +1,11 @@
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
+import { EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Group, GroupResponse, Permission } from '@gentics/mesh-models';
+import { Group } from '@gentics/mesh-models';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { toPermissionArray } from '@admin-ui/mesh/utils';
-import { MBO_PERMISSION_PATH, MBO_TYPE, MeshGroupBO, MeshType } from '../../common';
+import { MeshGroupBO } from '../../common';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
 
 export interface MeshGroupTableLoaderOptions {
@@ -37,28 +36,17 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
     }
 
     protected loadEntities(options: TableLoadOptions, additionalOptions?: MeshGroupTableLoaderOptions): Observable<EntityPageResponse<MeshGroupBO>> {
-        return from(this.handler.list({
+        return from(this.handler.listMapped({
             page: options.page + 1,
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,
         })).pipe(
-            map((res) => {
-                const entities: MeshGroupBO[] = res.data.map(group => ({
-                    ...group,
-                    [BO_ID]: group.uuid,
-                    [BO_DISPLAY_NAME]: group.name,
-                    [BO_PERMISSIONS]: toPermissionArray(group.permissions),
-                    [MBO_PERMISSION_PATH]: `groups/${group.uuid}`,
-                    [MBO_TYPE]: MeshType.GROUP,
-                }));
-
-                return {
-                    entities,
-                    // eslint-disable-next-line no-underscore-dangle
-                    totalCount: res._metainfo.totalCount,
-                };
-            }),
+            map((res) => ({
+                entities: res.data,
+                // eslint-disable-next-line no-underscore-dangle
+                totalCount: res._metainfo.totalCount,
+            })),
             switchMap(page => {
                 if (!(additionalOptions?.users ?? false)) {
                     return of(page);

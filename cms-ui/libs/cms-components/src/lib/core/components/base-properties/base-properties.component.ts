@@ -6,6 +6,8 @@ import { combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import { CONTROL_INVALID_VALUE } from '../../../common';
 
+const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
+
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges {
 
@@ -62,6 +64,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', true]);
+        // Set the value to this flag. Used to ignore changes until intial value has been provided.
+        this.value = INIVIAL_UNSET_VALUE as any;
     }
 
     public ngOnInit(): void {
@@ -111,8 +115,8 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             ),
             this.form.statusChanges,
         ]).pipe(
-            // Do not emit values if the disabled state hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled && this.value != null),
+            // Do not emit values if the disabled state and value hasn't initialized yet
+            filter(() => this.hasSetInitialDisabled && this.value !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value, status]) => {

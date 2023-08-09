@@ -6,17 +6,25 @@ import {
     MBO_PERMISSION_PATH,
     MBO_ROLE_PERMISSIONS,
     MBO_TYPE,
-    MeshRoleBO,
+    MeshSchemaBO,
     MeshType,
 } from '@admin-ui/mesh/common';
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
-import { ListResponse, RoleCreateRequest, RoleListOptions, RoleListResponse, RoleLoadOptions, RoleResponse, RoleUpdateRequest } from '@gentics/mesh-models';
+import {
+    ListResponse,
+    SchemaCreateRequest,
+    SchemaListOptions,
+    SchemaListResponse,
+    SchemaLoadOptions,
+    SchemaResponse,
+    SchemaUpdateRequest,
+} from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
 
 @Injectable()
-export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
+export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     constructor(
         errorHandler: ErrorHandler,
@@ -27,24 +35,24 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public mapToBusinessObject(
-        role: RoleResponse,
+        schema: SchemaResponse,
         _index?: number,
-    ): MeshRoleBO {
+    ): MeshSchemaBO {
         return {
-            ...role,
-            [BO_ID]: role.uuid,
-            [BO_PERMISSIONS]: toPermissionArray(role.permissions),
-            [BO_DISPLAY_NAME]: role.name,
-            [MBO_TYPE]: MeshType.ROLE,
+            ...schema,
+            [BO_ID]: schema.uuid,
+            [BO_PERMISSIONS]: toPermissionArray(schema.permissions),
+            [BO_DISPLAY_NAME]: schema.name,
+            [MBO_TYPE]: MeshType.SCHEMA,
             [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
-            [MBO_ROLE_PERMISSIONS]: toPermissionArray(role.rolePerms),
-            [MBO_PERMISSION_PATH]: `roles/${role.uuid}`,
+            [MBO_ROLE_PERMISSIONS]: toPermissionArray(schema.rolePerms),
+            [MBO_PERMISSION_PATH]: `schemas/${schema.uuid}`,
         };
     }
 
-    public async get(uuid: string, params?: RoleLoadOptions): Promise<RoleResponse> {
+    public async get(uuid: string, params?: SchemaLoadOptions): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.roles.get(uuid, params);
+            const res = await this.mesh.schemas.get(uuid, params);
             this.nameMap[res.uuid] = res.name;
             return res;
         } catch (err) {
@@ -52,16 +60,16 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public getMapped(uuid: string, params?: RoleLoadOptions): Promise<MeshRoleBO> {
-        return this.get(uuid, params).then(role => this.mapToBusinessObject(role));
+    public getMapped(uuid: string, params?: SchemaLoadOptions): Promise<MeshSchemaBO> {
+        return this.get(uuid, params).then(schema => this.mapToBusinessObject(schema));
     }
 
-    public async create(body: RoleCreateRequest): Promise<RoleResponse> {
+    public async create(body: SchemaCreateRequest): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.roles.create(body);
+            const res = await this.mesh.schemas.create(body);
             this.notification.show({
                 type: 'success',
-                message: 'mesh.create_role_success',
+                message: 'mesh.create_schema_success',
                 translationParams: {
                     entityName: res.name,
                 },
@@ -73,16 +81,16 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public createMapped(body: RoleCreateRequest): Promise<MeshRoleBO> {
-        return this.create(body).then(role => this.mapToBusinessObject(role));
+    public createMapped(body: SchemaCreateRequest): Promise<MeshSchemaBO> {
+        return this.create(body).then(schema => this.mapToBusinessObject(schema));
     }
 
-    public async update(uuid: string, body: RoleUpdateRequest): Promise<RoleResponse> {
+    public async update(uuid: string, body: SchemaUpdateRequest): Promise<SchemaResponse> {
         try {
-            const res = await this.mesh.roles.update(uuid, body);
+            const res = await this.mesh.schemas.update(uuid, body);
             this.notification.show({
                 type: 'success',
-                message: 'mesh.update_role_success',
+                message: 'mesh.update_schema_success',
                 translationParams: {
                     entityName: res.name,
                 },
@@ -94,18 +102,18 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public updateMapped(uuid: string, body: RoleUpdateRequest): Promise<MeshRoleBO> {
-        return this.update(uuid, body).then(role => this.mapToBusinessObject(role));
+    public updateMapped(uuid: string, body: SchemaUpdateRequest): Promise<MeshSchemaBO> {
+        return this.update(uuid, body).then(schema => this.mapToBusinessObject(schema));
     }
 
     public async delete(uuid: string): Promise<void> {
         try {
-            await this.mesh.roles.delete(uuid);
+            await this.mesh.schemas.delete(uuid);
             const name = this.nameMap[uuid];
             delete this.nameMap[uuid];
             this.notification.show({
                 type: 'success',
-                message: 'mesh.delete_role_success',
+                message: 'mesh.delete_schema_success',
                 translationParams: {
                     entityName: name,
                 },
@@ -115,11 +123,11 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public async list(params?: RoleListOptions): Promise<RoleListResponse> {
+    public async list(params?: SchemaListOptions): Promise<SchemaListResponse> {
         try {
-            const res = await this.mesh.roles.list(params);
-            for (const role of res.data) {
-                this.nameMap[role.uuid] = role.name
+            const res = await this.mesh.schemas.list(params);
+            for (const schema of res.data) {
+                this.nameMap[schema.uuid] = schema.name;
             }
             return res;
         } catch (err) {
@@ -127,12 +135,12 @@ export class MeshRoleHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
-    public listMapped(params?: RoleListOptions): Promise<ListResponse<MeshRoleBO>> {
+    public listMapped(params?: SchemaListOptions): Promise<ListResponse<MeshSchemaBO>> {
         return this.list(params).then(res => {
             return {
                 // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                 _metainfo: res._metainfo,
-                data: res.data.map((role, index) => this.mapToBusinessObject(role, index)),
+                data: res.data.map((schema, index) => this.mapToBusinessObject(schema, index)),
             };
         });
     }

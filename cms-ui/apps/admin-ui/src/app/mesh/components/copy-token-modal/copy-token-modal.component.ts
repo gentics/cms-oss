@@ -1,6 +1,6 @@
 import { I18nNotificationService } from '@admin-ui/core';
 import { MeshUserBO } from '@admin-ui/mesh/common';
-import { getUserName } from '@admin-ui/mesh/utils';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { User, UserReference } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
@@ -28,7 +28,7 @@ export class CopyTokenModal extends BaseModal<void> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.displayName = getUserName(this.user);
+        this.displayName = getUserDisplayName(this.user);
     }
 
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types

@@ -10,7 +10,7 @@ import { Permission, User } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { getUserName } from '@admin-ui/mesh/utils';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { MeshUserModal } from '../mesh-user-modal/mesh-user-modal.component';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 import { SelectGroupModal } from '../select-group-modal/select-group-modal.component';
@@ -171,7 +171,7 @@ export class MeshUserTableComponent extends BaseEntityTableComponent<User, MeshU
         const dialog = await this.modalService.dialog({
             title: this.i18n.instant('mesh.create_api_token'),
             body: this.i18n.instant('mesh.create_api_token_warning', {
-                user: getUserName(user),
+                user: getUserDisplayName(user),
             }),
             buttons: [
                 {

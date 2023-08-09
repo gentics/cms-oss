@@ -1,13 +1,21 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
-import { MBO_AVILABLE_PERMISSIONS, MBO_PERMISSION_PATH, MBO_ROLE_PERMISSIONS, MBO_TYPE, MeshBusinessObject, MeshType } from '@admin-ui/mesh/common';
-import { getUserName, toPermissionArray } from '@admin-ui/mesh/utils';
+import {
+    MBO_AVILABLE_PERMISSIONS,
+    MBO_PERMISSION_PATH,
+    MBO_ROLE_PERMISSIONS,
+    MBO_TYPE,
+    MeshBusinessObject,
+    MeshType,
+} from '@admin-ui/mesh/common';
+import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import { NodeResponse, Permission } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable, forkJoin, from, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
 import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
@@ -15,9 +23,6 @@ import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.s
 export interface MeshRolePermissionsTrableLoaderOptions {
     role: string;
 }
-
-const BASIC_PERMISSIONS: Permission[] = [Permission.CREATE, Permission.READ, Permission.UPDATE, Permission.DELETE];
-const NODE_PERMISSIONS: Permission[] = [...BASIC_PERMISSIONS, Permission.READ_PUBLISHED, Permission.PUBLISH];
 
 function createRoot(): MeshBusinessObject[] {
     return [
@@ -100,46 +105,19 @@ export class MeshRolePermissionsTrableLoaderService
 
         switch (parent[MBO_TYPE]) {
             case MeshType.USER:
-                return from(this.userHandler.list({ role: options.role }).then(page => {
-                    return page.data.map(user => ({
-                        ...user,
-                        [BO_ID]: user.uuid,
-                        [BO_DISPLAY_NAME]: getUserName(user),
-                        [BO_PERMISSIONS]: toPermissionArray(user.permissions),
-                        [MBO_TYPE]: MeshType.USER,
-                        [MBO_PERMISSION_PATH]: `users/${user.uuid}`,
-                        [MBO_AVILABLE_PERMISSIONS]: BASIC_PERMISSIONS,
-                        [MBO_ROLE_PERMISSIONS]: toPermissionArray(user.rolePerms),
-                    }));
-                }));
+                return from(this.userHandler.listMapped({ role: options.role })).pipe(
+                    map(page => page.data),
+                );
 
             case MeshType.GROUP:
-                return from(this.groupHandler.list({ role: options.role }).then(page => {
-                    return page.data.map(group => ({
-                        ...group,
-                        [BO_ID]: group.uuid,
-                        [BO_DISPLAY_NAME]: group.name,
-                        [BO_PERMISSIONS]: toPermissionArray(group.permissions),
-                        [MBO_TYPE]: MeshType.GROUP,
-                        [MBO_PERMISSION_PATH]: `groups/${group.uuid}`,
-                        [MBO_AVILABLE_PERMISSIONS]: BASIC_PERMISSIONS,
-                        [MBO_ROLE_PERMISSIONS]: toPermissionArray(group.rolePerms),
-                    }));
-                }));
+                return from(this.groupHandler.listMapped({ role: options.role })).pipe(
+                    map(page => page.data),
+                );
 
             case MeshType.ROLE:
-                return from(this.roleHandler.list({ role: options.role }).then(page => {
-                    return page.data.map(role => ({
-                        ...role,
-                        [BO_ID]: role.uuid,
-                        [BO_DISPLAY_NAME]: role.name,
-                        [BO_PERMISSIONS]: toPermissionArray(role.permissions),
-                        [MBO_TYPE]: MeshType.ROLE,
-                        [MBO_PERMISSION_PATH]: `roles/${role.uuid}`,
-                        [MBO_AVILABLE_PERMISSIONS]: BASIC_PERMISSIONS,
-                        [MBO_ROLE_PERMISSIONS]: toPermissionArray(role.rolePerms),
-                    }));
-                }));
+                return from(this.roleHandler.listMapped({ role: options.role })).pipe(
+                    map(page => page.data),
+                );
 
             default:
                 return of([]);

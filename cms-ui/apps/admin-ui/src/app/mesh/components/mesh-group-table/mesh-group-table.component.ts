@@ -8,7 +8,7 @@ import {
     MeshRoleTableLoaderService,
     MeshUserTableLoaderService,
 } from '@admin-ui/mesh/providers';
-import { getUserName } from '@admin-ui/mesh/utils';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
@@ -52,7 +52,7 @@ export class MeshGroupTableComponent
             id: 'users',
             label: 'common.user_plural',
             // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-            mapper: (group: MeshGroupBO) => (group.users).map(getUserName).filter(name => !!name).join(', '),
+            mapper: (group: MeshGroupBO) => (group.users).map(getUserDisplayName).filter(name => !!name).join(', '),
         },
         {
             id: 'roles',

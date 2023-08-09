@@ -21,8 +21,12 @@ import {
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    SchemaModal,
+    SchemaPropertiesComponent,
+    SchemaTableComponent,
     SelectGroupModal,
     SelectRoleModal,
+    SelectSchemaModal,
     SelectUserModal,
     ServerOverviewComponent,
 } from './components';
@@ -34,6 +38,8 @@ import {
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    SchemaHandlerService,
+    SchemaTableLoaderService,
 } from './providers';
 import { MeshIconPipe } from './pipes';
 
@@ -54,8 +60,12 @@ const COMPONENTS: Type<any>[] = [
     MeshUserModal,
     MeshUserPropertiesComponent,
     MeshUserTableComponent,
+    SchemaModal,
+    SchemaPropertiesComponent,
+    SchemaTableComponent,
     SelectGroupModal,
     SelectRoleModal,
+    SelectSchemaModal,
     SelectUserModal,
     ServerOverviewComponent,
 ];
@@ -77,6 +87,8 @@ const SERVICES: Provider[] = [
     MeshRoleTableLoaderService,
     MeshUserHandlerService,
     MeshUserTableLoaderService,
+    SchemaHandlerService,
+    SchemaTableLoaderService,
 ];
 
 @NgModule({

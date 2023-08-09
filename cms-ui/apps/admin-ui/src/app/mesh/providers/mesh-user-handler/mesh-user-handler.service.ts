@@ -1,7 +1,26 @@
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
-import { getUserName } from '@admin-ui/mesh/utils';
+import {
+    BASIC_ENTITY_PERMISSIONS,
+    MBO_AVILABLE_PERMISSIONS,
+    MBO_PERMISSION_PATH,
+    MBO_ROLE_PERMISSIONS,
+    MBO_TYPE,
+    MeshType,
+    MeshUserBO,
+} from '@admin-ui/mesh/common';
+import { getUserDisplayName, toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
-import { UserAPITokenResponse, UserCreateRequest, UserListOptions, UserListResponse, UserResponse, UserUpdateRequest } from '@gentics/mesh-models';
+import {
+    ListResponse,
+    UserAPITokenResponse,
+    UserCreateRequest,
+    UserListOptions,
+    UserListResponse,
+    UserLoadOptions,
+    UserResponse,
+    UserUpdateRequest,
+} from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
 
@@ -16,23 +35,43 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
         super(errorHandler, notification);
     }
 
-    public async get(uuid: string): Promise<UserResponse> {
+    public mapToBusinessObject(
+        user: UserResponse,
+        _index?: number,
+    ): MeshUserBO {
+        return {
+            ...user,
+            [BO_ID]: user.uuid,
+            [BO_PERMISSIONS]: toPermissionArray(user.permissions),
+            [BO_DISPLAY_NAME]: getUserDisplayName(user),
+            [MBO_TYPE]: MeshType.USER,
+            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_ROLE_PERMISSIONS]: toPermissionArray(user.rolePerms),
+            [MBO_PERMISSION_PATH]: `users/${user.uuid}`,
+        };
+    }
+
+    public async get(uuid: string, params?: UserLoadOptions): Promise<UserResponse> {
         try {
-            const res = await this.mesh.users.get(uuid);
-            this.nameMap[res.uuid] = getUserName(res);
+            const res = await this.mesh.users.get(uuid, params);
+            this.nameMap[res.uuid] = getUserDisplayName(res);
             return res;
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public getMapped(uuid: string, params?: UserLoadOptions): Promise<MeshUserBO> {
+        return this.get(uuid, params).then(user => this.mapToBusinessObject(user));
     }
 
     public async create(body: UserCreateRequest): Promise<UserResponse> {
         try {
             const res = await this.mesh.users.create(body);
-            const name = getUserName(res);
+            const name = getUserDisplayName(res);
             this.notification.show({
                 type: 'success',
-                message: 'mesh.create_role_success',
+                message: 'mesh.create_user_success',
                 translationParams: {
                     entityName: name,
                 },
@@ -44,13 +83,17 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
         }
     }
 
+    public createMapped(body: UserCreateRequest): Promise<MeshUserBO> {
+        return this.create(body).then(user => this.mapToBusinessObject(user));
+    }
+
     public async update(uuid: string, body: UserUpdateRequest): Promise<UserResponse> {
         try {
             const res = await this.mesh.users.update(uuid, body);
-            const name = getUserName(res);
+            const name = getUserDisplayName(res);
             this.notification.show({
                 type: 'success',
-                message: 'mesh.update_role_success',
+                message: 'mesh.update_user_success',
                 translationParams: {
                     entityName: name,
                 },
@@ -60,6 +103,10 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public updateMapped(uuid: string, body: UserUpdateRequest): Promise<MeshUserBO> {
+        return this.update(uuid, body).then(user => this.mapToBusinessObject(user));
     }
 
     public async delete(uuid: string): Promise<void> {
@@ -69,7 +116,7 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
             delete this.nameMap[uuid];
             this.notification.show({
                 type: 'success',
-                message: 'mesh.delete_role_success',
+                message: 'mesh.delete_user_success',
                 translationParams: {
                     entityName: name,
                 },
@@ -83,12 +130,22 @@ export class MeshUserHandlerService extends BaseMeshEntitiyHandlerService {
         try {
             const res = await this.mesh.users.list(params);
             for (const user of res.data) {
-                this.nameMap[user.uuid] = getUserName(user);
+                this.nameMap[user.uuid] = getUserDisplayName(user);
             }
             return res;
         } catch (err) {
             this.handleError(err);
         }
+    }
+
+    public listMapped(params?: UserListOptions): Promise<ListResponse<MeshUserBO>> {
+        return this.list(params).then(res => {
+            return {
+                // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
+                _metainfo: res._metainfo,
+                data: res.data.map((user, index) => this.mapToBusinessObject(user, index)),
+            };
+        });
     }
 
     public async createAPIToken(uuid: string): Promise<UserAPITokenResponse> {

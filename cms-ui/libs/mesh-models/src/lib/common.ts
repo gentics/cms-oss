@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { UserReference } from './users';
 
 export interface PagingMetaInfo {
@@ -24,20 +25,61 @@ export interface SortingOptions {
     order?: '' | 'asc' | 'desc';
 }
 
-export interface BasicListOptions extends PagingOptions, SortingOptions {
+export interface ListResponse<T> {
+    /** Paging information of the list result. */
+    _metainfo: PagingMetaInfo;
+    /** Array which contains the found elements. */
+    data: T[];
+}
+
+export interface BasicListOptions extends BranchedEntityOptions, PagingOptions, SortingOptions { }
+
+export interface MultiLangugeEntityOptions {
+    /**
+     * ISO 639-1 language tag of the language which should be loaded.
+     * Fallback handling can be applied by specifying multiple languages in a comma-separated list.
+     * The first matching language will be returned. If omitted or the requested language is not available,
+     * then the defaultLanguage as configured in mesh.yml will be returned.
+     */
+    lang?: string;
+}
+
+export interface BranchedEntityOptions {
     /**
      * Specifies the branch to be used for loading data. The latest project branch will be used if this parameter is omitted.
      */
     branch?: string;
 }
 
-export interface PermissionListOptions {
+export interface RolePermissionsOptions {
     /**
      * The role query parameter take a UUID of a role and may be used to add permission information to the response
      * via the rolePerm property which lists the permissions for the specified role on the element.
      * This may be useful when you are logged in as admin but you want to retrieve the editor role permissions on a given node.
      */
     role?: string;
+}
+
+export interface VersionedEntityOptions {
+    /** Specifies the version to be loaded. Can either be published/draft or version number. e.g.: 0.1, 1.0, draft, published. */
+    version?: 'draft' | 'published' | string;
+}
+
+export interface ResolvableLinksOptions {
+    /**
+     * The resolve links parameter can be set to either short, medium or full.
+     * Stored mesh links will automatically be resolved and replaced by the resolved webroot link.
+     * With the parameter set the path property as well as the languagesPath property (for available language variants),
+     * will be included in the response.
+     * Gentics Mesh links in any HTML-typed field will automatically be resolved and replaced by the resolved WebRoot path.
+     * No resolving occurs if no link has been specified.
+     */
+    resolveLinks?: 'short' | 'medium' | 'full';
+}
+
+export interface PartialEntityLoadOptions<T extends Entity> {
+    /** The properties of the entity which can be defined to only load these. */
+    fields?: keyof T[];
 }
 
 export enum Permission {

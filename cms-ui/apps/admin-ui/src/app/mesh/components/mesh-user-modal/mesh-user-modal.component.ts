@@ -4,7 +4,7 @@ import { FormControl } from '@angular/forms';
 import { createNestedControlValidator } from '@gentics/cms-components';
 import { User } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
-import { getUserName } from '@admin-ui/mesh/utils';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 
 @Component({
@@ -34,7 +34,7 @@ export class MeshUserModal extends BaseModal<User> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.name = this.user == null ? '' : getUserName(this.user);
+        this.name = this.user == null ? '' : getUserDisplayName(this.user);
         this.form = new FormControl(this.user, createNestedControlValidator());
     }
 

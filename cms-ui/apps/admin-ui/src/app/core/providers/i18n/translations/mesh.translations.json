@@ -19,10 +19,6 @@
         "de": "Rollen",
         "en": "Roles"
     },
-    "management_tab_permissions": {
-        "de": "Berechtigungen",
-        "en": "Permissions"
-    },
     "management_tab_projects": {
         "de": "Projekte",
         "en": "Projects"
@@ -85,7 +81,7 @@
     },
     "serverStatus_WAITING_FOR_CLUSTER": {
         "de": "Warten auf Cluster",
-        "en": "Waiting for Cluster"
+        "en": "Waiting for cluster"
     },
     "serverStatus_READY": {
         "de": "Verfügbar",
@@ -123,9 +119,10 @@
         "de": "Alle",
         "en": "All"
     },
+
     "admin_permissions": {
         "de": "Administrator Berechtigungen",
-        "en": "Administrator Permissions"
+        "en": "Administrator permissions"
     },
     "force_password_reset": {
         "de": "Benutzer muss Passwort beim nächsten Login ändern",
@@ -149,7 +146,7 @@
     },
     "create_api_token_warning": {
         "de": "Sind Sie sicher, dass Sie einen neuen API Token für den Benuzter „{{ user }}“ erstellen möchten?<br/><b>Der zuvor erstelle Token wird somit invalide, und nur der neue Token kann dann benutzt werden.</b><br/>Möchten Sie fortfahren?",
-        "en": "Are you sure you want to create a new API Token for the User \"{{ user }}\"?<br/><b>The previously created Token will become invalid and cannot be used anymore.</b><br/>Do you wish to proceed?"
+        "en": "Are you sure you want to create a new API Token for the user \"{{ user }}\"?<br/><b>The previously created token will become invalid and cannot be used anymore.</b><br/>Do you wish to proceed?"
     },
     "api_token": {
         "de": "API Token",
@@ -161,114 +158,178 @@
     },
     "copy_token": {
         "de": "Token kopieren",
-        "en": "Copy Token"
+        "en": "Copy token"
     },
     "copy_token_success": {
         "de": "Token wurde in die Zwischenablage kopiert",
-        "en": "The Token has been copied to the Clipboard"
+        "en": "The Token has been copied to the clipboard"
     },
     "copy_token_error": {
         "de": "Der Token konnte nicht kopiert werden",
         "en": "The Token could not be copied"
     },
-    "assign_roles_to_groups": {
-        "de": "Rollen zu Gruppen zuweisen",
-        "en": "Assign Roles to Groups"
-    },
-    "unassign_roles_from_groups": {
-        "de": "Rollen von Gruppen entfernen",
-        "en": "Unassign Roles from Groups"
-    },
-    "assign_users_to_groups": {
-        "de": "Benutzer zu Gruppen zuweisen",
-        "en": "Assign Users to Groups"
-    },
-    "unassign_users_from_groups": {
-        "de": "Benutzer von Gruppen entfernen",
-        "en": "Unassign Users from Groups"
+
+    "create_role": {
+        "de": "Neue Rolle erstellen",
+        "en": "Create new role"
     },
     "update_role": {
         "de": "Rolle „{{ entityName }}“ aktualisieren",
-        "en": "Update Role \"{{ entityName }}\""
+        "en": "Update role \"{{ entityName }}\""
     },
-    "manage_group_assignment": {
-        "de": "Gruppenzuweisung verwalten",
-        "en": "Manage Group assignment"
-    },
-    "manage_role_assignment": {
-        "de": "Rollenzuweisung verwalten",
-        "en": "Manage Role assignment"
-    },
-    "manage_user_assignment": {
-        "de": "Benutzterzuweisung verwalten",
-        "en": "Manage User assignment"
-    },
-    "manage_role_permissions": {
-        "de": "Rollen Berechtigungen verwalten",
-        "en": "Manage Role permissions"
-    },
-    "create_group_title": {
-        "de": "Neue Gruppe erstelle",
-        "en": "Create new Group"
-    },
-    "update_group": {
-        "de": "Gruppe „{{ entityName }}“ aktualisieren",
-        "en": "Update Group \"{{ entityName }}\""
-    },
-    "assign_role_to_group_success": {
-        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
-        "en": "Successfully assigned Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "assign_role_to_group_error": {
-        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
-        "en": "Could not assign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "unassign_role_from_group_success": {
-        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
-        "en": "Successfully unassigned Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "unassign_role_from_group_error": {
-        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
-        "en": "Could not unassign Role \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "assign_user_to_group_success": {
-        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
-        "en": "Successfully assigned User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "assign_user_to_group_error": {
-        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
-        "en": "Could not assign User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "unassign_user_from_group_success": {
-        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
-        "en": "Successfully unassigned User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "unassign_user_from_group_error": {
-        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
-        "en": "Could not unassign User \"{{ roleName }}\" to Group \"{{ groupName }}\"!"
-    },
-    "create_group_success": {
-        "de": "Gruppe „{{ entityName }}“ erfolgreich erstellt!",
-        "en": "Successfully created Group \"{{ entityName }}\"!"
-    },
-    "update_group_success": {
-        "de": "Gruppe „{{ entityName }}“ erfolgreich aktualisiert!",
-        "en": "Successfully updated Group \"{{ entityName }}\"!"
-    },
-    "delete_group_success": {
-        "de": "Gruppe „{{ entityName }}“ erfolgreich gelöscht!",
-        "en": "Successfully deleted Group \"{{ entityName }}\"!"
+    "info_selected_roles": {
+        "de": "{{amountSelected}} von {{amountTotal}} Rollen ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} roles selected"
     },
     "create_role_success": {
         "de": "Rolle „{{ entityName }}“ erfolgreich erstellt!",
-        "en": "Successfully created Role \"{{ entityName }}\"!"
+        "en": "Successfully created role \"{{ entityName }}\"!"
     },
     "update_role_success": {
         "de": "Rolle „{{ entityName }}“ erfolgreich aktualisiert!",
-        "en": "Successfully updated Role \"{{ entityName }}\"!"
+        "en": "Successfully updated role \"{{ entityName }}\"!"
     },
     "delete_role_success": {
         "de": "Rolle „{{ entityName }}“ erfolgreich gelöscht!",
-        "en": "Successfully deleted Role \"{{ entityName }}\"!"
+        "en": "Successfully deleted role \"{{ entityName }}\"!"
+    },
+    "manage_role_assignment": {
+        "de": "Rollenzuweisung verwalten",
+        "en": "Manage role assignment"
+    },
+    "manage_role_permissions": {
+        "de": "Rollen Berechtigungen verwalten",
+        "en": "Manage role permissions"
+    },
+    "assign_roles_to_groups": {
+        "de": "Rollen zu Gruppen zuweisen",
+        "en": "Assign roles to groups"
+    },
+    "unassign_roles_from_groups": {
+        "de": "Rollen von Gruppen entfernen",
+        "en": "Unassign roles from groups"
+    },
+    "assign_users_to_groups": {
+        "de": "Benutzer zu Gruppen zuweisen",
+        "en": "Assign users to groups"
+    },
+    "unassign_users_from_groups": {
+        "de": "Benutzer von Gruppen entfernen",
+        "en": "Unassign users from groups"
+    },
+    "manage_group_assignment": {
+        "de": "Gruppenzuweisung verwalten",
+        "en": "Manage group assignment"
+    },
+    "assign_role_to_group_success": {
+        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
+        "en": "Successfully assigned role \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    },
+    "assign_role_to_group_error": {
+        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
+        "en": "Could not assign role \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    },
+    "unassign_role_from_group_success": {
+        "de": "Rolle „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
+        "en": "Successfully unassigned role \"{{ roleName }}\" from group \"{{ groupName }}\"!"
+    },
+    "unassign_role_from_group_error": {
+        "de": "Rolle „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
+        "en": "Could not unassign role \"{{ roleName }}\" from group \"{{ groupName }}\"!"
+    },
+
+    "create_group": {
+        "de": "Neue Gruppe erstelle",
+        "en": "Create new group"
+    },
+    "update_group": {
+        "de": "Gruppe „{{ entityName }}“ aktualisieren",
+        "en": "Update group \"{{ entityName }}\""
+    },
+    "info_selected_groups": {
+        "de": "{{amountSelected}} von {{amountTotal}} Gruppen ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} groups selected"
+    },
+    "create_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created group \"{{ entityName }}\"!"
+    },
+    "update_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated group \"{{ entityName }}\"!"
+    },
+    "delete_group_success": {
+        "de": "Gruppe „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted group \"{{ entityName }}\"!"
+    },
+
+    "create_user": {
+        "de": "Neuen Benutzer erstellen",
+        "en": "Create new user"
+    },
+    "update_user": {
+        "de": "Benutzer „{{ entityName }}“ aktualisieren",
+        "en": "Update user \"{{ entityName }}\""
+    },
+    "info_selected_users": {
+        "de": "{{amountSelected}} von {{amountTotal}} Benutzern ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} users selected"
+    },
+    "create_user_success": {
+        "de": "Benutzer „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created user \"{{ entityName }}\"!"
+    },
+    "update_user_success": {
+        "de": "Benutzer „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated user \"{{ entityName }}\"!"
+    },
+    "delete_user_success": {
+        "de": "Benutzer „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted user \"{{ entityName }}\"!"
+    },
+    "assign_user_to_group_success": {
+        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ zugewiesen!",
+        "en": "Successfully assigned user \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    },
+    "assign_user_to_group_error": {
+        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ zugewiesen werden!",
+        "en": "Could not assign user \"{{ roleName }}\" to group \"{{ groupName }}\"!"
+    },
+    "unassign_user_from_group_success": {
+        "de": "Benutzer „{{ roleName }}“ erfolgreich der Gruppe „{{ groupName }}“ entfernt!",
+        "en": "Successfully unassigned user \"{{ roleName }}\" from group \"{{ groupName }}\"!"
+    },
+    "unassign_user_from_group_error": {
+        "de": "Benutzer „{{ roleName }}“ konnte nicht der Gruppe „{{ groupName }}“ entfernt werden!",
+        "en": "Could not unassign user \"{{ roleName }}\" from group \"{{ groupName }}\"!"
+    },
+    "manage_user_assignment": {
+        "de": "Benutzterzuweisung verwalten",
+        "en": "Manage user assignment"
+    },
+
+    "create_schema": {
+        "de": "Neues Schema erstellen",
+        "en": "Create new schema"
+    },
+    "update_schema": {
+        "de": "Schema „{{ entityName }}“ aktualisieren",
+        "en": "Update schema \"{{ entityName }}\""
+    },
+    "info_selected_schemas": {
+        "de": "{{amountSelected}} von {{amountTotal}} Schemen ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} schemas selected"
+    },
+    "create_schema_success": {
+        "de": "Schema „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created schema \"{{ entityName }}\"!"
+    },
+    "update_schema_success": {
+        "de": "Schema „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated schema \"{{ entityName }}\"!"
+    },
+    "delete_schema_success": {
+        "de": "Schema „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted schema \"{{ entityName }}\"!"
     }
 }

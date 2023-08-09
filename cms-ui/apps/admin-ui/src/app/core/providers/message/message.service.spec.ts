@@ -6,6 +6,9 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
 import { PermissionsService } from '../permissions/permissions.service';
 import { MessageService } from './message.service';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { I18nService } from '../i18n';
+import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
 
 class MockGcmsApi {}
 
@@ -36,12 +39,14 @@ describe('MessageService', () => {
         TestBed.configureTestingModule({
             imports: [
                 assembleTestAppStateImports(),
+                GenticsUICoreModule.forRoot(),
             ],
             providers: [
                 MessageService,
                 { provide: AppStateService, useClass: TestAppState },
                 { provide: GcmsApi, useClass: MockGcmsApi },
                 { provide: PermissionsService, useClass: MockPermissionsService },
+                { provide: I18nService, useClass: MockI18nServiceWithSpies },
             ],
         });
 

@@ -7,6 +7,14 @@ import { MessageActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PermissionService } from '../permissions/permission.service';
 import { MessageService } from './message.service';
+import { I18nService } from '../i18n/i18n.service';
+import { I18nNotification } from '../i18n-notification/i18n-notification.service';
+
+class MockI18nService {}
+
+class MockI18nNotification {
+    show = jasmine.createSpy();
+}
 
 describe('MessageService', () => {
 
@@ -24,6 +32,8 @@ describe('MessageService', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: MessageActionsService, useClass: MockMessageActions },
                 { provide: PermissionService, useClass: MockPermissionsService },
+                { provide: I18nService, useClass: MockI18nService },
+                { provide: I18nNotification, useClass: MockI18nNotification },
             ],
         });
 
@@ -104,8 +114,8 @@ describe('MessageService', () => {
 });
 
 class MockMessageActions {
-    fetchAllMessages = jasmine.createSpy('fetchAllMessages');
-    fetchUnreadMessages = jasmine.createSpy('fetchUnreadMessages');
+    fetchAllMessages = jasmine.createSpy('fetchAllMessages').and.returnValue(Promise.resolve([[],[]]));
+    fetchUnreadMessages = jasmine.createSpy('fetchUnreadMessages').and.returnValue(Promise.resolve([]));
 }
 
 class MockPermissionsService {

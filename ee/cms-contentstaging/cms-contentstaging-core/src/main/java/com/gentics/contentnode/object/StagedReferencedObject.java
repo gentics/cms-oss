@@ -59,6 +59,12 @@ public interface StagedReferencedObject<T extends NodeObject> {
 		boolean matches = StringUtils.equals(reference.getHash(), computedHash);
 
 		if (!matches) {
+			// if the hash does not match, try again with the alternate mapper
+			Pair<String, String> alternatePair = getStagedHash(true);
+			matches = StringUtils.equals(reference.getHash(), alternatePair.getLeft());
+		}
+
+		if (!matches) {
 			ContentStagingResourceImpl.logger.warn(String.format("Implementation hash mismatch for %s: Expected: %s, Actual: %s", this, reference.getHash(), computedHash));
 			ContentStagingResourceImpl.logger.warn(String.format("Implementation hash for %s is %s, computed from:\n-- begin --\n%s\n-- end --", this, computedHash, representation));
 		} else if (ContentStagingResourceImpl.logger.isDebugEnabled()) {
@@ -74,13 +80,24 @@ public interface StagedReferencedObject<T extends NodeObject> {
 	 * @throws NodeException
 	 */
 	default Pair<String, String> getStagedHash() throws NodeException {
+		return getStagedHash(false);
+	}
+
+	/**
+	 * Get the hash of the staged reference together with the string representation from which the hash is computed
+	 * @param alternate true to use the alternate mapper (which will only include non-empty attributes to the JSON)
+	 * @return Pair of hash and string representation
+	 * @throws NodeException
+	 */
+	default Pair<String, String> getStagedHash(boolean alternate) throws NodeException {
 		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
 				MD5OutputStream md5 = new MD5OutputStream(out);
 				JsonGenerator jg = new JsonFactory().createGenerator(md5, JsonEncoding.UTF8)) {
 			DefaultPrettyPrinter prettyPrinter = new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter("  ", "\n"));
 			jg.setPrettyPrinter(prettyPrinter);
 
-			ObjectMapper mapper = mapper();
+			// get alternate mapper if required
+			ObjectMapper mapper = mapper(alternate);
 			produceStagedHashComponents(s -> {
 				try {
 					mapper.writeValue(jg, s);

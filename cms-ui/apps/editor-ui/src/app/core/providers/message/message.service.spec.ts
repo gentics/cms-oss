@@ -6,9 +6,9 @@ import { ApplicationStateService } from '../../../state';
 import { MessageActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { PermissionService } from '../permissions/permission.service';
-import { MessageService } from './message.service';
 import { I18nService } from '../i18n/i18n.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
+import { MessageService } from './message.service';
 
 class MockI18nService {}
 

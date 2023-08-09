@@ -3,12 +3,12 @@ import { discardPeriodicTasks, fakeAsync, TestBed, tick } from '@angular/core/te
 import { AccessControlledType, TypePermissions, UniformTypePermissions } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { assembleTestAppStateImports, TestAppState } from '../../../state/utils/test-app-state';
 import { PermissionsService } from '../permissions/permissions.service';
-import { MessageService } from './message.service';
-import { GenticsUICoreModule } from '@gentics/ui-core';
 import { I18nService } from '../i18n';
 import { MockI18nServiceWithSpies } from '../i18n/i18n.service.mock';
+import { MessageService } from './message.service';
 
 class MockGcmsApi {}
 

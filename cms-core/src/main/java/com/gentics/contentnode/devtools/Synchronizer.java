@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -131,16 +132,25 @@ public class Synchronizer {
 	 */
 	private static ObjectMapper mapper;
 
+	/**
+	 * Alternate Object Mapper for serialization/deserialization (will include NON_EMPTY attributes)
+	 */
+	private static ObjectMapper alternateMapper;
+
 	static {
 		AtomicInteger priority = new AtomicInteger();
 		for (Class<? extends SynchronizableNodeObject> clazz : CLASSES) {
 			PRIORITIES.put(clazz, priority.incrementAndGet());
 		}
-
 		mapper = MiscUtils.newObjectMapper();
 		SimpleModule module = new SimpleModule();
 		module.addDeserializer(AbstractCRModel.class, new CRModelDeserializer());
 		mapper.registerModule(module);
+
+		alternateMapper = MiscUtils.newObjectMapper(Include.NON_EMPTY);
+		module = new SimpleModule();
+		module.addDeserializer(AbstractCRModel.class, new CRModelDeserializer());
+		alternateMapper.registerModule(module);
 	}
 
 	/**
@@ -776,7 +786,16 @@ public class Synchronizer {
 	 * @return object mapper
 	 */
 	public static ObjectMapper mapper() {
-		return mapper;
+		return mapper(false);
+	}
+
+	/**
+	 * Get the Object Mapper instance for deserialization/serialization
+	 * @param alternate true to get the alternate mapper
+	 * @return object mapper
+	 */
+	public static ObjectMapper mapper(boolean alternate) {
+		return alternate ? alternateMapper : mapper;
 	}
 
 	/**

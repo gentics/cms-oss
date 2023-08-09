@@ -108,6 +108,8 @@ export interface ContentRepositoryBase<T extends ModelType> {
     dataStatus: ContentRepositoryDataStatus;
     /** Result of last data check */
     dataCheckResult: string;
+    /** HTTP/2 usage flag */
+    http2: boolean;
 }
 
 /** Data model as defined by backend. */

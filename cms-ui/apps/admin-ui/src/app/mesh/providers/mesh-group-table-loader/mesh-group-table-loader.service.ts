@@ -27,7 +27,7 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
         );
     }
 
-    public canDelete(entityId: string | number): Promise<boolean> {
+    public canDelete(): Promise<boolean> {
         return Promise.resolve(true);
     }
 

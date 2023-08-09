@@ -1,0 +1,149 @@
+import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
+import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
+import {
+    BASIC_ENTITY_PERMISSIONS,
+    MBO_AVILABLE_PERMISSIONS,
+    MBO_PERMISSION_PATH,
+    MBO_ROLE_PERMISSIONS,
+    MBO_TYPE,
+    MeshMicroschemaBO,
+    MeshType,
+} from '@admin-ui/mesh/common';
+import { toPermissionArray } from '@admin-ui/mesh/utils';
+import { Injectable } from '@angular/core';
+import {
+    ListResponse,
+    MicroschemaCreateRequest,
+    MicroschemaListOptions,
+    MicroschemaListResponse,
+    MicroschemaLoadOptions,
+    MicroschemaResponse,
+    MicroschemaUpdateRequest,
+    SchemaCreateRequest,
+    SchemaLoadOptions,
+} from '@gentics/mesh-models';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';
+
+@Injectable()
+export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
+
+    constructor(
+        errorHandler: ErrorHandler,
+        notification: I18nNotificationService,
+        protected mesh: MeshRestClientService,
+    ) {
+        super(errorHandler, notification);
+    }
+
+    public mapToBusinessObject(
+        microschema: MicroschemaResponse,
+        _index?: number,
+    ): MeshMicroschemaBO {
+        return {
+            ...microschema,
+            [BO_ID]: microschema.uuid,
+            [BO_PERMISSIONS]: toPermissionArray(microschema.permissions),
+            [BO_DISPLAY_NAME]: microschema.name,
+            [MBO_TYPE]: MeshType.MICROSCHEMA,
+            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_ROLE_PERMISSIONS]: toPermissionArray(microschema.rolePerms),
+            [MBO_PERMISSION_PATH]: `microschemas/${microschema.uuid}`,
+        };
+    }
+
+    public async get(uuid: string, params?: MicroschemaLoadOptions): Promise<MicroschemaResponse> {
+        try {
+            const res = await this.mesh.microschemas.get(uuid, params);
+            this.nameMap[res.uuid] = res.name;
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public getMapped(uuid: string, params?: SchemaLoadOptions): Promise<MeshMicroschemaBO> {
+        return this.get(uuid, params).then(schema => this.mapToBusinessObject(schema));
+    }
+
+    public async create(body: MicroschemaCreateRequest): Promise<MicroschemaResponse> {
+        try {
+            const res = await this.mesh.microschemas.create(body);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.create_microschema_success',
+                translationParams: {
+                    entityName: res.name,
+                },
+            });
+            this.nameMap[res.uuid] = res.name;
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public createMapped(body: SchemaCreateRequest): Promise<MeshMicroschemaBO> {
+        return this.create(body).then(schema => this.mapToBusinessObject(schema));
+    }
+
+    public async update(uuid: string, body: MicroschemaUpdateRequest): Promise<MicroschemaResponse> {
+        try {
+            const res = await this.mesh.microschemas.update(uuid, body);
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.update_microschema_success',
+                translationParams: {
+                    entityName: res.name,
+                },
+            });
+            this.nameMap[res.uuid] = res.name;
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public updateMapped(uuid: string, body: MicroschemaUpdateRequest): Promise<MeshMicroschemaBO> {
+        return this.update(uuid, body).then(schema => this.mapToBusinessObject(schema));
+    }
+
+    public async delete(uuid: string): Promise<void> {
+        try {
+            await this.mesh.microschemas.delete(uuid);
+            const name = this.nameMap[uuid];
+            delete this.nameMap[uuid];
+            this.notification.show({
+                type: 'success',
+                message: 'mesh.delete_microschema_success',
+                translationParams: {
+                    entityName: name,
+                },
+            });
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public async list(params?: MicroschemaListOptions): Promise<MicroschemaListResponse> {
+        try {
+            const res = await this.mesh.microschemas.list(params);
+            for (const microschema of res.data) {
+                this.nameMap[microschema.uuid] = microschema.name;
+            }
+            return res;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
+
+    public listMapped(params?: MicroschemaListOptions): Promise<ListResponse<MeshMicroschemaBO>> {
+        return this.list(params).then(res => {
+            return {
+                // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
+                _metainfo: res._metainfo,
+                data: res.data.map((microschema, index) => this.mapToBusinessObject(microschema, index)),
+            };
+        });
+    }
+}

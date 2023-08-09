@@ -141,5 +141,13 @@ export interface Entity {
     editor: UserReference;
     /** Uuid of the element */
     uuid: string;
+    /** Permissions of the current user for this entity. */
+    permissions: PermissionInfo;
+    /** Optional permissions for the specified role for this entity. */
+    rolePerms?: PermissionInfo;
 }
 
+export interface VersionedEntity extends Entity {
+    /** Version of the entity. */
+    version?: string;
+}

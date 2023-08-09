@@ -331,5 +331,30 @@
     "delete_schema_success": {
         "de": "Schema „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted schema \"{{ entityName }}\"!"
+    },
+
+    "create_microschema": {
+        "de": "Neues Microschema erstellen",
+        "en": "Create new microschema"
+    },
+    "update_microschema": {
+        "de": "Microschema „{{ entityName }}“ aktualisieren",
+        "en": "Update microschema \"{{ entityName }}\""
+    },
+    "info_selected_microschemas": {
+        "de": "{{amountSelected}} von {{amountTotal}} Microschemen ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} microschemas selected"
+    },
+    "create_microschema_success": {
+        "de": "Microschema „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created microschema \"{{ entityName }}\"!"
+    },
+    "update_microschema_success": {
+        "de": "Microschema „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated microschema \"{{ entityName }}\"!"
+    },
+    "delete_microschema_success": {
+        "de": "Microschema „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted microschema \"{{ entityName }}\"!"
     }
 }

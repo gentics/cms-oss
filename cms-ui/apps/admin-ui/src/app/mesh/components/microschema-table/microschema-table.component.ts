@@ -1,16 +1,16 @@
 import { BO_PERMISSIONS } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
-import { MeshSchemaBO } from '@admin-ui/mesh/common';
-import { SchemaTableLoaderService } from '@admin-ui/mesh/providers';
+import { MeshMicroschemaBO } from '@admin-ui/mesh/common';
+import { MicroschemaTableLoaderService } from '@admin-ui/mesh/providers';
 import { BaseEntityTableComponent, DELETE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { Permission, Schema } from '@gentics/mesh-models';
+import { Microschema, Permission } from '@gentics/mesh-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { SchemaModal } from '../schema-modal/schema-modal.component';
-import { SchemaPropertiesMode } from '../schema-properties/schema-properties.component';
+import { MicroschemaModal } from '../microschema-modal/microschema-modal.component';
+import { MicroschemaPropertiesMode } from '../microschema-properties/microschema-properties.component';
 
 const EDIT_ACTION = 'edit';
 const MANAGE_PROJECT_ASSIGNMENT_ACTION = 'manageProjects';
@@ -18,14 +18,14 @@ const ASSIGN_TO_PROJECTS_ACTION = 'assignToProjects';
 const UNASSIGN_FROM_PROJECTS_ACTION = 'unassignFromProjects';
 
 @Component({
-    selector: 'gtx-mesh-schema-table',
-    templateUrl: './schema-table.component.html',
-    styleUrls: ['./schema-table.component.scss'],
+    selector: 'gtx-mesh-microschema-table',
+    templateUrl: './microschema-table.component.html',
+    styleUrls: ['./microschema-table.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshSchemaBO> {
+export class MicroschemaTableComponent extends BaseEntityTableComponent<Microschema, MeshMicroschemaBO> {
 
-    protected rawColumns: TableColumn<MeshSchemaBO>[] = [
+    protected rawColumns: TableColumn<MeshMicroschemaBO>[] = [
         {
             id: 'name',
             label: 'common.name',
@@ -38,13 +38,13 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
             fieldPath: 'description',
         },
     ];
-    protected entityIdentifier = 'schema' as any;
+    protected entityIdentifier = 'microschema' as any;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         appState: AppStateService,
         i18n: I18nService,
-        loader: SchemaTableLoaderService,
+        loader: MicroschemaTableLoaderService,
         modalService: ModalService,
     ) {
         super(
@@ -56,10 +56,10 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
         );
     }
 
-    protected override createTableActionLoading(): Observable<TableAction<MeshSchemaBO>[]> {
+    protected override createTableActionLoading(): Observable<TableAction<MeshMicroschemaBO>[]> {
         return this.actionRebuildTrigger$.pipe(
             map(() => {
-                const actions: TableAction<MeshSchemaBO>[] = [
+                const actions: TableAction<MeshMicroschemaBO>[] = [
                     {
                         id: EDIT_ACTION,
                         icon: 'edit',
@@ -85,13 +85,13 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
     }
 
     public override handleCreateButton(): void {
-        this.openModal(SchemaPropertiesMode.CREATE);
+        this.openModal(MicroschemaPropertiesMode.CREATE);
     }
 
-    public override handleAction(event: TableActionClickEvent<MeshSchemaBO>): void {
+    public override handleAction(event: TableActionClickEvent<MeshMicroschemaBO>): void {
         switch (event.actionId) {
             case EDIT_ACTION:
-                this.openModal(SchemaPropertiesMode.EDIT, event.item);
+                this.openModal(MicroschemaPropertiesMode.EDIT, event.item);
                 return;
 
             case MANAGE_PROJECT_ASSIGNMENT_ACTION:
@@ -110,7 +110,7 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
         super.handleAction(event);
     }
 
-    async manageProjectAssignment(schema: MeshSchemaBO): Promise<void> {
+    async manageProjectAssignment(schema: MeshMicroschemaBO): Promise<void> {
         // TODO: Find a way to get these
         const assignedProjects: string[] = [];
 
@@ -183,10 +183,10 @@ export class SchemaTableComponent extends BaseEntityTableComponent<Schema, MeshS
         // this.reload();
     }
 
-    async openModal(mode: SchemaPropertiesMode, schema?: Schema): Promise<void> {
-        const dialog = await this.modalService.fromComponent(SchemaModal, {}, {
+    async openModal(mode: MicroschemaPropertiesMode, microschema?: Microschema): Promise<void> {
+        const dialog = await this.modalService.fromComponent(MicroschemaModal, {}, {
             mode,
-            schema,
+            microschema,
         });
         const res = await dialog.open();
         if (res) {

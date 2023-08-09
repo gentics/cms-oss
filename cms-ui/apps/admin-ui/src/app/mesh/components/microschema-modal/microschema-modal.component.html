@@ -1,0 +1,28 @@
+<div class="modal-title">
+    <h5>{{ (mode === MicroschemaPropertiesMode.CREATE ? 'mesh.create_microschema' : 'mesh.update_microschema') | i18n: { entityName: microschema?.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <gtx-mesh-microschema-properties
+        [mode]="mode"
+        [formControl]="form"
+    ></gtx-mesh-microschema-properties>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form.valid && form.enabled"
+        (click)="buttonCreateEntityClicked()"
+    >
+        {{ (mode === MicroschemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

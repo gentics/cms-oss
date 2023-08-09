@@ -23,7 +23,7 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
         );
     }
 
-    public canDelete(_entityId: string | number): Promise<boolean> {
+    public canDelete(): Promise<boolean> {
         return Promise.resolve(true);
     }
 
@@ -31,7 +31,7 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
         return this.handler.delete(entityId as any);
     }
 
-    protected loadEntities(options: TableLoadOptions, _additionalOptions?: never): Observable<EntityPageResponse<MeshUserBO>> {
+    protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshUserBO>> {
         return from(this.handler.listMapped({
             page: options.page + 1,
             perPage: options.perPage,

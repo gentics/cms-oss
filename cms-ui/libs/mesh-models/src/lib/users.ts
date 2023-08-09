@@ -85,8 +85,6 @@ export interface UserResponse extends User {
     enabled: boolean;
     /** List of group references to which the user belongs. */
     groups: GroupReference[];
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
     /** Hashsum of user roles which can be used for user permission caching. */
     rolesHash: string;
 }

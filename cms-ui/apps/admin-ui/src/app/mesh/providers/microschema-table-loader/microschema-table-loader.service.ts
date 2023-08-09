@@ -2,19 +2,19 @@ import { EntityPageResponse, TableLoadOptions } from '@admin-ui/common';
 import { BaseTableLoaderService, EntityManagerService } from '@admin-ui/core';
 import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { Role } from '@gentics/mesh-models';
+import { Microschema } from '@gentics/mesh-models';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { MeshRoleBO } from '../../common';
-import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
+import { MeshMicroschemaBO } from '../../common';
+import { MicroschemaHandlerService } from '../microschema-handler/microschema-handler.service';
 
 @Injectable()
-export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, MeshRoleBO> {
+export class MicroschemaTableLoaderService extends BaseTableLoaderService<Microschema, MeshMicroschemaBO> {
 
     constructor(
         entityManager: EntityManagerService,
         appState: AppStateService,
-        protected handler: MeshRoleHandlerService,
+        protected handler: MicroschemaHandlerService,
     ) {
         super(
             null,
@@ -31,7 +31,7 @@ export class MeshRoleTableLoaderService extends BaseTableLoaderService<Role, Mes
         return this.handler.delete(entityId as any);
     }
 
-    protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshRoleBO>> {
+    protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshMicroschemaBO>> {
         return from(this.handler.listMapped({
             page: options.page + 1,
             perPage: options.perPage,

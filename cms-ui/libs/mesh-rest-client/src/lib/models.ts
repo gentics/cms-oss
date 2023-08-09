@@ -20,6 +20,7 @@ import {
     GroupUpdateRequest,
     LocalConfigModel,
     LoginResponse,
+    MicroschemaLoadOptions,
     MicroschemaCreateRequest,
     MicroschemaListOptions,
     MicroschemaListResponse,
@@ -149,16 +150,6 @@ export interface MeshProjectAPI {
     get(project: string): Promise<ProjectResponse>;
     update(project: string, body: ProjectUpdateRequest): Promise<ProjectResponse>;
     delete(project: string): Promise<GenericMessageResponse>;
-
-    listSchemas(project: string): Promise<SchemaListResponse>;
-    getSchema(project: string, uuid: string): Promise<SchemaResponse>;
-    assignSchema(project: string, uuid: string): Promise<SchemaResponse>;
-    unassignSchema(project: string, uuid: string): Promise<void>;
-
-    listMicroschemas(project: string): Promise<MicroschemaListResponse>;
-    getMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
-    assignMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
-    unassignMicroschema(project: string, uuid: string): Promise<void>;
 }
 
 export interface MeshSchemaAPI {
@@ -175,7 +166,7 @@ export interface MeshSchemaAPI {
 export interface MeshMicroschemaAPI {
     list(params?: MicroschemaListOptions): Promise<MicroschemaListResponse>;
     create(body: MicroschemaCreateRequest): Promise<MicroschemaResponse>;
-    get(uuid: string): Promise<MicroschemaResponse>;
+    get(uuid: string, params?: MicroschemaLoadOptions): Promise<MicroschemaResponse>;
     update(uuid: string, body: MicroschemaUpdateRequest): Promise<MicroschemaResponse>;
     delete(uuid: string): Promise<void>;
 

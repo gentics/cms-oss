@@ -3,12 +3,11 @@ import {
     BasicListOptions,
     BranchedEntityOptions,
     ElasticSearchSettings,
-    Entity,
     GenericMessageResponse,
     ListResponse,
     PartialEntityLoadOptions,
-    PermissionInfo,
-    VersionedEntityOptions,
+    VersionedEntity,
+    VersionedEntityOptions
 } from './common';
 import { FieldSchema } from './fields';
 
@@ -83,15 +82,9 @@ export interface SchemaReference {
     versionUuid?: string;
 }
 
-export interface Schema extends Entity, EditableSchemaProperties {
-    /** Version of the schema. */
-    version: string;
-}
+export interface Schema extends VersionedEntity, EditableSchemaProperties {}
 
-export interface SchemaResponse extends Schema {
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
-}
+export interface SchemaResponse extends Schema {}
 
 export interface SchemaUpdateRequest extends EditableSchemaProperties {
     /** Version of the schema. */

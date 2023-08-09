@@ -5,5 +5,7 @@ export * from './mesh-role-permissions-trable-loader/mesh-role-permissions-trabl
 export * from './mesh-role-table-loader/mesh-role-table-loader.service';
 export * from './mesh-user-handler/mesh-user-handler.service';
 export * from './mesh-user-table-loader/mesh-user-table-loader.service';
+export * from './microschema-handler/microschema-handler.service';
+export * from './microschema-table-loader/microschema-table-loader.service';
 export * from './schema-handler/schema-handler.service';
 export * from './schema-table-loader/schema-table-loader.service';

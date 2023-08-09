@@ -1,5 +1,5 @@
 import { BusinessObject } from '@admin-ui/common';
-import { GroupResponse, Permission, RoleResponse, SchemaResponse, User, UserResponse } from '@gentics/mesh-models';
+import { GroupResponse, MicroschemaResponse, Permission, RoleResponse, SchemaResponse, User, UserResponse } from '@gentics/mesh-models';
 
 export enum MeshType {
     PROJECT = 'project',
@@ -34,3 +34,4 @@ export type MeshGroupBO = GroupResponse & MeshBusinessObject & {
 };
 export type MeshUserBO = UserResponse & MeshBusinessObject;
 export type MeshSchemaBO = SchemaResponse & MeshBusinessObject;
+export type MeshMicroschemaBO = MicroschemaResponse & MeshBusinessObject;

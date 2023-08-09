@@ -86,7 +86,7 @@ export class MeshRestClient {
     public users: MeshUserAPI = {
         list: (params?) => this.performReqeust(GET, '/users', null, params),
         create: (body) => this.performReqeust(POST, '/users', body),
-        get: (uuid, params) => this.performReqeust(GET, `/users/${uuid}`, null, params),
+        get: (uuid, params?) => this.performReqeust(GET, `/users/${uuid}`, null, params),
         update: (uuid, body) => this.performReqeust(POST, `/users/${uuid}`, body),
         delete: (uuid) => this.performReqeust(DELETE, `/users/${uuid}`),
 
@@ -96,7 +96,7 @@ export class MeshRestClient {
     public roles: MeshRoleAPI = {
         list: (params?) => this.performReqeust(GET, '/roles', null, params),
         create: (body) => this.performReqeust(POST, '/roles', body),
-        get: (uuid, params) => this.performReqeust(GET, `/roles/${uuid}`, null, params),
+        get: (uuid, params?) => this.performReqeust(GET, `/roles/${uuid}`, null, params),
         update: (uuid, body) => this.performReqeust(POST, `/roles/${uuid}`, body),
         delete: (uuid) => this.performReqeust(DELETE, `/roles/${uuid}`),
     } as const;
@@ -104,15 +104,15 @@ export class MeshRestClient {
     public groups: MeshGroupAPI = {
         list: (params?) => this.performReqeust(GET, '/groups', null, params),
         create: (body) => this.performReqeust(POST, '/groups', body),
-        get: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
+        get: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
         update: (uuid, body) => this.performReqeust(POST, `/groups/${uuid}`, body),
         delete: (uuid) => this.performReqeust(DELETE, `/groups/${uuid}`),
 
-        getRoles: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
+        getRoles: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
         assignRole: (uuid, roleUuid) => this.performReqeust(POST, `/groups/${uuid}/roles/${roleUuid}`),
         unassignRole: (uuid, roleUuid) => this.performReqeust(DELETE, `/groups/${uuid}/roles/${roleUuid}`),
 
-        getUsers: (uuid, params) => this.performReqeust(GET, `/groups/${uuid}/users`, null, params),
+        getUsers: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}/users`, null, params),
         assignUser: (uuid, userUuid) => this.performReqeust(POST, `/groups/${uuid}/users/${userUuid}`),
         unassignUser: (uuid, userUuid) => this.performReqeust(DELETE, `/groups/${uuid}/users/${userUuid}`),
     } as const;
@@ -130,16 +130,6 @@ export class MeshRestClient {
         get: (project) => this.performReqeust(GET, `/projects/${project}`),
         update: (project, body) => this.performReqeust(POST, `/projects/${project}`, body),
         delete: (project) => this.performReqeust(DELETE, `/projects/${project}`),
-
-        listSchemas: (project) => this.performReqeust(GET, `/projects/${project}/schemas`),
-        getSchema: (project, uuid) => this.performReqeust(GET, `/projects/${project}/schemas/${uuid}`),
-        assignSchema: (project, uuid) => this.performReqeust(POST, `/projects/${project}/schemas/${uuid}`),
-        unassignSchema: (project, uuid) => this.performReqeust(DELETE, `/projects/${project}/schemas/${uuid}`),
-
-        listMicroschemas: (project) => this.performReqeust(GET, `/projects/${project}/microschemas`),
-        getMicroschema: (project, uuid) => this.performReqeust(GET, `/projects/${project}/microschemas/${uuid}`),
-        assignMicroschema: (project, uuid) => this.performReqeust(POST, `/projects/${project}/microschemas/${uuid}`),
-        unassignMicroschema: (project, uuid) => this.performReqeust(DELETE, `/projects/${project}/microschemas/${uuid}`),
     } as const;
 
     public schemas: MeshSchemaAPI = {
@@ -155,7 +145,7 @@ export class MeshRestClient {
     public microschemas: MeshMicroschemaAPI = {
         list: (params?) => this.performReqeust(GET, '/microschemas', null, params),
         create: (body) => this.performReqeust(POST, '/microschemas', body),
-        get: (uuid) => this.performReqeust(GET, `/microschemas/${uuid}`),
+        get: (uuid, params?) => this.performReqeust(GET, `/microschemas/${uuid}`, null, params),
         update: (uuid, body) => this.performReqeust(POST, `/microschemas/${uuid}`, body),
         delete: (uuid) => this.performReqeust(DELETE, `/microschemas/${uuid}`),
         diff: (uuid, body) => this.performReqeust(POST, `/microschemas/${uuid}/diff`, body),

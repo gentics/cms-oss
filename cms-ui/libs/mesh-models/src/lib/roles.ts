@@ -35,8 +35,6 @@ export interface Role extends EditableRoleProperties, Entity { }
 export interface RoleResponse extends Role {
     /** List of groups which are assigned to the role. */
     groups: GroupReference[];
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
 }
 
 export interface RoleUpdateRequest extends Role { }

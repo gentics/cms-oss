@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, Entity, ListResponse, PartialEntityLoadOptions, PermissionInfo, RolePermissionsOptions } from './common';
+import { BasicListOptions, Entity, ListResponse, PartialEntityLoadOptions, RolePermissionsOptions } from './common';
 import { RoleReference } from './roles';
 
 export interface EditableGroupProperties {
@@ -25,8 +25,6 @@ export interface GroupReference {
 export interface Group extends EditableGroupProperties, Entity {}
 
 export interface GroupResponse extends Group {
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
     /** List of role references */
     roles: RoleReference[];
 }

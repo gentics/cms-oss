@@ -23,7 +23,7 @@ export class SchemaTableLoaderService extends BaseTableLoaderService<Schema, Mes
         );
     }
 
-    public canDelete(entityId: string | number): Promise<boolean> {
+    public canDelete(): Promise<boolean> {
         return Promise.resolve(true);
     }
 
@@ -31,7 +31,7 @@ export class SchemaTableLoaderService extends BaseTableLoaderService<Schema, Mes
         return this.handler.delete(entityId as any);
     }
 
-    protected loadEntities(options: TableLoadOptions, additionalOptions?: never): Observable<EntityPageResponse<MeshSchemaBO>> {
+    protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshSchemaBO>> {
         return from(this.handler.listMapped({
             page: options.page + 1,
             perPage: options.perPage,

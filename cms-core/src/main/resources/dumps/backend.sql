@@ -469,7 +469,6 @@ CREATE TABLE `contentrepository` (
   `project_per_node` tinyint(4) NOT NULL DEFAULT 0,
   `uuid` varchar(41) NOT NULL DEFAULT '',
   `udate` int(11) DEFAULT 0,
-  `http2` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

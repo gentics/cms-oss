@@ -73,7 +73,8 @@ public class Message {
 	private String message;
     
 	/**
-	 * Message is a instant message
+	 * Message is an instant message if:
+	 * current timestamp + instantTime is in the future
 	 */
 	private int instantTime = 0;
 
@@ -100,7 +101,7 @@ public class Message {
 	 * @param fromId id of the sender
 	 * @param toId id of the recipient
 	 * @param message message to send
-	 * @param instanttime specifies how many seconds from now the message should be delivered as an instant message
+	 * @param instantTime specifies how many seconds from now the message should be delivered as an instant message
 	 */
 	public Message(int fromId, int toId, String message, int instantTime) {
 		super();

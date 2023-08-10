@@ -607,7 +607,7 @@ public class PropertyNodeConfig implements NodeConfig {
 						"Error while trying to create connection to backend database with url {" + url + "}",
 						e);
 			}
-			Transaction t = TransactionManager.getCurrentTransaction();
+			Transaction t = TransactionManager.getCurrentTransactionOrNull();
 
 			if (t != null) {
 				RenderResult result = t.getRenderResult();

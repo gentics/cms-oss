@@ -26,8 +26,6 @@ export enum TagPropertyType {
     NODE = 'NODE',
     /** @deprecated Use `CMSFORM` instead. */
     FORM = 'FORM',
-    /** @deprecated Use `CMSFORM` instead. */
-    FORMLIST = 'FORMLIST',
     CMSFORM = 'CMSFORM',
 }
 

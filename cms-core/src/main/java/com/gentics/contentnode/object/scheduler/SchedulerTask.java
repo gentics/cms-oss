@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
 
-import com.gentics.contentnode.object.NamedNodeObject;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -21,6 +20,7 @@ import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.object.SchedulerFactory;
+import com.gentics.contentnode.object.NamedNodeObject;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler;
@@ -28,8 +28,6 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.scheduler.TaskModel;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.scheduler.InternalSchedulerTask;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
 
 /**
  * Interface for scheduler tasks
@@ -220,12 +218,7 @@ public interface SchedulerTask extends NamedNodeObject, Resolvable {
 				throw new NodeException(String.format("Unknown internal task %s", getCommand()));
 			}
 
-			try {
-				resultStatus = internalTask.execute(output) ? 0 : 255;
-			} catch (NodeException e) {
-				output.add(ExceptionUtils.getStackTrace(e));
-				resultStatus = 255;
-			}
+			resultStatus = internalTask.execute(output) ? 0 : 255;
 
 			return resultStatus;
 		}

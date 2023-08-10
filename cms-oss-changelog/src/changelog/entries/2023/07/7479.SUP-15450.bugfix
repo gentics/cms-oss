@@ -1,0 +1,2 @@
+Add flag to objects of @GET /msg/list@ response to indicate if message is an instant message.
+Editor User Interface, Admin User Interface: Fix instant messaging.

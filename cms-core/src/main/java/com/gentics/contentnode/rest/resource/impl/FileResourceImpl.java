@@ -406,6 +406,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	@Produces(MediaType.APPLICATION_JSON)
 	public FileUploadResponse createSimpleMultiPartFallback(MultiPart multiPart, @Context HttpServletRequest request,
 			@QueryParam(FileUploadMetaData.META_DATA_FOLDERID_KEY) String folderId,
+			@QueryParam(FileUploadMetaData.META_DATA_NODE_ID_KEY) String nodeId,
 			@QueryParam(FileUploadMetaData.META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartName,
 			@QueryParam(AuthenticatedContentNodeResource.QQFILE_FILENAME_PARAMETER_NAME) String qqFileUploaderFileName,
 			@QueryParam(FileUploadMetaData.META_DATA_DESCRIPTION_KEY) String description,
@@ -434,6 +435,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						"Needed parameter is missing. Folderid parameter {" + FileUploadMetaData.META_DATA_FOLDERID_KEY + "} is {" + folderId + "}");
 			}
 
+			if (!StringUtils.isEmpty(nodeId)) {
+				metaData.setNodeId(nodeId);
+			}
+
 			// Set the filename from the query parameters
 			if (!StringUtils.isEmpty(qqFileUploaderFileName)) {
 				metaData.setFilename(qqFileUploaderFileName);
@@ -445,7 +450,14 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			metaData.setDescription(ObjectTransformer.getString(description, ""));
 			metaData.setOverwrite(overwrite ? "true" : "false");
 
-			return handleMultiPartRequest(multiPart, metaData, 0);
+			String filename = metaData.getFilename();
+
+			// Create a transaction lock on the filename
+			// This lock doesn't handle all cases of filename collisions because the FUM
+			// can change the filename to anything else, but we ignore this case here.
+			String lockKey = FileFactory.sanitizeName(filename);
+
+			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, 0));
 		} catch (Exception e) {
 
 			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
@@ -489,26 +501,30 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+				String sanitizedFilename = FileFactory.sanitizeName(fileName);
 				Integer fileId = null;
 				if (overwrite) {
 					// If overwrite is enabled and a file with the same filename exists in the given folder,
 					// overwrite it
-					File file = findFileByName(folderId, FileFactory.sanitizeName(fileName));
+					File file = findFileByName(folderId, sanitizedFilename);
 					if (file != null && !file.isInherited()) {
 						fileId = file.getId();
 					}
 				}
 
+				Integer finalFileId = fileId;
 				InputStream inputStream = request.getInputStream();
 
-				if (fileId == null) {
-					// Create a new file
-					return createFile(inputStream, false, request.getContentLength(), folderId,
+				return (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
+					if (finalFileId == null) {
+						// Create a new file
+						return createFile(inputStream, false, request.getContentLength(), folderId,
 							nodeId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
-				} else {
-					// Save data to an existing file
-					return saveFile(inputStream, fileId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
-				}
+					} else {
+						// Save data to an existing file
+						return saveFile(inputStream, finalFileId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
+					}
+				});
 			}
 
 
@@ -1151,7 +1167,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	@Path("/copy")
 	public FileUploadResponse copyFile(FileCopyRequest request) {
 		try {
-			return handleFileCopyRequest(request);
+			String lockKey = request.getNewFilename() != null
+				? FileFactory.sanitizeName(request.getNewFilename())
+				: FileFactory.sanitizeName(request.getFile().getName());
+
+			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleFileCopyRequest(request));
 		} catch (NodeException e) {
 			ResponseCode code = e instanceof InsufficientPrivilegesException
 				? ResponseCode.PERMISSION
@@ -1198,17 +1218,29 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 			for (String id : request.getIds()) {
 				File toMove = getFile(id, false);
-				OpResult result = toMove.move(target, ObjectTransformer.getInt(request.getNodeId(), 0));
-				switch (result.getStatus()) {
-				case FAILURE:
-					GenericResponse response = new GenericResponse();
-					for (NodeMessage msg : result.getMessages()) {
-						response.addMessage(ModelBuilder.getMessage(msg));
+				String lockKey = FileFactory.sanitizeName(toMove.getName());
+				GenericResponse response = executeLocked(fileNameLock, lockKey, () -> {
+					OpResult result = toMove.move(target, ObjectTransformer.getInt(request.getNodeId(), 0));
+
+					if (result.getStatus() == OpResult.Status.OK) {
+						// Nothing to do, return a dummy response to signal success.
+
+						return new GenericResponse(null, ResponseInfo.ok("success"));
 					}
-					response.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Error"));
+
+					GenericResponse failureResponse = new GenericResponse();
+
+					for (NodeMessage msg : result.getMessages()) {
+						failureResponse.addMessage(ModelBuilder.getMessage(msg));
+					}
+
+					failureResponse.setResponseInfo(new ResponseInfo(ResponseCode.FAILURE, "Error"));
+
+					return failureResponse;
+				});
+
+				if (response.getResponseInfo().getResponseCode() != ResponseCode.OK) {
 					return response;
-				case OK:
-					// Nothing to be done.
 				}
 			}
 			trx.success();

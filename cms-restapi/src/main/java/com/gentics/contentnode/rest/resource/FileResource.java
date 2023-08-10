@@ -162,6 +162,7 @@ public interface FileResource extends AuthenticatedResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	FileUploadResponse createSimpleMultiPartFallback(MultiPart multiPart, @Context HttpServletRequest request,
 			@QueryParam(META_DATA_FOLDERID_KEY) String folderId,
+			@QueryParam(META_DATA_NODE_ID_KEY) String nodeId,
 			@QueryParam(META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME) String customBodyPartName,
 			@QueryParam(QQFILE_FILENAME_PARAMETER_NAME) String qqFileUploaderFileName,
 			@QueryParam(META_DATA_DESCRIPTION_KEY) String description,

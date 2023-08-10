@@ -1,6 +1,7 @@
 package com.gentics.contentnode.object;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
@@ -36,7 +37,7 @@ public interface PublishableNodeObjectInFolder extends PublishableNodeObject, No
 		}
 
 		Folder folder = null;
-		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE); ChannelTrx trx = new ChannelTrx()) {
 			folder = getFolder().getMaster();
 		}
 		if (folder == null) {

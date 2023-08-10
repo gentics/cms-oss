@@ -3,7 +3,6 @@ package com.gentics.contentnode.factory.object;
 import static com.gentics.contentnode.factory.Trx.supply;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
@@ -553,8 +552,6 @@ public class SchedulerFactory extends AbstractFactory {
 				SchedulerTask task = supply(() -> schedule.getSchedulerTask());
 				task.validate();
 				resultStatus = task.execute(output);
-			} catch (InterruptedException | IOException e) {
-				output.add(ExceptionUtils.getStackTrace(e));
 			} catch (Throwable e) {
 				logger.error(String.format("Could not execute schedule %d (%s): %s", scheduleId, schedule.getName(), e.getMessage()), e);
 				output.add(ExceptionUtils.getStackTrace(e));

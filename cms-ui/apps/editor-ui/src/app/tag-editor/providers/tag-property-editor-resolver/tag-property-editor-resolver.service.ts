@@ -41,8 +41,8 @@ DEFAULT_EDITORS.set(TagPartType.UrlPage, PageUrlTagPropertyEditor);
 
 DEFAULT_EDITORS.set(TagPartType.SelectMultiple, SelectTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.SelectSingle, SelectTagPropertyEditor);
-DEFAULT_EDITORS.set(TagPartType.FormList, FormlistTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.Form, FormTagPropertyEditorComponent);
+DEFAULT_EDITORS.set(TagPartType.CmsForm, FormTagPropertyEditorComponent);
 
 DEFAULT_EDITORS.set(TagPartType.TagPage, TagRefTagPropertyEditor);
 DEFAULT_EDITORS.set(TagPartType.TagTemplate, TagRefTagPropertyEditor);

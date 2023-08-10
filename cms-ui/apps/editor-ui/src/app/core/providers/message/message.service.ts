@@ -1,15 +1,20 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Subject, Subscription, combineLatest, interval, of } from 'rxjs';
 import { delay, filter, map, mergeMap, startWith } from 'rxjs/operators';
-import { ApplicationStateService, MessageActionsService } from '../../../state';
+import { MessageFromServer } from '@gentics/cms-models';
+import {
+    ApplicationStateService,
+    InstantMessagesDeliveredAction,
+    MessageActionsService,
+} from '../../../state';
 import { PermissionService } from '../permissions/permission.service';
+import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 
-const DEFAULT_DELAY = 5;
+const DEFAULT_DELAY = 2;
 const DEFAULT_INTERVAL = 30;
 
 @Injectable()
 export class MessageService implements OnDestroy {
-
     private fetchInterval = DEFAULT_INTERVAL;
     private fetchDelay = DEFAULT_DELAY;
     private subscription: Subscription;
@@ -19,7 +24,8 @@ export class MessageService implements OnDestroy {
         private appState: ApplicationStateService,
         private messageActions: MessageActionsService,
         private permissions: PermissionService,
-    ) { }
+        private notificationService: I18nNotification,
+    ) {}
 
     ngOnDestroy(): void {
         if (this.subscription) {
@@ -28,8 +34,15 @@ export class MessageService implements OnDestroy {
     }
 
     /** Polls for new messages when a user is logged in and has inbox permissions. */
-    poll(delayInSeconds: number = DEFAULT_DELAY, intervalInSeconds: number = DEFAULT_INTERVAL): Subscription {
-        if (!this.subscription || delayInSeconds !== this.fetchDelay || intervalInSeconds !== this.fetchInterval) {
+    poll(
+        delayInSeconds: number = DEFAULT_DELAY,
+        intervalInSeconds: number = DEFAULT_INTERVAL,
+    ): Subscription {
+        if (
+            !this.subscription ||
+            delayInSeconds !== this.fetchDelay ||
+            intervalInSeconds !== this.fetchInterval
+        ) {
             if (this.subscription) {
                 this.subscription.unsubscribe();
             }
@@ -51,14 +64,16 @@ export class MessageService implements OnDestroy {
     }
 
     private fetchWhenUserIsLoggedIn(): void {
-        const doFetch$ = this.appState.select(state => state.auth.isLoggedIn).pipe(
-            mergeMap(loggedIn => {
-                if (loggedIn) {
-                    return this.permissions.viewInbox$;
-                }
-                return of(false);
-            }),
-        );
+        const doFetch$ = this.appState
+            .select((state) => state.auth.isLoggedIn)
+            .pipe(
+                mergeMap((loggedIn) => {
+                    if (loggedIn) {
+                        return this.permissions.viewInbox$;
+                    }
+                    return of(false);
+                }),
+            );
 
         this.subscription = combineLatest([
             doFetch$,
@@ -68,20 +83,59 @@ export class MessageService implements OnDestroy {
                     // and this entire observable only starts after the interval, which isn't what's intended.
                     startWith(0),
                 ),
-                of(null).pipe(
-                    delay(this.fetchDelay * 1000),
-                ),
+                of(null).pipe(delay(this.fetchDelay * 1000)),
             ]),
-        ]).pipe(
-            filter(([allow]) => allow),
-            map((_, idx) => idx === 0),
-        ).subscribe(firstFetch => {
-            if (firstFetch) {
-                this.messageActions.fetchAllMessages();
-            } else {
-                this.messageActions.fetchUnreadMessages();
-            }
-        });
+        ])
+            .pipe(
+                filter(([allow]) => allow),
+                map((_, idx) => idx === 0),
+            )
+            .subscribe((firstFetch) => {
+                if (firstFetch) {
+                    this.messageActions
+                        .fetchAllMessages()
+                        .then((allMessages) => {
+                            const [_all, unread] = allMessages;
+                            this.deliverInstantMessagesOnce(unread);
+                        });
+                } else {
+                    this.messageActions.fetchUnreadMessages().then((unread) => {
+                        this.deliverInstantMessagesOnce(unread);
+                    });
+                }
+            });
     }
 
+    private deliverInstantMessagesOnce(messages: MessageFromServer[]): void {
+        const deliveredInstantMessages =
+            this.appState.now.messages.deliveredInstantMessages;
+
+        messages
+            .filter(
+                (message) =>
+                    message.isInstantMessage &&
+                    !deliveredInstantMessages.includes(message.id),
+            )
+            .forEach((message) => this.sendInstantMessage(message));
+
+        const deliveredMessageIds = messages.map((message) => message.id);
+        this.appState.dispatch(
+            new InstantMessagesDeliveredAction(deliveredMessageIds),
+        );
+    }
+
+    private sendInstantMessage(message: MessageFromServer): void {
+        const msg = this.notificationService.show({
+            message: message.message,
+            dismissOnClick: false,
+            delay: 0,
+            action: {
+                label: 'message.message_read',
+                onClick: () => {
+                    msg.dismiss();
+                    this.messageActions.markMessagesAsRead([message.id]);
+                },
+            },
+        });
+    }
 }

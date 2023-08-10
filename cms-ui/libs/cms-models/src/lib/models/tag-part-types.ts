@@ -26,8 +26,6 @@ export enum TagPropertyType {
     NODE = 'NODE',
     /** @deprecated Use `CMSFORM` instead. */
     FORM = 'FORM',
-    /** @deprecated Use `CMSFORM` instead. */
-    FORMLIST = 'FORMLIST',
     CMSFORM = 'CMSFORM',
 }
 
@@ -119,9 +117,7 @@ export enum TagPartType {
     /** The node part is a drop-down menu with the nodes available to the user. */
     Node = 40,
     /** @deprecated */
-    FormList = 41,
-    /** @deprecated */
-    Form = 42,
+    Form = 41,
     /** The CMS Form part lets the user select a form from the CMS. See Gentics CMS Forms for details. NOTE: Parts of this type can only be used in the new Editor User Interface. */
     CmsForm = 42,
 }
@@ -157,7 +153,6 @@ export const TagPartTypePropertyType: Readonly<{ [key in TagPartType]: TagProper
     [TagPartType.FolderUpload]: TagPropertyType.FOLDER,
     [TagPartType.Node]: TagPropertyType.NODE,
     [TagPartType.Form]: TagPropertyType.FORM,
-    [TagPartType.FormList]: TagPropertyType.FORMLIST,
     [TagPartType.CmsForm]: TagPropertyType.CMSFORM,
 } as const;
 

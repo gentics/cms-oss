@@ -129,7 +129,8 @@ public class MessagingResourceImpl implements MessagingResource {
 							message.setParameters(request.getParameters());
 						}
 						// now compose the message and add to the message sender
-						Message msg = new Message(t.getUserId(), ObjectTransformer.getInt(adressee.getId(), 0), message.toString());
+						Message msg = new Message(t.getUserId(), ObjectTransformer.getInt(adressee.getId(), 0),
+								message.toString(), request.getInstantTimeMinutes());
 
 						messageSender.sendMessage(msg);
 					}
@@ -161,11 +162,11 @@ public class MessagingResourceImpl implements MessagingResource {
 						while (res.next()) {
 							Message nodeMsg = new Message(res.getInt("from_user_id"), res.getInt("to_user_id"), res.getString("msg"));
 							com.gentics.contentnode.rest.model.response.Message msg = new com.gentics.contentnode.rest.model.response.Message();
-
 							msg.setId(res.getInt("id"));
 							msg.setMessage(nodeMsg.getParsedMessage());
 							msg.setSender(ModelBuilder.getUser(t.getObject(SystemUser.class, res.getInt("from_user_id"))));
 							msg.setTimestamp(res.getLong("timestamp"));
+							msg.setInstantMessage(!msg.isExpired(res.getInt("instanttime")));
 							msg.setType(Type.INFO);
 							list.add(msg);
 						}

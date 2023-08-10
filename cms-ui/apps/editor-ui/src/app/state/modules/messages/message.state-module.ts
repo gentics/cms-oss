@@ -8,6 +8,7 @@ import { ApplicationStateService } from '../../providers';
 import { ActionDefinition, AppStateBranch, concatUnique } from '../../state-utils';
 import { AddEntitiesAction, SetMessageEntitiesAction, UpdateEntitiesAction } from '../entity/entity.actions';
 import {
+    InstantMessagesDeliveredAction,
     MESSAGES_STATE_KEY,
     MessagesFetchingErrorAction,
     MessagesFetchingSuccessAction,
@@ -20,13 +21,14 @@ const INITIAL_MESSAGES_STATE: MessageState = {
     all: [],
     read: [],
     unread: [],
+    deliveredInstantMessages: [],
     lastError: undefined,
 };
 
 @AppStateBranch<MessageState>({
     name: MESSAGES_STATE_KEY,
     defaults: INITIAL_MESSAGES_STATE,
-    })
+})
 @Injectable()
 export class MessageStateModule {
 
@@ -66,7 +68,7 @@ export class MessageStateModule {
         const { messages, normalized } = normalizeMessages(newMessages);
         const messagesMap = {} as { [id: number]: Message<Normalized> };
 
-        for (let message of messages) {
+        for (const message of messages) {
             message.unread = action.onlyUnread || unreadIds.includes(message.id);
             messagesMap[message.id] = message;
         }
@@ -126,7 +128,15 @@ export class MessageStateModule {
             unread: state.unread.filter(id => !allReadIds.includes(id)),
         });
     }
+
+    @ActionDefinition(InstantMessagesDeliveredAction)
+    handleInstantMessagesDeliveredAction(ctx: StateContext<MessageState>, action: InstantMessagesDeliveredAction): void {
+        ctx.patchState({
+            deliveredInstantMessages: action.messageIds,
+        });
+    }
 }
+
 
 /**
  * Normalizes messages and the users that sent them.
@@ -141,7 +151,7 @@ function normalizeMessages(messages: MessageFromServer[]): {
     const messagesWithUserId: Message<Normalized>[] = [];
     const messageIds: number[] = [];
 
-    for (let message of messages as Array<Message<AnyModelType>>) {
+    for (const message of messages as Array<Message<AnyModelType>>) {
         const normalizedMessage: Message<Normalized> = { ...message, sender: 1, [IS_NORMALIZED]: true };
         if (typeof message.sender === 'object' && message.sender) {
             userHash[message.sender.id] = message.sender;

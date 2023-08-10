@@ -64,6 +64,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
             {
                 id: 3,
@@ -71,6 +72,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
         ];
 
@@ -81,10 +83,13 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
         ];
 
-        appState.dispatch(new FetchAllMessageSuccess(messagesFromServer, unreadMessagesFromServer))
+        const instantMessagesFromServer: MessageFromServer[] = [];
+
+        appState.dispatch(new FetchAllMessageSuccess(messagesFromServer, unreadMessagesFromServer, instantMessagesFromServer))
             .toPromise()
             .then(() => {
                 expect(appState.now.messages.fetching).toBe(false);
@@ -181,6 +186,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 3, firstName: 'Third', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             };
 
             appState.dispatch(new FetchUnreadMessageSuccess([unreadMessage]));
@@ -212,6 +218,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             };
 
             const stateBefore = appState.now;

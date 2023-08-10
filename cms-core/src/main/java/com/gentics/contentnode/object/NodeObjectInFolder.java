@@ -2,6 +2,7 @@ package com.gentics.contentnode.object;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
+import com.gentics.contentnode.factory.ChannelTrx;
 import com.gentics.contentnode.factory.NoMcTrx;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Wastebin;
@@ -75,7 +76,7 @@ public interface NodeObjectInFolder extends NodeObject {
 		}
 
 		Folder folder = null;
-		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE); ChannelTrx trx = new ChannelTrx()) {
 			folder = getFolder().getMaster();
 		}
 		if (folder == null) {
@@ -115,7 +116,7 @@ public interface NodeObjectInFolder extends NodeObject {
 			return true;
 		}
 		Folder folder = null;
-		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE); ChannelTrx trx = new ChannelTrx()) {
 			folder = getFolder().getMaster();
 		}
 		if (folder == null) {
@@ -151,7 +152,7 @@ public interface NodeObjectInFolder extends NodeObject {
 			return true;
 		}
 		Folder folder = null;
-		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE)) {
+		try (WastebinFilter wbf = new WastebinFilter(Wastebin.INCLUDE); ChannelTrx trx = new ChannelTrx()) {
 			folder = getFolder().getMaster();
 		}
 		if (folder == null) {

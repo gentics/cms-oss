@@ -1,0 +1,1 @@
+The purge logs and purge messages jobs have been improved to purge the records in batches.

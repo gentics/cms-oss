@@ -37,6 +37,17 @@ entries correspond exactly to the respective fields in the @keycloak.json@ you c
 generate in the Keycloak admin front-end, and you should put all the entries here even
 when they are not listed in the example above.
 
+h4. Using an Identity Provider
+
+When using an "identity provider":https://www.keycloak.org/docs/latest/server_admin/#_identity_broker
+the following two settings in the advanced OpenID Connect settings are important to prevent unwanted
+redirect behavior:
+
+# "Prompt": Set to "Select account"
+# "Accepts prompt=none forward from client": Set to "Off"
+
+!images/keycloak-ip-config.png(Keycloak - Identity Provider configuration)!
+
 h4. Circumvent Single Sign-on
 
 It can usefull to not use the single sign process although it is enabled.

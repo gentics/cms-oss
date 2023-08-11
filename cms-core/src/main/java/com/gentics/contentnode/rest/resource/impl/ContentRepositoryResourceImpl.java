@@ -1,5 +1,6 @@
 package com.gentics.contentnode.rest.resource.impl;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.assertMeshCr;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
 import java.util.ArrayList;
@@ -659,13 +660,5 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 					|| crFragmentId.equals(ObjectTransformer.getString(fr.getGlobalId(), null));
 		}).findFirst().orElseThrow(() -> new EntityNotFoundException(I18NHelper.get("cr_fragment.notfound", crFragmentId)));
 		return MiscUtils.load(CrFragment.class, crFragment.getId().toString());
-	}
-
-	protected void assertMeshCr(ContentRepository cr) throws NodeException {
-		if (cr.getCrType() != ContentRepositoryModel.Type.mesh) {
-			String translatedType = I18NHelper.get("crtype." + cr.getCrType().name() + ".short");
-			throw new RestMappedException(I18NHelper.get("contentrepository.invalidtype", cr.getName(), translatedType)).setResponseCode(ResponseCode.INVALIDDATA)
-					.setStatus(Status.CONFLICT);
-		}
 	}
 }

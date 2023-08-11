@@ -55,6 +55,7 @@ import com.gentics.contentnode.job.AbstractUserActionJob;
 import com.gentics.contentnode.msg.NodeMessage;
 import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ContentLanguage;
+import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Disinheritable;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
@@ -85,6 +86,7 @@ import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.contentnode.rest.model.ContentNodeItem;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel;
 import com.gentics.contentnode.rest.model.Reference;
 import com.gentics.contentnode.rest.model.User;
 import com.gentics.contentnode.rest.model.perm.PermType;
@@ -2421,5 +2423,18 @@ public class MiscUtils {
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")))
 				.setSerializationInclusion(Include.NON_NULL)
 				.enable(SerializationFeature.INDENT_OUTPUT);
+	}
+
+	/**
+	 * Assert that the given contentrepository is a Mesh CR. If not, throw a {@link RestMappedException} with an appropriate message
+	 * @param cr contentrepository to check
+	 * @throws NodeException
+	 */
+	public static void assertMeshCr(ContentRepository cr) throws NodeException {
+		if (cr.getCrType() != ContentRepositoryModel.Type.mesh) {
+			String translatedType = I18NHelper.get("crtype." + cr.getCrType().name() + ".short");
+			throw new RestMappedException(I18NHelper.get("contentrepository.invalidtype", cr.getName(), translatedType)).setResponseCode(ResponseCode.INVALIDDATA)
+					.setStatus(Status.CONFLICT);
+		}
 	}
 }

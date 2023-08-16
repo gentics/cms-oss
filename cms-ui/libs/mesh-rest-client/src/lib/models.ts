@@ -68,6 +68,18 @@ import {
     UserResponse,
     UserUpdateRequest,
     ProjectLoadOptions,
+    TagFamilyListResponse,
+    TagFamilyListOptions,
+    TagFamilyLoadOptions,
+    TagFamilyResponse,
+    TagFamilyCreateRequest,
+    TagListOptions,
+    TagCreateRequest,
+    TagResponse,
+    TagFamilyUpdateRequest,
+    TagLoadOptions,
+    TagUpdateRequest,
+    TagNodeListOptions,
 } from '@gentics/mesh-models';
 
 export interface MeshClientDriver {
@@ -102,6 +114,7 @@ export enum MeshAPIVersion {
 export interface MeshAuthAPI {
     login(username: string, password: string): Promise<LoginResponse>;
     me(): Promise<UserResponse>;
+    logout(): Promise<GenericMessageResponse>;
 }
 
 export interface MeshUserAPI {
@@ -151,6 +164,16 @@ export interface MeshProjectAPI {
     get(project: string, params?: ProjectLoadOptions): Promise<ProjectResponse>;
     update(project: string, body: ProjectUpdateRequest): Promise<ProjectResponse>;
     delete(project: string): Promise<GenericMessageResponse>;
+
+    listSchemas(project: string, params?: SchemaListOptions): Promise<SchemaListResponse>;
+    getSchema(project: string, uuid: string): Promise<SchemaResponse>;
+    assignSchema(project: string, uuid: string): Promise<SchemaResponse>;
+    unassignSchema(project: string, uuid: string): Promise<void>;
+
+    listMicroschemas(project: string, params?: MicroschemaListOptions): Promise<MicroschemaListResponse>;
+    getMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
+    assignMicroschema(project: string, uuid: string): Promise<MicroschemaResponse>;
+    unassignMicroschema(project: string, uuid: string): Promise<void>;
 }
 
 export interface MeshSchemaAPI {
@@ -204,18 +227,22 @@ export interface MeshBranchAPI {
     asLatest(project: string, uuid: string): Promise<BranchResponse>;
 }
 
-export interface MeshProjectSchemaAPI {
-    list(project: string, params?: SchemaListOptions): Promise<SchemaListResponse>;
-    get(project: string, uuid: string): Promise<SchemaResponse>;
-    assign(project: string, uuid: string): Promise<SchemaResponse>;
-    unassign(project: string, uuid: string): Promise<void>;
+export interface MeshTagFamiliesAPI {
+    list(project: string, params?: TagFamilyListOptions): Promise<TagFamilyListResponse>;
+    create(project: string, body: TagFamilyCreateRequest): Promise<TagFamilyResponse>;
+    get(project: string, uuid: string, params?: TagFamilyLoadOptions): Promise<TagFamilyResponse>;
+    update(project: string, uuid: string, body: TagFamilyUpdateRequest): Promise<TagFamilyResponse>;
+    delete(project: string, uuid: string): Promise<void>;
 }
 
-export interface MeshProjectMicroschemaAPI {
-    list(project: string, params?: MicroschemaListOptions): Promise<MicroschemaListResponse>;
-    get(project: string, uuid: string): Promise<MicroschemaResponse>;
-    assign(project: string, uuid: string): Promise<MicroschemaResponse>;
-    unassign(project: string, uuid: string): Promise<void>;
+export interface MeshTagsAPI {
+    list(project: string, familyUuid: string, params?: TagListOptions): Promise<TagListResponse>;
+    create(project: string, familyUuid: string, body: TagCreateRequest): Promise<TagResponse>;
+    get(project: string, familyUuid: string, uuid: string, params?: TagLoadOptions): Promise<TagResponse>;
+    update(project: string, familyUuid: string, uuid: string, body: TagUpdateRequest): Promise<TagResponse>;
+    delete(project: string, familyUuid: string, uuid: string): Promise<void>;
+
+    nodes(project: string, familyUuid: string, uuid: string, params?: TagNodeListOptions): Promise<NodeListResponse>;
 }
 
 export interface MeshServerAPI {

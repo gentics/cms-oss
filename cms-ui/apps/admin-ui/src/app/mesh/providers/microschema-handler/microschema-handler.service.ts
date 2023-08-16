@@ -151,7 +151,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async listFromProject(project: string, params?: MicroschemaListOptions): Promise<MicroschemaListResponse> {
         try {
-            const res = await this.mesh.projectMicroschemas.list(project, params);
+            const res = await this.mesh.projects.listMicroschemas(project, params);
             for (const microschema of res.data) {
                 this.nameMap[microschema.uuid] = microschema.name;
             }
@@ -163,7 +163,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async assignToProject(project: ProjectReference, microschema: MicroschemaReference): Promise<MicroschemaResponse> {
         try {
-            const res = await this.mesh.projectMicroschemas.assign(project.name, microschema.uuid);
+            const res = await this.mesh.projects.assignMicroschema(project.name, microschema.uuid);
             this.notification.show({
                 type: 'success',
                 message: 'mesh.assign_microschema_to_project_success',
@@ -180,7 +180,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
 
     public async unassignFromProject(project: ProjectReference, microschema: MicroschemaReference): Promise<void> {
         try {
-            await this.mesh.projectMicroschemas.unassign(project.name, microschema.uuid);
+            await this.mesh.projects.unassignMicroschema(project.name, microschema.uuid);
             this.notification.show({
                 type: 'success',
                 message: 'mesh.unassign_microschema_from_project_success',

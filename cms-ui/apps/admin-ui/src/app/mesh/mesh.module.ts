@@ -8,6 +8,7 @@ import {
     CopyTokenModal,
     CopyValueComponent,
     LoginGateComponent,
+    ManageTagFamiliesModal,
     ManagementComponent,
     ManagementTabsComponent,
     MeshGroupModal,
@@ -36,8 +37,16 @@ import {
     SelectProjectModal,
     SelectRoleModal,
     SelectSchemaModal,
+    SelectTagFamilyModal,
+    SelectTagModal,
     SelectUserModal,
     ServerOverviewComponent,
+    TagFamilyModal,
+    TagFamilyPropertiesComponent,
+    TagFamilyTableComponent,
+    TagModal,
+    TagPropertiesComponent,
+    TagTableComponent,
 } from './components';
 import {
     MeshGroupHandlerService,
@@ -53,6 +62,10 @@ import {
     ProjectTableLoaderService,
     SchemaHandlerService,
     SchemaTableLoaderService,
+    TagFamilyHandlerService,
+    TagFamilyTableLoaderService,
+    TagHandlerService,
+    TagTableLoaderService,
 } from './providers';
 import { MeshIconPipe } from './pipes';
 
@@ -60,6 +73,7 @@ const COMPONENTS: Type<any>[] = [
     CopyTokenModal,
     CopyValueComponent,
     LoginGateComponent,
+    ManageTagFamiliesModal,
     ManagementComponent,
     ManagementTabsComponent,
     MeshGroupModal,
@@ -88,8 +102,16 @@ const COMPONENTS: Type<any>[] = [
     SelectProjectModal,
     SelectRoleModal,
     SelectSchemaModal,
+    SelectTagFamilyModal,
+    SelectTagModal,
     SelectUserModal,
     ServerOverviewComponent,
+    TagFamilyModal,
+    TagFamilyPropertiesComponent,
+    TagFamilyTableComponent,
+    TagModal,
+    TagPropertiesComponent,
+    TagTableComponent,
 ];
 
 const PIPES: Type<any>[] = [
@@ -115,6 +137,10 @@ const SERVICES: Provider[] = [
     ProjectTableLoaderService,
     SchemaHandlerService,
     SchemaTableLoaderService,
+    TagFamilyHandlerService,
+    TagFamilyTableLoaderService,
+    TagHandlerService,
+    TagTableLoaderService,
 ];
 
 @NgModule({

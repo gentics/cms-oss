@@ -419,6 +419,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected callToDeleteEntity(id: string): Promise<void> {
-        return this.loader.deleteEntity(id);
+        return this.loader.deleteEntity(id, this.createAdditionalLoadOptions());
     }
 }

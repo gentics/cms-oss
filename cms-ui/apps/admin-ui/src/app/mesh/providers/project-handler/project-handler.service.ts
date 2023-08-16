@@ -12,20 +12,13 @@ import {
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import {
-    GenericMessageResponse,
     ListResponse,
-    MicroschemaListOptions,
-    MicroschemaListResponse,
-    MicroschemaResponse,
     ProjectCreateRequest,
     ProjectListOptions,
     ProjectListResponse,
     ProjectLoadOptions,
     ProjectResponse,
     ProjectUpdateRequest,
-    SchemaListOptions,
-    SchemaListResponse,
-    SchemaResponse,
 } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { BaseMeshEntitiyHandlerService } from '../base-mesh-entity-handler/base-mesh-entity-handler.service';

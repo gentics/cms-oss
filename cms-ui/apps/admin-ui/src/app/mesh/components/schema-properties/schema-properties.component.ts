@@ -18,7 +18,7 @@ export enum SchemaPropertiesMode {
 })
 export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> {
 
-    public readonly MeshSchemaPropertiesMode = SchemaPropertiesMode;
+    public readonly SchemaPropertiesMode = SchemaPropertiesMode;
 
     @Input()
     public mode: SchemaPropertiesMode;

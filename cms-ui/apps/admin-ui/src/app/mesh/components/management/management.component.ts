@@ -1,8 +1,9 @@
-import { ROUTE_MANAGEMENT_OUTLET, ROUTE_PATH_MESH } from '@admin-ui/common';
+import { ROUTE_MANAGEMENT_OUTLET, ROUTE_PARAM_MESH_TAB, ROUTE_PATH_MESH, MeshMangementTabs } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 
 @Component({
     selector: 'gtx-mesh-management',
@@ -23,16 +24,25 @@ export class ManagementComponent {
         protected router: Router,
         protected route: ActivatedRoute,
         protected cmsClient: GcmsApi,
+        protected mesh: MeshRestClientService,
     ) {}
 
     public handleMeshLogin(isLoggedIn: boolean): void {
         this.loggedIn = isLoggedIn;
-        this.router.navigate([{ outlets: { [ROUTE_MANAGEMENT_OUTLET]: [ROUTE_PATH_MESH] } }], { relativeTo: this.route });
+        const snapshot = this.route.snapshot;
+        const tab: MeshMangementTabs = snapshot.params?.[ROUTE_PARAM_MESH_TAB]
+        const parts = [
+            ROUTE_PATH_MESH,
+        ];
+        if (tab) {
+            parts.push(tab);
+        }
+        this.router.navigate([{ outlets: { [ROUTE_MANAGEMENT_OUTLET]: parts } }], { relativeTo: this.route });
     }
 
     public logout(): void {
-        // this.cmsClient.contentrepositories.logoutFromMeshInstance(this.repository.id).subscribe(() => {
+        this.mesh.auth.logout().then(() => {
             this.loggedIn = false;
-        // });
+        });
     }
 }

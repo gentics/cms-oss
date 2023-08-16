@@ -14,8 +14,10 @@ import { ProjectModal } from '../project-modal/project-modal.component';
 import { ProjectPropertiesMode } from '../project-properties/project-properties.component';
 import { SelectMicroschemaModal } from '../select-microschema-modal/select-microschema-modal.component';
 import { SelectSchemaModal } from '../select-schema-modal/select-schema-modal.component';
+import { ManageTagFamiliesModal } from '../manage-tag-families-modal/manage-tag-families-modal.component';
 
 const EDIT_ACTION = 'edit';
+const MANAGE_TAGS_ACTIONS = 'manageTags';
 const MANAGE_SCHEMA_ASSIGNMENT_ACTION = 'manageSchemaAssignment';
 const MANAGE_MICROSCHEMA_ASSIGNMENT_ACTION = 'manageMicroschemaAssignment';
 
@@ -68,6 +70,14 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
                         single: true,
                     },
                     {
+                        id: MANAGE_TAGS_ACTIONS,
+                        icon: 'local_offer',
+                        label: this.i18n.instant('mesh.manage_tags'),
+                        enabled: (item) => item[BO_PERMISSIONS].includes(Permission.UPDATE),
+                        type: 'secondary',
+                        single: true,
+                    },
+                    {
                         id: MANAGE_SCHEMA_ASSIGNMENT_ACTION,
                         icon: 'view_compact',
                         label: this.i18n.instant('mesh.manage_schema_assignment'),
@@ -109,6 +119,10 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
                 this.openModal(ProjectPropertiesMode.EDIT, event.item);
                 return;
 
+            case MANAGE_TAGS_ACTIONS:
+                this.manageTagFamilies(event.item);
+                return;
+
             case MANAGE_SCHEMA_ASSIGNMENT_ACTION:
                 this.manageSchemaAssignment(event.item);
                 return;
@@ -119,6 +133,16 @@ export class ProjectTableComponent extends BaseEntityTableComponent<Project, Mes
         }
 
         super.handleAction(event);
+    }
+
+    async manageTagFamilies(project: MeshProjectBO): Promise<void> {
+        const dialog = await this.modalService.fromComponent(ManageTagFamiliesModal, {
+            closeOnEscape: false,
+            closeOnOverlayClick: false,
+        }, {
+            project,
+        });
+        await dialog.open();
     }
 
     async manageSchemaAssignment(project: MeshProjectBO): Promise<void> {

@@ -224,12 +224,6 @@ export class ContentrespositoryApi {
     loginToMeshInstance(
         contentRepositoryId: EntityIdType,
     ): Observable<Response> {
-        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/login`, null);
-    }
-
-    logoutFromMeshInstance(
-        contentRepositoryId: EntityIdType,
-    ): Observable<Response> {
-        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/logout`, null);
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/proxylogin`, null);
     }
 }

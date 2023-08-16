@@ -425,5 +425,75 @@
     "delete_project_success": {
         "de": "Projekt „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted project \"{{ entityName }}\"!"
+    },
+
+    "create_tag_family": {
+        "de": "Neue Tag-Family erstellen",
+        "en": "Create new tag family"
+    },
+    "update_tag_family": {
+        "de": "Tag-Family „{{ entityName }}“ aktualisieren",
+        "en": "Update tag family \"{{ entityName }}\""
+    },
+    "info_selected_tag_families": {
+        "de": "{{amountSelected}} von {{amountTotal}} Tag-Families ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} tag families selected"
+    },
+    "create_tag_family_success": {
+        "de": "Tag-Family „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created tag family \"{{ entityName }}\"!"
+    },
+    "update_tag_family_success": {
+        "de": "Tag-Family „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated tag family \"{{ entityName }}\"!"
+    },
+    "delete_tag_family_success": {
+        "de": "Tag-Family „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted tag family \"{{ entityName }}\"!"
+    },
+
+    "tags": {
+        "de": "Tags",
+        "en": "Tags"
+    },
+    "create_tag": {
+        "de": "Neuen Tag erstellen",
+        "en": "Create new tag"
+    },
+    "update_tag": {
+        "de": "Tag „{{ entityName }}“ aktualisieren",
+        "en": "Update tag \"{{ entityName }}\""
+    },
+    "edit_tag": {
+        "de": "Tag bearbeiten",
+        "en": "Edit tag"
+    },
+    "delete_tag": {
+        "de": "Tag löschen",
+        "en": "Delete tag"
+    },
+    "delete_tag_warning": {
+        "de": "Sind Sie sicher, dass Sie den Tag „<b>{{ entityName }}</b>“ wirklich löschen möchten?<br/>Der Tag sowie die verknüpfung zu den Nodes kann nicht wiederhergestellt werden.",
+        "en": "Are you sure you want to delete the tag \"<b>{{ entityName }}</b>\"?<br/>Neither the tag nor the existing linking to nodes can be recovered."
+    },
+    "manage_tags": {
+        "de": "Tags verwalten",
+        "en": "Manage tags"
+    },
+    "info_selected_tags": {
+        "de": "{{amountSelected}} von {{amountTotal}} Tags ausgewählt",
+        "en": "{{amountSelected}} of {{amountTotal}} tags selected"
+    },
+    "create_tag_success": {
+        "de": "Tag „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created tag \"{{ entityName }}\"!"
+    },
+    "update_tag_success": {
+        "de": "Tag „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated tag \"{{ entityName }}\"!"
+    },
+    "delete_tag_success": {
+        "de": "Tag „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted tag \"{{ entityName }}\"!"
     }
 }

@@ -22,7 +22,7 @@ export abstract class BaseTableLoaderService<T, O = T & BusinessObject, A = neve
 
     public abstract canDelete(entityId: string | number): Promise<boolean>;
 
-    public abstract deleteEntity(entityId: string | number): Promise<void>;
+    public abstract deleteEntity(entityId: string | number, additonalOptions?: A): Promise<void>;
 
     protected abstract loadEntities(options: TableLoadOptions, additionalOptions?: A): Observable<EntityPageResponse<O>>;
 

@@ -11,3 +11,7 @@ export * from './project-handler/project-handler.service';
 export * from './project-table-loader/project-table-loader.service';
 export * from './schema-handler/schema-handler.service';
 export * from './schema-table-loader/schema-table-loader.service';
+export * from './tag-family-handler/tag-family-handler.service';
+export * from './tag-family-table-loader/tag-family-table-loader.service';
+export * from './tag-handler/tag-handler.service';
+export * from './tag-table-loader/tag-table-loader.service';

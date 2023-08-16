@@ -1,6 +1,5 @@
 import { CONTENT_TYPE_JSON, DELETE, GET, HTTP_HEADER_AUTHORIZATION, HTTP_HEADER_CONTENT_TYPE, POST } from './internal';
 import {
-    MeshGraphQLAPI,
     MeshAPIVersion,
     MeshAuthAPI,
     MeshBranchAPI,
@@ -8,19 +7,20 @@ import {
     MeshClientDriver,
     MeshClusterAPI,
     MeshCoordinatorAPI,
+    MeshGraphQLAPI,
     MeshGroupAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
+    MeshPermissionAPI,
     MeshPluginAPI,
     MeshProjectAPI,
-    MeshProjectMicroschemaAPI,
-    MeshProjectSchemaAPI,
+    MeshTagsAPI,
+    MeshTagFamiliesAPI,
     MeshRoleAPI,
     MeshSchemaAPI,
     MeshServerAPI,
     MeshUserAPI,
     RequestMethod,
-    MeshPermissionAPI,
 } from './models';
 import { toRelativePath, trimTrailingSlash } from './utils';
 
@@ -81,6 +81,7 @@ export class MeshRestClient {
     public auth: MeshAuthAPI = {
         login: (username, password) => this.performReqeust(POST, '/auth/login', { username, password }),
         me: () => this.performReqeust(GET, '/auth/me'),
+        logout: () => this.performReqeust(GET, '/auth/logout'),
     } as const;
 
     public users: MeshUserAPI = {
@@ -130,6 +131,16 @@ export class MeshRestClient {
         get: (project, params?) => this.performReqeust(GET, `/projects/${project}`, null, params),
         update: (project, body) => this.performReqeust(POST, `/projects/${project}`, body),
         delete: (project) => this.performReqeust(DELETE, `/projects/${project}`),
+
+        listSchemas: (project) => this.performReqeust(GET, `/${project}/schemas`),
+        getSchema: (project, uuid) => this.performReqeust(GET, `/${project}/schemas/${uuid}`),
+        assignSchema: (project, uuid) => this.performReqeust(POST, `/${project}/schemas/${uuid}`),
+        unassignSchema: (project, uuid) => this.performReqeust(DELETE, `/${project}/schemas/${uuid}`),
+
+        listMicroschemas: (project) => this.performReqeust(GET, `/${project}/microschemas`),
+        getMicroschema: (project, uuid) => this.performReqeust(GET, `/${project}/microschemas/${uuid}`),
+        assignMicroschema: (project, uuid) => this.performReqeust(POST, `/${project}/microschemas/${uuid}`),
+        unassignMicroschema: (project, uuid) => this.performReqeust(DELETE, `/${project}/microschemas/${uuid}`),
     } as const;
 
     public schemas: MeshSchemaAPI = {
@@ -196,18 +207,22 @@ export class MeshRestClient {
         asLatest: (project, uuid) => this.performReqeust(POST, `/${project}/branches/${uuid}/latest`),
     } as const;
 
-    public projectSchemas: MeshProjectSchemaAPI = {
-        list: (project) => this.performReqeust(GET, `/${project}/schemas`),
-        get: (project, uuid) => this.performReqeust(GET, `/${project}/schemas/${uuid}`),
-        assign: (project, uuid) => this.performReqeust(POST, `/${project}/schemas/${uuid}`),
-        unassign: (project, uuid) => this.performReqeust(DELETE, `/${project}/schemas/${uuid}`),
+    public tagFamilies: MeshTagFamiliesAPI = {
+        list: (project, params?) => this.performReqeust(GET, `/${project}/tagFamilies`, null, params),
+        create: (project, body) => this.performReqeust(POST, `/${project}/tagFamilies`, body),
+        get: (project, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${uuid}`, null, params),
+        update: (project, uuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${uuid}`, body),
+        delete: (project, uuid) => this.performReqeust(DELETE, `/${project}/tagFamilies/${uuid}`),
     } as const;
 
-    public projectMicroschemas: MeshProjectMicroschemaAPI = {
-        list: (project) => this.performReqeust(GET, `/${project}/microschemas`),
-        get: (project, uuid) => this.performReqeust(GET, `/${project}/microschemas/${uuid}`),
-        assign: (project, uuid) => this.performReqeust(POST, `/${project}/microschemas/${uuid}`),
-        unassign: (project, uuid) => this.performReqeust(DELETE, `/${project}/microschemas/${uuid}`),
+    public tags: MeshTagsAPI = {
+        list: (project, familyUuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags`, null, params),
+        create: (project, familyUuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${familyUuid}/tags`, body),
+        get: (project, familyUuid, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, null, params),
+        update: (project, familyUuid, uuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, body),
+        delete: (project, familyUuid, uuid) => this.performReqeust(DELETE, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`),
+
+        nodes: (project, familyUuid, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}/nodes`, null, params),
     } as const;
 
     public server: MeshServerAPI = {

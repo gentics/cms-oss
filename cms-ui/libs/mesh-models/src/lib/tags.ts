@@ -1,23 +1,27 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { PagingMetaInfo, PermissionInfo } from './common';
-import { UserReference } from './users';
+import { Entity, ListResponse, PagingOptions, PartialEntityLoadOptions, SortingOptions } from './common';
 
-export interface TagCreateRequest {
-    /** Name of the tag which will be created. */
+export interface EditableTagProperties {
+    /** Name of the tag. */
     name: string;
 }
 
-export interface TagFamilyCreateRequest {
+export interface EditableTagFamilyProperties {
     /** Name of the tag family which will be created. */
     name: string;
 }
 
-export interface TagFamilyListResponse {
-    /** Paging information of the list result. */
-    _metainfo: PagingMetaInfo;
-    /** Array which contains the found elements. */
-    data: TagFamilyResponse[];
-}
+export interface Tag extends EditableTagProperties, Entity { }
+
+export interface TagFamily extends EditableTagFamilyProperties, Entity { }
+
+export interface TagFamilyCreateRequest extends EditableTagFamilyProperties { }
+
+export interface TagFamilyLoadOptions { }
+
+export interface TagFamilyListOptions extends PagingOptions, SortingOptions { }
+
+export type TagFamilyListResponse = ListResponse<TagFamilyResponse>;
 
 /** Reference to the tag family to which the tag belongs. */
 export interface TagFamilyReference {
@@ -27,34 +31,19 @@ export interface TagFamilyReference {
     uuid: string;
 }
 
-export interface TagFamilyResponse {
-    /** ISO8601 formatted created date string. */
-    created: string;
-    /** User reference of the creator of the element. */
-    creator: UserReference;
-    /** ISO8601 formatted edited date string. */
-    edited: string;
-    /** User reference of the creator of the element. */
-    editor: UserReference;
-    /** Name of the tag family. */
-    name?: string;
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
-    /** Uuid of the element */
-    uuid: string;
-}
+export interface TagFamilyResponse extends TagFamily { }
 
-export interface TagFamilyUpdateRequest {
-    /** New name of the tag family */
-    name: string;
-}
+export interface TagFamilyUpdateRequest extends Partial<EditableTagFamilyProperties> { }
 
-export interface TagListResponse {
-    /** Paging information of the list result. */
-    _metainfo: PagingMetaInfo;
-    /** Array which contains the found elements. */
-    data: TagResponse[];
-}
+export interface TagCreateRequest extends EditableTagProperties { }
+
+export interface TagLoadOptions extends PartialEntityLoadOptions<TagResponse> { }
+
+export interface TagListOptions extends PagingOptions, SortingOptions, PartialEntityLoadOptions<TagResponse> { }
+
+export interface TagNodeListOptions extends PagingOptions, SortingOptions { }
+
+export type TagListResponse = ListResponse<TagResponse>;
 
 export interface TagListUpdateRequest {
     /**
@@ -72,26 +61,9 @@ export interface TagReference {
     uuid: string;
 }
 
-export interface TagResponse {
-    /** ISO8601 formatted created date string. */
-    created: string;
-    /** User reference of the creator of the element. */
-    creator: UserReference;
-    /** ISO8601 formatted edited date string. */
-    edited: string;
-    /** User reference of the creator of the element. */
-    editor: UserReference;
-    /** Name of the tag. */
-    name: string;
-    permissions: PermissionInfo;
-    rolePerms: PermissionInfo;
+export interface TagResponse extends Tag {
     /** Reference to the tag family to which the tag belongs. */
     tagFamily: TagFamilyReference;
-    /** Uuid of the element */
-    uuid: string;
 }
 
-export interface TagUpdateRequest {
-    /** New name of the tag. */
-    name: string;
-}
+export interface TagUpdateRequest extends Partial<EditableTagProperties> { }

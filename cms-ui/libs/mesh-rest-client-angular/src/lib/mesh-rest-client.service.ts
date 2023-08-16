@@ -13,8 +13,8 @@ import {
     MeshPermissionAPI,
     MeshPluginAPI,
     MeshProjectAPI,
-    MeshProjectMicroschemaAPI,
-    MeshProjectSchemaAPI,
+    MeshTagsAPI,
+    MeshTagFamiliesAPI,
     MeshRestClient,
     MeshRoleAPI,
     MeshSchemaAPI,
@@ -89,12 +89,12 @@ export class MeshRestClientService {
         return this.client.nodes;
     }
 
-    get projectSchemas(): MeshProjectSchemaAPI {
-        return this.client.projectSchemas;
+    get tagFamilies(): MeshTagFamiliesAPI {
+        return this.client.tagFamilies;
     }
 
-    get projectMicroschemas(): MeshProjectMicroschemaAPI {
-        return this.client.projectMicroschemas;
+    get tags(): MeshTagsAPI {
+        return this.client.tags;
     }
 
     get server(): MeshServerAPI {

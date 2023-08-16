@@ -4,6 +4,7 @@ import {
     BASIC_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
     MBO_PERMISSION_PATH,
+    MBO_PROJECT_CONTEXT,
     MBO_ROLE_PERMISSIONS,
     MBO_TYPE,
     MeshTagFamilyBO,
@@ -50,6 +51,7 @@ export class TagFamilyHandlerService extends BaseMeshEntitiyHandlerService {
             [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
             [MBO_ROLE_PERMISSIONS]: toPermissionArray(family.rolePerms),
             [MBO_PERMISSION_PATH]: `${project}/tagFamilies/${family.uuid}`,
+            [MBO_PROJECT_CONTEXT]: project,
         };
     }
 
@@ -194,10 +196,12 @@ query($page: Long, $perPage: Long, $sortBy: String, $order: SortOrder) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const data: MeshTagFamilyBO[] = (families.elements || []).map((family, index) => {
                 const { tags, ...rawFamily } = family;
+                rawFamily[MBO_PROJECT_CONTEXT] = project;
                 const mapped = this.mapToBusinessObject(project, rawFamily, index);
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 mapped.tags = (tags.elements || []).map((tag, index) => {
                     tag.tagFamily = rawFamily;
+                    this.tagHandler.nameMap[tag.uuid] = tag.name;
                     return this.tagHandler.mapToBusinessObject(project, rawFamily.uuid, tag, index);
                 });
 

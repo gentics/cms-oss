@@ -140,8 +140,8 @@ export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily,
 
     public async deleteTag(family: MeshTagFamilyBO, tag: TagResponse): Promise<void> {
         const dialog = await this.modalService.dialog({
-            title: this.i18n.instant('mesh.delete_tag', { entityName: tag.name }),
-            body: this.i18n.instant('mesh.delete_tag_warning'),
+            title: this.i18n.instant('mesh.delete_tag'),
+            body: this.i18n.instant('mesh.delete_tag_warning', { entityName: tag.name }),
             buttons: [
                 {
                     label: this.i18n.instant('shared.confirm_button'),
@@ -159,6 +159,7 @@ export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily,
 
         if (doDelete) {
             await this.tagHandler.delete(this.project, family.uuid, tag.uuid);
+            this.reload();
         }
     }
 

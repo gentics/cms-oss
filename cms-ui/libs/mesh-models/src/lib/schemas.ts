@@ -6,6 +6,7 @@ import {
     GenericMessageResponse,
     ListResponse,
     PartialEntityLoadOptions,
+    RolePermissionsOptions,
     VersionedEntity,
     VersionedEntityOptions,
 } from './common';
@@ -65,7 +66,7 @@ export interface SchemaCreateRequest extends EditableSchemaProperties {}
 export interface SchemaLoadOptions extends BranchedEntityOptions, VersionedEntityOptions,
     PartialEntityLoadOptions<SchemaResponse> {}
 
-export interface SchemaListOptions extends BasicListOptions { }
+export interface SchemaListOptions extends BasicListOptions, RolePermissionsOptions { }
 
 export type SchemaListResponse = ListResponse<SchemaResponse>;
 

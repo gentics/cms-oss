@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Entity, ListResponse, PagingOptions, PartialEntityLoadOptions, SortingOptions } from './common';
+import { Entity, ListResponse, PagingOptions, PartialEntityLoadOptions, RolePermissionsOptions, SortingOptions } from './common';
 
 export interface EditableTagProperties {
     /** Name of the tag. */
@@ -19,7 +19,7 @@ export interface TagFamilyCreateRequest extends EditableTagFamilyProperties { }
 
 export interface TagFamilyLoadOptions { }
 
-export interface TagFamilyListOptions extends PagingOptions, SortingOptions { }
+export interface TagFamilyListOptions extends PagingOptions, SortingOptions, RolePermissionsOptions { }
 
 export type TagFamilyListResponse = ListResponse<TagFamilyResponse>;
 
@@ -39,7 +39,7 @@ export interface TagCreateRequest extends EditableTagProperties { }
 
 export interface TagLoadOptions extends PartialEntityLoadOptions<TagResponse> { }
 
-export interface TagListOptions extends PagingOptions, SortingOptions, PartialEntityLoadOptions<TagResponse> { }
+export interface TagListOptions extends PagingOptions, SortingOptions, RolePermissionsOptions, PartialEntityLoadOptions<TagResponse> { }
 
 export interface TagNodeListOptions extends PagingOptions, SortingOptions { }
 

@@ -1,9 +1,10 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
-    BASIC_ENTITY_PERMISSIONS,
+    EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
     MBO_PERMISSION_PATH,
+    MBO_PROJECT_CONTEXT,
     MBO_ROLE_PERMISSIONS,
     MBO_TYPE,
     MeshTagBO,
@@ -48,9 +49,10 @@ export class TagHandlerService extends BaseMeshEntitiyHandlerService {
             [BO_PERMISSIONS]: toPermissionArray(tag.permissions),
             [BO_DISPLAY_NAME]: tag.name,
             [MBO_TYPE]: MeshType.TAG,
-            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_AVILABLE_PERMISSIONS]: EDITABLE_ENTITY_PERMISSIONS,
             [MBO_ROLE_PERMISSIONS]: toPermissionArray(tag.rolePerms),
             [MBO_PERMISSION_PATH]: `${project}/tagFamilies/${familyUuid}/tags/${tag.uuid}`,
+            [MBO_PROJECT_CONTEXT]: project,
         };
     }
 

@@ -1,7 +1,7 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
-    BASIC_ENTITY_PERMISSIONS,
+    EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
     MBO_PERMISSION_PATH,
     MBO_ROLE_PERMISSIONS,
@@ -46,7 +46,7 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
             [BO_PERMISSIONS]: toPermissionArray(schema.permissions),
             [BO_DISPLAY_NAME]: schema.name,
             [MBO_TYPE]: MeshType.SCHEMA,
-            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_AVILABLE_PERMISSIONS]: EDITABLE_ENTITY_PERMISSIONS,
             [MBO_ROLE_PERMISSIONS]: toPermissionArray(schema.rolePerms),
             [MBO_PERMISSION_PATH]: `schemas/${schema.uuid}`,
         };

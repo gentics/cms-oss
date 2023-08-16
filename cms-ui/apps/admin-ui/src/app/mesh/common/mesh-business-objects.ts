@@ -28,8 +28,10 @@ export const MBO_TYPE = Symbol('mesh-type');
 export const MBO_PERMISSION_PATH = Symbol('mesh-permission-path');
 export const MBO_ROLE_PERMISSIONS = Symbol('mesh-role-permissions');
 export const MBO_AVILABLE_PERMISSIONS = Symbol('mesh-available-perms');
+export const MBO_PROJECT_CONTEXT = Symbol('mesh-project');
 
-export const BASIC_ENTITY_PERMISSIONS: Permission[] = [Permission.CREATE, Permission.READ, Permission.UPDATE, Permission.DELETE];
+export const EDITABLE_ENTITY_PERMISSIONS: Permission[] = [Permission.READ, Permission.UPDATE, Permission.DELETE];
+export const BASIC_ENTITY_PERMISSIONS: Permission[] = [Permission.CREATE, ...EDITABLE_ENTITY_PERMISSIONS];
 export const NODE_PERMISSIONS: Permission[] = [...BASIC_ENTITY_PERMISSIONS, Permission.READ_PUBLISHED, Permission.PUBLISH];
 
 export interface MeshBusinessObject extends BusinessObject {
@@ -37,6 +39,7 @@ export interface MeshBusinessObject extends BusinessObject {
     [MBO_ROLE_PERMISSIONS]?: Permission[];
     [MBO_AVILABLE_PERMISSIONS]?: Permission[];
     [MBO_TYPE]?: MeshType;
+    [MBO_PROJECT_CONTEXT]?: string;
 }
 
 export type MeshRoleBO = RoleResponse & MeshBusinessObject;

@@ -1,5 +1,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, BranchedEntityOptions, ElasticSearchSettings, ListResponse, VersionedEntity, VersionedEntityOptions } from './common';
+import {
+    BasicListOptions,
+    BranchedEntityOptions,
+    ElasticSearchSettings,
+    ListResponse,
+    RolePermissionsOptions,
+    VersionedEntity,
+    VersionedEntityOptions,
+} from './common';
 import { FieldSchema } from './fields';
 
 export interface EditableMicroschemaProperties {
@@ -22,7 +30,7 @@ export interface MicroschemaCreateRequest extends EditableMicroschemaProperties 
 
 export interface MicroschemaLoadOptions extends BranchedEntityOptions, VersionedEntityOptions {}
 
-export interface MicroschemaListOptions extends BasicListOptions { }
+export interface MicroschemaListOptions extends BasicListOptions, RolePermissionsOptions { }
 
 export type MicroschemaListResponse = ListResponse<MicroschemaResponse>;
 

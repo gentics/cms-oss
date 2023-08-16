@@ -10,11 +10,12 @@
     [columns]="columns"
     [rows]="rows"
     [active]="activeEntity"
-    [selected]="selection"
+    [selected]="selected"
+    [actions]="actions"
 
     [renderers]="{
         name: nameRenderer,
-        '__fallback__': permissionRenderer
+        permissions: permissionRenderer
     }"
 
     (loadRow)="loadRow($event)"

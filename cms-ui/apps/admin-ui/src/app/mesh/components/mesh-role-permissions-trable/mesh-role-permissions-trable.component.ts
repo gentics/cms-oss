@@ -5,7 +5,12 @@ import { MeshRolePermissionsTrableLoaderOptions, MeshRolePermissionsTrableLoader
 import { BaseEntityTrableComponent } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { RoleReference } from '@gentics/mesh-models';
-import { TableColumn } from '@gentics/ui-core';
+import { TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+const EDIT_ACTION = 'edit';
+const APPLY_RECURSIVELY_ACTION = 'applyRecursive';
 
 @Component({
     selector: 'gtx-mesh-role-permissions-trable',
@@ -56,5 +61,43 @@ export class MeshRolePermissionsTrableComponent
         return {
             role: this.role.uuid,
         };
+    }
+
+    protected override createTableActionLoading(): Observable<TableAction<MeshBusinessObject>[]> {
+        // Override me when needed
+        return this.actionRebuildTrigger$.pipe(
+            map(() => {
+                const actions: TableAction<MeshBusinessObject>[] = [
+                    {
+                        id: EDIT_ACTION,
+                        label: this.i18n.instant('common.edit'),
+                        icon: 'edit',
+                        type: 'primary',
+                        enabled: true,
+                        single: true,
+                    },
+                    {
+                        id: APPLY_RECURSIVELY_ACTION,
+                        label: this.i18n.instant('mesh.apply_permissions_recursive'),
+                        icon: 'arrow_downward',
+                        type: 'warning',
+                        enabled: true,
+                        single: true,
+                    },
+                ];
+                return actions;
+            }),
+        );
+    }
+
+    public override handleActionClick(action: TableActionClickEvent<MeshBusinessObject>): void {
+        switch (action.actionId) {
+            case EDIT_ACTION:
+                return;
+            case APPLY_RECURSIVELY_ACTION:
+                return;
+        }
+
+        super.handleActionClick(action);
     }
 }

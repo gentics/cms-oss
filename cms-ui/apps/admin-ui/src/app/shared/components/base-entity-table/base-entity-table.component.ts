@@ -106,7 +106,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     protected loadTrigger = new Subject<void>();
     protected actionRebuildTrigger = new Subject<void>();
     protected actionRebuildTrigger$ = this.actionRebuildTrigger.asObservable();
-    protected builtActions: TableAction<O>[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,

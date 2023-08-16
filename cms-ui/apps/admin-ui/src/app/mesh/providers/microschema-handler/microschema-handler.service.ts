@@ -1,7 +1,7 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS } from '@admin-ui/common';
 import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import {
-    BASIC_ENTITY_PERMISSIONS,
+    EDITABLE_ENTITY_PERMISSIONS,
     MBO_AVILABLE_PERMISSIONS,
     MBO_PERMISSION_PATH,
     MBO_ROLE_PERMISSIONS,
@@ -48,7 +48,7 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
             [BO_PERMISSIONS]: toPermissionArray(microschema.permissions),
             [BO_DISPLAY_NAME]: microschema.name,
             [MBO_TYPE]: MeshType.MICROSCHEMA,
-            [MBO_AVILABLE_PERMISSIONS]: BASIC_ENTITY_PERMISSIONS,
+            [MBO_AVILABLE_PERMISSIONS]: EDITABLE_ENTITY_PERMISSIONS,
             [MBO_ROLE_PERMISSIONS]: toPermissionArray(microschema.rolePerms),
             [MBO_PERMISSION_PATH]: `microschemas/${microschema.uuid}`,
         };

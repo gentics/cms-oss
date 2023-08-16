@@ -185,6 +185,10 @@
         "en": "Schema"
     },
 
+    "roles": {
+        "de": "Rollen",
+        "en": "Roles"
+    },
     "create_role": {
         "de": "Neue Rolle erstellen",
         "en": "Create new role"
@@ -217,6 +221,10 @@
         "de": "Rollen Berechtigungen verwalten",
         "en": "Manage role permissions"
     },
+    "manage_role_instance_permissions": {
+        "de": "Berechtigungsverwaltung von „{{ entityName }}“",
+        "en": "Permissions management of \"{{ entityName }}\""
+    },
     "assign_roles_to_groups": {
         "de": "Rollen zu Gruppen zuweisen",
         "en": "Assign roles to groups"
@@ -238,6 +246,10 @@
         "en": "Manage group assignment"
     },
 
+    "groups": {
+        "de": "Gruppen",
+        "en": "Groups"
+    },
     "create_group": {
         "de": "Neue Gruppe erstelle",
         "en": "Create new group"
@@ -263,6 +275,10 @@
         "en": "Successfully deleted group \"{{ entityName }}\"!"
     },
 
+    "users": {
+        "de": "Benutzer",
+        "en": "Users"
+    },
     "create_user": {
         "de": "Neuen Benutzer erstellen",
         "en": "Create new user"
@@ -308,6 +324,10 @@
         "en": "Successfully unassigned user \"{{ roleName }}\" from group \"{{ groupName }}\"!"
     },
 
+    "schemas": {
+        "de": "Schemas",
+        "en": "Schemas"
+    },
     "create_schema": {
         "de": "Neues Schema erstellen",
         "en": "Create new schema"
@@ -357,51 +377,59 @@
         "en": "Successfully unassigned schema \"{{ schemaName }}\" from project \"{{ projectName }}\"!"
     },
 
+    "microschemas": {
+        "de": "Mikroschemas",
+        "en": "Microschemas"
+    },
     "create_microschema": {
-        "de": "Neues Microschema erstellen",
+        "de": "Neues Mikroschema erstellen",
         "en": "Create new microschema"
     },
     "update_microschema": {
-        "de": "Microschema „{{ entityName }}“ aktualisieren",
+        "de": "Mikroschema „{{ entityName }}“ aktualisieren",
         "en": "Update microschema \"{{ entityName }}\""
     },
     "info_selected_microschemas": {
-        "de": "{{amountSelected}} von {{amountTotal}} Microschemen ausgewählt",
+        "de": "{{amountSelected}} von {{amountTotal}} Mikroschemen ausgewählt",
         "en": "{{amountSelected}} of {{amountTotal}} microschemas selected"
     },
     "create_microschema_success": {
-        "de": "Microschema „{{ entityName }}“ erfolgreich erstellt!",
+        "de": "Mikroschema „{{ entityName }}“ erfolgreich erstellt!",
         "en": "Successfully created microschema \"{{ entityName }}\"!"
     },
     "update_microschema_success": {
-        "de": "Microschema „{{ entityName }}“ erfolgreich aktualisiert!",
+        "de": "Mikroschema „{{ entityName }}“ erfolgreich aktualisiert!",
         "en": "Successfully updated microschema \"{{ entityName }}\"!"
     },
     "delete_microschema_success": {
-        "de": "Microschema „{{ entityName }}“ erfolgreich gelöscht!",
+        "de": "Mikroschema „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted microschema \"{{ entityName }}\"!"
     },
     "manage_microschema_assignment": {
-        "de": "Microschemenzuweisung verwalten",
+        "de": "Mikroschemenzuweisung verwalten",
         "en": "Manage microschema assignment"
     },
     "assign_microschemas_to_projects": {
-        "de": "Microschemen zu Projekten zuweisen",
+        "de": "Mikroschemen zu Projekten zuweisen",
         "en": "Assign microschemas to projects"
     },
     "assign_microschema_to_project_success": {
-        "de": "Microschema „{{ microschemaName }}“ erfolgreich dem Projekt „{{ projectName }}“ zugewiesen!",
+        "de": "Mikroschema „{{ microschemaName }}“ erfolgreich dem Projekt „{{ projectName }}“ zugewiesen!",
         "en": "Successfully assigned microschema \"{{ microschemaName }}\" to project \"{{ projectName }}\"!"
     },
     "unassign_microschemas_from_projects": {
-        "de": "Microschemen von Projekten entfernen",
+        "de": "Mikroschemen von Projekten entfernen",
         "en": "Unassign microschemas from projects"
     },
     "unassign_microschema_from_project_success": {
-        "de": "Microschema „{{ microschemaName }}“ erfolgreich aus dem Project „{{ projectName }}“ entfernt!",
+        "de": "Mikroschema „{{ microschemaName }}“ erfolgreich aus dem Project „{{ projectName }}“ entfernt!",
         "en": "Successfully unassigned microschema \"{{ microschemaName }}\" from project \"{{ projectName }}\"!"
     },
 
+    "projects": {
+        "de": "Projekte",
+        "en": "Projects"
+    },
     "create_project": {
         "de": "Neues Projekt erstellen",
         "en": "Create new project"
@@ -427,6 +455,10 @@
         "en": "Successfully deleted project \"{{ entityName }}\"!"
     },
 
+    "tag_families": {
+        "de": "Tag-Families",
+        "en": "Tag Families"
+    },
     "create_tag_family": {
         "de": "Neue Tag-Family erstellen",
         "en": "Create new tag family"
@@ -495,5 +527,14 @@
     "delete_tag_success": {
         "de": "Tag „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted tag \"{{ entityName }}\"!"
+    },
+
+    "nodes": {
+        "de": "Nodes",
+        "en": "Nodes"
+    },
+    "permissions": {
+        "de": "Berechtigungen",
+        "en": "Permissions"
     }
 }

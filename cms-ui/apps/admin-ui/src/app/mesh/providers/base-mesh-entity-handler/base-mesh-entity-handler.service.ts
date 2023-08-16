@@ -3,7 +3,7 @@ import { RequestFailedError } from '@gentics/mesh-rest-client';
 
 export abstract class BaseMeshEntitiyHandlerService {
 
-    protected nameMap: Record<string, string> = {}
+    public nameMap: Record<string, string> = {}
 
     constructor(
         protected errorHandler: ErrorHandler,

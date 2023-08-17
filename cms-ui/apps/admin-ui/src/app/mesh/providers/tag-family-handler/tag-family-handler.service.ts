@@ -151,10 +151,11 @@ export class TagFamilyHandlerService extends BaseMeshEntitiyHandlerService {
     }
 
     public async listWithTags(project: string, params?: TagFamilyListOptions): Promise<ListResponse<MeshTagFamilyBO>> {
+        const hasRole = params?.role?.length > 0;
         try {
             const res = await this.mesh.graphql(project, {
                 query: `
-query($page: Long, $perPage: Long, $sortBy: String, $order: SortOrder) {
+query($page: Long, $perPage: Long, $sortBy: String, $order: SortOrder${hasRole ? ', $role: String!' : ''}) {
     tagFamilies(page: $page, perPage: $perPage, sortBy: $sortBy, sortOrder: $order) {
         currentPage
         pageCount
@@ -171,6 +172,7 @@ query($page: Long, $perPage: Long, $sortBy: String, $order: SortOrder) {
                 update
                 delete
             }
+            ${hasRole ? 'rolePerms(role: $role) { create, read, update, delete }' : ''}
 
             tags {
                 totalCount
@@ -184,6 +186,7 @@ query($page: Long, $perPage: Long, $sortBy: String, $order: SortOrder) {
                         update
                         delete
                     }
+                    ${hasRole ? 'rolePerms(role: $role) { create, read, update, delete }' : ''}
                 }
             }
         }

@@ -17,16 +17,16 @@ import {
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import { NodeResponse, Permission } from '@gentics/mesh-models';
-import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
 import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
+import { MeshRolePermissionHandlerService } from '../mesh-role-permission-handler/mesh-role-permission-handler.service';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
+import { MicroschemaHandlerService } from '../microschema-handler/microschema-handler.service';
 import { ProjectHandlerService } from '../project-handler/project-handler.service';
 import { SchemaHandlerService } from '../schema-handler/schema-handler.service';
-import { MicroschemaHandlerService } from '../microschema-handler/microschema-handler.service';
 import { TagFamilyHandlerService } from '../tag-family-handler/tag-family-handler.service';
 import { TagHandlerService } from '../tag-handler/tag-handler.service';
 
@@ -121,7 +121,6 @@ export class MeshRolePermissionsTrableLoaderService
     extends BaseTrableLoaderService<MeshBusinessObject, MeshBusinessObject, MeshRolePermissionsTrableLoaderOptions> {
 
     constructor(
-        protected mesh: MeshRestClientService,
         protected i18n: I18nService,
         protected groupHandler: MeshGroupHandlerService,
         protected roleHandler: MeshRoleHandlerService,
@@ -131,6 +130,7 @@ export class MeshRolePermissionsTrableLoaderService
         protected microHandler: MicroschemaHandlerService,
         protected tagFamilyHandler: TagFamilyHandlerService,
         protected tagHandler: TagHandlerService,
+        protected permissions: MeshRolePermissionHandlerService,
     ) {
         super();
     }
@@ -143,7 +143,7 @@ export class MeshRolePermissionsTrableLoaderService
         if (parent == null) {
             return forkJoin(createRoot().map(entry => {
                 entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
-                return this.loadPermissions(entry, options)
+                return this.loadEntityRow(entry, options)
             }));
         }
 
@@ -203,35 +203,34 @@ export class MeshRolePermissionsTrableLoaderService
     }
 
     protected loadEntityRow(entity: MeshBusinessObject, options?: MeshRolePermissionsTrableLoaderOptions): Observable<MeshBusinessObject> {
-        // if (entity[BO_ID][0] === '_') {
         const clone = { ...entity };
-        return from(this.mesh.permissions.get(options.role, entity[MBO_PERMISSION_PATH])).pipe(
+        return from(this.permissions.get(options.role, entity[MBO_PERMISSION_PATH])).pipe(
             map(res => {
-                clone[BO_PERMISSIONS] = toPermissionArray(res);
+                clone[MBO_ROLE_PERMISSIONS] = toPermissionArray(res);
                 return clone;
             }),
         );
-        // }
-
-        // switch (entity[MBO_TYPE]) {
-
-        // }
     }
 
     protected override hasChildren(entity: MeshBusinessObject, _options?: MeshRolePermissionsTrableLoaderOptions): boolean {
-        // Root elements are marked with a leading underscore and always have children
+        // Root elements are marked with a leading underscore, and always have children
         if (entity[BO_ID] == null || entity[BO_ID][0] === '_') {
             return true;
         }
 
-        // Nodes may have children
-        if (entity[MBO_TYPE] === MeshType.NODE) {
-            return Object.values((entity as any as NodeResponse).childrenInfo).some(info => info.count > 0);
-        } else if (entity[MBO_TYPE] === MeshType.TAG_FAMILY) {
-            return (entity as MeshTagFamilyBO).tags?.length > 0;
-        }
+        switch (entity[MBO_TYPE]) {
+            case MeshType.PROJECT:
+                return true;
 
-        return false;
+            case MeshType.NODE:
+                return Object.values((entity as any as NodeResponse).childrenInfo).some(info => info.count > 0);
+
+            case MeshType.TAG_FAMILY:
+                return (entity as MeshTagFamilyBO).tags?.length > 0;
+
+            default:
+                return false;
+        }
     }
 
     protected override mapToTrableRow(
@@ -242,15 +241,6 @@ export class MeshRolePermissionsTrableLoaderService
         const row = super.mapToTrableRow(entity, parent, options);
 
         switch (entity[MBO_TYPE]) {
-            case MeshType.PROJECT:
-                row.hasChildren = true;
-                row.children = createProjectRoot(entity as MeshProjectBO)
-                    .map(entry => {
-                        entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
-                        return this.mapToTrableRow(entry, row, options)
-                    });
-                break;
-
             case MeshType.NODE:
                 break;
 
@@ -258,6 +248,8 @@ export class MeshRolePermissionsTrableLoaderService
                 row.loaded = !row.hasChildren;
                 break;
         }
+
+        row.hash = (entity[MBO_AVILABLE_PERMISSIONS] || []).join(',') + ':' + (entity[MBO_ROLE_PERMISSIONS] || []).join(',');
 
         return row;
     }
@@ -267,13 +259,7 @@ export class MeshRolePermissionsTrableLoaderService
             .map(entry => {
                 entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
                 return this.loadEntityRow(entry, options);
-            }));
-    }
-
-    protected loadPermissions(mbo: MeshBusinessObject, options: MeshRolePermissionsTrableLoaderOptions): Observable<MeshBusinessObject> {
-        return from(this.mesh.permissions.get(options.role, mbo[MBO_PERMISSION_PATH]).then(perms => {
-            mbo[MBO_ROLE_PERMISSIONS] = toPermissionArray(perms);
-            return mbo;
-        }));
+            }),
+        );
     }
 }

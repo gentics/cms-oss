@@ -84,11 +84,11 @@ export interface PartialEntityLoadOptions<T extends Entity> {
 
 export enum Permission {
     CREATE = 'create',
+    READ = 'read',
+    UPDATE = 'update',
     DELETE = 'delete',
     PUBLISH = 'publish',
-    READ = 'read',
     READ_PUBLISHED = 'readPublished',
-    UPDATE = 'update',
 }
 
 export interface PermissionInfo {

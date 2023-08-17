@@ -31,6 +31,10 @@ export class MeshIconPipe implements PipeTransform {
                 return 'view_module';
             case MeshType.TAG:
                 return 'local_offer';
+            case MeshType.TAG_FAMILY:
+                return  'bookmarks';
+            case MeshType.NODE:
+                return 'book';
 
             case Permission.CREATE:
                 return 'add';
@@ -40,6 +44,10 @@ export class MeshIconPipe implements PipeTransform {
                 return 'edit';
             case Permission.DELETE:
                 return 'delete';
+            case Permission.PUBLISH:
+                return 'public';
+            case Permission.READ_PUBLISHED:
+                return 'face';
         }
     }
 }

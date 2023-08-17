@@ -536,5 +536,41 @@
     "permissions": {
         "de": "Berechtigungen",
         "en": "Permissions"
+    },
+    "role_permission_applied": {
+        "de": "Berechtigungen für „{{ entityName }}“ erfolgreich übernommen",
+        "en": "Successfully applied permissions for \"{{ entityName }}\""
+    },
+    "apply_permissions_recursive": {
+        "de": "Berechtigungen vererben",
+        "en": "Apply permissions recursively"
+    },
+    "apply_permissions_recursive_body": {
+        "de": "Möchten Sie die Berechtigungen auf die Unterelemente vererben?",
+        "en": "Do you want to apply the permissions to the child elements?"
+    },
+    "permission_create": {
+        "de": "Erstellen",
+        "en": "Create"
+    },
+    "permission_read": {
+        "de": "Lesen",
+        "en": "Read"
+    },
+    "permission_update": {
+        "de": "Bearbeiten",
+        "en": "Edit"
+    },
+    "permission_delete": {
+        "de": "Löschen",
+        "en": "Delete"
+    },
+    "permission_publish": {
+        "de": "Publizieren",
+        "en": "Publish"
+    },
+    "permission_readPublished": {
+        "de": "Lesen wenn publiziert",
+        "en": "Read when published"
     }
 }

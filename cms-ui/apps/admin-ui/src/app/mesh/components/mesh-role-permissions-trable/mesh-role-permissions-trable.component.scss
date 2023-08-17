@@ -22,6 +22,10 @@
         margin-top: 1px;
         display: inline-block;
     }
+
+    &.root-element .name {
+        font-weight: bold;
+    }
 }
 
 .gtx-perm-icon::ng-deep {
@@ -41,11 +45,15 @@
     flex-wrap: nowrap;
     align-items: center;
 
+    .empty-permission,
     .permission-icon {
-        font-size: 18px;
         width: 18px;
         height: 18px;
         margin: auto 0.25rem;
+    }
+
+    .permission-icon {
+        font-size: 18px;
         color: $gtx-color-dark-gray;
 
         &.granted {

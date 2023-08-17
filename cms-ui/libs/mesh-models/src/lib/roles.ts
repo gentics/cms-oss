@@ -16,7 +16,7 @@ export interface RoleListOptions extends BasicListOptions, RolePermissionsOption
 export type RoleListResponse = ListResponse<RoleResponse>
 
 export interface RolePermissionRequest {
-    permissions: PermissionInfo;
+    permissions: Partial<PermissionInfo>;
     /** Flag which indicates whether the permission update should be applied recursively. */
     recursive?: boolean;
 }

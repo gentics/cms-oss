@@ -26,6 +26,7 @@ export * from './schema-picker/schema-picker.component';
 export * from './schema-properties/schema-properties.component';
 export * from './schema-table/schema-table.component';
 export * from './select-group-modal/select-group-modal.component';
+export * from './mesh-role-permissions-edit-modal/mesh-role-permissions-edit-modal.component';
 export * from './select-microschema-modal/select-microschema-modal.component';
 export * from './select-project-modal/select-project-modal.component';
 export * from './select-role-modal/select-role-modal.component';

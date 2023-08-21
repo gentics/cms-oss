@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class ConstructResolver extends AbstractDependencyResolver {
 
-  private final Class<Construct> CLAZZ = Construct.class;
+  private static final Class<Construct> CLAZZ = Construct.class;
 
 
   @Override
@@ -84,14 +84,13 @@ public class ConstructResolver extends AbstractDependencyResolver {
       return "";
     }
 
-    return DBUtils.select("SELECT `uuid` FROM `datasource` WHERE `id` = ?", (ps) -> {
-      ps.setInt(1, datasourceId);
-    }, (resultSet) -> {
-      if (resultSet.next()) {
-        return resultSet.getString("uuid");
-      }
-      return "";
-    });
+    return DBUtils.select("SELECT `uuid` FROM `datasource` WHERE `id` = ?",
+        ps -> ps.setInt(1, datasourceId), resultSet -> {
+          if (resultSet.next()) {
+            return resultSet.getString("uuid");
+          }
+          return "";
+        });
   }
 
 

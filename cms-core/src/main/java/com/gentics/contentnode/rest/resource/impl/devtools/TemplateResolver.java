@@ -17,7 +17,7 @@ import java.util.List;
 
 public class TemplateResolver extends AbstractDependencyResolver {
 
-  private final Class<Template> CLAZZ = Template.class;
+  private static final Class<Template> CLAZZ = Template.class;
 
 
   @Override

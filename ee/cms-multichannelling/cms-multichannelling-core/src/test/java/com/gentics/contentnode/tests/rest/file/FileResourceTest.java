@@ -93,6 +93,7 @@ public class FileResourceTest {
 		FileCopyRequest copyRequest = new FileCopyRequest();
 
 		fileModel.setId(file.getId());
+		fileModel.setName(file.getName());
 		copyRequest.setFile(fileModel);
 
 		FileUploadResponse response = ContentNodeTestUtils.assertRequiredPermissions(
@@ -154,6 +155,7 @@ public class FileResourceTest {
 		FileCopyRequest copyRequest = new FileCopyRequest();
 
 		fileModel.setId(file.getId());
+		fileModel.setName(file.getName());
 		copyRequest.setFile(fileModel);
 		copyRequest.setTargetFolder(new TargetFolder(targetFolder.getId(), channel.getId()));
 

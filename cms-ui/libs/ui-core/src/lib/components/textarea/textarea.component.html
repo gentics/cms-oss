@@ -17,7 +17,7 @@
     [value]="value || ''"
 
     (input)="textAreaInputHandler($event)"
-    (blur)="triggerTouch()"
+    (blur)="blurHandler()"
 ></textarea>
 
 <label [attr.for]="id">{{ label }}</label>

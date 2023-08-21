@@ -119,6 +119,42 @@
         "de": "Alle",
         "en": "All"
     },
+    "fieldType_binary": {
+        "de": "Binär",
+        "en": "Binary"
+    },
+    "fieldType_boolean": {
+        "de": "Boolean",
+        "en": "Boolean"
+    },
+    "fieldType_date": {
+        "de": "Datum",
+        "en": "Date"
+    },
+    "fieldType_html": {
+        "de": "HTML",
+        "en": "HTML"
+    },
+    "fieldType_list": {
+        "de": "Liste",
+        "en": "List"
+    },
+    "fieldType_micronode": {
+        "de": "Mikronode",
+        "en": "Micronode"
+    },
+    "fieldType_node": {
+        "de": "Node",
+        "en": "Node"
+    },
+    "fieldType_number": {
+        "de": "Nummer",
+        "en": "Number"
+    },
+    "fieldType_string": {
+        "de": "Text",
+        "en": "String"
+    },
 
     "admin_permissions": {
         "de": "Administrator Berechtigungen",
@@ -183,6 +219,38 @@
     "branch_schema": {
         "de": "Schema",
         "en": "Schema"
+    },
+    "label": {
+        "de": "Bezeichnung",
+        "en": "Label"
+    },
+    "required": {
+        "de": "Benötigt",
+        "en": "Required"
+    },
+    "schema_type": {
+        "de": "Typ",
+        "en": "Type"
+    },
+    "schema_listType": {
+        "de": "Listen Typ",
+        "en": "List Type"
+    },
+    "extract_content": {
+        "de": "Daten extrahieren",
+        "en": "Extract from Data"
+    },
+    "extract_metadata": {
+        "de": "Metadaten extrahieren",
+        "en": "Extract Metadata"
+    },
+    "allow": {
+        "de": "Erlaubter Inhalt",
+        "en": "Allowed Content"
+    },
+    "allow_addString": {
+        "de": "Hinzufügen",
+        "en": "Add"
     },
 
     "roles": {

@@ -10,7 +10,7 @@ import {
     VersionedEntity,
     VersionedEntityOptions,
 } from './common';
-import { FieldSchema } from './fields';
+import { SchemaField } from './fields';
 
 export interface SchemaChange {
     /** Type of operation for this change */
@@ -45,7 +45,7 @@ export interface EditableSchemaProperties {
      */
     elasticsearch?: ElasticSearchSettings;
     /** List of schema fields */
-    fields: FieldSchema[];
+    fields: SchemaField[];
     /** Name of the schema. */
     name: string;
     /**

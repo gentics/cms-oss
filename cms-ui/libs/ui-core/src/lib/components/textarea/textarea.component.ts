@@ -4,9 +4,11 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
+    Output,
     SimpleChanges,
     ViewChild
 } from '@angular/core';
@@ -69,6 +71,9 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
      */
     @Input()
     public id: string;
+
+    @Output()
+    public blur = new EventEmitter<void>();
 
     @ViewChild(AutosizeDirective, { static: true })
     private autosizeDir: AutosizeDirective;
@@ -133,6 +138,11 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
     public textAreaInputHandler(event: KeyboardEvent) {
         const elementValue = (event.target as HTMLTextAreaElement).value;
         this.triggerChange(elementValue);
+    }
+
+    public blurHandler(): void {
+        this.blur.emit();
+        this.triggerTouch();
     }
 
     protected onValueChange(): void {

@@ -1,11 +1,24 @@
 <form
     *ngIf="form"
     [formGroup]="form"
-    class="row small-12 medium-12"
+    class="row"
 >
     <gtx-input
         class="columns small-12"
-        [label]="'common.name' | i18n"
+        [label]="('common.name' | i18n) + ' *'"
         formControlName="name"
     ></gtx-input>
+
+    <hr/>
+
+    <ng-container *ngFor="let ctl of form?.controls?.fields?.controls">
+        <gtx-mesh-schema-field-properties
+            class="columns small-12"
+            [formControl]="ctl"
+            [type]="SchemaFieldPropertiesType.SCHEMA"
+            [ownName]="form.value.name"
+            [schemaNames]="schemaNames"
+            [microschemaNames]="microschemaNames"
+        ></gtx-mesh-schema-field-properties>
+    </ng-container>
 </form>

@@ -191,4 +191,38 @@ export class SchemaHandlerService extends BaseMeshEntitiyHandlerService {
             this.handleError(err);
         }
     }
+
+    public async getAllNames(project?: string, checkProject: boolean = true): Promise<SchemaReference[]> {
+        try {
+            if (checkProject) {
+                project = (await this.mesh.projects.list({ perPage: 1 }))?.data?.[0]?.name;
+            }
+            let schemas: SchemaReference[] = [];
+
+            if (project) {
+                const res = await this.mesh.graphql(project, {
+                    query: `
+{
+    schemas {
+        elements {
+            uuid
+            name
+        }
+    }
+}
+                    `,
+                });
+                schemas = res.data?.schemas?.elements || [];
+            } else {
+                schemas = (await this.mesh.schemas.list())?.data || [];
+            }
+
+            for (const ref of schemas) {
+                this.nameMap[ref.uuid] = ref.name;
+            }
+            return schemas;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
 }

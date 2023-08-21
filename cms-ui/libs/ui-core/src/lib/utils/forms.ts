@@ -1,4 +1,5 @@
-import { UntypedFormGroup, AbstractControl } from '@angular/forms';
+import { UntypedFormGroup, AbstractControl, ValidatorFn } from '@angular/forms';
+import { JSON_VALUE_INVALID } from '../common';
 
 export function setControlsEnabled(
     group: UntypedFormGroup,
@@ -42,3 +43,10 @@ export function setControlsEnabled(
 export type FormProperties<T> = {
     [P in keyof T]: AbstractControl<T[P]>;
 };
+
+export const createJsonValidator: () => ValidatorFn = () => (control) => {
+    if (control.value === JSON_VALUE_INVALID) {
+        return { jsonInvalid: true };
+    }
+    return null;
+}

@@ -21,6 +21,7 @@ export * from './microschema-table/microschema-table.component';
 export * from './project-modal/project-modal.component';
 export * from './project-properties/project-properties.component';
 export * from './project-table/project-table.component';
+export * from './schema-field-properties/schema-field-properties.component';
 export * from './schema-modal/schema-modal.component';
 export * from './schema-picker/schema-picker.component';
 export * from './schema-properties/schema-properties.component';

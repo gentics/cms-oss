@@ -193,4 +193,39 @@ export class MicroschemaHandlerService extends BaseMeshEntitiyHandlerService {
             this.handleError(err);
         }
     }
+
+    public async getAllNames(project?: string, checkProject: boolean = true): Promise<MicroschemaReference[]> {
+        try {
+            if (checkProject) {
+                project = (await this.mesh.projects.list({ perPage: 1 }))?.data?.[0]?.name;
+            }
+
+            let schemas: MicroschemaReference[] = [];
+
+            if (project) {
+                const res = await this.mesh.graphql(project, {
+                    query: `
+{
+    microschemas {
+        elements {
+            uuid
+            name
+        }
+    }
+}
+                    `,
+                });
+                schemas = res.data?.schemas?.elements || [];
+            } else {
+                schemas = (await this.mesh.microschemas.list())?.data || [];
+            }
+
+            for (const ref of schemas) {
+                this.nameMap[ref.uuid] = ref.name;
+            }
+            return schemas;
+        } catch (err) {
+            this.handleError(err);
+        }
+    }
 }

@@ -71,6 +71,35 @@ export function blacklistValidator(blacklist: any[] | (() => any[])): ValidatorF
     }
 }
 
+type CompareFn = (a: any, b: any) => boolean;
+
+const DEFAULT_COMPARISON: CompareFn = (a, b) => a === b;
+
+export function whitelistValidator(whitelist: any[] | (() => any[]), compareFn: CompareFn = DEFAULT_COMPARISON): ValidatorFn {
+    return (control) => {
+        let whitelistToCheck: any[];
+
+        if (typeof whitelist === 'function') {
+            whitelistToCheck = whitelist();
+        } else {
+            whitelistToCheck = whitelist;
+        }
+
+        if (control.value == null || !Array.isArray(whitelistToCheck) || whitelistToCheck.length === 0) {
+            return null;
+        }
+
+        const ctlVal = Array.isArray(control.value) ? control.value : [control.value];
+        for (const arrValue of ctlVal) {
+            if (!whitelistToCheck.some(whitelisted => compareFn(whitelisted, arrValue))) {
+                return { whitelist: ctlVal };
+            }
+        }
+
+        return null;
+    }
+}
+
 type InvalidLanguagesCallback = (invalidLanguages: string[]) => any;
 
 export function createI18nRequiredValidator(requiredLanguages: string[] | (() => string[]), callback?: InvalidLanguagesCallback): ValidatorFn {

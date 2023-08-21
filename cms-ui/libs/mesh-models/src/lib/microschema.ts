@@ -8,7 +8,7 @@ import {
     VersionedEntity,
     VersionedEntityOptions,
 } from './common';
-import { FieldSchema } from './fields';
+import { SchemaField } from './fields';
 
 export interface EditableMicroschemaProperties {
     /** Name of the microschema */
@@ -21,7 +21,7 @@ export interface EditableMicroschemaProperties {
      */
     elasticsearch?: ElasticSearchSettings;
     /** List of microschema fields */
-    fields: FieldSchema[];
+    fields: SchemaField[];
 }
 
 export interface Microschema extends EditableMicroschemaProperties, VersionedEntity {}

@@ -1,27 +1,14 @@
 package com.gentics.contentnode.tests.devtools;
 
-import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.gentics.api.lib.exception.NodeException;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
 
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
 import com.gentics.contentnode.rest.resource.impl.devtools.PackageResourceImpl;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
@@ -31,6 +18,16 @@ import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.testutils.infrastructure.TestEnvironment;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Test cases for the package resource
@@ -246,12 +243,19 @@ public class PackageResourceTest {
 
 
 	@Test
-	public void givenPackageShouldListDependencies() throws NodeException {
-		operate(()->{
+	public void givenPackageShouldListDependencies() throws Exception {
+		final String PACKAGE_NAME = "manual";
+
+		try (Trx trx = new Trx()) {
+			PackageResource resource = new PackageResourceImpl();
+			resource.add(PACKAGE_NAME);
+
 			PackageResource packageResource = new PackageResourceImpl();
+			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME);
 
-
-		});
+			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+			assertThat(packageConsistencyResponse.checkCompleteness()).isTrue();
+		}
 	}
 
 

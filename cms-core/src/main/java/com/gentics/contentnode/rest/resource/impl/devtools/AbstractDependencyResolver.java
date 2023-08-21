@@ -9,8 +9,17 @@ import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import java.util.List;
 
+/**
+ * Factory for the respective DependencyResolver implementations
+ */
 public abstract class AbstractDependencyResolver {
 
+  /**
+   * Factory to create the appropriate resolver implementation.
+   * @param clazz The class for which the dependencies should be resolved.
+   * @return The dependency resolver implementation
+   * @throws NodeException Exception if no appropriate resolver can be instantiated.
+   */
   public static AbstractDependencyResolver getResolver(
       Class<? extends SynchronizableNodeObject> clazz) throws NodeException {
     if (clazz.equals(Construct.class)) {
@@ -22,6 +31,12 @@ public abstract class AbstractDependencyResolver {
     throw new NodeException("Could not find appropriate resolver for class: " + clazz);
   }
 
+  /**
+   * Method to resolve the package dependencies
+   * @param packageSynchronizer The package synchronizer
+   * @return The list of package dependencies
+   * @throws NodeException Exception if dependencies cannot be resolved
+   */
   public abstract List<PackageDependency> resolve(
       PackageSynchronizer packageSynchronizer) throws NodeException;
 
@@ -32,7 +47,7 @@ public abstract class AbstractDependencyResolver {
    * @param clazz A class that is synchronizeable. The synchronizer will look exclusively for this class.
    * @param id The object id the synchonizer will look for.
    * @return true if the object of the given class and id is in the package (i.e.: synced as package object)
-   * @throws NodeException
+   * @throws NodeException Exception if assertion cannot be performed
    */
    <T extends SynchronizableNodeObject> boolean isInPackage(PackageSynchronizer synchronizer, Class<T> clazz, String id)
       throws NodeException {

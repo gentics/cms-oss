@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.model.response.devtools;
 
 
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
+import java.util.List;
 
 
 /**
@@ -18,23 +19,28 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
   /**
    * The flag indicating whether the package is complete.
    */
-  private boolean packageIsComplete;
+  private Boolean packageIsComplete;
 
   /**
-   * Gets whether the package is complete.
+   * Checks whether the package is complete.
+   * A package is incomplete if any object is neither in this package nor in any other.
    * @return True if the package is complete, false otherwise.
    */
-  public boolean getPackageIsComplete() {
+  public boolean checkCompleteness() {
+    if(packageIsComplete != null) {
+      return packageIsComplete;
+    }
+
+    List<PackageDependency> dependencies = this.getItems();
+    if (dependencies.isEmpty()) {
+      packageIsComplete = true;
+      return true;
+    }
+
+    packageIsComplete = dependencies.stream()
+        .anyMatch(dependency -> !dependency.getIsInPackage() && !dependency.getIsInOtherPackage());
+
     return packageIsComplete;
   }
-
-  /**
-   * Sets whether the package is complete.
-   * @param packageIsComplete True if the package is complete, false otherwise.
-   */
-  public void setPackageIsComplete(boolean packageIsComplete) {
-    this.packageIsComplete = packageIsComplete;
-  }
-
 
 }

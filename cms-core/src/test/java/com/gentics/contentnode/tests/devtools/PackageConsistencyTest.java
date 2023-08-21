@@ -1,7 +1,6 @@
 package com.gentics.contentnode.tests.devtools;
 
 
-import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.assertj.core.api.Assertions.assertThat;

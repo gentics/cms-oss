@@ -7,6 +7,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertRes
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -148,4 +149,26 @@ public class MessagingResourceTest {
 			assertThat(response.getMessages()).as("Messages").isEmpty();
 		});
 	}
+
+	@Test
+	public void givenInstantMessageShouldBeFlaggedAsInstant() throws NodeException {
+		// add instant message
+		operate(user, () -> {
+			MessageSendRequest request = new MessageSendRequest();
+			request.setToUserId(Collections.singletonList(user.getId()));
+			request.setMessage("Test instant message");
+			request.setInstantTimeMinutes(5);
+			assertResponseOK(new MessagingResourceImpl().send(request));
+		});
+
+		operate(user, () -> {
+			GenericResponse response = new MessagingResourceImpl().list(false);
+			assertResponseOK(response);
+
+			List<Message> messages = response.getMessages();
+			assertThat(messages).isNotEmpty();
+			assertThat(messages.get(0)).hasFieldOrPropertyWithValue("isInstantMessage", true);
+		});
+	}
+
 }

@@ -10,7 +10,7 @@ import { InheritanceDialog } from './inheritance-dialog.component';
 describe('InheritanceDialog', () => {
 
     function defaultSetup(fixture: ComponentFixture<InheritanceDialog>): void {
-        let instance = fixture.componentRef.instance;
+        const instance = fixture.componentRef.instance;
         instance.item = <any> {
             id: 42,
             name: 'Test Folder',
@@ -45,7 +45,7 @@ describe('InheritanceDialog', () => {
     it('should set initial values',
         componentTest(() => InheritanceDialog, (fixture, instance) => {
             defaultSetup(fixture);
-            expect(instance.generalInheritance).toBe(false);
+            expect(instance.generalInheritance).toBe(true);
             expect(instance.inheritedChannels).toEqual({
                 1: false,
                 2: true,
@@ -66,7 +66,7 @@ describe('InheritanceDialog', () => {
             instance.saveSettings();
 
             expect(fnArgs(instance.closeFn, 1)[0]).toEqual(jasmine.objectContaining({
-                exclude: false,
+                exclude: true,
             }));
         }),
     );

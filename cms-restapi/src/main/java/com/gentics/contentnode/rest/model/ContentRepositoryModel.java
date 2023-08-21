@@ -30,7 +30,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected PasswordType passwordType;
 
-	protected Boolean useHttp2;
+	protected Boolean http2;
 
 	protected String url;
 
@@ -189,16 +189,16 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 * True when a HTTP/2 is used
 	 * @return true for HTTP/2
 	 */
-	public Boolean getUseHttp2() {
-		return useHttp2;
+	public Boolean getHttp2() {
+		return http2;
 	}
 
 	/**
 	 * Set whether HTTP/2 version should be used
-	 * @param useHttp2 true for HTTP/2
+	 * @param http2 true for HTTP/2
 	 */
-	public void setUseHttp2(Boolean useHttp2) {
-		this.useHttp2 = useHttp2;
+	public void setHttp2(Boolean http2) {
+		this.http2 = http2;
 	}
 
 	/**

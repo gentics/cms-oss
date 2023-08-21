@@ -41,6 +41,7 @@ describe('ContentRepositoryApi', () => {
             defaultPermission: '',
             diffDelete: true,
             projectPerNode: false,
+            http2: false,
         };
         contentRepositoryApi.createContentRepository(payload);
 

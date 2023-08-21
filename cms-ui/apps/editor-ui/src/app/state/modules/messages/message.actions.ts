@@ -29,3 +29,10 @@ export class MessagesReadAction {
         public messageIds: number[],
     ) {}
 }
+
+@ActionDeclaration(MESSAGES_STATE_KEY)
+export class InstantMessagesDeliveredAction {
+    constructor(
+        public messageIds: number[],
+    ) {}
+}

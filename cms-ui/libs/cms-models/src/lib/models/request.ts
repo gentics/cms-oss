@@ -1619,6 +1619,8 @@ export interface ContentRepositoryCreateRequest {
     elasticsearch?: CRElasticsearchModel;
     /** Flag for publishing every node into its own project for Mesh contentrepositories */
     projectPerNode: boolean;
+    /** Flag for HTTP/2 support */
+    http2: boolean;
 }
 
 export type ContentRepositoryUpdateRequest = Partial<ContentRepositoryCreateRequest>;

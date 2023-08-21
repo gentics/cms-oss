@@ -165,6 +165,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             version: new UntypedFormControl(this.value?.version || ''),
             url: new UntypedFormControl(this.value?.url || '', Validators.required),
             username: new UntypedFormControl(this.value?.username || '', Validators.required),
+            http2: new UntypedFormControl(this.value?.http2 ?? false),
         });
     }
 
@@ -186,6 +187,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             'elasticsearch',
             'permissionProperty',
             'projectPerNode',
+            'http2',
             'version',
         ];
 

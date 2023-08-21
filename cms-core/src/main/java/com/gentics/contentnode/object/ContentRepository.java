@@ -112,7 +112,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			cr.setPasswordType(ContentRepositoryModel.PasswordType.value);
 		}
 		cr.setUrl(nodeCR.getUrl());
-		cr.setUseHttp2(nodeCR.isHttp2());
+		cr.setHttp2(nodeCR.isHttp2());
 		cr.setBasepath(nodeCR.getBasepath());
 		cr.setInstantPublishing(nodeCR.isInstantPublishing());
 		cr.setPermissionInformation(nodeCR.isPermissionInformation());
@@ -180,8 +180,8 @@ public abstract class ContentRepository extends AbstractContentObject implements
 				break;
 			}
 		}
-		if (cr.getUseHttp2() != null) {
-			nodeCR.setHttp2(cr.getUseHttp2());
+		if (cr.getHttp2() != null) {
+			nodeCR.setHttp2(cr.getHttp2());
 		}
 		if (cr.getUrl() != null) {
 			nodeCR.setUrl(cr.getUrl());

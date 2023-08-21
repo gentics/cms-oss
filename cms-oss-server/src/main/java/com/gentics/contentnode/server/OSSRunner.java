@@ -85,7 +85,7 @@ public class OSSRunner {
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
 		int port = Integer.parseInt(HTTP_PORT.get());
-		boolean useHttp2 = Boolean.parseBoolean(HTTP2.get());
+		boolean http2 = Boolean.parseBoolean(HTTP2.get());
 
 		// create context
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -153,7 +153,7 @@ public class OSSRunner {
 
 		// create connector
 		ServerConnector serverConnector;
-		if (useHttp2) {
+		if (http2) {
 			HTTP2CServerConnectionFactory h2cConnectionFactory = new HTTP2CServerConnectionFactory(httpConfiguration);
 			serverConnector = new ServerConnector(server, httpConnectionFactory, h2cConnectionFactory);
 		} else {

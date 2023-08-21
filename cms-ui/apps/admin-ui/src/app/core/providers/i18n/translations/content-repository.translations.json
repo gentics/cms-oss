@@ -111,6 +111,10 @@
         "en": "Project per Node",
         "de": "Projekt pro Node"
     },
+    "http2": {
+        "en": "Use HTTP/2",
+        "de": "HTTP/2 verwenden"
+    },
     "version": {
         "en": "Implementation version",
         "de": "Implementierungsversion"

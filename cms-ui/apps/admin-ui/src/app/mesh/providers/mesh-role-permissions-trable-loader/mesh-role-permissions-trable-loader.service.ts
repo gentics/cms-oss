@@ -9,6 +9,7 @@ import {
     MBO_ROLE_PERMISSIONS,
     MBO_TYPE,
     MeshBusinessObject,
+    MeshNodeBO,
     MeshProjectBO,
     MeshTagFamilyBO,
     MeshType,
@@ -17,10 +18,12 @@ import {
 import { toPermissionArray } from '@admin-ui/mesh/utils';
 import { Injectable } from '@angular/core';
 import { NodeResponse, Permission } from '@gentics/mesh-models';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable, forkJoin, from, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MeshGroupHandlerService } from '../mesh-group-handler/mesh-group-handler.service';
+import { MeshNodeHandlerService } from '../mesh-node-handler/mesh-node-handler.service';
 import { MeshRoleHandlerService } from '../mesh-role-handler/mesh-role-handler.service';
 import { MeshRolePermissionHandlerService } from '../mesh-role-permission-handler/mesh-role-permission-handler.service';
 import { MeshUserHandlerService } from '../mesh-user-handler/mesh-user-handler.service';
@@ -105,6 +108,7 @@ function createProjectRoot(project: MeshProjectBO): MeshBusinessObject[] {
             [MBO_PERMISSION_PATH]: `${project.name}/tagFamilies`,
             [MBO_PROJECT_CONTEXT]: project.name,
         }, {
+            ...project.rootNode,
             [BO_ID]: `_project-${project.name}_nodes`,
             [BO_DISPLAY_NAME]: 'mesh.nodes',
             [BO_PERMISSIONS]: NODE_PERMISSIONS,
@@ -122,6 +126,7 @@ export class MeshRolePermissionsTrableLoaderService
 
     constructor(
         protected i18n: I18nService,
+        protected mesh: MeshRestClientService,
         protected groupHandler: MeshGroupHandlerService,
         protected roleHandler: MeshRoleHandlerService,
         protected userHandler: MeshUserHandlerService,
@@ -130,6 +135,7 @@ export class MeshRolePermissionsTrableLoaderService
         protected microHandler: MicroschemaHandlerService,
         protected tagFamilyHandler: TagFamilyHandlerService,
         protected tagHandler: TagHandlerService,
+        protected nodeHandler: MeshNodeHandlerService,
         protected permissions: MeshRolePermissionHandlerService,
     ) {
         super();
@@ -170,7 +176,6 @@ export class MeshRolePermissionsTrableLoaderService
                     );
                 }
                 return this.loadProjectRootElements(parent as MeshProjectBO, options);
-                break;
 
             case MeshType.SCHEMA:
                 return from(this.schemaHandler.listMapped({ role: options.role })).pipe(
@@ -196,6 +201,9 @@ export class MeshRolePermissionsTrableLoaderService
                 )).pipe(
                     map(page => page.data),
                 );
+
+            case MeshType.NODE:
+                return this.loadNodeChildren(parent as MeshNodeBO, options);
 
             default:
                 return of([]);
@@ -223,7 +231,7 @@ export class MeshRolePermissionsTrableLoaderService
                 return true;
 
             case MeshType.NODE:
-                return Object.values((entity as any as NodeResponse).childrenInfo).some(info => info.count > 0);
+                return (entity as any as NodeResponse).container;
 
             case MeshType.TAG_FAMILY:
                 return (entity as MeshTagFamilyBO).tags?.length > 0;
@@ -259,6 +267,48 @@ export class MeshRolePermissionsTrableLoaderService
             .map(entry => {
                 entry[BO_DISPLAY_NAME] = this.i18n.instant(entry[BO_DISPLAY_NAME]);
                 return this.loadEntityRow(entry, options);
+            }),
+        );
+    }
+
+    protected loadNodeChildren(parent: MeshNodeBO, options: MeshRolePermissionsTrableLoaderOptions): Observable<MeshNodeBO[]> {
+        const project = parent[MBO_PROJECT_CONTEXT];
+
+        return from(this.mesh.graphql(project, {
+            query: `
+query($parent: String, $role: String!) {
+    node(uuid: $parent) {
+        children {
+            elements {
+                uuid
+                displayName
+                container: isContainer
+                permissions {
+                    create
+                    read
+                    update
+                    delete
+                }
+                rolePerms(role: $role) {
+                    create
+                    read
+                    update
+                    delete
+                }
+            }
+        }
+    }
+}
+`,
+            variables: {
+                parent: parent.uuid,
+                role: options.role,
+            },
+        })).pipe(
+            map(res => {
+                const children = res.data?.node?.children ?? {};
+                const nodes: NodeResponse[] = children?.elements ?? [];
+                return nodes.map(node => this.nodeHandler.mapToBusinessObject(project, node));
             }),
         );
     }

@@ -1,5 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BasicListOptions, PagingMetaInfo, PermissionInfo } from './common';
+import {
+    BasicListOptions,
+    BranchedEntityOptions,
+    ListResponse,
+    MultiLangugeEntityOptions,
+    PartialEntityLoadOptions,
+    ResolvableLinksOptions,
+    RolePermissionsOptions,
+    VersionedEntity,
+    VersionedEntityOptions,
+} from './common';
 import { FieldMap } from './fields';
 import { ProjectReference } from './projects';
 import { SchemaReference } from './schemas';
@@ -13,11 +23,16 @@ export interface NodeChildrenInfo {
     schemaUuid: string;
 }
 
-export interface NodeCreateRequest {
+export interface EditableNodeProperties {
     /** Dynamic map with fields of the node language specific content. */
     fields: FieldMap;
     /** ISO 639-1 language tag of the node content. */
     language: string;
+    /** List of tags that should be used to tag the node. */
+    tags?: TagReference[];
+}
+
+export interface Node extends EditableNodeProperties, VersionedEntity {
     /** The project root node. All futher nodes are children of this node. */
     parentNode: NodeReference;
     /**
@@ -26,44 +41,26 @@ export interface NodeCreateRequest {
      * initial branch  of the project.
      */
     schema: SchemaReference;
-    /** List of tags that should be used to tag the node. */
-    tags?: TagReference[];
 }
 
-export interface NodeListOptions extends BasicListOptions {
+export interface NodeCreateRequest extends EditableNodeProperties {
+    /** The project root node. All futher nodes are children of this node. */
+    parentNode: NodeReference;
     /**
-     * The role query parameter take a UUID of a role and may be used to add permission information to the response,
-     * via the rolePerm property which lists the permissions for the specified role on the element.
-     * This may be useful when you are logged in as admin but you want to retrieve the editor role permissions on a given node.
+     * Reference to the schema of the root node. Creating a project will also
+     * automatically create the base node of the project and link the schema to the
+     * initial branch  of the project.
      */
-    role?: string;
-    /**
-     * Stored mesh links will automatically be resolved and replaced by the resolved webroot link.
-     * With the parameter set the path property as well as the languagesPath property (for available language variants),
-     * will be included in the response.
-     * Gentics Mesh links in any HTML-typed field will automatically be resolved and replaced by the resolved WebRoot path.
-     * No resolving occurs if no link has been specified.
-     */
-    resolveLinks?: 'short' | 'medium' | 'full';
-    /**
-     * ISO 639-1 language tag of the language which should be loaded.
-     * Fallback handling can be applied by specifying multiple languages in a comma-separated list.
-     * The first matching language will be returned.
-     * If omitted or the requested language is not available then the defaultLanguage as configured in `mesh.yml` will be returned.
-     */
-    lang?: string;
-    /**
-     * Specifies the version to be loaded. Can either be published/draft or version number. e.g.: `0.1`, `1.0`, `draft`, `published`.
-     */
-    version?: 'draft' | 'published' | string;
+    schema: SchemaReference;
 }
 
-export interface NodeListResponse {
-    /** Paging information of the list result. */
-    _metainfo: PagingMetaInfo;
-    /** Array which contains the found elements. */
-    data: NodeResponse[];
-}
+export interface NodeLoadOptions extends RolePermissionsOptions, MultiLangugeEntityOptions,
+    PartialEntityLoadOptions<NodeResponse>, BranchedEntityOptions, VersionedEntityOptions, ResolvableLinksOptions { }
+
+export interface NodeListOptions extends BasicListOptions, RolePermissionsOptions, MultiLangugeEntityOptions,
+    PartialEntityLoadOptions<NodeResponse>, BranchedEntityOptions, VersionedEntityOptions, ResolvableLinksOptions  { }
+
+export type NodeListResponse = ListResponse<NodeResponse>;
 
 /** The project root node. All futher nodes are children of this node. */
 export interface NodeReference {
@@ -89,7 +86,7 @@ export interface NodeReference {
     uuid: string;
 }
 
-export interface NodeResponse {
+export interface NodeResponse extends Node {
     /** Map of languages for which content is available and their publish status. */
     availableLanguages: {
         [languageCode: string]: PublishStatusModel;
@@ -98,7 +95,7 @@ export interface NodeResponse {
      * List of nodes which construct the breadcrumb. Note that the start node will not
      * be included in the list.
      */
-    breadcrumb: NodeReference[];
+    breadcrumb?: NodeReference[];
     /** Object which contains information about child elements. */
     childrenInfo?: {
         [schemaName: string]: NodeChildrenInfo;
@@ -108,10 +105,6 @@ export interface NodeResponse {
      * elements.
      */
     container: boolean;
-    /** ISO8601 formatted created date string. */
-    created: string;
-    /** User reference of the creator of the element. */
-    creator: UserReference;
     /**
      * Display field name of the node. May not be retured if the node schema has no
      * display field.
@@ -122,14 +115,6 @@ export interface NodeResponse {
      * display field.
      */
     displayName?: string;
-    /** ISO8601 formatted edited date string. */
-    edited: string;
-    /** User reference of the creator of the element. */
-    editor: UserReference;
-    /** Dynamic map with fields of the node language specific content. */
-    fields: FieldMap;
-    /** ISO 639-1 language tag of the node content. */
-    language?: string;
     /**
      * Map of webroot paths per language. This property will only be populated if the
      * resolveLinks query parameter has been set accordingly.
@@ -137,38 +122,18 @@ export interface NodeResponse {
     languagePaths?: {
         [languageCode: string]: string;
     };
-    /** The project root node. All futher nodes are children of this node. */
-    parentNode: NodeReference | null;
     /**
      * Webroot path to the node content. Will only be provided if the resolveLinks query
      * parameter has been set accordingly.
      */
     path?: string;
-    permissions: PermissionInfo;
     /** Reference to the project of the node. */
     project: ProjectReference;
-    rolePerms: PermissionInfo;
-    /**
-     * Reference to the schema of the root node. Creating a project will also
-     * automatically create the base node of the project and link the schema to the
-     * initial branch  of the project.
-     */
-    schema: SchemaReference;
     /** List of tags that were used to tag the node. */
     tags: TagReference[];
-    /** Uuid of the element */
-    uuid: string;
-    /** Version of the node content. */
-    version: string;
 }
 
-export interface NodeUpdateRequest {
-    /** Dynamic map with fields of the node language specific content. */
-    fields: FieldMap;
-    /** ISO 639-1 language tag of the node content. */
-    language: string;
-    /** List of tags that should be used to tag the node. */
-    tags?: TagReference[];
+export interface NodeUpdateRequest extends EditableNodeProperties {
     /**
      * Version number which can be provided in order to handle and detect concurrent
      * changes to the node content.

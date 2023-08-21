@@ -166,7 +166,7 @@ export class MeshRestClient {
     public nodes: MeshNodeAPI = {
         list: (project, params?) => this.performReqeust(GET, `/${project}/nodes`, null, params),
         create: (project, body) => this.performReqeust(POST, `/${project}/nodes`, body),
-        get: (project, uuid) => this.performReqeust(GET, `/${project}/nodes/${uuid}`),
+        get: (project, uuid, params?) => this.performReqeust(GET, `/${project}/nodes/${uuid}`, null, params),
         update: (project, uuid, body) => this.performReqeust(POST, `/${project}/nodes/${uuid}`, body),
         delete: (project, uuid, params?) => this.performReqeust(DELETE, `/${project}/nodes/${uuid}`, null, params),
 

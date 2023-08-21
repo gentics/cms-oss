@@ -52,6 +52,7 @@ import {
 import {
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
+    MeshNodeHandlerService,
     MeshRoleHandlerService,
     MeshRolePermissionHandlerService,
     MeshRolePermissionsTrableLoaderService,
@@ -129,6 +130,7 @@ const DECLARATIONS = [
 const SERVICES: Provider[] = [
     MeshGroupHandlerService,
     MeshGroupTableLoaderService,
+    MeshNodeHandlerService,
     MeshRoleHandlerService,
     MeshRolePermissionHandlerService,
     MeshRolePermissionsTrableLoaderService,

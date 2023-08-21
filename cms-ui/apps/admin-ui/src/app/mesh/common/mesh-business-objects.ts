@@ -2,6 +2,7 @@ import { BusinessObject } from '@admin-ui/common';
 import {
     GroupResponse,
     MicroschemaResponse,
+    NodeResponse,
     Permission,
     ProjectResponse,
     RoleResponse,
@@ -54,3 +55,4 @@ export type MeshTagBO = TagResponse & MeshBusinessObject;
 export type MeshTagFamilyBO = TagFamilyResponse & MeshBusinessObject & {
     tags?: MeshTagBO[];
 };
+export type MeshNodeBO = NodeResponse & MeshBusinessObject;

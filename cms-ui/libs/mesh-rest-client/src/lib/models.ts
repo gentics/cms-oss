@@ -80,6 +80,7 @@ import {
     TagLoadOptions,
     TagUpdateRequest,
     TagNodeListOptions,
+    NodeLoadOptions,
 } from '@gentics/mesh-models';
 
 export interface MeshClientDriver {
@@ -201,7 +202,7 @@ export interface MeshMicroschemaAPI {
 export interface MeshNodeAPI {
     list(project: string, params?: NodeListOptions): Promise<NodeListResponse>;
     create(project: string, body: NodeCreateRequest): Promise<NodeResponse>;
-    get(project: string, uuid: string): Promise<NodeResponse>;
+    get(project: string, uuid: string, prams?: NodeLoadOptions): Promise<NodeResponse>;
     update(project: string, uuid: string, body: NodeUpdateRequest): Promise<NodeResponse>;
     delete(project: string, uuid: string, params?: NodeDeleteOptions): Promise<GenericMessageResponse>;
 

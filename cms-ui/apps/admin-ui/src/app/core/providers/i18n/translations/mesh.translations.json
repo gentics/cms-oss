@@ -529,10 +529,6 @@
         "en": "Successfully deleted tag \"{{ entityName }}\"!"
     },
 
-    "nodes": {
-        "de": "Nodes",
-        "en": "Nodes"
-    },
     "permissions": {
         "de": "Berechtigungen",
         "en": "Permissions"
@@ -572,5 +568,22 @@
     "permission_readPublished": {
         "de": "Lesen wenn publiziert",
         "en": "Read when published"
+    },
+
+    "nodes": {
+        "de": "Nodes",
+        "en": "Nodes"
+    },
+    "create_node_success": {
+        "de": "Node „{{ entityName }}“ erfolgreich erstellt!",
+        "en": "Successfully created node \"{{ entityName }}\"!"
+    },
+    "update_node_success": {
+        "de": "Node „{{ entityName }}“ erfolgreich aktualisiert!",
+        "en": "Successfully updated node \"{{ entityName }}\"!"
+    },
+    "delete_node_success": {
+        "de": "Node „{{ entityName }}“ erfolgreich gelöscht!",
+        "en": "Successfully deleted node \"{{ entityName }}\"!"
     }
 }

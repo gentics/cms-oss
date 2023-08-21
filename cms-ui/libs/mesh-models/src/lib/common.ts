@@ -79,7 +79,7 @@ export interface ResolvableLinksOptions {
 
 export interface PartialEntityLoadOptions<T extends Entity> {
     /** The properties of the entity which can be defined to only load these. */
-    fields?: keyof T[];
+    fields?: (keyof T)[];
 }
 
 export enum Permission {

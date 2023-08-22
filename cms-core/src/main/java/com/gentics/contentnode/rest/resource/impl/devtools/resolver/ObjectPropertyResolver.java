@@ -1,4 +1,3 @@
-
 package com.gentics.contentnode.rest.resource.impl.devtools.resolver;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -70,6 +69,5 @@ public class ObjectPropertyResolver extends AbstractDependencyResolver {
 
     return referencedDependencies;
   }
-
 
 }

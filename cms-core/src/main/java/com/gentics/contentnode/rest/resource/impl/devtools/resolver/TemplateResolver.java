@@ -1,8 +1,7 @@
-package com.gentics.contentnode.rest.resource.impl.devtools;
+package com.gentics.contentnode.rest.resource.impl.devtools.resolver;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.devtools.PackageObject;
-import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ObjectTag;
@@ -21,14 +20,14 @@ public class TemplateResolver extends AbstractDependencyResolver {
 
 
   @Override
-  public List<PackageDependency> resolve(PackageSynchronizer packageSynchronizer)
+  public List<PackageDependency> resolve()
       throws NodeException {
-    List<PackageObject<Template>> packageTemplates = packageSynchronizer.getObjects(CLAZZ);
+    List<PackageObject<Template>> packageTemplates = synchronizer.getObjects(CLAZZ);
     List<PackageDependency> resolvedDependencyList = new ArrayList<>();
 
     for (PackageObject<Template> packageObject : packageTemplates) {
       Template template = packageObject.getObject();
-      List<PackageDependency> references = resolveReferences(packageSynchronizer, template);
+      List<PackageDependency> references = resolveReferences(template);
 
       PackageDependency dependency = new PackageDependency.Builder()
           .withGlobalId(template.getGlobalId().toString())
@@ -44,21 +43,18 @@ public class TemplateResolver extends AbstractDependencyResolver {
   }
 
 
-  private List<PackageDependency> resolveReferences(PackageSynchronizer packageSynchronizer,
-      Template template) throws NodeException {
+  private List<PackageDependency> resolveReferences(Template template) throws NodeException {
     List<TemplateTag> templateTags = new ArrayList<>(template.getTemplateTags().values());
     List<ObjectTag> objectTags = new ArrayList<>(template.getObjectTags().values());
 
     List<PackageDependency> referencedDependencies = new ArrayList<>();
-    referencedDependencies.addAll(resolveTags(packageSynchronizer, templateTags));
-    referencedDependencies.addAll(resolveTags(packageSynchronizer, objectTags));
+    referencedDependencies.addAll(resolveTags(templateTags));
+    referencedDependencies.addAll(resolveTags(objectTags));
 
     return referencedDependencies;
   }
 
-  private <T extends Tag> List<PackageDependency> resolveTags(
-      PackageSynchronizer packageSynchronizer,
-      List<T> tags) throws NodeException {
+  private <T extends Tag> List<PackageDependency> resolveTags(List<T> tags) throws NodeException {
     List<PackageDependency> referencedDependencies = new ArrayList<>();
 
     for (T tag : tags) {
@@ -67,7 +63,7 @@ public class TemplateResolver extends AbstractDependencyResolver {
           .withGlobalId(tag.getGlobalId().toString())
           .withName(tag.getName())
           .withIsInPackage(
-              isInPackage(packageSynchronizer, getSynchronizationClass(tag), resolveUuid(tag)))
+              isInPackage(getSynchronizationClass(tag), resolveUuid(tag)))
           .build();
 
       referencedDependencies.add(dependency);
@@ -106,6 +102,5 @@ public class TemplateResolver extends AbstractDependencyResolver {
 
     return Type.UNKNOWN;
   }
-
 
 }

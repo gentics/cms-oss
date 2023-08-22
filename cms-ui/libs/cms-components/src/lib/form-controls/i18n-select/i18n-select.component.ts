@@ -37,11 +37,23 @@ import { Subscription } from 'rxjs';
 })
 export class I18nSelectComponent implements ControlValueAccessor, Validator, OnInit, AfterViewInit, OnChanges, OnDestroy {
 
-    @Input() label: string;
-    @Input() requiredInCurrentLanguage: boolean;
-    @Input() language: string;
-    @Input() disabled: boolean;
-    @Input() availableLanguages: string[];
+    @Input()
+    public label: string;
+
+    @Input()
+    public requiredInCurrentLanguage: boolean;
+
+    @Input()
+    public language: string;
+
+    @Input()
+    public disabled: boolean;
+
+    @Input()
+    public multiple = false;
+
+    @Input()
+    public availableLanguages: string[];
 
     @ContentChildren(SelectOptionDirective, { descendants: false }) selectOptions: QueryList<SelectOptionDirective>;
     private selectOptionsSubscription: Subscription;

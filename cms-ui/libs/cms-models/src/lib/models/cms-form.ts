@@ -53,9 +53,9 @@ export interface FormQueuedActionPublish extends FormQueuedActionTakeOffline {
 }
 
 export interface FormQueuedActionRequestPublishAt {
-     at: number;
-     alllang: boolean;
-     keepVersion: boolean;
+    at: number;
+    alllang: boolean;
+    keepVersion: boolean;
 }
 
 export interface FormQueuedActionRequestTakeOfflineAt {
@@ -406,12 +406,14 @@ interface CmsFormElementPropertyBase {
     description_i18n_ui?: CmsFormElementI18nString;
     /** If user input is requried for surrounding form to be valid. */
     required?: boolean;
+    /** If the user should be able to select muliple options. */
+    multiple?: boolean;
 }
 
 export interface CmsFormElementPropertyDefault extends CmsFormElementPropertyBase {
     type: CmsFormElementPropertyType.BOOLEAN
-        | CmsFormElementPropertyType.NUMBER
-        | CmsFormElementPropertyType.STRING;
+    | CmsFormElementPropertyType.NUMBER
+    | CmsFormElementPropertyType.STRING;
     validation?: CmsFormElementValidator;
     value_i18n?: CmsFormElementI18nValue<string | number | boolean | null>;
 }

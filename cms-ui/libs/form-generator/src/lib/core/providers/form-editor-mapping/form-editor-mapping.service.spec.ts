@@ -1117,6 +1117,7 @@ describe('FormEditorMappingService', () => {
             },
             description_i18n_ui: undefined,
             required: undefined,
+            multiple: false,
             options: [{
                 key: 'key',
                 value_i18n_ui: {
@@ -1208,6 +1209,7 @@ describe('FormEditorMappingService', () => {
             },
             description_i18n_ui: undefined,
             required: undefined,
+            multiple: false,
             options: [{
                 key: 'key',
                 value_i18n_ui: {
@@ -1296,6 +1298,7 @@ describe('FormEditorMappingService', () => {
             },
             description_i18n_ui: undefined,
             required: undefined,
+            multiple: false,
             options: [{
                 key: 'key',
                 value_i18n_ui: {
@@ -1403,6 +1406,7 @@ describe('FormEditorMappingService', () => {
             },
             description_i18n_ui: undefined,
             required: undefined,
+            multiple: false,
             options: [{
                 key: 'key',
                 value_i18n_ui: {

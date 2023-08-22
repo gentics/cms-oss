@@ -68,7 +68,7 @@ import {
     TooltipTriggerDirective,
 } from './directives';
 import { configFactory, ConfigService, CustomConfig, defaultConfig, optionsConfig, PredefinedConfig } from './module.config';
-import { IncludesPipe, MatchesMimeTypePipe, TableActionEnabledPipe, TableCellMapperPipe, ValuePathPipe } from './pipes';
+import { ConcatPipe, IncludesPipe, MatchesMimeTypePipe, SortPipe, TableActionEnabledPipe, TableCellMapperPipe, ValuePathPipe } from './pipes';
 import {
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
@@ -143,10 +143,12 @@ export const UI_CORE_DIRECTIVES: Type<any>[] = [
 ];
 
 export const UI_CORE_PIPES: Type<any>[] = [
+    ConcatPipe,
     IncludesPipe,
+    MatchesMimeTypePipe,
+    SortPipe,
     TableActionEnabledPipe,
     TableCellMapperPipe,
-    MatchesMimeTypePipe,
     ValuePathPipe,
 ];
 

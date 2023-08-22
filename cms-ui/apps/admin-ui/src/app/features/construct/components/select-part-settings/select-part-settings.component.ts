@@ -70,7 +70,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
             this.loadEntries(this.value?.datasourceId);
         }
 
-        this.form.setValue({
+        this.form.patchValue({
             ...this.form.value,
             // datasourceId: this.value?.datasourceId || null,
             template: this.value?.template || '',
@@ -100,9 +100,9 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
          * Potentially abstract the APi again as EntityOperations should be for BOs only?
          */
         this.entriesSubscription = this.api.dataSource.getEntries(dsId).subscribe(res => {
-            this.form.setValue({
+            this.form.patchValue({
                 ...this.form.value,
-                datasourceId: dsId,
+                datasourceId: dsId as number,
                 options: res.items.map(option => ({
                     // "id" in the response context is the ID in the global CMS, while dsId is the one inside the Datasource
                     id: option.dsId,

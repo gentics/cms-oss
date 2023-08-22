@@ -236,7 +236,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
             const tmpObj: Partial<TagmapEntry> = {};
             Object.keys(this.form.controls).forEach(controlName => {
-                tmpObj[controlName] = this.value?.[controlName] || null;
+                tmpObj[controlName] = this.value?.[controlName] ?? null;
             });
 
             if (tmpObj?.elasticsearch) {
@@ -257,7 +257,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
                 (tmpObj as any).elasticsearch = esSettings;
             }
 
-            this.form.setValue(tmpObj);
+            this.form.patchValue(tmpObj);
         }
     }
 }

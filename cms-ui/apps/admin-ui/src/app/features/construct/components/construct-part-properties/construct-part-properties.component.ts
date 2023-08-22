@@ -14,25 +14,28 @@ import {
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {
-    AnyModelType,
     CmsI18nValue,
     DataSource,
     Language,
     MarkupLanguage,
-    Normalized,
     OverviewSetting,
     Raw,
     SelectSetting,
-    TagPart,
     TagPartProperty,
     TagPartType,
     TagPartTypePropertyType,
     TagPartValidatorConfigs,
     TagPartValidatorId,
+    TagPropertyType,
 } from '@gentics/cms-models';
 import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export interface TagPartPropertiesFormData {
+    globalId?: string;
+    id?: string;
+    name?: string;
+    type?: TagPropertyType;
+
     /** Part keyword */
     keyword: string;
     /** Name in the current language */
@@ -125,7 +128,7 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     providers: [generateFormProvider(ConstructPartPropertiesComponent)],
 })
 export class ConstructPartPropertiesComponent
-    extends BasePropertiesComponent<TagPart>
+    extends BasePropertiesComponent<TagPartPropertiesFormData>
     implements OnChanges {
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
@@ -253,7 +256,7 @@ export class ConstructPartPropertiesComponent
         });
     }
 
-    protected configureForm(value: TagPart<AnyModelType>, loud: boolean = false): void {
+    protected configureForm(value: TagPartPropertiesFormData, loud: boolean = false): void {
         // Don't do stuff if it's the initial change. Only perform the changes on item init
         if (value === undefined) {
             return;
@@ -317,7 +320,7 @@ export class ConstructPartPropertiesComponent
         setControlsEnabled(this.form, ['defaultProperty'], defaultPropertyEnabled, options);
     }
 
-    protected assembleValue(formData: any): TagPart<Normalized> {
+    protected assembleValue(formData: TagPartPropertiesFormData): TagPartPropertiesFormData {
         if (formData == null) {
             return null;
         }
@@ -325,16 +328,16 @@ export class ConstructPartPropertiesComponent
         const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
-            output.globalId = this.value?.globalId;
-            output.id = this.value?.id;
-            output.keyword = this.value?.keyword;
+            (output as TagPartPropertiesFormData).globalId = this.value?.globalId;
+            (output as TagPartPropertiesFormData).id = this.value?.id;
+            (output as TagPartPropertiesFormData).keyword = this.value?.keyword;
             output.name = this.value?.name;
             output.type = this.value?.type;
         } else {
-            output.keyword = formData.keyword;
+            (output as TagPartPropertiesFormData).keyword = formData.keyword;
         }
 
-        return output;
+        return output as TagPartPropertiesFormData;
     }
 
     protected onValueChange(): void {

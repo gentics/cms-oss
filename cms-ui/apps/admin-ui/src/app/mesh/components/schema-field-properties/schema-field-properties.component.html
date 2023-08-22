@@ -74,7 +74,10 @@
                 [multiple]="true"
                 formControlName="allow"
             >
-                <gtx-option *ngFor="let schema of schemaNames" [value]="schema">{{ schema }}</gtx-option>
+                <gtx-option
+                    *ngFor="let schema of schemaNames | gtxConcat:(type === SchemaFieldPropertiesType.SCHEMA ? ownName : null) | gtxSort"
+                    [value]="schema"
+                >{{ schema }}</gtx-option>
             </gtx-select>
 
             <gtx-select
@@ -84,7 +87,10 @@
                 [multiple]="true"
                 formControlName="allow"
             >
-                <gtx-option *ngFor="let schema of microschemaNames" [value]="schema">{{ schema }}</gtx-option>
+                <gtx-option
+                    *ngFor="let schema of microschemaNames | gtxConcat:(type === SchemaFieldPropertiesType.MICROSCHEMA ? ownName : null) | gtxSort"
+                    [value]="schema"
+                >{{ schema }}</gtx-option>
             </gtx-select>
 
             <gtx-string-list

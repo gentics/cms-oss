@@ -41,7 +41,7 @@ export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<Sch
 
     protected override onValueChange(): void {
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
+            this.form.patchValue({
                 name: this.value?.name || '',
                 description: this.value?.description || '',
                 command: this.value?.command || '',

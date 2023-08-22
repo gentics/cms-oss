@@ -1,9 +1,9 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormGroup, UntypedFormGroup } from '@angular/forms';
-import { BaseFormElementComponent } from '@gentics/ui-core';
+import { FormGroup } from '@angular/forms';
+import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
 import { combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import { CONTROL_INVALID_VALUE } from '../../../common';
 
 const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
@@ -53,7 +53,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * The form which should be used in the component template for all form interactions.
      */
-    public form: UntypedFormGroup;
+    public form: FormGroup<FormProperties<T>>;
 
     /**
      * Internal flag if the form should setup the value changes only after the first configuration.
@@ -78,7 +78,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         // When the initialValue flag is updated, it means that the value may be significantly changed (usually full entity change).
         // Therefore, configure the form with the current value again to properly update the controls.
         if (changes.initialValue && this.initialValue && this.form) {
-            this.configureForm(this.form.value);
+            this.configureForm(this.form.value as any);
             this.form.updateValueAndValidity();
         }
     }
@@ -121,12 +121,12 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value, status]) => {
                 if (status === 'VALID') {
-                    return this.assembleValue(value);
+                    return this.assembleValue(value as any);
                 }
                 return CONTROL_INVALID_VALUE;
             }),
             distinctUntilChanged(isEqual),
-            debounceTime(100),
+            // debounceTime(100),
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.

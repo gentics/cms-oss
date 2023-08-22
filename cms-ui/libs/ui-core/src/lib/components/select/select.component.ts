@@ -95,6 +95,15 @@ export class SelectComponent
     public placeholder = '';
 
     /**
+     * If the `value` of the select or the options change, should this select check if the
+     * selected values are even possible with the current options.
+     * If a value is set, but no option can be found, remove the value (either `null` on single select,
+     * or remove the value from the array).
+     */
+    @Input()
+    public removeUnknownValues = false;
+
+    /**
      * Blur event.
      */
     @Output()
@@ -138,15 +147,15 @@ export class SelectComponent
         changeDetector: ChangeDetectorRef,
     ) {
         super(changeDetector);
-        this.booleanInputs.push('clearable', 'selectAll', 'multiple');
+        this.booleanInputs.push('clearable', 'selectAll', 'multiple', ['removeUnknownValues', false]);
     }
 
     ngAfterViewInit(): void {
         // Update the value if there are any changes to the options
         this.subscriptions.push(this.selectOptions.changes.subscribe(() => {
             setTimeout(() => {
-                this.writeValue(this.value);
                 this.optionGroups = this.buildOptionGroups();
+                this.writeValue(this.value);
                 this.changeDetector.markForCheck();
             });
         }));
@@ -190,6 +199,31 @@ export class SelectComponent
         }
 
         if (selectOptions) {
+            if (this.removeUnknownValues) {
+                const newArr = [];
+                let didFind = false;
+
+                for (const selectedValue of this.valueArray) {
+                    didFind = false;
+
+                    for (const option of selectOptions) {
+                        if (this.isSame(selectedValue, option.value)) {
+                            didFind = true;
+                            break;
+                        }
+                    }
+
+                    if (didFind) {
+                        newArr.push(selectedValue);
+                    }
+                }
+
+                if (newArr.length !== this.valueArray.length) {
+                    this.valueArray = newArr;
+                    this.triggerChange(this.multiple ? this.valueArray : this.valueArray[0]);
+                }
+            }
+
             let tmp = selectOptions.filter(option => {
                 for (const selectedValue of this.valueArray) {
                     if (this.isSame(selectedValue, option.value)) {

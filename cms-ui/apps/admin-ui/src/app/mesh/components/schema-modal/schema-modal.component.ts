@@ -27,6 +27,7 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
     public microschemaNames: string[];
 
     public form: FormControl;
+    public namesLoaded = false;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -51,6 +52,7 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
 
         this.schemaNames = schemas.map(s => s.name).filter(s => s != null && s !== this.schema?.name);
         this.microschemaNames = microschemas.map(s => s.name);
+        this.namesLoaded = true;
         this.changeDetector.markForCheck();
     }
 

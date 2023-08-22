@@ -4,6 +4,7 @@ import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/
 import { EditableSchemaProperties } from '@gentics/mesh-models';
 import { FormProperties, generateFormProvider } from '@gentics/ui-core';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
+import { blacklistValidator } from '@admin-ui/common';
 
 export enum SchemaPropertiesMode {
     CREATE,
@@ -26,6 +27,9 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
     public mode: SchemaPropertiesMode;
 
     @Input()
+    public ownName: string;
+
+    @Input()
     public schemaNames: string[];
 
     @Input()
@@ -36,9 +40,10 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
             name: new FormControl(this.value?.name, [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
+                blacklistValidator(() => this.schemaNames.filter(name => name !== this.ownName)),
             ]),
             fields: new FormArray([
-                new FormControl({} as any, createNestedControlValidator()),
+                new FormControl(this.value?.fields?.[0], createNestedControlValidator()),
             ]),
         });
     }

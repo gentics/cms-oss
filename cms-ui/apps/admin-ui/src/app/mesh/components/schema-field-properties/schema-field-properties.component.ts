@@ -66,6 +66,10 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
                 this.form.updateValueAndValidity();
             }
         }
+
+        if (changes.ownName && !changes.ownName.firstChange && this.form) {
+            this.updateSelectedOwnName(changes.ownName.previousValue, this.ownName);
+        }
     }
 
     protected createForm(): FormGroup<FormProperties<SchemaField>> {
@@ -95,7 +99,7 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
     }
 
     protected configureForm(value: SchemaField, loud?: boolean): void {
-        const options = { emitEvent: !!loud };
+        const options = { emitEvent: !!loud, onlySelf: true };
         this.effectiveType = value.type == null ? null : (value.type === FieldType.LIST ? value.listType : value.type);
         setControlsEnabled(this.form, ['listType'], value.type === FieldType.LIST, options);
         setControlsEnabled(this.form, ['checkServiceUrl', 'extract'], value.type === FieldType.BINARY, options);
@@ -106,4 +110,27 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
         return value;
     }
 
+    protected updateSelectedOwnName(oldName: string, newName: string): void {
+        // If no name was present, we don't need to do anything.
+        if (oldName == null || oldName.length === 0) {
+            return;
+        }
+        const ctl = this.form.controls.allow;
+        // Get a copy
+        const val = (ctl.value || []).slice(0);
+        let didChange = false;
+        // Remove the old name
+        const idx = val.findIndex(selected => selected === oldName);
+        if (idx > -1) {
+            val.splice(idx, 1);
+            didChange = true;
+        }
+        if (didChange && newName != null && newName.length > 0) {
+            val.push(newName);
+        }
+
+        if (didChange) {
+            ctl.setValue(val);
+        }
+    }
 }

@@ -145,7 +145,7 @@ export class ObjectpropertyPropertiesComponent
             this.objTagSyncEnabled = objTagSyncEnabled;
 
             if (this.form) {
-                this.configureForm(this.form.value);
+                this.configureForm(this.form.value as any);
             }
 
             this.changeDetector.markForCheck();
@@ -243,7 +243,7 @@ export class ObjectpropertyPropertiesComponent
 
     protected onValueChange(): void {
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
+            this.form.patchValue({
                 nameI18n: this.value?.nameI18n ?? null,
                 descriptionI18n: this.value?.descriptionI18n ?? null,
                 keyword: this.value?.keyword ?? null,

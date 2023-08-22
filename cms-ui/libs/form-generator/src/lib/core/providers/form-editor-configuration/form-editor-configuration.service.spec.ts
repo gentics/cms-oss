@@ -160,6 +160,7 @@ describe('FormEditorConfigurationService', () => {
                         label_i18n_ui: {
                             de: 'Deutsch',
                         },
+                        multiple: false,
                         options: [{
                             key: 'key',
                             value_i18n_ui: {
@@ -1468,6 +1469,7 @@ describe('FormEditorConfigurationService', () => {
                             label_i18n_ui: {
                                 de: 'Deutsch',
                             },
+                            multiple: false,
                             options: [],
                         }, {
                             name: 'name5',
@@ -2353,6 +2355,7 @@ describe('FormEditorConfigurationService', () => {
                                 label_i18n_ui: {
                                     de: 'Deutsch',
                                 },
+                                multiple: false,
                                 options: [{
                                     key: 'key',
                                     value_i18n_ui: {
@@ -2393,6 +2396,7 @@ describe('FormEditorConfigurationService', () => {
                                 label_i18n_ui: {
                                     de: 'Deutsch',
                                 },
+                                multiple: false,
                                 options: [{
                                     key: 'key',
                                     value_i18n_ui: {

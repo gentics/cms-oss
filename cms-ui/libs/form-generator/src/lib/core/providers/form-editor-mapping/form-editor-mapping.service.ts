@@ -289,6 +289,7 @@ export class FormEditorMappingService {
                         label_i18n_ui: elementPropertyConfiguration.label_i18n_ui,
                         required: elementPropertyConfiguration.required,
                         value_i18n: formElement[propertyValueName],
+                        multiple: elementPropertyConfiguration.multiple ?? false,
                         options: elementPropertyConfiguration.options.map((optionConfiguration: FormElementPropertyOptionConfiguration) => {
                             return { key: optionConfiguration.key, value_i18n_ui: optionConfiguration.value_i18n_ui };
                         }),

@@ -16,7 +16,7 @@
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!form.valid && form.enabled"
+        [disabled]="!form.valid || !form.enabled"
         (click)="buttonCreateEntityClicked()"
     >
         {{ (mode === SchemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}

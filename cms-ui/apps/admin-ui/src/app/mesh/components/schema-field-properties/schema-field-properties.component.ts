@@ -52,6 +52,8 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
     public validListTypes: FieldType[];
     public effectiveType: FieldType;
 
+    protected override delayedSetup = true;
+
     public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 

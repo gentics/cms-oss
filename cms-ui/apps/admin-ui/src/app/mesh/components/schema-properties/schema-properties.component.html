@@ -9,16 +9,13 @@
         formControlName="name"
     ></gtx-input>
 
-    <hr/>
-
-    <ng-container *ngFor="let ctl of form?.controls?.fields?.controls">
-        <gtx-mesh-schema-field-properties
-            class="columns small-12"
-            [formControl]="ctl"
-            [type]="SchemaFieldPropertiesType.SCHEMA"
+    <div class="columns small-12">
+        <gtx-mesh-schema-fields-manager
+            class="fields-manager"
+            formControlName="fields"
             [ownName]="form.value.name"
             [schemaNames]="schemaNames"
             [microschemaNames]="microschemaNames"
-        ></gtx-mesh-schema-field-properties>
-    </ng-container>
+        ></gtx-mesh-schema-fields-manager>
+    </div>
 </form>

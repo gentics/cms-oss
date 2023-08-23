@@ -1,4 +1,5 @@
 export * from './app-version-label';
+export * from './base-properties-list/base-properties-list.component';
 export * from './base-properties/base-properties.component';
 export * from './browse-box';
 export * from './link-to-manual';

@@ -1,0 +1,59 @@
+@import "variables";
+
+:host {
+    display: block;
+}
+
+.label {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: $gtx-color-dark-gray;
+    user-select: none;
+    margin-bottom: 0.1rem;
+}
+
+.field-list {
+    display: block;
+
+    .field-wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .movement-group {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: center;
+
+        .move-top {
+            margin-bottom: 2rem;
+        }
+
+        .move-bottom {
+            margin-top: 2rem;
+        }
+    }
+
+    .field {
+        padding: 0 2rem;
+        margin: 1rem 0 0.5rem;
+        display: block;
+        flex: 1 1 auto;
+    }
+
+    .separator {
+        margin: 1rem 0;
+    }
+}
+
+.add-button-wrapper {
+    width: 100%;
+    display: flex;
+
+    .add-button {
+        margin: auto;
+    }
+}

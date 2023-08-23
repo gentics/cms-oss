@@ -252,6 +252,30 @@
         "de": "Hinzufügen",
         "en": "Add"
     },
+    "elasticsearch": {
+        "de": "Elasticsearch",
+        "en": "Elasticsearch"
+    },
+    "schema_fields": {
+        "de": "Felder",
+        "en": "Fields"
+    },
+    "schema_fields_remove": {
+        "de": "Feld entfernen",
+        "en": "Remove field"
+    },
+    "schema_fields_add": {
+        "de": "Neues Feld hinzugfügen",
+        "en": "Add new field"
+    },
+    "move_to_top": {
+        "de": "Als erstes element",
+        "en": "Move to top"
+    },
+    "move_to_bottom": {
+        "de": "Als letztes element",
+        "en": "Move to bottom"
+    },
 
     "roles": {
         "de": "Rollen",

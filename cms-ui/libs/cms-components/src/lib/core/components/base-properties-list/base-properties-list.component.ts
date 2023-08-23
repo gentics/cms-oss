@@ -1,15 +1,15 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { FormArray, FormControl } from '@angular/forms';
+import { BaseFormElementComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
-import { combineLatest } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import { CONTROL_INVALID_VALUE } from '../../../common';
 
 const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
 @Component({ template: '' })
-export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges {
+export abstract class BasePropertiesListComponent<T> extends BaseFormElementComponent<T[]> implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -53,13 +53,15 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * The form which should be used in the component template for all form interactions.
      */
-    public form: FormGroup<FormProperties<T>>;
+    public form: FormArray<FormControl<T>>;
 
     /**
      * Internal flag if the form should setup the value changes only after the first configuration.
      * This ignores the change performed by the first configuration and doesn't trigger a change for it (if any would occur).
      */
     protected delayedSetup = false;
+
+    protected formSubscription: Subscription;
 
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
@@ -87,6 +89,14 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         }
     }
 
+    public ngOnDestroy(): void {
+        super.ngOnDestroy();
+
+        if (this.formSubscription) {
+            this.formSubscription.unsubscribe();
+        }
+    }
+
     /**
      * Function which initializes the form and sets up all required change detections.
      */
@@ -111,7 +121,11 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     }
 
     protected setupFormSubscription(): void {
-        this.subscriptions.push(combineLatest([
+        if (this.formSubscription) {
+            this.formSubscription.unsubscribe();
+        }
+
+        this.formSubscription = combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
                 tap(value => this.configureForm(value)),
@@ -120,12 +134,12 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.form.statusChanges,
         ]).pipe(
             // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled && this.value !== INIVIAL_UNSET_VALUE),
+            filter(() => this.hasSetInitialDisabled && (this.value as any) !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value, status]) => {
                 if (status === 'VALID') {
-                    return this.assembleValue(value as any);
+                    return this.assembleValue(value);
                 }
                 return CONTROL_INVALID_VALUE;
             }),
@@ -140,20 +154,15 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             // Set it, in case that the parent-component has no binding for it
             this.initialValue = false;
             this.initialValueChange.emit(false);
-        }));
+        });
     }
 
     // Override to fix the typings
-    override triggerChange(value: T | typeof CONTROL_INVALID_VALUE): void {
+    override triggerChange(value: T[] | typeof CONTROL_INVALID_VALUE): void {
         super.triggerChange(value as any);
     }
 
-    /**
-     * Function which creates a new form (at initialization) for this component.
-     * All controls should already be present and should be toggled by disabling them
-     * via the `configureForm` method.
-     */
-    protected abstract createForm(): FormGroup;
+    protected abstract createControl(value?: T): FormControl<T>;
 
     /**
      * Hook for whenever the form value changes, to configure the form controls.
@@ -161,7 +170,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      * @param value The current form value.
      * @param loud If the dis-/enabling of the controls should be with an event (Trigger a value change). (Defaults to `false`)
      */
-    protected abstract configureForm(value: T, loud?: boolean): void;
+    protected abstract configureForm(value: T[], loud?: boolean): void;
 
     /**
      * Function which is getting called whenever a pushable form value change occurred.
@@ -169,23 +178,46 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      *
      * @param value The current form value.
      */
-    protected abstract assembleValue(value: T): T;
+    protected abstract assembleValue(value: T[]): T[];
 
     /** Hook which is called whenever `initialValue` is getting reset to `true`. */
     protected onValueReset(): void {}
+
+    /**
+     * Function which creates a new form (at initialization) for this component.
+     * All controls should already be present and should be toggled by disabling them
+     * via the `configureForm` method.
+     */
+    protected createForm(): FormArray<FormControl<T>> {
+        const arr = Array.isArray(this.value) ? this.value : [];
+        return new FormArray(arr.map(entry => {
+            return this.createControl(entry);
+        }));
+    }
+
+    public add(value?: T): void {
+        this.form.push(this.createControl(value));
+    }
+
+    public remove(index: number): void {
+        this.form.removeAt(index);
+    }
 
     /**
      * Basic implementation which will simply put the value into the form.
      */
     protected onValueChange(): void {
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            const tmpObj = {};
-            Object.keys(this.form.controls).forEach(controlName => {
-                if (this.value != null && this.value.hasOwnProperty(controlName)) {
-                    tmpObj[controlName] = this.value[controlName];
-                }
-            });
-            this.form.patchValue(tmpObj);
+            if (this.value?.length === this.form.length) {
+                this.form.setValue(this.value);
+            } else {
+                // If there's another amount of elements now, we have to re-create the form
+                this.form.clear({ emitEvent: false });
+                (this.value || []).forEach(entry => {
+                    this.form.push(this.createControl(entry), { emitEvent: false });
+                });
+                this.form.updateValueAndValidity();
+            }
         }
     }
 

@@ -49,6 +49,7 @@ import {
     TagPropertiesComponent,
     TagTableComponent,
     SchemaFieldPropertiesComponent,
+    SchemaFieldsManagerComponent,
 } from './components';
 import {
     MeshGroupHandlerService,
@@ -99,6 +100,7 @@ const COMPONENTS: Type<any>[] = [
     ProjectPropertiesComponent,
     ProjectTableComponent,
     SchemaFieldPropertiesComponent,
+    SchemaFieldsManagerComponent,
     SchemaModal,
     SchemaPickerComponent,
     SchemaPropertiesComponent,

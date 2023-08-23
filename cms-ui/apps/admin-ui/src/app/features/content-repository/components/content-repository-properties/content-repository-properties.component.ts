@@ -94,11 +94,11 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         if (changes.mode && this.form) {
             setControlsEnabled(this.form, ['crType'], this.mode !== ContentRepositoryPropertiesMode.UPDATE, { emitEvent: true });
         }
+    }
 
-        // When the root element changes, we have to reset the repeat value
-        if (changes.initialValue && this.initialValue) {
-            this.passwordRepeat = '';
-        }
+    protected override onValueReset(): void {
+        super.onValueReset();
+        this.passwordRepeat = '';
     }
 
     public updatePasswordRepeat(value: string): void {

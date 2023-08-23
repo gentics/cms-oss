@@ -1,6 +1,24 @@
-import { AfterContentInit, Component, ElementRef, EventEmitter, HostBinding, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import {
+    AfterContentInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    ContentChildren,
+    ElementRef,
+    EventEmitter,
+    HostBinding,
+    Input,
+    OnChanges,
+    OnInit,
+    Output,
+    QueryList,
+    SimpleChanges,
+} from '@angular/core';
+import { distinctUntilChanged } from 'rxjs/operators';
 import * as Sortable from 'sortablejs';
-import { ISortableEvent, ISortableMoveEvent, SortableGroup, SortFunction } from '../../common';
+import { ISortableEvent, ISortableMoveEvent, SortFunction, SortableGroup } from '../../common';
+import { BaseComponent } from '../base-component/base.component';
+import { SortableListDragHandleComponent } from '../drag-handle/drag-handle.component';
 
 /**
  * Enables the creation of lists which can be re-ordered by dragging the items. Built on top of
@@ -57,14 +75,9 @@ import { ISortableEvent, ISortableMoveEvent, SortableGroup, SortFunction } from 
     selector: 'gtx-sortable-list',
     templateUrl: './sortable-list.component.html',
     styleUrls: ['./sortable-list.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SortableListComponent implements OnChanges, OnInit, AfterContentInit {
-
-    /**
-     * Set to true to disable sorting. i.e. items will no longer be draggable.
-     */
-    @Input()
-    disabled = false;
+export class SortableListComponent extends BaseComponent implements OnChanges, OnInit, AfterContentInit {
 
     /**
      * Specify a group to allow dragging items between SortableLists. See
@@ -72,88 +85,104 @@ export class SortableListComponent implements OnChanges, OnInit, AfterContentIni
      * for more information.
      */
     @Input()
-    group: SortableGroup;
+    public group: SortableGroup;
+
+    /**
+     * Explicitly enable/disable the handles for this list.
+     * Handles may be set via the `gtx-drag-handle` component.
+     * Set to `null` to auto-detect for handles and act accordingly (default).
+     */
+    @Input()
+    public handles: boolean | null = null;
 
     /**
      * Invoked when an item is moved in the list or between lists. Return `false` to cancel the move.
      */
     @Input()
-    onMove: (e: ISortableMoveEvent) => boolean;
+    public onMove: (e: ISortableMoveEvent) => boolean;
 
     /**
      * Fired when an item drag is started.
      */
     @Output()
-    dragStart = new EventEmitter<ISortableEvent>();
+    public dragStart = new EventEmitter<ISortableEvent>();
 
     /**
      * Fired when an item has been dragged and dropped to a new position in the list.
      */
     @Output()
-    dragEnd = new EventEmitter<ISortableEvent>();
+    public dragEnd = new EventEmitter<ISortableEvent>();
 
     /**
      * Fired when an item has been dropped onto this list from a different list.
      */
     @Output()
-    addItem = new EventEmitter<ISortableEvent>();
+    public addItem = new EventEmitter<ISortableEvent>();
 
     /**
      * Fired when creating a clone of element.
      */
     @Output()
-    cloneItem = new EventEmitter<ISortableEvent>();
+    public cloneItem = new EventEmitter<ISortableEvent>();
 
     /**
      * Fired when an item has been remove from this list to a different list.
      */
     @Output()
-    removeItem = new EventEmitter<ISortableEvent>();
+    public removeItem = new EventEmitter<ISortableEvent>();
+
+    @ContentChildren(SortableListDragHandleComponent)
+    public handles$: QueryList<SortableListComponent>;
 
     @HostBinding('class.gtx-dragging')
-    dragging = false;
+    public dragging = false;
 
     private sortable: Sortable;
 
-    constructor(private elementRef: ElementRef<HTMLElement>) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        if (this.sortable) {
-            this.sortable.option('disabled', this.disabled);
-        }
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        private elementRef: ElementRef<HTMLElement>,
+    ) {
+        super(changeDetector);
+        this.booleanInputs.push('handles');
     }
 
     ngOnInit(): void {
         this.sortable = Sortable.create(this.elementRef.nativeElement, {
             animation: 150,
-            setData: (dataTransfer: any, dragEl: Element): void => {},
+            setData: (dataTransfer: any, dragEl: Element): void => { },
             // dragging started
             onStart: (e: ISortableEvent): void => {
                 this.dragging = true;
                 this.dragStart.emit(e);
+                this.changeDetector.markForCheck();
             },
             // dragging ended
             onEnd: (e: ISortableEvent): void => {
                 e.sort = this.sortFactory(e);
                 this.dragging = false;
                 this.dragEnd.emit(e);
+                this.changeDetector.markForCheck();
             },
             // Element is dropped into the list from another list
             onAdd: (e: ISortableEvent): void => {
                 this.addItem.emit(e);
+                this.changeDetector.markForCheck();
             },
             // Changed sorting within list
-            onUpdate: (e: ISortableEvent): void => {},
+            onUpdate: (e: ISortableEvent): void => { },
             // Called by any change to the list (add / update / remove)
-            onSort: (e: ISortableEvent): void => {},
+            onSort: (e: ISortableEvent): void => { },
             // Element is removed from the list into another list
             onRemove: (e: ISortableEvent): void => {
                 this.removeItem.emit(e);
+                this.changeDetector.markForCheck();
             },
             // Attempt to drag a filtered element
-            onFilter: (e: ISortableEvent): void => {},
+            onFilter: (e: ISortableEvent): void => { },
             // Event when you move an item in the list or between lists
             onMove: (e: ISortableMoveEvent): any => {
+                this.changeDetector.markForCheck();
                 if (typeof this.onMove === 'function') {
                     return this.onMove(e);
                 }
@@ -162,6 +191,7 @@ export class SortableListComponent implements OnChanges, OnInit, AfterContentIni
 
         this.sortable.option('onClone', (e: ISortableEvent) => {
             this.cloneItem.emit(e);
+            this.changeDetector.markForCheck();
         });
 
         if (this.group) {
@@ -169,21 +199,55 @@ export class SortableListComponent implements OnChanges, OnInit, AfterContentIni
         }
     }
 
+    ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        if (changes.group && this.sortable) {
+            this.sortable.option('group', this.group);
+        }
+        if (changes.handle && !changes.handle.firstChange) {
+            this.updateHandleOption();
+        }
+    }
+
     ngAfterContentInit(): void {
-        let dragHandles = this.elementRef.nativeElement.querySelectorAll('gtx-drag-handle');
-        if (dragHandles && 0 < dragHandles.length) {
+        this.updateHandleOption();
+
+        this.subscriptions.push(this.handles$.changes.pipe(
+            distinctUntilChanged(),
+        ).subscribe(() => {
+            this.updateHandleOption();
+        }));
+    }
+
+    protected override onDisabledChange(): void {
+        if (this.sortable) {
+            this.sortable.option('disabled', this.disabled);
+        }
+    }
+
+    protected updateHandleOption(): void {
+        // Not mounted yet
+        if (!this.elementRef?.nativeElement) {
+            return;
+        }
+
+        const dragHandles = this.elementRef.nativeElement.querySelectorAll('gtx-drag-handle');
+        if (this.handles === true || (this.handles == null && dragHandles && dragHandles.length > 0)) {
             this.sortable.option('handle', '.gtx-drag-handle');
+        } else {
+            this.sortable.option('handle', null);
         }
     }
 
     /**
      * Returns a pre-configured sort function which uses the indexes of the sort operation.
      */
-    sortFactory(e: ISortableEvent): SortFunction<any> {
+    protected sortFactory(e: ISortableEvent): SortFunction<any> {
         return (source: any[], byReference: boolean = false) => {
-            let result: any[] = byReference ? source : source.slice();
-            let oldIndex: number = e.oldIndex;
-            let newIndex: number = e.newIndex;
+            const result: any[] = byReference ? source : source.slice();
+            const oldIndex: number = e.oldIndex;
+            const newIndex: number = e.newIndex;
 
             // Check that index i is an integer
             const isInt = (i: any): boolean => Number(i) === i && i % 1 === 0;

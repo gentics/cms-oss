@@ -21,7 +21,6 @@ export enum SchemaPropertiesMode {
 export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> {
 
     public readonly SchemaPropertiesMode = SchemaPropertiesMode;
-    public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
 
     @Input()
     public mode: SchemaPropertiesMode;
@@ -35,6 +34,8 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
     @Input()
     public microschemaNames: string[];
 
+    protected override delayedSetup = true;
+
     protected createForm(): FormGroup<FormProperties<EditableSchemaProperties>> {
         return new FormGroup<FormProperties<EditableSchemaProperties>>({
             name: new FormControl(this.value?.name, [
@@ -42,9 +43,7 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
                 blacklistValidator(() => this.schemaNames.filter(name => name !== this.ownName)),
             ]),
-            fields: new FormArray([
-                new FormControl(this.value?.fields?.[0], createNestedControlValidator()),
-            ]),
+            fields: new FormControl(this.value?.fields || [], createNestedControlValidator()),
         });
     }
 

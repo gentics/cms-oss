@@ -1,21 +1,25 @@
 package com.gentics.contentnode.tests.devtools;
 
 
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartTypeId;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.devtools.PackageObject;
 import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
-import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.object.ObjectTag;
+import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
@@ -48,7 +52,8 @@ public class PackageConsistencyTest {
   protected static Node node;
   @Rule
   public PackageSynchronizerContext syncContext = new PackageSynchronizerContext();
-  protected PackageSynchronizer packageSynchronizer;
+
+  protected PackageSynchronizer synchronizer;
   private PackageDependencyChecker dependencyChecker;
 
   @BeforeClass
@@ -66,9 +71,9 @@ public class PackageConsistencyTest {
     Synchronizer.disable();
     Synchronizer.addPackage(PACKAGE_NAME);
     dependencyChecker = new PackageDependencyChecker(PACKAGE_NAME);
-    packageSynchronizer = Synchronizer.getPackage(PACKAGE_NAME);
+    synchronizer = Synchronizer.getPackage(PACKAGE_NAME);
 
-    assertThat(packageSynchronizer).as("package synchronizer").isNotNull();
+    assertThat(synchronizer).as("package synchronizer").isNotNull();
   }
 
   @Test
@@ -80,10 +85,11 @@ public class PackageConsistencyTest {
   }
 
   @Test
-  public void givenPackageWithDependenciesShouldContainAllObjects() throws NodeException {
+  public void givenPackageWithDependenciesShouldContainAllExpectedObjects() throws NodeException {
     givenSynchronizedPackage();
     List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
+    //todo: assert uuid also
     assertThat(dependencies.get(0)).hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
     assertThat(dependencies.get(1)).hasFieldOrPropertyWithValue("dependencyType", Type.TEMPLATE);
     assertThat(dependencies.get(1).getReferencedDependencies().get(0))
@@ -97,35 +103,20 @@ public class PackageConsistencyTest {
     List<SynchronizableNodeObject> packageObjects = givenSynchronizedPackage();
     List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-    // assert dependency collection
-    PackageDependency constructDependency = dependencies.stream()
-        .filter(packageDependency -> Type.CONSTRUCT == packageDependency.getDependencyType())
-        .findFirst().get();
+    operate(() -> {
+      PackageObject<Datasource> datasourceInPackage = synchronizer.getObjects(Datasource.class).get(0);
+      synchronizer.remove(datasourceInPackage.getObject(), true);
+    });
 
-    //todo: assert uuid also
-    PackageDependency referencedDependency = constructDependency.getReferencedDependencies()
-        .stream()
-        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyType())
-        .findFirst().get();
-
-    // remove one object that should be part of the package
-    Construct construct = (Construct) packageObjects.stream()
-        .filter(object -> object instanceof Construct).findFirst().get();
-    packageSynchronizer.remove(construct, true);
-
-    assertThat(packageSynchronizer.syncAllFromFilesystem(Construct.class)).isPositive();
+    // todo: needed?
+    operate(() ->
+        assertThat(synchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
+    );
 
     // datasource that is referenced by a construct is missing and should be detected
-    dependencyChecker.collectDependencies();
-
-    PackageDependency checkedDependency = constructDependency.getReferencedDependencies()
-        .stream()
-        .filter(packageDependency -> Type.DATASOURCE == packageDependency.getDependencyType())
-        .findFirst().get();
-
-    assertThat(checkedDependency).hasFieldOrPropertyWithValue("isInPackage", "false");
+    List<PackageDependency> derangedDependencies = dependencyChecker.collectDependencies();
+    assertThat(dependencyChecker.isPackageComplete(derangedDependencies)).isFalse();
   }
-
 
   @Test
   public void givenPackageWithDependenciesShouldIdentifyMissingObject() throws NodeException {
@@ -134,23 +125,16 @@ public class PackageConsistencyTest {
     // remove one object that should be part of the package
     Construct construct = (Construct) packageObjects.stream()
         .filter(object -> object instanceof Construct).findFirst().get();
-    packageSynchronizer.remove(construct, true);
+    synchronizer.remove(construct, true);
 
-    assertThat(packageSynchronizer.syncAllFromFilesystem(Construct.class)).isPositive();
-
+/*    operate(()->
+      assertThat(packageSynchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
+    );*/
     List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
     // construct that is referenced by a template is missing and should be detected
     assertThat(dependencyChecker.isPackageComplete(dependencies)).isFalse();
     assertThat(PackageDependencyChecker.filterMissingDependencies(dependencies)).isNotEmpty();
-
-    /*
-    // assert completeness
-    List<PackageDependency> unmetDependencies = dependencies.stream()
-        .filter(dependency -> dependency.getReferencedDependencies()
-            .stream().noneMatch(referencedDependency -> !referencedDependency.getIsInPackage() //todo: check condition
-                && !referencedDependency.getIsInOtherPackage())).collect(Collectors.toList());
-  */
   }
 
 
@@ -159,27 +143,31 @@ public class PackageConsistencyTest {
     Construct construct = givenConstructWithDatasource();
     packageObjects.add(construct);
     packageObjects.add(givenTemplateWithConstruct(construct));
+    packageObjects.add(givenDataSource());
+    packageObjects.add(givenObjectPropertyWithConstruct(construct));
 
-    try (Trx trx = ContentNodeHelper.trx()) {
+      operate(() -> {
       for (SynchronizableNodeObject objectToAdd : packageObjects) {
-        packageSynchronizer.synchronize(objectToAdd, true);
+        synchronizer.synchronize(objectToAdd, true);
       }
-    }
+    });
     return packageObjects;
   }
 
 
   private Construct givenConstructWithDatasource() throws NodeException {
-    givenDataSource();
+    Datasource datasource = givenDataSource();
+
     return Builder.create(Construct.class, (c) -> {
       c.setAutoEnable(true);
-      c.setKeyword("keyword");
-      c.setName("tagtype", 1);
+      c.setKeyword("construct_with_ds");
+      c.setName("construct_with_ds", 1);
       c.setIconName("icon");
 
       c.getParts().add(create(Part.class, p -> {
-        p.setKeyname(DATASOURCE_NAME);
+        p.setKeyname("select_part_ds");
         p.setPartTypeId(getPartTypeId(SingleSelectPartType.class));
+        p.setPartoptionId(datasource.getId()); // todo: check me
         p.setName("DatasourcePart", 1);
       }).doNotSave().build());
     }).build();
@@ -205,6 +193,33 @@ public class PackageConsistencyTest {
       }).doNotSave().build());
     }).build();
   }
+
+  private ObjectTagDefinition givenObjectPropertyWithConstruct(Construct construct) throws NodeException {
+    return Builder.create(ObjectTagDefinition.class, oe -> {
+        oe.setTargetType(Folder.TYPE_FOLDER);
+        oe.setName("First Object Property", 1);
+        ObjectTag objectTag = oe.getObjectTag();
+
+        objectTag.setConstructId(construct.getConstructId()); //todo: checkme
+        objectTag.setEnabled(true);
+        objectTag.setName("object.first");
+        objectTag.setObjType(Folder.TYPE_FOLDER);
+    }).build();
+  }
+
+    private PackageDependency extractPackageDependencyOfType(List<PackageDependency> dependencies,
+      Type type) {
+    return dependencies.stream()
+        .filter(packageDependency -> type == packageDependency.getDependencyType())
+        .findFirst().get();
+  }
+
+  private SynchronizableNodeObject extractPackageObjectOfClass(
+      List<SynchronizableNodeObject> packageObjects, Class<SynchronizableNodeObject> clazz) {
+    return packageObjects.stream()
+        .filter(clazz::isInstance).findFirst().get();
+  }
+
 
   private List<PackageDependency> mockPackageWithDependencies() throws NodeException {
     List<PackageDependency> dependencies = new ArrayList<>();

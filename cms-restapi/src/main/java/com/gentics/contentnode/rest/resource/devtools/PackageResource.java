@@ -113,6 +113,7 @@ public interface PackageResource {
 	/**
 	 * Checks the package for completeness
 	 * @param name name of the package to check
+	 * @param checkAll if true, other packages are also searched
 	 * @param filter filter options. The dependency type can be filtered and only missing references (q=incomplete)
 	 * @param paging the paging parameter
 	 * @return list of dependencies and sub dependencies
@@ -121,6 +122,7 @@ public interface PackageResource {
 	@GET
 	@Path("/package/{name}/check")
 	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name,
+			@QueryParam("checkAll")  @DefaultValue("false")  boolean checkAll,
 			@BeanParam FilterParameterBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception;
 

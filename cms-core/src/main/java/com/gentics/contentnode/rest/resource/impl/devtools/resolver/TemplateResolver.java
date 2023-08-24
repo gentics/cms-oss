@@ -13,11 +13,13 @@ import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class TemplateResolver extends AbstractDependencyResolver {
 
   private static final Class<Template> CLAZZ = Template.class;
 
+  private static final Pattern UUID_REGEX = Pattern.compile("^[0-9a-fA-F]{4}.[0-9]{5}$");
 
   @Override
   public List<PackageDependency> resolve()
@@ -58,6 +60,12 @@ public class TemplateResolver extends AbstractDependencyResolver {
     List<PackageDependency> referencedDependencies = new ArrayList<>();
 
     for (T tag : tags) {
+      // exclude default constructs
+      String constructId = tag.getConstruct().getGlobalId().toString();
+      if (UUID_REGEX.matcher(constructId).matches()) {
+        continue;
+      }
+
       PackageDependency dependency = new PackageDependency.Builder()
           .withType(getSynchronizationType(tag))
           .withGlobalId(tag.getGlobalId() != null ? tag.getGlobalId().toString() : "")
@@ -71,6 +79,8 @@ public class TemplateResolver extends AbstractDependencyResolver {
 
     return referencedDependencies;
   }
+
+
 
   private String resolveUuid(Tag tag) throws NodeException {
     if (tag instanceof ObjectTag) {

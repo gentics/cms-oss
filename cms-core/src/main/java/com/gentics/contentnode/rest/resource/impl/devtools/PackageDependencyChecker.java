@@ -76,7 +76,6 @@ public class PackageDependencyChecker {
    * @param dependencies the list that should be cleaned
    * @return the cleaned dependency list
    */
-
   private static List<PackageDependency> removeEmptyDependencyList(
       List<PackageDependency> dependencies) {
     return dependencies.stream().filter(

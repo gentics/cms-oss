@@ -43,6 +43,11 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
     return packageIsComplete;
   }
 
+  /**
+   * Check if the given dependency is consistent (i.e.: contained in a package)
+   * @param dependency the dependency to check
+   * @return true if all referenced objects are included
+   */
   private boolean isSane(PackageDependency dependency) {
     return (Boolean.FALSE.equals(dependency.getIsInPackage()) || dependency.getIsInPackage() == null)
         &&  (Boolean.FALSE.equals(dependency.getIsInOtherPackage()) || dependency.getIsInPackage() == null);

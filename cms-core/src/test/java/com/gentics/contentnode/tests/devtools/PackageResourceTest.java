@@ -3,6 +3,7 @@ package com.gentics.contentnode.tests.devtools;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
 
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
@@ -251,11 +252,37 @@ public class PackageResourceTest {
 			resource.add(PACKAGE_NAME);
 
 			PackageResource packageResource = new PackageResourceImpl();
-			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME, null, null);
+			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false, null, null);
 
 			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
 			assertThat(packageConsistencyResponse.checkCompleteness()).isTrue();
 		}
+	}
+
+	@Test(expected = EntityNotFoundException.class)
+	public void givenNotExistingPackageShouldThrowException() throws Exception {
+		final String PACKAGE_NAME = "not-existing";
+
+		PackageResource packageResource = new PackageResourceImpl();
+		PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false, null, null);
+
+		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.NOTFOUND);
+	}
+
+	@Test(expected = InvalidRequestException.class)
+	public void givenInvalidFilterShouldThrowException() throws Exception {
+		final String PACKAGE_NAME = "manual";
+		try (Trx trx = new Trx()) {
+			PackageResource resource = new PackageResourceImpl();
+			resource.add(PACKAGE_NAME);
+		}
+
+		PackageResource packageResource = new PackageResourceImpl();
+		PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(
+				PACKAGE_NAME,false, new FilterParameterBean().setQuery("notexisting-filter"),null);
+
+		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(
+				ResponseCode.FAILURE);
 	}
 
 

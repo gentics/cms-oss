@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.SseFeature;
@@ -177,14 +179,22 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}/check")
 	public PackageDependencyList performPackageConsistencyCheck(
 			@PathParam("name") String packageName,
+			@QueryParam("checkAll") boolean checkAll,
 			@BeanParam FilterParameterBean filter,
-			@BeanParam PagingParameterBean paging) throws NodeException {
+			@BeanParam PagingParameterBean paging) throws Exception {
+		getPackage(packageName);
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
 		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 		PackageDependencyList consistencyCheckResult = new PackageDependencyList();
 		consistencyCheckResult.setItems(dependencies);
 		consistencyCheckResult.checkCompleteness();
 
+		if (checkAll) {
+			ConcurrentPackageDependencyChecker.createDependencyCheckerTasks(packageName);
+			ConcurrentPackageDependencyChecker.checkAllPackageDependencies(
+					filterMissingDependencies(dependencies));
+		}
+		// todo: should checkAll and filtering for incomplete be allowed?
 		if (filter != null && filter.query != null) {
 			if ("incomplete".equals(filter.query)) {
 				dependencies = filterMissingDependencies(dependencies);

@@ -1,7 +1,6 @@
 import { MeshGroupHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Group } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { MeshGroupPropertiesMode } from '../mesh-group-properties/mesh-group-properties.component';
@@ -32,7 +31,7 @@ export class MeshGroupModal extends BaseModal<Group> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.group, createNestedControlValidator());
+        this.form = new FormControl(this.group);
     }
 
     buttonCreateEntityClicked(): void {

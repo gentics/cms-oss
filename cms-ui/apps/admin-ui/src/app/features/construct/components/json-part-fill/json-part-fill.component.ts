@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { AbstractControl, UntypedFormControl } from '@angular/forms';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { TagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
@@ -76,7 +75,7 @@ export class JsonPartFillComponent extends BaseFormElementComponent<TagPartPrope
     }
 
     protected onValueChange(): void {
-        if (this.control && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if (this.control) {
             this.control.setValue(JSON.stringify(this.value || {}));
         }
     }

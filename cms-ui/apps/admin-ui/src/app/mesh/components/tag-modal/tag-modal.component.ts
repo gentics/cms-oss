@@ -1,7 +1,6 @@
 import { TagHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Tag } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { TagPropertiesMode } from '../tag-properties/tag-properties.component';
@@ -38,7 +37,7 @@ export class TagModal extends BaseModal<Tag> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.tag || {}, createNestedControlValidator());
+        this.form = new FormControl(this.tag || {});
     }
 
     buttonCreateEntityClicked(): void {

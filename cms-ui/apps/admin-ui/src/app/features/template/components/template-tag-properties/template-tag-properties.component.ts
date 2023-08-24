@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } 
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { Raw, TagEditorChange, TagType, TemplateTag } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { environment } from '../../../../../environments/environment';
 
 export enum TemplateTagPropertiesMode {
@@ -16,7 +16,10 @@ export enum TemplateTagPropertiesMode {
     templateUrl: './template-tag-properties.component.html',
     styleUrls: ['./template-tag-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(TemplateTagPropertiesComponent)],
+    providers: [
+        generateFormProvider(TemplateTagPropertiesComponent),
+        generateValidatorProvider(TemplateTagPropertiesComponent),
+    ],
 })
 export class TemplateTagPropertiesComponent extends BasePropertiesComponent<TemplateTag> implements OnInit {
 

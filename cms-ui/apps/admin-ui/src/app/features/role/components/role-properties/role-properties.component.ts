@@ -3,14 +3,17 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChange } fr
 import { FormControl, FormGroup, ValidatorFn } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, Language, Role } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-role-properties',
     templateUrl: './role-properties.component.html',
     styleUrls: ['./role-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(RolePropertiesComponent)],
+    providers: [
+        generateFormProvider(RolePropertiesComponent),
+        generateValidatorProvider(RolePropertiesComponent),
+    ],
 })
 export class RolePropertiesComponent extends BasePropertiesComponent<Role> implements OnChanges {
 

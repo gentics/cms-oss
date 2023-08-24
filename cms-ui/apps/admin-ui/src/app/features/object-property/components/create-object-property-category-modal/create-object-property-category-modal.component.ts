@@ -1,7 +1,6 @@
 import { ObjectPropertyCategoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { ObjectPropertyCategory } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { ObjectPropertyCategoryPropertiesMode } from '../object-property-category-properties/object-property-category-properties.component';
@@ -27,7 +26,7 @@ export class CreateObjectPropertyCategoryModalComponent extends BaseModal<Object
         // instantiate form
         this.form = new UntypedFormControl({
             nameI18n: null,
-        }, createNestedControlValidator());
+        });
     }
 
     /**

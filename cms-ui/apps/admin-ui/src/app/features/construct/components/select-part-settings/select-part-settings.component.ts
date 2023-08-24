@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { DataSource, IndexById, Raw, SelectSetting } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -11,7 +11,10 @@ import { Subscription } from 'rxjs';
     templateUrl: './select-part-settings.component.html',
     styleUrls: ['./select-part-settings.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(SelectPartSettingsComponent)],
+    providers: [
+        generateFormProvider(SelectPartSettingsComponent),
+        generateValidatorProvider(SelectPartSettingsComponent),
+    ],
 })
 export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectSetting> implements OnChanges, OnDestroy {
 
@@ -62,7 +65,7 @@ export class SelectPartSettingsComponent extends BasePropertiesComponent<SelectS
     }
 
     protected override onValueChange(): void {
-        if (!this.form || (this.value as any) === CONTROL_INVALID_VALUE) {
+        if (!this.form) {
             return;
         }
         // If the datasourceId has been changed, we need to reload the entries

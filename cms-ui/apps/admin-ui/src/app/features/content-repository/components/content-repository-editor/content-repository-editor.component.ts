@@ -11,7 +11,6 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { ContentRepositoryType, Feature } from '@gentics/cms-models';
 import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
@@ -61,7 +60,7 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
         this.fgProperties = new UntypedFormControl({
             ...this.entity,
             elasticsearch: this.entity?.elasticsearch ? JSON.stringify(this.entity.elasticsearch, null, 4) : '',
-        }, createNestedControlValidator());
+        });
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
 
         this.tabHandles[this.Tabs.TAGMAP] = NULL_FORM_TAB_HANDLE;

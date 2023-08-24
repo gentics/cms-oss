@@ -1,4 +1,4 @@
-<div class="label">{{ 'mesh.schema_fields' | i18n }}</div>
+<div *ngIf="label" class="label">{{ label }}</div>
 
 <gtx-sortable-list
     *ngIf="form"

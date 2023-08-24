@@ -2,14 +2,17 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-language-properties',
     templateUrl: './language-properties.component.html',
     styleUrls: ['./language-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(LanguagePropertiesComponent)],
+    providers: [
+        generateFormProvider(LanguagePropertiesComponent),
+        generateValidatorProvider(LanguagePropertiesComponent),
+    ],
 })
 export class LanguagePropertiesComponent extends BasePropertiesComponent<Language> {
 

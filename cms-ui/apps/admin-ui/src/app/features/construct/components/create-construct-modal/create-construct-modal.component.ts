@@ -2,7 +2,6 @@ import { ConstructHandlerService, I18nNotificationService, LanguageHandlerServic
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -33,7 +32,7 @@ export class CreateConstructModalComponent extends BaseModal<boolean> implements
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl(null, createNestedControlValidator());
+        this.form = new UntypedFormControl(null);
 
         // get available system languages for i18n-properties
         this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();

@@ -7,7 +7,6 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import {
     AccessControlledType,
     AnyModelType,
@@ -248,7 +247,7 @@ export class RoleDetailComponent extends BaseDetailComponent<'role', RoleOperati
      * Initialize form 'Properties'
      */
     protected fgPropertiesInit(): void {
-        this.fgProperties = new UntypedFormControl(cloneDeep(this.currentEntity), createNestedControlValidator());
+        this.fgProperties = new UntypedFormControl(cloneDeep(this.currentEntity));
         this.fgPropertiesSaveDisabled$ = createFormSaveDisabledTracker(this.fgProperties);
     }
 

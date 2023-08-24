@@ -1,10 +1,9 @@
 import { MicroschemaHandlerService, SchemaHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
-import { Schema } from '@gentics/mesh-models';
-import { BaseModal } from '@gentics/ui-core';
+import { EditableSchemaProperties, ElasticSearchSettings, Schema, SchemaField } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { BaseModal, createJsonValidator } from '@gentics/ui-core';
 import { SchemaPropertiesMode } from '../schema-properties/schema-properties.component';
 
 @Component({
@@ -25,8 +24,12 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
 
     public schemaNames: string[];
     public microschemaNames: string[];
+    public fieldNames: string[];
 
-    public form: FormControl;
+    public fgProperties: FormControl<EditableSchemaProperties>;
+    public fgElasticsearch: FormControl<ElasticSearchSettings>;
+    public fgFields: FormControl<SchemaField[]>;
+
     public namesLoaded = false;
 
     constructor(
@@ -40,7 +43,14 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
 
     ngOnInit(): void {
         this.loadNames();
-        this.form = new FormControl(this.schema || {}, createNestedControlValidator());
+        this.fieldNames = (this.schema?.fields || []).map(field => field.name);
+        this.fgProperties = new FormControl(this.schema || {} as any);
+        this.fgElasticsearch = new FormControl(this.schema?.elasticsearch, createJsonValidator());
+        this.fgFields = new FormControl(this.schema?.fields || []);
+    }
+
+    updateFieldNames(names: string[]): void {
+        this.fieldNames = names;
     }
 
     async loadNames(): Promise<void> {
@@ -57,8 +67,15 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
     }
 
     buttonCreateEntityClicked(): void {
-        const val = this.form.value;
-        this.form.disable();
+        const val: EditableSchemaProperties = {
+            ...this.fgProperties.value,
+            elasticsearch: this.fgElasticsearch.value,
+            fields: this.fgFields.value,
+        };
+
+        this.fgProperties.disable();
+        this.fgElasticsearch.disable();
+        this.fgFields.disable();
         this.changeDetector.markForCheck();
 
         const op = this.mode === SchemaPropertiesMode.CREATE
@@ -68,7 +85,9 @@ export class SchemaModal extends BaseModal<Schema> implements OnInit {
         op.then(res => {
             this.closeFn(res);
         }).catch(() => {
-            this.form.enable();
+            this.fgProperties.enable();
+            this.fgElasticsearch.enable();
+            this.fgFields.enable();
             this.changeDetector.markForCheck();
         });
     }

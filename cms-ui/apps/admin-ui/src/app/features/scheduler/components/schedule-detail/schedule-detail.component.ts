@@ -5,7 +5,6 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { NormalizableEntityType, Raw, ScheduleBO, SingleInstancePermissionType } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
 import { NGXLogger } from 'ngx-logger';
@@ -140,7 +139,7 @@ export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', Sch
         if (this.fgProperties) {
             this.fgProperties.setValue(this.currentEntity);
         } else {
-            this.fgProperties = new UntypedFormControl(this.currentEntity, [Validators.required, createNestedControlValidator()]);
+            this.fgProperties = new UntypedFormControl(this.currentEntity, Validators.required);
             this.fgPropertiesSaveDisabled$ = combineLatest([
                 this.currentEntity$.pipe(
                     map(item => hasInstancePermission(item, SingleInstancePermissionType.EDIT)),

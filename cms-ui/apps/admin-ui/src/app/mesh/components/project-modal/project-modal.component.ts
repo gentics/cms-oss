@@ -1,7 +1,6 @@
 import { ProjectHandlerService } from '@admin-ui/mesh/providers/project-handler/project-handler.service';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Project } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { ProjectPropertiesMode } from '../project-properties/project-properties.component';
@@ -32,7 +31,7 @@ export class ProjectModal extends BaseModal<Project> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.project || {}, createNestedControlValidator());
+        this.form = new FormControl(this.project || {});
     }
 
     buttonCreateEntityClicked(): void {

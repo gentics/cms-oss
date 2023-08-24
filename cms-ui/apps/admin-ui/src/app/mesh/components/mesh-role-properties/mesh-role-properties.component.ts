@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableRoleProperties } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum MeshRolePropertiesMode {
     CREATE,
@@ -14,7 +14,10 @@ export enum MeshRolePropertiesMode {
     templateUrl: './mesh-role-properties.component.html',
     styleUrls: ['./mesh-role-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(MeshRolePropertiesComponent)],
+    providers: [
+        generateFormProvider(MeshRolePropertiesComponent),
+        generateValidatorProvider(MeshRolePropertiesComponent),
+    ],
 })
 export class MeshRolePropertiesComponent extends BasePropertiesComponent<EditableRoleProperties> {
 

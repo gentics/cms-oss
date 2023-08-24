@@ -1,17 +1,20 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
-import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
+import { AbstractControl, ValidationErrors, Validator } from '@angular/forms';
+import { BaseFormElementComponent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-password-confirm-input',
     templateUrl: './password-confirm-input.component.html',
     styleUrls: ['./password-confirm-input.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(PasswordConfirmInputComponent)],
+    providers: [
+        generateFormProvider(PasswordConfirmInputComponent),
+        generateValidatorProvider(PasswordConfirmInputComponent),
+    ],
 })
 export class PasswordConfirmInputComponent
-    extends BaseFormElementComponent<string | typeof CONTROL_INVALID_VALUE>
-    implements OnChanges {
+    extends BaseFormElementComponent<string>
+    implements OnChanges, Validator {
 
     @Input()
     public allowVisibilty = true;
@@ -50,6 +53,15 @@ export class PasswordConfirmInputComponent
         }
     }
 
+    validate(control: AbstractControl<any, any>): ValidationErrors {
+        if (this.valid) {
+            return null;
+        }
+        return {
+            confirmationNoMatch: true,
+        };
+    }
+
     updatePassword(value: string): void {
         this.actualPassword = value;
         this.triggerTouch();
@@ -71,16 +83,10 @@ export class PasswordConfirmInputComponent
 
     checkAndTrigger(): void {
         this.valid = this.actualPassword === '' || this.actualPassword === this.confirmationValue;
-        this.triggerChange(this.valid
-            ? this.actualPassword
-            : CONTROL_INVALID_VALUE,
-        );
+        this.triggerChange(this.actualPassword);
     }
 
     protected onValueChange(): void {
-        if (this.value === CONTROL_INVALID_VALUE) {
-            return;
-        }
         this.actualPassword = this.value || '';
     }
 }

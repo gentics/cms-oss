@@ -1,9 +1,9 @@
-import { whitelistValidator } from '@admin-ui/common';
+import { createWhitelistValidator } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FieldExtractOptions, FieldType, SchemaField } from '@gentics/mesh-models';
-import { FormProperties, createJsonValidator, generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 import { pick } from 'lodash-es';
 
 export enum SchemaFieldPropertiesType {
@@ -28,7 +28,10 @@ const MicroschemaListFieldType = pick(FieldType, ['BOOLEAN', 'DATE', 'HTML', 'NO
     templateUrl: './schema-field-properties.component.html',
     styleUrls: ['./schema-field-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(SchemaFieldPropertiesComponent)],
+    providers: [
+        generateFormProvider(SchemaFieldPropertiesComponent),
+        generateValidatorProvider(SchemaFieldPropertiesComponent),
+    ],
 })
 export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<SchemaField> implements OnChanges {
 
@@ -70,7 +73,7 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
         }
 
         if (changes.ownName && !changes.ownName.firstChange && this.form) {
-            this.updateSelectedOwnName(changes.ownName.previousValue, this.ownName);
+            this.form.controls.allow.updateValueAndValidity();
         }
     }
 
@@ -82,15 +85,26 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
             ]),
             type: new FormControl(this.value?.type, [
                 Validators.required,
-                whitelistValidator(() => this.validTypes),
+                createWhitelistValidator(() => this.validTypes),
             ]),
             listType: new FormControl(this.value?.listType, [
                 Validators.required,
-                whitelistValidator(() => this.validListTypes),
+                createWhitelistValidator(() => this.validListTypes),
             ]),
             label: new FormControl(this.value?.label || ''),
             required: new FormControl(this.value?.required ?? false),
-            allow: new FormControl(this.value?.allow || []),
+            allow: new FormControl(this.value?.allow || [], createWhitelistValidator(() => {
+                switch (this.effectiveType) {
+                    case FieldType.NODE:
+                        return [...(this.schemaNames || []), this.ownName];
+                    case FieldType.MICRONODE:
+                        return [...(this.microschemaNames || []), this.ownName];
+
+                    // Disable this validator otherwise
+                    default:
+                        return null;
+                }
+            })),
             elasticsearch: new FormControl(this.value?.elasticsearch || {}, createJsonValidator()),
             checkServiceUrl: new FormControl(this.value?.checkServiceUrl || ''),
             extract: new FormGroup<FormProperties<FieldExtractOptions>>({
@@ -110,29 +124,5 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
 
     protected assembleValue(value: SchemaField): SchemaField {
         return value;
-    }
-
-    protected updateSelectedOwnName(oldName: string, newName: string): void {
-        // If no name was present, we don't need to do anything.
-        if (oldName == null || oldName.length === 0) {
-            return;
-        }
-        const ctl = this.form.controls.allow;
-        // Get a copy
-        const val = (ctl.value || []).slice(0);
-        let didChange = false;
-        // Remove the old name
-        const idx = val.findIndex(selected => selected === oldName);
-        if (idx > -1) {
-            val.splice(idx, 1);
-            didChange = true;
-        }
-        if (didChange && newName != null && newName.length > 0) {
-            val.push(newName);
-        }
-
-        if (didChange) {
-            ctl.setValue(val);
-        }
     }
 }

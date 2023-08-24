@@ -1,7 +1,6 @@
 import { I18nService, TemplateOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl, UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Node, Raw, Tag, Template, TemplateBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { cloneDeep, pick } from 'lodash-es';
@@ -52,7 +51,7 @@ export class CopyTemplateModal extends BaseModal<TemplateBO<Raw>> implements OnI
         const suffix = this.i18n.instant('common.copy_suffix');
         initialValue.name += ` ${suffix}`;
 
-        this.form = new UntypedFormControl(initialValue, createNestedControlValidator());
+        this.form = new UntypedFormControl(initialValue);
     }
 
     async createCopy(): Promise<void> {

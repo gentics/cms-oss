@@ -1,16 +1,6 @@
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl } from '@angular/forms';
 
 export const CONTROL_INVALID_VALUE = Symbol();
-
-export function createNestedControlValidator(): ValidatorFn {
-    return (control) => {
-        if (control.value === CONTROL_INVALID_VALUE) {
-            return { invalidValue: true };
-        }
-
-        return null;
-    }
-}
 
 export interface MultiValueValidityState {
     valid: boolean;
@@ -21,7 +11,7 @@ export interface MultiValueValidityState {
 
 export type ValidationFunction = (control: AbstractControl) => null | MultiValueValidityState | ValidityState;
 
-const defaultFlags = 'u';
+const DEFAULT_FLAGS = 'u';
 const defaultValidity: ValidityState = {
     valid: false,
     badInput: false,
@@ -49,7 +39,7 @@ const defaultValidity: ValidityState = {
  * @param strict If it should invalidate if there's a non-string value.
  * @returns `null` if the control is valid; otherwise an error object with the found validity issues.
  */
- export function createPatternValidator(
+export function createPatternValidator(
     pattern: string | RegExp,
     allowNull: boolean = false,
     strict: boolean = true,
@@ -67,7 +57,7 @@ const defaultValidity: ValidityState = {
             if (!pattern.endsWith('$')) {
                 pattern += '$';
             }
-            pattern = new RegExp(pattern, defaultFlags);
+            pattern = new RegExp(pattern, DEFAULT_FLAGS);
         } catch (e) {
             console.error(e);
             return null;
@@ -75,7 +65,7 @@ const defaultValidity: ValidityState = {
     }
 
     return (control) => {
-        let value = control.value;
+        const value = control.value;
 
         const check: (value: any) => ValidityState | null = (element) => {
             if (element == null) {
@@ -88,7 +78,8 @@ const defaultValidity: ValidityState = {
                 if (strict) {
                     return { ...defaultValidity, badInput: true };
                 }
-                element = '' + value;
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                element = `${value}`;
             }
             if (element === '') {
                 if (allowNull) {

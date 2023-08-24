@@ -1,5 +1,5 @@
 import {
-    blacklistValidator,
+    createBlacklistValidator,
     createI18nRequiredValidator,
 } from '@admin-ui/common';
 import {
@@ -12,7 +12,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     CmsI18nValue,
     DataSource,
@@ -28,7 +28,7 @@ import {
     TagPartValidatorId,
     TagPropertyType,
 } from '@gentics/cms-models';
-import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export interface TagPartPropertiesFormData {
     globalId?: string;
@@ -125,7 +125,10 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     templateUrl: './construct-part-properties.component.html',
     styleUrls: ['./construct-part-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ConstructPartPropertiesComponent)],
+    providers: [
+        generateFormProvider(ConstructPartPropertiesComponent),
+        generateValidatorProvider(ConstructPartPropertiesComponent),
+    ],
 })
 export class ConstructPartPropertiesComponent
     extends BasePropertiesComponent<TagPartPropertiesFormData>
@@ -199,7 +202,7 @@ export class ConstructPartPropertiesComponent
             // text
             keyword: new UntypedFormControl(this.value?.keyword ?? null, [
                 Validators.required,
-                blacklistValidator(() => this.keywordBlacklist),
+                createBlacklistValidator(() => this.keywordBlacklist),
             ]),
             // i18n Object
             nameI18n: new UntypedFormControl({}, createI18nRequiredValidator(
@@ -217,10 +220,10 @@ export class ConstructPartPropertiesComponent
                 Validators.required,
                 Validators.min(1),
                 Validators.max(999),
-                blacklistValidator(() => this.orderBlacklist),
+                createBlacklistValidator(() => this.orderBlacklist),
             ]),
             // select
-            typeId: new UntypedFormControl(null, [Validators.required, blacklistValidator(() => REMOVED_CONSTRUCT_PART_TYPES)]),
+            typeId: new UntypedFormControl(null, [Validators.required, createBlacklistValidator(() => REMOVED_CONSTRUCT_PART_TYPES)]),
 
             // checkbox
             editable: new UntypedFormControl(false),
@@ -236,7 +239,7 @@ export class ConstructPartPropertiesComponent
             // text
             externalEditorUrl: new UntypedFormControl(null),
             // Tag-Editor
-            defaultProperty: new UntypedFormControl(null, createNestedControlValidator()),
+            defaultProperty: new UntypedFormControl(null),
 
             // ///// TYPE-DEPENDANT:
 
@@ -248,11 +251,11 @@ export class ConstructPartPropertiesComponent
 
             // ///// ONLY for Select inputs
             // // select-part-settings
-            selectSettings: new UntypedFormControl(null, createNestedControlValidator()),
+            selectSettings: new UntypedFormControl(null),
 
             // ///// ONLY for Overview inputs
             // // overview-part-settings
-            overviewSettings: new UntypedFormControl(null, createNestedControlValidator()),
+            overviewSettings: new UntypedFormControl(null),
         });
     }
 
@@ -338,27 +341,5 @@ export class ConstructPartPropertiesComponent
         }
 
         return output as TagPartPropertiesFormData;
-    }
-
-    protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                keyword: this.value?.keyword ?? null,
-                nameI18n: this.value?.nameI18n ?? null,
-                partOrder: this.value?.partOrder ?? null,
-                typeId: this.value?.typeId ?? null,
-                editable: this.value?.editable ?? null,
-                mandatory: this.value?.mandatory ?? null,
-                hidden: this.value?.hidden ?? null,
-                liveEditable: this.value?.liveEditable ?? null,
-                hideInEditor: this.value?.hideInEditor ?? null,
-                externalEditorUrl: this.value?.externalEditorUrl ?? null,
-                defaultProperty: this.value?.defaultProperty ?? null,
-                markupLanguageId: this.value?.markupLanguageId ?? null,
-                regex: this.value?.regex ?? null,
-                selectSettings: this.value?.selectSettings ?? null,
-                overviewSettings: this.value?.overviewSettings ?? null,
-            });
-        }
     }
 }

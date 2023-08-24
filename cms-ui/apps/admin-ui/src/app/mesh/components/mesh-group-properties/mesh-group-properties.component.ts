@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableGroupProperties } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum MeshGroupPropertiesMode {
     CREATE,
@@ -14,7 +14,10 @@ export enum MeshGroupPropertiesMode {
     templateUrl: './mesh-group-properties.component.html',
     styleUrls: ['./mesh-group-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(MeshGroupPropertiesComponent)],
+    providers: [
+        generateFormProvider(MeshGroupPropertiesComponent),
+        generateValidatorProvider(MeshGroupPropertiesComponent),
+    ],
 })
 export class MeshGroupPropertiesComponent extends BasePropertiesComponent<EditableGroupProperties> {
 

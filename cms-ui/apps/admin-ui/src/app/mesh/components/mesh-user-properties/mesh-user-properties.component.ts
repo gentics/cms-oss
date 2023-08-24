@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, createNestedControlValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { UserUpdateRequest } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export enum MeshUserPropertiesMode {
     CREATE = 'create',
@@ -14,7 +14,10 @@ export enum MeshUserPropertiesMode {
     templateUrl: './mesh-user-properties.component.html',
     styleUrls: ['./mesh-user-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(MeshUserPropertiesComponent)],
+    providers: [
+        generateFormProvider(MeshUserPropertiesComponent),
+        generateValidatorProvider(MeshUserPropertiesComponent),
+    ],
 })
 export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpdateRequest> implements OnChanges {
 
@@ -54,10 +57,7 @@ export class MeshUserPropertiesComponent extends BasePropertiesComponent<UserUpd
             password: new FormControl({
                 value: this.value?.password || '',
                 disabled: this.mode !== MeshUserPropertiesMode.CREATE,
-            }, [
-                Validators.required,
-                createNestedControlValidator(),
-            ]),
+            }, Validators.required),
         });
 
         return out;

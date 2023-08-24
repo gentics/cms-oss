@@ -1,7 +1,6 @@
 import { BO_DISPLAY_NAME, BO_ID, BO_NODE_ID, BO_PERMISSIONS, ContentItem, ContentItemBO, PickableEntity, SelectableType } from '@admin-ui/common';
 import { FileOperations, FolderOperations, FormOperations, ImageOperations, PageOperations, TemplateOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import {
     CmsFormTagPartProperty,
     EntityIdType,
@@ -76,10 +75,6 @@ export class GenericUrlPartFillComponent
     }
 
     protected onValueChange(): void {
-        if ((this.value as any) === CONTROL_INVALID_VALUE){
-            return;
-        }
-
         if (this.value == null) {
             this.loadedEntity = null;
             return;

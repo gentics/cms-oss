@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableMicroschemaProperties } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum MicroschemaPropertiesMode {
     CREATE,
@@ -14,7 +14,10 @@ export enum MicroschemaPropertiesMode {
     templateUrl: './microschema-properties.component.html',
     styleUrls: ['./microschema-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(MicroschemaPropertiesComponent)],
+    providers: [
+        generateFormProvider(MicroschemaPropertiesComponent),
+        generateValidatorProvider(MicroschemaPropertiesComponent),
+    ],
 })
 export class MicroschemaPropertiesComponent extends BasePropertiesComponent<EditableMicroschemaProperties> {
 

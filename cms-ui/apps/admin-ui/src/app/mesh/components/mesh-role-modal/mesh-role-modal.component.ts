@@ -1,7 +1,6 @@
 import { MeshRoleHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Role } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { MeshRolePropertiesMode } from '../mesh-role-properties/mesh-role-properties.component';
@@ -32,7 +31,7 @@ export class MeshRoleModal extends BaseModal<Role> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.role, createNestedControlValidator());
+        this.form = new FormControl(this.role);
     }
 
     buttonCreateEntityClicked(): void {

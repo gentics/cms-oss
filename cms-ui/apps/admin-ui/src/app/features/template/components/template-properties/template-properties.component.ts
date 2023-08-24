@@ -1,9 +1,9 @@
 import { MarkupLanguageDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { IndexById, MarkupLanguage, Node, Raw, TagEditorChange, TemplateBO } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum TemplatePropertiesMode {
     CREATE = 'create',
@@ -15,7 +15,10 @@ export enum TemplatePropertiesMode {
     templateUrl: './template-properties.component.html',
     styleUrls: ['./template-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(TemplatePropertiesComponent)],
+    providers: [
+        generateFormProvider(TemplatePropertiesComponent),
+        generateValidatorProvider(TemplatePropertiesComponent),
+    ],
 })
 export class TemplatePropertiesComponent extends BasePropertiesComponent<TemplateBO> implements OnInit {
 
@@ -106,7 +109,7 @@ export class TemplatePropertiesComponent extends BasePropertiesComponent<Templat
     }
 
     protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if (this.form) {
             this.form.patchValue({
                 id: this.value?.id || null,
                 name: this.value?.name || '',

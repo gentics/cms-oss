@@ -5,7 +5,6 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { ObjectPropertyCategory } from '@gentics/cms-models';
 import { ObjectPropertyCategoryTableLoaderService } from '../../providers';
 import { ObjectpropertyPropertiesMode } from '../object-property-properties/object-property-properties.component';
@@ -41,7 +40,7 @@ export class ObjectPropertyCategoryEditorComponent extends BaseEntityEditorCompo
     }
 
     protected initializeTabHandles(): void {
-        this.fgProperties = new FormControl(this.entity, createNestedControlValidator());
+        this.fgProperties = new FormControl(this.entity);
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
     }
 

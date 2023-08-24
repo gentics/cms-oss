@@ -1,7 +1,6 @@
 import { MicroschemaHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Microschema, Schema } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { MicroschemaPropertiesMode } from '../microschema-properties/microschema-properties.component';
@@ -32,7 +31,7 @@ export class MicroschemaModal extends BaseModal<Schema> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.microschema || {}, createNestedControlValidator());
+        this.form = new FormControl(this.microschema || {});
     }
 
     buttonCreateEntityClicked(): void {

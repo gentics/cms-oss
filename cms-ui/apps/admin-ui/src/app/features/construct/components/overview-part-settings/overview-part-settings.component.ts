@@ -2,14 +2,17 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { ControlValueAccessor, FormControl, FormGroup } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { ListType, OverviewSetting, SelectType } from '@gentics/cms-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-overview-part-settings',
     templateUrl: './overview-part-settings.component.html',
     styleUrls: ['./overview-part-settings.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(OverviewPartSettingsComponent)],
+    providers: [
+        generateFormProvider(OverviewPartSettingsComponent),
+        generateValidatorProvider(OverviewPartSettingsComponent),
+    ],
 })
 export class OverviewPartSettingsComponent
     extends BasePropertiesComponent<OverviewSetting>

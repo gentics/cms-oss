@@ -18,7 +18,6 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { AccessControlledType, DataSource, DataSourceEntryListUpdateRequest, GcmsPermission, TypePermissions } from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -66,7 +65,7 @@ export class DataSourceEditorComponent extends BaseEntityEditorComponent<Editabl
     }
 
     protected initializeTabHandles(): void {
-        this.fgProperties = new FormControl(this.entity, createNestedControlValidator());
+        this.fgProperties = new FormControl(this.entity);
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
 
         this.tabHandles[this.Tabs.ENTRIES] = {

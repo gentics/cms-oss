@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, ScheduleTask } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ScheduleTaskPropertiesMode {
     UPDATE = 'update',
@@ -14,7 +14,10 @@ export enum ScheduleTaskPropertiesMode {
     templateUrl: './schedule-task-properties.component.html',
     styleUrls: ['./schedule-task-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ScheduleTaskPropertiesComponent)],
+    providers: [
+        generateFormProvider(ScheduleTaskPropertiesComponent),
+        generateValidatorProvider(ScheduleTaskPropertiesComponent),
+    ],
 })
 export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<ScheduleTask> {
 
@@ -37,15 +40,5 @@ export class ScheduleTaskPropertiesComponent extends BasePropertiesComponent<Sch
 
     protected override assembleValue(value: ScheduleTask<AnyModelType>): ScheduleTask<AnyModelType> {
         return value;
-    }
-
-    protected override onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.patchValue({
-                name: this.value?.name || '',
-                description: this.value?.description || '',
-                command: this.value?.command || '',
-            });
-        }
     }
 }

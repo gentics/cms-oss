@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { FormArray, FormControl } from '@angular/forms';
-import { BasePropertiesListComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { BasePropertiesListComponent } from '@gentics/cms-components';
 import { SchemaField } from '@gentics/mesh-models';
-import { ISortableEvent, generateFormProvider } from '@gentics/ui-core';
+import { ISortableEvent, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
 @Component({
@@ -10,11 +10,17 @@ import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-fie
     templateUrl: './schema-fields-manager.component.html',
     styleUrls: ['./schema-fields-manager.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(SchemaFieldsManagerComponent)],
+    providers: [
+        generateFormProvider(SchemaFieldsManagerComponent),
+        generateValidatorProvider(SchemaFieldsManagerComponent),
+    ],
 })
 export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<SchemaField> {
 
     public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
+
+    @Input()
+    public label: string;
 
     @Input()
     public ownName: string;
@@ -25,28 +31,17 @@ export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<Sc
     @Input()
     public microschemaNames: string[];
 
-    protected override createForm(): FormArray<FormControl<SchemaField>> {
-        const form = super.createForm();
+    @Output()
+    public rawFieldNames = new EventEmitter<string[]>();
 
-        form.setValidators((ctl) => {
-            const tmp = ctl.value;
-            if (tmp === CONTROL_INVALID_VALUE) {
-                return { invalidValue: true };
-            }
-            if (Array.isArray(tmp)) {
-                if (tmp.some(innerVal => innerVal === CONTROL_INVALID_VALUE)) {
-                    return { invalidValue: true };
-                }
-            }
-
-            return null;
-        });
-
-        return form;
+    protected override onValueTrigger(_value: SchemaField[]): void {
+        const fields = this.form.getRawValue() || [];
+        const names = fields.map(field => field.name);
+        this.rawFieldNames.emit(names);
     }
 
     protected createControl(value?: SchemaField): FormControl<SchemaField> {
-        return new FormControl(value || {} as any, createNestedControlValidator());
+        return new FormControl(value || {} as any);
     }
 
     protected configureForm(value: SchemaField[], loud?: boolean): void {

@@ -1,15 +1,14 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormArray, FormControl } from '@angular/forms';
+import { AbstractControl, FormArray, FormControl, ValidationErrors, Validator } from '@angular/forms';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { isEqual } from 'lodash';
-import { Subscription, combineLatest } from 'rxjs';
+import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
-import { CONTROL_INVALID_VALUE } from '../../../common';
 
 const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
 
 @Component({ template: '' })
-export abstract class BasePropertiesListComponent<T> extends BaseFormElementComponent<T[]> implements OnInit, OnChanges, OnDestroy {
+export abstract class BasePropertiesListComponent<T> extends BaseFormElementComponent<T[]> implements OnInit, OnChanges, OnDestroy, Validator {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -61,7 +60,8 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
      */
     protected delayedSetup = false;
 
-    protected formSubscription: Subscription;
+    /** The control to which this component is bound to. */
+    protected boundControl: AbstractControl<any, any>;
 
     constructor(changeDetector: ChangeDetectorRef) {
         super(changeDetector);
@@ -91,10 +91,6 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
 
     public ngOnDestroy(): void {
         super.ngOnDestroy();
-
-        if (this.formSubscription) {
-            this.formSubscription.unsubscribe();
-        }
     }
 
     /**
@@ -121,11 +117,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
     }
 
     protected setupFormSubscription(): void {
-        if (this.formSubscription) {
-            this.formSubscription.unsubscribe();
-        }
-
-        this.formSubscription = combineLatest([
+        this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
                 tap(value => this.configureForm(value)),
@@ -137,29 +129,25 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
             filter(() => this.hasSetInitialDisabled && (this.value as any) !== INIVIAL_UNSET_VALUE),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
-            map(([value, status]) => {
-                if (status === 'VALID') {
-                    return this.assembleValue(value);
-                }
-                return CONTROL_INVALID_VALUE;
-            }),
+            map(([value]) => this.assembleValue(value)),
             distinctUntilChanged(isEqual),
-            // debounceTime(100),
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
-            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(value, this.value))) {
+            if (!this.initialValue && !isEqual(value, this.value)) {
                 this.triggerChange(value);
+                this.onValueTrigger(value);
             }
             // Set it, in case that the parent-component has no binding for it
             this.initialValue = false;
             this.initialValueChange.emit(false);
-        });
-    }
+        }));
 
-    // Override to fix the typings
-    override triggerChange(value: T[] | typeof CONTROL_INVALID_VALUE): void {
-        super.triggerChange(value as any);
+        this.subscriptions.push(this.form.statusChanges.subscribe(() => {
+            if (this.boundControl) {
+                this.boundControl.updateValueAndValidity();
+            }
+        }));
     }
 
     protected abstract createControl(value?: T): FormControl<T>;
@@ -182,6 +170,27 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
 
     /** Hook which is called whenever `initialValue` is getting reset to `true`. */
     protected onValueReset(): void {}
+
+    /** Hook which is called whenever the value has been dispatched to the parent. */
+    protected onValueTrigger(value: T[]): void {}
+
+    /** Validation implementation which simply forwards this forms validation state */
+    public validate(control: AbstractControl<any, any>): ValidationErrors {
+        this.boundControl = control;
+
+        if (this.form.valid) {
+            return null;
+        }
+
+        const err: ValidationErrors = {};
+        this.form.controls.forEach((ctl, index) => {
+            if (ctl.invalid) {
+                err[index] = ctl.errors;
+            }
+        });
+
+        return { propertiesError: err };
+    }
 
     /**
      * Function which creates a new form (at initialization) for this component.
@@ -207,7 +216,7 @@ export abstract class BasePropertiesListComponent<T> extends BaseFormElementComp
      * Basic implementation which will simply put the value into the form.
      */
     protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if (this.form) {
             if (this.value?.length === this.form.length) {
                 this.form.setValue(this.value);
             } else {

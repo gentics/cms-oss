@@ -1,7 +1,6 @@
 import { ConstructPartPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, TagPart } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -36,7 +35,7 @@ export class CreateConstructPartModalComponent extends BaseModal<TagPart> implem
     ngOnInit(): void {
         this.form = new UntypedFormControl({
             partOrder: this.defaultOrder,
-        }, createNestedControlValidator());
+        });
     }
 
     buttonCreateEntityClicked(): void {

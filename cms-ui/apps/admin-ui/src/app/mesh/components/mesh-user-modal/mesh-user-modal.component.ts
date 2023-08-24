@@ -1,10 +1,9 @@
 import { MeshUserHandlerService } from '@admin-ui/mesh/providers';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { User } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
-import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { MeshUserPropertiesMode } from '../mesh-user-properties/mesh-user-properties.component';
 
 @Component({
@@ -35,7 +34,7 @@ export class MeshUserModal extends BaseModal<User> implements OnInit {
 
     ngOnInit(): void {
         this.name = this.user == null ? '' : getUserDisplayName(this.user);
-        this.form = new FormControl(this.user, createNestedControlValidator());
+        this.form = new FormControl(this.user);
     }
 
     buttonCreateEntityClicked(): void {

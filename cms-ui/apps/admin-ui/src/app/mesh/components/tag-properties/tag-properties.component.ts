@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableTagProperties } from '@gentics/mesh-models';
-import { FormProperties, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum TagPropertiesMode {
     CREATE,
@@ -14,7 +14,10 @@ export enum TagPropertiesMode {
     templateUrl: './tag-properties.component.html',
     styleUrls: ['./tag-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(TagPropertiesComponent)],
+    providers: [
+        generateFormProvider(TagPropertiesComponent),
+        generateValidatorProvider(TagPropertiesComponent),
+    ],
 })
 export class TagPropertiesComponent extends BasePropertiesComponent<EditableTagProperties> {
 

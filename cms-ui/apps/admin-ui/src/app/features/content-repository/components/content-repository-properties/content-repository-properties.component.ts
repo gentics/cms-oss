@@ -19,7 +19,7 @@ import {
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import { AnyModelType, ContentRepository, ContentRepositoryType, Feature } from '@gentics/cms-models';
-import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -36,7 +36,10 @@ type CRDisplayType = {
     templateUrl: './content-repository-properties.component.html',
     styleUrls: ['./content-repository-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ContentRepositoryPropertiesComponent)],
+    providers: [
+        generateFormProvider(ContentRepositoryPropertiesComponent),
+        generateValidatorProvider(ContentRepositoryPropertiesComponent),
+    ],
 })
 export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepository> implements OnInit, OnChanges {
 

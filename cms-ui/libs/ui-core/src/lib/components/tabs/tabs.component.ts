@@ -1,5 +1,4 @@
 import {
-    AfterContentInit,
     AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -10,10 +9,9 @@ import {
     Input,
     OnChanges,
     OnDestroy,
-    OnInit,
     Output,
     QueryList,
-    SimpleChanges,
+    SimpleChanges
 } from '@angular/core';
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
@@ -129,7 +127,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-    ) {}
+    ) { }
 
     ngAfterViewInit(): void {
         let initial = true;
@@ -214,6 +212,7 @@ export class TabsComponent implements AfterViewInit, OnChanges, OnDestroy {
     private setAsActive(tab: TabComponent): void {
         this.tabs.toArray().forEach(tab => tab.active = false);
         tab.active = true;
+        this.activeTabId$.next(tab.id);
     }
 
 }

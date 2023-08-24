@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FollowUpScheduleData, IntervalScheduleData, ScheduleData, ScheduleType } from '@gentics/cms-models';
-import { dateInYears, generateFormProvider } from '@gentics/ui-core';
+import { FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { pick } from 'lodash';
 
 @Component({
@@ -10,7 +10,10 @@ import { pick } from 'lodash';
     templateUrl: './schedule-data-properties.component.html',
     styleUrls: ['./schedule-data-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ScheduleDataPropertiesComponent)],
+    providers: [
+        generateFormProvider(ScheduleDataPropertiesComponent),
+        generateValidatorProvider(ScheduleDataPropertiesComponent),
+    ],
 })
 export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<ScheduleData> implements OnInit {
 
@@ -27,13 +30,13 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
     @Input()
     public scheduleBlacklist: number[] = [];
 
-    protected override createForm(): UntypedFormGroup {
-        return new UntypedFormGroup({
-            type: new UntypedFormControl(this.value?.type, Validators.required),
-            startTimestamp: new UntypedFormControl(this.value?.startTimestamp),
-            endTimestamp: new UntypedFormControl(this.value?.endTimestamp),
-            interval: new UntypedFormControl((this.value as IntervalScheduleData)?.interval, [Validators.required, createNestedControlValidator()]),
-            follow: new UntypedFormControl((this.value as FollowUpScheduleData)?.follow, [Validators.required, createNestedControlValidator()]),
+    protected override createForm(): FormGroup<FormProperties<ScheduleData>> {
+        return new FormGroup<FormProperties<ScheduleData>>({
+            type: new FormControl(this.value?.type as any, Validators.required),
+            startTimestamp: new FormControl(this.value?.startTimestamp),
+            endTimestamp: new FormControl(this.value?.endTimestamp),
+            interval: new FormControl((this.value as IntervalScheduleData)?.interval, Validators.required),
+            follow: new FormControl((this.value as FollowUpScheduleData)?.follow, Validators.required),
         });
     }
 
@@ -95,18 +98,6 @@ export class ScheduleDataPropertiesComponent extends BasePropertiesComponent<Sch
 
             default:
                 return value;
-        }
-    }
-
-    protected override onValueChange(): void {
-        if (this.form && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                type: this.value?.type || null,
-                startTimestamp: this.value?.startTimestamp || null,
-                endTimestamp: this.value?.endTimestamp || null,
-                interval: (this.value as IntervalScheduleData)?.interval || null,
-                follow: (this.value as FollowUpScheduleData)?.follow || null,
-            });
         }
     }
 }

@@ -14,7 +14,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE, GtxJsonValidator } from '@gentics/cms-components';
+import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import {
     AnyModelType,
     MeshTagmapEntryAttributeTypes,
@@ -23,7 +23,7 @@ import {
     TagmapEntryAttributeTypes,
     TagmapEntryPropertiesObjectType,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { environment } from 'apps/admin-ui/src/environments/environment';
 
 export enum TagmapEntryPropertiesMode {
@@ -36,7 +36,10 @@ export enum TagmapEntryPropertiesMode {
     templateUrl: './tag-map-entry-properties.component.html',
     styleUrls: ['./tag-map-entry-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(TagMapEntryPropertiesComponent)],
+    providers: [
+        generateFormProvider(TagMapEntryPropertiesComponent),
+        generateValidatorProvider(TagMapEntryPropertiesComponent),
+    ],
 })
 export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<TagmapEntry> implements OnInit, OnChanges {
 
@@ -233,7 +236,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
     }
 
     protected override onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if (this.form && this.value) {
             const tmpObj: Partial<TagmapEntry> = {};
             Object.keys(this.form.controls).forEach(controlName => {
                 tmpObj[controlName] = this.value?.[controlName] ?? null;

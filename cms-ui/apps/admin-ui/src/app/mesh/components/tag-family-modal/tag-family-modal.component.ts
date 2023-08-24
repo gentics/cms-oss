@@ -1,7 +1,6 @@
 import { TagFamilyHandlerService } from '@admin-ui/mesh/providers';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { TagFamily } from '@gentics/mesh-models';
 import { BaseModal } from '@gentics/ui-core';
 import { TagFamilyPropertiesMode } from '../tag-family-properties/tag-family-properties.component';
@@ -35,7 +34,7 @@ export class TagFamilyModal extends BaseModal<TagFamily> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.form = new FormControl(this.family || {}, createNestedControlValidator());
+        this.form = new FormControl(this.family || {});
     }
 
     buttonCreateEntityClicked(): void {

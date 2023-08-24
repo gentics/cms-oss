@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+/**
+ * Service to collect package dependencies and test them for consistency.
+ */
 public class PackageDependencyChecker {
 
   private static final List<Class<? extends SynchronizableNodeObject>> DEPENDENCY_CLASSES = Arrays.asList(
@@ -32,23 +35,11 @@ public class PackageDependencyChecker {
     this.packageSynchronizer = Synchronizer.getPackage(packageName);
   }
 
-  public static List<PackageDependency> filterMissingDependencies(
-      List<PackageDependency> dependencies) {
-    removeEmptyDependencyList(dependencies).forEach(
-        dependency -> dependency.getReferencedDependencies()
-            .removeIf(PackageDependency::getIsInPackage));
-
-    return removeEmptyDependencyList(dependencies);
-  }
-
-  private static List<PackageDependency> removeEmptyDependencyList(
-      List<PackageDependency> dependencies) {
-    return dependencies.stream().filter(
-        packageObject -> packageObject.getReferencedDependencies() != null
-            && !packageObject.getReferencedDependencies().isEmpty()).collect(
-        Collectors.toList());
-  }
-
+  /**
+   * Collects all dependencies and its sub dependencies
+   * @return the dependencies
+   * @throws NodeException
+   */
   public List<PackageDependency> collectDependencies() throws NodeException {
     LOGGER.info("Collecting dependencies for package " + packageName);
     try (Trx trx = ContentNodeHelper.trx()) {
@@ -61,8 +52,37 @@ public class PackageDependencyChecker {
 
         dependencies.addAll(resolver.resolve());
       }
-      return dependencies;
+
+      return removeEmptyDependencyList(dependencies);
     }
+  }
+
+  /**
+   * Utility method to filter the given dependency list to only contain missing entities
+   * @param dependencies the list that should be filtered
+   * @return the filtered dependency list
+   */
+  public static List<PackageDependency> filterMissingDependencies(
+      List<PackageDependency> dependencies) {
+    removeEmptyDependencyList(dependencies).forEach(
+        dependency -> dependency.getReferencedDependencies()
+            .removeIf(PackageDependency::getIsInPackage));
+
+    return removeEmptyDependencyList(dependencies);
+  }
+
+  /**
+   * Utility method to clean the given dependency list from empty references
+   * @param dependencies the list that should be cleaned
+   * @return the cleaned dependency list
+   */
+
+  private static List<PackageDependency> removeEmptyDependencyList(
+      List<PackageDependency> dependencies) {
+    return dependencies.stream().filter(
+        packageObject -> packageObject.getReferencedDependencies() != null
+            && !packageObject.getReferencedDependencies().isEmpty()).collect(
+        Collectors.toList());
   }
 
   /**
@@ -75,11 +95,18 @@ public class PackageDependencyChecker {
         .isEmpty();
   }
 
-
+  /**
+   * Gets the package name
+   * @return the package name
+   */
   public String getPackageName() {
     return packageName;
   }
 
+  /**
+   * Sets the package name
+   * @param packageName the new package name
+   */
   public void setPackageName(String packageName) {
     this.packageName = packageName;
   }

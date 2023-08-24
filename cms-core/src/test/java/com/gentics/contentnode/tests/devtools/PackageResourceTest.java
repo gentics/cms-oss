@@ -251,7 +251,7 @@ public class PackageResourceTest {
 			resource.add(PACKAGE_NAME);
 
 			PackageResource packageResource = new PackageResourceImpl();
-			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME);
+			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(PACKAGE_NAME, null, null);
 
 			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
 			assertThat(packageConsistencyResponse.checkCompleteness()).isTrue();

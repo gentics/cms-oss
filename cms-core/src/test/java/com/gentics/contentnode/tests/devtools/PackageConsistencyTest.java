@@ -100,8 +100,7 @@ public class PackageConsistencyTest {
   @Test
   public void givenConstructWithReferencedDatasourceShouldDetectDeletedDatasource()
       throws NodeException {
-    List<SynchronizableNodeObject> packageObjects = givenSynchronizedPackage();
-    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
+    givenSynchronizedPackage();
 
     operate(() -> {
       PackageObject<Datasource> datasourceInPackage = synchronizer.getObjects(Datasource.class).get(0);
@@ -127,9 +126,6 @@ public class PackageConsistencyTest {
         .filter(object -> object instanceof Construct).findFirst().get();
     synchronizer.remove(construct, true);
 
-/*    operate(()->
-      assertThat(packageSynchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
-    );*/
     List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
     // construct that is referenced by a template is missing and should be detected

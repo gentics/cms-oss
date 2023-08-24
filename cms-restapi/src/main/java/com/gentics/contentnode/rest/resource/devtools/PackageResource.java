@@ -110,10 +110,19 @@ public interface PackageResource {
 	Response delete(@PathParam("name") String name) throws Exception;
 
 
+	/**
+	 * Checks the package for completeness
+	 * @param name name of the package to check
+	 * @param filter filter options. The dependency type can be filtered and only missing references (q=incomplete)
+	 * @param paging the paging parameter
+	 * @return list of dependencies and sub dependencies
+	 * @throws Exception
+	 */
 	@GET
 	@Path("/package/{name}/check")
-	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name) throws Exception;
-
+	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name,
+			@BeanParam FilterParameterBean filter,
+			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
 	 * Trigger synchronization of all objects in the given package to the filesystem

@@ -1,12 +1,14 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
-import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -173,17 +175,35 @@ public class PackageResourceImpl implements PackageResource {
 	@Override
 	@GET
 	@Path("/packages/{name}/check")
-	public PackageDependencyList performPackageConsistencyCheck(@PathParam("name") String packageName) throws NodeException {
-		operate(()-> getPackage(packageName));
-
+	public PackageDependencyList performPackageConsistencyCheck(
+			@PathParam("name") String packageName,
+			@BeanParam FilterParameterBean filter,
+			@BeanParam PagingParameterBean paging) throws NodeException {
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
 		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 		PackageDependencyList consistencyCheckResult = new PackageDependencyList();
 		consistencyCheckResult.setItems(dependencies);
 		consistencyCheckResult.checkCompleteness();
 
-		return ListBuilder.from(dependencies, (x)-> x)
-				// todo: impl sorting & grouping
+		if (filter != null && filter.query != null) {
+			if ("incomplete".equals(filter.query)) {
+				dependencies = filterMissingDependencies(dependencies);
+			} else {
+				try {
+					dependencies = dependencies.stream().filter(
+							dependency -> dependency.getDependencyType() == PackageDependency.Type.valueOf(
+									filter.query.toUpperCase())).collect(
+							Collectors.toList());
+				} catch (IllegalArgumentException e) {
+					throw new InvalidRequestException(
+							"Invalid Filter specified. Allowed values are: " + Arrays.toString(
+									PackageDependency.Type.values()));
+				}
+			}
+		}
+
+		return ListBuilder.from(dependencies, (x) -> x)
+				.page(paging)
 				.to(consistencyCheckResult);
 	}
 

@@ -60,7 +60,7 @@ public class TemplateResolver extends AbstractDependencyResolver {
     for (T tag : tags) {
       PackageDependency dependency = new PackageDependency.Builder()
           .withType(getSynchronizationType(tag))
-          .withGlobalId(tag.getGlobalId().toString())
+          .withGlobalId(tag.getGlobalId() != null ? tag.getGlobalId().toString() : "")
           .withName(tag.getName())
           .withIsInPackage(
               isInPackage(getSynchronizationClass(tag), resolveUuid(tag)))

@@ -22,12 +22,13 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
   private Boolean packageIsComplete;
 
   /**
-   * Checks whether the package is complete.
-   * A package is incomplete if any object is neither in this package nor in any other.
+   * Checks whether the package is complete. A package is incomplete if any object is neither in
+   * this package nor in any other.
+   *
    * @return True if the package is complete, false otherwise.
    */
   public boolean checkCompleteness() {
-    if(packageIsComplete != null) {
+    if (packageIsComplete != null) {
       return packageIsComplete;
     }
 
@@ -37,10 +38,14 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
       return true;
     }
 
-    packageIsComplete = dependencies.stream()
-        .anyMatch(dependency -> !dependency.getIsInPackage() && !dependency.getIsInOtherPackage());
+    packageIsComplete = dependencies.stream().anyMatch(this::isSane);
 
     return packageIsComplete;
+  }
+
+  private boolean isSane(PackageDependency dependency) {
+    return (Boolean.FALSE.equals(dependency.getIsInPackage()) || dependency.getIsInPackage() == null)
+        &&  (Boolean.FALSE.equals(dependency.getIsInOtherPackage()) || dependency.getIsInPackage() == null);
   }
 
 }

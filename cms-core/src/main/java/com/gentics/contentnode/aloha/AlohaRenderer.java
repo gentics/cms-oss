@@ -81,11 +81,11 @@ import com.gentics.lib.log.NodeLogger;
 
 /**
  * Renderer, that renders all aloha specific output like aloha includes and settings.
- * 
+ *
  * @author floriangutmann
  */
 public class AlohaRenderer implements TemplateRenderer {
-    
+
 	/**
 	 * Logger
 	 */
@@ -105,18 +105,18 @@ public class AlohaRenderer implements TemplateRenderer {
 	/**
 	 * List of allowed HTML elements for editable root elements
 	 */
-	public static final List<String> allowedEditables = Arrays.asList(new String[] { "div", "p", "a", "span", "h1", "h2", "h3", "h4", "h5", "h6"}); 
-    
+	public static final List<String> allowedEditables = Arrays.asList(new String[] { "div", "p", "a", "span", "h1", "h2", "h3", "h4", "h5", "h6"});
+
 	/**
 	 * List of allowed HTML elements for block root elements
 	 */
 	public static final List<String> allowedBlocks = Arrays.asList(new String[] { "div", "span", "img", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6" });
-    
+
 	/**
 	 * Prefix for editable id's
 	 */
 	public static final String EDITABLE_PREFIX = "GENTICS_EDITABLE_";
-    
+
 	/**
 	 * Prefix for block id's
 	 */
@@ -146,17 +146,17 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * Name of the render result parameter that holds a list of HTML id's for blocks
 	 */
 	public static final String PARAM_BLOCK_HTML_IDS = "block_html_ids";
-    
+
 	/**
 	 * Name of the render result parameter that holds a list of Tag id's for blocks
 	 */
 	public static final String PARAM_BLOCK_TAG_IDS = "block_tag_ids";
-    
+
 	/**
 	 * Name of the render result parameter that holds a list of HTML id's for editables
 	 */
 	public static final String PARAM_EDITABLE_HTML_IDS = "editable_html_ids";
-    
+
 	/**
 	 * Name of the render result parameter that holds a list of value id's for editables
 	 */
@@ -186,12 +186,12 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * Tag name for the aloha settings where they should be pasted in a template.
 	 */
 	public static final String ALOHA_SETTINGS_PLACE_HOLDER = "<aloha_settings>";
-	
+
 	/**
 	 * Tag name for the aloha scripts where they should be pasted in a template.
 	 */
 	public static final String ALOHA_SCRIPTS_PLACE_HOLDER = "<aloha_scripts>";
-	
+
 	/**
 	 * Parameter name for the aloha settings for the renderresult.
 	 */
@@ -227,7 +227,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 	/**
 	 * name of the rendertype parameter that holds the flag for whether the
-	 * html5 doctype shall be added to the content 
+	 * html5 doctype shall be added to the content
 	 */
 	public final static String ADD_HTML5_DOCTYPE = "add_html5_doctype";
 
@@ -379,8 +379,8 @@ public class AlohaRenderer implements TemplateRenderer {
 				ObjectNode cnEditable = mapper.createObjectNode();
 
 				// unfortunately this has to be done here, as jQuery would
-				// interprete "."-chars as the start of a css class name 
-                
+				// interprete "."-chars as the start of a css class name
+
 				// TODO this is extremely ugly, due to RenderResult not supporting
 				// Maps in addParameters. Review this with NOP
 				cnEditable.put("id", MetaEditableRenderer.EDITABLE_PREFIX + id.replaceAll("\\.", "_"));
@@ -388,7 +388,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				cnEditables.add(cnEditable);
 			}
 		}
-        
+
 		return cnEditables;
 	}
 
@@ -402,7 +402,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	public static List<JsonNode> getBlocks(RenderResult renderResult, ObjectMapper mapper) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		List<JsonNode> cnBlocks = new Vector<JsonNode>();
-        
+
 		String[] blockHtmlIds = (String[]) renderResult.getParameters().get(PARAM_BLOCK_HTML_IDS);
 		String[] blockTagIds = (String[]) renderResult.getParameters().get(PARAM_BLOCK_TAG_IDS);
 
@@ -524,7 +524,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		i18n.put("current", currentLanguage);
 		settings.put("i18n", i18n);
 		settings.put("locale", currentLanguage);
-        
+
 		// add the proxyURL as general setting
 		settings.put("proxyUrl",
 				prefs.getProperty("stag_prefix") + "?sid=" + t.getSessionId() + "&do=19191&url=");
@@ -593,7 +593,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		cnIntegrationPlugin.put("sid", t.getSessionId());
 		cnIntegrationPlugin.put("buildRootTimestamp", buildRootTimestamp);
-		cnIntegrationPlugin.put("gcnLibVersion", gcnJSLibVersion); 
+		cnIntegrationPlugin.put("gcnLibVersion", gcnJSLibVersion);
 		cnIntegrationPlugin.put("webappPrefix", webappPrefix);
 		cnIntegrationPlugin.put("languageid", t.getLanguage().getId());
 		cnIntegrationPlugin.put("pagelanguage", page.getLanguage());
@@ -622,7 +622,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		cnIntegrationPlugin.put("stag_prefix", prefs.getProperty("stag_prefix"));
 		cnIntegrationPlugin.put("portletapp_prefix", prefs.getProperty("portletapp_prefix"));
 		cnIntegrationPlugin.put("lastAction", ObjectTransformer.getString(renderType.getParameter(LAST_ACTION), ""));
-		// Add the proxy_prefix parameter when one was specified. This parameter will be used to build certain urls to images and css  
+		// Add the proxy_prefix parameter when one was specified. This parameter will be used to build certain urls to images and css
 		String proxy_prefix = prefs.getProperty(DynamicUrlFactory.PROXY_PREFIX_PARAM);
 
 		if (proxy_prefix != null) {
@@ -702,7 +702,7 @@ public class AlohaRenderer implements TemplateRenderer {
 			for (Iterator<JsonNode> iterator = blocks.iterator(); iterator.hasNext();) {
 				blocksNode.add(iterator.next());
 			}
-            
+
 			// NOTE can't use putArray().addAll() here as there is a NPE in the current Jackson version
 			cnIntegrationPlugin.put("blocks", blocksNode);
 
@@ -776,7 +776,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				stmt.setInt(3, ObjectTransformer.getInt(constructContainerNode.getId(), -1));
 
 				rs = stmt.executeQuery();
-                
+
 				List<JsonNode> constructCategories = new Vector<JsonNode>();
 				List<JsonNode> constructs = new Vector<JsonNode>();
 				ObjectNode constructCategory = null;
@@ -807,7 +807,7 @@ public class AlohaRenderer implements TemplateRenderer {
 					if (categoryName == null) {
 						categoryName = "";
 					}
-                    
+
 					if (!categoryName.equals(lastConstructCategoryName)) {
 						// add the old category to categories
 						if (constructCategory != null) {
@@ -817,18 +817,18 @@ public class AlohaRenderer implements TemplateRenderer {
 								constructsNode.add(it.next());
 							}
 							constructCategory.put("constructs", constructsNode);
-                            
+
 							constructCategories.add(constructCategory);
 						}
-                        
+
 						// start a new construct category
 						constructCategory = mapper.createObjectNode();
 						constructCategory.put("name", categoryName);
 						constructCategory.put("id", categoryId);
-                        
+
 						constructs.clear();
 					}
-                    
+
 					constructs.add(construct);
 					lastConstructCategoryName = categoryName;
 				}
@@ -856,7 +856,7 @@ public class AlohaRenderer implements TemplateRenderer {
 						constructsNode.add(it.next());
 					}
 					constructCategory.put("constructs", constructsNode);
-                    
+
 					constructCategories.add(constructCategory);
 				}
 
@@ -872,7 +872,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				t.closeResultSet(rs);
 				t.closeStatement(stmt);
 			}
-        
+
 			// add meta editables
 			if (renderResult.getParameters().get("metaeditables") != null) {}
 		}
@@ -918,7 +918,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		return settings;
 	}
-	
+
 	/**
 	 * Sets the map property 'propertyName' inside 'settings' with name 'keyName'.
 	 * @param keyName
@@ -937,11 +937,11 @@ public class AlohaRenderer implements TemplateRenderer {
 			newMap.put(keyName, propertyObject);
 			setMapToJSON(newMap, settings, mapper, true);
 		}
-		
+
 	}
 
 	/**
-	 * Sets map property 'propertyName' into 'settings'. 
+	 * Sets map property 'propertyName' into 'settings'.
 	 * @param node
 	 * @param mapper
 	 * @param t
@@ -1093,10 +1093,10 @@ public class AlohaRenderer implements TemplateRenderer {
 	public String render(RenderResult renderResult, String template) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		RenderType renderType = t.getRenderType();
-       
+
 		Object rootObject = renderType.getRenderedRootObject();
 		Object actual = renderType.getStack().peek();
-       
+
 		// Only run when in aloha mode and the actual rendered object is the root object
 		if ((renderType.getEditMode() == RenderType.EM_ALOHA || renderType.getEditMode() == RenderType.EM_ALOHA_READONLY) && rootObject.equals(actual)
 				&& rootObject instanceof com.gentics.contentnode.object.Page) {
@@ -1122,22 +1122,22 @@ public class AlohaRenderer implements TemplateRenderer {
 						new DefaultNodeMessage(Level.WARN, AlohaRenderer.class,
 						"Your template does not include a html head tag, which might cause problems when using Aloha Editor."));
 			}
-			
+
 			String alohaSettings = getAlohaSettings(renderResult, renderType, node);
 			String alohaScripts = getAlohaScriptFiles(t, node);
 			String alohaCSSFile = getAlohaCSSFiles(t, node);
-			
+
 			if (!isAddToContent(renderType)) {
 				StringBuilder head = new StringBuilder();
 				// Settings have to go before Scripts
 				head.append(alohaCSSFile);
 				head.append(alohaSettings);
 				head.append(alohaScripts);
-				
+
 				renderResult.setParameter(SCRIPT_INCLUDES, head.toString());
 				renderResult.setParameter(ALOHA_SETTINGS_PARAMETER, alohaSettings);
 				renderResult.setParameter(ALOHA_SCRIPTS_PARAMETER, alohaScripts);
-				
+
 				return template;
 			}
 
@@ -1148,7 +1148,7 @@ public class AlohaRenderer implements TemplateRenderer {
 				template = StringUtils.insertHtml5DocType(template);
 			}
 		}
-		
+
 		return removeAlohaPlaceHolders(template);
 	}
 
@@ -1170,15 +1170,15 @@ public class AlohaRenderer implements TemplateRenderer {
 	 */
 	private String setAlohaConfiguration(String template, String alohaSettings, String alohaScripts) {
 		String alohaConfPlaceHolders = ALOHA_SETTINGS_PLACE_HOLDER + "\n" + ALOHA_SCRIPTS_PLACE_HOLDER;
-		
+
 		if (existAlohaPlaceHolder(template, ALOHA_SCRIPTS_PLACE_HOLDER) && !existAlohaPlaceHolder(template, ALOHA_SETTINGS_PLACE_HOLDER)) {
 			template = template.replace(ALOHA_SCRIPTS_PLACE_HOLDER, alohaConfPlaceHolders);
 		} else if (!existAlohaPlaceHolder(template, ALOHA_SCRIPTS_PLACE_HOLDER) && existAlohaPlaceHolder(template, ALOHA_SETTINGS_PLACE_HOLDER)) {
 			template = template.replace(ALOHA_SETTINGS_PLACE_HOLDER, alohaConfPlaceHolders);
 		} else if (!existAlohaPlaceHolder(template, ALOHA_SCRIPTS_PLACE_HOLDER) && !existAlohaPlaceHolder(template, ALOHA_SETTINGS_PLACE_HOLDER)) {
 			template = StringUtils.insertHtmlIntoHead(template, alohaConfPlaceHolders);
-		} 
-		
+		}
+
 		return setAlohaPlaceHolders(template, alohaSettings, alohaScripts);
 	}
 
@@ -1255,15 +1255,17 @@ public class AlohaRenderer implements TemplateRenderer {
 
 		StringBuilder scripts = new StringBuilder();
 
-		scripts.append("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>");
+		scripts.append("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n");
 
 		if (StringUtils.isEqual(System.getProperty(BUILD_TIMESTAMP), "DEV")) {
-			scripts.append(String.format("<script src=\"%s/lib/require.js\"></script>", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery-1.7.2.js\"></script>", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/aloha-jquery-noconflict.js\"></script>", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
-			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
+			scripts.append(String.format("<script src=\"%s/lib/require.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery-3.7.0.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+//			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery-1.7.2.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+			scripts.append(String.format("<script src=\"%s/lib/vendor/jquery.layout.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+			scripts.append(String.format("<script src=\"%s/lib/aloha-jquery-noconflict.js\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM)));
+			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
 		} else {
-			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
+			scripts.append(String.format("<script src=\"%s/lib/aloha.js\" data-aloha-plugins=\"%s\"></script>\n", System.getProperty(ALOHA_EDITOR_BASE_URL_PARAM), alohaPlugins));
 		}
 
 		return scripts.toString();
@@ -1282,18 +1284,18 @@ public class AlohaRenderer implements TemplateRenderer {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			StringWriter sw = new StringWriter();
-			
+
 			JsonGenerator jg = new JsonFactory().createJsonGenerator(sw);
-	
+
 			jg.useDefaultPrettyPrinter();
 			mapper.writeValue(jg, getAlohaSettings(node, renderResult, renderType, mapper));
-			
+
 			return "<script type=\"text/javascript\">\n" + "Aloha = {}; Aloha.settings = " + sw.toString() + ";" + "\n</script>";
 		} catch (Exception e) {
 			throw new NodeException("Error while writing aloha settings", e);
 		}
 	}
-    
+
 	/**
 	 * Adds <code>aloha-block</code> to the <code>class</code> attribute of the tag.
 	 *
@@ -1332,13 +1334,13 @@ public class AlohaRenderer implements TemplateRenderer {
 
 	/**
 	 * Makes an Aloha block of the given source code.<br /><br />
-	 * 
-	 * If the block has a supported root element it will be used as the 
-	 * block root element, otherwise the code is surrounded with a div 
+	 *
+	 * If the block has a supported root element it will be used as the
+	 * block root element, otherwise the code is surrounded with a div
 	 * element which is used as block root element.
-	 * 
+	 *
 	 * If the feature copy_tags is enabled for the node, the block root tag will
-	 * 
+	 *
 	 * @param code The html code of the block
 	 * @param container The tag of the block
 	 * @param renderResult The renderResult
@@ -1410,13 +1412,13 @@ public class AlohaRenderer implements TemplateRenderer {
 							boolean notMagicLink = !rootTagName.toLowerCase().equals("a") || !isMagicLinkConstruct(renderResult, tag.getConstruct(), node);
 
 							insertDiv = false;
-                            
+
 							// check for an id
 							Matcher idMatcher = idPattern.matcher(startTag);
 
 							if (idMatcher.find()) {
 								htmlId = idMatcher.group(1);
-                                
+
 								// check if the id we've found does not match an id we've generated previously
 								String[] ids = (String[]) renderResult.getParameters().get(PARAM_BLOCK_HTML_IDS);
 
@@ -1449,21 +1451,21 @@ public class AlohaRenderer implements TemplateRenderer {
 									rootTagName + " " + renderTagAnnotations(page, tag));
 
 								code = newStartTag + rest;
-							}  
+							}
 						}
 					}
-				} 
-                
+				}
+
 				String tagName = null;
 
 				if (insertDiv) {
 					htmlId = BLOCK_PREFIX + tag.getId();
-                    
+
 					// check for liveedit_per_construct setting to choose tagname
 					if (TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature("liveedit_tag_perconstruct")) {
 						tagName = tag.getConstruct().getLiveEditorTagName();
 					}
-                    
+
 					// if no tag name has been defined so far we default to div
 					if (tagName == null || "".equals(tagName)) {
 						tagName = "div";
@@ -1525,37 +1527,37 @@ public class AlohaRenderer implements TemplateRenderer {
 				code = String.format("<gtxtag %s>%s</gtxtag %s>", tag.getName(), code, tag.getName());
 		}
 		}
-        
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("Aloha Renderer needed " + (System.currentTimeMillis() - startTime) + " ms to build a block of the input");
 		}
-        
+
 		return code;
 	}
-    
+
 	/**
 	 * Looks for all &lt;gtxEditable&gt; elements and checks for a proper html parent element.<br /><br />
-	 * 
+	 *
 	 * If the gtxEditable has a direct parent (no content in between the parent and the gtxEditable)
-	 * element with a proper type as defined in {@link #allowedEditables} 
+	 * element with a proper type as defined in {@link #allowedEditables}
 	 * this element will be used as editable.<br /><br />
-	 * 
+	 *
 	 * If the gtxEditable has no direct parent, a &lt;div&gt; element will be inserted as editable element.
-	 * 
-	 * @param template The markup in which the replacement should be performed  
+	 *
+	 * @param template The markup in which the replacement should be performed
 	 * @return The final result after replacing the &lt;gtxEditable&gt; tags
 	 * @throws Exception in case of problems with the transaction
 	 */
 	public static String replaceEditables(String template, RenderResult renderResult) throws Exception {
 		StringBuilder templateBuilder = new StringBuilder(template);
-        
+
 		// Regular expression for finding editables and a surrounding tag
 		String editableExpression = "((<([a-zA-Z0-9]*)\\b[^>]*>)?" + // possible tag before the editable
 				"<gtxEditable\\s([0-9a-zA-Z_]+)>" + // followed by the editable
 				"(.*?)" + // anything in the editable
 				"</gtxEditable\\s\\4>" + // end of the editable
 				"(</\\3\\s*>)?)"; // possible tag after the editable
-                
+
 		Pattern editablePattern = Pattern.compile(editableExpression, Pattern.DOTALL | Pattern.COMMENTS);
 
 		long startTime = System.currentTimeMillis();
@@ -1568,7 +1570,7 @@ public class AlohaRenderer implements TemplateRenderer {
 		// shall we annotate the editables with classes?
 		boolean annotate = t.getNodeConfig().getDefaultPreferences().isFeature(Feature.ALOHA_ANNOTATE_EDITABLES);
 
-		while (matcher.find()) {            
+		while (matcher.find()) {
 			// The complete opening tag
 			String openingTag = matcher.group(2);
 			// The tag name of the opening tag
@@ -1595,7 +1597,7 @@ public class AlohaRenderer implements TemplateRenderer {
 
 			// The complete closing tag if it is the same as the opening tag
 			String closingTag = matcher.group(6);
-            
+
 			String htmlId;
 			String replacement = "";
 			String tagName = "div";
@@ -1659,7 +1661,7 @@ public class AlohaRenderer implements TemplateRenderer {
 			} else {
 				// we have a valid root tag so we check if it contains an id
 				String newOpeningTag = "";
-                
+
 				Matcher idMatcher = idPattern.matcher(openingTag);
 
 				if (idMatcher.find()) {
@@ -1720,15 +1722,15 @@ public class AlohaRenderer implements TemplateRenderer {
 				renderResult.addParameter(PARAM_EDITABLE_VALUE_IDS, editableId);
 			}
 
-			// replace the current find with the replacement and reset the matcher 
+			// replace the current find with the replacement and reset the matcher
 			templateBuilder.replace(matcher.start(), matcher.end(), replacement);
-			matcher.reset(templateBuilder.toString());            
+			matcher.reset(templateBuilder.toString());
 		}
-        
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("AlohaRenderer needed " + (System.currentTimeMillis() - startTime) + " ms to replace editables");
 		}
-        
+
 		return templateBuilder.toString();
 	}
 
@@ -1767,7 +1769,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	 * The order is also defined in node.conf.
 	 * @param node node
 	 * @return aloha plugins to be loaded
-	 * @throws NodeException 
+	 * @throws NodeException
 	 */
 	protected String getAlohaPlugins(Node node) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();

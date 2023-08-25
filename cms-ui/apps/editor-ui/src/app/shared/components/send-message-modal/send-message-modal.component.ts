@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { SendMessageForm } from '@editor-ui/app/common/models';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -11,7 +10,7 @@ import { I18nNotification } from '../../../core/providers/i18n-notification/i18n
 @Component({
     selector: 'send-message-modal',
     templateUrl: './send-message-modal.tpl.html',
-    styleUrls: ['./send-message-modal.scss']
+    styleUrls: ['./send-message-modal.scss'],
 })
 export class SendMessageModal extends BaseModal<any> implements OnInit {
 
@@ -30,7 +29,7 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
     ngOnInit(): void {
         this.users$ = this.api.user.getUsers().map(response => response.items);
         this.groups$ = this.api.group.getGroupsTree().map(response => response.groups);
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.form = new UntypedFormControl({});
     }
 
     okayClicked(): void {
@@ -58,7 +57,7 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
             acc[key].push(value);
             return acc;
         }, {
-            message:  formValues.message,
+            message: formValues.message,
             toGroupId: [],
             toUserId: [],
         });

@@ -25,7 +25,7 @@ interface DisplayItem<T> {
     templateUrl: './content-package-list.component.html',
     styleUrls: ['./content-package-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ContentPackageListComponent implements OnInit, OnChanges, OnDestroy {
 
     @Input()

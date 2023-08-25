@@ -6,8 +6,8 @@
     <gtx-content-package-list
         [selectable]="true"
         [multiple]="false"
-        [selected]="activePackage"
-        (selectedChange)="updateActivePackage($event)"
+        [selection]="activePackage"
+        (selectionChange)="updateActivePackage($event)"
     ></gtx-content-package-list>
 </div>
 

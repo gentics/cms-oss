@@ -410,6 +410,8 @@ interface CmsFormElementPropertyBase {
     description_i18n_ui?: CmsFormElementI18nString;
     /** If user input is requried for surrounding form to be valid. */
     required?: boolean;
+    /** If the user should be able to select muliple options. */
+    multiple?: boolean;
 }
 
 export interface CmsFormElementPropertyDefault extends CmsFormElementPropertyBase {

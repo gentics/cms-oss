@@ -301,7 +301,8 @@ export class FormEditorConfigurationService {
                     type: prunedFormElementPropertyConfigurationType,
                     label_i18n_ui: prunedFormElementPropertyConfigurationLabelI18NUi,
                     options: prunedOptions,
-                }
+                    multiple: formElementPropertyConfiguration.multiple ?? false,
+                };
 
                 if (formElementPropertyConfiguration.default_value_i18n) {
                     if (this.isFormElementPropertyDefaultValueI18n(formElementPropertyConfiguration.default_value_i18n, ['string'])) {

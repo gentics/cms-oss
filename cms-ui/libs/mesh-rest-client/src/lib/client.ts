@@ -3,7 +3,6 @@ import {
     MeshAPIVersion,
     MeshAuthAPI,
     MeshBranchAPI,
-    MeshClientConnection,
     MeshClientDriver,
     MeshClusterAPI,
     MeshCoordinatorAPI,
@@ -14,13 +13,15 @@ import {
     MeshPermissionAPI,
     MeshPluginAPI,
     MeshProjectAPI,
-    MeshTagsAPI,
-    MeshTagFamiliesAPI,
+    MeshRestClientConfig,
+    MeshRestClientInterceptorData,
     MeshRoleAPI,
     MeshSchemaAPI,
     MeshServerAPI,
+    MeshTagFamiliesAPI,
+    MeshTagsAPI,
     MeshUserAPI,
-    RequestMethod,
+    RequestMethod
 } from './models';
 import { toRelativePath, trimTrailingSlash } from './utils';
 
@@ -28,36 +29,52 @@ export class MeshRestClient {
 
     constructor(
         public driver: MeshClientDriver,
-        public config: MeshClientConnection,
+        public config: MeshRestClientConfig,
         public apiKey?: string,
-    ) {}
+    ) { }
 
     protected createUrl(
         path: string,
         queryParams: Record<string, any>,
     ): string {
-        const params = new URLSearchParams(queryParams || {}).toString();
-        const protocol = this.config.ssl ? 'https' : 'http';
-        let url = `${protocol}://${this.config.host}`;
+        let buildPath = '';
 
-        if (this.config.port) {
-            url += `:${this.config.port}`;
-        }
-
-        if (this.config.basePath) {
-            url += trimTrailingSlash(toRelativePath(this.config.basePath));
+        if (this.config.connection.basePath) {
+            buildPath += trimTrailingSlash(toRelativePath(this.config.connection.basePath));
         } else {
-            const version = this.config.version ?? MeshAPIVersion.V2;
-            url += `/api/${version}`;
+            const version = this.config.connection.version ?? MeshAPIVersion.V2;
+            buildPath += `/api/${version}`;
         }
+        buildPath += toRelativePath(path);
 
-        url += toRelativePath(path);
+        const { protocol, host, port, path: finalPath, params } = this.handleInterceptors({
+            protocol: this.config.connection.ssl ? 'https' : 'http',
+            host: this.config.connection.host,
+            port: this.config.connection.port,
+            path: buildPath,
+            params: queryParams,
+        });
 
+        let url = `${protocol}://${host}`;
+        if (port) {
+            url += `:${port}`;
+        }
+        url += finalPath;
+
+        const buildParams = new URLSearchParams(params || {}).toString();
         if (params) {
-            url += `?${params}`;
+            url += `?${buildParams}`;
         }
 
         return url;
+    }
+
+    protected handleInterceptors(data: MeshRestClientInterceptorData): MeshRestClientInterceptorData {
+        const interceptors = this.config.interceptors || [];
+        for (const handler of interceptors) {
+            data = handler(data);
+        }
+        return data;
     }
 
     protected performReqeust<T>(
@@ -79,7 +96,7 @@ export class MeshRestClient {
     }
 
     public auth: MeshAuthAPI = {
-        login: (username, password) => this.performReqeust(POST, '/auth/login', { username, password }),
+        login: (body) => this.performReqeust(POST, '/auth/login', body),
         me: () => this.performReqeust(GET, '/auth/me'),
         logout: () => this.performReqeust(GET, '/auth/logout'),
     } as const;

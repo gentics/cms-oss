@@ -81,6 +81,7 @@ import {
     TagUpdateRequest,
     TagNodeListOptions,
     NodeLoadOptions,
+    LoginRequest,
 } from '@gentics/mesh-models';
 
 export interface MeshClientDriver {
@@ -91,6 +92,21 @@ export interface MeshClientDriver {
         body?: null | string,
     ): Promise<Record<string, any>>;
 }
+
+export interface MeshRestClientConfig {
+    interceptors?: MeshRestClientInterceptor[];
+    connection: MeshClientConnection;
+}
+
+export interface MeshRestClientInterceptorData {
+    protocol: 'http' | 'https';
+    host: string;
+    port?: number;
+    path: string;
+    params: Record<string, string>;
+}
+
+export type MeshRestClientInterceptor = (data: MeshRestClientInterceptorData) => MeshRestClientInterceptorData;
 
 export interface MeshClientConnection {
     ssl?: boolean;
@@ -113,7 +129,7 @@ export enum MeshAPIVersion {
 }
 
 export interface MeshAuthAPI {
-    login(username: string, password: string): Promise<LoginResponse>;
+    login(body: LoginRequest): Promise<LoginResponse>;
     me(): Promise<UserResponse>;
     logout(): Promise<GenericMessageResponse>;
 }

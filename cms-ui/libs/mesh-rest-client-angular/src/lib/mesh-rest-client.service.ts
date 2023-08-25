@@ -3,7 +3,6 @@ import { Injectable } from '@angular/core';
 import {
     MeshAuthAPI,
     MeshBranchAPI,
-    MeshClientConnection,
     MeshClusterAPI,
     MeshCoordinatorAPI,
     MeshGraphQLAPI,
@@ -13,13 +12,14 @@ import {
     MeshPermissionAPI,
     MeshPluginAPI,
     MeshProjectAPI,
-    MeshTagsAPI,
-    MeshTagFamiliesAPI,
     MeshRestClient,
+    MeshRestClientConfig,
     MeshRoleAPI,
     MeshSchemaAPI,
     MeshServerAPI,
-    MeshUserAPI,
+    MeshTagFamiliesAPI,
+    MeshTagsAPI,
+    MeshUserAPI
 } from '@gentics/mesh-rest-client';
 import { AngularMeshClientDriver } from './angular-mesh-client-driver';
 
@@ -27,7 +27,7 @@ import { AngularMeshClientDriver } from './angular-mesh-client-driver';
 export class MeshRestClientService {
 
     private driver: AngularMeshClientDriver;
-    private config: MeshClientConnection;
+    private config: MeshRestClientConfig;
     private client: MeshRestClient;
 
     constructor(
@@ -36,7 +36,7 @@ export class MeshRestClientService {
         this.driver = new AngularMeshClientDriver(http);
     }
 
-    init(config: MeshClientConnection, apiKey?: string): void {
+    init(config: MeshRestClientConfig, apiKey?: string): void {
         this.client = new MeshRestClient(this.driver, config, apiKey);
         this.config = config;
     }
@@ -45,7 +45,7 @@ export class MeshRestClientService {
         return this.client != null;
     }
 
-    getConfig(): MeshClientConnection {
+    getConfig(): MeshRestClientConfig {
         return this.config;
     }
 

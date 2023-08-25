@@ -156,6 +156,10 @@
         "en": "String"
     },
 
+    "user_name": {
+        "de": "Benutzername",
+        "en": "Username"
+    },
     "admin_permissions": {
         "de": "Administrator Berechtigungen",
         "en": "Administrator permissions"
@@ -167,6 +171,18 @@
     "confirm_addition": {
         "de": "{{ label }} bestätigen",
         "en": "Confirm {{ label }}"
+    },
+    "password": {
+        "de": "Passwort",
+        "en": "Password"
+    },
+    "new_password": {
+        "de": "Neues Passwort",
+        "en": "New Password"
+    },
+    "new_password_required_warning": {
+        "de": "Sie müssen ein neues Passwort für Ihren Benutzer angeben",
+        "en": "You have to supply a new password for you user"
     },
     "update_password": {
         "en": "Update Password",

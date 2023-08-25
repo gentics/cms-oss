@@ -18,6 +18,7 @@ import {
     TagmapEntryUpdateRequest,
     TagmapEntryUpdateResponse,
 } from '@gentics/cms-models';
+import { LoginResponse } from '@gentics/mesh-models';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ApiBase } from '../base/api-base.service';
@@ -223,7 +224,7 @@ export class ContentrespositoryApi {
 
     loginToMeshInstance(
         contentRepositoryId: EntityIdType,
-    ): Observable<Response> {
-        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/proxylogin`, null);
+    ): Observable<LoginResponse> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/proxylogin`, null) as any;
     }
 }

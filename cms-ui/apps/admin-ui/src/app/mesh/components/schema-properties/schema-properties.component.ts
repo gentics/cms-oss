@@ -1,9 +1,10 @@
 import { createBlacklistValidator, createWhitelistValidator } from '@admin-ui/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { EditableSchemaProperties } from '@gentics/mesh-models';
 import { FormProperties, createJsonValidator, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
+import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-field-properties.component';
 
 export enum SchemaPropertiesMode {
     CREATE,
@@ -20,18 +21,16 @@ export enum SchemaPropertiesMode {
         generateValidatorProvider(SchemaPropertiesComponent),
     ],
 })
-export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> implements OnChanges {
+export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableSchemaProperties> {
 
     public readonly SchemaPropertiesMode = SchemaPropertiesMode;
+    public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
 
     @Input()
     public mode: SchemaPropertiesMode;
 
     @Input()
-    public onlyProperties = false;
-
-    @Input()
-    public ownName: string;
+    public tabs = false;
 
     @Input()
     public schemaNames: string[];
@@ -39,38 +38,21 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
     @Input()
     public microschemaNames: string[];
 
-    @Input()
-    public fieldNames: string[];
-
     protected override delayedSetup = true;
-
-    public ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-
-        if (changes.ownName || changes.schemaNames) {
-            if (this.form) {
-                this.form.controls.name.updateValueAndValidity();
-            }
-        }
-
-        if (changes.fieldNames) {
-            this.updateFieldNames(this.fieldNames);
-        }
-    }
 
     protected createForm(): FormGroup<FormProperties<EditableSchemaProperties>> {
         return new FormGroup<FormProperties<EditableSchemaProperties>>({
-            name: new FormControl(this.value?.name, [
+            name: new FormControl(this.value?.name || '', [
                 Validators.required,
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
-                createBlacklistValidator(() => this.schemaNames.filter(name => name !== this.ownName)),
+                createBlacklistValidator(() => this.schemaNames.filter(name => name !== this.form?.value?.name)),
             ]),
-            description: new FormControl(this.value?.description),
-            autoPurge: new FormControl(this.value?.autoPurge),
-            container: new FormControl(this.value?.container),
-            displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.fieldNames)),
-            segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.fieldNames)),
-            urlFields: new FormControl(this.value?.urlFields || [], createWhitelistValidator(() => this.fieldNames)),
+            description: new FormControl(this.value?.description || ''),
+            autoPurge: new FormControl(this.value?.autoPurge ?? false),
+            container: new FormControl(this.value?.container ?? false),
+            displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
+            urlFields: new FormControl(this.value?.urlFields || [], createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
             elasticsearch: new FormControl(this.value?.elasticsearch, createJsonValidator()),
             fields: new FormControl(this.value?.fields || []),
         });
@@ -82,15 +64,5 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
 
     protected assembleValue(value: EditableSchemaProperties): EditableSchemaProperties {
         return value;
-    }
-
-    protected updateFieldNames(names: string[]): void {
-        this.fieldNames = names;
-
-        if (this.form) {
-            this.form.controls.displayField.updateValueAndValidity();
-            this.form.controls.segmentField.updateValueAndValidity();
-            this.form.controls.urlFields.updateValueAndValidity();
-        }
     }
 }

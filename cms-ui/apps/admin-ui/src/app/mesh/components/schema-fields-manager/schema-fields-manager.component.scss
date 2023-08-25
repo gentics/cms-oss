@@ -1,7 +1,10 @@
 @import "variables";
 
 :host {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    height: 100%;
 }
 
 .label {
@@ -10,10 +13,15 @@
     color: $gtx-color-dark-gray;
     user-select: none;
     margin-bottom: 0.1rem;
+    flex: 0 0;
+    width: 100%;
 }
 
 .field-list {
     display: block;
+    flex: 1 1 auto;
+    min-height: 1px;
+    overflow: auto;
 
     .field-wrapper {
         display: flex;
@@ -28,10 +36,12 @@
         flex-wrap: nowrap;
         align-items: center;
 
-        .move-top {
+        .move-top,
+        .move-up {
             margin-bottom: 2rem;
         }
 
+        .move-down,
         .move-bottom {
             margin-top: 2rem;
         }
@@ -52,6 +62,7 @@
 .add-button-wrapper {
     width: 100%;
     display: flex;
+    padding-top: 1rem;
 
     .add-button {
         margin: auto;

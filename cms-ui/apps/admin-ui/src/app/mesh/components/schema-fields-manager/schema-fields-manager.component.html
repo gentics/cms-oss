@@ -16,12 +16,36 @@
                     size="small"
                     [title]="'mesh.move_to_top' | i18n"
                     [disabled]="first"
-                    (click)="moveToTop(ctl, index)"
+                    (click)="moveControl(ctl, index, 0)"
                 >
                     <icon>north</icon>
                 </gtx-button>
 
+                <gtx-button
+                    class="move-up"
+                    icon
+                    type="secondary"
+                    size="small"
+                    [title]="'mesh.move_up' | i18n"
+                    [disabled]="first"
+                    (click)="moveControl(ctl, index, index - 1)"
+                >
+                    <icon>keyboard_arrow_up</icon>
+                </gtx-button>
+
                 <gtx-drag-handle class="drag-handle"></gtx-drag-handle>
+
+                <gtx-button
+                    class="move-down"
+                    icon
+                    type="secondary"
+                    size="small"
+                    [title]="'mesh.move_down' | i18n"
+                    [disabled]="last"
+                    (click)="moveControl(ctl, index, index + 1)"
+                >
+                    <icon>keyboard_arrow_down</icon>
+                </gtx-button>
 
                 <gtx-button
                     class="move-bottom"
@@ -30,7 +54,7 @@
                     size="small"
                     [title]="'mesh.move_to_bottom' | i18n"
                     [disabled]="last"
-                    (click)="moveToBottom(ctl, index)"
+                    (click)="moveControl(ctl, index, form.controls.length - 1)"
                 >
                     <icon>south</icon>
                 </gtx-button>
@@ -39,7 +63,7 @@
             <gtx-mesh-schema-field-properties
                 class="field"
                 [formControl]="ctl"
-                [type]="SchemaFieldPropertiesType.SCHEMA"
+                [type]="type"
                 [ownName]="ownName"
                 [schemaNames]="schemaNames"
                 [microschemaNames]="microschemaNames"

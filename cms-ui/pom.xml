@@ -42,9 +42,9 @@
     </properties>
 
 	<modules>
+        <module>libs/mesh-models</module>
         <module>libs/cms-models</module>
         <module>libs/cms-rest-clients-angular</module>
-        <module>libs/mesh-models</module>
         <module>libs/mesh-rest-client</module>
         <module>libs/mesh-rest-client-angular</module>
         <module>libs/ui-core</module>

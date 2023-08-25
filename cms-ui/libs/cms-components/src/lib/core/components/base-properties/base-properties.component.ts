@@ -5,8 +5,6 @@ import { isEqual } from 'lodash';
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
-const INIVIAL_UNSET_VALUE = Symbol('initial-unset-value');
-
 @Component({ template: '' })
 export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
@@ -69,7 +67,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         super(changeDetector);
         this.booleanInputs.push(['initialValue', true]);
         // Set the value to this flag. Used to ignore changes until intial value has been provided.
-        this.value = INIVIAL_UNSET_VALUE as any;
+        this.value = null;
     }
 
     public ngOnInit(): void {
@@ -124,7 +122,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
             this.form.statusChanges,
         ]).pipe(
             // Do not emit values if the disabled state and value hasn't initialized yet
-            filter(() => this.hasSetInitialDisabled && this.value !== INIVIAL_UNSET_VALUE),
+            filter(() => this.hasSetInitialDisabled),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
             map(([value]) => this.assembleValue(value as any)),

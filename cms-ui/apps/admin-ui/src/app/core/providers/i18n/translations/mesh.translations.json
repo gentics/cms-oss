@@ -268,9 +268,37 @@
         "de": "Neues Feld hinzugfügen",
         "en": "Add new field"
     },
+    "schema_displayField": {
+        "de": "Anzeigefeld",
+        "en": "Displayfield"
+    },
+    "schema_segmentField": {
+        "de": "Segmentfeld",
+        "en": "Segmentfield"
+    },
+    "schema_urlFields": {
+        "de": "URL Felder",
+        "en": "URL Fields"
+    },
+    "schema_autoPurge": {
+        "de": "Automatisches Bereinigen",
+        "en": "Autopurge"
+    },
+    "schema_container": {
+        "de": "Behälter",
+        "en": "Container"
+    },
     "move_to_top": {
         "de": "Als erstes element",
         "en": "Move to top"
+    },
+    "move_up": {
+        "de": "Nach oben bewegen",
+        "en": "Move up"
+    },
+    "move_down": {
+        "de": "Nach unten bewegen",
+        "en": "Move down"
     },
     "move_to_bottom": {
         "de": "Als letztes element",

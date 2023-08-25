@@ -3,49 +3,21 @@
 </div>
 
 <div class="modal-content">
-    <!-- <div class="tabs-wrapper"> -->
-        <gtx-tabs class="schema-tabs">
-            <gtx-tab id="properties" [title]="'shared.title_properties' | i18n">
-                <div class="detail-tab-wrapper">
-                    <gtx-mesh-schema-properties
-                        *ngIf="namesLoaded"
-                        [mode]="mode"
-                        [formControl]="fgProperties"
-                        [onlyProperties]="true"
-                        [ownName]="schema?.name"
-                        [schemaNames]="schemaNames"
-                        [microschemaNames]="microschemaNames"
-                        [fieldNames]="fieldNames"
-                    ></gtx-mesh-schema-properties>
-                </div>
-            </gtx-tab>
-
-            <gtx-tab id="elasticsearch" [title]="'mesh.elasticsearch' | i18n">
-                <gtx-json-input
-                    [label]="'mesh.elasticsearch' | i18n"
-                    [formControl]="fgElasticsearch"
-                ></gtx-json-input>
-            </gtx-tab>
-
-            <gtx-tab id="fields" [title]="'mesh.schema_fields' | i18n">
-                <div class="detail-tab-wrapper">
-                    <gtx-mesh-schema-fields-manager
-                        [ownName]="fgProperties.value.name"
-                        [schemaNames]="schemaNames"
-                        [microschemaNames]="microschemaNames"
-                        [formControl]="fgFields"
-                        (rawFieldNames)="updateFieldNames($event)"
-                    ></gtx-mesh-schema-fields-manager>
-                </div>
-            </gtx-tab>
-        </gtx-tabs>
-    <!-- </div> -->
+    <gtx-mesh-schema-properties
+        *ngIf="namesLoaded"
+        class="properties"
+        [mode]="mode"
+        [formControl]="form"
+        [tabs]="true"
+        [schemaNames]="schemaNames"
+        [microschemaNames]="microschemaNames"
+    ></gtx-mesh-schema-properties>
 </div>
 
 <div class="modal-footer">
     <gtx-button
         type="primary"
-        [disabled]="!fgProperties.valid || !fgProperties.enabled || !fgElasticsearch.valid || !fgElasticsearch.enabled || !fgFields.valid || !fgFields.enabled"
+        [disabled]="!form.valid || !form.enabled"
         (click)="buttonCreateEntityClicked()"
     >
         {{ (mode === SchemaPropertiesMode.CREATE ? 'modal.create_button' : 'modal.update_button') | i18n }}

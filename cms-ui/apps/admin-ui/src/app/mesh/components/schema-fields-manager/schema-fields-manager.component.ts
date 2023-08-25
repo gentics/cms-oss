@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { BasePropertiesListComponent } from '@gentics/cms-components';
 import { SchemaField } from '@gentics/mesh-models';
@@ -17,7 +17,8 @@ import { SchemaFieldPropertiesType } from '../schema-field-properties/schema-fie
 })
 export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<SchemaField> {
 
-    public readonly SchemaFieldPropertiesType = SchemaFieldPropertiesType;
+    @Input({ required: true })
+    public type: SchemaFieldPropertiesType;
 
     @Input()
     public label: string;
@@ -30,15 +31,6 @@ export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<Sc
 
     @Input()
     public microschemaNames: string[];
-
-    @Output()
-    public rawFieldNames = new EventEmitter<string[]>();
-
-    protected override onValueTrigger(_value: SchemaField[]): void {
-        const fields = this.form.getRawValue() || [];
-        const names = fields.map(field => field.name);
-        this.rawFieldNames.emit(names);
-    }
 
     protected createControl(value?: SchemaField): FormControl<SchemaField> {
         return new FormControl(value || {} as any);
@@ -60,16 +52,9 @@ export class SchemaFieldsManagerComponent extends BasePropertiesListComponent<Sc
         this.value = this.form.value;
     }
 
-    moveToTop(ctl: FormControl<SchemaField>, index: number): void {
-        this.form.removeAt(index, { emitEvent: false });
-        this.form.insert(0, ctl, { emitEvent: false });
-        this.form.updateValueAndValidity();
-        this.value = this.form.value;
-    }
-
-    moveToBottom(ctl: FormControl<SchemaField>, index: number): void {
-        this.form.removeAt(index, { emitEvent: false });
-        this.form.push(ctl, { emitEvent: false });
+    moveControl(ctl: FormControl<SchemaField>, from: number, to: number): void {
+        this.form.removeAt(from, { emitEvent: false });
+        this.form.insert(to, ctl, { emitEvent: false });
         this.form.updateValueAndValidity();
         this.value = this.form.value;
     }

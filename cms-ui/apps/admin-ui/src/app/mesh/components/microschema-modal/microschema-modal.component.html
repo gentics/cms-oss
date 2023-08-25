@@ -4,8 +4,12 @@
 
 <div class="modal-content">
     <gtx-mesh-microschema-properties
+        *ngIf="namesLoaded"
+        class="properties"
         [mode]="mode"
         [formControl]="form"
+        [schemaNames]="schemaNames"
+        [microschemaNames]="microschemaNames"
     ></gtx-mesh-microschema-properties>
 </div>
 

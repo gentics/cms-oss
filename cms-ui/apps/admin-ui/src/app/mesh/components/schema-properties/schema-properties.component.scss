@@ -2,3 +2,17 @@
     width: 100%;
     padding-bottom: 2.5rem;
 }
+
+.schema-tabs {
+    flex: 1 1 auto;
+    min-height: 1px;
+}
+
+.detail-tab-wrapper {
+    overflow: auto;
+}
+
+form {
+    height: 100%;
+    display: flex;
+}

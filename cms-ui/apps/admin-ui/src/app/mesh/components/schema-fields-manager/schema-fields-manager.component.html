@@ -3,6 +3,7 @@
 <gtx-sortable-list
     *ngIf="form"
     class="field-list"
+    [handles]="true"
     [disabled]="form.controls.length < 2"
     (dragEnd)="sortFields($event)"
 >

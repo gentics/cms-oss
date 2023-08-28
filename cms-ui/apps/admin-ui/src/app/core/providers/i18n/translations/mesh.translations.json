@@ -721,5 +721,9 @@
     "delete_node_success": {
         "de": "Node „{{ entityName }}“ erfolgreich gelöscht!",
         "en": "Successfully deleted node \"{{ entityName }}\"!"
+    },
+    "unknown_error": {
+        "de": "Ein unbekannter Fehler ist aufgetreten",
+        "en": "An unknown error occurred"
     }
 }

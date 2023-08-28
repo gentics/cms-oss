@@ -8,7 +8,17 @@
             <router-outlet [name]="ROUTE_MANAGEMENT_OUTLET"></router-outlet>
         </div>
         <div class="management-controls">
-            <gtx-button (click)="logout()">logout</gtx-button>
+            <div class="user-information">
+                <div class="user-avatar">
+                    <icon>person</icon>
+                </div>
+                <div class="user-name">{{ meName }}</div>
+            </div>
+            <gtx-button
+                size="small"
+                flat
+                (click)="logout()"
+            >logout</gtx-button>
         </div>
     </div>
 </gtx-mesh-login-gate>

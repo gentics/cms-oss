@@ -1,8 +1,11 @@
-import { ROUTE_MANAGEMENT_OUTLET, ROUTE_PARAM_MESH_TAB, ROUTE_PATH_MESH, MeshMangementTabs } from '@admin-ui/common';
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MeshMangementTabs, ROUTE_DETAIL_OUTLET, ROUTE_MANAGEMENT_OUTLET, ROUTE_PARAM_MESH_TAB, ROUTE_PATH_MESH } from '@admin-ui/common';
+import { MeshUserBO } from '@admin-ui/mesh/common';
+import { getUserDisplayName } from '@admin-ui/mesh/utils';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ActivatedRoute, PRIMARY_OUTLET, Router, UrlTree } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { User } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 
 @Component({
@@ -18,24 +21,59 @@ export class ManagementComponent {
     @Input()
     public repository: ContentRepository;
 
+    public me: User;
+    public meName: string;
     public loggedIn = false;
 
     constructor(
+        protected changeDetector: ChangeDetectorRef,
         protected router: Router,
         protected route: ActivatedRoute,
         protected cmsClient: GcmsApi,
         protected mesh: MeshRestClientService,
     ) {}
 
-    public handleMeshLogin(isLoggedIn: boolean): void {
-        this.loggedIn = isLoggedIn;
-        const snapshot = this.route.snapshot;
-        const tab: MeshMangementTabs = snapshot.params?.[ROUTE_PARAM_MESH_TAB]
+    public handleMeshLogin(event: { loggedIn: boolean, user?: User }): void {
+        this.loggedIn = event.loggedIn;
+
+        if (event.loggedIn) {
+            if (event.user) {
+                this.me = event.user;
+                this.meName = getUserDisplayName(this.me);
+            } else {
+                this.mesh.auth.me().then(res => {
+                    this.me = res;
+                    this.meName = getUserDisplayName(this.me);
+                    this.changeDetector.markForCheck();
+                });
+            }
+        }
+
+        const tree: UrlTree = (this.router as any).rawUrlTree;
+        let isManagement = false;
+        let group = tree.root;
+
+        while (Object.keys(group.children || {}).length > 0) {
+            if (group.children[ROUTE_DETAIL_OUTLET]) {
+                group = group.children[ROUTE_DETAIL_OUTLET];
+                continue;
+            }
+            if (group.children[PRIMARY_OUTLET]) {
+                group = group.children[PRIMARY_OUTLET];
+                continue;
+            }
+            if (group.children[ROUTE_MANAGEMENT_OUTLET]) {
+                group = group.children[ROUTE_MANAGEMENT_OUTLET];
+                isManagement = true;
+                break;
+            }
+        }
+
         const parts = [
             ROUTE_PATH_MESH,
         ];
-        if (tab) {
-            parts.push(tab);
+        if (isManagement && group.segments.length >= 2) {
+            parts.push(group.segments[1].path);
         }
         this.router.navigate([{ outlets: { [ROUTE_MANAGEMENT_OUTLET]: parts } }], { relativeTo: this.route });
     }
@@ -43,6 +81,7 @@ export class ManagementComponent {
     public logout(): void {
         this.mesh.auth.logout().then(() => {
             this.loggedIn = false;
+            this.changeDetector.markForCheck();
         });
     }
 }

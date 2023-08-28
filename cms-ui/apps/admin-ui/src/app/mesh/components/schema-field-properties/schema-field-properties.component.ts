@@ -116,9 +116,9 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
 
     protected configureForm(value: SchemaField, loud?: boolean): void {
         const options = { emitEvent: !!loud, onlySelf: true };
-        this.effectiveType = value.type == null ? null : (value.type === FieldType.LIST ? value.listType : value.type);
-        setControlsEnabled(this.form, ['listType'], value.type === FieldType.LIST, options);
-        setControlsEnabled(this.form, ['checkServiceUrl', 'extract'], value.type === FieldType.BINARY, options);
+        this.effectiveType = value?.type == null ? null : (value.type === FieldType.LIST ? value.listType : value.type);
+        setControlsEnabled(this.form, ['listType'], value?.type === FieldType.LIST, options);
+        setControlsEnabled(this.form, ['checkServiceUrl', 'extract'], value?.type === FieldType.BINARY, options);
         setControlsEnabled(this.form, ['allow'], TYPES_WITH_ALLOW.includes(this.effectiveType), options);
     }
 

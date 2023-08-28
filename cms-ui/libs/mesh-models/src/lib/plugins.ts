@@ -6,6 +6,17 @@ export interface PluginDeploymentRequest {
     path: string;
 }
 
+export enum PluginStatus {
+    LOADED = 'LOADED',
+    VALIDATED = 'VALIDATED',
+    STARTED = 'STARTED',
+    PRE_REGISTERED = 'PRE_REGISTERED',
+    INITIALIZED = 'INITIALIZED',
+    REGISTERED = 'REGISTERED',
+    FAILED = 'FAILED',
+    FAILED_RETRY = 'FAILED_RETRY',
+}
+
 export interface PluginListResponse {
     /** Paging information of the list result. */
     _metainfo: PagingMetaInfo;
@@ -43,4 +54,5 @@ export interface PluginResponse {
     manifest: PluginManifest;
     /** Name of the plugin. */
     name: string;
+    status: PluginStatus;
 }

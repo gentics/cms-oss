@@ -98,13 +98,15 @@
             gtxDetailTabLink
             [title]="'contentRepository.management' | i18n"
         >
-            <gtx-entity-detail-header
-                [title]="'shared.title_management_of_entity' | i18n: { entityName: entity?.name }"
-                (cancelClick)="detailsClose()"
-            ></gtx-entity-detail-header>
+            <div class="detail-tab-wrapper">
+                <gtx-entity-detail-header
+                    [title]="'shared.title_management_of_entity' | i18n: { entityName: entity?.name }"
+                    (cancelClick)="detailsClose()"
+                ></gtx-entity-detail-header>
 
-            <div *ngIf="editorTab === Tabs.MANAGEMENT" class="gtx-entity-details-tab-content-body">
-                <gtx-mesh-management [repository]="entity"></gtx-mesh-management>
+                <div *ngIf="editorTab === Tabs.MANAGEMENT" class="gtx-entity-details-tab-content-body">
+                    <gtx-mesh-management [repository]="entity"></gtx-mesh-management>
+                </div>
             </div>
         </gtx-tab>
     </gtx-tabs>

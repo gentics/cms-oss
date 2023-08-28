@@ -1,6 +1,12 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
 .tabs {
     margin: 0;
-    height: auto;
+    height: 100%;
     display: flex;
 
     &::ng-deep {

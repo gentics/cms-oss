@@ -725,5 +725,53 @@
     "unknown_error": {
         "de": "Ein unbekannter Fehler ist aufgetreten",
         "en": "An unknown error occurred"
+    },
+    "plugins": {
+        "de": "Plugins",
+        "en": "Plugins"
+    },
+    "version": {
+        "de": "Version",
+        "en": "Version"
+    },
+    "status": {
+        "de": "Status",
+        "en": "Status"
+    },
+    "plugin_id": {
+        "de": "ID",
+        "en": "ID"
+    },
+    "plugin_status_LOADED": {
+        "de": "Geladen",
+        "en": "Loaded"
+    },
+    "plugin_status_VALIDATED": {
+        "de": "Validiert",
+        "en": "Validated"
+    },
+    "plugin_status_STARTED": {
+        "de": "Gestartet",
+        "en": "Started"
+    },
+    "plugin_status_PRE_REGISTERED": {
+        "de": "Vor Registrierung",
+        "en": "Pre-Registered"
+    },
+    "plugin_status_INITIALIZED": {
+        "de": "Initialisiert",
+        "en": "Initialized"
+    },
+    "plugin_status_REGISTERED": {
+        "de": "Registriert",
+        "en": "Registered"
+    },
+    "plugin_status_FAILED": {
+        "de": "Fehlgeschlagen",
+        "en": "Failed"
+    },
+    "plugin_status_FAILED_RETRY": {
+        "de": "Fehlgeschlagen (Neustart)",
+        "en": "Failed (retry)"
     }
 }

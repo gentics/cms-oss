@@ -1,9 +1,17 @@
 @import 'variables';
 
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
 .management-container {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    height: 100%;
+    width: 100%;
 
     .management-content {
         flex: 1 1 auto;

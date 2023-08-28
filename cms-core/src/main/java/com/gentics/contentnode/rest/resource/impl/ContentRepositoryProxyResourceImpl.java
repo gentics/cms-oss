@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -352,7 +353,10 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 				@Override
 				public void write(OutputStream output) throws IOException, WebApplicationException {
 					try {
-						IOUtils.copy(response.getEntity().getContent(), output);
+						HttpEntity responseEntity = response.getEntity();
+						if (responseEntity != null) {
+							IOUtils.copy(responseEntity.getContent(), output);
+						}
 					} finally {
 						response.close();
 						httpClient.close();

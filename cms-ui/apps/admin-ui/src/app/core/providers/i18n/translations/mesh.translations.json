@@ -60,7 +60,7 @@
         "en": "Database Revision"
     },
     "serverInfo_vertxVersion": {
-        "de": "Vert.x Verison",
+        "de": "Vert.x Version",
         "en": "Vert.x Version"
     },
     "serverInfo_searchVendor": {
@@ -99,13 +99,13 @@
         "de": "Wiederherstellung",
         "en": "Restore"
     },
-    "coordination": {
-        "de": "Koorindation",
-        "en": "Coordination"
+    "clustering": {
+        "de": "Clustering",
+        "en": "Clustering"
     },
     "coordinatorMode": {
-        "de": "Modus",
-        "en": "Mode"
+        "de": "Koordinationsmodus",
+        "en": "Coordination Mode"
     },
     "coordinatorMode_DISABLED": {
         "de": "Deaktiviert",
@@ -387,7 +387,7 @@
         "en": "Groups"
     },
     "create_group": {
-        "de": "Neue Gruppe erstelle",
+        "de": "Neue Gruppe erstellen",
         "en": "Create new group"
     },
     "update_group": {
@@ -477,7 +477,7 @@
         "en": "Select schema"
     },
     "info_selected_schemas": {
-        "de": "{{amountSelected}} von {{amountTotal}} Schemen ausgewählt",
+        "de": "{{amountSelected}} von {{amountTotal}} Schemas ausgewählt",
         "en": "{{amountSelected}} of {{amountTotal}} schemas selected"
     },
     "create_schema_success": {
@@ -526,7 +526,7 @@
         "en": "Update microschema \"{{ entityName }}\""
     },
     "info_selected_microschemas": {
-        "de": "{{amountSelected}} von {{amountTotal}} Mikroschemen ausgewählt",
+        "de": "{{amountSelected}} von {{amountTotal}} Mikroschemas ausgewählt",
         "en": "{{amountSelected}} of {{amountTotal}} microschemas selected"
     },
     "create_microschema_success": {

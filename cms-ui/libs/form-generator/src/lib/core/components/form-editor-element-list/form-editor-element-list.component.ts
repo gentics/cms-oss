@@ -18,7 +18,7 @@ import {
     FORM_ELEMENT_MIME_TYPE_TYPE,
     FormElementDropInformation
 } from '@gentics/cms-models';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { newUUID } from '../../../common';

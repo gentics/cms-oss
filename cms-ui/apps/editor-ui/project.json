@@ -1,0 +1,163 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "editor-ui",
+    "projectType": "application",
+    "prefix": "gtx",
+    "sourceRoot": "apps/editor-ui/src",
+    "implicitDependencies": [
+        "cms-components",
+        "cms-models",
+        "cms-rest-clients-angular",
+        "form-generator",
+        "image-editor",
+        "mesh-models",
+        "ui-core"
+    ],
+    "tags": ["app", "ui", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:webpack-browser",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "customWebpackConfig": {
+                    "path": "apps/editor-ui/webpack.partial.js"
+                },
+                "outputPath": "dist/apps/editor-ui",
+                "index": "apps/editor-ui/src/index.html",
+                "main": "apps/editor-ui/src/main.ts",
+                "polyfills": ["apps/editor-ui/src/polyfills.ts"],
+                "tsConfig": "apps/editor-ui/tsconfig.app.json",
+                "assets": [
+                    "apps/editor-ui/src/favicon.ico",
+                    "apps/editor-ui/src/assets"
+                ],
+                "styles": ["apps/editor-ui/src/styles/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/editor-ui/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "scripts": [],
+                "allowedCommonJsDependencies": [
+                    "@bevacqua/rome",
+                    "@gentics/ui-core",
+                    "angular2-hotkeys",
+                    "dom-serialize",
+                    "masonry-layout",
+                    "rxjs",
+                    "serialize-to-js",
+                    "immutablets"
+                ],
+                "aot": true,
+                "buildOptimizer": false,
+                "optimization": false,
+                "vendorChunk": true,
+                "extractLicenses": false,
+                "sourceMap": true,
+                "namedChunks": true
+            },
+            "configurations": {
+                "production": {
+                    "budgets": [
+                        {
+                            "type": "initial",
+                            "maximumWarning": "5mb",
+                            "maximumError": "7mb"
+                        }
+                    ],
+                    "fileReplacements": [
+                        {
+                            "replace": "apps/editor-ui/src/environments/environment.ts",
+                            "with": "apps/editor-ui/src/environments/environment.prod.ts"
+                        }
+                    ],
+                    "outputHashing": "all",
+                    "optimization": true,
+                    "sourceMap": false,
+                    "namedChunks": false,
+                    "extractLicenses": true,
+                    "vendorChunk": false,
+                    "buildOptimizer": true
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@nx/angular:webpack-dev-server",
+            "options": {
+                "proxyConfig": "proxy.conf.json",
+                "liveReload": false
+            },
+            "configurations": {
+                "production": {
+                    "browserTarget": "editor-ui:build:production"
+                },
+                "development": {
+                    "browserTarget": "editor-ui:build:development"
+                }
+            },
+            "defaultConfiguration": "development"
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "apps/editor-ui/**/*.ts",
+                    "apps/editor-ui/**/*.html"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@angular-devkit/custom-webpack:karma",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "customWebpackConfig": {
+                    "path": "apps/editor-ui/webpack.partial.js"
+                },
+                "main": "apps/editor-ui/src/test.ts",
+                "tsConfig": "apps/editor-ui/tsconfig.spec.json",
+                "karmaConfig": "apps/editor-ui/karma.conf.js",
+                "polyfills": "apps/editor-ui/src/polyfills.ts",
+                "styles": ["apps/editor-ui/src/styles/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/editor-ui/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "assets": ["apps/editor-ui/src/assets"]
+            },
+            "configurations": {
+                "ci": {
+                    "codeCoverage": true
+                }
+            }
+        },
+        "serve-static": {
+            "executor": "@nx/web:file-server",
+            "options": {
+                "buildTarget": "editor-ui:build"
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/editor-ui/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "editor-ui:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

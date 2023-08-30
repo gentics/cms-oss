@@ -1,0 +1,64 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "form-generator",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/form-generator/src",
+    "implicitDependencies": [
+        "form-generator",
+        "cms-models",
+        "cms-rest-clients-angular",
+        "ui-core"
+    ],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/form-generator/tsconfig.lib.json",
+                "project": "libs/form-generator/ng-package.json"
+            }
+        },
+        "test": {
+            "executor": "@angular-devkit/custom-webpack:karma",
+            "options": {
+                "main": "libs/form-generator/src/test.ts",
+                "polyfills": "libs/form-generator/src/polyfills.ts",
+                "tsConfig": "libs/form-generator/tsconfig.spec.json",
+                "karmaConfig": "libs/form-generator/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "libs/form-generator/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                }
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/form-generator/**/*.ts",
+                    "libs/form-generator/**/*.html"
+                ]
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/form-generator/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "form-generator:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

@@ -3,7 +3,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FollowUpScheduleData, IntervalScheduleData, ScheduleData, ScheduleType } from '@gentics/cms-models';
 import { FormProperties, dateInYears, generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 @Component({
     selector: 'gtx-schedule-data-properties',

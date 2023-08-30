@@ -1,0 +1,61 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "image-editor",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/image-editor/src",
+    "implicitDependencies": [
+        "ui-core"
+    ],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/image-editor/tsconfig.lib.json",
+                "project": "libs/image-editor/ng-package.json"
+            }
+        },
+        "test": {
+            "executor": "@angular-devkit/custom-webpack:karma",
+            "options": {
+                "main": "libs/image-editor/src/test.ts",
+                "polyfills": "libs/image-editor/src/polyfills.ts",
+                "tsConfig": "libs/image-editor/tsconfig.spec.json",
+                "karmaConfig": "libs/image-editor/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "libs/image-editor/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                }
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/image-editor/**/*.ts",
+                    "libs/image-editor/**/*.html"
+                ]
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/image-editor/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "image-editor:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

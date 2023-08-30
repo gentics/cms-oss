@@ -1,5 +1,4 @@
-import { MeshMangementTabs, ROUTE_DETAIL_OUTLET, ROUTE_MANAGEMENT_OUTLET, ROUTE_PARAM_MESH_TAB, ROUTE_PATH_MESH } from '@admin-ui/common';
-import { MeshUserBO } from '@admin-ui/mesh/common';
+import { ROUTE_DETAIL_OUTLET, ROUTE_MANAGEMENT_OUTLET, ROUTE_PATH_MESH } from '@admin-ui/common';
 import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { ActivatedRoute, PRIMARY_OUTLET, Router, UrlTree } from '@angular/router';

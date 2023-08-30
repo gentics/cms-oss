@@ -14,7 +14,7 @@ import {
 import { AbstractControl, AsyncValidatorFn, UntypedFormControl, UntypedFormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import { EditableFolderProps, Folder, GtxI18nProperty, Language, Raw } from '@gentics/cms-models';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
 import { debounceTime, filter, map, mergeMap, switchMap, take, tap } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';

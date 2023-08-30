@@ -44,7 +44,7 @@ import {
     getNoPermissions,
 } from '@gentics/cms-models';
 import { IBreadcrumbRouterLink, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     Observable,

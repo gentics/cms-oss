@@ -1,4 +1,4 @@
-import { GcmsNormalizationSchemas } from '@gentics/cms-models/lib/models/gcms-normalizer/schemas';
+import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normalizer/schemas';
 
 /**
  * In order not to rewrite all imports, we export all model types here as well.

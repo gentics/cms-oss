@@ -1,15 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [
-            "webpack-env",
-            "jquery",
-            "masonry-layout",
-            "jasmine"
-        ]
+        "types": ["node", "jquery"]
     },
     "files": [
-        "src/app/main.ts",
+        "src/main.ts",
         "src/polyfills.ts"
     ],
     "include": [
@@ -25,6 +20,12 @@
         "src/test.ts",
         "src/testing/**",
         "**/*.mock.ts",
-        "**/*.spec.ts"
+        "**/*.spec.ts",
+        "cypress/**/*",
+        "cypress.config.ts",
+        "**/*.cy.ts",
+        "**/*.cy.js",
+        "**/*.cy.tsx",
+        "**/*.cy.jsx"
     ]
 }

@@ -15,12 +15,22 @@ module.exports = {
         tsconfigRootDir: __dirname,
     },
     plugins: [
+        // '@nx',
         'eslint-plugin-import',
         'eslint-plugin-jsdoc',
         '@angular-eslint/eslint-plugin',
         '@typescript-eslint',
     ],
     rules: {
+        // '@nx/enfore-module-boundaries': [
+        //     'error',
+        //     {
+        //         depConstraints: {
+        //             sourceTag: 'app',
+        //             onlyDependOnLibsWithTags: ['lib'],
+        //         },
+        //     },
+        // ],
         '@angular-eslint/component-class-suffix': [
             'error',
             {

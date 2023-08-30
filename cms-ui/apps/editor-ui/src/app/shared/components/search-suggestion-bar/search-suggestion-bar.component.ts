@@ -20,7 +20,7 @@ import {
 } from '@editor-ui/app/shared/providers/suggestion-search/suggestion-search.service';
 import { ObservableStopper } from '@gentics/cms-components';
 import { EditMode, Folder, Page } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable, Subscription } from 'rxjs';
 import {
     debounceTime,

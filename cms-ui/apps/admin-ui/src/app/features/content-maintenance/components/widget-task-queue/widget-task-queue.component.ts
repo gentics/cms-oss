@@ -3,7 +3,7 @@ import { AdminOperations } from '@admin-ui/core/providers/operations/admin/admin
 import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { coerceToBoolean } from '@gentics/cms-components';
 import { DirtQueueSummary } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { distinctUntilChanged, filter, startWith, switchMap } from 'rxjs/operators';
 

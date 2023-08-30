@@ -24,7 +24,7 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual as _isEqual } from 'lodash';
+import { isEqual as _isEqual } from'lodash-es'
 import { Observable } from 'rxjs';
 import { ItemsInfo } from '../../../common/models';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';

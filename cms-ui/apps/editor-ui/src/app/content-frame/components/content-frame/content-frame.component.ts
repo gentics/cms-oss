@@ -34,7 +34,7 @@ import {
     noItemPermissions,
 } from '@gentics/cms-models';
 import { FilePickerComponent, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { debounce as _debounce, isEqual } from 'lodash';
+import { debounce as _debounce, isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     Observable,

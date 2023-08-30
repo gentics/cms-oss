@@ -1,11 +1,11 @@
 {
   "name": "@gentics/mesh-rest-client-angular",
-  "version": "6.0.0-beta.0",
+  "version": "6.1.0-SNAPSHOT",
   "peerDependencies": {
     "@angular/common": "15.2.5",
     "@angular/core": "15.2.5",
-    "@gentics/mesh-models": "^6.0.0",
-    "@gentics/mesh-rest-client": "^6.0.0",
+    "@gentics/mesh-models": "^6.1.0-SNAPSHOT",
+    "@gentics/mesh-rest-client": "^6.1.0-SNAPSHOT",
     "rxjs": "^6.6.3"
   },
   "publishConfig": {

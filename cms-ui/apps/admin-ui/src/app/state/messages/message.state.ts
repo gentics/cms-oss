@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { GcmsNormalizer, Message, Raw } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 
 import { concatUnique, removeEntries } from '../../common/utils/list-utils/list-utils';
 import { AddEntities } from '../entity/entity.actions';

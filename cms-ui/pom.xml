@@ -105,7 +105,7 @@
 
 						<configuration>
                             <skip>${ui.skip.test}</skip>
-							<arguments>test ${project.artifactId} -- --browsers=${ui.test.browsers} --reporters=junit</arguments>
+							<arguments>run nx -- ${project.artifactId}:test --browsers=${ui.test.browsers} --reporters=junit</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>
@@ -121,7 +121,7 @@
 
 						<configuration>
                             <skip>${ui.skip.build}</skip>
-							<arguments>run build ${project.artifactId}</arguments>
+							<arguments>run nx -- ${project.artifactId}:build</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>

@@ -1,0 +1,47 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "cms-rest-clients-angular",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/cms-rest-clients-angular/src",
+    "implicitDependencies": [
+        "cms-models",
+        "mesh-models"
+    ],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.lib.json",
+                "project": "libs/cms-rest-clients-angular/ng-package.json"
+            }
+        },
+        "test": {
+            "executor": "@angular-devkit/custom-webpack:karma",
+            "options": {
+                "main": "libs/cms-rest-clients-angular/src/test.ts",
+                "polyfills": "libs/cms-rest-clients-angular/src/polyfills.ts",
+                "tsConfig": "libs/cms-rest-clients-angular/tsconfig.spec.json",
+                "karmaConfig": "libs/cms-rest-clients-angular/karma.conf.js",
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "libs/cms-rest-clients-angular/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                }
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/cms-rest-clients-angular/**/*.ts",
+                    "libs/cms-rest-clients-angular/**/*.html"
+                ]
+            }
+        }
+    }
+}

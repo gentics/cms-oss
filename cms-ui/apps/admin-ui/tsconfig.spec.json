@@ -1,16 +1,15 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2016",
         "types": [
             "jasmine",
             "node",
             "jasminewd2"
         ]
     },
-    "files": [
-        "src/test.ts",
-        "src/polyfills.ts"
-    ],
+    "files": ["src/test.ts"],
     "include": [
         "src/**/*.d.ts",
         "src/**/*.spec.ts",

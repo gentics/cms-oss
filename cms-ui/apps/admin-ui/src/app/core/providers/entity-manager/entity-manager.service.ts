@@ -18,7 +18,7 @@ import {
     Normalized,
     Raw
 } from '@gentics/cms-models';
-import { debounce as _debounce, isEqual, values as _values } from 'lodash';
+import { debounce as _debounce, isEqual, values as _values } from'lodash-es'
 import { Observable, of as observableOf, ReplaySubject, Subject, throwError } from 'rxjs';
 import {
     distinctUntilChanged,

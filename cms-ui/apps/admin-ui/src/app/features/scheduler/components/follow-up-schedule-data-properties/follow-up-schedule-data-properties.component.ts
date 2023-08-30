@@ -4,7 +4,7 @@ import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { FollowUpScheduleData, ScheduleBO } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 

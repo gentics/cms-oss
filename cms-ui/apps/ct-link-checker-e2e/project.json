@@ -1,0 +1,37 @@
+{
+  "name": "ct-link-checker-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/ct-link-checker-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/ct-link-checker-e2e/cypress.config.ts",
+        "devServerTarget": "ct-link-checker:serve:development",
+        "testingType": "e2e",
+        "watch": false
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "ct-link-checker:serve:production"
+        },
+        "watch": {
+            "watch": true
+        },
+        "ci": {
+          "devServerTarget": "ct-link-checker:serve-static"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/ct-link-checker-e2e/**/*.{js,ts}"]
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["ct-link-checker"]
+}

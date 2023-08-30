@@ -3,4 +3,4 @@
  * use the '@gentics/cms-models' path defined in the root tsconfig.json.
  */
 
-export * from '@gentics/cms-models/lib/tag-editor';
+export * from '@gentics/cms-models/tag-editor';

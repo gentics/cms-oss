@@ -1,7 +1,7 @@
 import { ObservableStopper } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { combineLatest, Subscription, timer } from 'rxjs';
 import {
     catchError,

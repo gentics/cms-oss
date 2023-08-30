@@ -2,7 +2,7 @@ import { SelectableType } from '@admin-ui/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { PageTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 enum PageLinkType {
     INTERNAL = 'internal',

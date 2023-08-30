@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@
 import { AbstractControl, UntypedFormArray, UntypedFormControl, ValidatorFn } from '@angular/forms';
 import { DataSourceTagPartProperty, SelectOption, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, ISortableEvent, generateFormProvider } from '@gentics/ui-core';
-import { isEqual, pick } from 'lodash';
+import { isEqual, pick } from'lodash-es'
 import { combineLatest } from 'rxjs';
 import { distinctUntilChanged, map } from 'rxjs/operators';
 

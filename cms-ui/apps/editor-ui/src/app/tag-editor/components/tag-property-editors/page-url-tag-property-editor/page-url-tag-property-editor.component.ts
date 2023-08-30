@@ -20,7 +20,7 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { merge, Observable, of, Subject, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 

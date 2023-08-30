@@ -13,7 +13,7 @@ import {
     TemplateTagTagPartProperty,
 } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 import { Observable, Subscription } from 'rxjs';
 
 type GenericUrlPartWithNodeIdProperty =

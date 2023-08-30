@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { File, Folder, Page } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Subject, Subscription, combineLatest } from 'rxjs';
 import { startWith, switchMap, distinctUntilChanged, map, filter } from 'rxjs/operators';
 import { EditorState } from '@editor-ui/app/common/models';

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { GcmsNormalizer, Normalized, Page } from '@gentics/cms-models';
-import { getExampleEntityStore } from '@gentics/cms-models/lib/testing/entity-store-data.mock';
+import { getExampleEntityStore } from '@gentics/cms-models/testing/entity-store-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { BehaviorSubject } from 'rxjs';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';

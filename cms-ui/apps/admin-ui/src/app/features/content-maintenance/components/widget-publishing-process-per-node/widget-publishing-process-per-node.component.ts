@@ -18,7 +18,7 @@ import {
 } from '@angular/core';
 import { Node, PublishQueue, Raw } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Observable, Subscription, timer } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, map, mergeMap, startWith, switchMap, tap } from 'rxjs/operators';
 import { MaintenanceActionModalAction, MaintenanceActionModalComponent } from '../maintenance-action-modal/maintenance-action-modal.component';

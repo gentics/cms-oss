@@ -14,7 +14,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { UntypedFormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Node, NormalizableEntityType, Normalized, Raw, TemplateBO, TemplateSaveRequest } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { NGXLogger } from 'ngx-logger';
 import { Observable, of, Subscription } from 'rxjs';
 import { delay, distinctUntilChanged, filter, first, map, repeat, startWith, switchMap, takeUntil } from 'rxjs/operators';

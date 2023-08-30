@@ -47,7 +47,7 @@ import {
     Raw, RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ApiError } from '../api';

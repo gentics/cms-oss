@@ -11,7 +11,7 @@ import {
     RoleAssignment
 } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 
 export type EditPermissionsSuccessCallback = (changes: GroupSetPermissionsRequest) => void;
 export type EditPermissionsCancelCallback = (val: void) => void;

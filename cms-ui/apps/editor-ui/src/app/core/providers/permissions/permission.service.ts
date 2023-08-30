@@ -38,7 +38,7 @@ import {
     UniformTypePermissions,
     getNoPermissions
 } from '@gentics/cms-models';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, isEqual } from'lodash-es'
 import { Observable, combineLatest, forkJoin, of as observableOf } from 'rxjs';
 import {
     catchError,

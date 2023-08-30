@@ -1,1 +1,1 @@
-export * from '@gentics/cms-models/lib/testing/test-data.mock';
+export * from '@gentics/cms-models/testing/test-data.mock';

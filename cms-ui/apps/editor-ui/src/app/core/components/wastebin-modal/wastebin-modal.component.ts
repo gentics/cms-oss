@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { File, Folder, Form, Image, ItemType, NodeFeature, NodeFeatures, Page, SortField } from '@gentics/cms-models';
 import { IModalDialog, ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, map, publishReplay, refCount, takeUntil, withLatestFrom } from 'rxjs/operators';
 import { ApplicationStateService, WastebinActionsService } from '../../../state';

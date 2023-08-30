@@ -15,7 +15,7 @@ import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, U
 import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSource, Language, MarkupLanguage, Raw, TagPart } from '@gentics/cms-models';
 import { ModalService, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { cloneDeep } from 'lodash-es';
 import { Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';

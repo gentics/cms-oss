@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ExternalLinkStatistics, Language, LinkCheckerPageList, Node, NodeFeature, Raw } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { uniqWith } from 'lodash';
+import { uniqWith } from'lodash-es'
 import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
 import { concatMap, debounceTime, distinctUntilChanged, filter, first, map, switchMap, tap, toArray } from 'rxjs/operators';
 import { FilterOptions } from '../../common/models/filter-options';

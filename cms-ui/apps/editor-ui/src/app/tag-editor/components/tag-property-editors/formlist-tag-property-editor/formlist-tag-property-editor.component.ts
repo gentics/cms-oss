@@ -14,7 +14,7 @@ import {
     TagPropertyType,
     ValidationResult,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { FormgeneratorApiService } from '../../../providers/formgenerator-api/formgenerator-api.service';

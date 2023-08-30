@@ -9,7 +9,7 @@ import {
     Normalized,
     Raw,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { NGXLogger } from 'ngx-logger';
 import { Observable } from 'rxjs';
 import {

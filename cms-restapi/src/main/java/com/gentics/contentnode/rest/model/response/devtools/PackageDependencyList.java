@@ -24,13 +24,10 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
   /**
    * Checks whether the package is complete. A package is incomplete if any object is neither in
    * this package nor in any other.
-   *
    * @return True if the package is complete, false otherwise.
    */
   public boolean checkCompleteness() {
-    if (packageIsComplete != null) {
-      return packageIsComplete;
-    }
+    packageIsComplete = false;
 
     List<PackageDependency> dependencies = this.getItems();
     if (dependencies.isEmpty()) {
@@ -38,9 +35,18 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
       return true;
     }
 
-    packageIsComplete = dependencies.stream().anyMatch(this::isSane);
+    for (PackageDependency dependency : dependencies) {
+      List<PackageDependency> references = dependency.getReferencedDependencies();
+      if (references != null && !references.isEmpty()) {
+        if (references.stream().anyMatch(r -> !isSane(r))) {
+          packageIsComplete = false;
+          return false;
+        }
+      }
+    }
+    packageIsComplete= true;
 
-    return packageIsComplete;
+    return true;
   }
 
   /**
@@ -49,8 +55,24 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
    * @return true if all referenced objects are included
    */
   private boolean isSane(PackageDependency dependency) {
-    return (Boolean.FALSE.equals(dependency.getIsInPackage()) || dependency.getIsInPackage() == null)
-        &&  (Boolean.FALSE.equals(dependency.getIsInOtherPackage()) || dependency.getIsInPackage() == null);
+    return Boolean.TRUE.equals(dependency.getIsInPackage())
+        || Boolean.TRUE.equals(dependency.getIsInOtherPackage());
+  }
+
+  /**
+   * Gets the package completeness status.
+   * @return the package completeness status
+   */
+  public Boolean getPackageIsComplete() {
+    return packageIsComplete;
+  }
+
+  /**
+   * Sets the package completeness status.
+   * @param packageIsComplete the new package completeness status
+   */
+  public void setPackageIsComplete(Boolean packageIsComplete) {
+    this.packageIsComplete = packageIsComplete;
   }
 
 }

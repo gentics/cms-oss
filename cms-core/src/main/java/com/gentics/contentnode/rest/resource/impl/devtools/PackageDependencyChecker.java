@@ -7,6 +7,7 @@ import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
@@ -19,12 +20,12 @@ import java.util.stream.Collectors;
 
 
 /**
- * Service to collect package dependencies and test them for consistency.
+ * Service to lookup package dependencies and test them for consistency.
  */
 public class PackageDependencyChecker {
 
   private static final List<Class<? extends SynchronizableNodeObject>> DEPENDENCY_CLASSES = Arrays.asList(
-      Construct.class, ObjectTagDefinition.class, Template.class);
+      Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
 
   private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(PackageDependencyChecker.class);
   private final PackageSynchronizer packageSynchronizer;

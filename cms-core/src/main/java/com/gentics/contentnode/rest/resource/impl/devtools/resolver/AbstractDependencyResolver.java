@@ -6,6 +6,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.devtools.PackageSynchronizer;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
@@ -59,6 +60,9 @@ public abstract class AbstractDependencyResolver {
       else if (clazz.equals(ObjectTagDefinition.class)) {
         this.resolver = new ObjectPropertyResolver();
       }
+      else if (clazz.equals(Datasource.class)) {
+        this.resolver = new DatasourceResolver();
+      }
       else {
         throw new NodeException("Could not find appropriate resolver for class: " + clazz);
       }
@@ -76,3 +80,4 @@ public abstract class AbstractDependencyResolver {
   }
 
 }
+

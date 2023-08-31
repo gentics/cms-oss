@@ -49,7 +49,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
 
     List<Part> datasourceParts = construct.getParts().stream().filter(
             part -> DEPENDENCIES.stream()
-                .anyMatch(type -> type == part.getPartTypeId())) //todo: check me
+                .anyMatch(type -> type == part.getPartTypeId()))
         .collect(Collectors.toList());
 
     for (Part part : datasourceParts) {
@@ -59,9 +59,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
           .withName(part.getName().toString())
           .withIsInPackage(
               isInPackage(Datasource.class, resolveUuid(part.getInfoInt())))
-          //todo: is this mapping ok  part.info_int to datasource.id ?
-          .withType(
-              Type.DATASOURCE)
+          .withType(Type.DATASOURCE)
           .build();
 
       referencedDependencies.add(referencedDependency);
@@ -78,7 +76,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
    * @return the mapped uuid
    * @throws NodeException
    */
-  private String resolveUuid(int datasourceId) throws NodeException {
+  static public String resolveUuid(int datasourceId) throws NodeException {
     if (datasourceId == 0) {
       return "";
     }

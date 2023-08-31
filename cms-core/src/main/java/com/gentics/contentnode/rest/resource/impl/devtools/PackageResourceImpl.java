@@ -9,6 +9,7 @@ import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyLis
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -191,10 +192,15 @@ public class PackageResourceImpl implements PackageResource {
 
 		if (checkAll) {
 			ConcurrentPackageDependencyChecker.createDependencyCheckerTasks(packageName);
-			ConcurrentPackageDependencyChecker.checkAllPackageDependencies(
-					filterMissingDependencies(dependencies));
+			List<PackageDependency> missingReferencesOnly = filterMissingDependencies(
+					dependencies).stream().flatMap(d -> d.getReferencedDependencies().stream())
+					.collect(Collectors.toList());
+
+			ConcurrentPackageDependencyChecker.checkAllPackageDependencies(missingReferencesOnly);
+			// check again after other packages where scanned
+			consistencyCheckResult.checkCompleteness();
 		}
-		// todo: should checkAll and filtering for incomplete be allowed?
+
 		if (filter != null && filter.query != null) {
 			if ("incomplete".equals(filter.query)) {
 				dependencies = filterMissingDependencies(dependencies);

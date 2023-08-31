@@ -1,7 +1,13 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.Synchronizer;
+import com.gentics.contentnode.etc.ContentNodeHelper;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.resource.impl.devtools.resolver.ConstructResolver;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +18,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.bouncycastle.util.Pack;
 
 /**
  * Service to collect and check packages concurrently
@@ -23,6 +28,8 @@ public class ConcurrentPackageDependencyChecker {
   private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(
       ConcurrentPackageDependencyChecker.class);
   private static List<Future<List<PackageDependency>>> dependencyCheckerTasks;
+
+  private ConcurrentPackageDependencyChecker() {}
 
   /**
    * Creates and submits dependency checking task
@@ -48,7 +55,8 @@ public class ConcurrentPackageDependencyChecker {
   }
 
   /**
-   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for in other packages
+   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
+   *                                            in other packages
    * @throws ExecutionException
    * @throws InterruptedException
    */
@@ -70,8 +78,10 @@ public class ConcurrentPackageDependencyChecker {
 
   /**
    * Check if missing dependency is in other package
-   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for in other packages
-   * @param collectedDependencies package dependencies from other package
+   *
+   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
+   *                                            in other packages
+   * @param collectedDependencies               package dependencies from other package
    * @return true if dependency was found in other package
    */
   private static boolean checkOtherPackages(
@@ -82,11 +92,9 @@ public class ConcurrentPackageDependencyChecker {
       for (PackageDependency collectedDependency : collectedDependencies) {
 
         // searching the missing dependency in other package dependency
-        Optional<PackageDependency> missingDependency = collectedDependency.getReferencedDependencies().stream().filter(
-            referencedDependency ->
-              referencedDependency.getGlobalId().equals(searchDependency.getGlobalId()) //todo: compare ref -> top level
-        ).findAny();
+        Optional<PackageDependency> missingDependency = findMissingDependency(searchDependency, collectedDependency);
 
+        isInOtherPkg = missingDependency.isPresent();
         searchDependency.setIsInOtherPackage(isInOtherPkg);
         if (isInOtherPkg) {
           return true;
@@ -96,8 +104,57 @@ public class ConcurrentPackageDependencyChecker {
     return false;
   }
 
-  private void searchReferences(PackageDependency dependency){
+  private static Optional<PackageDependency> findMissingDependency(
+      PackageDependency searchDependency,
+      PackageDependency collectedDependency) {
+    if(searchDependency.getDependencyType() == Type.DATASOURCE) {
+      return findMissingDatasource(searchDependency, collectedDependency);
+    }
 
+    // top level comparison (i.e.: check not reference but dependency itself)
+    if(collectedDependency.getGlobalId().equals(searchDependency.getGlobalId())){
+      return Optional.of(collectedDependency);
+    }
+
+    // check references
+    if(collectedDependency.getReferencedDependencies() == null) {
+      return Optional.empty();
+    }
+
+    // todo: check isInPackage additionally: test in GPU-993
+    return collectedDependency.getReferencedDependencies()
+        .stream().filter(
+            referencedDependency ->
+                referencedDependency.getGlobalId().equals(searchDependency.getGlobalId())
+        ).findAny();
+  }
+
+  private static Optional<PackageDependency> findMissingDatasource(
+      PackageDependency searchDependency,
+      PackageDependency collectedDependency) {
+      try (Trx trx = ContentNodeHelper.trx()) {
+        int infoInt = resolvePartInfoInt(searchDependency.getGlobalId());
+        String datasourceUuid = ConstructResolver.resolveUuid(infoInt);
+
+        if(collectedDependency.getGlobalId().equals(datasourceUuid)){
+          return Optional.of(collectedDependency);
+        }
+      } catch (NodeException e) {
+        return Optional.empty();
+      }
+
+    return Optional.empty();
+  }
+
+
+  private static int resolvePartInfoInt(String partUuid) throws NodeException {
+    return DBUtils.select("SELECT `info_int` FROM `part` WHERE `uuid` = ?",
+        ps -> ps.setString(1, partUuid), resultSet -> {
+          if (resultSet.next()) {
+            return resultSet.getInt("info_int");
+          }
+          return -1;
+        });
   }
 
 }

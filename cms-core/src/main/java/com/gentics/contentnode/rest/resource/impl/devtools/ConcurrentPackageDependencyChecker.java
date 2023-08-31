@@ -29,7 +29,8 @@ public class ConcurrentPackageDependencyChecker {
       ConcurrentPackageDependencyChecker.class);
   private static List<Future<List<PackageDependency>>> dependencyCheckerTasks;
 
-  private ConcurrentPackageDependencyChecker() {}
+  private ConcurrentPackageDependencyChecker() {
+  }
 
   /**
    * Creates and submits dependency checking task
@@ -90,11 +91,16 @@ public class ConcurrentPackageDependencyChecker {
     for (PackageDependency searchDependency : searchDependencyInOtherPackagesList) {
       boolean isInOtherPkg = false;
       for (PackageDependency collectedDependency : collectedDependencies) {
-
         // searching the missing dependency in other package dependency
-        Optional<PackageDependency> missingDependency = findMissingDependency(searchDependency, collectedDependency);
+        Optional<PackageDependency> missingDependency = findMissingDependency(searchDependency,
+            collectedDependency);
 
-        isInOtherPkg = missingDependency.isPresent();
+        if (missingDependency.isPresent()) {
+          PackageDependency foundMissingDependency = missingDependency.get();
+          isInOtherPkg = foundMissingDependency.getIsInPackage()
+              || foundMissingDependency.getIsInOtherPackage();
+        }
+
         searchDependency.setIsInOtherPackage(isInOtherPkg);
         if (isInOtherPkg) {
           return true;
@@ -107,54 +113,21 @@ public class ConcurrentPackageDependencyChecker {
   private static Optional<PackageDependency> findMissingDependency(
       PackageDependency searchDependency,
       PackageDependency collectedDependency) {
-    if(searchDependency.getDependencyType() == Type.DATASOURCE) {
-      return findMissingDatasource(searchDependency, collectedDependency);
-    }
-
     // top level comparison (i.e.: check not reference but dependency itself)
-    if(collectedDependency.getGlobalId().equals(searchDependency.getGlobalId())){
+    if (collectedDependency.getGlobalId().equals(searchDependency.getGlobalId())) {
       return Optional.of(collectedDependency);
     }
 
     // check references
-    if(collectedDependency.getReferencedDependencies() == null) {
+    if (collectedDependency.getReferencedDependencies() == null) {
       return Optional.empty();
     }
 
-    // todo: check isInPackage additionally: test in GPU-993
     return collectedDependency.getReferencedDependencies()
         .stream().filter(
             referencedDependency ->
                 referencedDependency.getGlobalId().equals(searchDependency.getGlobalId())
         ).findAny();
-  }
-
-  private static Optional<PackageDependency> findMissingDatasource(
-      PackageDependency searchDependency,
-      PackageDependency collectedDependency) {
-      try (Trx trx = ContentNodeHelper.trx()) {
-        int infoInt = resolvePartInfoInt(searchDependency.getGlobalId());
-        String datasourceUuid = ConstructResolver.resolveUuid(infoInt);
-
-        if(collectedDependency.getGlobalId().equals(datasourceUuid)){
-          return Optional.of(collectedDependency);
-        }
-      } catch (NodeException e) {
-        return Optional.empty();
-      }
-
-    return Optional.empty();
-  }
-
-
-  private static int resolvePartInfoInt(String partUuid) throws NodeException {
-    return DBUtils.select("SELECT `info_int` FROM `part` WHERE `uuid` = ?",
-        ps -> ps.setString(1, partUuid), resultSet -> {
-          if (resultSet.next()) {
-            return resultSet.getInt("info_int");
-          }
-          return -1;
-        });
   }
 
 }

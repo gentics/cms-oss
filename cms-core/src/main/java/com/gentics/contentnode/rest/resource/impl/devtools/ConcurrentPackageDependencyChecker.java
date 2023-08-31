@@ -1,13 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.devtools.Synchronizer;
-import com.gentics.contentnode.etc.ContentNodeHelper;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
-import com.gentics.contentnode.rest.resource.impl.devtools.resolver.ConstructResolver;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;

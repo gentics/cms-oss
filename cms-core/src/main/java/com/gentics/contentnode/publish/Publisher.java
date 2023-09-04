@@ -484,9 +484,11 @@ public class Publisher implements Runnable {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_FILEDEPENDENCIES);
 					}
 
+					checkForError();
 					meshPublishController.waitForRenderAndWrite();
 					meshPublishController.handlePostponedUpdates();
 
+					checkForError();
 					meshPublishController.waitForRenderAndWrite();
 					meshPublishController.success();
 				}
@@ -1532,6 +1534,16 @@ public class Publisher implements Runnable {
 	public void setError(Throwable error) {
 		if (this.error == null && error != null) {
 			this.error = error;
+		}
+	}
+
+	/**
+	 * If an error has been set for the publisher, throw it
+	 * @throws Throwable
+	 */
+	protected void checkForError() throws Throwable {
+		if (this.error != null) {
+			throw error;
 		}
 	}
 

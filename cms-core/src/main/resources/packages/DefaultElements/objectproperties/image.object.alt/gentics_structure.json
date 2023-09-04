@@ -1,0 +1,15 @@
+{
+  "globalId" : "AE20.bd768720-704b-11e7-98b3-005056bb53cc",
+  "type" : "image",
+  "keyword" : "object.alt",
+  "name" : {
+    "de" : "Alternativtext",
+    "en" : "Alternativtext"
+  },
+  "description" : {
+    "de" : "",
+    "en" : ""
+  },
+  "constructId" : "A547.69478",
+  "required" : false
+}

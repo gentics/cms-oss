@@ -1,0 +1,15 @@
+{
+  "globalId" : "AE20.c6cec8b2-498b-11ea-99a6-005056bb0e7a",
+  "type" : "template",
+  "keyword" : "object.bladeTemplateName",
+  "name" : {
+    "de" : "Blade Template Name",
+    "en" : "Blade Template Name"
+  },
+  "description" : {
+    "de" : "name of the blade template",
+    "en" : "name of the blade template"
+  },
+  "constructId" : "A547.69478",
+  "required" : false
+}

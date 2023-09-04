@@ -107,30 +107,6 @@
                 ]
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "main": "apps/ct-link-checker/src/test.ts",
-                "tsConfig": "apps/ct-link-checker/tsconfig.spec.json",
-                "karmaConfig": "apps/ct-link-checker/karma.conf.js",
-                "polyfills": "apps/ct-link-checker/src/polyfills.ts",
-                "styles": ["apps/ct-link-checker/src/styles/styles.scss"],
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "apps/ct-link-checker/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                },
-                "assets": ["apps/ct-link-checker/src/assets"]
-            },
-            "configurations": {
-                "ci": {
-                    "codeCoverage": true
-                }
-            }
-        },
         "serve-static": {
             "executor": "@nx/web:file-server",
             "options": {

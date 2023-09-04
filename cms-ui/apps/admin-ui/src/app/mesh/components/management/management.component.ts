@@ -3,7 +3,6 @@ import { getUserDisplayName } from '@admin-ui/mesh/utils';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { ActivatedRoute, PRIMARY_OUTLET, Router, UrlTree } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { User } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 
@@ -28,7 +27,6 @@ export class ManagementComponent {
         protected changeDetector: ChangeDetectorRef,
         protected router: Router,
         protected route: ActivatedRoute,
-        protected cmsClient: GcmsApi,
         protected mesh: MeshRestClientService,
     ) {}
 

@@ -13,7 +13,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ContentRepository } from '@gentics/cms-models';
+import { ContentRepository, Response } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
 import { MeshAPIVersion, MeshClientConnection, RequestFailedError } from '@gentics/mesh-rest-client';
@@ -168,6 +168,11 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
             } else {
                 // eslint-disable-next-line no-console
                 console.debug('Error while logging in to mesh', err);
+                this.notification.show({
+                    message: err.data?.message || (err.data as Response)?.responseInfo?.responseMessage || 'mesh.unknown_error',
+                    type: 'alert',
+                    delay: 5_000,
+                });
                 this.form.controls.newPassword.disable();
             }
 

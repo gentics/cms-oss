@@ -10,16 +10,52 @@
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 declare namespace Cypress {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface Chainable<Subject> {
-    login(email: string, password: string): void;
-  }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Chainable<Subject> {
+        login(cmsLogin: boolean): void;
+        editEntity(type: string, identifier: string): Chainable<JQuery<HTMLElement>> | Chainable<null>;
+    }
 }
 //
 // -- This is a parent command --
-Cypress.Commands.add('login', (email, password) => {
-  console.log('Custom command example: Login', email, password);
+Cypress.Commands.add('login', (cmsLogin) => {
+    cy.fixture('auth.json').then(auth => {
+        const cred = cmsLogin ? auth.cms : auth.keycloak;
+
+        cy.get('input[type="text"]').type(cred.username);
+        cy.get('input[type="password"]').type(cred.password);
+        if (cmsLogin) {
+            cy.get('button[type="submit"]').click();
+        } else {
+            cy.get('input[type="submit"]').click();
+        }
+    });
 });
+
+Cypress.Commands.add('editEntity', (type, identifier) => {
+    let tabId;
+    let properties;
+
+    switch (type) {
+        case 'user':
+            tabId = 1;
+            properties = 'gtx-mesh-user-properties';
+            break;
+        default:
+            return cy.root().end();
+    }
+
+    cy.get(`.grouped-tabs .tab-link:nth(${tabId})`).click();
+    // Find the user in the table and edit it
+    cy.get('gtx-table')
+        .find('.grid-row').contains(identifier)
+        .parents('.grid-row')
+        .find('gtx-button[data-id="edit"]')
+        .click();
+
+    return cy.get(properties);
+});
+
 //
 // -- This is a child command --
 // Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })

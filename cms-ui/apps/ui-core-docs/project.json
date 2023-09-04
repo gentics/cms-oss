@@ -13,6 +13,9 @@
             "executor": "@nx/angular:webpack-browser",
             "outputs": ["{options.outputPath}"],
             "options": {
+                "customWebpackConfig": {
+                    "path": "apps/ui-core-docs/webpack.partial.js"
+                },
                 "outputPath": "dist/apps/ui-core-docs",
                 "index": "apps/ui-core-docs/src/index.html",
                 "main": "apps/ui-core-docs/src/main.ts",
@@ -97,9 +100,12 @@
             }
         },
         "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
+            "executor": "@angular-builders/custom-webpack:karma",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
+                "customWebpackConfig": {
+                    "path": "apps/ui-core-docs/webpack.partial.js"
+                },
                 "main": "apps/ui-core-docs/src/test.ts",
                 "tsConfig": "apps/ui-core-docs/tsconfig.spec.json",
                 "karmaConfig": "apps/ui-core-docs/karma.conf.js",

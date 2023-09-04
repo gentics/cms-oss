@@ -1,5 +1,5 @@
 import { Folder, GcmsTestData, Raw, Normalized, NormalizedEntityStore, Page, File, Image } from '@gentics/cms-models';
-import { getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 
 import {IsStartPagePipe} from './is-start-page.pipe';
 

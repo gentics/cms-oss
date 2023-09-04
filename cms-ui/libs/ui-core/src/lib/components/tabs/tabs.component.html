@@ -3,6 +3,7 @@
         *ngFor="let tab of tabs"
         class="tab-link"
         role="presentation"
+        [attr.data-id]="tab.id"
         [title]="tab.title"
         [class.disabled]="!!tab?.disabled"
         [class.is-active]="!!tab?.active"

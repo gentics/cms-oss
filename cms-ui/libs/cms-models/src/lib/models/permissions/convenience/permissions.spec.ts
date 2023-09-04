@@ -1,5 +1,6 @@
-import * as _ from'lodash-es'
-import {FolderItemType} from '../../item';
+import { cloneDeep } from 'lodash-es';
+import { FolderItemType } from '../../item';
+import { RecursivePartial } from '../../type-util';
 import {
     AccessControlledType,
     GCMS_ROLE_PRIVILEGES_TO_GCMS_PERMISSIONS_MAP,
@@ -14,16 +15,15 @@ import {
     InstancePermissionsImpl,
     PermissionsFactory,
     TypePermissions,
-    TypePermissionsImpl
+    TypePermissionsImpl,
 } from './permissions';
-import { RecursivePartial } from '../../type-util';
 
 const MOCK_PERMISSIONS_MAP_COLLECTION: PermissionsMapCollection = {
     permissions: {
         read: true,
         setperm: false,
         update: true,
-    }
+    },
 } as const;
 
 const MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION: RecursivePartial<PermissionsMapCollection> = {
@@ -58,8 +58,8 @@ const MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION: RecursivePartial<Permissi
                 deleteitems: true,
                 translatepages: true,
             },
-        }
-    }
+        },
+    },
 } as const;
 
 describe('permissions', () => {
@@ -94,7 +94,7 @@ describe('permissions', () => {
     describe('InstancePermissionsImpl', () => {
 
         it('instanceId and nodeId are set correctly', () => {
-            let permissions = new InstancePermissionsImpl(AccessControlledType.USER_ADMIN, MOCK_PERMISSIONS_MAP_COLLECTION, 4711, 1);
+            const permissions = new InstancePermissionsImpl(AccessControlledType.USER_ADMIN, MOCK_PERMISSIONS_MAP_COLLECTION, 4711, 1);
             expect(permissions.instanceId).toBe(4711);
             expect(permissions.nodeId).toBe(1);
         });
@@ -127,7 +127,7 @@ describe('permissions', () => {
             }
 
             function assertHasPermOrPrivWorksWithoutRoles(itemType: FolderItemType): void {
-                const mapsClone = _.cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
+                const mapsClone = cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
                 delete mapsClone.rolePermissions;
                 folderPermissions = new FolderInstancePermissionsImpl(mapsClone as any, 4711, 1);
 
@@ -233,7 +233,7 @@ describe('permissions', () => {
                 });
 
                 it('with language: works if no language specific privileges are set', () => {
-                    const mapsClone = _.cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
+                    const mapsClone = cloneDeep(MOCK_FOLDER_INSTANCE_PERMISSIONS_MAP_COLLECTION);
                     delete mapsClone.rolePermissions.pageLanguages;
                     folderPermissions = new FolderInstancePermissionsImpl(mapsClone as any, 4711, 1);
 

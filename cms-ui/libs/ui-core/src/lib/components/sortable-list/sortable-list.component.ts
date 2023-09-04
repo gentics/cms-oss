@@ -20,6 +20,27 @@ import { ISortableEvent, ISortableMoveEvent, SortFunction, SortableGroup } from 
 import { BaseComponent } from '../base-component/base.component';
 import { SortableListDragHandleComponent } from '../drag-handle/drag-handle.component';
 
+export function sortFactory(e: ISortableEvent): SortFunction<any> {
+    return (source: any[], byReference: boolean = false) => {
+        const result: any[] = byReference ? source : source.slice();
+        const oldIndex: number = e.oldIndex;
+        const newIndex: number = e.newIndex;
+
+        // Check that index i is an integer
+        const isInt = (i: any): boolean => Number(i) === i && i % 1 === 0;
+        // Check that index i is within the bounds of the array
+        const inBounds = (i: number): boolean => 0 <= i && i < result.length;
+        // Valid if numeric and in bounds
+        const valid = (i: any): boolean => isInt(i) && inBounds(i);
+
+        if (oldIndex !== newIndex && valid(oldIndex) && valid(newIndex)) {
+            result.splice(newIndex, 0, result.splice(oldIndex, 1)[0]);
+        }
+
+        return result;
+    };
+}
+
 /**
  * Enables the creation of lists which can be re-ordered by dragging the items. Built on top of
  * [sortablejs](https://github.com/RubaXa/Sortable). Note that this component does not do the actual
@@ -157,9 +178,10 @@ export class SortableListComponent extends BaseComponent implements OnChanges, O
                 this.dragStart.emit(e);
                 this.changeDetector.markForCheck();
             },
+            disabled: this.disabled,
             // dragging ended
             onEnd: (e: ISortableEvent): void => {
-                e.sort = this.sortFactory(e);
+                e.sort = sortFactory(e);
                 this.dragging = false;
                 this.dragEnd.emit(e);
                 this.changeDetector.markForCheck();
@@ -238,29 +260,5 @@ export class SortableListComponent extends BaseComponent implements OnChanges, O
         } else {
             this.sortable.option('handle', null);
         }
-    }
-
-    /**
-     * Returns a pre-configured sort function which uses the indexes of the sort operation.
-     */
-    protected sortFactory(e: ISortableEvent): SortFunction<any> {
-        return (source: any[], byReference: boolean = false) => {
-            const result: any[] = byReference ? source : source.slice();
-            const oldIndex: number = e.oldIndex;
-            const newIndex: number = e.newIndex;
-
-            // Check that index i is an integer
-            const isInt = (i: any): boolean => Number(i) === i && i % 1 === 0;
-            // Check that index i is within the bounds of the array
-            const inBounds = (i: number): boolean => 0 <= i && i < result.length;
-            // Valid if numeric and in bounds
-            const valid = (i: any): boolean => isInt(i) && inBounds(i);
-
-            if (oldIndex !== newIndex && valid(oldIndex) && valid(newIndex)) {
-                result.splice(newIndex, 0, result.splice(oldIndex, 1)[0]);
-            }
-
-            return result;
-        };
     }
 }

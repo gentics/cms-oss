@@ -1,29 +1,40 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { TemplateActionsService } from '@editor-ui/app/state';
+import { PostUpdateBehavior, TemplateActionsService } from '@editor-ui/app/state';
 import {
+    AllowedSelectionType,
+    AllowedSelectionTypeMap,
     CmsFormData,
     EditMode,
+    File,
     Folder,
+    FolderItemOrNodeSaveOptionsMap,
     FolderItemType,
     Form,
+    Image,
     InheritableItem,
+    ItemInNode,
     ItemType,
     ItemTypeMap,
+    Page,
     Raw,
+    RepositoryBrowserOptions,
+    TagInContainer,
 } from '@gentics/cms-models';
-import { IModalInstance, ModalService } from '@gentics/ui-core';
+import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialogComponent, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of } from 'rxjs';
+import { Type } from '@angular/core';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExampleTemplateData,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { LinkTemplateService } from '../../../shared/providers/link-template/link-template.service';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES, WastebinActionsService } from '../../../state';
 import { ContentStagingActionsService, UsageActionsService } from '../../../state/index';
@@ -139,13 +150,13 @@ describe('ContextMenuOperationsService', () => {
         });
 
         it('calls `createPageVariations` function right', fakeAsync(() => {
-            let items: any[] = [
+            const items: any[] = [
                 { name: 'Some page1', type: 'page', id: ITEM_ID + 1 },
                 { name: 'Some page2', type: 'page', id: ITEM_ID + 2 },
                 { name: 'Some page3', type: 'page', id: ITEM_ID + 3 },
             ];
 
-            let targetFolders: Folder[] = [ getExampleFolderData() ];
+            const targetFolders: Folder[] = [ getExampleFolderData() ];
 
             spyOn(repositoryBrowserClient, 'openRepositoryBrowser').and.returnValue(Promise.resolve(targetFolders));
 
@@ -230,7 +241,7 @@ describe('ContextMenuOperationsService', () => {
 
             contextMenuOperationsService.linkTemplatesToFolder(nodeId, folderId);
 
-            expect(modalService.fromComponent).toHaveBeenCalledWith(LinkTemplateModal, { padding: true, width: '1000px' }, { nodeId, folderId });
+            expect(modalService.fromComponent).toHaveBeenCalledWith(LinkTemplateModal, { padding: true, width: '1000px' }, { nodeId, folderId } as any);
         }));
 
         it('successfully opens a link template modal with correct parameters with CMS feature folder_based_template_selection', fakeAsync(() => {
@@ -633,14 +644,19 @@ class MockDecisionModalsService {
     }
 }
 
-class MockFolderActions {
-    createPageVariations(): Promise<any> {
+class MockFolderActions implements Partial<FolderActionsService> {
+    createPageVariations(sourcePages: Page[], sourceNodeId: number, targetFolders: Folder[]): Promise<void> {
         throw new Error('createPageVariations called but not mocked');
     }
-    localizeItem(): Promise<any> {
-        throw new Error('localizeItem called but not mocked');
+    localizeItem(type: 'folder', itemId: number, channelId: number): Promise<Folder<Raw>>;
+    localizeItem(type: 'page', itemId: number, channelId: number): Promise<Page<Raw>>;
+    localizeItem(type: 'file', itemId: number, channelId: number): Promise<File<Raw>>;
+    localizeItem(type: 'image', itemId: number, channelId: number): Promise<Image<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw> | void> {
+        return Promise.resolve(null);
     }
-    refreshList(): void {
+    refreshList(type: FolderItemType, itemLanguages?: string[]): Promise<void> {
         throw new Error('refreshList called but not mocked');
     }
     getTemplatesRaw(): Observable<any | void> {
@@ -649,10 +665,16 @@ class MockFolderActions {
     getAllTemplatesOfNode(): Observable<any | void> {
         throw new Error('getAllTemplatesOfNode called but not mocked');
     }
-    updateItem<T extends ItemType>(): Promise<ItemTypeMap<Raw>[T] | void> {
+    updateItem<T extends ItemType>(
+        type: T,
+        itemId: number,
+        payload: Partial<ItemTypeMap<Raw>[T]>,
+        requestOptions?: Partial<FolderItemOrNodeSaveOptionsMap[T]>,
+        postUpdateBehavior?: PostUpdateBehavior,
+    ): Promise<ItemTypeMap<Raw>[T] | void> {
         throw new Error('updateItem called but not mocked');
     }
-    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): void {
+    getTemplates(parentId: number, fetchAll: boolean = false, search: string = '', pageNumber = 1): Promise<void>  {
         throw new Error('getTemplates called but not mocked');
     }
 }
@@ -661,11 +683,12 @@ class MockI18nNotification { }
 
 class MockPermissionService { }
 
-class MockWastebinActions {
+class MockWastebinActions implements Partial<WastebinActionsService> {
     moveItemsToWastebin(
-        type: 'folder' | 'page' | 'file' | 'form' | 'image',
+        type: 'folder' | 'page' | 'file' | 'image' | 'form',
         ids: number[],
-    ): Promise<{ succeeded: number, failed: number, error: ApiError}> {
+        nodeId: number,
+    ): Promise<{ succeeded: number; failed: number; error: ApiError }> {
         throw new Error('moveItemsToWastebin called but not mocked');
     }
 }
@@ -692,9 +715,18 @@ class MockNavigationService {
     }
 }
 
-class MockModalService {
-    dialog(): void { }
-    fromComponent(): void { }
+class MockModalService implements Partial<ModalService> {
+    dialog(config: IDialogConfig, options?: IModalOptions): Promise<IModalInstance<ModalDialogComponent>> {
+        return Promise.resolve(null);
+    }
+
+    fromComponent<T extends IModalDialog>(
+        component: Type<T>,
+        options?: IModalOptions,
+        locals?: { [K in keyof T]?: T[K] },
+    ): Promise<IModalInstance<T>>{
+        return Promise.resolve(null);
+    }
 }
 
 class MockUsageActions {
@@ -702,8 +734,21 @@ class MockUsageActions {
 }
 
 
-class MockRepositoryBrowserClientService {
-    openRepositoryBrowser(): Promise<any> {
+class MockRepositoryBrowserClientService implements Partial<RepositoryBrowserClient> {
+    openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
+        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: false }
+    ): Promise<R>;
+    openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
+        options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: true }
+    ): Promise<R[]>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: false }
+    ): Promise<R>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(
+        options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: true }
+    ): Promise<R[]>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>  {
         return Promise.resolve([]);
     }
 }
@@ -724,8 +769,15 @@ class MockI18nService {
     }
 }
 
-class MockTemplateActions {
-    linkTemplatesToFolders(): void { }
+class MockTemplateActions implements Partial<TemplateActionsService> {
+    linkTemplatesToFolders(
+        nodeId: number,
+        templateIds: number[],
+        folderIds: number[],
+        recursive: boolean = false,
+    ): Observable<boolean>  {
+        return of(true);
+    }
 }
 
 class MockContentStagingActions {

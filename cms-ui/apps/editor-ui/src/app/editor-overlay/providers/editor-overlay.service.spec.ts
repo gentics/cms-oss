@@ -1,7 +1,24 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Pipe, PipeTransform } from '@angular/core';
 import { TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { CropResizeParameters } from '@gentics/cms-models';
+import {
+    CropResizeParameters,
+    File,
+    Folder,
+    FolderItemOrTemplateType,
+    FolderRequestOptions,
+    Form,
+    FormRequestOptions,
+    Image,
+    ImageRequestOptions,
+    InheritableItem,
+    Page,
+    PageRequestOptions,
+    Raw,
+    Template,
+    TemplateRequestOptions,
+} from '@gentics/cms-models';
 import { GenticsUIImageEditorModule, ImageTransformParams } from '@gentics/image-editor';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -168,8 +185,15 @@ class MockNavigationService {
     deserializeOptions(): any {}
 }
 
-class MockFolderActions {
-    getItem(): any {
+class MockFolderActions implements Partial<FolderActionsService> {
+    getItem(itemId: number, type: 'folder', options?: FolderRequestOptions, throwError?: boolean): Promise<Folder<Raw>>;
+    getItem(itemId: number, type: 'page', options?: PageRequestOptions, throwError?: boolean): Promise<Page<Raw>>;
+    getItem(itemId: number, type: 'image', options?: ImageRequestOptions, throwError?: boolean): Promise<Image<Raw>>;
+    getItem(itemId: number, type: 'file', options?: FolderRequestOptions, throwError?: boolean): Promise<File<Raw>>;
+    getItem(itemId: number, type: 'form', options?: FormRequestOptions, throwError?: boolean): Promise<Form<Raw>>;
+    getItem(itemId: number | string, type: 'template', options?: TemplateRequestOptions, throwError?: boolean): Promise<Template<Raw>>;
+    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>>;
+    getItem(itemId: number | string, type: FolderItemOrTemplateType, options?: any, throwError?: boolean): Promise<InheritableItem<Raw> | Template<Raw>> {
         return Promise.resolve({
             id: ITEM_ID,
             globalId: 'A123.123456',
@@ -207,12 +231,14 @@ class MockFolderActions {
             leaf: true,
             text: 'mockpic.jpg',
             cls: 'file',
-        });
+        } as any);
     }
     getNode(): any {
         return {name: MOCK_NODE_NAME};
     }
-    cropAndResizeImage(): void {}
+    cropAndResizeImage(sourceImage: Image, resizeParams: CropResizeParameters): Promise<Image<Raw> | void> {
+        return Promise.resolve(null);
+    }
 }
 class MockEntityResolver {
     getNode(): any {

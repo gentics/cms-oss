@@ -111,33 +111,6 @@
                 ]
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-            "options": {
-                "customWebpackConfig": {
-                    "path": "apps/editor-ui/webpack.partial.js"
-                },
-                "main": "apps/editor-ui/src/test.ts",
-                "tsConfig": "apps/editor-ui/tsconfig.spec.json",
-                "karmaConfig": "apps/editor-ui/karma.conf.js",
-                "polyfills": "apps/editor-ui/src/polyfills.ts",
-                "styles": ["apps/editor-ui/src/styles/styles.scss"],
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "apps/editor-ui/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                },
-                "assets": ["apps/editor-ui/src/assets"]
-            },
-            "configurations": {
-                "ci": {
-                    "codeCoverage": true
-                }
-            }
-        },
         "serve-static": {
             "executor": "@nx/web:file-server",
             "options": {

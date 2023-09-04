@@ -1,15 +1,14 @@
 import { TestBed } from '@angular/core/testing';
-import { GcmsNormalizer, Normalized, Page } from '@gentics/cms-models';
+import { GcmsNormalizer, Normalized, NormalizedEntityStore, Page } from '@gentics/cms-models';
 import { getExampleEntityStore } from '@gentics/cms-models/testing/entity-store-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { BehaviorSubject } from 'rxjs';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
-import { PartialEntityState } from '../../../state/test-application-state.mock';
 import { EntityResolver } from './entity-resolver';
 
 describe('EntityResolver:', () => {
 
-    const mockEntities: PartialEntityState = getExampleEntityStore();
+    const mockEntities: NormalizedEntityStore = getExampleEntityStore();
     class MockAppStore {
         select(): BehaviorSubject<any> {
             return new BehaviorSubject<any>(mockEntities);
@@ -51,7 +50,7 @@ describe('EntityResolver:', () => {
         });
 
         it('should return undefined for non-existent entity type', () => {
-            let badEntityType: any = 'badEntityType';
+            const badEntityType: any = 'badEntityType';
             expect(entityResolver.getEntity(badEntityType, 1)).toBeUndefined();
         });
 
@@ -62,7 +61,7 @@ describe('EntityResolver:', () => {
             });
 
             it('should return an empty object if not found', () => {
-                expect(entityResolver.getTemplateByName('bad_name')).toEqual({});
+                expect(entityResolver.getTemplateByName('bad_name')).toEqual({} as any);
             });
         });
 
@@ -73,7 +72,7 @@ describe('EntityResolver:', () => {
             });
 
             it('should return an empty object if not found', () => {
-                expect(entityResolver.getLanguageByName('bad_name')).toEqual({});
+                expect(entityResolver.getLanguageByName('bad_name')).toEqual({} as any);
             });
         });
 
@@ -84,7 +83,7 @@ describe('EntityResolver:', () => {
             });
 
             it('should return an empty object if not found', () => {
-                expect(entityResolver.getLanguageByCode('bad_code')).toEqual({});
+                expect(entityResolver.getLanguageByCode('bad_code')).toEqual({} as any);
             });
         });
 
@@ -111,7 +110,7 @@ describe('EntityResolver:', () => {
             expect(result).toBeTruthy();
             expect(denormalizeSpy).toHaveBeenCalledTimes(1);
             expect(denormalizeSpy).toHaveBeenCalledWith('page', page, mockEntities);
-            expect(result).toBe(denormalizeSpy.calls.all()[0].returnValue);
+            expect(result).toBe(denormalizeSpy.calls.all()[0].returnValue as any);
         });
 
     });

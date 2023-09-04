@@ -5,7 +5,7 @@ import {
     getExamplePageDataNormalized,
     getExampleUserData,
     getExampleUserDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { ItemsInfo, PublishQueueState } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { TestApplicationState } from '../../test-application-state.mock';

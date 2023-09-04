@@ -1,5 +1,5 @@
 import { Page } from '@gentics/cms-models';
-import { getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { FilterItemsPipe } from './filter-items.pipe';
 
 

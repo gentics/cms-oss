@@ -13,7 +13,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { FolderStartPageComponent } from './folder-start-page.component';
 
-const FOLDER_WITH_INTERNAL_START_PAGE: Partial<Folder> = {
+const FOLDER_WITH_INTERNAL_START_PAGE: Folder = {
     id: 1,
     globalId: 'item1',
     type: 'folder',
@@ -36,9 +36,9 @@ const FOLDER_WITH_INTERNAL_START_PAGE: Partial<Folder> = {
             } as Partial<TagPropertyMap>,
         },
     },
-};
+} as any;
 
-const FOLDER_WITH_EXTERNAL_START_PAGE: Partial<Folder> = {
+const FOLDER_WITH_EXTERNAL_START_PAGE: Folder = {
     id: 1,
     globalId: 'item1',
     type: 'folder',
@@ -60,9 +60,9 @@ const FOLDER_WITH_EXTERNAL_START_PAGE: Partial<Folder> = {
             } as Partial<TagPropertyMap>,
         },
     },
-};
+} as any;
 
-const FOLDER_WITHOUT_START_PAGE: Partial<Folder> = {
+const FOLDER_WITHOUT_START_PAGE: Folder = {
     id: 1,
     globalId: 'item1',
     type: 'folder',
@@ -84,14 +84,14 @@ const FOLDER_WITHOUT_START_PAGE: Partial<Folder> = {
             } as Partial<TagPropertyMap>,
         },
     },
-};
+} as any;
 
-const PAGE: Partial<Page<Normalized>> = {
+const PAGE: Page<Normalized> = {
     id: 1,
     globalId: 'item1',
     type: 'page',
     name: 'Page 1',
-};
+} as any;
 
 class MockContextMenuOperationsService {}
 
@@ -247,8 +247,8 @@ describe('FolderStartPage', () => {
 
 @Component({
     template: `<folder-start-page [folder]="folder"></folder-start-page>
-    <gtx-overlay-host></gtx-overlay-host>`
-    })
+    <gtx-overlay-host></gtx-overlay-host>`,
+})
 class TestComponent {
     @ViewChild(FolderStartPageComponent, { static: true })
     folderStartPage: FolderStartPageComponent;
@@ -257,6 +257,7 @@ class TestComponent {
 }
 
 class MockEntityResolver {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     getEntity(entityType: keyof EntityState, id: number): any {
         throw new Error('getEntity called but not mocked');
     }

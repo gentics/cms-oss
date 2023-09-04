@@ -29,7 +29,7 @@
                 ></gtx-input>
 
                 <gtx-button
-                    class="login-button"
+                    class="login-button form-login-button"
                     size="large"
                     submit
                     [disabled]="!form.valid || form.disabled || loading"
@@ -37,7 +37,7 @@
             </form>
 
             <gtx-button
-                class="login-button"
+                class="login-button cr-login-button"
                 size="large"
                 [disabled]="!canLoginWithCR || loading"
                 (click)="loginWithContentRepository()"

@@ -17,22 +17,6 @@
                 "project": "libs/mesh-rest-client-angular/ng-package.json"
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "options": {
-                "main": "libs/mesh-rest-client-angular/src/test.ts",
-                "polyfills": "libs/mesh-rest-client-angular/src/polyfills.ts",
-                "tsConfig": "libs/mesh-rest-client-angular/tsconfig.spec.json",
-                "karmaConfig": "libs/mesh-rest-client-angular/karma.conf.js",
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "libs/mesh-rest-client-angular/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                }
-            }
-        },
         "lint": {
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],

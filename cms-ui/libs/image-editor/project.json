@@ -16,22 +16,6 @@
                 "project": "libs/image-editor/ng-package.json"
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "options": {
-                "main": "libs/image-editor/src/test.ts",
-                "polyfills": "libs/image-editor/src/polyfills.ts",
-                "tsConfig": "libs/image-editor/tsconfig.spec.json",
-                "karmaConfig": "libs/image-editor/karma.conf.js",
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "libs/image-editor/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                }
-            }
-        },
         "lint": {
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],

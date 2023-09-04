@@ -3,7 +3,7 @@ import { ApplicationStateService, STATE_MODULES, SetUILanguageAction } from '@ed
 import { Node, Page, Raw, StringTagPartProperty, Tag, TagType } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
-import { getExampleNodeData, getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EditableTag, TagEditorContext, VariableTagEditorContext } from '../../common';
@@ -82,7 +82,7 @@ describe('TagEditorService', () => {
 
         expect(tagEditorContext instanceof TagEditorContextImpl).toBeTruthy();
         expect(tagEditorContext.editedTag).toEqual(expectedEditableTag);
-        expect(tagEditorContext.page).toEqual(expectedData.tagOwner);
+        expect(tagEditorContext.page).toEqual(expectedData.tagOwner as any);
         expect(tagEditorContext.node).toEqual(expectedData.node);
         expect(tagEditorContext.readOnly).toBe(expectedData.readOnly);
         expect(tagEditorContext.sid).toBe(state.now.auth.sid);
@@ -153,7 +153,7 @@ describe('TagEditorService', () => {
         const data = getTagEditorContextInitData();
         const tagEditorContext = tagEditorService.createTagEditorContext(data);
 
-        const openRepositoryBrowserSpy = spyOn(repositoryBrowserClient, 'openRepositoryBrowser');
+        const openRepositoryBrowserSpy: any = spyOn(repositoryBrowserClient, 'openRepositoryBrowser');
 
         tagEditorContext.gcmsUiServices.openRepositoryBrowser({ allowedSelection: 'page', selectMultiple: false });
 
@@ -164,7 +164,7 @@ describe('TagEditorService', () => {
         const data = getTagEditorContextInitData();
         const tagEditorContext = tagEditorService.createTagEditorContext(data);
 
-        const openImageEditorSpy = spyOn(editorOverlayService, 'editImage');
+        const openImageEditorSpy: any = spyOn(editorOverlayService, 'editImage');
 
         tagEditorContext.gcmsUiServices.openImageEditor({ nodeId: 1, imageId: 415 });
 
@@ -269,7 +269,7 @@ describe('TagEditorService', () => {
 
         const tagEditorContext = tagEditorService.createTagEditorContext(data);
         checkTagEditorContext(tagEditorContext, expectedData);
-        expect(tagEditorContext.editedTag).not.toBe(data.tag);
+        expect(tagEditorContext.editedTag).not.toBe(data.tag as any);
         expect(tagEditorContext.editedTag.tagType).not.toBe(data.tagType);
 
         expect(tagEditorContext.page).toEqual(data.tagOwner);

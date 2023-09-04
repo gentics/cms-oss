@@ -101,6 +101,9 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
 
     protected override onValueReset(): void {
         super.onValueReset();
+        if (this.form) {
+            this.form.controls.password.setValue(null);
+        }
         this.passwordRepeat = '';
     }
 

@@ -43,7 +43,7 @@ export class ObjectPropertyApi {
      * Get a single contentrepository by id.
      */
     getObjectProperty(objPropId: string | number): Observable<ObjectPropertyLoadResponse> {
-        return this.apiBase.get(`objectproperty/${objPropId}`, {});
+        return this.apiBase.get(`objectproperty/${objPropId}`);
     }
 
     /**

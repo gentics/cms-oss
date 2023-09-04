@@ -53,7 +53,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
 
     it('correctly assembles single `nodeId` query and `language`', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
-        const requestOptionsExpected: Partial<GtxCmsQueryOptions> = {
+        const requestOptionsExpected: GtxCmsQueryOptions = {
             folderId: 2,
             nodeId: 2,
             language: 'en',
@@ -73,8 +73,8 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toEqual( requestOptionsExpected );
     }));
@@ -82,7 +82,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
     it('correctly assembles `all` query', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
         const searchTerm = 'searchTermForTesting-00001';
-        const requestOptionsExpected: Partial<GtxCmsQueryOptions> = {
+        const requestOptionsExpected: GtxCmsQueryOptions = {
             folderId: 1,
             search: searchTerm,
             q: searchTerm,
@@ -104,15 +104,15 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toEqual( requestOptionsExpected );
     }));
 
     it('correctly assembles `planned` query', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
-        const requestOptionsExpected: Partial<GtxCmsQueryOptions> = {
+        const requestOptionsExpected: GtxCmsQueryOptions = {
             folderId: 1,
             planned: true,
             language: 'en',
@@ -132,8 +132,8 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toEqual( requestOptionsExpected );
     }));
@@ -141,7 +141,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
     it('correctly assembles string fields query `niceurl`', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
         const searchTerm = 'searchTermForTesting-00001';
-        const requestOptionsExpected: Partial<GtxCmsQueryOptions> = {
+        const requestOptionsExpected: GtxCmsQueryOptions = {
             folderId: 1,
             niceurl: `.*${searchTerm}.*`,
             language: 'en',
@@ -161,8 +161,8 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toEqual( requestOptionsExpected );
     }));
@@ -170,7 +170,7 @@ describe('QueryAssemblerGCMSSearchService', () => {
     it('correctly assembles string fields query `filename`', fakeAsync(() => {
         let requestOptionsAssembled: GtxCmsQueryOptions;
         const searchTerm = 'searchTermForTesting-00001';
-        const requestOptionsExpected: Partial<GtxCmsQueryOptions> = {
+        const requestOptionsExpected: GtxCmsQueryOptions = {
             folderId: 1,
             filename: `%${searchTerm}%`,
             language: 'en',
@@ -202,9 +202,9 @@ describe('QueryAssemblerGCMSSearchService', () => {
         filters: GtxChipSearchSearchFilterMap,
         requestOptionsExpected: Partial<GtxCmsQueryOptions>,
     ): void {
-        it('correctly assembles date fields query `' + stringField + '` with operator `' + operator + '`', fakeAsync(() => {
+        it(`correctly assembles date fields query '${stringField}' with operator '${operator}'`, fakeAsync(() => {
             let requestOptionsAssembled: GtxCmsQueryOptions;
-            const mappedExpected: Partial<GtxCmsQueryOptions> = {
+            const mappedExpected: GtxCmsQueryOptions = {
                 folderId: 1,
                 ...requestOptionsExpected,
             };
@@ -306,8 +306,8 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toEqual( requestOptionsExpected );
     }));
@@ -328,8 +328,8 @@ describe('QueryAssemblerGCMSSearchService', () => {
             parentId,
             filters,
             optionsInitial,
-        ).pipe(first()).subscribe(_requestOptionsAssembled => {
-            requestOptionsAssembled = _requestOptionsAssembled;
+        ).pipe(first()).subscribe(assembled => {
+            requestOptionsAssembled = assembled;
         });
         expect(requestOptionsAssembled).toBeNull();
     }));

@@ -1,6 +1,6 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { getExamplePageData } from '@editor-ui/testing/test-data.mock';
 import { ItemInNode, Page, PageResponse, Raw } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { cloneDeep } from 'lodash-es';
 import { Observable, Subscription } from 'rxjs';
 import { SelectedItemHelper } from './selected-item-helper';
@@ -160,7 +160,7 @@ function mockResponseObservable(page: Page<Raw>): Observable<PageResponse> {
     delete (<any> page)['nodeId'];
 
     const response: Partial<PageResponse> = {
-        page: page
+        page: page,
     };
     return Observable.of(response as any).delay(0);
 }

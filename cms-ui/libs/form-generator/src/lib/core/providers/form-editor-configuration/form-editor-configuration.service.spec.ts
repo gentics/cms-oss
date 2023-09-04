@@ -21,7 +21,7 @@ import { FormEditorConfigurationService } from './form-editor-configuration.serv
 describe('FormEditorConfigurationService', () => {
 
     const CUSTOMER_CONFIG_PATH = './../ui-conf/';
-    const NO_VALUE = Symbol('no-value-loaded');
+    const NO_VALUE: any = Symbol('no-value-loaded');
 
     let formEditorConfigurationService: FormEditorConfigurationService;
     let httpTestingController: HttpTestingController;
@@ -55,7 +55,7 @@ describe('FormEditorConfigurationService', () => {
     describe('getConfiguration$', () => {
         it('if no configuration is found, emit a default configuration', () => {
             const service: FormEditorConfigurationService = TestBed.inject(FormEditorConfigurationService);
-            let result: FormEditorConfiguration | symbol = NO_VALUE;
+            let result: FormEditorConfiguration = NO_VALUE;
             const subscription = service.getConfiguration$('GENERIC').subscribe(response => {
                 result = response;
             });

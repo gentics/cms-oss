@@ -1,6 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpResponse, HttpResponseBase } from '@angular/common/http';
 import { Inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
-
 import {
     ElasticSearchQueryResponse,
     FolderListOptions,
@@ -9,7 +8,6 @@ import {
     InheritableItem,
     PageListOptions,
     PageListRequest,
-    PagingSortOption,
     Raw,
     Response,
     ResponseMessage,
@@ -20,7 +18,11 @@ import { ApiError, ApiErrorReason, ApiRequestInfo } from '../error/api-error';
 import { GcmsApiErrorHandler } from '../error/error-handler';
 import { FileUploaderFactory } from '../util/file-uploader/file-uploader.factory';
 import { FileUploader } from '../util/file-uploader/file-uploader.service';
-import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
+
+export const HTTP_HEADER_CONTENT_TYPE = 'Content-Type';
+export const HTTP_HEADER_ACCEPT = 'Accept';
+export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_TEXT = 'text/plain';
 
 /**
  * This injection token is used to declare the base URL of the CMS.
@@ -136,7 +138,7 @@ export class ApiBase implements OnDestroy {
             observe: 'body',
             responseType: 'blob',
             headers: {
-                'Content-Type': 'application/json',
+                [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
             },
             params: this.encodeParamsAndAddSid(params),
         }
@@ -249,8 +251,8 @@ export class ApiBase implements OnDestroy {
     }
 
     private isElasticSearchResponse(responseBody: any): responseBody is ElasticSearchQueryResponse<InheritableItem<Raw>> {
-        return responseBody.hasOwnProperty('_shards') &&
-            responseBody.hasOwnProperty('hits');
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        return responseBody.hasOwnProperty('_shards') && responseBody.hasOwnProperty('hits');
     }
 
     /**
@@ -259,8 +261,8 @@ export class ApiBase implements OnDestroy {
     private getDefaultOptions(): HttpFullJsonRequestOptions {
         const options: HttpRequestOptions = {
             headers: new HttpHeaders({
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
+                [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
+                [HTTP_HEADER_ACCEPT]: CONTENT_TYPE_JSON,
             }),
             observe: 'response',
             responseType: 'json',
@@ -294,7 +296,7 @@ export class ApiBase implements OnDestroy {
                 const messages: ResponseMessage[] = responseBody.messages || [];
 
                 switch (responseCode) {
-                    case 'OK':
+                    case 'OK': {
                         // if any error messages, pipe them to the user
                         const criticalMsgs = messages.filter(msg => msg.type !== 'INFO' && msg.type !== 'SUCCESS');
                         if (criticalMsgs.length > 0) {
@@ -303,6 +305,7 @@ export class ApiBase implements OnDestroy {
                             });
                         }
                         return responseBody;
+                    }
 
                     case 'AUTHREQUIRED':
                     case 'MAINTENANCEMODE':
@@ -319,7 +322,7 @@ export class ApiBase implements OnDestroy {
                         reason = 'invalid_data'; break;
 
                     default:
-                        console.error('Unknown responseCode: ' + responseCode);
+                        console.error('Unknown responseCode:', responseCode);
                         reason = 'failed'; break;
                 }
             } else if (response.status === 200 || response.status === 201 || response.status === 204) {
@@ -337,6 +340,7 @@ export class ApiBase implements OnDestroy {
             if (err instanceof ApiError || err.name === 'ApiError') {
                 throw err;
             } else {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                 const message = err instanceof Error ? err.message : err.toString();
                 throw new ApiError(message, 'exception', { request, response: responseBody, originalError: err });
             }
@@ -349,7 +353,7 @@ export class ApiBase implements OnDestroy {
 
             // On critical errors when requests fail at the receiving server before being forwarded to ContentNode,
             // the server returns an HTML error page, which the Angular HttpClient fails to parse as JSON.
-            if (response && !response.ok && response.headers && /^text\/html/.test(response.headers.get('Content-Type'))) {
+            if (response && !response.ok && response.headers && /^text\/html/.test(response.headers.get(HTTP_HEADER_CONTENT_TYPE))) {
                 return throwError(new ApiError(`Server returned an unexpected error (HTTP ${response.status})`, 'http', {
                     request,
                     response: response.statusText,
@@ -373,7 +377,7 @@ export class ApiBase implements OnDestroy {
             const message = err instanceof Error ? err.message : this.assembleResponseErrorMessage(result);
 
             // Handle remaining cases with an error status code.
-            let statusCode: number = response.status;
+            const statusCode: number = response.status;
             if ((response && !response.ok) || ((statusCode < 200 || statusCode >= 300) && statusCode !== 304)) {
                 return throwError(new ApiError(message, 'http', { request, response: result, originalError: err, statusCode }));
             }

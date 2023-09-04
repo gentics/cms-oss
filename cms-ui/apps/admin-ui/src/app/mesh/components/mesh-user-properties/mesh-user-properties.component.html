@@ -5,6 +5,7 @@
     <div class="row">
         <gtx-input
             class="columns small-6"
+            data-control="username"
             [label]="('mesh.user_name' | i18n) + ' *'"
             [required]="true"
             formControlName="username"
@@ -12,6 +13,7 @@
 
         <gtx-input
             class="columns small-6"
+            data-control="emailAddress"
             [label]="'shared.email' | i18n"
             formControlName="emailAddress"
         ></gtx-input>
@@ -30,6 +32,7 @@
             <gtx-password-confirm-input
                 *ngIf="form.get('password').enabled"
                 class="columns small-12"
+                data-control="password"
                 [label]="('user.password' | i18n) + ' *'"
                 [confirmLabel]="'mesh.confirm_addition' | i18n: { label: ('user.password' | i18n) }"
                 [missmatchText]="'mesh.password_missmatch' | i18n"
@@ -41,12 +44,14 @@
     <div class="row">
         <gtx-input
             class="columns small-6"
+            data-control="firstname"
             [label]="'shared.first_name' | i18n"
             formControlName="firstname"
         ></gtx-input>
 
         <gtx-input
             class="columns small-6"
+            data-control="lastname"
             [label]="'shared.last_name' | i18n"
             formControlName="lastname"
         ></gtx-input>
@@ -55,12 +60,14 @@
     <div class="row">
         <gtx-checkbox
             class="columns small-6"
+            data-control="forcePasswordChange"
             [label]="'mesh.force_password_reset' | i18n"
             formControlName="forcedPasswordChange"
         ></gtx-checkbox>
 
         <gtx-checkbox
             class="columns small-6"
+            data-control="admin"
             [label]="'mesh.admin_permissions' | i18n"
             formControlName="admin"
         ></gtx-checkbox>

@@ -16,7 +16,7 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExamplePageData } from '../../../../testing/test-data.mock';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
 import { FormPropertiesFormComponent } from '../form-properties-form/form-properties-form.component';

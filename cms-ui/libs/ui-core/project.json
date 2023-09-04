@@ -14,22 +14,6 @@
                 "project": "libs/ui-core/ng-package.json"
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "options": {
-                "main": "libs/ui-core/src/test.ts",
-                "polyfills": "libs/ui-core/src/polyfills.ts",
-                "tsConfig": "libs/ui-core/tsconfig.spec.json",
-                "karmaConfig": "libs/ui-core/karma.conf.js",
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "libs/ui-core/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                }
-            }
-        },
         "lint": {
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],

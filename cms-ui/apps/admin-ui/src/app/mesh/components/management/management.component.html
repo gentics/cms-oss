@@ -3,7 +3,7 @@
     [loggedIn]="loggedIn"
     (loggedInChange)="handleMeshLogin($event)"
 >
-    <div class="management-container">
+    <div *ngIf="loggedIn" class="management-container">
         <div class="management-content">
             <router-outlet [name]="ROUTE_MANAGEMENT_OUTLET"></router-outlet>
         </div>
@@ -16,6 +16,7 @@
             </div>
             <gtx-button
                 size="small"
+                class="logout-button"
                 flat
                 (click)="logout()"
             >logout</gtx-button>

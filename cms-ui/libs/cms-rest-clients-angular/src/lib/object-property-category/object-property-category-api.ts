@@ -34,7 +34,7 @@ export class ObjectPropertyCategoryApi {
      * Get a single contentrepository by id.
      */
     getObjectPropertyCategory(itemId: number | string): Observable<ObjectPropertyCategoryLoadResponse> {
-        return this.apiBase.get(`objectproperty/category/${itemId}`, {});
+        return this.apiBase.get(`objectproperty/category/${itemId}`);
     }
 
     /**

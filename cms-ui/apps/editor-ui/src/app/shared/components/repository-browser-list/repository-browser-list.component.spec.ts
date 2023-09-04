@@ -1,7 +1,6 @@
 import { Component, DebugElement, Injectable, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { FolderApi } from '@editor-ui/app/core/providers/api';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -15,13 +14,6 @@ import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import {
-    getExampleFolderDataNormalized,
-    getExampleImageDataNormalized,
-    getExampleNodeDataNormalized,
-    getExamplePageDataNormalized,
-    getExampleTemplateDataNormalized,
-} from '@editor-ui/testing/test-data.mock';
 import {
     AllowedSelection,
     AllowedSelectionType,
@@ -37,6 +29,13 @@ import {
     RepositoryBrowserSorting,
     Template,
 } from '@gentics/cms-models';
+import {
+    getExampleFolderDataNormalized,
+    getExampleImageDataNormalized,
+    getExampleNodeDataNormalized,
+    getExamplePageDataNormalized,
+    getExampleTemplateDataNormalized,
+} from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';

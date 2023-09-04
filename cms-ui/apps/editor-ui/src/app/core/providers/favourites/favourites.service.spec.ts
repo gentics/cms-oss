@@ -13,8 +13,7 @@ describe('FavouritesService', () => {
     let service: FavouritesService;
     let state: TestApplicationState;
     let userSettings: MockUserSettingsService;
-    let exampleStarrable: Starrable;
-    let exampleStarrable2: Starrable;
+    let exampleStarrable: Omit<Favourite, 'nodeId'>;
 
     beforeEach(() => {
         userSettings = new MockUserSettingsService();
@@ -30,11 +29,10 @@ describe('FavouritesService', () => {
         state.mockState({ auth: { currentUserId: 123 } });
         state.trackSubscriptions();
 
-        let entityResolver = new EntityResolver(state);
+        const entityResolver = new EntityResolver(state);
         service = new FavouritesService(userSettings as any as UserSettingsService, state, entityResolver);
 
         exampleStarrable = { type: 'folder', id: 17, globalId: 'some-folder-id', name: 'Folder 17' };
-        exampleStarrable2 = { type: 'page', id: 9, globalId: 'some-page-id', name: 'Page 9' };
     });
 
     describe('list$', () => {
@@ -48,7 +46,7 @@ describe('FavouritesService', () => {
             expect(state.select).toHaveBeenCalled();
             expect(state.getSubscribedBranches()).not.toContain('favourites', 'subscribed before subscribe()');
 
-            let subscription = service.list$.subscribe(el => {});
+            const subscription = service.list$.subscribe(el => {});
             expect(state.getSubscribedBranches()).toContain('favourites');
 
             subscription.unsubscribe();
@@ -56,18 +54,18 @@ describe('FavouritesService', () => {
         });
 
         it('cleans up its subscriptions when destroyed', () => {
-            let subscription = service.list$.subscribe(el => {});
+            const subscription = service.list$.subscribe(el => {});
             subscription.unsubscribe();
             service.ngOnDestroy();
             expect(state.getSubscribedBranches()).not.toContain('favourites');
         });
 
         it('is a subscription to the app state when subscribed to', fakeAsync(() => {
-            let exampleItem: Favourite = { nodeId: 7, name: 'My folder', type: 'folder', id: 5, globalId: 'TestID' };
+            const exampleItem: Favourite = { nodeId: 7, name: 'My folder', type: 'folder', id: 5, globalId: 'TestID' };
             state.mockState({ favourites: { list: [exampleItem] } });
 
             let received: any;
-            let subscription = service.list$.subscribe(val => { received = val; });
+            const subscription = service.list$.subscribe(val => { received = val; });
             tick(500);
             expect(state.getSubscribedBranches()).toContain('favourites');
             expect(received).toEqual([jasmine.objectContaining(exampleItem)]);
@@ -76,7 +74,7 @@ describe('FavouritesService', () => {
         }));
 
         it('adds the name of the node to the favourites item', fakeAsync(() => {
-            let exampleItem: Favourite = { nodeId: 7, name: 'My folder', type: 'folder', id: 5, globalId: 'TestID' };
+            const exampleItem: Favourite = { nodeId: 7, name: 'My folder', type: 'folder', id: 5, globalId: 'TestID' };
             state.mockState({
                 entities: {
                     node: {
@@ -90,7 +88,7 @@ describe('FavouritesService', () => {
             });
 
             let received: FavouriteWithDisplayDetails[];
-            let subscription = service.list$.subscribe(val => { received = val; });
+            const subscription = service.list$.subscribe(val => { received = val; });
             tick(500);
             expect(received.length).toBeGreaterThan(0);
             expect(received[0].nodeName).toBe('Node #7');
@@ -103,7 +101,7 @@ describe('FavouritesService', () => {
     describe('getList()', () => {
 
         it('returns the "favourites.list" branch of the app state', () => {
-            let fav: Favourite = { name: 'My folder', type: 'folder', id: 17, globalId: 'folder-17', nodeId: 1 };
+            const fav: Favourite = { name: 'My folder', type: 'folder', id: 17, globalId: 'folder-17', nodeId: 1 };
             state.mockState({ favourites: { list: [fav] } });
             expect(service.getList()).toEqual([fav]);
         });
@@ -193,7 +191,7 @@ describe('FavouritesService', () => {
                 },
             });
 
-            let item = Object.assign({}, exampleStarrable, { nodeId: 10 });
+            const item = Object.assign({}, exampleStarrable, { nodeId: 10 });
             expect('nodeId' in item).toBe(true);
             service.add([item]);
 
@@ -225,9 +223,9 @@ describe('FavouritesService', () => {
 
         it('stores the result in the user settings', () => {
             expect(userSettings.saveFavourites).not.toHaveBeenCalled();
-            let itemToDelete: Favourite = { nodeId: 7, type: 'folder', id: 17, name: 'some name', globalId: 'GlobalIdOne' };
-            let remainingItem: Favourite = { nodeId: 7, type: 'page', id: 999, name: 'remaining', globalId: 'GlobalIdTwo' };
-            let initialState = [remainingItem, itemToDelete];
+            const itemToDelete: Favourite = { nodeId: 7, type: 'folder', id: 17, name: 'some name', globalId: 'GlobalIdOne' };
+            const remainingItem: Favourite = { nodeId: 7, type: 'page', id: 999, name: 'remaining', globalId: 'GlobalIdTwo' };
+            const initialState = [remainingItem, itemToDelete];
             state.mockState({ favourites: { list: initialState } });
 
             service.remove([itemToDelete]);
@@ -266,7 +264,7 @@ describe('FavouritesService', () => {
 
 });
 
-class MockUserSettingsService {
+class MockUserSettingsService implements Partial<UserSettingsService> {
     constructor() {
         spyOn(this as any, 'saveFavourites');
     }

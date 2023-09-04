@@ -13,7 +13,7 @@ describe('ElasticSearchIndexApi', () => {
 
     it('getItems() sends the correct GET request', () => {
         entityApi.getItems();
-        expect(apiBase.get).toHaveBeenCalledWith('index');
+        expect(apiBase.get).toHaveBeenCalledWith('index', undefined);
     });
 
     it('rebuild() sends the correct PUT request', () => {

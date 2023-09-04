@@ -19,7 +19,7 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
     getExampleUserData,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { FolderState, ItemsInfo, emptyItemInfo, plural } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
 import { getNormalizrSchema } from '../../state-utils';

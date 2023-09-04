@@ -31,7 +31,7 @@ import * as USER_TRANSLATIONS from './translations/user.translations.json';
 import * as WIDGET_TRANSLATIONS from './translations/widget.translations.json';
 
 function getTranslations(jsonModule: any): any {
-    return jsonModule.default;
+    return jsonModule;
 }
 
 export const ALL_TRANSLATIONS = {
@@ -85,7 +85,7 @@ export class LocalTranslateLoader implements TranslateLoader {
         const translation: SingleLanguageTranslationsSet = {};
 
         Object.keys(ALL_TRANSLATIONS).forEach(section => {
-            const srcSection = ALL_TRANSLATIONS[section];
+            const srcSection = ALL_TRANSLATIONS[section] || {};
             const destSection: IndexByKey<string> = {};
 
             Object.keys(srcSection).forEach(key => {

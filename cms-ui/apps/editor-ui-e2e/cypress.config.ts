@@ -7,6 +7,6 @@ export default defineConfig({
     video: false,
     reporter: resolve(__dirname, '../../node_modules/mocha-junit-reporter'),
     reporterOptions: {
-        mochaFile: '../../.reports/editor-ui_e2e.xml',
+        mochaFile: '.reports/report.xml',
     },
 });

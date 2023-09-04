@@ -98,7 +98,7 @@
             }
         },
         "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
+            "executor": "@angular-devkit/build-angular:karma",
             "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
             "options": {
                 "main": "apps/image-editor-demo/src/test.ts",

@@ -8,9 +8,6 @@ module.exports = function (config) {
     const baseConfig = getBaseKarmaConfig();
     config.set({
         ...baseConfig,
-        files: [
-            './lib/testing/global-variables.js',
-        ],
         coverageIstanbulReporter: {
             ...baseConfig.coverageIstanbulReporter,
             dir: join(__dirname, '../../coverage/libs/form-generator'),

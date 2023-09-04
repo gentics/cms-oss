@@ -11,15 +11,14 @@ import {
     EntityIdType,
     GcmsNormalizer,
     IndexById,
-    IS_NORMALIZED,
     NormalizableEntity,
     NormalizableEntityType,
     NormalizableEntityTypesMapBO,
     Normalized,
-    Raw
+    Raw,
 } from '@gentics/cms-models';
-import { debounce as _debounce, isEqual, values as _values } from'lodash-es'
-import { Observable, of as observableOf, ReplaySubject, Subject, throwError } from 'rxjs';
+import { debounce as _debounce, values as _values, isEqual } from 'lodash-es';
+import { Observable, ReplaySubject, Subject, of as observableOf, throwError } from 'rxjs';
 import {
     distinctUntilChanged,
     finalize,
@@ -29,10 +28,9 @@ import {
     switchMap,
     take,
     takeUntil,
-    tap
+    tap,
 } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { NormalizationWorkerRequest, NormalizationWorkerResponse } from './normalization-worker/worker-task';
 
 interface CachedDenormalizedValue<
     T extends keyof EntityStateModel,
@@ -61,12 +59,11 @@ export class EntityManagerService extends InitializableServiceBase {
 
     protected denormalizedEntityBranches = new Map<keyof EntityStateModel, Observable<NormalizableEntity<Raw>[]>>();
 
-    protected normalizationWorker: Worker;
     protected nextRequestId = 0;
     protected pendingNormalizations: Map<number, Subject<ArrayNormalizationResult>> = new Map();
 
-    protected readonly maxSyncBatchSize: number = 20;
-    protected readonly cleanupDebounceTimeMs: number = 200;
+    /** Time in ms how long the debounce should be for. */
+    protected readonly CLEANUP_DEBOUNCE: number = 200;
 
     constructor(
         private appState: AppStateService,
@@ -75,14 +72,9 @@ export class EntityManagerService extends InitializableServiceBase {
     }
 
     protected onServiceInit(): void {
-        this.initNormalizationWorker();
     }
 
     protected onServiceDestroy(): void {
-        if (this.normalizationWorker) {
-            this.normalizationWorker.terminate();
-            this.normalizationWorker = null;
-        }
     }
 
     /**
@@ -276,16 +268,6 @@ export class EntityManagerService extends InitializableServiceBase {
         );
     }
 
-    private initNormalizationWorker(): void {
-        if (typeof Worker !== 'undefined') {
-            this.normalizationWorker = new Worker(new URL('./normalization-worker/normalization.worker', import.meta.url), { type: 'module' });
-
-            this.normalizationWorker.onmessage = msg => {
-                this.handleWorkerResponse(msg.data);
-            };
-        }
-    }
-
     protected normalizeAsync<
         T extends keyof EntityStateModel,
         E extends NormalizableEntityTypesMapBO<Raw>[T]
@@ -293,36 +275,12 @@ export class EntityManagerService extends InitializableServiceBase {
         type: T,
         rawEntities: E[],
     ): Observable<ArrayNormalizationResult> {
-        if (rawEntities.length <= this.maxSyncBatchSize || !this.normalizationWorker) {
-            // If there are not many entities to normalize or
-            // if the current platform does not support web workers, normalize synchronously.
-            try {
-                return observableOf(this.normalizer.normalize(type, rawEntities));
-            } catch (error) {
-                return throwError(error);
-            }
-        }
-
-        const request: NormalizationWorkerRequest<T, E> = {
-            id: this.nextRequestId++,
-            entityType: type,
-            rawEntities,
-        };
-        const subj = new Subject<ArrayNormalizationResult>();
-        this.pendingNormalizations.set(request.id, subj);
-        this.normalizationWorker.postMessage(request);
-        return subj;
-    }
-
-    protected handleWorkerResponse(response: NormalizationWorkerResponse): void {
-        const subj = this.pendingNormalizations.get(response.id);
-        this.pendingNormalizations.delete(response.id);
-        if (response.result) {
-            this.addIsNormalizedSymbol(response.result);
-            subj.next(response.result);
-            subj.complete();
-        } else {
-            subj.error(response.error);
+        // If there are not many entities to normalize or
+        // if the current platform does not support web workers, normalize synchronously.
+        try {
+            return observableOf(this.normalizer.normalize(type, rawEntities));
+        } catch (error) {
+            return throwError(error);
         }
     }
 
@@ -344,7 +302,7 @@ export class EntityManagerService extends InitializableServiceBase {
                     denormalizedCache.delete(id);
                 }
             });
-        }, this.cleanupDebounceTimeMs, { trailing: true });
+        }, this.CLEANUP_DEBOUNCE, { trailing: true });
 
         const denormalizer$ = this.appState.select(state => state.entity[type]).pipe(
             switchMap(entityBranch => {
@@ -416,16 +374,4 @@ export class EntityManagerService extends InitializableServiceBase {
             }),
         );
     }
-
-    /**
-     * Adds the `IS_NORMALIZED` symbol to all entities in the result.
-     * This is necessary, because symbols do not seem to be copied when using `postMessage()`.
-     */
-    private addIsNormalizedSymbol(resultFromWorker: ArrayNormalizationResult): void {
-        Object.keys(resultFromWorker.entities).forEach(branchKey => {
-            const branch = resultFromWorker.entities[branchKey];
-            Object.keys(branch).forEach(id => branch[id][IS_NORMALIZED] = true);
-        });
-    }
-
 }

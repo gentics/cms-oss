@@ -35,7 +35,7 @@
         },
         "@nx/angular:library": {
             "linter": "eslint",
-            "unitTestRunner": "karma"
+            "unitTestRunner": "jest"
         },
         "@nx/angular:component": {
             "style": "scss"
@@ -46,8 +46,10 @@
         "production": [
             "default",
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+            "!{projectRoot}/**/*.spec.[jt]s",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
+            "!{projectRoot}/karma.conf.js",
             "!{projectRoot}/src/test-setup.[jt]s",
             "!{projectRoot}/test-setup.[jt]s",
             "!{projectRoot}/.eslintrc.json",
@@ -63,11 +65,13 @@
             "inputs": ["production", "^production"]
         },
         "test": {
+            "inputs": ["default", "^default", "{workspaceRoot}/karma.conf.js"]
+        },
+        "jest": {
             "inputs": [
                 "default",
-                "^default",
-                "{workspaceRoot}/karma.conf.js",
-                "watch"
+                "^production",
+                "{workspaceRoot}/jest.preset.js"
             ]
         },
         "e2e": {

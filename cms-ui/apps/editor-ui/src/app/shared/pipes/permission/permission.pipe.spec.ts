@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { ChangeDetectorRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { Page } from '@gentics/cms-models';
+import { EditorPermissions, Page } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, Subject } from 'rxjs';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
@@ -9,6 +10,8 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { PermissionsPipe } from './permission.pipe';
 
 const ACTIVE_NODE = 9999;
+const FETCHED_PERMISSIONS: EditorPermissions = { already: 'fetched permissions' } as any;
+const PERMISSIONS_FROM_SERVER: EditorPermissions = { permissions: 'permissions from the server' } as any;
 
 describe('PermissionPipe:', () => {
 
@@ -97,16 +100,14 @@ describe('PermissionPipe:', () => {
         });
 
         it('returns the permissions if they are in the app state', () => {
-            const existingPermissions = { already: 'fetched permissions' };
-            permissionService.forFolderInLanguage = () => Observable.of(existingPermissions);
+            permissionService.forFolderInLanguage = () => Observable.of(FETCHED_PERMISSIONS);
 
             const output = permissionPipe.transform(inputPage, 'en');
-            expect(output).toBe(existingPermissions);
+            expect(output).toBe(FETCHED_PERMISSIONS);
         });
 
         it('does not mark for change detection if the permissions are in the app state', () => {
-            const existingPermissions = { already: 'fetched permissions' };
-            permissionService.forFolderInLanguage = () => Observable.of(existingPermissions);
+            permissionService.forFolderInLanguage = () => Observable.of(FETCHED_PERMISSIONS);
 
             permissionPipe.transform(inputPage, 'en');
             expect(changeDetector.markForCheck).not.toHaveBeenCalled();
@@ -120,10 +121,10 @@ describe('PermissionPipe:', () => {
         it('marks for change detection after fetching permissions', () => {
             const permissionsSubject = new Subject<any>();
             permissionService.forFolderInLanguage = () => permissionsSubject;
-            const result = permissionPipe.transform(inputPage, 'en');
+            permissionPipe.transform(inputPage, 'en');
 
             expect(changeDetector.markForCheck).not.toHaveBeenCalled();
-            permissionsSubject.next({ permissions: 'permissions from the server' });
+            permissionsSubject.next(PERMISSIONS_FROM_SERVER);
             expect(changeDetector.markForCheck).toHaveBeenCalled();
         });
 
@@ -132,11 +133,11 @@ describe('PermissionPipe:', () => {
             permissionService.forFolderInLanguage = () => permissionsSubject;
 
             let result = permissionPipe.transform(inputPage, 'en');
-            expect(result).not.toEqual({ permissions: 'permissions from the server' });
+            expect(result).not.toEqual(PERMISSIONS_FROM_SERVER);
 
-            permissionsSubject.next({ permissions: 'permissions from the server' });
+            permissionsSubject.next(PERMISSIONS_FROM_SERVER);
             result = permissionPipe.transform(inputPage, 'en');
-            expect(result).toEqual({ permissions: 'permissions from the server' });
+            expect(result).toEqual(PERMISSIONS_FROM_SERVER);
         });
 
     });
@@ -150,16 +151,14 @@ describe('PermissionPipe:', () => {
         });
 
         it('returns the permissions if they are in the app state', () => {
-            const existingPermissions = { already: 'fetched permissions' };
-            permissionService.forFolder = () => Observable.of(existingPermissions);
+            permissionService.forFolder = () => Observable.of(FETCHED_PERMISSIONS);
 
             const output = permissionPipe.transform(inputPage);
-            expect(output).toBe(existingPermissions);
+            expect(output).toBe(FETCHED_PERMISSIONS);
         });
 
         it('does not mark for change detection if the permissions are in the app state', () => {
-            const existingPermissions = { already: 'fetched permissions' };
-            permissionService.forFolder = () => Observable.of(existingPermissions);
+            permissionService.forFolder = () => Observable.of(FETCHED_PERMISSIONS);
 
             permissionPipe.transform(inputPage);
             expect(changeDetector.markForCheck).not.toHaveBeenCalled();
@@ -173,10 +172,10 @@ describe('PermissionPipe:', () => {
         it('marks for change detection after fetching permissions', () => {
             const permissionsSubject = new Subject<any>();
             permissionService.forFolder = () => permissionsSubject;
-            const result = permissionPipe.transform(inputPage);
+            permissionPipe.transform(inputPage);
 
             expect(changeDetector.markForCheck).not.toHaveBeenCalled();
-            permissionsSubject.next({ permissions: 'permissions from the server' });
+            permissionsSubject.next(PERMISSIONS_FROM_SERVER);
             expect(changeDetector.markForCheck).toHaveBeenCalled();
         });
 
@@ -185,11 +184,11 @@ describe('PermissionPipe:', () => {
             permissionService.forFolder = () => permissionsSubject;
 
             let result = permissionPipe.transform(inputPage);
-            expect(result).not.toEqual({ permissions: 'permissions from the server' });
+            expect(result).not.toEqual(PERMISSIONS_FROM_SERVER);
 
-            permissionsSubject.next({ permissions: 'permissions from the server' });
+            permissionsSubject.next(PERMISSIONS_FROM_SERVER);
             result = permissionPipe.transform(inputPage);
-            expect(result).toEqual({ permissions: 'permissions from the server' });
+            expect(result).toEqual(PERMISSIONS_FROM_SERVER);
         });
 
     });
@@ -200,17 +199,21 @@ class MockChangeDetector {
     markForCheck = jasmine.createSpy('markForCheck');
 }
 
-class MockPermissionService {
+class MockPermissionService implements Partial<PermissionService> {
     constructor() {
         spyOn(this as any, 'forFolder').and.callThrough();
         spyOn(this as any, 'forFolderInLanguage').and.callThrough();
     }
 
-    forFolder(): Observable<any> {
+    forFolder(folderId: number, nodeId: number): Observable<EditorPermissions> {
         return Observable.never();
     }
 
-    forFolderInLanguage(): Observable<any> {
+    forFolderInLanguage(
+        folderId: number,
+        nodeId: number,
+        languageId: number | null,
+    ): Observable<EditorPermissions> {
         return Observable.never();
     }
 }

@@ -19,22 +19,6 @@
                 "project": "libs/form-generator/ng-package.json"
             }
         },
-        "test": {
-            "executor": "@angular-devkit/custom-webpack:karma",
-            "options": {
-                "main": "libs/form-generator/src/test.ts",
-                "polyfills": "libs/form-generator/src/polyfills.ts",
-                "tsConfig": "libs/form-generator/tsconfig.spec.json",
-                "karmaConfig": "libs/form-generator/karma.conf.js",
-                "stylePreprocessorOptions": {
-                    "includePaths": [
-                        "libs/form-generator/src/styles",
-                        "libs",
-                        "node_modules"
-                    ]
-                }
-            }
-        },
         "lint": {
             "executor": "@nx/linter:eslint",
             "outputs": ["{options.outputFile}"],

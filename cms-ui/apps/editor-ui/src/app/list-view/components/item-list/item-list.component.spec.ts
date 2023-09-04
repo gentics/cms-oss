@@ -30,7 +30,7 @@ import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExamplePageData, getExamplePageDataNormalized } from '../../../../testing/test-data.mock';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

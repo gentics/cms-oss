@@ -42,7 +42,7 @@ describe('AppStateService', () => {
 
         const actualResult = appState.select(selector);
         expect(selectSpy).toHaveBeenCalledTimes(1);
-        expect(selectSpy.calls.argsFor(0)[0]).toBe(selector);
+        expect(selectSpy.calls.argsFor(0)[0]).toBe(selector as any);
         expect(actualResult).toBe(expectedResult);
     });
 
@@ -53,7 +53,7 @@ describe('AppStateService', () => {
 
         const actualResult = appState.selectOnce(selector);
         expect(selectOnceSpy).toHaveBeenCalledTimes(1);
-        expect(selectOnceSpy.calls.argsFor(0)[0]).toBe(selector);
+        expect(selectOnceSpy.calls.argsFor(0)[0]).toBe(selector as any);
         expect(actualResult).toBe(expectedResult);
     });
 

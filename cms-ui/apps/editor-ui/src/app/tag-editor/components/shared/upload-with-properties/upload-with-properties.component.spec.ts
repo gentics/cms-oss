@@ -4,10 +4,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { File as FileModel, Folder } from '@gentics/cms-models';
+import { getExampleFileObjectData, getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { getExampleFileObjectData, getExampleFolderData } from '../../../../../testing/test-data.mock';
 import { Api } from '../../../../core/providers/api';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -79,13 +79,13 @@ describe('UploadWithPropertiesComponent', () => {
 
         it('works for file with conflicting name',
             componentTest(() => TestComponent, () => {
-                let conflictingFiles: any[] = [
+                const conflictingFiles: any[] = [
                     { id: 1, type: 'file', name: 'file1.ext' },
                     { id: 3, type: 'image', name: 'image2.ext' },
                 ];
-                let checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve(conflictingFiles));
-                let uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
-                let modalServiceSpy =
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve(conflictingFiles));
+                const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
+                const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
                         const open = () => Promise.resolve([ ...locals.conflictingFiles ]);
                         return Promise.resolve({
@@ -104,9 +104,9 @@ describe('UploadWithPropertiesComponent', () => {
 
         it('works for file without conflicting name',
             componentTest(() => TestComponent, () => {
-                let checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
-                let uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
-                let modalServiceSpy =
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+                const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
+                const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
                         const open = () => Promise.resolve([ ...locals.conflictingFiles ]);
                         return Promise.resolve({
@@ -211,7 +211,7 @@ describe('UploadWithPropertiesComponent', () => {
                     [itemType]="itemType"
                     (upload)="onUpload($event)">
                 </upload-with-properties>`,
-    })
+})
 class TestComponent {
 
 }

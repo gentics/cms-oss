@@ -14,7 +14,7 @@ import {
     getExamplePageData,
     getExampleTemplateData,
     getExampleTemplateDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

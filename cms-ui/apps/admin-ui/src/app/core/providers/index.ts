@@ -8,6 +8,7 @@ export * from './data-source-entry-table-loader/data-source-entry-table-loader.s
 export * from './data-source-table-loader/data-source-table-loader.service';
 export * from './debug-tool/debug-tool.service';
 export * from './dev-tool-package-table-loader/dev-tool-package-table-loader.service';
+export * from './dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 export * from './editor-tab-tracker/editor-tab-tracker.service';
 export * from './editor-ui-local-storage';
 export * from './entity-manager/entity-manager.service';

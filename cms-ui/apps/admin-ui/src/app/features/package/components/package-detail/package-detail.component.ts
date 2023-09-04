@@ -32,6 +32,7 @@ export enum PackageDetailTabs {
     DATA_SOURCES = 'data-sources',
     OBJECT_PROPERTIES = 'object-properties',
     TEMPLATES = 'templates',
+    CONSISTENCY_CHECK = 'consistency-check',
 }
 
 // *************************************************************************************************
@@ -124,6 +125,7 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
             [PackageDetailTabs.DATA_SOURCES]: NULL_FORM_TAB_HANDLE,
             [PackageDetailTabs.OBJECT_PROPERTIES]: NULL_FORM_TAB_HANDLE,
             [PackageDetailTabs.TEMPLATES]: NULL_FORM_TAB_HANDLE,
+            [PackageDetailTabs.CONSISTENCY_CHECK]: NULL_FORM_TAB_HANDLE,
         };
     }
 

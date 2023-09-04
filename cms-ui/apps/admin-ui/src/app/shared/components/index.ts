@@ -29,6 +29,7 @@ export * from './create-user-modal/create-user-modal.component';
 export * from './data-source-entry-table/data-source-entry-table.component';
 export * from './data-source-table/data-source-table.component';
 export * from './dev-tool-package-table/dev-tool-package-table.component';
+export * from './dev-tool-package-trable/dev-tool-package-trable.component';
 export * from './edit-permissions-modal/edit-permissions-modal.component';
 export * from './entity-detail-header/entity-detail-header.component';
 export * from './entity-picker-modal/entity-picker-modal.component';

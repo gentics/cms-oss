@@ -51,6 +51,10 @@
         "en": "Create new package",
         "de": "Neues Paket erstellen"
     },
+    "consistency_check_title" : {
+        "en": "Consistency check",
+        "de": "Konsistenzüberprüfung"
+    },
     "package_successfully_synced_to_filesystem": {
         "en": "Package {{name}} successfully synced to filesystem",
         "de": "Paket {{name}} erfolgreich nach Dateisystem synchronisiert"

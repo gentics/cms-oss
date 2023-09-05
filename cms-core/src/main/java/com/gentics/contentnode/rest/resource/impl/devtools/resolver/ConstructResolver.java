@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ConstructResolver extends AbstractDependencyResolver {
 
@@ -25,7 +26,7 @@ public class ConstructResolver extends AbstractDependencyResolver {
 	 * @return the mapped uuid
 	 * @throws NodeException
 	 */
-	static private String resolveUuid(int datasourceId) throws NodeException {
+	private static String resolveUuid(int datasourceId) throws NodeException {
 		Transaction transaction = TransactionManager.getCurrentTransaction();
 		return transaction.getGlobalId(Datasource.class, datasourceId);
 	}
@@ -38,7 +39,15 @@ public class ConstructResolver extends AbstractDependencyResolver {
 
 		for (PackageObject<Construct> packageObject : packageObjects) {
 			Construct construct = packageObject.getObject();
-			List<PackageDependency> references = resolveReferences(construct);
+
+			List<PackageDependency> references = Stream.concat(
+					resolveReferences(construct, Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE),
+							Type.DATASOURCE).stream(),
+					resolveReferences(construct,
+							Arrays.asList(Part.TEXT, Part.TEXTHMTL, Part.HTML, Part.URLFILE, Part.URLFOLDER,
+									Part.URLPAGE, Part.HTMLLONG, Part.CHECKBOX, Part.VELOCITY),
+							Type.CONSTRUCT).stream()
+			).collect(Collectors.toList());
 
 			PackageDependency dependency = new PackageDependency.Builder()
 					.withGlobalId(construct.getGlobalId().toString())
@@ -54,29 +63,35 @@ public class ConstructResolver extends AbstractDependencyResolver {
 		return resolvedDependencyList;
 	}
 
-	private List<PackageDependency> resolveReferences(Construct construct) throws NodeException {
-		final List<Integer> DEPENDENCIES = Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE);
-		List<PackageDependency> referencedDependencies = new ArrayList<>();
-
-		List<Part> datasourceParts = construct.getParts().stream().filter(
-						part -> DEPENDENCIES.stream()
+	private List<PackageDependency> resolveReferences(Construct construct, List<Integer> dependencies,
+			Type dependencyType) throws NodeException {
+		List<Part> referencedParts = construct.getParts().stream().filter(
+						part -> dependencies.stream()
 								.anyMatch(type -> type == part.getPartTypeId()))
 				.collect(Collectors.toList());
 
-		for (Part part : datasourceParts) {
+		List<PackageDependency> referencedDependencies = new ArrayList<>();
+
+		for (Part part : referencedParts) {
 			PackageDependency referencedDependency = new PackageDependency.Builder()
 					.withGlobalId(part.getGlobalId().toString())
 					.withKeyword(part.getKeyname())
 					.withName(part.getName().toString())
-					.withIsInPackage(
-							isInPackage(Datasource.class, resolveUuid(part.getInfoInt())))
-					.withType(Type.DATASOURCE)
+					.withIsInPackage(isInPackage(part, dependencyType))
+					.withType(dependencyType)
 					.build();
 
 			referencedDependencies.add(referencedDependency);
 		}
 
 		return referencedDependencies;
+	}
+
+	private boolean isInPackage(Part part, Type dependencyType) throws NodeException {
+		if (Type.DATASOURCE == dependencyType) {
+			return isInPackage(Datasource.class, resolveUuid(part.getInfoInt()));
+		}
+		return isInPackage(Construct.class, part.getConstruct().getGlobalId().toString());
 	}
 
 }

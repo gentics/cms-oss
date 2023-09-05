@@ -24,11 +24,10 @@ import java.util.stream.Collectors;
  */
 public class PackageDependencyChecker {
 
-	private static final List<Class<? extends SynchronizableNodeObject>> DEPENDENCY_CLASSES = Arrays.asList(
-			Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
-
 	private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(PackageDependencyChecker.class);
 	private final PackageSynchronizer packageSynchronizer;
+	private List<Class<? extends SynchronizableNodeObject>> dependencyClasses = Arrays.asList(
+			Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
 	private String packageName;
 
 	public PackageDependencyChecker(String packageName) {
@@ -79,7 +78,7 @@ public class PackageDependencyChecker {
 		LOGGER.info("Collecting dependencies for package " + packageName);
 		try (Trx trx = ContentNodeHelper.trx()) {
 			List<PackageDependency> dependencies = new ArrayList<>();
-			for (Class<? extends SynchronizableNodeObject> dependencyClass : DEPENDENCY_CLASSES) {
+			for (Class<? extends SynchronizableNodeObject> dependencyClass : dependencyClasses) {
 				AbstractDependencyResolver resolver = new AbstractDependencyResolver
 						.Builder(dependencyClass)
 						.withSynchronizer(packageSynchronizer)
@@ -119,6 +118,25 @@ public class PackageDependencyChecker {
 	 */
 	public void setPackageName(String packageName) {
 		this.packageName = packageName;
+	}
+
+	/**
+	 * Get the list of dependency classes
+	 * @return the list of dependency classes
+	 */
+	public List<Class<? extends SynchronizableNodeObject>> getDependencyClasses() {
+		return dependencyClasses;
+	}
+
+	/**
+	 * Override the list of classes that should be considered for the dependency check
+	 * @param dependencyClasses the new list of dependency classes. Each dependency class must
+	 *                          correspond to a resolver implementation
+	 * @see AbstractDependencyResolver
+	 */
+	public void setDependencyClasses(
+			List<Class<? extends SynchronizableNodeObject>> dependencyClasses) {
+		this.dependencyClasses = dependencyClasses;
 	}
 
 }

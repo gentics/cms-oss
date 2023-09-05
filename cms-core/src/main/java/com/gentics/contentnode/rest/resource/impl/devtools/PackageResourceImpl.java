@@ -184,6 +184,11 @@ public class PackageResourceImpl implements PackageResource {
 			@BeanParam PagingParameterBean paging) throws Exception {
 		getPackage(packageName);
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
+
+		if (filter.type != null && !filter.type.isEmpty()) {
+			dependencyChecker.setDependencyClasses(getFilteredDependencyClassList(filter));
+		}
+
 		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 		PackageDependencyList consistencyCheckResult = new PackageDependencyList();
 		consistencyCheckResult.setItems(dependencies);
@@ -191,7 +196,7 @@ public class PackageResourceImpl implements PackageResource {
 
 		if (checkAll) {
 			ConcurrentPackageDependencyChecker concurrentChecker = new ConcurrentPackageDependencyChecker();
-			concurrentChecker.createDependencyCheckerTasks(packageName);
+			concurrentChecker.createDependencyCheckerTasks(packageName, dependencyChecker.getDependencyClasses());
 
 			List<PackageDependency> missingReferencesOnly = filterMissingDependencies(
 					dependencies).stream().flatMap(d -> d.getReferencedDependencies().stream())
@@ -211,21 +216,28 @@ public class PackageResourceImpl implements PackageResource {
 
 	private List<PackageDependency> filterAndSortDependencyList(FilterPackageCheckBean filter,
 			List<PackageDependency> dependencies) {
-		if (filter != null) {
-			if (filter.completeness == Filter.INCOMPLETE) {
-				dependencies = filterMissingDependencies(dependencies);
-			} else if (filter.type != null) {
-				for (Type typeFilter : filter.type) {
-					dependencies = dependencies.stream().filter(
-							dependency -> dependency.getDependencyType() == PackageDependency.Type.valueOf(
-									typeFilter.toString().toUpperCase())).collect(
-							Collectors.toList());
-				}
-			}
+		if (filter != null && filter.completeness == Filter.INCOMPLETE) {
+			dependencies = filterMissingDependencies(dependencies);
 		}
 		return dependencies.stream().sorted(
 				Comparator.comparing(PackageDependency::getDependencyType)).collect(
 				Collectors.toList());
+	}
+
+	private List<Class<? extends SynchronizableNodeObject>> getFilteredDependencyClassList(FilterPackageCheckBean filter) {
+		List<Class<? extends SynchronizableNodeObject>> dependencyClasses = new ArrayList<>();
+		for (Type typeFilter : filter.type) {
+			if (typeFilter == Type.CONSTRUCT) {
+				dependencyClasses.add(Construct.class);
+			} else if (typeFilter == Type.OBJECT_PROPERTY) {
+				dependencyClasses.add(ObjectTagDefinition.class);
+			} else if (typeFilter == Type.TEMPLATE) {
+				dependencyClasses.add(Template.class);
+			} else if (typeFilter == Type.DATASOURCE) {
+				dependencyClasses.add(Datasource.class);
+			}
+		}
+		return dependencyClasses;
 	}
 
 

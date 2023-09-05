@@ -1,5 +1,6 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
+import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import com.gentics.lib.log.NodeLogger;
@@ -81,10 +82,12 @@ public class ConcurrentPackageDependencyChecker {
 	/**
 	 * Creates and submits dependency checking task
 	 *
-	 * @param excludedPackage the package that has been already checked
+	 * @param excludedPackage   the package that has been already checked
+	 * @param dependencyClasses list of dependency classes that should b considered for the
+	 *                          consistency check
 	 */
 	public void createDependencyCheckerTasks(
-			String excludedPackage) {
+			String excludedPackage, List<Class<? extends SynchronizableNodeObject>> dependencyClasses) {
 		dependencyCheckerTasks = new ArrayList<>();
 		Set<String> packages = Synchronizer.getPackages();
 		// ignore already checked package
@@ -94,6 +97,7 @@ public class ConcurrentPackageDependencyChecker {
 		for (String packageName : packages) {
 			Callable<List<PackageDependency>> collectDependencyTask = () -> {
 				PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
+				dependencyChecker.setDependencyClasses(dependencyClasses);
 				return dependencyChecker.collectDependencies();
 			};
 

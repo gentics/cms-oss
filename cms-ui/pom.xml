@@ -99,7 +99,7 @@
 
 						<configuration>
                             <skip>${ui.skip.install}</skip>
-							<arguments>install --no-audit --no-fund</arguments>
+							<arguments>ci --no-audit --no-fund</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>

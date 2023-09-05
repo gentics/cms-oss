@@ -393,5 +393,15 @@ module.exports = {
                 'id-blacklist': 'off',
             },
         },
+        {
+            files: ['./tools/**/*.js'],
+            rules: {
+                'import/no-nodejs-modules': 'off',
+                '@typescript-eslint/no-use-before-define': 'off',
+                '@typescript-eslint/restrict-template-expressions': 'off',
+                '@typescript-eslint/no-unsafe-call': 'off',
+                '@typescript-eslint/unbound-method': 'off',
+            },
+        },
     ],
 };

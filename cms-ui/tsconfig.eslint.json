@@ -4,6 +4,7 @@
         "noEmit": true
     },
     "include": [
+        "tools/*.js",
         ".eslintrc.js",
         "apps/**/*.ts",
         "libs/**/*.ts",

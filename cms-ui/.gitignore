@@ -44,6 +44,7 @@ yarn-error.log
 testem.log
 /typings
 /.angular
+/ng-workspace/.angular
 /cypress
 
 # System Files

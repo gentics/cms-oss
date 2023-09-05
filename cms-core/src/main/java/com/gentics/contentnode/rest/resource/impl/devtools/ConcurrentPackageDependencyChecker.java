@@ -18,111 +18,104 @@ import java.util.concurrent.Future;
  */
 public class ConcurrentPackageDependencyChecker {
 
-  private static final ExecutorService executor = Executors.newFixedThreadPool(5);
-  private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(
-      ConcurrentPackageDependencyChecker.class);
-  private static List<Future<List<PackageDependency>>> dependencyCheckerTasks;
+	private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(
+			ConcurrentPackageDependencyChecker.class);
+	private final ExecutorService executor = Executors.newFixedThreadPool(5);
+	private List<Future<List<PackageDependency>>> dependencyCheckerTasks;
 
-  private ConcurrentPackageDependencyChecker() {
-  }
+	/**
+	 * Check if missing dependency is in other package
+	 *
+	 * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
+	 *                                            in other packages
+	 * @param collectedDependencies               package dependencies from other package
+	 * @return true if dependency was found in other package
+	 */
+	private static void checkOtherPackages(
+			List<PackageDependency> searchDependencyInOtherPackagesList,
+			List<PackageDependency> collectedDependencies) {
+		for (PackageDependency searchDependency : searchDependencyInOtherPackagesList) {
+			boolean isInOtherPkg = false;
 
-  /**
-   * Creates and submits dependency checking task
-   *
-   * @param excludedPackage the package that has been already checked
-   */
-  public static void createDependencyCheckerTasks(
-      String excludedPackage) {
-    dependencyCheckerTasks = new ArrayList<>();
-    Set<String> packages = Synchronizer.getPackages();
-    // ignore already checked package
-    packages.remove(excludedPackage);
-    LOGGER.info(String.format("Searching %s packages for missing objects", packages.size()));
+			for (PackageDependency collectedDependency : collectedDependencies) {
+				// searching the missing dependency in other package dependency
+				Optional<PackageDependency> missingDependency = findMissingDependency(searchDependency,
+						collectedDependency);
 
-    for (String packageName : packages) {
-      Callable<List<PackageDependency>> collectDependencyTask = () -> {
-        PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
-        return dependencyChecker.collectDependencies();
-      };
+				if (missingDependency.isPresent()) {
+					PackageDependency foundMissingDependency = missingDependency.get();
+					isInOtherPkg = (foundMissingDependency.getIsInPackage() == null
+							|| foundMissingDependency.getIsInPackage()) &&
+							(foundMissingDependency.getIsInOtherPackage() == null
+									|| foundMissingDependency.getIsInOtherPackage());
+				}
 
-      dependencyCheckerTasks.add(executor.submit(collectDependencyTask));
-    }
-  }
+				searchDependency.setIsInOtherPackage(isInOtherPkg);
+				if (isInOtherPkg) {
+					break;
+				}
+			}
+		}
+	}
 
-  /**
-   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
-   *                                            in other packages
-   * @throws ExecutionException
-   * @throws InterruptedException
-   */
-  public static void checkAllPackageDependencies(
-      List<PackageDependency> searchDependencyInOtherPackagesList)
-      throws ExecutionException, InterruptedException {
-    for (Future<List<PackageDependency>> task : dependencyCheckerTasks) {
-      List<PackageDependency> collectedDependencies = task.get();
+	private static Optional<PackageDependency> findMissingDependency(
+			PackageDependency searchDependency,
+			PackageDependency collectedDependency) {
+		// top level comparison (i.e.: check not reference but dependency itself)
+		if (collectedDependency.getGlobalId().equals(searchDependency.getGlobalId())) {
+			return Optional.of(collectedDependency);
+		}
 
-      boolean isInOtherPkg = checkOtherPackages(searchDependencyInOtherPackagesList,
-          collectedDependencies);
-      if (isInOtherPkg) {
-        // stop looking for dependency
-        dependencyCheckerTasks.forEach(t -> t.cancel(true));
-        break;
-      }
-    }
-  }
+		// check references
+		if (collectedDependency.getReferencedDependencies() == null) {
+			return Optional.empty();
+		}
 
-  /**
-   * Check if missing dependency is in other package
-   *
-   * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
-   *                                            in other packages
-   * @param collectedDependencies               package dependencies from other package
-   * @return true if dependency was found in other package
-   */
-  private static boolean checkOtherPackages(
-      List<PackageDependency> searchDependencyInOtherPackagesList,
-      List<PackageDependency> collectedDependencies) {
-    for (PackageDependency searchDependency : searchDependencyInOtherPackagesList) {
-      boolean isInOtherPkg = false;
-      for (PackageDependency collectedDependency : collectedDependencies) {
-        // searching the missing dependency in other package dependency
-        Optional<PackageDependency> missingDependency = findMissingDependency(searchDependency,
-            collectedDependency);
+		return collectedDependency.getReferencedDependencies()
+				.stream().filter(
+						referencedDependency ->
+								referencedDependency.getGlobalId().equals(searchDependency.getGlobalId())
+				).findAny();
+	}
 
-        if (missingDependency.isPresent()) {
-          PackageDependency foundMissingDependency = missingDependency.get();
-          isInOtherPkg = foundMissingDependency.getIsInPackage()
-              || foundMissingDependency.getIsInOtherPackage();
-        }
+	/**
+	 * Creates and submits dependency checking task
+	 *
+	 * @param excludedPackage the package that has been already checked
+	 */
+	public void createDependencyCheckerTasks(
+			String excludedPackage) {
+		dependencyCheckerTasks = new ArrayList<>();
+		Set<String> packages = Synchronizer.getPackages();
+		// ignore already checked package
+		packages.remove(excludedPackage);
+		LOGGER.info(String.format("Searching %s packages for missing objects", packages.size()));
 
-        searchDependency.setIsInOtherPackage(isInOtherPkg);
-        if (isInOtherPkg) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+		for (String packageName : packages) {
+			Callable<List<PackageDependency>> collectDependencyTask = () -> {
+				PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
+				return dependencyChecker.collectDependencies();
+			};
 
-  private static Optional<PackageDependency> findMissingDependency(
-      PackageDependency searchDependency,
-      PackageDependency collectedDependency) {
-    // top level comparison (i.e.: check not reference but dependency itself)
-    if (collectedDependency.getGlobalId().equals(searchDependency.getGlobalId())) {
-      return Optional.of(collectedDependency);
-    }
+			dependencyCheckerTasks.add(executor.submit(collectDependencyTask));
+		}
+	}
 
-    // check references
-    if (collectedDependency.getReferencedDependencies() == null) {
-      return Optional.empty();
-    }
+	/**
+	 * @param searchDependencyInOtherPackagesList the list of dependencies that should be looked for
+	 *                                            in other packages
+	 * @throws ExecutionException
+	 * @throws InterruptedException
+	 */
+	public void checkAllPackageDependencies(
+			List<PackageDependency> searchDependencyInOtherPackagesList)
+			throws ExecutionException, InterruptedException {
+		for (Future<List<PackageDependency>> task : dependencyCheckerTasks) {
+			List<PackageDependency> collectedDependencies = task.get();
 
-    return collectedDependency.getReferencedDependencies()
-        .stream().filter(
-            referencedDependency ->
-                referencedDependency.getGlobalId().equals(searchDependency.getGlobalId())
-        ).findAny();
-  }
+			checkOtherPackages(searchDependencyInOtherPackagesList, collectedDependencies);
+		}
+	}
 
 }
 

@@ -3,20 +3,20 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
-import com.gentics.contentnode.exception.InvalidRequestException;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean.Filter;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
@@ -34,7 +34,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.SseFeature;
@@ -181,7 +180,7 @@ public class PackageResourceImpl implements PackageResource {
 	public PackageDependencyList performPackageConsistencyCheck(
 			@PathParam("name") String packageName,
 			@QueryParam("checkAll") boolean checkAll,
-			@BeanParam FilterParameterBean filter,
+			@BeanParam FilterPackageCheckBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception {
 		getPackage(packageName);
 		PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
@@ -191,36 +190,42 @@ public class PackageResourceImpl implements PackageResource {
 		consistencyCheckResult.checkCompleteness();
 
 		if (checkAll) {
-			ConcurrentPackageDependencyChecker.createDependencyCheckerTasks(packageName);
+			ConcurrentPackageDependencyChecker concurrentChecker = new ConcurrentPackageDependencyChecker();
+			concurrentChecker.createDependencyCheckerTasks(packageName);
+
 			List<PackageDependency> missingReferencesOnly = filterMissingDependencies(
 					dependencies).stream().flatMap(d -> d.getReferencedDependencies().stream())
 					.collect(Collectors.toList());
 
-			ConcurrentPackageDependencyChecker.checkAllPackageDependencies(missingReferencesOnly);
+			concurrentChecker.checkAllPackageDependencies(missingReferencesOnly);
 			// check again after other packages where scanned
 			consistencyCheckResult.checkCompleteness();
 		}
 
-		if (filter != null && filter.query != null) {
-			if ("incomplete".equals(filter.query)) {
-				dependencies = filterMissingDependencies(dependencies);
-			} else {
-				try {
-					dependencies = dependencies.stream().filter(
-							dependency -> dependency.getDependencyType() == PackageDependency.Type.valueOf(
-									filter.query.toUpperCase())).collect(
-							Collectors.toList());
-				} catch (IllegalArgumentException e) {
-					throw new InvalidRequestException(
-							"Invalid Filter specified. Allowed values are: " + Arrays.toString(
-									PackageDependency.Type.values()));
-				}
-			}
-		}
+		dependencies = filterAndSortDependencyList(filter, dependencies);
 
 		return ListBuilder.from(dependencies, (x) -> x)
 				.page(paging)
 				.to(consistencyCheckResult);
+	}
+
+	private List<PackageDependency> filterAndSortDependencyList(FilterPackageCheckBean filter,
+			List<PackageDependency> dependencies) {
+		if (filter != null) {
+			if (filter.completeness == Filter.INCOMPLETE) {
+				dependencies = filterMissingDependencies(dependencies);
+			} else if (filter.type != null) {
+				for (Type typeFilter : filter.type) {
+					dependencies = dependencies.stream().filter(
+							dependency -> dependency.getDependencyType() == PackageDependency.Type.valueOf(
+									typeFilter.toString().toUpperCase())).collect(
+							Collectors.toList());
+				}
+			}
+		}
+		return dependencies.stream().sorted(
+				Comparator.comparing(PackageDependency::getDependencyType)).collect(
+				Collectors.toList());
 	}
 
 

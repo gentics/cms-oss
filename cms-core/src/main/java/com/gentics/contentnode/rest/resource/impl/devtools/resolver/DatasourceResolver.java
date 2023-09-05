@@ -10,25 +10,25 @@ import java.util.List;
 
 public class DatasourceResolver extends AbstractDependencyResolver {
 
-  private static final Class<Datasource> CLAZZ = Datasource.class;
+	private static final Class<Datasource> CLAZZ = Datasource.class;
 
-  @Override
-  public List<PackageDependency> resolve() throws NodeException {
-    List<PackageObject<Datasource>> datasources = synchronizer.getObjects(CLAZZ);
+	@Override
+	public List<PackageDependency> resolve() throws NodeException {
+		List<PackageObject<Datasource>> datasources = synchronizer.getObjects(CLAZZ);
 
-    List<PackageDependency> resolvedDependencyList = new ArrayList<>();
+		List<PackageDependency> resolvedDependencyList = new ArrayList<>();
 
-    for (PackageObject<Datasource> datasource : datasources) {
-      Datasource ds = datasource.getObject();
-      PackageDependency dependency = new PackageDependency.Builder()
-          .withGlobalId(datasource.getGlobalId().toString())
-          .withName(ds.getName())
-          .withType(Type.DATASOURCE)
-          .build();
+		for (PackageObject<Datasource> datasource : datasources) {
+			Datasource ds = datasource.getObject();
+			PackageDependency dependency = new PackageDependency.Builder()
+					.withGlobalId(datasource.getGlobalId().toString())
+					.withName(ds.getName())
+					.withType(Type.DATASOURCE)
+					.build();
 
-      resolvedDependencyList.add(dependency);
-    }
+			resolvedDependencyList.add(dependency);
+		}
 
-    return resolvedDependencyList;
-  }
+		return resolvedDependencyList;
+	}
 }

@@ -1488,6 +1488,19 @@ public class MeshPublisher implements AutoCloseable {
 		// check which alternative projects exist
 		alternativeProjects.removeIf(project -> !project.exists());
 
+		// Since Mesh-SQL is case-insensitive when loading projects by name,
+		// alternative projects with the same name apart from case which are
+		// already in the project map must also be ignored.
+		if (meshSql) {
+			Set<String> projectNames = projectMap.values().stream()
+				.map(p -> p.name)
+				.filter(Objects::nonNull)
+				.map(String::toLowerCase)
+				.collect(Collectors.toSet());
+
+			alternativeProjects.removeIf(p -> p.name == null || projectNames.contains(p.name.toLowerCase()));
+		}
+
 		for (MeshProject project : alternativeProjects) {
 			project.validate(Collections.emptyMap(), false, new AtomicBoolean());
 		}

@@ -15,6 +15,7 @@ import com.gentics.contentnode.publish.PublishQueue.PublishAction;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
 //import com.gentics.contentnode.publish.mesh.MeshPublisher.MeshNodeTracker;
 import com.gentics.mesh.core.rest.node.FieldMap;
+import com.gentics.mesh.core.rest.node.NodePublishRequest;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 
 import io.reactivex.Single;
@@ -58,6 +59,11 @@ class WriteTask extends AbstractWriteTask {
 	 * Fields of the Mesh Node
 	 */
 	protected FieldMap fields;
+
+	/**
+	 * Optional publish request body
+	 */
+	protected NodePublishRequest nodePublishRequest;
 
 //	/**
 //	 * Tracker to mark when an object was written

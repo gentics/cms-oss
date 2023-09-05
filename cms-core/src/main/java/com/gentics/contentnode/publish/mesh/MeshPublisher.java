@@ -111,6 +111,9 @@ import com.gentics.contentnode.publish.WorkPhaseHandler;
 import com.gentics.contentnode.publish.cr.MeshRoleRenderer;
 import com.gentics.contentnode.publish.cr.MeshURLRenderer;
 import com.gentics.contentnode.publish.cr.TagmapEntryRenderer;
+import com.gentics.contentnode.render.GisDirective;
+import com.gentics.contentnode.render.GisDirective.CropInfo;
+import com.gentics.contentnode.render.GisDirective.ResizeInfo;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
@@ -144,6 +147,7 @@ import com.gentics.mesh.core.rest.micronode.MicronodeResponse;
 import com.gentics.mesh.core.rest.node.FieldMap;
 import com.gentics.mesh.core.rest.node.FieldMapImpl;
 import com.gentics.mesh.core.rest.node.NodeListResponse;
+import com.gentics.mesh.core.rest.node.NodePublishRequest;
 import com.gentics.mesh.core.rest.node.NodeResponse;
 import com.gentics.mesh.core.rest.node.NodeUpdateRequest;
 import com.gentics.mesh.core.rest.node.NodeUpsertRequest;
@@ -151,6 +155,9 @@ import com.gentics.mesh.core.rest.node.field.BinaryField;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
+import com.gentics.mesh.core.rest.node.field.image.ImageManipulationRequest;
+import com.gentics.mesh.core.rest.node.field.image.ImageVariantRequest;
+import com.gentics.mesh.core.rest.node.field.image.Point;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
@@ -200,6 +207,8 @@ import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
+import com.gentics.mesh.parameter.image.ImageRect;
+import com.gentics.mesh.parameter.image.ResizeMode;
 import com.gentics.mesh.rest.client.MeshRequest;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
@@ -1977,7 +1986,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 			logger.debug(String.format("Handling postponed update of %d.%d", task.objType, task.objId));
 			if (task.postponed != null) {
-			handleRenderedEntries(task.nodeId, task.postponed, null, fields -> task.fields = fields, null, null);
+			handleRenderedEntries(task.nodeId, task.postponed, null, fields -> task.fields = fields, null, null, publish -> task.nodePublishRequest = publish);
 			}
 			if (!task.fields.isEmpty()) {
 				task.postponed = null;
@@ -2588,6 +2597,8 @@ public class MeshPublisher implements AutoCloseable {
 				task.roles = roles;
 			}, postponed -> {
 				task.postponed = postponed;
+			}, nodePublishRequest -> {
+				task.nodePublishRequest = nodePublishRequest;
 			});
 
 			task.publisher = this;
@@ -3148,8 +3159,8 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void handleRenderedEntries(int nodeId, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes, Consumer<FieldMap> fieldMapHandler,
-			Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
-		handleRenderedEntries(false, nodeId, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone);
+			Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone, Consumer<NodePublishRequest> nodePublishRequestBodyHandler) throws NodeException {
+		handleRenderedEntries(false, nodeId, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone, nodePublishRequestBodyHandler);
 	}
 
 	/**
@@ -3170,8 +3181,10 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	@SuppressWarnings("unchecked")
 	public void handleRenderedEntries(boolean preview, int nodeId, Supplier<FieldMap> fieldMapSupplier, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes,
-			Consumer<FieldMap> fieldMapHandler, Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
+			Consumer<FieldMap> fieldMapHandler, Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone, 
+			Consumer<NodePublishRequest> nodePublishRequestBodyHandler) throws NodeException {
 		FieldMap fields = null;
+		List<NodePublishRequest> nodePublishRequest = new ArrayList<>(1);
 		if (fieldMapSupplier != null) {
 			fields = fieldMapSupplier.get();
 		} else {
@@ -3180,7 +3193,33 @@ public class MeshPublisher implements AutoCloseable {
 
 		Map<TagmapEntryRenderer, Object> postponed = new HashMap<>();
 		Collection<String> roles = null;
-
+		Consumer<String> gisChecker = string -> {
+			if (string.contains(GisDirective.PATH_PREFIX)) {
+				String[] gisParts = string.split(GisDirective.PATH_PREFIX);
+				for (int i = 1; i < gisParts.length; i++) {
+					Optional<Pair<ResizeInfo, CropInfo>> maybeGis = GisDirective.unrenderPrefix(gisParts[i]);
+					if (maybeGis.isPresent()) {
+						// TODO where to inject?
+						if (nodePublishRequest.isEmpty()) {
+							nodePublishRequest.add(new NodePublishRequest());
+						}
+						Pair<ResizeInfo, CropInfo> gis = maybeGis.get();
+						ImageManipulationRequest im = new ImageManipulationRequest();
+						im.setDeleteOther(false);
+						ImageVariantRequest iv = new ImageVariantRequest();
+						iv.setWidth(gis.getKey().getWidth() < 0 ? "auto" : Integer.toString(gis.getKey().getWidth()));
+						iv.setHeight(gis.getKey().getHeight() < 0 ? "auto" : Integer.toString(gis.getKey().getHeight()));
+						iv.setResizeMode(ResizeMode.get(gis.getKey().getMode().toString()));
+						if (gis.getValue() != null) {
+							ImageRect crop = new ImageRect(gis.getValue().getX(), gis.getValue().getY(), gis.getValue().getWidth(), gis.getValue().getHeight());
+							iv.setRect(crop);
+						}
+						im.setVariants(Collections.singletonList(iv));
+						nodePublishRequest.get(0).addImageVariant("", im);
+					}
+				}
+			}
+		};
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
 			Object value = mapEntry.getValue();
@@ -3224,10 +3263,13 @@ public class MeshPublisher implements AutoCloseable {
 							String string = ObjectTransformer.getString(o, null);
 							if (string != null) {
 								field.add(string);
+								gisChecker.accept(string);
 							}
 						}
 					} else {
-						fields.put(entry.getMapname(), new StringFieldImpl().setString(ObjectTransformer.getString(value, null)));
+						String string = ObjectTransformer.getString(value, null);
+						fields.put(entry.getMapname(), new StringFieldImpl().setString(string));
+						gisChecker.accept(string);
 					}
 					break;
 				}
@@ -3349,6 +3391,10 @@ public class MeshPublisher implements AutoCloseable {
 
 		if (!postponed.isEmpty() && postpone != null) {
 			postpone.accept(postponed);
+		}
+
+		if (nodePublishRequestBodyHandler != null) {
+			nodePublishRequestBodyHandler.accept(nodePublishRequest.stream().findAny().orElse(null));
 		}
 	}
 

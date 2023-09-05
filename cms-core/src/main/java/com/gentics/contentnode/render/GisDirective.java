@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.velocity.context.InternalContextAdapter;
 import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
@@ -28,6 +30,12 @@ import com.gentics.contentnode.render.RenderUrlFactory.LinkManagement;
  * Directive for rendering GenticsImageStore URLs
  */
 public class GisDirective extends Directive {
+	private static final String PATH_CROPANDRESIZE = "cropandresize";
+
+	private static final String PATH_SIZE_AUTO = "auto";
+
+	public static final String PATH_PREFIX = "/GenticsImageStore/";
+
 	/**
 	 * First argument must be the image
 	 */
@@ -341,6 +349,35 @@ public class GisDirective extends Directive {
 		writer.write(")); ?>");
 	}
 
+	public static Optional<Pair<ResizeInfo, CropInfo>> unrenderPrefix(String maybePrefix) {
+		return Optional.ofNullable(maybePrefix)
+				//.filter(prefix -> prefix.startsWith(PATH_PREFIX))
+				.map(prefix -> prefix.split("/"))
+				.map(parts -> {
+					try {
+						ResizeInfo resizeInfo = null;
+						CropInfo cropInfo = null;
+						int width = PATH_SIZE_AUTO.equals(parts[0]) ? -1 : Integer.parseInt(parts[0]);
+						int height = PATH_SIZE_AUTO.equals(parts[1]) ? -1 : Integer.parseInt(parts[1]);
+						String mode;
+						String type = null;
+						if (PATH_CROPANDRESIZE.equals(parts[2])) {
+							mode = parts[3];
+							int cropX = Integer.parseInt(parts[4]);
+							int cropY = Integer.parseInt(parts[5]);
+							int cropWidth = Integer.parseInt(parts[6]);
+							int cropHeight = Integer.parseInt(parts[7]);
+							cropInfo = new CropInfo(cropX, cropY, cropWidth, cropHeight);
+						} else {
+							mode = parts[2];
+						}
+						resizeInfo = new ResizeInfo(width, height, mode, type);
+						return Pair.of(resizeInfo, cropInfo);
+					} catch (Throwable e) {
+						throw new IllegalStateException(e);
+					}
+				});
+	}
 	/**
 	 * Render the GIX Prefix into the writer
 	 * @param resizeInfo resize info
@@ -349,13 +386,13 @@ public class GisDirective extends Directive {
 	 * @throws IOException
 	 */
 	protected void renderPrefix(ResizeInfo resizeInfo, CropInfo cropInfo, Writer writer) throws IOException {
-		writer.write("/GenticsImageStore/");
-		writer.write(resizeInfo.width > 0 ? Integer.toString(resizeInfo.width) : "auto");
+		writer.write(PATH_PREFIX);
+		writer.write(resizeInfo.width > 0 ? Integer.toString(resizeInfo.width) : PATH_SIZE_AUTO);
 		writer.write("/");
-		writer.write(resizeInfo.height > 0 ? Integer.toString(resizeInfo.height) : "auto");
+		writer.write(resizeInfo.height > 0 ? Integer.toString(resizeInfo.height) : PATH_SIZE_AUTO);
 		writer.write("/");
 		if (cropInfo != null) {
-			writer.write("cropandresize/");
+			writer.write(PATH_CROPANDRESIZE + "/");
 		}
 		writer.write(resizeInfo.mode.toString());
 		if (cropInfo != null) {
@@ -386,7 +423,8 @@ public class GisDirective extends Directive {
 	/**
 	 * Resize info
 	 */
-	protected class ResizeInfo {
+	public static class ResizeInfo {
+
 		/**
 		 * Resize mode
 		 */
@@ -407,41 +445,61 @@ public class GisDirective extends Directive {
 		 */
 		Type type = Type.url;
 
+		ResizeInfo(int width, int height, String mode, String type) throws NodeException {
+			if (width < 0 && height < 0) {
+				throw new NodeException("Error while rendering gis url: either width or height must be set to positive integer");
+			}
+			this.width = width;
+			this.height = height;
+			if (mode != null) {
+				this.mode = Mode.valueOf(mode);
+				if (this.mode == null) {
+					throw new NodeException("Error while rendering gis url: unknown mode \"" + mode + "\"");
+				}
+			}
+			if (type != null) {
+				this.type = Type.valueOf(type);
+				if (this.type == null) {
+					throw new NodeException("Error while rendering gis url: unknown type \"" + type + "\"");
+				}
+			}
+		}
+
 		/**
 		 * Create an instance, filled with data from the given map
 		 * @param map map
 		 * @throws MethodInvocationException
 		 */
 		public ResizeInfo(Map<Object, Object> map) throws NodeException {
-			width = ObjectTransformer.getInt(map.get(WIDTH_ARG), width);
-			height = ObjectTransformer.getInt(map.get(HEIGHT_ARG), height);
+			this(
+				ObjectTransformer.getInt(map.get(WIDTH_ARG), -1), 
+				ObjectTransformer.getInt(map.get(HEIGHT_ARG), -1), 
+				ObjectTransformer.getString(map.get(MODE_ARG), null), 
+				ObjectTransformer.getString(map.get(TYPE_ARG), null)
+			);
+		}
 
-			if (width < 0 && height < 0) {
-				throw new NodeException("Error while rendering gis url: either width or height must be set to positive integer");
-			}
+		public Mode getMode() {
+			return mode;
+		}
 
-			String modeArg = ObjectTransformer.getString(map.get(MODE_ARG), null);
-			if (modeArg != null) {
-				mode = Mode.valueOf(modeArg);
-				if (mode == null) {
-					throw new NodeException("Error while rendering gis url: unknown mode \"" + modeArg + "\"");
-				}
-			}
+		public int getWidth() {
+			return width;
+		}
 
-			String typeArg = ObjectTransformer.getString(map.get(TYPE_ARG), null);
-			if (typeArg != null) {
-				type = Type.valueOf(typeArg);
-				if (type == null) {
-					throw new NodeException("Error while rendering gis url: unknown type \"" + typeArg + "\"");
-				}
-			}
+		public int getHeight() {
+			return height;
+		}
+
+		public Type getType() {
+			return type;
 		}
 	}
 
 	/**
 	 * Crop Info
 	 */
-	protected class CropInfo {
+	public static class CropInfo {
 		/**
 		 * x of the top/left corner
 		 */
@@ -462,43 +520,67 @@ public class GisDirective extends Directive {
 		 */
 		int height = 0;
 
+		CropInfo(int x, int y, int width, int height) throws NodeException {
+			if (x < 0) {
+				throw new NodeException("Error while rendering gis url: x-coordinate for cropping must not be negative (was " + x + ")");
+			}
+			this.x = x;
+			if (y < 0) {
+				throw new NodeException("Error while rendering gis url: y-coordinate for cropping must not be negative (was " + y + ")");
+			}
+			this.y = y;
+			if (width <= 0) {
+				throw new NodeException("Error while rendering gis url: cropping width must be a positive integer");
+			}
+			this.width = width;
+			if (height <= 0) {
+				throw new NodeException("Error while rendering gis url: cropping height must be a positive integer");
+			}
+			this.height = height;
+		}
+
 		/**
 		 * Create an instance, filled with data from the given map
 		 * @param map map with crop data
 		 * @throws NodeException
 		 */
 		public CropInfo(Map<Object, Object> map) throws NodeException {
-			x = ObjectTransformer.getInt(map.get(X_ARG), x);
-			if (x < 0) {
-				throw new NodeException("Error while rendering gis url: x-coordinate for cropping must not be negative (was " + x + ")");
-			}
-			y = ObjectTransformer.getInt(map.get(Y_ARG), y);
-			if (y < 0) {
-				throw new NodeException("Error while rendering gis url: y-coordinate for cropping must not be negative (was " + y + ")");
-			}
+			this(
+				ObjectTransformer.getInt(map.get(X_ARG), 0),
+				ObjectTransformer.getInt(map.get(Y_ARG), 0),
+				ObjectTransformer.getInt(map.get(WIDTH_ARG), 0),
+				ObjectTransformer.getInt(map.get(HEIGHT_ARG), 0)
+			);
+		}
 
-			width = ObjectTransformer.getInt(map.get(WIDTH_ARG), width);
-			if (width <= 0) {
-				throw new NodeException("Error while rendering gis url: cropping width must be a positive integer");
-			}
-			height = ObjectTransformer.getInt(map.get(HEIGHT_ARG), height);
-			if (height <= 0) {
-				throw new NodeException("Error while rendering gis url: cropping height must be a positive integer");
-			}
+		public int getX() {
+			return x;
+		}
+
+		public int getY() {
+			return y;
+		}
+
+		public int getWidth() {
+			return width;
+		}
+
+		public int getHeight() {
+			return height;
 		}
 	}
 
 	/**
 	 * Resize modes
 	 */
-	protected enum Mode {
+	public enum Mode {
 		prop, force, smart, fpsmart
 	}
 
 	/**
 	 * Render types
 	 */
-	protected enum Type {
+	public enum Type {
 		url, phpwidget
 	}
 }

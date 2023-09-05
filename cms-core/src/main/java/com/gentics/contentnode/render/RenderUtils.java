@@ -109,7 +109,7 @@ public class RenderUtils {
 						meshNode.setParentNode(new NodeReference().setUuid(MeshPublisher.getMeshUuid(page.getFolder())).setSchema(new SchemaReferenceImpl().setName(mp.getSchemaName(Folder.TYPE_FOLDER))));
 						meshNode.setSchema(new SchemaReferenceImpl().setName(mp.getSchemaName(Page.TYPE_PAGE)));
 						meshNode.setFields(new FieldMapImpl());
-						mp.handleRenderedEntries(true, masterNode.getId(), () -> meshNode.getFields(), mp.render(mp.getEntries(Page.TYPE_PAGE), null, language, false), null, null, null, null);
+						mp.handleRenderedEntries(true, masterNode.getId(), () -> meshNode.getFields(), mp.render(mp.getEntries(Page.TYPE_PAGE), null, language, false), null, null, null, null, null);
 
 						HttpPost postMethod = new HttpPost(getPreviewUrl(previewUrl, getMode(renderMode), node));
 

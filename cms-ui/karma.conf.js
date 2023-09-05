@@ -5,7 +5,7 @@ process.env.CHROME_BIN = require('puppeteer').executablePath();
 const { join } = require('path');
 const { constants } = require('karma');
 
-module.exports = () => {
+module.exports = (type, name) => {
     return {
         basePath: './src',
         frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -28,14 +28,14 @@ module.exports = () => {
             },
         },
         coverageReporter: {
-            dir: join(__dirname, 'coverage'),
+            dir: join(__dirname, `coverage/${type}/${name}`),
             subdir: '.',
-            reporters: [{ type: 'html' }, { type: 'text-summary' }],
+            reporters: [{ type: 'text-summary' }, { type: 'cobertura' }],
         },
 
         junitReporter: {
-            outputDir: join(__dirname, '.reports'),
-            outputFile: 'report.xml',
+            outputDir: join(__dirname, `.reports/${type}/${name}/`),
+            outputFile: 'KARMA-report.xml',
         },
 
         // Test results reporter to use

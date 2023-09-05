@@ -254,8 +254,7 @@ spec:
                                 junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit  testResults: "cms-ui/apps/admin-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
-                            junit  testResults: "cms-ui/apps/editor-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
+                            junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -309,22 +308,26 @@ spec:
                     def imageNameWithTag = "${imageName}:${branchName}"
                     withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
                         try {
-                            /* 
-                            Requires:
-                            <groupId>io.fabric8</groupId>
-            				<artifactId>docker-maven-plugin</artifactId>
-                            */
-
                             // prior to starting the tests, start the docker containers with CMS
                             sh 'docker login -u $repoUsername -p $repoPassword docker.apa-it.at'
-                            sh "mvn -pl :cms-e2e-tests-common docker:start"
+                            sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                             
                             // run the e2e tests
-                            sh "TBD"
+                            sh "mvn integration-test -B -am -fae -pl :admin-ui-e2e,:editor-ui-e2e -Dui.skip.install=true"
                         } finally {
                             // finally stop the docker containers
-                            sh "mvn -pl :cms-e2e-tests-common docker:stop"
+                            sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
                         }
+                    }
+                }
+            }
+
+            post {
+                always {
+                    script {
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
                     }
                 }
             }

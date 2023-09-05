@@ -24,6 +24,11 @@
               ]
             },
             "assets": ["../apps/admin-ui/src/assets"]
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -50,6 +55,11 @@
                 "../libs",
                 "../node_modules"
               ]
+            }
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
             }
           }
         }
@@ -82,6 +92,11 @@
             },
             "scripts": [],
             "assets": ["../apps/editor-ui/src/assets"]
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -106,6 +121,11 @@
                 "../node_modules"
               ]
             }
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -122,6 +142,11 @@
             "main": "../libs/cms-rest-clients-angular/src/test.ts",
             "tsConfig": "../libs/cms-rest-clients-angular/tsconfig.spec.json",
             "karmaConfig": "../libs/cms-rest-clients-angular/karma.conf.js"
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -146,6 +171,11 @@
                 "../node_modules"
               ]
             }
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -163,6 +193,11 @@
             "polyfills": "../libs/image-editor/src/polyfills.ts",
             "tsConfig": "../libs/image-editor/tsconfig.spec.json",
             "karmaConfig": "../libs/image-editor/karma.conf.js"
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
+            }
           }
         }
       }
@@ -182,6 +217,11 @@
             "karmaConfig": "../libs/ui-core/karma.conf.js",
             "stylePreprocessorOptions": {
               "includePaths": ["../libs/ui-core/src/styles"]
+            }
+          },
+          "configurations": {
+            "ci": {
+              "codeCoverage": true
             }
           }
         }

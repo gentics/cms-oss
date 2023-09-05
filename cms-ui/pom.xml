@@ -127,11 +127,11 @@
 							<goal>npm</goal>
 						</goals>
 
-						<phase>test</phase>
+						<phase>integration-test</phase>
 
 						<configuration>
                             <skip>${ui.skip.e2e}</skip>
-							<arguments>run e2e -- ${project.artifactId}</arguments>
+							<arguments>run e2e -- ${project.artifactId} --browsers=${ui.test.browsers}</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>

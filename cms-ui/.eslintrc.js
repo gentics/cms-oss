@@ -394,7 +394,7 @@ module.exports = {
             },
         },
         {
-            files: ['./tools/**/*.js'],
+            files: ['./tools/**/*.js', '**/karma.conf.js'],
             rules: {
                 'import/no-nodejs-modules': 'off',
                 '@typescript-eslint/no-use-before-define': 'off',

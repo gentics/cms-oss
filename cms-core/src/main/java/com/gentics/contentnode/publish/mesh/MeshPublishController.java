@@ -435,6 +435,9 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * @throws NodeException
 	 */
 	public void waitForRenderAndWrite() throws NodeException, InterruptedException {
+		for (MeshPublisher meshPublisher : publishers) {
+			meshPublisher.checkForErrors();
+		}
 		renderTasks.awaitEmpty();
 		writeTasks.awaitEmpty();
 	}

@@ -180,7 +180,7 @@ public class PublishRenderResult extends RenderResult {
 	}
     
 	public static void checkInterrupted() throws PublishInterruptedException {
-		if (Thread.interrupted()) {
+		if (Thread.currentThread().isInterrupted()) {
 			throw new PublishInterruptedException("Publish process has been interrupted (stopped ?)");
 		}
 	}

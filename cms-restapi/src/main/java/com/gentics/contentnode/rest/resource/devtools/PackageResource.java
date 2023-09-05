@@ -1,5 +1,7 @@
 package com.gentics.contentnode.rest.resource.devtools;
 
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -114,16 +116,17 @@ public interface PackageResource {
 	 * Checks the package for completeness
 	 * @param name name of the package to check
 	 * @param checkAll if true, other packages are also searched
-	 * @param filter filter options. The dependency type can be filtered and only missing references (q=incomplete)
+	 * @param filter filter options. The dependency type can be filtered (e.g.: type=CONSTRUCT).
+	 *                Additionally, missing references can be filtered (e.g.: filter=INCOMPLETE)
 	 * @param paging the paging parameter
-	 * @return list of dependencies and sub dependencies
+	 * @return list of dependencies
 	 * @throws Exception
 	 */
 	@GET
 	@Path("/package/{name}/check")
-	GenericResponse performPackageConsistencyCheck(@PathParam("name") String name,
+	PackageDependencyList performPackageConsistencyCheck(@PathParam("name") String name,
 			@QueryParam("checkAll")  @DefaultValue("false")  boolean checkAll,
-			@BeanParam FilterParameterBean filter,
+			@BeanParam FilterPackageCheckBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**

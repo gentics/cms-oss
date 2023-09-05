@@ -23,8 +23,6 @@ import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.object.Value;
-import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.object.parttype.SingleSelectPartType;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
@@ -39,7 +37,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,166 +44,166 @@ import org.junit.Test;
 @GCNFeature(set = {Feature.DEVTOOLS})
 public class PackageConsistencyTest {
 
-  public final static String PACKAGE_NAME = "checkme";
-  public final static String DATASOURCE_NAME = "datasource";
-  @ClassRule
-  public static DBTestContext testContext = new DBTestContext();
-  protected static Node node;
-  @Rule
-  public PackageSynchronizerContext syncContext = new PackageSynchronizerContext();
+	public final static String PACKAGE_NAME = "checkme";
+	public final static String DATASOURCE_NAME = "datasource";
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+	protected static Node node;
+	@Rule
+	public PackageSynchronizerContext syncContext = new PackageSynchronizerContext();
 
-  protected PackageSynchronizer synchronizer;
-  private PackageDependencyChecker dependencyChecker;
+	protected PackageSynchronizer synchronizer;
+	private PackageDependencyChecker dependencyChecker;
 
-  @BeforeClass
-  public static void setupOnce() throws NodeException {
-    Transaction transaction = testContext.getContext().getTransaction();
-    if (transaction != null) {
-      transaction.commit();
-    }
+	@BeforeClass
+	public static void setupOnce() throws NodeException {
+		Transaction transaction = testContext.getContext().getTransaction();
+		if (transaction != null) {
+			transaction.commit();
+		}
 
-    node = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
-  }
+		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
+	}
 
-  @Before
-  public void setup() throws NodeException {
-    Synchronizer.disable();
-    Synchronizer.addPackage(PACKAGE_NAME);
-    dependencyChecker = new PackageDependencyChecker(PACKAGE_NAME);
-    synchronizer = Synchronizer.getPackage(PACKAGE_NAME);
+	@Before
+	public void setup() throws NodeException {
+		Synchronizer.disable();
+		Synchronizer.addPackage(PACKAGE_NAME);
+		dependencyChecker = new PackageDependencyChecker(PACKAGE_NAME);
+		synchronizer = Synchronizer.getPackage(PACKAGE_NAME);
 
-    assertThat(synchronizer).as("package synchronizer").isNotNull();
-  }
+		assertThat(synchronizer).as("package synchronizer").isNotNull();
+	}
 
-  @Test
-  @Ignore("Failing because reference of datasource is wrong (see todo below)")
-  public void givenPackageWithDependenciesShouldBeComplete() throws NodeException {
-    givenSynchronizedPackage();
-    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
+	@Test
+	public void givenPackageWithDependenciesShouldBeComplete() throws NodeException {
+		givenSynchronizedPackage();
+		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-    assertThat(dependencyChecker.isPackageComplete(dependencies)).isTrue();
-  }
+		assertThat(dependencyChecker.isPackageComplete(dependencies)).isTrue();
+	}
 
-  @Test
-  public void givenPackageWithDependenciesShouldContainAllExpectedObjects() throws NodeException {
-    givenSynchronizedPackage();
-    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
+	@Test
+	public void givenPackageWithDependenciesShouldContainAllExpectedObjects() throws NodeException {
+		givenSynchronizedPackage();
+		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
 
-    assertThat(dependencies.get(0)).hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
-    assertThat(dependencies.get(1)).hasFieldOrPropertyWithValue("dependencyType", Type.TEMPLATE);
-    assertThat(dependencies.get(1).getReferencedDependencies().get(0))
-        .hasFieldOrPropertyWithValue("dependencyType", Type.TEMPLATE_TAG);
-  }
-
-
-  @Test
-  public void givenConstructWithReferencedDatasourceShouldDetectDeletedDatasource()
-      throws NodeException {
-    givenSynchronizedPackage();
-
-    operate(() -> {
-      PackageObject<Datasource> datasourceInPackage = synchronizer.getObjects(Datasource.class)
-          .get(0);
-      synchronizer.remove(datasourceInPackage.getObject(), true);
-    });
-
-    operate(() ->
-        assertThat(synchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
-    );
-
-    // datasource that is referenced by a construct is missing and should be detected
-    List<PackageDependency> derangedDependencies = dependencyChecker.collectDependencies();
-    assertThat(dependencyChecker.isPackageComplete(derangedDependencies)).isFalse();
-  }
-
-  @Test
-  public void givenPackageWithDependenciesShouldIdentifyMissingObject() throws NodeException {
-    List<SynchronizableNodeObject> packageObjects = givenSynchronizedPackage();
-
-    // remove one object that should be part of the package
-    Construct construct = (Construct) packageObjects.stream()
-        .filter(object -> object instanceof Construct).findFirst().get();
-    synchronizer.remove(construct, true);
-
-    List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
-
-    // construct that is referenced by a template is missing and should be detected
-    assertThat(dependencyChecker.isPackageComplete(dependencies)).isFalse();
-    assertThat(PackageDependencyChecker.filterMissingDependencies(dependencies)).isNotEmpty();
-  }
+		assertThat(dependencies.get(0)).hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
+		assertThat(dependencies.get(1)).hasFieldOrPropertyWithValue("dependencyType",
+				Type.OBJECT_TAG_DEFINITION);
+		assertThat(dependencies.get(1).getReferencedDependencies().get(0))
+				.hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
+	}
 
 
-  private List<SynchronizableNodeObject> givenSynchronizedPackage() throws NodeException {
-    List<SynchronizableNodeObject> packageObjects = new ArrayList<>();
-    Construct construct = givenConstructWithDatasource();
-    packageObjects.add(construct);
-    packageObjects.add(givenTemplateWithConstruct(construct));
-    packageObjects.add(givenDataSource());
-    packageObjects.add(givenObjectPropertyWithConstruct(construct));
+	@Test
+	public void givenConstructWithReferencedDatasourceShouldDetectDeletedDatasource()
+			throws NodeException {
+		givenSynchronizedPackage();
 
-    operate(() -> {
-      for (SynchronizableNodeObject objectToAdd : packageObjects) {
-        synchronizer.synchronize(objectToAdd, true);
-      }
-    });
-    return packageObjects;
-  }
+		operate(() -> {
+			PackageObject<Datasource> datasourceInPackage = synchronizer.getObjects(Datasource.class)
+					.get(0);
+			synchronizer.remove(datasourceInPackage.getObject(), true);
+		});
+
+		operate(() ->
+				assertThat(synchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
+		);
+
+		// datasource that is referenced by a construct is missing and should be detected
+		List<PackageDependency> derangedDependencies = dependencyChecker.collectDependencies();
+		assertThat(dependencyChecker.isPackageComplete(derangedDependencies)).isFalse();
+	}
+
+	@Test
+	public void givenPackageWithDependenciesShouldIdentifyMissingObject() throws NodeException {
+		List<SynchronizableNodeObject> packageObjects = givenSynchronizedPackage();
+
+		// remove one object that should be part of the package
+		Construct construct = (Construct) packageObjects.stream()
+				.filter(object -> object instanceof Construct).findFirst().get();
+
+		synchronizer.remove(construct, true);
+
+		List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
+
+		// construct that is referenced by a template is missing and should be detected
+		assertThat(dependencyChecker.isPackageComplete(dependencies)).isFalse();
+		assertThat(PackageDependencyChecker.filterMissingDependencies(dependencies)).isNotEmpty();
+	}
 
 
-  private Construct givenConstructWithDatasource() throws NodeException {
-    Datasource datasource = givenDataSource();
+	private List<SynchronizableNodeObject> givenSynchronizedPackage() throws NodeException {
+		List<SynchronizableNodeObject> packageObjects = new ArrayList<>();
+		Datasource datasource = givenDataSource();
+		Construct construct = givenConstructWithDatasource(datasource);
+		packageObjects.add(construct);
+		packageObjects.add(datasource);
+		packageObjects.add(givenTemplateWithConstruct(construct));
+		packageObjects.add(givenObjectPropertyWithConstruct(construct));
 
-    return Builder.create(Construct.class, (c) -> {
-      c.setAutoEnable(true);
-      c.setKeyword("construct_with_ds");
-      c.setName("construct_with_ds", 1);
-      c.setIconName("icon");
+		operate(() -> {
+			for (SynchronizableNodeObject objectToAdd : packageObjects) {
+				synchronizer.synchronize(objectToAdd, true);
+			}
+		});
+		return packageObjects;
+	}
 
-      c.getParts().add(create(Part.class, p -> {
-        p.setInfoInt(datasource.getId()); // todo: which id should be used? (reason of failing test)
-        p.setKeyname("select_part_ds");
-        p.setPartTypeId(getPartTypeId(SingleSelectPartType.class));
-        p.setPartoptionId(datasource.getId());
-        p.setName("DatasourcePart", 1);
-        p.setConstructId(c.getConstructId());
-      }).doNotSave().build());
-    }).build();
-  }
 
-  private Datasource givenDataSource() throws NodeException {
-    return Trx.supply(() -> ContentNodeTestDataUtils.createDatasource(DATASOURCE_NAME,
-        Arrays.asList("one", "two", "three")));
-  }
+	private Construct givenConstructWithDatasource(Datasource datasource) throws NodeException {
+		return Builder.create(Construct.class, (c) -> {
+			c.setAutoEnable(true);
+			c.setKeyword("construct_with_ds");
+			c.setName("construct_with_ds", 1);
+			c.setIconName("icon");
 
-  private Template givenTemplateWithConstruct(Construct construct) throws NodeException {
-    final String TAG_NAME = "tagtype";
+			c.getParts().add(create(Part.class, p -> {
+				p.setInfoInt(datasource.getId());
+				p.setKeyname("select_part_ds");
+				p.setPartTypeId(getPartTypeId(SingleSelectPartType.class));
+				p.setPartoptionId(datasource.getId());
+				p.setName("DatasourcePart", 1);
+				p.setConstructId(c.getConstructId());
+			}).doNotSave().build());
+		}).build();
+	}
 
-    return Builder.create(Template.class, t -> {
-      t.setFolderId(node.getFolder().getId());
-      t.setMlId(1);
-      t.setName("Package Template");
+	private Datasource givenDataSource() throws NodeException {
+		return Trx.supply(() -> ContentNodeTestDataUtils.createDatasource(DATASOURCE_NAME,
+				Arrays.asList("one", "two", "three")));
+	}
 
-      t.getTemplateTags().put(TAG_NAME, Builder.create(TemplateTag.class, tag -> {
-        tag.setConstructId(construct.getId());
-        tag.setEnabled(true);
-        tag.setName(TAG_NAME);
-      }).doNotSave().build());
-    }).build();
-  }
+	private Template givenTemplateWithConstruct(Construct construct) throws NodeException {
+		final String TAG_NAME = "tagtype";
 
-  private ObjectTagDefinition givenObjectPropertyWithConstruct(Construct construct)
-      throws NodeException {
-    return Builder.create(ObjectTagDefinition.class, oe -> {
-      oe.setTargetType(Folder.TYPE_FOLDER);
-      oe.setName("First Object Property", 1);
-      ObjectTag objectTag = oe.getObjectTag();
+		return Builder.create(Template.class, t -> {
+			t.setFolderId(node.getFolder().getId());
+			t.setMlId(1);
+			t.setName("Package Template");
 
-      objectTag.setConstructId(construct.getConstructId());
-      objectTag.setEnabled(true);
-      objectTag.setName("object.first");
-      objectTag.setObjType(Folder.TYPE_FOLDER);
-    }).build();
-  }
+			t.getTemplateTags().put(TAG_NAME, Builder.create(TemplateTag.class, tag -> {
+				tag.setConstructId(construct.getId());
+				tag.setEnabled(true);
+				tag.setName(TAG_NAME);
+			}).doNotSave().build());
+		}).build();
+	}
+
+	private ObjectTagDefinition givenObjectPropertyWithConstruct(Construct construct)
+			throws NodeException {
+		return Builder.create(ObjectTagDefinition.class, oe -> {
+			oe.setTargetType(Folder.TYPE_FOLDER);
+			oe.setName("First Object Property", 1);
+			ObjectTag objectTag = oe.getObjectTag();
+
+			objectTag.setConstructId(construct.getConstructId());
+			objectTag.setEnabled(true);
+			objectTag.setName("object.first");
+			objectTag.setObjType(Folder.TYPE_FOLDER);
+		}).build();
+	}
 
 
 }

@@ -43,12 +43,13 @@ public class ObjectPropertyResolver extends AbstractDependencyResolver {
 
 	private PackageDependency getObjectTagDefinitionAsDependency(
 			ObjectTag objectTagDefinition) throws NodeException {
-		String constructId = objectTagDefinition.getConstruct().getGlobalId().toString();
+		Construct construct = objectTagDefinition.getConstruct();
+		String constructId = construct.getGlobalId().toString();
 
 		return new PackageDependency.Builder()
 				.withType(Type.CONSTRUCT)
 				.withGlobalId(constructId)
-				.withName(objectTagDefinition.getName())
+				.withName(construct.getName().toString())
 				.withIsInPackage(isInPackage(Construct.class, constructId))
 				.build();
 	}

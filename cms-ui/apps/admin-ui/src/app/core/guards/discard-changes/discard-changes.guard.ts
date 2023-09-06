@@ -1,6 +1,6 @@
 import { BooleanFn, OnDiscardChanges } from '@admin-ui/common';
 import { DiscardChangesModalComponent } from '@admin-ui/core/components/discard-changes-modal';
-import { AppStateService } from '@admin-ui/state';
+import { AppStateService, CloseEditor } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { ModalService } from '@gentics/ui-core';
 
@@ -16,6 +16,10 @@ export class DiscardChangesGuard {
     ) {}
 
     async canDeactivate(comp: OnDiscardChanges): Promise<boolean> {
+        if (comp == null) {
+            return true;
+        }
+
         const userHasEdited = this.evaluateBooleanValue(comp, comp.userHasEdited);
         let doClose = !userHasEdited;
 
@@ -33,9 +37,9 @@ export class DiscardChangesGuard {
         }
 
         // If it will close and the editor is still open, then we need to close it
-        // if (doClose && this.appState.now.ui.editorIsOpen) {
-        //     this.appState.dispatch(new CloseEditor());
-        // }
+        if (doClose && !comp.skipClose) {
+            this.appState.dispatch(new CloseEditor());
+        }
 
         return doClose;
     }

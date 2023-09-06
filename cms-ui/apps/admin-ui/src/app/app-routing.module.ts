@@ -360,6 +360,26 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
             },
+            {
+                path: `${AdminUIModuleRoutes.TEMPLATES}/:nodeId`,
+                component: SplitViewRouterOutletComponent,
+                loadChildren: () => import('./features/template/template.module')
+                    .then(m => m.TemplateModule),
+                data: {
+                    [ROUTE_BREADCRUMB_KEY]: {
+                        title: 'dashboard.item_templates',
+                    },
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
+                        {
+                            type: AccessControlledType.ADMIN,
+                            permissions: [
+                                GcmsPermission.READ,
+                            ],
+                        },
+                    ],
+                },
+            },
 
             // Objectproperties Management Module
             {

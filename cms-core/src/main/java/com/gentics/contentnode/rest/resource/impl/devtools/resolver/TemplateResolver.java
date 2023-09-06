@@ -7,8 +7,9 @@ import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +24,12 @@ public class TemplateResolver extends AbstractDependencyResolver {
 
 		for (PackageObject<Template> packageObject : packageTemplates) {
 			Template template = packageObject.getObject();
-			List<PackageDependency> references = resolveReferences(template);
+			List<ReferenceDependency> references = resolveReferences(template);
 
-			PackageDependency dependency = new PackageDependency.Builder().withGlobalId(
+			PackageDependency dependency = new PackageDependency.Builder<>(
+					PackageDependency.class).withGlobalId(
 							template.getGlobalId().toString()).withName(template.getName()).withType(Type.TEMPLATE)
-					.withDependencies(references).build();
+					.build().withReferenceDependencies(references);
 
 			resolvedDependencyList.add(dependency);
 		}
@@ -36,29 +38,31 @@ public class TemplateResolver extends AbstractDependencyResolver {
 	}
 
 
-	private List<PackageDependency> resolveReferences(Template template) throws NodeException {
+	private List<ReferenceDependency> resolveReferences(Template template) throws NodeException {
 		List<TemplateTag> templateTags = new ArrayList<>(template.getTemplateTags().values());
 		List<ObjectTag> objectTags = new ArrayList<>(template.getObjectTags().values());
 
-		List<PackageDependency> referencedDependencies = new ArrayList<>();
+		List<ReferenceDependency> referencedDependencies = new ArrayList<>();
 		referencedDependencies.addAll(resolveTemplateTags(templateTags));
 		referencedDependencies.addAll(resolveObjectTags(objectTags));
 
 		return referencedDependencies;
 	}
 
-	private List<PackageDependency> resolveObjectTags(List<ObjectTag> objectTags)
+	private List<ReferenceDependency> resolveObjectTags(List<ObjectTag> objectTags)
 			throws NodeException {
-		List<PackageDependency> referencedDependencies = new ArrayList<>();
+		List<ReferenceDependency> referencedDependencies = new ArrayList<>();
 
 		for (ObjectTag tag : objectTags) {
 			ObjectTagDefinition objectTagDefinition = tag.getDefinition();
 
-			PackageDependency dependency = new PackageDependency.Builder().withGlobalId(
-							objectTagDefinition.getGlobalId().toString()).withName(objectTagDefinition.getName())
-					.withType(Type.OBJECT_TAG_DEFINITION).withIsInPackage(
-							isInPackage(ObjectTagDefinition.class, objectTagDefinition.getGlobalId().toString()))
-					.build();
+			ReferenceDependency dependency = new PackageDependency.Builder<>(
+					ReferenceDependency.class).withGlobalId(
+							objectTagDefinition.getGlobalId().toString())
+					.withName(objectTagDefinition.getName())
+					.withType(Type.OBJECT_TAG_DEFINITION)
+					.build().withIsInOtherPackage(
+							isInPackage(ObjectTagDefinition.class, objectTagDefinition.getGlobalId().toString()));
 
 			referencedDependencies.add(dependency);
 		}
@@ -66,18 +70,19 @@ public class TemplateResolver extends AbstractDependencyResolver {
 		return referencedDependencies;
 	}
 
-	private List<PackageDependency> resolveTemplateTags(List<TemplateTag> templateTags)
+	private List<ReferenceDependency> resolveTemplateTags(List<TemplateTag> templateTags)
 			throws NodeException {
-		List<PackageDependency> referencedDependencies = new ArrayList<>();
+		List<ReferenceDependency> referencedDependencies = new ArrayList<>();
 
 		for (TemplateTag tag : templateTags) {
 			Construct construct = tag.getConstruct();
 
-			PackageDependency dependency = new PackageDependency.Builder().withGlobalId(
+			ReferenceDependency dependency = new PackageDependency.Builder<>(
+					ReferenceDependency.class).withGlobalId(
 							construct.getGlobalId().toString()).withName(construct.getName().toString())
 					.withType(Type.CONSTRUCT)
-					.withIsInPackage(isInPackage(Construct.class, construct.getGlobalId().toString()))
-					.build();
+					.build()
+					.withIsInPackage(isInPackage(Construct.class, construct.getGlobalId().toString()));
 
 			referencedDependencies.add(dependency);
 		}

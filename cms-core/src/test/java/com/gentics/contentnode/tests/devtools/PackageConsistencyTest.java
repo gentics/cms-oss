@@ -24,8 +24,8 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.parttype.SingleSelectPartType;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
@@ -91,8 +91,8 @@ public class PackageConsistencyTest {
 		assertThat(dependencies.get(0)).hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
 		assertThat(dependencies.get(1)).hasFieldOrPropertyWithValue("dependencyType",
 				Type.OBJECT_TAG_DEFINITION);
-		assertThat(dependencies.get(1).getReferencedDependencies().get(0))
-				.hasFieldOrPropertyWithValue("dependencyType", Type.CONSTRUCT);
+		assertThat(dependencies.get(1).getReferenceDependencies().get(0)).hasFieldOrPropertyWithValue(
+				"dependencyType", Type.CONSTRUCT);
 	}
 
 
@@ -107,9 +107,7 @@ public class PackageConsistencyTest {
 			synchronizer.remove(datasourceInPackage.getObject(), true);
 		});
 
-		operate(() ->
-				assertThat(synchronizer.syncAllFromFilesystem(Construct.class)).isPositive()
-		);
+		operate(() -> assertThat(synchronizer.syncAllFromFilesystem(Construct.class)).isPositive());
 
 		// datasource that is referenced by a construct is missing and should be detected
 		List<PackageDependency> derangedDependencies = dependencyChecker.collectDependencies();

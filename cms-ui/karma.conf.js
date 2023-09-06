@@ -5,7 +5,11 @@ process.env.CHROME_BIN = require('puppeteer').executablePath();
 const { join } = require('path');
 const { constants } = require('karma');
 
-module.exports = (type, name) => {
+module.exports = (type, name, junitPackageName) => {
+    if (!junitPackageName) {
+        junitPackageName = `ui.${type}.${name}`;
+    }
+
     return {
         basePath: './src',
         frameworks: ['jasmine', '@angular-devkit/build-angular'],
@@ -35,6 +39,8 @@ module.exports = (type, name) => {
 
         junitReporter: {
             outputDir: join(__dirname, `.reports/${type}/${name}/`),
+            suite: junitPackageName,
+            useBrowserName: false,
             outputFile: 'KARMA-report.xml',
         },
 
@@ -64,7 +70,7 @@ module.exports = (type, name) => {
         customLaunchers: {
             ChromeDebugging: {
                 base: 'Chrome',
-                flags: [ '--remote-debugging-port=9333' ]
+                flags: ['--remote-debugging-port=9333'],
             },
             ChromeDocker: {
                 base: 'ChromeHeadless',

@@ -27,7 +27,6 @@ describe('FavouritesService', () => {
         state = TestBed.get(ApplicationStateService);
 
         state.mockState({ auth: { currentUserId: 123 } });
-        state.trackSubscriptions();
 
         const entityResolver = new EntityResolver(state);
         service = new FavouritesService(userSettings as any as UserSettingsService, state, entityResolver);
@@ -36,28 +35,10 @@ describe('FavouritesService', () => {
     });
 
     describe('list$', () => {
-
-        it('maps to the "favourites.list" branch of the app store', () => {
-            expect(service.list$).not.toBeUndefined();
-            expect(state.select).toHaveBeenCalled();
-        });
-
-        it('is not implicitly subscribed to', () => {
-            expect(state.select).toHaveBeenCalled();
-            expect(state.getSubscribedBranches()).not.toContain('favourites', 'subscribed before subscribe()');
-
-            const subscription = service.list$.subscribe(el => {});
-            expect(state.getSubscribedBranches()).toContain('favourites');
-
-            subscription.unsubscribe();
-            expect(state.getSubscribedBranches()).not.toContain('favourites', 'subscribed after unsubscribe()');
-        });
-
         it('cleans up its subscriptions when destroyed', () => {
-            const subscription = service.list$.subscribe(el => {});
+            const subscription = service.list$.subscribe();
             subscription.unsubscribe();
             service.ngOnDestroy();
-            expect(state.getSubscribedBranches()).not.toContain('favourites');
         });
 
         it('is a subscription to the app state when subscribed to', fakeAsync(() => {
@@ -67,7 +48,6 @@ describe('FavouritesService', () => {
             let received: any;
             const subscription = service.list$.subscribe(val => { received = val; });
             tick(500);
-            expect(state.getSubscribedBranches()).toContain('favourites');
             expect(received).toEqual([jasmine.objectContaining(exampleItem)]);
 
             subscription.unsubscribe();

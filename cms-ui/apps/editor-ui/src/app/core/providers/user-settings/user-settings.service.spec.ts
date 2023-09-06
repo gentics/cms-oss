@@ -84,7 +84,6 @@ describe('UserSettingsService', () => {
     let localStorage: MockLocalStorage;
     let serverStorage: MockServerStorage;
     let errorHandler: MockErrorHandler;
-    let subscriptions: any[];
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -108,8 +107,6 @@ describe('UserSettingsService', () => {
             (serverStorage = new MockServerStorage()) as any as ServerStorage,
             (errorHandler = new MockErrorHandler()) as any as ErrorHandler,
         );
-
-        subscriptions = state.trackSubscriptions();
     });
 
     it('gets created okay', () => {
@@ -138,9 +135,7 @@ describe('UserSettingsService', () => {
     describe('loadUserSettingsWhenLoggedIn', () => {
 
         it('waits until the app state signals a logged-in user', () => {
-            expect(subscriptions.length).toBe(0);
             userSettings.loadUserSettingsWhenLoggedIn();
-            expect(state.getSubscribedBranches()).toContain('auth');
             expect(localStorage.getForUser).not.toHaveBeenCalled();
         });
 

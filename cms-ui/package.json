@@ -106,6 +106,7 @@
     "material-design-icons-iconfont": "^6.7.0",
     "materialize-css": "^1.0.0",
     "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
     "mousetrap": "^1.6.3",
     "ngx-autosize": "^2.0.4",
     "ngx-logger": "^5.0.11",

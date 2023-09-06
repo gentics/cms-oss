@@ -6,7 +6,7 @@ import {
     Optional,
     Output,
 } from '@angular/core';
-import { Moment, momentjs } from '../../common';
+import { Moment, unix } from '../../common';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
 import { ModalService } from '../../providers/modal/modal.service';
 import { generateFormProvider } from '../../utils';
@@ -124,7 +124,7 @@ export class DateTimePickerComponent
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.momentValue = momentjs.unix(timestamp);
+        this.momentValue = unix(timestamp);
         this.updateDisplayValue();
     }
 

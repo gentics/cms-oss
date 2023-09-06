@@ -10,7 +10,7 @@ import {
     OnDestroy,
     Output,
     SimpleChanges,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
 import { AutosizeDirective } from 'ngx-autosize';
 import { generateFormProvider } from '../../utils';
@@ -146,7 +146,7 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
     }
 
     protected onValueChange(): void {
-        // Nothing to do
+        this.autosizeDir.adjust(true);
     }
 
     protected override getFinalValue(): string {

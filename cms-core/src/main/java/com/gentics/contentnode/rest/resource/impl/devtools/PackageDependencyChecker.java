@@ -24,91 +24,119 @@ import java.util.stream.Collectors;
  */
 public class PackageDependencyChecker {
 
-  private static final List<Class<? extends SynchronizableNodeObject>> DEPENDENCY_CLASSES = Arrays.asList(
-      Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
+	private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(PackageDependencyChecker.class);
+	private final PackageSynchronizer packageSynchronizer;
+	private List<Class<? extends SynchronizableNodeObject>> dependencyClasses = Arrays.asList(
+			Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
+	private String packageName;
 
-  private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(PackageDependencyChecker.class);
-  private final PackageSynchronizer packageSynchronizer;
-  private String packageName;
+	public PackageDependencyChecker(String packageName) {
+		this.packageName = packageName;
+		this.packageSynchronizer = Synchronizer.getPackage(packageName);
+	}
 
-  public PackageDependencyChecker(String packageName) {
-    this.packageName = packageName;
-    this.packageSynchronizer = Synchronizer.getPackage(packageName);
-  }
+	/**
+	 * Utility method to filter the given dependency list to only contain missing entities
+	 *
+	 * @param dependencies the list that should be filtered
+	 * @return the filtered dependency list
+	 */
+	public static List<PackageDependency> filterMissingDependencies(
+			List<PackageDependency> dependencies) {
 
-  /**
-   * Collects all dependencies and its sub dependencies
-   * @return the dependencies
-   * @throws NodeException
-   */
-  public List<PackageDependency> collectDependencies() throws NodeException {
-    LOGGER.info("Collecting dependencies for package " + packageName);
-    try (Trx trx = ContentNodeHelper.trx()) {
-      List<PackageDependency> dependencies = new ArrayList<>();
-      for (Class<? extends SynchronizableNodeObject> dependencyClass : DEPENDENCY_CLASSES) {
-        AbstractDependencyResolver resolver = new AbstractDependencyResolver
-            .Builder(dependencyClass)
-            .withSynchronizer(packageSynchronizer)
-            .build();
+		List<PackageDependency> missingDependencies = removeEmptyDependencyList(dependencies).stream()
+				.filter(dependency -> dependency.getReferencedDependencies().stream()
+						.anyMatch(
+								reference -> !reference.getIsInPackage() &&
+										(reference.getIsInOtherPackage() == null || !reference.getIsInOtherPackage())))
+				.collect(Collectors.toList());
 
-        dependencies.addAll(resolver.resolve());
-      }
+		return removeEmptyDependencyList(missingDependencies);
+	}
 
-      return removeEmptyDependencyList(dependencies);
-    }
-  }
+	/**
+	 * Utility method to clean the given dependency list from empty references
+	 *
+	 * @param dependencies the list that should be cleaned
+	 * @return the cleaned dependency list
+	 */
+	private static List<PackageDependency> removeEmptyDependencyList(
+			List<PackageDependency> dependencies) {
+		return dependencies.stream().filter(
+				packageObject -> packageObject.getReferencedDependencies() != null
+						&& !packageObject.getReferencedDependencies().isEmpty()).collect(
+				Collectors.toList());
+	}
 
-  /**
-   * Utility method to filter the given dependency list to only contain missing entities
-   * @param dependencies the list that should be filtered
-   * @return the filtered dependency list
-   */
-  public static List<PackageDependency> filterMissingDependencies(
-      List<PackageDependency> dependencies) {
-    removeEmptyDependencyList(dependencies).forEach(
-        dependency -> dependency.getReferencedDependencies()
-            .removeIf(PackageDependency::getIsInPackage));
+	/**
+	 * Collects all dependencies and its sub dependencies
+	 *
+	 * @return the dependencies
+	 * @throws NodeException
+	 */
+	public List<PackageDependency> collectDependencies() throws NodeException {
+		LOGGER.info("Collecting dependencies for package " + packageName);
+		try (Trx trx = ContentNodeHelper.trx()) {
+			List<PackageDependency> dependencies = new ArrayList<>();
+			for (Class<? extends SynchronizableNodeObject> dependencyClass : dependencyClasses) {
+				AbstractDependencyResolver resolver = new AbstractDependencyResolver
+						.Builder(dependencyClass)
+						.withSynchronizer(packageSynchronizer)
+						.build();
 
-    return removeEmptyDependencyList(dependencies);
-  }
+				dependencies.addAll(resolver.resolve());
+			}
 
-  /**
-   * Utility method to clean the given dependency list from empty references
-   * @param dependencies the list that should be cleaned
-   * @return the cleaned dependency list
-   */
-  private static List<PackageDependency> removeEmptyDependencyList(
-      List<PackageDependency> dependencies) {
-    return dependencies.stream().filter(
-        packageObject -> packageObject.getReferencedDependencies() != null
-            && !packageObject.getReferencedDependencies().isEmpty()).collect(
-        Collectors.toList());
-  }
+			return removeEmptyDependencyList(dependencies);
+		}
+	}
 
-  /**
-   * Checks if the package has unmet dependencies
-   * @param dependencies dependency list to check
-   * @return true if all dependencies are synced to the filesystem
-   */
-  public boolean isPackageComplete(List<PackageDependency> dependencies) {
-    return filterMissingDependencies(dependencies)
-        .isEmpty();
-  }
+	/**
+	 * Checks if the package has unmet dependencies
+	 *
+	 * @param dependencies dependency list to check
+	 * @return true if all dependencies are synced to the filesystem
+	 */
+	public boolean isPackageComplete(List<PackageDependency> dependencies) {
+		return filterMissingDependencies(dependencies)
+				.isEmpty();
+	}
 
-  /**
-   * Gets the package name
-   * @return the package name
-   */
-  public String getPackageName() {
-    return packageName;
-  }
+	/**
+	 * Gets the package name
+	 *
+	 * @return the package name
+	 */
+	public String getPackageName() {
+		return packageName;
+	}
 
-  /**
-   * Sets the package name
-   * @param packageName the new package name
-   */
-  public void setPackageName(String packageName) {
-    this.packageName = packageName;
-  }
+	/**
+	 * Sets the package name
+	 *
+	 * @param packageName the new package name
+	 */
+	public void setPackageName(String packageName) {
+		this.packageName = packageName;
+	}
+
+	/**
+	 * Get the list of dependency classes
+	 * @return the list of dependency classes
+	 */
+	public List<Class<? extends SynchronizableNodeObject>> getDependencyClasses() {
+		return dependencyClasses;
+	}
+
+	/**
+	 * Override the list of classes that should be considered for the dependency check
+	 * @param dependencyClasses the new list of dependency classes. Each dependency class must
+	 *                          correspond to a resolver implementation
+	 * @see AbstractDependencyResolver
+	 */
+	public void setDependencyClasses(
+			List<Class<? extends SynchronizableNodeObject>> dependencyClasses) {
+		this.dependencyClasses = dependencyClasses;
+	}
 
 }

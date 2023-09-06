@@ -112,6 +112,15 @@
             "executor": "@nx/web:file-server",
             "options": {
                 "buildTarget": "admin-ui:build"
+            },
+            "configurations": {
+                "e2e": {
+                    "proxyUrl": "http://localhost:8080",
+                    "proxyOptions": {
+                        "secure": false,
+                        "changeOrigin": true
+                    }
+                }
             }
         },
         "component-test": {

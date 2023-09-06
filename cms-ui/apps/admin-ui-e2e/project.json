@@ -16,11 +16,8 @@
         "production": {
           "devServerTarget": "admin-ui:serve:production"
         },
-        "watch": {
-            "watch": true
-        },
         "ci": {
-          "devServerTarget": "admin-ui:serve-static"
+          "devServerTarget": "admin-ui:serve-static:e2e"
         }
       }
     },

@@ -16,11 +16,8 @@
         "production": {
           "devServerTarget": "ct-link-checker:serve:production"
         },
-        "watch": {
-            "watch": true
-        },
         "ci": {
-          "devServerTarget": "ct-link-checker:serve-static"
+          "devServerTarget": "ct-link-checker:serve-static:e2e"
         }
       }
     },

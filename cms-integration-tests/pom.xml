@@ -58,30 +58,29 @@
 									<MYSQL_PASSWORD>node</MYSQL_PASSWORD>
 									<MYSQL_ROOT_PASSWORD>finger</MYSQL_ROOT_PASSWORD>
 								</env>
-								<net>host</net>
-								<wait>
-									<log>.*socket: '/run/mysqld/mysqld.sock' port: 3306 mariadb.org
-										binary distribution*</log>
-									<time>120000</time>
-								</wait>
+
 								<ports>
 									<port>mariadb.port:3306</port>
 									<port>3306:3306</port>
 								</ports>
+
+								<wait>
+									<log>.*socket: '/run/mysqld/mysqld.sock'  port: 3306 .*</log>
+									<time>120000</time>
+								</wait>
 							</run>
 						</image>
 
 						<image>
 							<alias>cms</alias>
-							<!--
-							<name>${integrationTest.cms.image}:${integrationTest.cms.version>}</name> -->
-							<name>docker.apa-it.at/gentics/cms-oss:f-gpu-942</name>
+							<name>${integrationTest.cms.image}:${integrationTest.cms.version}</name>
+
 							<run>
 								<skip>${skip.integration.tests}</skip>
 								<env>
 									<NODE_DB_HOST>+${docker.container.mariadb.ip}</NODE_DB_HOST>
-									<NODE_DB_USER>node</NODE_DB_USER>
-									<NODE_DB_PASSWORD>node</NODE_DB_PASSWORD>
+									<NODE_DB_USER>root</NODE_DB_USER>
+									<NODE_DB_PASSWORD>finger</NODE_DB_PASSWORD>
 									<NODE_USER_PASSWORD>node</NODE_USER_PASSWORD>
 									<ELASTICSEARCH_ENABLED>false</ELASTICSEARCH_ENABLED>
 									<ELASTICSEARCH_URL></ELASTICSEARCH_URL>
@@ -100,30 +99,21 @@
 									<container>mariadb</container>
 								</dependsOn>
 								
-								<net>host</net>
 								<ports>
 									<port>cms.port:8080</port>
 									<port>8080:8080</port>
 								</ports>
 
-								<healthCheck>
-									<interval>1m</interval>
-									<timeout>10s</timeout>
-									<startPeriod>2m</startPeriod>
-									<retries>3</retries>
-									<cmd>curl -f http://localhost:8080/rest/rest/info/maintenance || exit 1</cmd>
-								</healthCheck>
 								<wait>
-									<healthy>true</healthy>
+									<log>.*runtime - Server started successfully.*</log>
+									<time>120000</time>
 								</wait>
 							</run>
 						</image>
 
 						<image>
 							<alias>mesh</alias>
-							<!--
-							<name>${integrationTest.mesh.image}:${integrationTest.mesh.version}</name> -->
-							<name>docker.apa-it.at/gentics/mesh:1.10.10</name>
+							<name>${integrationTest.mesh.image}:${integrationTest.mesh.version}</name>
 							<run>
 								<skip>${skip.integration.tests}</skip>
 								<env>
@@ -135,14 +125,14 @@
 									<MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS>false</MESH_ELASTICSEARCH_INCLUDE_BINARY_FIELDS>
 								</env>
 
-								<net>host</net>
 								<ports>
 									<port>mesh.port:8100</port>
 									<port>8100:8080</port>
 								</ports>
 
 								<wait>
-									<healthy>true</healthy>
+									<log>.*Sending startup completed event to \{mesh.startup-complete\}.*</log>
+									<time>120000</time>
 								</wait>
 							</run>
 						</image>

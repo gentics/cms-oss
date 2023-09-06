@@ -3,6 +3,7 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
@@ -21,7 +21,7 @@ public class ConcurrentPackageDependencyChecker {
 
 	private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(
 			ConcurrentPackageDependencyChecker.class);
-	private final ExecutorService executor = Executors.newFixedThreadPool(5);
+	private static final ExecutorService executor = Operator.getExecutor();
 	private List<Future<List<PackageDependency>>> dependencyCheckerTasks;
 
 	/**

@@ -5,8 +5,9 @@ import com.gentics.contentnode.devtools.PackageObject;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,16 +24,17 @@ public class ObjectPropertyResolver extends AbstractDependencyResolver {
 
 		for (PackageObject<ObjectTagDefinition> packageObject : objectTagDefinitions) {
 			ObjectTagDefinition objectTagDefinition = packageObject.getObject();
-			List<PackageDependency> references = Collections.singletonList(
+			List<ReferenceDependency> references = Collections.singletonList(
 					getObjectTagDefinitionAsDependency(objectTagDefinition.getObjectTag()));
 
-			PackageDependency dependency = new PackageDependency.Builder()
+			PackageDependency dependency = new PackageDependency.Builder<>(PackageDependency.class)
 					.withGlobalId(objectTagDefinition.getGlobalId().toString())
 					.withName(objectTagDefinition.getName())
 					.withType(Type.OBJECT_TAG_DEFINITION)
 					.withKeyword(objectTagDefinition.getObjectTag().getTypeKeyword())
-					.withDependencies(references)
 					.build();
+
+			dependency.withReferenceDependencies(references);
 
 			resolvedDependencyList.add(dependency);
 		}
@@ -41,17 +43,19 @@ public class ObjectPropertyResolver extends AbstractDependencyResolver {
 	}
 
 
-	private PackageDependency getObjectTagDefinitionAsDependency(
+	private ReferenceDependency getObjectTagDefinitionAsDependency(
 			ObjectTag objectTagDefinition) throws NodeException {
 		Construct construct = objectTagDefinition.getConstruct();
 		String constructId = construct.getGlobalId().toString();
 
-		return new PackageDependency.Builder()
+		return new PackageDependency.Builder<>(ReferenceDependency.class)
 				.withType(Type.CONSTRUCT)
 				.withGlobalId(constructId)
 				.withName(construct.getName().toString())
-				.withIsInPackage(isInPackage(Construct.class, constructId))
-				.build();
+				.build()
+				.withIsInPackage(
+						isInPackage(Construct.class, constructId));
+
 	}
 
 }

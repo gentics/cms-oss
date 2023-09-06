@@ -3,8 +3,9 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean.Filter;
@@ -198,8 +199,8 @@ public class PackageResourceImpl implements PackageResource {
 			ConcurrentPackageDependencyChecker concurrentChecker = new ConcurrentPackageDependencyChecker();
 			concurrentChecker.createDependencyCheckerTasks(packageName, dependencyChecker.getDependencyClasses());
 
-			List<PackageDependency> missingReferencesOnly = filterMissingDependencies(
-					dependencies).stream().flatMap(d -> d.getReferencedDependencies().stream())
+			List<ReferenceDependency> missingReferencesOnly = filterMissingDependencies(
+					dependencies).stream().flatMap(d -> d.getReferenceDependencies().stream())
 					.collect(Collectors.toList());
 
 			concurrentChecker.checkAllPackageDependencies(missingReferencesOnly);

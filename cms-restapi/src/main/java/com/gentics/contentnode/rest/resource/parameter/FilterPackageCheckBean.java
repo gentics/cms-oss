@@ -1,6 +1,6 @@
 package com.gentics.contentnode.rest.resource.parameter;
 
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.Set;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;

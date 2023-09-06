@@ -41,6 +41,19 @@ module.exports = (type, name, junitPackageName) => {
             outputDir: join(__dirname, `.reports/${type}/${name}/`),
             suite: junitPackageName,
             useBrowserName: false,
+            nameFormatter: (browser, result) => {
+                return result.description;
+            },
+            classNameFormatter: (browser, result) => {
+                let name = junitPackageName;
+                if (result.suite && result.suite.length > 0) {
+                    const testName = (result.suite[0] || '').replaceAll(/\s+/g, '.').trim();
+                    if (testName) {
+                        name += `.${testName}`;
+                    }
+                }
+                return name;
+            },
             outputFile: 'KARMA-report.xml',
         },
 

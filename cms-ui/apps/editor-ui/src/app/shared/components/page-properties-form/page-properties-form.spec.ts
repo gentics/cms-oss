@@ -4,17 +4,17 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { CoreModule } from '@gentics/cms-components';
 import { EditablePageProps, EditorPermissions, Language, Template } from '@gentics/cms-models';
-import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
-import { Observable, of } from 'rxjs';
-import { componentTest } from '../../../../testing/component-test';
-import { configureComponentTest } from '../../../../testing/configure-component-test';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExampleTemplateData,
     getExampleTemplateDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { CheckboxComponent, GenticsUICoreModule } from '@gentics/ui-core';
+import { Observable, of } from 'rxjs';
+import { componentTest } from '../../../../testing/component-test';
+import { configureComponentTest } from '../../../../testing/configure-component-test';
+import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -97,8 +97,8 @@ describe('PagePropertiesForm', () => {
 
         it('file name suggestion works well for some pageName for english version if no file name has been entered manually',
             componentTest(() => TestComponent, (fixture, instance) => {
-                let pageNameValue = 'Außenwirtschaft Oberösterreich';
-                let expectedChanges = {
+                const pageNameValue = 'Außenwirtschaft Oberösterreich';
+                const expectedChanges = {
                     ...instance.properties,
                     pageName: pageNameValue,
                     fileName: '',
@@ -110,7 +110,7 @@ describe('PagePropertiesForm', () => {
 
                 api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.en.html' }));
 
-                let pageName = getPageName(fixture);
+                const pageName = getPageName(fixture);
 
                 instance.propertiesForm.form.controls['pageName'].setValue(pageNameValue);
 
@@ -138,8 +138,8 @@ describe('PagePropertiesForm', () => {
 
         it('file name suggestion works well for some pageName for german version if no file name has been entered manually',
             componentTest(() => TestComponent, (fixture, instance) => {
-                let pageNameValue = 'Außenwirtschaft Oberösterreich';
-                let expectedChanges = {
+                const pageNameValue = 'Außenwirtschaft Oberösterreich';
+                const expectedChanges = {
                     ...instance.properties,
                     language: 'de',
                     pageName: pageNameValue,
@@ -152,7 +152,7 @@ describe('PagePropertiesForm', () => {
 
                 api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.de.html' }));
 
-                let pageName = getPageName(fixture);
+                const pageName = getPageName(fixture);
 
                 instance.propertiesForm.form.controls['pageName'].setValue(pageNameValue);
                 instance.propertiesForm.form.controls['language'].setValue('de');
@@ -181,8 +181,8 @@ describe('PagePropertiesForm', () => {
 
         it('sanitizing works well for some fileName for english version',
             componentTest(() => TestComponent, (fixture, instance) => {
-                let fileNameValue = 'Außenwirtschaft Oberösterreich';
-                let expectedChanges = {
+                const fileNameValue = 'Außenwirtschaft Oberösterreich';
+                const expectedChanges = {
                     ...instance.properties,
                     fileName: 'Aussenwirtschaft_Oberoesterreich.en.html',
                     suggestedOrRequestedFileName: 'Aussenwirtschaft_Oberoesterreich.en.html',
@@ -193,7 +193,7 @@ describe('PagePropertiesForm', () => {
 
                 api.folders.suggestPageFileName.and.returnValue(of({ fileName: 'Aussenwirtschaft_Oberoesterreich.en.html' }));
 
-                let fileName = getSuggestedOrRequestedFileName(fixture);
+                const fileName = getSuggestedOrRequestedFileName(fixture);
 
                 instance.propertiesForm.form.controls['suggestedOrRequestedFileName'].setValue(fileNameValue);
 
@@ -566,8 +566,8 @@ describe('PagePropertiesForm', () => {
                               [templates]="templates"
                               [languages]="languages"
                               (changes)="onChange($event)"></page-properties-form>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
     propertiesForm: PagePropertiesForm;

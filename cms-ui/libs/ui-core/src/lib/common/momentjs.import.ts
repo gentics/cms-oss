@@ -26,7 +26,10 @@ export function setInstance(value: Moment): void {
 
 export function unix(timestamp: number): Moment {
     const parsed = moment_.unix(timestamp);
-    parsed.tz(instance.tz());
+    const zone = instance.tz();
+    if (typeof zone === 'string') {
+        parsed.tz(zone);
+    }
     return parsed;
 }
 

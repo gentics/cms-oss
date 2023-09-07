@@ -66,11 +66,14 @@ import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.PublishedNodeTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.image.CNGenticsImageStore;
+import com.gentics.contentnode.image.MeshPublisherGisImageInitiator;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.object.AbstractContentObject;
@@ -1855,6 +1858,24 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Create variants for image binaries, collected during the publish phase.
+	 * 
+	 * @param phase
+	 * @throws NodeException
+	 */
+	public void createImageVariants(WorkPhaseHandler phase) throws NodeException {
+		for (Node node : cr.getNodes()) {
+			if (!node.isPublishImageVariants()) {
+				continue;
+			}
+			int nodeId = node.getId();
+			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
+
+			
+		}
+	}
+
+	/**
 	 * Begin publishing dirted folders and files
 	 * @param phase workphase handler
 	 * @throws NodeException
@@ -3165,6 +3186,19 @@ public class MeshPublisher implements AutoCloseable {
 		handleRenderedEntries(false, nodeId, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone);
 	}
 
+	public void handleCollectingGisImages(String source, int nodeId, int entityId, String fieldKey, int entityType) throws NodeException {
+		if (source == null || !source.contains("/GenticsImageStore/")) {
+			return;
+		}
+
+		Node node = TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId);
+		if (!node.isPublishImageVariants()) {
+			return;
+		}
+		CNGenticsImageStore.processGISUrls(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey), node, source, null, null,
+				CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
+	}
+
 	/**
 	 * Handle rendered tagmap entries.
 	 * Most will be transformed into a FieldMap, which can be handled in the handler.
@@ -3240,7 +3274,8 @@ public class MeshPublisher implements AutoCloseable {
 							}
 						}
 					} else {
-						fields.put(entry.getMapname(), new StringFieldImpl().setString(ObjectTransformer.getString(value, null)));
+						String string = ObjectTransformer.getString(value, null);
+						fields.put(entry.getMapname(), new StringFieldImpl().setString(string));
 					}
 					break;
 				}

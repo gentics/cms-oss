@@ -4748,6 +4748,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected boolean https;
 
+		@DataField("pub_img_variants")
+		@Updateable
+		protected boolean pubImgVariants;
+
 		@DataField("host")
 		@Updateable
 		protected String host;
@@ -4940,6 +4944,11 @@ public class FolderFactory extends AbstractFactory {
 			} else {
 				return false;
 			}
+		}
+
+		@Override
+		public boolean isPublishImageVariants() {
+			return pubImgVariants;
 		}
 
 		public boolean isHttps() {
@@ -6141,6 +6150,14 @@ public class FolderFactory extends AbstractFactory {
 		public void setHttps(boolean https) throws ReadOnlyException {
 			if (this.https != https) {
 				this.https = https;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setPublishImageVariants(boolean publishImageVariants) throws ReadOnlyException {
+			if (this.pubImgVariants != publishImageVariants) {
+				this.pubImgVariants = publishImageVariants;
 				this.modified = true;
 			}
 		}

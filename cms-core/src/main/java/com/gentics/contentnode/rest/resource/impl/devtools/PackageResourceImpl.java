@@ -171,8 +171,14 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}")
 	public Response delete(@PathParam("name") String name) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			getPackage(name);
+			PackageSynchronizer synchronizer = getPackage(name);
 			Synchronizer.removePackage(name);
+
+			File checkResultFile = new File(getCheckResultFileName(synchronizer));
+			if (checkResultFile.exists()) {
+				checkResultFile.delete();
+			}
+
 			return Response.noContent().build();
 		}
 	}
@@ -187,14 +193,14 @@ public class PackageResourceImpl implements PackageResource {
 			@BeanParam FilterPackageCheckBean filter,
 			@BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer synchronizer = getPackage(packageName);
 			CNI18nString description = new CNI18nString("devtools_package.action.check");
 			description.addParameter(packageName);
 
 			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
-				MainPackageSynchronizer synchronizer = getPackage(packageName);
 				PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
 
-				if (filter.type != null && !filter.type.isEmpty()) {
+				if (filter != null && filter.type != null && !filter.type.isEmpty()) {
 					dependencyChecker.setDependencyClasses(getFilteredDependencyClassList(filter));
 				}
 
@@ -271,7 +277,8 @@ public class PackageResourceImpl implements PackageResource {
 						.build();
 			}
 			else {
-				throw new EntityNotFoundException("Result not available. Trigger a consistency check first");
+				CNI18nString description = new CNI18nString("devtools_package.action.check.unavailable");
+				throw new EntityNotFoundException(description.toString());
 			}
 		}
 	}

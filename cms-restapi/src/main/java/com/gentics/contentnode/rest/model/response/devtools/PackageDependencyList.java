@@ -1,7 +1,9 @@
 package com.gentics.contentnode.rest.model.response.devtools;
 
 
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
 import com.gentics.contentnode.rest.model.response.AbstractListResponse;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
 import java.util.List;
 
 
@@ -37,7 +39,7 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
 		}
 
 		for (PackageDependency dependency : dependencies) {
-			List<PackageDependency> references = dependency.getReferencedDependencies();
+			List<ReferenceDependency> references = dependency.getReferenceDependencies();
 			if (references != null && !references.isEmpty()) {
 				if (references.stream().anyMatch(r -> !isSane(r))) {
 					packageIsComplete = false;
@@ -52,10 +54,10 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
 	/**
 	 * Check if the given dependency is consistent (i.e.: contained in a package)
 	 *
-	 * @param dependency the dependency to check
+	 * @param dependency the reference dependency to check
 	 * @return true if all referenced objects are included
 	 */
-	private boolean isSane(PackageDependency dependency) {
+	private boolean isSane(ReferenceDependency dependency) {
 		return Boolean.TRUE.equals(dependency.getIsInPackage())
 				|| Boolean.TRUE.equals(dependency.getIsInOtherPackage());
 	}

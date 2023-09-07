@@ -10,7 +10,7 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
 import com.gentics.contentnode.rest.resource.impl.devtools.resolver.AbstractDependencyResolver;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
@@ -45,10 +45,10 @@ public class PackageDependencyChecker {
 			List<PackageDependency> dependencies) {
 
 		List<PackageDependency> missingDependencies = removeEmptyDependencyList(dependencies).stream()
-				.filter(dependency -> dependency.getReferencedDependencies().stream()
+				.filter(dependency -> dependency.getReferenceDependencies().stream()
 						.anyMatch(
-								reference -> !reference.getIsInPackage() &&
-										(reference.getIsInOtherPackage() == null || !reference.getIsInOtherPackage())))
+								reference -> Boolean.FALSE.equals(reference.getIsInPackage()) ||
+										Boolean.FALSE.equals(reference.getIsInOtherPackage())))
 				.collect(Collectors.toList());
 
 		return removeEmptyDependencyList(missingDependencies);
@@ -63,8 +63,8 @@ public class PackageDependencyChecker {
 	private static List<PackageDependency> removeEmptyDependencyList(
 			List<PackageDependency> dependencies) {
 		return dependencies.stream().filter(
-				packageObject -> packageObject.getReferencedDependencies() != null
-						&& !packageObject.getReferencedDependencies().isEmpty()).collect(
+				packageObject -> packageObject.getReferenceDependencies() != null
+						&& !packageObject.getReferenceDependencies().isEmpty()).collect(
 				Collectors.toList());
 	}
 

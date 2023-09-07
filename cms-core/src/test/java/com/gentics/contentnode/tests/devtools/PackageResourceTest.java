@@ -8,6 +8,7 @@ import com.gentics.contentnode.rest.exceptions.DuplicateEntityException;
 import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.devtools.Package;
 import com.gentics.contentnode.rest.model.devtools.PackageListResponse;
+import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.resource.devtools.PackageResource;
@@ -253,9 +254,11 @@ public class PackageResourceTest {
 			resource.add(PACKAGE_NAME);
 
 			PackageResource packageResource = new PackageResourceImpl();
-			PackageDependencyList packageConsistencyResponse = packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false, null, null);
+			PackageDependencyList packageConsistencyResponse = (PackageDependencyList) packageResource.performPackageConsistencyCheck(
+					PACKAGE_NAME, false, 0, null, null);
 
-			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+			assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(
+					ResponseCode.OK);
 			assertThat(packageConsistencyResponse.checkCompleteness()).isTrue();
 		}
 	}
@@ -265,7 +268,7 @@ public class PackageResourceTest {
 		final String PACKAGE_NAME = "not-existing";
 
 		PackageResource packageResource = new PackageResourceImpl();
-		PackageDependencyList packageConsistencyResponse = packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false, null, null);
+		GenericResponse packageConsistencyResponse = packageResource.performPackageConsistencyCheck(PACKAGE_NAME, false,  0,null, null);
 
 		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.NOTFOUND);
 	}
@@ -279,8 +282,8 @@ public class PackageResourceTest {
 		}
 
 		PackageResource packageResource = new PackageResourceImpl();
-		PackageDependencyList packageConsistencyResponse = packageResource.performPackageConsistencyCheck(
-				PACKAGE_NAME,false, new FilterPackageCheckBean().withCompletenessFilter("notexisting-filter"),null);
+		GenericResponse packageConsistencyResponse = packageResource.performPackageConsistencyCheck(
+				PACKAGE_NAME,false, 0, new FilterPackageCheckBean().withCompletenessFilter("notexisting-filter"),null);
 
 		assertThat(packageConsistencyResponse.getResponseInfo().getResponseCode()).isEqualTo(
 				ResponseCode.FAILURE);

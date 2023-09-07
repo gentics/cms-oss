@@ -8,7 +8,7 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
 import java.util.List;
 
 /**

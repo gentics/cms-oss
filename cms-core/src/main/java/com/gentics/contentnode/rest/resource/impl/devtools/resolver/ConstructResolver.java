@@ -7,28 +7,22 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.Part;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency;
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependency.Type;
+import com.gentics.contentnode.rest.model.devtools.dependency.AbstractDependencyModel;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ConstructResolver extends AbstractDependencyResolver {
 
 	private static final Class<Construct> CLAZZ = Construct.class;
 
-	/**
-	 * Utility method to map datasourceId to the uuid of a datasource
-	 *
-	 * @param datasourceId numeric id that should be mapped to an uuid
-	 * @return the mapped uuid
-	 * @throws NodeException
-	 */
-	private static String resolveUuid(int datasourceId) throws NodeException {
+	private static Datasource getDatasourceObject(int datasourceId) throws NodeException {
 		Transaction transaction = TransactionManager.getCurrentTransaction();
-		return transaction.getGlobalId(Datasource.class, datasourceId);
+		return transaction.getObject(Datasource.class, datasourceId);
 	}
 
 	@Override
@@ -40,22 +34,18 @@ public class ConstructResolver extends AbstractDependencyResolver {
 		for (PackageObject<Construct> packageObject : packageObjects) {
 			Construct construct = packageObject.getObject();
 
-			List<PackageDependency> references = Stream.concat(
-					resolveReferences(construct, Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE),
-							Type.DATASOURCE).stream(),
-					resolveReferences(construct,
-							Arrays.asList(Part.TEXT, Part.TEXTHMTL, Part.HTML, Part.URLFILE, Part.URLFOLDER,
-									Part.URLPAGE, Part.HTMLLONG, Part.CHECKBOX, Part.VELOCITY),
-							Type.CONSTRUCT).stream()
-			).collect(Collectors.toList());
+			List<ReferenceDependency> references = resolveReferences(construct,
+					Arrays.asList(Part.SELECTSINGLE, Part.SELECTMULTIPLE));
 
-			PackageDependency dependency = new PackageDependency.Builder()
+			PackageDependency dependency = new PackageDependency.Builder<>(
+					PackageDependency.class)
 					.withGlobalId(construct.getGlobalId().toString())
 					.withName(construct.getName().toString())
 					.withKeyword(construct.getKeyword())
 					.withType(Type.CONSTRUCT)
-					.withDependencies(references)
 					.build();
+
+			dependency.withReferenceDependencies(references);
 
 			resolvedDependencyList.add(dependency);
 		}
@@ -63,35 +53,31 @@ public class ConstructResolver extends AbstractDependencyResolver {
 		return resolvedDependencyList;
 	}
 
-	private List<PackageDependency> resolveReferences(Construct construct, List<Integer> dependencies,
-			Type dependencyType) throws NodeException {
+	private List<ReferenceDependency> resolveReferences(Construct construct,
+			List<Integer> dependencies)
+			throws NodeException {
 		List<Part> referencedParts = construct.getParts().stream().filter(
 						part -> dependencies.stream()
 								.anyMatch(type -> type == part.getPartTypeId()))
 				.collect(Collectors.toList());
 
-		List<PackageDependency> referencedDependencies = new ArrayList<>();
+		List<ReferenceDependency> referencedDependencies = new ArrayList<>();
 
 		for (Part part : referencedParts) {
-			PackageDependency referencedDependency = new PackageDependency.Builder()
-					.withGlobalId(part.getGlobalId().toString())
-					.withKeyword(part.getKeyname())
-					.withName(part.getName().toString())
-					.withIsInPackage(isInPackage(part, dependencyType))
-					.withType(dependencyType)
-					.build();
+			Datasource datasource = getDatasourceObject(part.getInfoInt());
+
+			ReferenceDependency referencedDependency = new AbstractDependencyModel.Builder<>(
+					ReferenceDependency.class)
+					.withGlobalId(datasource.getGlobalId().toString())
+					.withName(datasource.getName())
+					.withType(Type.DATASOURCE)
+					.build()
+					.withIsInPackage(isInPackage(Datasource.class, datasource.getId().toString()));
 
 			referencedDependencies.add(referencedDependency);
 		}
 
 		return referencedDependencies;
-	}
-
-	private boolean isInPackage(Part part, Type dependencyType) throws NodeException {
-		if (Type.DATASOURCE == dependencyType) {
-			return isInPackage(Datasource.class, resolveUuid(part.getInfoInt()));
-		}
-		return isInPackage(Construct.class, part.getConstruct().getGlobalId().toString());
 	}
 
 }

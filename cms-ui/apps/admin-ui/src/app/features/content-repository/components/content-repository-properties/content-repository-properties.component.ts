@@ -19,7 +19,7 @@ import {
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import { AnyModelType, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, Feature } from '@gentics/cms-models';
-import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { generateFormProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -201,6 +201,11 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         } else {
             setControlsEnabled(this.form, dbControls, crType !== ContentRepositoryType.MESH, options);
             setControlsEnabled(this.form, meshControls, crType === ContentRepositoryType.MESH, options);
+        }
+        if (crType === ContentRepositoryType.MESH) {
+            setControlsValidators(this.form, ['username'], null);
+        } else {
+            setControlsValidators(this.form, ['username'], Validators.required);
         }
     }
 

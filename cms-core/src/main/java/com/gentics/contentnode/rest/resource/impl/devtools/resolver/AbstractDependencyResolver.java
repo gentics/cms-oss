@@ -9,7 +9,6 @@ import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
-import com.gentics.contentnode.rest.model.devtools.dependency.Type;
 import java.util.List;
 
 /**

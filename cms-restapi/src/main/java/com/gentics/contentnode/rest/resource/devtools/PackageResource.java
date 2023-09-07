@@ -1,6 +1,5 @@
 package com.gentics.contentnode.rest.resource.devtools;
 
-import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
 import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
 import java.util.List;
 
@@ -116,6 +115,7 @@ public interface PackageResource {
 	 * Checks the package for completeness
 	 * @param name name of the package to check
 	 * @param checkAll if true, other packages are also searched
+	 * @param waitMs wait timeout in ms. When set to 0, response will be sent, when the action completes
 	 * @param filter filter options. The dependency type can be filtered (e.g.: type=CONSTRUCT).
 	 *                Additionally, missing references can be filtered (e.g.: filter=INCOMPLETE)
 	 * @param paging the paging parameter
@@ -124,10 +124,23 @@ public interface PackageResource {
 	 */
 	@GET
 	@Path("/package/{name}/check")
-	PackageDependencyList performPackageConsistencyCheck(@PathParam("name") String name,
+	GenericResponse performPackageConsistencyCheck(
+			@PathParam("name") String name,
 			@QueryParam("checkAll")  @DefaultValue("false")  boolean checkAll,
+			@QueryParam("wait") @DefaultValue("0") long waitMs,
 			@BeanParam FilterPackageCheckBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Get the result from the package consistency check if available
+	 * @param packageName name of the package
+	 * @return the result of the check
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/package/{name}/check/result")
+	Response obtainPackageConsistencyCheckResult(@PathParam("name") String packageName) throws Exception;
+
 
 	/**
 	 * Trigger synchronization of all objects in the given package to the filesystem

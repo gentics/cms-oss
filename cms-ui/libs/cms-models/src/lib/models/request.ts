@@ -1503,6 +1503,29 @@ export interface PackageSyncOptions {
     wait?: number;
 }
 
+export interface PackageCheckFilter {
+    type: DependencyType;
+    filter: Filter;
+}
+
+enum Filter {
+    INCOMPLETE,
+    ALL
+}
+
+enum DependencyType {
+    CONSTRUCT,
+    DATASOURCE,
+    OBJECT_TAG_DEFINITION,
+    TEMPLATE
+}
+
+export interface PackageCheckOptions extends PackageSyncOptions{
+    checkAll?: boolean;
+    filter: PackageCheckFilter
+}
+
+
 /**
  * Request used for saving a `Package`.
  */

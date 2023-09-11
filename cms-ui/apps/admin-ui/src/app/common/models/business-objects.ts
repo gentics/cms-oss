@@ -34,6 +34,9 @@ import {
     Template,
     TemplateTag,
     User,
+    PackageCheckResult,
+    PackageDependency,
+
 } from '@gentics/cms-models';
 
 /** Symbol to access the permissions of an object */
@@ -130,3 +133,5 @@ export const CONTENT_ITEM_TYPES: ContentItemTypes[] = [
     'form',
     'template',
 ];
+
+export type PackageDependencyBO = PackageDependency & BusinessObject;

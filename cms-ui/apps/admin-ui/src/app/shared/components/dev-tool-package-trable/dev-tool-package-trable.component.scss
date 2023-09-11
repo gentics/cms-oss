@@ -1,35 +1,12 @@
 @import '../base-entity-trable/base-entity-trable.component.scss';
+// todo: ok to reuse? searchbar, buttons etc needs same behavior as for tables
+@import '../base-entity-table/base-entity-table.component';
 
-.name-wrapper {
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    padding-left: 0.5rem;
 
-    .type-icon {
-        display: inline-block;
-        font-size: 20px;
-        height: 24px;
-        margin-right: 0.5rem;
-
-        &::ng-deep .gtx-icon {
-            font-size: inherit !important;
-        }
-    }
-
-    .name {
-        margin-top: 1px;
-        display: inline-block;
-    }
+.package-check-checkbox {
+    margin-top: 1rem;
 }
 
-.gtx-perm-icon::ng-deep {
-    display: inline-block;
-    height: 20px;
-    width: 20px;
-    font-size: 18px;
-
-    .gtx-icon {
-        font-size: inherit !important;
-    }
+.reload-button {
+    margin-left: auto;
 }

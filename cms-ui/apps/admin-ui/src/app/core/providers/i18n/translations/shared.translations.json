@@ -223,6 +223,10 @@
         "en": "Entity",
         "de": "Entität"
     },
+    "type" : {
+        "en": "Type",
+        "de": "Typ"
+    },    
     "element": {
         "en": "Element",
         "de": "Element"

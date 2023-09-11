@@ -21,6 +21,8 @@ import {
     ObjectPropertyListResponse,
     ObjectPropertyLoadResponse,
     PackageBO,
+    PackageCheckOptions,
+    PackageCheckResult,
     PackageCreateRequest,
     PackageListOptions,
     PackageListResponse,
@@ -34,7 +36,7 @@ import {
     Template,
     TemplateBO,
     TemplateFolderListRequest,
-    TemplateResponse
+    TemplateResponse,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable, throwError } from 'rxjs';
@@ -449,6 +451,21 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
         return stream.pipe(
             this.catchAndRethrowError(),
         );
+    }
+
+
+    /**
+     * Perform a consistency check on a package.
+     */
+    check(packageName: string, options?: PackageCheckOptions): Observable<PackageCheckResult> {
+        return this.api.devTools.check(packageName, options);
+    }
+
+    /**
+     * Get the result of the consistency check for a package
+     */
+    getCheckResult(packageName: string): Observable<PackageCheckResult> {
+        return this.api.devTools.getCheckResult(packageName)
     }
 
     // GENERIC ENTITIES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

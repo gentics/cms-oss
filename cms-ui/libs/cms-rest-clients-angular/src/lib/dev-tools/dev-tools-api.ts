@@ -14,6 +14,8 @@ import {
     ObjectPropertyListOptions,
     ObjectPropertyListResponse,
     ObjectPropertyLoadResponse,
+    PackageCheckOptions,
+    PackageCheckResult,
     PackageCreateRequest,
     PackageListOptions,
     PackageListResponse,
@@ -153,6 +155,22 @@ export class DevToolsApi {
     syncPackageFromFilesystem(packageName: string, options?: PackageSyncOptions): Observable<Response> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
         return this.apiBase.put(`devtools/packages/${sanitizedPackageName}/fs2cms`, null, options);
+    }
+
+    /**
+     * Trigger a consistency check of the given package
+     */
+    check(packageName: string, options?: PackageCheckOptions): Observable<PackageCheckResult> {
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/check`, options);
+    }
+
+    /**
+     * Obtain the result of the consistency check for the given package
+     */
+    getCheckResult(packageName: string): Observable<PackageCheckResult> {
+        const sanitizedPackageName = this.sanitizePackageNameString(packageName);
+        return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/check/result`);
     }
 
     // CONSTRUCTS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

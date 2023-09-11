@@ -34,6 +34,9 @@ import {
     File,
     Image,
     Form,
+    PackageCheckResult,
+    PackageDependency,
+
 } from '@gentics/cms-models';
 import { TableRow } from '@gentics/ui-core';
 
@@ -137,3 +140,5 @@ export const CONTENT_ITEM_TYPES: ContentItemTypes[] = [
     'form',
     'template',
 ];
+
+export type PackageDependencyBO = PackageDependency & BusinessObject;

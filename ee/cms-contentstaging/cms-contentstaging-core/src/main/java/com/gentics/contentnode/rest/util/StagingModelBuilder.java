@@ -814,6 +814,7 @@ public class StagingModelBuilder {
 		}
 
 		node.setHttps(stagedNode.isHttps());
+		node.setPublishImageVariants(stagedNode.isPublishImageVariants());
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(stagedNode.isPubDirSegment());

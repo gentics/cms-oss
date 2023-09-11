@@ -1,6 +1,6 @@
 import {
     I18nService,
-    PackageCheckLoaderOptions,
+    PackageCheckTrableLoaderOptions,
     PackageCheckTrableLoaderService,
 } from '@admin-ui/core';
 import {
@@ -13,7 +13,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { PackageDependency } from '@gentics/cms-models';
-import { TableColumn } from '@gentics/ui-core';
+import { TableColumn, TrableRow } from '@gentics/ui-core';
 import { PackageDependencyBO } from '@admin-ui/common';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
@@ -27,7 +27,7 @@ export class PackageCheckTrableComponent
     extends BaseEntityTrableComponent<
     PackageDependency,
     PackageDependencyBO,
-    PackageCheckLoaderOptions
+    PackageCheckTrableLoaderOptions
     >
     implements OnInit, OnChanges
 {
@@ -38,7 +38,17 @@ export class PackageCheckTrableComponent
         {
             id: 'globalId',
             label: 'shared.element',
-            fieldPath: 'referenceDependencies',
+            fieldPath: 'name',
+        },
+        {
+            id: 'globalId',
+            label: 'shared.type',
+            fieldPath: 'dependencyType',
+        },
+        {
+            id: 'globalId',
+            label: 'package.consistency_check_contained',
+            fieldPath: '', // todo: add (if isInPackage and isInOtherPackage is true)
         },
     ];
 
@@ -58,10 +68,14 @@ export class PackageCheckTrableComponent
         super.ngOnChanges(changes);
     }
 
-    protected override createAdditionalLoadOptions(): PackageCheckLoaderOptions {
+    protected override createAdditionalLoadOptions(): PackageCheckTrableLoaderOptions {
         return {
             packageName: this.packageName,
         };
+    }
+
+    override handleRowClick(row: TrableRow<PackageDependencyBO>): void {
+        this.reloadRow(row);
     }
 
     protected override onLoad(): void {}

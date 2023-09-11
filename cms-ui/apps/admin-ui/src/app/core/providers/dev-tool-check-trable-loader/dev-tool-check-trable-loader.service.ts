@@ -1,15 +1,18 @@
 import { Injectable } from '@angular/core';
-import {
-    PackageCheckResult, PackageDependency,
-} from '@gentics/cms-models';
+import { PackageCheckResult, PackageDependency } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { BO_DISPLAY_NAME, BO_ID, BO_PERMISSIONS, PackageDependencyBO } from '@admin-ui/common';
+import {
+    BO_DISPLAY_NAME,
+    BO_ID,
+    BO_PERMISSIONS,
+    PackageDependencyBO,
+} from '@admin-ui/common';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 
-export interface PackageCheckLoaderOptions {
+export interface PackageCheckTrableLoaderOptions {
     packageName: string;
 }
 
@@ -17,7 +20,7 @@ export interface PackageCheckLoaderOptions {
 export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
 PackageDependency,
 PackageDependencyBO,
-PackageCheckLoaderOptions
+PackageCheckTrableLoaderOptions
 > {
     constructor(protected api: GcmsApi) {
         super();
@@ -25,45 +28,70 @@ PackageCheckLoaderOptions
 
     protected loadEntityRow(
         entity: PackageDependency,
-        options?: PackageCheckLoaderOptions,
+        options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyBO> {
-        return null;
+        // todo: remove; merely needed for reload and not needed?
+        return this.api.devTools.getCheckResult(options.packageName).pipe(
+            map((checkResult: PackageCheckResult) => {
+                const packageDependency = checkResult.items.find(
+                    (packageDependency) =>
+                        packageDependency.globalId ===entity.globalId,
+                );
+
+                return this.mapToBusinessObject(packageDependency);
+            }),
+        );
     }
 
     protected loadEntityChildren(
         parent: PackageDependencyBO | null,
-        options?: PackageCheckLoaderOptions,
+        options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyBO[]> {
+        let packageDependencies: Observable<PackageDependencyBO[]>;
 
-        return this.api.devTools
-            .getCheckResult(options.packageName)
-            .pipe(
-                map((checkResult: PackageCheckResult) =>
-                    checkResult.items.map((packageDependency) =>
-                        this.mapToBusinessObject(packageDependency),
+        if (!parent) {
+            packageDependencies = this.api.devTools
+                .getCheckResult(options.packageName)
+                .pipe(
+                    map((checkResult: PackageCheckResult) =>
+                        checkResult.items.map((packageDependency) =>
+                            this.mapToBusinessObject(packageDependency),
+                        ),
+                    ),
+                );
+        }
+        else {
+            packageDependencies = packageDependencies.pipe(
+                map((packageDependencies) =>
+                    packageDependencies.flatMap((packageDependency) =>
+                        packageDependency.referenceDependencies.map((referenceDependency) =>
+                            this.mapToBusinessObject(referenceDependency),
+                        ),
                     ),
                 ),
-            )
+            );
+        }
 
+        // todo: remove me
+        packageDependencies.toPromise().then((res) => console.log(res));
 
-    }
-
-    public override createRowHash(
-        entity: PackageDependencyBO,
-    ): string | null {
-        return new Date().toISOString();
+        return packageDependencies;
     }
 
     protected override mapToTrableRow(
         entity: PackageDependencyBO,
         parent?: TrableRow<PackageDependencyBO>,
-        options?: PackageCheckLoaderOptions,
+        options?: PackageCheckTrableLoaderOptions,
     ): TrableRow<PackageDependencyBO> {
         const row = super.mapToTrableRow(entity, parent, options);
-        row.hasChildren = false
-        row.loaded = true
+        row.hasChildren = this.hasChildren(entity);
+        row.loaded = true;
 
         return row;
+    }
+
+    protected override hasChildren(entity: PackageDependency): boolean {
+        return entity.referenceDependencies?.length > 0;
     }
 
     public mapToBusinessObject(
@@ -73,8 +101,7 @@ PackageCheckLoaderOptions
             ...packageDependency,
             [BO_ID]: packageDependency.globalId.toString(),
             [BO_DISPLAY_NAME]: packageDependency.name,
-            [BO_PERMISSIONS]: [], // TODO: permissions needed?
+            [BO_PERMISSIONS]: [],
         };
     }
-
 }

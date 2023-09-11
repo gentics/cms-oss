@@ -32,6 +32,7 @@ import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
+import { DependencyType } from './package-check';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -1513,12 +1514,7 @@ enum Filter {
     ALL
 }
 
-enum DependencyType {
-    CONSTRUCT,
-    DATASOURCE,
-    OBJECT_TAG_DEFINITION,
-    TEMPLATE
-}
+
 
 export interface PackageCheckOptions extends PackageSyncOptions{
     checkAll?: boolean;

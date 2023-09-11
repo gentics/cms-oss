@@ -11,6 +11,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.crResou
 import static com.gentics.contentnode.tests.utils.ContentNodeMeshCRUtils.createMeshCR;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createImage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectPropertyDefinition;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
@@ -20,11 +21,14 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertRes
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -48,6 +52,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.OpResult;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.parttype.LongHTMLTextPartType;
 import com.gentics.contentnode.object.parttype.PageURLPartType;
 import com.gentics.contentnode.publish.PublishInfo;
 import com.gentics.contentnode.publish.PublishQueue;
@@ -59,6 +64,7 @@ import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.tests.category.MeshTest;
+import com.gentics.contentnode.tests.rest.ImageResourceTest;
 import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
@@ -84,6 +90,8 @@ public class MeshPublishTest {
 	 * Name of the mesh project
 	 */
 	public final static String MESH_PROJECT_NAME = "testproject";
+
+	public final static String IMAGE_NAME = "image-dpi66x44-res311x211.jpg";
 
 	@ClassRule
 	public static DBTestContext context = new DBTestContext();
@@ -269,6 +277,39 @@ public class MeshPublishTest {
 			assertFolders(mesh.client(), MESH_PROJECT_NAME, project.getRootNode().getUuid(), Trx.supply(() -> node.getFolder()));
 			assertFolders(mesh.client(), MESH_PROJECT_NAME, MeshPublisher.getMeshUuid(folderLevel2), folderLevel3);
 		});
+	}
+
+	@Test
+	public void testPublishPageWithGisReference() throws Exception {
+		Integer htmlWithGisConstructId = Trx.supply(() -> createConstruct(node, LongHTMLTextPartType.class, "node", "htmlWithGis"));
+
+		Folder folder = Trx.supply(() -> {
+			return create(Folder.class, f -> {
+				f.setMotherId(node.getFolder().getId());
+				f.setName("Testfolder");
+			});
+		});
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		IOUtils.copy(ImageResourceTest.class.getResourceAsStream(IMAGE_NAME), out);
+		ImageFile image1 = (ImageFile) supply(() -> { 
+			return createImage(node.getFolder(), IMAGE_NAME, out.toByteArray()); 
+		});
+
+		Page page = Trx.supply(() -> {
+			return create(Page.class, p -> {
+				p.setTemplateId(template.getId());
+				p.setFolderId(folder.getId());
+				p.setName("PageWithGis");
+				p.getContent().addContentTag(htmlWithGisConstructId);
+				p.getContentTag("node1").getValues().getByKeyname("htmlWithGis").setValueText("http://" + mesh.getHost() + ":" + mesh.getMappedPort(8080) + "/GenticsImageStore/50/auto/prop/home/" + IMAGE_NAME);
+			});
+		});
+
+		try (Trx trx = new Trx()) {
+			context.publish(true);
+			trx.success();
+		}
 	}
 
 	/**

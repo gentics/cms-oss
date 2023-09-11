@@ -61,6 +61,7 @@ import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.CnMapPublisher;
 import com.gentics.contentnode.publish.FilePublisher;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.render.PublishRenderResult;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -1027,9 +1028,35 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		return image;
 	}
 
+	public static List<Object[]> createImageVariants(int nodeId) throws NodeException {
+		List<Object[]> result = new ArrayList<>();
+		DBUtils.executeStatement("SELECT distinct mit.entity_id, mit.entity_type, mit.field_key, isi.contentfile_id, isi.transform "
+				+ " from meshpublish_imagestoretarget mit "
+				+ " inner join imagestoretarget ist on mit.imagestoretarget_id = ist.id "
+				+ " inner join imagestoreimage isi on ist.imagestoreimage_id = isi.id "
+				+ " where mit.node_id = ? ", new SQLExecutor() {
+			@Override
+			public void prepareStatement(PreparedStatement stmt) throws SQLException {
+				stmt.setInt(1, nodeId);
+			}
+			@Override
+			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+				if (rs.next()) {
+					Object[] record = new Object[5];
+					record[0] = rs.getInt("mit.entity_id");
+					record[0] = rs.getInt("mit.entity_type");
+					record[0] = rs.getString("mit.field_key");
+					record[0] = rs.getInt("isi.contentfile_id");
+					record[0] = rs.getString("isi.transform");
+				}
+			}
+		}, Transaction.UPDATE_STATEMENT);
+		return result;
+	}
+
 	/**
 	 * Stores a link between the specified image file and publish entry,
-	 * creating the image file db entry if it doesn't yet exist
+	 * creating the image file db entry if it doesn't yet exist. Variant for {@link MeshPublisher}.
 	 *
 	 * @param fdesc
 	 *            the requested image file
@@ -1038,10 +1065,6 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @return
 	 * @throws NodeException
 	 */
-	private static int storeGISLink(final FileDescription fdesc, final FilePublisherGisImageInitiator initiator) throws NodeException {
-		return storeGISLink(fdesc, initiator.getInitiatorForeignKey());
-	}
-
 	public static int storeGISLink(final FileDescription fdesc, final MeshPublisherGisImageInitiator initiator) throws NodeException {
 		int ifid = storeImageFileEntry(fdesc);
 		final boolean[] exists = new boolean[] { false };
@@ -1074,23 +1097,23 @@ public class CNGenticsImageStore extends GenticsImageStore {
 
 	/**
 	 * Stores a link between the specified image file and publish entry,
-	 * creating the image file db entry if it doesn't yet exist
+	 * creating the image file db entry if it doesn't yet exist. Variant for {@link FilePublisher}.
 	 *
 	 * @param fdesc
 	 *            the requested image file
-	 * @param publishId
+	 * @param initiator
 	 *            the publish entry to associate the image file with
 	 * @return imagestoretarget_id created/used
 	 * @throws NodeException
 	 */
-	private static int storeGISLink(final FileDescription fdesc, final int publishId) throws NodeException {
+	private static int storeGISLink(final FileDescription fdesc, final FilePublisherGisImageInitiator initiator) throws NodeException {
 		int ifid = storeImageFileEntry(fdesc);
 		final boolean[] exists = new boolean[] { false };
 		// We need to access data written in the publish transaction, so we declare this to be an update statement.
 		DBUtils.executeStatement("SELECT publish_id, imagestoretarget_id from publish_imagestoretarget where publish_id = ? and imagestoretarget_id = ? ", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, publishId);
+				stmt.setInt(1, initiator.getInitiatorForeignKey());
 				stmt.setInt(2, ifid);
 			}
 			@Override
@@ -1099,7 +1122,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 		}, Transaction.UPDATE_STATEMENT);
 		if (!exists[0]) {
-			DBUtils.executeInsert("INSERT INTO publish_imagestoretarget (publish_id, imagestoretarget_id) values (?,?)", new Object[] { publishId, ifid });
+			DBUtils.executeInsert("INSERT INTO publish_imagestoretarget (publish_id, imagestoretarget_id) values (?,?)", new Object[] { initiator.getInitiatorForeignKey(), ifid });
 		}
 		return ifid;
 	}
@@ -1248,8 +1271,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		Set<Integer> excessTargetIds = new HashSet<>(existingTargetIds);
 		excessTargetIds.removeAll(usedTargetIds);
 		if (excessTargetIds.size() > 0) {
-			DBUtils.executeMassStatement("DELETE from meshpublish_imagestoretarget WHERE node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and imagestoretarget_id in", "", new ArrayList<Integer>(
-					excessTargetIds), 2, new SQLExecutor() {
+			DBUtils.executeMassStatement("DELETE from meshpublish_imagestoretarget WHERE node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and imagestoretarget_id in", "", 
+					excessTargetIds, 2, new SQLExecutor() {
 				@Override
 				public void prepareStatement(PreparedStatement stmt) throws SQLException {
 					stmt.setInt(1, (Integer) fkey[0]);

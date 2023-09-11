@@ -66,7 +66,6 @@ import com.gentics.contentnode.factory.PublishCacheTrx;
 import com.gentics.contentnode.factory.PublishedNodeTrx;
 import com.gentics.contentnode.factory.RenderTypeTrx;
 import com.gentics.contentnode.factory.Transaction;
-import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
@@ -1871,7 +1870,7 @@ public class MeshPublisher implements AutoCloseable {
 			int nodeId = node.getId();
 			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
 
-			
+			List<Object[]> variants = CNGenticsImageStore.createImageVariants(nodeId);
 		}
 	}
 
@@ -2011,7 +2010,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 			logger.debug(String.format("Handling postponed update of %d.%d", task.objType, task.objId));
 			if (task.postponed != null) {
-			handleRenderedEntries(task.nodeId, task.postponed, null, fields -> task.fields = fields, null, null);
+			handleRenderedEntries(task.nodeId, task.objId, task.objType, task.postponed, null, fields -> task.fields = fields, null, null);
 			}
 			if (!task.fields.isEmpty()) {
 				task.postponed = null;
@@ -2616,7 +2615,7 @@ public class MeshPublisher implements AutoCloseable {
 				renderedEntries.keySet().removeIf(e -> "folder.pub_dir".equals(e.getTagname()));
 			}
 
-			handleRenderedEntries(task.nodeId, renderedEntries, o.getAttributes(), fields -> {
+			handleRenderedEntries(task.nodeId, task.objId, task.objType, renderedEntries, o.getAttributes(), fields -> {
 				task.fields = fields;
 			}, roles -> {
 				task.roles = roles;
@@ -3181,9 +3180,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return FieldMap
 	 * @throws NodeException
 	 */
-	public void handleRenderedEntries(int nodeId, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes, Consumer<FieldMap> fieldMapHandler,
+	public void handleRenderedEntries(int nodeId, int objectId, int objectType, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes, Consumer<FieldMap> fieldMapHandler,
 			Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
-		handleRenderedEntries(false, nodeId, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone);
+		handleRenderedEntries(false, nodeId, objectId, objectType, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone);
 	}
 
 	public void handleCollectingGisImages(String source, int nodeId, int entityId, String fieldKey, int entityType) throws NodeException {
@@ -3216,7 +3215,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	@SuppressWarnings("unchecked")
-	public void handleRenderedEntries(boolean preview, int nodeId, Supplier<FieldMap> fieldMapSupplier, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes,
+	public void handleRenderedEntries(boolean preview, int nodeId, int objectId, int objectType, Supplier<FieldMap> fieldMapSupplier, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes,
 			Consumer<FieldMap> fieldMapHandler, Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
 		FieldMap fields = null;
 		if (fieldMapSupplier != null) {
@@ -3271,11 +3270,17 @@ public class MeshPublisher implements AutoCloseable {
 							String string = ObjectTransformer.getString(o, null);
 							if (string != null) {
 								field.add(string);
+								if (!preview) {
+									handleCollectingGisImages(string, nodeId, objectId, mapEntry.getKey().getTagname(), objectType);
+								}
 							}
 						}
 					} else {
 						String string = ObjectTransformer.getString(value, null);
 						fields.put(entry.getMapname(), new StringFieldImpl().setString(string));
+						if (!preview) {
+							handleCollectingGisImages(string, nodeId, objectId, mapEntry.getKey().getTagname(), objectType);
+						}
 					}
 					break;
 				}

@@ -120,7 +120,6 @@ import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.MiscUtils;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.db.SQLExecutor;

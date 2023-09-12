@@ -158,7 +158,7 @@ spec:
 
                     // when deploying for the test systems, we only build the server
                     if (params.deployTesting) {
-                        mvnArguments += " -am -pl cms-oss-server"
+                        mvnArguments += " -am -pl cms-oss-server,cms-oss-bom"
                     }
 
                     // Update chrome to the latest version

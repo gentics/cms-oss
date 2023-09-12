@@ -1,53 +1,55 @@
 import { Injectable } from '@angular/core';
-import { PackageCheckResult, PackageDependency } from '@gentics/cms-models';
+import {
+    PackageCheckResult,
+    PackageDependency,
+    PackageDependencyEntity,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+import { map, toArray } from 'rxjs/operators';
 import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
-    PackageDependencyBO,
+    PackageDependencyEntityBO,
 } from '@admin-ui/common';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 
 export interface PackageCheckTrableLoaderOptions {
     packageName: string;
+    checkAll: boolean;
+    shouldReload: boolean;
 }
 
 @Injectable()
 export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
-PackageDependency,
-PackageDependencyBO,
-PackageCheckTrableLoaderOptions
+    PackageDependencyEntity,
+    PackageDependencyEntityBO,
+    PackageCheckTrableLoaderOptions
 > {
     constructor(protected api: GcmsApi) {
         super();
     }
 
     protected loadEntityRow(
-        entity: PackageDependency,
-        options?: PackageCheckTrableLoaderOptions,
-    ): Observable<PackageDependencyBO> {
-        // todo: remove; merely needed for reload and not needed?
-        return this.api.devTools.getCheckResult(options.packageName).pipe(
-            map((checkResult: PackageCheckResult) => {
-                const packageDependency = checkResult.items.find(
-                    (packageDependency) =>
-                        packageDependency.globalId ===entity.globalId,
-                );
-
-                return this.mapToBusinessObject(packageDependency);
-            }),
-        );
+        entity: PackageDependencyEntity,
+        options?: PackageCheckTrableLoaderOptions
+    ): Observable<PackageDependencyEntityBO> {
+        // TODO: handle reload
+        return null;
     }
 
     protected loadEntityChildren(
-        parent: PackageDependencyBO | null,
-        options?: PackageCheckTrableLoaderOptions,
-    ): Observable<PackageDependencyBO[]> {
-        let packageDependencies: Observable<PackageDependencyBO[]>;
+        parent: PackageDependencyEntityBO | null,
+        options?: PackageCheckTrableLoaderOptions
+    ): Observable<PackageDependencyEntityBO[]> {
+        let packageDependencies: Observable<PackageDependencyEntityBO[]>;
+
+        if (options && options.shouldReload) {
+            // TODO: perform new check and display result
+            console.log('perform new check');
+        }
 
         if (!parent) {
             packageDependencies = this.api.devTools
@@ -55,48 +57,50 @@ PackageCheckTrableLoaderOptions
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
                         checkResult.items.map((packageDependency) =>
-                            this.mapToBusinessObject(packageDependency),
-                        ),
-                    ),
+                            this.mapToBusinessObject(packageDependency)
+                        )
+                    )
                 );
-        }
-        else {
-            packageDependencies = packageDependencies.pipe(
-                map((packageDependencies) =>
-                    packageDependencies.flatMap((packageDependency) =>
-                        packageDependency.referenceDependencies.map((referenceDependency) =>
-                            this.mapToBusinessObject(referenceDependency),
-                        ),
-                    ),
+        } else if ((parent as PackageDependency).referenceDependencies) {
+            packageDependencies = from(
+                (parent as PackageDependency).referenceDependencies
+            ).pipe(
+                map((referenceDependency) =>
+                    this.mapToBusinessObject(referenceDependency)
                 ),
+                toArray()
             );
         }
-
-        // todo: remove me
-        packageDependencies.toPromise().then((res) => console.log(res));
 
         return packageDependencies;
     }
 
     protected override mapToTrableRow(
-        entity: PackageDependencyBO,
-        parent?: TrableRow<PackageDependencyBO>,
-        options?: PackageCheckTrableLoaderOptions,
-    ): TrableRow<PackageDependencyBO> {
+        entity: PackageDependencyEntityBO,
+        parent?: TrableRow<PackageDependencyEntityBO>,
+        options?: PackageCheckTrableLoaderOptions
+    ): TrableRow<PackageDependencyEntityBO> {
         const row = super.mapToTrableRow(entity, parent, options);
         row.hasChildren = this.hasChildren(entity);
-        row.loaded = true;
+        if (!row.hasChildren) {
+            row.loaded = true;
+        }
 
         return row;
     }
 
-    protected override hasChildren(entity: PackageDependency): boolean {
-        return entity.referenceDependencies?.length > 0;
+    protected override hasChildren(entity: PackageDependencyEntity): boolean {
+        if ((entity as PackageDependency).referenceDependencies) {
+            return (
+                (entity as PackageDependency).referenceDependencies?.length > 0
+            );
+        }
+        return false;
     }
 
     public mapToBusinessObject(
-        packageDependency: PackageDependency,
-    ): PackageDependencyBO {
+        packageDependency: PackageDependencyEntity
+    ): PackageDependencyEntityBO {
         return {
             ...packageDependency,
             [BO_ID]: packageDependency.globalId.toString(),

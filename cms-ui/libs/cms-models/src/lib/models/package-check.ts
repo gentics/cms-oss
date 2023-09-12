@@ -9,13 +9,15 @@ export interface BasePackageDependency{
 }
 
 export interface PackageDependency extends BasePackageDependency {
-    referenceDependencies: PackageDependency[]
+    referenceDependencies: ReferenceDependency[]
 }
 
 export interface ReferenceDependency extends BasePackageDependency {
     isInPackage: boolean;
     isInOtherPackage: boolean;
 }
+
+export type PackageDependencyEntity = PackageDependency | ReferenceDependency
 
 export interface PackageCheckResult extends ListResponse<PackageDependency> {
     items: PackageDependency[];

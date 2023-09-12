@@ -36,6 +36,7 @@ import {
     User,
     PackageCheckResult,
     PackageDependency,
+    PackageDependencyEntity,
 
 } from '@gentics/cms-models';
 
@@ -134,4 +135,4 @@ export const CONTENT_ITEM_TYPES: ContentItemTypes[] = [
     'template',
 ];
 
-export type PackageDependencyBO = PackageDependency & BusinessObject;
+export type PackageDependencyEntityBO = PackageDependencyEntity & BusinessObject;

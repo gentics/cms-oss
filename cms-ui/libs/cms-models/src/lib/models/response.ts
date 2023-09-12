@@ -23,7 +23,6 @@ import { Node } from './node';
 import { ObjectProperty } from './object-property';
 import { ObjectPropertyCategory } from './object-property-category';
 import { Package } from './package';
-import { PackageCheckResult } from './package-check';
 import { Page, PageWithExternalLinks } from './page';
 import { GcmsPermission, PermissionsAndRoles, PermissionsMapCollection, PermissionsSet } from './permissions';
 import { PrivilegeMapFromServer } from './permissions/cms/privileges';

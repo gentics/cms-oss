@@ -10,6 +10,7 @@
 <div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
     <gtx-checkbox
         class="package-check-checkbox"
+        [(ngModel)]="isChecked"
         [label]="'package.consistency_check_filter_label' | i18n"
     ></gtx-checkbox>
 
@@ -45,6 +46,7 @@
 
     [renderers]="{
         label: nameRenderer,
+        isInPackage: boolIconRenderer
     }"
 
     (loadRow)="loadRow($event)"
@@ -61,4 +63,13 @@
         <gtx-icon class="gtx-type-icon type-icon" [name]="row.item.type"></gtx-icon>
         <span class="name">{{ value }}</span>
     </div>
+</ng-template>
+
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        *ngIf="value !== undefined" 
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
 </ng-template>

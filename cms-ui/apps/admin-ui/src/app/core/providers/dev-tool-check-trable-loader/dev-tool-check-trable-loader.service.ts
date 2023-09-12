@@ -24,9 +24,9 @@ export interface PackageCheckTrableLoaderOptions {
 
 @Injectable()
 export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
-    PackageDependencyEntity,
-    PackageDependencyEntityBO,
-    PackageCheckTrableLoaderOptions
+PackageDependencyEntity,
+PackageDependencyEntityBO,
+PackageCheckTrableLoaderOptions
 > {
     constructor(protected api: GcmsApi) {
         super();
@@ -34,7 +34,7 @@ export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
 
     protected loadEntityRow(
         entity: PackageDependencyEntity,
-        options?: PackageCheckTrableLoaderOptions
+        options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO> {
         // TODO: handle reload
         return null;
@@ -42,7 +42,7 @@ export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
 
     protected loadEntityChildren(
         parent: PackageDependencyEntityBO | null,
-        options?: PackageCheckTrableLoaderOptions
+        options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO[]> {
         let packageDependencies: Observable<PackageDependencyEntityBO[]>;
 
@@ -57,18 +57,18 @@ export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
                         checkResult.items.map((packageDependency) =>
-                            this.mapToBusinessObject(packageDependency)
-                        )
-                    )
+                            this.mapToBusinessObject(packageDependency),
+                        ),
+                    ),
                 );
         } else if ((parent as PackageDependency).referenceDependencies) {
             packageDependencies = from(
-                (parent as PackageDependency).referenceDependencies
+                (parent as PackageDependency).referenceDependencies,
             ).pipe(
                 map((referenceDependency) =>
-                    this.mapToBusinessObject(referenceDependency)
+                    this.mapToBusinessObject(referenceDependency),
                 ),
-                toArray()
+                toArray(),
             );
         }
 
@@ -78,7 +78,7 @@ export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
     protected override mapToTrableRow(
         entity: PackageDependencyEntityBO,
         parent?: TrableRow<PackageDependencyEntityBO>,
-        options?: PackageCheckTrableLoaderOptions
+        options?: PackageCheckTrableLoaderOptions,
     ): TrableRow<PackageDependencyEntityBO> {
         const row = super.mapToTrableRow(entity, parent, options);
         row.hasChildren = this.hasChildren(entity);
@@ -99,7 +99,7 @@ export class PackageCheckTrableLoaderService extends BaseTrableLoaderService<
     }
 
     public mapToBusinessObject(
-        packageDependency: PackageDependencyEntity
+        packageDependency: PackageDependencyEntity,
     ): PackageDependencyEntityBO {
         return {
             ...packageDependency,

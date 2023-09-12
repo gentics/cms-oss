@@ -211,8 +211,10 @@ import com.gentics.mesh.rest.client.MeshRequest;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
+import com.gentics.mesh.rest.client.MeshWebrootResponse;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
+import com.gentics.mesh.util.UUIDUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
@@ -1868,6 +1870,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void createImageVariants(WorkPhaseHandler phase) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		for (Node node : cr.getNodes()) {
 			if (!node.isPublishImageVariants()) {
 				continue;
@@ -1879,28 +1882,25 @@ public class MeshPublisher implements AutoCloseable {
 
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
-				String fieldKey = "binarycontent"; //variant.fieldKey;
-//				String uuid;
-//				if (variant.information.getFileId() != 0) {
-//					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
-//				} else {
-//					String webroot = variant.information.getFilePath().startsWith("/" + node.getPublishDir()) ? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
-//					webroot = webroot.startsWith("/" + node.getBinaryPublishDir()) ? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-//					webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) ? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
-//					MeshWebrootResponse binaryResponse = client.webroot(node.getMeshProject(), webroot).blockingGet();
-//					uuid = binaryResponse.getNodeUuid();
-//				}
+				String fieldKey = "binarycontent";
 				String webroot = variant.information.getFilePath().startsWith("/" + node.getPublishDir()) ? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
 				webroot = webroot.startsWith("/" + node.getBinaryPublishDir()) ? webroot.split(node.getBinaryPublishDir())[1] : webroot;
 				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) ? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
 
+				String uuid;
+				if (variant.information.getFileId() != 0) {
+					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
+				} else {
+					MeshWebrootResponse binaryResponse = client.webroot(node.getMeshProject(), webroot).blockingGet();
+					uuid = binaryResponse.getNodeUuid();
+				}
 				String transform = variant.description.transform;
 
 				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(webroot, fieldKey), key -> new ImageManipulationRequest());
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest());
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
 				imageVariantRequest.setWidth(m.group("width"));
@@ -1924,7 +1924,11 @@ public class MeshPublisher implements AutoCloseable {
 			}
 
 			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
-				client.webrootUpdate(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), new NodeUpdateRequest().setManipulation(uuidKeyRequest.getValue())).blockingGet();
+				if (UUIDUtil.isUUID(uuidKeyRequest.getKey().getKey())) {
+					client.upsertNodeBinaryFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue()).blockingGet();
+				} else {
+					client.webrootUpdate(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), new NodeUpdateRequest().setManipulation(uuidKeyRequest.getValue())).blockingGet();
+				}
 			}
 		}
 	}

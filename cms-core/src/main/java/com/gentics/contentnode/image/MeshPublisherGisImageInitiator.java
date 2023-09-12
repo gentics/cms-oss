@@ -6,6 +6,8 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	private final int entityId;
 	private final int entityType;
 	private final String fieldKey;
+	private String webrootpath;
+	private String transform;
 
 	public MeshPublisherGisImageInitiator(int nodeId, int entityId, int entityType, String fieldKey) {
 		this.nodeId = nodeId;
@@ -15,7 +17,18 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	}
 
 	@Override
+	public void setImageData(String webrootPath, String transform) {
+		this.webrootpath = webrootPath;
+		this.transform = transform;
+	}
+
+	@Override
 	public Object[] getInitiatorForeignKey() {
-		return new Object[] {nodeId, entityId, entityType, fieldKey};
+		return new Object[] {nodeId, entityId, entityType, fieldKey, webrootpath, transform};
+	}
+
+	@Override
+	public boolean initiateIfNotFound() {
+		return true;
 	}
 }

@@ -72,6 +72,7 @@ import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
+import com.gentics.contentnode.image.CNGenticsImageStore.ImageVariant;
 import com.gentics.contentnode.image.MeshPublisherGisImageInitiator;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
@@ -153,6 +154,8 @@ import com.gentics.mesh.core.rest.node.field.BinaryField;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
+import com.gentics.mesh.core.rest.node.field.image.ImageManipulationRequest;
+import com.gentics.mesh.core.rest.node.field.image.ImageVariantRequest;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
@@ -202,6 +205,8 @@ import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
+import com.gentics.mesh.parameter.image.CropMode;
+import com.gentics.mesh.parameter.image.ResizeMode;
 import com.gentics.mesh.rest.client.MeshRequest;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
@@ -1870,7 +1875,57 @@ public class MeshPublisher implements AutoCloseable {
 			int nodeId = node.getId();
 			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
 
-			List<Object[]> variants = CNGenticsImageStore.createImageVariants(nodeId);
+			HashMap<Pair<String, String>, ImageManipulationRequest> uuidKeyRequests = new HashMap<>();
+
+			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
+			for (ImageVariant variant : variants) {
+				String fieldKey = "binarycontent"; //variant.fieldKey;
+//				String uuid;
+//				if (variant.information.getFileId() != 0) {
+//					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
+//				} else {
+//					String webroot = variant.information.getFilePath().startsWith("/" + node.getPublishDir()) ? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
+//					webroot = webroot.startsWith("/" + node.getBinaryPublishDir()) ? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+//					webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) ? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+//					MeshWebrootResponse binaryResponse = client.webroot(node.getMeshProject(), webroot).blockingGet();
+//					uuid = binaryResponse.getNodeUuid();
+//				}
+				String webroot = variant.information.getFilePath().startsWith("/" + node.getPublishDir()) ? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
+				webroot = webroot.startsWith("/" + node.getBinaryPublishDir()) ? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) ? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+
+				String transform = variant.description.transform;
+
+				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
+				if (!m.matches()) {
+					throw new NodeException("Couldn't parse " + transform);
+				}
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(webroot, fieldKey), key -> new ImageManipulationRequest());
+
+				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
+				imageVariantRequest.setWidth(m.group("width"));
+				imageVariantRequest.setHeight(m.group("height"));
+
+				String mode = m.group("mode");
+				imageVariantRequest.setResizeMode(StringUtils.isEmpty(mode) ? null : ResizeMode.get(mode) );
+
+				String cropMode = m.group("cropmode");
+				imageVariantRequest.setCropMode(StringUtils.isEmpty(cropMode) ? null : CropMode.get(cropMode));
+
+				String topleft_x = m.group("tlx");
+				String topleft_y = m.group("tly");
+				String cropwidth = m.group("cw");
+				String cropheight = m.group("ch");
+				if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
+					imageVariantRequest.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
+				}
+
+				imageManipulationRequest.setVariants(Collections.singletonList(imageVariantRequest));
+			}
+
+			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
+				client.webrootUpdate(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), new NodeUpdateRequest().setManipulation(uuidKeyRequest.getValue())).blockingGet();
+			}
 		}
 	}
 
@@ -3271,7 +3326,7 @@ public class MeshPublisher implements AutoCloseable {
 							if (string != null) {
 								field.add(string);
 								if (!preview) {
-									handleCollectingGisImages(string, nodeId, objectId, mapEntry.getKey().getTagname(), objectType);
+									handleCollectingGisImages(string, nodeId, objectId, entry.getMapname(), objectType);
 								}
 							}
 						}
@@ -3279,7 +3334,7 @@ public class MeshPublisher implements AutoCloseable {
 						String string = ObjectTransformer.getString(value, null);
 						fields.put(entry.getMapname(), new StringFieldImpl().setString(string));
 						if (!preview) {
-							handleCollectingGisImages(string, nodeId, objectId, mapEntry.getKey().getTagname(), objectType);
+							handleCollectingGisImages(string, nodeId, objectId, entry.getMapname(), objectType);
 						}
 					}
 					break;

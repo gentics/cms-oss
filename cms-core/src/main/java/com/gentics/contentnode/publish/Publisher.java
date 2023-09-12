@@ -484,6 +484,14 @@ public class Publisher implements Runnable {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_FILEDEPENDENCIES);
 					}
 
+					try {
+						publisherInfo.setPhase(PublisherPhase.GENTICSIMAGESTORE);
+						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
+						meshPublishController.createImageVariants();
+					} finally {
+						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
+					}
+
 					checkForError();
 					meshPublishController.waitForRenderAndWrite();
 					meshPublishController.handlePostponedUpdates();
@@ -1480,9 +1488,9 @@ public class Publisher implements Runnable {
 
 			MBeanRegistry.getPublisherInfo().setPhase(PublisherPhase.GENTICSIMAGESTORE);
 			writeFsImageStorePhase.begin();
-			RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_WRITEFS_IMAGERESIZER);
+			RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 			filePublisher.writeTagImageResizer(writeFsImageStorePhase, cnMapPublisher);
-			RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_WRITEFS_IMAGERESIZER);
+			RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 			writeFsImageStorePhase.done();
 
 			filePublisher.finalizeWriter(true);

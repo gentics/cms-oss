@@ -84,16 +84,18 @@ public class GenticsImageStorePublishTest {
 
 	private static Integer crId;
 
-	@Parameters(name = "{index}: segments {0}, mesh {1}, project per node {2}")
+	@Parameters(name = "{index}: segments {0}, mesh {1}, project per node {2}, publish image variants {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
 		for (boolean segments : Arrays.asList(true, false)) {
 			for (boolean mesh : Arrays.asList(true, false)) {
 				for (boolean projectPerNode : Arrays.asList(true, false)) {
-					if (!mesh && projectPerNode) {
-						continue;
+					for (boolean publishImageVariant : Arrays.asList(false, true)) {
+						if (!mesh && projectPerNode) {
+							continue;
+						}
+						data.add(new Object[] { segments, mesh, projectPerNode, publishImageVariant });
 					}
-					data.add(new Object[] { segments, mesh, projectPerNode });
 				}
 			}
 		}
@@ -149,7 +151,7 @@ public class GenticsImageStorePublishTest {
 				part.setName("template", 1);
 				part.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
 				part.setDefaultValue(create(Value.class, v -> {
-					v.setValueText("#gtx_gis($cms.tag.parts.image.target, {\"width\": 50, \"mode\": \"smart\"})|$cms.tag.parts.image");
+					v.setValueText("#gtx_gis($cms.tag.parts.image.target, {\"width\": 50, \"mode\": \"smart\"})   $cms.tag.parts.image");
 				}, false));
 			}, false));
 
@@ -194,6 +196,9 @@ public class GenticsImageStorePublishTest {
 	@Parameter(2)
 	public boolean projectPerNode;
 
+	@Parameter(3)
+	public boolean publishImageVariants;
+
 	@Before
 	public void clean() throws NodeException {
 		if (mesh) {
@@ -205,6 +210,7 @@ public class GenticsImageStorePublishTest {
 			n.setPubDirSegment(segments);
 			n.setPublishContentmap(mesh);
 			n.setContentrepositoryId(mesh ? crId : 0);
+			n.setPublishImageVariants(publishImageVariants);
 		});
 
 		ContentRepository cr = supply(t -> t.getObject(ContentRepository.class, crId));
@@ -260,7 +266,7 @@ public class GenticsImageStorePublishTest {
 			String gisUrl = getExpectedUrl(gisFile);
 			String imageUrl = getExpectedUrl(imageFile);
 
-			assertThat(gisUrl + "|" + imageUrl).as("URLs").isEqualTo(source);
+			assertThat(gisUrl + "   " + imageUrl).as("URLs").isEqualTo(source);
 
 			trx.success();
 		}

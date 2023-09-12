@@ -788,6 +788,6 @@
 2023-03-30  CH-1696 NOP SQL DROP TABLE IF EXISTS template_processes;
 2023-07-10  CH-1698 OG SQL ALTER TABLE type ADD COLUMN deprecated BOOLEAN NOT NULL DEFAULT 0;
 2023-07-31	CH-1699	SP	SQL ALTER TABLE contentrepository ADD COLUMN http2 TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of http usage per cr
-2023-09-06	CH-1700 SP	SQL	CREATE TABLE meshpublish_imagestoretarget (node_id INT NOT NULL, entity_id INT NOT NULL, field_key VARCHAR(255) NOT NULL, entity_type INT NOT NULL, imagestoretarget_id INT NOT NULL, PRIMARY KEY(node_id, entity_id, field_key, entity_type, imagestoretarget_id), FOREIGN KEY (node_id) REFERENCES node(id) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (imagestoretarget_id) REFERENCES imagestoretarget(id) ON UPDATE CASCADE ON DELETE CASCADE) # connects requested GenticsImageStore files to the Mesh published entries
+2023-09-06	CH-1700 SP	SQL	CREATE TABLE meshpublish_imagestoretarget (node_id INT NOT NULL, entity_id INT NOT NULL, field_key VARCHAR(255) NOT NULL, entity_type INT NOT NULL, webrootpath VARCHAR(255) NOT NULL, transform VARCHAR(255) NOT NULL, imagestoretarget_id INT NOT NULL, PRIMARY KEY(node_id, entity_id, field_key, entity_type, webrootpath, transform, imagestoretarget_id), FOREIGN KEY (node_id) REFERENCES node(id) ON UPDATE CASCADE ON DELETE CASCADE) # connects requested GenticsImageStore files to the Mesh published entries
 2023-07-31	CH-1701	SP	SQL ALTER TABLE node ADD COLUMN pub_img_variants TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of image variants creation usage per node
 

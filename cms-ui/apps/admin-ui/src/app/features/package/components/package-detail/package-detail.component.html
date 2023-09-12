@@ -136,6 +136,7 @@
                     *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSISTENCY_CHECK"
                     [packageName]="currentEntity.id"
                     [showSearch]="true"
+                    [checkAll]="true"
                 ></gtx-dev-tool-package-trable>
             </div>
         </gtx-tab>

@@ -12,9 +12,9 @@ import {
     OnInit,
     SimpleChanges,
 } from '@angular/core';
-import { PackageDependency } from '@gentics/cms-models';
-import { TableColumn, TrableRow } from '@gentics/ui-core';
-import { PackageDependencyBO } from '@admin-ui/common';
+import { PackageDependencyEntity } from '@gentics/cms-models';
+import { TableColumn } from '@gentics/ui-core';
+import { PackageDependencyEntityBO } from '@admin-ui/common';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({
@@ -24,31 +24,43 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PackageCheckTrableComponent
-    extends BaseEntityTrableComponent<
-    PackageDependency,
-    PackageDependencyBO,
-    PackageCheckTrableLoaderOptions
-    >
+    extends BaseEntityTrableComponent<PackageDependencyEntity, PackageDependencyEntityBO, PackageCheckTrableLoaderOptions>
     implements OnInit, OnChanges
 {
     @Input()
     public packageName: string;
 
-    public rawColumns: TableColumn<PackageDependencyBO>[] = [
+    @Input()
+    public checkAll: boolean;
+
+    public isChecked: boolean;
+
+    private shouldReload: boolean = false;
+
+    public rawColumns: TableColumn<PackageDependencyEntityBO>[] = [
         {
-            id: 'globalId',
+            id: 'name',
             label: 'shared.element',
             fieldPath: 'name',
+            sortable: true,
         },
         {
-            id: 'globalId',
+            id: 'dependencyType',
             label: 'shared.type',
             fieldPath: 'dependencyType',
+            sortable: true,
+        },
+        {
+            id: 'isInPackage',
+            label: 'package.consistency_check_contained',
+            fieldPath: 'isInPackage',
+            align: 'center',
+            sortable: false,
         },
         {
             id: 'globalId',
-            label: 'package.consistency_check_contained',
-            fieldPath: '', // todo: add (if isInPackage and isInOtherPackage is true)
+            label: 'id',
+            fieldPath: 'globalId',
         },
     ];
 
@@ -71,14 +83,10 @@ export class PackageCheckTrableComponent
     protected override createAdditionalLoadOptions(): PackageCheckTrableLoaderOptions {
         return {
             packageName: this.packageName,
+            checkAll: this.checkAll,
+            shouldReload: this.shouldReload
         };
     }
-
-    override handleRowClick(row: TrableRow<PackageDependencyBO>): void {
-        this.reloadRow(row);
-    }
-
-    protected override onLoad(): void {}
 
     protected rebuildColumns(): void {
         const columnsToTranslate = [...this.rawColumns];

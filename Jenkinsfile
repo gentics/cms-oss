@@ -81,6 +81,7 @@ spec:
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
+        booleanParam(name: 'deployTesting',             defaultValue: false, description: "Like deploy, but only the server image will be built and deployed to a different repository")
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
         booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
@@ -155,6 +156,11 @@ spec:
                         runJUnitTests = false
                     }
 
+                    // when deploying for the test systems, we only build the server
+                    if (params.deployTesting) {
+                        mvnArguments += " -am -pl cms-oss-server"
+                    }
+
                     // Update chrome to the latest version
                     //sh "sudo apt-get update"
                     //sh "sudo apt-get install --assume-yes --allow-unauthenticated google-chrome-beta"
@@ -187,7 +193,7 @@ spec:
                         // for now, do not build modules in parallel
                         // mvnArguments += " -T 1C"
 
-                        if (params.deploy) {
+                        if (params.deploy || params.deployTesting) {
                             // Deploy
                             mvnGoal = "deploy"
                         }
@@ -276,9 +282,13 @@ spec:
 
             steps {
                 script {
-                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageHost = "gtx-docker-products.docker.apa-it.at"
+                    if (params.deployTesting) {
+                        imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
+                    }
+                    def imageName = "${imageHost}/gentics/cms-oss"
                     def imageNameWithTag = "${imageName}:${branchName}"
-                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
+                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://${imageHost}/v2" ]) {
                         sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
                         // Push released image
@@ -286,7 +296,7 @@ spec:
                             String dockerImageVersionTag = imageName + ":" + tagName
                             sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
                             sh "docker push " + dockerImageVersionTag
-                        } else if (params.deploy) {
+                        } else if (params.deploy || params.deployTesting) {
                             // push snapshot build image
                             sh "docker push ${imageNameWithTag}"
                         }

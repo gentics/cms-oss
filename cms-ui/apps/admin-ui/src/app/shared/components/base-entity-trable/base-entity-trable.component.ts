@@ -40,9 +40,6 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     @Input()
     public inlineSelection = false;
 
-    @Input()
-    public showSearch = false;
-
     @Output()
     public rowClick = new EventEmitter<TrableRow<O>>();
 

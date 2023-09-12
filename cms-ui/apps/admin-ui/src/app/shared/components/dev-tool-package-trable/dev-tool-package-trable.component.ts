@@ -35,7 +35,7 @@ export class PackageCheckTrableComponent
 
     public isChecked: boolean;
 
-    private shouldReload: boolean = false;
+    private shouldReload = false;
 
     public rawColumns: TableColumn<PackageDependencyEntityBO>[] = [
         {
@@ -84,7 +84,7 @@ export class PackageCheckTrableComponent
         return {
             packageName: this.packageName,
             checkAll: this.checkAll,
-            shouldReload: this.shouldReload
+            shouldReload: this.shouldReload,
         };
     }
 

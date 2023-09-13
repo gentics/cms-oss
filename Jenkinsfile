@@ -156,9 +156,9 @@ spec:
                         runJUnitTests = false
                     }
 
-                    // when deploying for the test systems, we only build the server
+                    // when deploying for the test systems, we do not build the changelog or doc
                     if (params.deployTesting) {
-                        mvnArguments += " -am -pl cms-oss-server,cms-oss-bom"
+                        mvnArguments += " -pl '!cms-oss-changelog,!cms-oss-doc'"
                     }
 
                     // Update chrome to the latest version

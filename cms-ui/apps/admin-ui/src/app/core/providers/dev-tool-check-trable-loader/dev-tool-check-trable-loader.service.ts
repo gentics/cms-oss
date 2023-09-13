@@ -6,8 +6,8 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
-import { Observable, from } from 'rxjs';
-import { map, toArray } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { catchError, map, switchMap, toArray } from 'rxjs/operators';
 import {
     BO_DISPLAY_NAME,
     BO_ID,
@@ -18,8 +18,8 @@ import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loade
 
 export interface PackageCheckTrableLoaderOptions {
     packageName: string;
-    checkAll: boolean;
-    shouldReload: boolean;
+    checkAll?: boolean;
+    shouldReload?: boolean;
 }
 
 @Injectable()
@@ -36,7 +36,6 @@ PackageCheckTrableLoaderOptions
         entity: PackageDependencyEntity,
         options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO> {
-        // TODO: handle reload
         return null;
     }
 
@@ -44,16 +43,8 @@ PackageCheckTrableLoaderOptions
         parent: PackageDependencyEntityBO | null,
         options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO[]> {
-        let packageDependencies: Observable<PackageDependencyEntityBO[]>;
-
-        if (options && options.shouldReload) {
-            // TODO: perform new check and display result
-            console.log('perform new check');
-        }
-
         if (!parent) {
-            packageDependencies = this.api.devTools
-                .getCheckResult(options.packageName)
+            return this.api.devTools.getCheckResult(options.packageName)
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
                         checkResult.items.map((packageDependency) =>
@@ -62,7 +53,7 @@ PackageCheckTrableLoaderOptions
                     ),
                 );
         } else if ((parent as PackageDependency).referenceDependencies) {
-            packageDependencies = from(
+            return from(
                 (parent as PackageDependency).referenceDependencies,
             ).pipe(
                 map((referenceDependency) =>
@@ -71,8 +62,28 @@ PackageCheckTrableLoaderOptions
                 toArray(),
             );
         }
+    }
 
-        return packageDependencies;
+    public isCheckResultAvailable(options?: PackageCheckTrableLoaderOptions): Observable<boolean> {
+        console.log('checking existing results...');
+        return this.api.devTools.getCheckResult(options.packageName)
+            .pipe(
+                switchMap(() => of(true)),
+                catchError(() => {
+                    return of(false);
+                }),
+            )
+    }
+
+
+    public getNewCheckResult(options?: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
+        return this.api.devTools.check(options.packageName).pipe(
+            map((checkResult: PackageCheckResult) =>
+                checkResult.items.map((packageDependency) =>
+                    this.mapToBusinessObject(packageDependency),
+                ),
+            ),
+        )
     }
 
     protected override mapToTrableRow(

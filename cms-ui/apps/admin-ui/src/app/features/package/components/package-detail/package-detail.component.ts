@@ -2,6 +2,7 @@ import { FormTabHandle, NULL_FORM_TAB_HANDLE } from '@admin-ui/common';
 import {
     BREADCRUMB_RESOLVER,
     EditorTabTrackerService,
+    PackageCheckTrableLoaderService,
     PackageOperations,
     ResolveBreadcrumbFn,
 } from '@admin-ui/core';
@@ -11,6 +12,7 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
+    OnDestroy,
     OnInit,
     Type,
 } from '@angular/core';
@@ -22,8 +24,8 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { NGXLogger } from 'ngx-logger';
-import { Observable, of } from 'rxjs';
-import { map, publishReplay, refCount, takeUntil } from 'rxjs/operators';
+import { Observable, Subscription, of } from 'rxjs';
+import { catchError, map, publishReplay, refCount, takeUntil, tap } from 'rxjs/operators';
 
 export enum PackageDetailTabs {
     CONSTRUCTS = 'constructs',
@@ -46,7 +48,7 @@ export enum PackageDetailTabs {
     templateUrl: './package-detail.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PackageDetailComponent extends BaseDetailComponent<'package', PackageOperations> implements OnInit {
+export class PackageDetailComponent extends BaseDetailComponent<'package', PackageOperations> implements OnInit, OnDestroy {
 
     public readonly PackageDetailTabs = PackageDetailTabs;
 
@@ -54,6 +56,10 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
 
     /** current entity value */
     public currentEntity: PackageBO<Raw>;
+
+    public isCheckResultAvailable = false;
+
+    private subscriptions: Subscription[] = [];
 
     get isLoading(): boolean {
         return this.currentEntity == null || !this.currentEntity.name || this.currentEntity.name === '';
@@ -83,6 +89,7 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
         packageData: PackageDataService,
         changeDetectorRef: ChangeDetectorRef,
         private editorTabTracker: EditorTabTrackerService,
+        private packageCheckLoader: PackageCheckTrableLoaderService,
     ) {
         super(
             logger,
@@ -110,10 +117,17 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
         this.currentEntity$.pipe(
             takeUntil(this.stopper.stopper$),
         ).subscribe((currentEntity: PackageBO<Raw>) => {
+            this.subscriptions.forEach(subscription => subscription.unsubscribe());
             this.currentEntity = currentEntity;
+            this.isPackageCheckResultAvailable(this.currentEntity.id);
         });
 
         this.activeTabId$ = this.editorTabTracker.trackEditorTab(this.route);
+    }
+
+    ngOnDestroy(): void {
+        super.ngOnDestroy();
+        this.subscriptions.forEach(subscription => subscription.unsubscribe());
     }
 
     private initForms(): void {
@@ -127,6 +141,26 @@ export class PackageDetailComponent extends BaseDetailComponent<'package', Packa
             [PackageDetailTabs.TEMPLATES]: NULL_FORM_TAB_HANDLE,
             [PackageDetailTabs.CONSISTENCY_CHECK]: NULL_FORM_TAB_HANDLE,
         };
+    }
+
+
+    protected isPackageCheckResultAvailable(packageName: string): void {
+        const sub = this.packageCheckLoader.isCheckResultAvailable({packageName})
+            .subscribe(isAvailable => {
+                this.isCheckResultAvailable = isAvailable
+                this.changeDetectorRef.markForCheck();
+            })
+
+        this.subscriptions.push(sub)
+    }
+
+    public handleLoadButtonClick(packageName: string): void {
+        const dependencies$ = this.packageCheckLoader.getNewCheckResult({packageName}).pipe(
+            tap(() => this.packageCheckLoader.reload()),
+            catchError(() => {
+                return of(false);
+            }),
+        ).subscribe()
     }
 
 }

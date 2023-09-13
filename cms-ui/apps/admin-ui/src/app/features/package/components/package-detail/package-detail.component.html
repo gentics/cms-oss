@@ -133,11 +133,29 @@
 
             <div class="gtx-entity-details-tab-content-body">
                 <gtx-dev-tool-package-trable
-                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSISTENCY_CHECK"
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSISTENCY_CHECK && isCheckResultAvailable else noResultAvailable" 
                     [packageName]="currentEntity.id"
-                    [showSearch]="true"
                     [checkAll]="true"
                 ></gtx-dev-tool-package-trable>
+
+                <ng-template #noResultAvailable>
+                    <div>
+                        <span id="no-result-text">No package check result available.</span>
+
+                        <gtx-button
+                            *ngIf="!hideActions"
+                            class=""
+                            flat
+                            size="small"
+                            type="primary"
+                            [disabled]="disabled || loading"
+                            (click)="handleLoadButtonClick(currentEntity.id)"
+                        >
+                            Trigger a check first
+                        </gtx-button>
+                    </div>
+                </ng-template>
+
             </div>
         </gtx-tab>
     </gtx-tabs>

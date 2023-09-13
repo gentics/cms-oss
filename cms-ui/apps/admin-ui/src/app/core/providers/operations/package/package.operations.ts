@@ -40,7 +40,7 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, Observable, throwError } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
@@ -465,7 +465,7 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
      * Get the result of the consistency check for a package
      */
     getCheckResult(packageName: string): Observable<PackageCheckResult> {
-        return this.api.devTools.getCheckResult(packageName)
+        return this.api.devTools.getCheckResult(packageName);
     }
 
     // GENERIC ENTITIES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

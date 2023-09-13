@@ -709,15 +709,17 @@ public class CNGenticsImageStore extends GenticsImageStore {
 				+ " left join node cn on cf.node_id = cn.id "
 				+ " left join folder nf on nf.id = cn.folder_id " 
 						+ "where ("
-							+ " concat('/', cn.pub_dir, '/', cf.pub_dir, '/', c.name) = ?"
-							+ " OR concat('/', nf.pub_dir, '/', cf.pub_dir, '/', c.name) = ?"
+							+ " concat('/', cn.pub_dir, cf.pub_dir, c.name) = ?"
+							+ " OR concat(nf.pub_dir, cf.pub_dir, c.name) = ?"
+							+ " OR concat(cf.pub_dir, c.name) = ?"
 							+ ") AND c.name = ? AND c.deleted = 0",
 				new SQLExecutor() {
 					@Override
 					public void prepareStatement(PreparedStatement stmt) throws SQLException {
 						stmt.setString(1, paramFullImagePath);
 						stmt.setString(2, paramFullImagePath);
-						stmt.setString(3, imageName);
+						stmt.setString(3, paramFullImagePath);
+						stmt.setString(4, imageName);
 					}
 
 					@Override
@@ -1008,8 +1010,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			// check whether publish process shall be interrupted
 			PublishRenderResult.checkInterrupted();
 
-			// Change the used current Host when this GIS call references a
-			// foreign node
+			// Change the used current Host when this GIS call references a foreign node
 			if (hostname == null) {
 				hostname = pageNode.getHostname();
 			}

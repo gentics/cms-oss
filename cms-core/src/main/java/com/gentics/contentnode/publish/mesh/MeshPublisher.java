@@ -70,6 +70,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageVariant;
@@ -1883,16 +1884,23 @@ public class MeshPublisher implements AutoCloseable {
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
 				String fieldKey = "binarycontent";
-				String webroot = variant.information.getFilePath().startsWith("/" + node.getPublishDir()) ? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
-				webroot = webroot.startsWith("/" + node.getBinaryPublishDir()) ? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) ? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+				String webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && variant.information.getFilePath().startsWith("/" + node.getPublishDir())) 
+						? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
+				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
+						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) 
+						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
 
 				String uuid;
 				if (variant.information.getFileId() != 0) {
 					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
-				} else {
+				} else if (isConsiderGtxUrlField()) {
+					// No segment field is set to the binary schema = have to pull the UUID from Mesh Webroot
 					MeshWebrootResponse binaryResponse = client.webroot(node.getMeshProject(), webroot).blockingGet();
 					uuid = binaryResponse.getNodeUuid();
+				} else {
+					// With the segment field we cut some corners and use webroot-based update
+					uuid = webroot;
 				}
 				String transform = variant.description.transform;
 

@@ -212,10 +212,8 @@ import com.gentics.mesh.rest.client.MeshRequest;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
-import com.gentics.mesh.rest.client.MeshWebrootResponse;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
-import com.gentics.mesh.util.UUIDUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
@@ -1871,7 +1869,6 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void createImageVariants(WorkPhaseHandler phase) throws NodeException {
-		Transaction t = TransactionManager.getCurrentTransaction();
 		for (Node node : cr.getNodes()) {
 			if (!node.isPublishImageVariants()) {
 				continue;
@@ -1879,7 +1876,7 @@ public class MeshPublisher implements AutoCloseable {
 			int nodeId = node.getId();
 			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
 
-			HashMap<Pair<String, String>, ImageManipulationRequest> uuidKeyRequests = new HashMap<>();
+			HashMap<Pair<String, String>, ImageManipulationRequest> webrootKeyRequests = new HashMap<>();
 
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
@@ -1891,24 +1888,13 @@ public class MeshPublisher implements AutoCloseable {
 				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) 
 						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
 
-				String uuid;
-				if (variant.information.getFileId() != 0) {
-					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
-				} else if (isConsiderGtxUrlField()) {
-					// No segment field is set to the binary schema = have to pull the UUID from Mesh Webroot
-					MeshWebrootResponse binaryResponse = client.webroot(node.getMeshProject(), webroot).blockingGet();
-					uuid = binaryResponse.getNodeUuid();
-				} else {
-					// With the segment field we cut some corners and use webroot-based update
-					uuid = webroot;
-				}
 				String transform = variant.description.transform;
 
 				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest());
+				ImageManipulationRequest imageManipulationRequest = webrootKeyRequests.computeIfAbsent(Pair.of(webroot, fieldKey), key -> new ImageManipulationRequest());
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
 				imageVariantRequest.setWidth(m.group("width"));
@@ -1930,13 +1916,16 @@ public class MeshPublisher implements AutoCloseable {
 
 				imageManipulationRequest.setVariants(Collections.singletonList(imageVariantRequest));
 			}
-
-			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
-				if (UUIDUtil.isUUID(uuidKeyRequest.getKey().getKey())) {
-					client.upsertNodeBinaryFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue()).blockingGet();
-				} else {
-					client.webrootUpdate(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), new NodeUpdateRequest().setManipulation(uuidKeyRequest.getValue())).blockingGet();
-				}
+			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : webrootKeyRequests.entrySet()) {
+				client.upsertWebrootFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getValue()).getResponse()
+//					.doOnError(error -> error("Error during creation of image variants of %s (%s) / %s :\n %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error))
+//					.doOnSuccess(unused -> info("Successfully created variants for %s (%s) / %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue()))
+//					.blockingGet();
+				.subscribe(unused -> {
+					info("Successfully created variants for %s (%s) / %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue());
+				}, error -> {
+					error("Error during creation of image variants of %s (%s) / %s :\n %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error);
+				});
 			}
 		}
 	}

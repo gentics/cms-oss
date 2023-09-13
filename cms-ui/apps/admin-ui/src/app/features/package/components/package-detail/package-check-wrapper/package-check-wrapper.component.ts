@@ -58,14 +58,19 @@ export class PackageCheckWrapperComponent
     }
 
     public handleLoadButtonClick(packageName: string): void {
-        this.packageCheckLoader
+        const subscription = this.packageCheckLoader
             .getNewCheckResult({ packageName })
             .pipe(
-                tap(() => this.packageCheckLoader.reload()),
+                tap(() => this.isCheckResultAvailable = true),
                 catchError(() => {
+                    this.isCheckResultAvailable = false;
                     return of(false);
                 }),
             )
-            .subscribe();
+            .subscribe(() =>
+                this.changeDetector.markForCheck(),
+            );
+
+        this.subscriptions.push(subscription);
     }
 }

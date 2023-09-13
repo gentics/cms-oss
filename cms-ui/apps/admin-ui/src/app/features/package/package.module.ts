@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
-import { CreatePackageModalComponent, PackageDetailComponent, PackageMasterComponent } from './components';
+import { CreatePackageModalComponent, PackageCheckWrapperComponent, PackageDetailComponent, PackageMasterComponent } from './components';
 import { PACKAGE_ROUTES } from './package.routes';
 import { CanActivatePackageGuard } from './providers';
 
@@ -10,6 +10,7 @@ import { CanActivatePackageGuard } from './providers';
         CreatePackageModalComponent,
         PackageMasterComponent,
         PackageDetailComponent,
+        PackageCheckWrapperComponent,
     ],
     providers: [
         CanActivatePackageGuard,

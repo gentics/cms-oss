@@ -65,7 +65,6 @@ PackageCheckTrableLoaderOptions
     }
 
     public isCheckResultAvailable(options?: PackageCheckTrableLoaderOptions): Observable<boolean> {
-        console.log('checking existing results...');
         return this.api.devTools.getCheckResult(options.packageName)
             .pipe(
                 switchMap(() => of(true)),

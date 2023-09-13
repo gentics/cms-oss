@@ -12,11 +12,11 @@
         size="small"
         type="primary"
         [disabled]="disabled || loading"
-        (click)="reload()"
+        (click)="handleLoadButtonClick()"
     >
         <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
     </gtx-button>
-</div>
+</div> 
 
 
 <gtx-trable
@@ -47,6 +47,7 @@
     (select)="forwardSelect($event)"
     (deselect)="forwardDeselect($event)"
 ></gtx-trable>
+
 
 <ng-template #nameRenderer let-value="value" let-row="row">
     <div class="name-wrapper">

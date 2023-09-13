@@ -10,7 +10,6 @@ import {
     Input,
     OnChanges,
     OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import { PackageDependencyEntity } from '@gentics/cms-models';
 import { TableColumn } from '@gentics/ui-core';
@@ -40,26 +39,23 @@ export class PackageCheckTrableComponent
     public rawColumns: TableColumn<PackageDependencyEntityBO>[] = [
         {
             id: 'name',
-            label: 'shared.element',
+            label: 'common.name',
             fieldPath: 'name',
-            sortable: true,
         },
         {
             id: 'dependencyType',
             label: 'shared.type',
             fieldPath: 'dependencyType',
-            sortable: true,
         },
         {
             id: 'isInPackage',
             label: 'package.consistency_check_contained',
             fieldPath: 'isInPackage',
             align: 'center',
-            sortable: false,
         },
         {
             id: 'globalId',
-            label: 'id',
+            label: 'Id',
             fieldPath: 'globalId',
         },
     ];
@@ -72,13 +68,6 @@ export class PackageCheckTrableComponent
         super(changeDetector, i18n, loader);
     }
 
-    public override ngOnInit(): void {
-        super.ngOnInit();
-    }
-
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-    }
 
     protected override createAdditionalLoadOptions(): PackageCheckTrableLoaderOptions {
         return {
@@ -92,4 +81,5 @@ export class PackageCheckTrableComponent
         const columnsToTranslate = [...this.rawColumns];
         this.columns = this.translateColumns(columnsToTranslate);
     }
+
 }

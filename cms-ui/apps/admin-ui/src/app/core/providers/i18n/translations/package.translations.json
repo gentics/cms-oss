@@ -52,8 +52,8 @@
         "de": "Neues Paket erstellen"
     },
     "consistency_check_title" : {
-        "en": "Consistency check",
-        "de": "Konsistenzüberprüfung"
+        "en": "Consistency Check",
+        "de": "Konsistenz-Überprüfung"
     },
     "consistency_check_contained" : {
         "en": "Contained",
@@ -62,6 +62,14 @@
     "consistency_check_filter_label" : {
         "en": "Check all packages",
         "de": "Alle Pakete überpfüen"
+    },
+    "consistency_check_no_result" : {
+        "en": "No package check result is available yet.",
+        "de": "Es ist noch kein Ergebnis der Konsistenz-Überpfüfung verfügbar."
+    },
+    "consistency_check_no_result_button" : {
+        "en": "Trigger check",
+        "de": "Paket überprüfen"
     },
     "package_successfully_synced_to_filesystem": {
         "en": "Package {{name}} successfully synced to filesystem",

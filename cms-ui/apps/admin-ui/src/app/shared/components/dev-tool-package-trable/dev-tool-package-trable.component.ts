@@ -47,7 +47,7 @@ export class PackageCheckTrableComponent
         {
             id: 'isInPackage',
             label: 'package.consistency_check_contained',
-            fieldPath: 'isInPackage',
+            fieldPath: 'isContained',
             align: 'center',
         },
         {

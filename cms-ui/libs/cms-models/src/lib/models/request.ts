@@ -1516,9 +1516,10 @@ enum Filter {
 
 
 
-export interface PackageCheckOptions extends PackageSyncOptions{
+export interface PackageCheckOptions extends PackageSyncOptions {
+    wait?: number;
     checkAll?: boolean;
-    filter: PackageCheckFilter
+    filter?: PackageCheckFilter
 }
 
 

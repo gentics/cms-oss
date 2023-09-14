@@ -3,17 +3,18 @@ import {
     PackageCheckResult,
     PackageDependency,
     PackageDependencyEntity,
+    ReferenceDependency,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
-import { Observable, from, of } from 'rxjs';
-import { catchError, map, switchMap, toArray } from 'rxjs/operators';
+import { Observable, Subject, from, interval, of } from 'rxjs';
 import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
     PackageDependencyEntityBO,
 } from '@admin-ui/common';
+import { catchError, filter, map, mergeMap, retry, startWith, switchMap, take, takeUntil, tap, toArray } from 'rxjs/operators';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 
 export interface PackageCheckTrableLoaderOptions {
@@ -45,7 +46,7 @@ PackageCheckTrableLoaderOptions
     ): Observable<PackageDependencyEntityBO[]> {
         if (!parent) {
             if (options?.triggerNewCheck) {
-                return this.getNewCheckResult(options)
+                return this.triggerNewCheck(options)
             }
 
             return this.api.devTools.getCheckResult(options.packageName)
@@ -61,14 +62,14 @@ PackageCheckTrableLoaderOptions
                 (parent as PackageDependency).referenceDependencies,
             ).pipe(
                 map((referenceDependency) =>
-                    this.mapToBusinessObject(referenceDependency),
+                    this.mapToBusinessObject(referenceDependency, true),
                 ),
                 toArray(),
             );
         }
     }
 
-    public isCheckResultAvailable(options?: PackageCheckTrableLoaderOptions): Observable<boolean> {
+    public isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
         return this.api.devTools.getCheckResult(options.packageName)
             .pipe(
                 switchMap(() => of(true)),
@@ -79,15 +80,38 @@ PackageCheckTrableLoaderOptions
     }
 
 
-    public getNewCheckResult(options?: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
-        return this.api.devTools.check(options.packageName).pipe(
+    public triggerNewCheck(options?: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
+        return this.api.devTools.check(options.packageName, {
+            wait: 1, // todo: fix
+            checkAll: options.checkAll,
+        }).pipe(
             map((checkResult: PackageCheckResult) =>
                 checkResult.items.map((packageDependency) =>
                     this.mapToBusinessObject(packageDependency),
                 ),
             ),
+            catchError(()=> {
+                this.pollUntilResultIsAvailable(options)
+                return of(null)
+            }),
         )
     }
+
+    private pollUntilResultIsAvailable(options: PackageCheckTrableLoaderOptions) {
+        const pollStop = new Subject();
+        interval(1000).pipe(
+            startWith(0),
+            mergeMap(() => this.isCheckResultAvailable(options)),
+            take(10),
+            filter(isAvailable => isAvailable === true),
+            tap(() => {
+                pollStop.next();
+                pollStop.complete();
+            }),
+            takeUntil(pollStop),
+        ).subscribe()
+    }
+
 
     protected override mapToTrableRow(
         entity: PackageDependencyEntityBO,
@@ -112,14 +136,23 @@ PackageCheckTrableLoaderOptions
         return false;
     }
 
-    public mapToBusinessObject(
+    private mapToBusinessObject(
         packageDependency: PackageDependencyEntity,
+        addFlag?: boolean,
     ): PackageDependencyEntityBO {
-        return {
+        const packageEntity: PackageDependencyEntityBO = {
             ...packageDependency,
             [BO_ID]: packageDependency.globalId.toString(),
             [BO_DISPLAY_NAME]: packageDependency.name,
             [BO_PERMISSIONS]: [],
-        };
+        }
+
+        if (addFlag) {
+            const reference = packageDependency as ReferenceDependency;
+            packageEntity['isContained'] = (reference.isInPackage ?? false) || (reference.isInOtherPackage ?? false);
+        }
+
+
+        return packageEntity;
     }
 }

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -37,6 +38,8 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
@@ -51,11 +54,18 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.parttype.ImageURLPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
 import com.gentics.contentnode.object.parttype.VelocityPartType;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
+import com.gentics.mesh.etc.config.ImageManipulationMode;
+import com.gentics.mesh.parameter.client.ImageManipulationParametersImpl;
+import com.gentics.mesh.parameter.image.CropMode;
+import com.gentics.mesh.parameter.image.ResizeMode;
 import com.gentics.testutils.GenericTestUtils;
 
 /**
@@ -74,7 +84,7 @@ public class GenticsImageStorePublishTest {
 	public static DBTestContext context = new DBTestContext();
 
 	@ClassRule
-	public static MeshContext meshContext = new MeshContext();
+	public static MeshContext meshContext = new MeshContext().withImageManipulationMode(ImageManipulationMode.MANUAL);
 
 	private static Node node;
 
@@ -87,10 +97,10 @@ public class GenticsImageStorePublishTest {
 	@Parameters(name = "{index}: segments {0}, mesh {1}, project per node {2}, publish image variants {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<>();
-		for (boolean segments : Arrays.asList(true, false)) {
-			for (boolean mesh : Arrays.asList(true, false)) {
-				for (boolean projectPerNode : Arrays.asList(true, false)) {
-					for (boolean publishImageVariant : Arrays.asList(false, true)) {
+		for (boolean publishImageVariant : Arrays.asList(false, true)) {
+			for (boolean segments : Arrays.asList(true, false)) {
+				for (boolean mesh : Arrays.asList(true, false)) {
+					for (boolean projectPerNode : Arrays.asList(true, false)) {
 						if (!mesh && projectPerNode) {
 							continue;
 						}
@@ -267,6 +277,29 @@ public class GenticsImageStorePublishTest {
 			String imageUrl = getExpectedUrl(imageFile);
 
 			assertThat(gisUrl + "   " + imageUrl).as("URLs").isEqualTo(source);
+
+			if (mesh && publishImageVariants) {
+				Matcher m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl);
+				while (m.find()) {
+					ImageManipulationParametersImpl imageManipulationParameters = new ImageManipulationParametersImpl();
+					String url = m.group("imageurl");
+					imageManipulationParameters.setWidth(m.group("width"));
+					imageManipulationParameters.setHeight(m.group("height"));
+					String mode = m.group("mode");
+					imageManipulationParameters.setResizeMode(StringUtils.isEmpty(mode) ? null : ResizeMode.get(mode) );
+					String cropMode = m.group("cropmode");
+					imageManipulationParameters.setCropMode(StringUtils.isEmpty(cropMode) ? null : CropMode.get(cropMode));
+					String topleft_x = m.group("tlx");
+					String topleft_y = m.group("tly");
+					String cropwidth = m.group("cw");
+					String cropheight = m.group("ch");
+					if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
+						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
+					}
+					ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
+					variants.getVariants();
+				}
+			}
 
 			trx.success();
 		}

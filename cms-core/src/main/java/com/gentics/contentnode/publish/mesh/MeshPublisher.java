@@ -70,9 +70,9 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
+import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageVariant;
 import com.gentics.contentnode.image.MeshPublisherGisImageInitiator;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -209,11 +209,14 @@ import com.gentics.mesh.parameter.client.VersioningParametersImpl;
 import com.gentics.mesh.parameter.image.CropMode;
 import com.gentics.mesh.parameter.image.ResizeMode;
 import com.gentics.mesh.rest.client.MeshRequest;
+import com.gentics.mesh.rest.client.MeshResponse;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
+import com.gentics.mesh.rest.client.MeshWebrootResponse;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
+import com.gentics.mesh.util.UUIDUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
@@ -610,6 +613,9 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected RenderResult renderResult;
 
+	/**
+	 * Micronode publisher
+	 */
 	protected MeshMicronodePublisher micronodePublisher;
 
 	/**
@@ -621,6 +627,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Map containing the IDs of all objects, which were already checked and are known to be missing in Mesh (per nodeId and objectType)
 	 */
 	protected Map<Integer, Map<Integer, Set<Integer>>> missing = Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * Image data
+	 */
+	protected Map<String, ImageInformation> allImageData = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * Lambda that handles errors
@@ -1869,6 +1880,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void createImageVariants(WorkPhaseHandler phase) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
 		for (Node node : cr.getNodes()) {
 			if (!node.isPublishImageVariants()) {
 				continue;
@@ -1876,25 +1888,32 @@ public class MeshPublisher implements AutoCloseable {
 			int nodeId = node.getId();
 			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
 
-			HashMap<Pair<String, String>, ImageManipulationRequest> webrootKeyRequests = new HashMap<>();
+			HashMap<Pair<String, String>, ImageManipulationRequest> uuidKeyRequests = new HashMap<>();
 
 			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
 			for (ImageVariant variant : variants) {
 				String fieldKey = "binarycontent";
-				String webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && variant.information.getFilePath().startsWith("/" + node.getPublishDir())) 
-						? variant.information.getFilePath().split(node.getPublishDir())[1] : variant.information.getFilePath();
-				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
-						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) 
-						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+				String webroot = variant.information.getFilePath();
+//				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
+//						? webroot.split(node.getPublishDir())[1] : webroot;
+//				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
+//						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+//				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) 
+//						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
 
+				String uuid;
+				if (variant.information.getFileId() != 0) {
+					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
+				} else {
+					uuid = null;
+				}
 				String transform = variant.description.transform;
 
 				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = webrootKeyRequests.computeIfAbsent(Pair.of(webroot, fieldKey), key -> new ImageManipulationRequest());
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest());
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
 				imageVariantRequest.setWidth(m.group("width"));
@@ -1916,16 +1935,20 @@ public class MeshPublisher implements AutoCloseable {
 
 				imageManipulationRequest.setVariants(Collections.singletonList(imageVariantRequest));
 			}
-			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : webrootKeyRequests.entrySet()) {
-				client.upsertWebrootFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getValue()).getResponse()
-//					.doOnError(error -> error("Error during creation of image variants of %s (%s) / %s :\n %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error))
-//					.doOnSuccess(unused -> info("Successfully created variants for %s (%s) / %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue()))
-//					.blockingGet();
-				.subscribe(unused -> {
-					info("Successfully created variants for %s (%s) / %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue());
-				}, error -> {
-					error("Error during creation of image variants of %s (%s) / %s :\n %s", uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error);
-				});
+			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
+				MeshRequest<?> request;
+				if (UUIDUtil.isUUID(uuidKeyRequest.getKey().getKey())) {
+					request = client.upsertNodeBinaryFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue());
+				} else {
+					request = client.upsertWebrootFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getValue());
+				}
+				MeshResponse<?> response = request.getResponse()
+					.doOnError(error -> error("Error during creation of image variants of %s (%s) / %s :\n %s", 
+							uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error))
+					.doOnSuccess(creationResponse -> info("Variants creation for %s (%s) resulted in %d / %s", 
+							uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), creationResponse.getStatusCode(), uuidKeyRequest.getValue()))
+					.blockingGet();
+				debug("Image creation responded with: %d: %s", response.getStatusCode(), response.getBodyAsString());
 			}
 		}
 	}
@@ -2691,6 +2714,12 @@ public class MeshPublisher implements AutoCloseable {
 					task.postSave = new ArrayList<>();
 				}
 
+				if (setFocalPointInfo) {
+					String path = String.format("%s%s", file.getFullPublishPath(true, false), file.getFilename());
+					ImageInformation imageInformation = new ImageInformation(file.getId(), nodeId, path, file.getEDate().getIntTimestamp());
+					allImageData.put(node.getHostname() + path, imageInformation);
+				}
+
 				if (uploadBinary) {
 					// add dependencies
 					RenderType renderType = rTrx.get();
@@ -3250,7 +3279,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (!node.isPublishImageVariants()) {
 			return;
 		}
-		CNGenticsImageStore.processGISUrls(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey), node, source, null, null,
+		CNGenticsImageStore.processGISUrls(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey), node, source, null, allImageData,
 				CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
 	}
 

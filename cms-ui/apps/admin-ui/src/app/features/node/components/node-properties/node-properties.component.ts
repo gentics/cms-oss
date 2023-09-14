@@ -25,6 +25,7 @@ export interface NodePropertiesFormData {
     defaultFileFolderId: number;
     defaultImageFolderId: number;
     pubDirSegment: boolean;
+    publishImageVariants: boolean;
 }
 
 @Component({
@@ -165,6 +166,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
             meshPreviewUrl: new UntypedFormControl(null),
             insecurePreviewUrl: new UntypedFormControl(null),
             pubDirSegment: new UntypedFormControl(null),
+            publishImageVariants: new UntypedFormControl(null),
 
             // ToDo: GTXPE-845
             // Until we have the repository browser in the Admin UI, we need to disable the default upload folders.

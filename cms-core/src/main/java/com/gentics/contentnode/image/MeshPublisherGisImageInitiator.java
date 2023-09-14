@@ -1,5 +1,13 @@
 package com.gentics.contentnode.image;
 
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
+
+/**
+ * Initiator for {@link MeshPublisher}.
+ * 
+ * @author plyhun
+ *
+ */
 public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[]> {
 
 	private final int nodeId;
@@ -30,5 +38,10 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	@Override
 	public boolean initiateIfNotFound() {
 		return true;
+	}
+
+	@Override
+	public boolean useOnlyCachedImageData() {
+		return false;
 	}
 }

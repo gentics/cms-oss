@@ -675,10 +675,11 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @param host the image is looked up in the node identified by this hostname
 	 * @param fullImagePath full publish path of the image
 	 * @param allImageData map containing all image data (may be null)
+	 * @param useOnlyCachedData 
 	 * @return image information or null if not found
 	 * @throws TransactionException
 	 */
-	protected static ImageInformation getImageInformation(String host, String fullImagePath, Map<String, ImageInformation> allImageData) throws NodeException {
+	protected static ImageInformation getImageInformation(String host, String fullImagePath, Map<String, ImageInformation> allImageData, boolean useOnlyCachedData) throws NodeException {
 
 		if (fullImagePath == null) {
 			return null;
@@ -693,16 +694,18 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		if (!fullImagePath.startsWith("/")) {
 			fullImagePath = "/" + fullImagePath;
 		}
+		final ImageInformation[] image = new ImageInformation[1];
 
 		// when the map of all image data is given, we get the data from the map
 		if (allImageData != null) {
-			return (ImageInformation) allImageData.get(host + fullImagePath);
+			image[0] = (ImageInformation) allImageData.get(host + fullImagePath);
+			if (image[0] != null || useOnlyCachedData) {
+				return image[0];
+			}
 		}
 
 		// Warning: The code below does not correctly determine the publish path for images in multichannelling environments.
 		// If you don't specify a complete allImageData in the method call, you're doomed.
-		final ImageInformation[] image = new ImageInformation[1];
-
 		final String paramFullImagePath = fullImagePath;
 		DBUtils.executeStatement("select c.id id, cn.id nodeId, c.edate edate from contentfile c "
 				+ " left join folder cf on c.folder_id = cf.id "
@@ -1016,7 +1019,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 
 			String imageUrl = m.group("imageurl");
-			ImageInformation image = getImage(hostname, imageUrl, allImageData);
+			ImageInformation image = getImage(hostname, imageUrl, allImageData, initiator.useOnlyCachedImageData());
 			if (image != null || initiator.initiateIfNotFound()) {
 				int fileId = image != null ? image.getFileId() : 0;
 				int nodeId = image != null ? image.getNodeId() : pageNode.getId(); // TODO or make 0?
@@ -1040,14 +1043,15 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @param hostname hostname
 	 * @param imageUrl image URL
 	 * @param allImageData map containing all image data
+	 * @param useOnlyCachedData 
 	 * @return image information object or null if not found
 	 * @throws NodeException
 	 */
-	public static ImageInformation getImage(String hostname, String imageUrl, Map<String, ImageInformation> allImageData) throws NodeException {
-		ImageInformation image = getImageInformation(hostname, imageUrl, allImageData);
+	public static ImageInformation getImage(String hostname, String imageUrl, Map<String, ImageInformation> allImageData, boolean useOnlyCachedData) throws NodeException {
+		ImageInformation image = getImageInformation(hostname, imageUrl, allImageData, useOnlyCachedData);
 		while (image == null && !imageUrl.isEmpty()) {
 			imageUrl = imageUrl.substring(0, imageUrl.length() - 1);
-			image = getImageInformation(hostname, imageUrl, allImageData);
+			image = getImageInformation(hostname, imageUrl, allImageData, useOnlyCachedData);
 		}
 
 		return image;
@@ -1066,7 +1070,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 			@Override
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				if (rs.next()) {
+				while (rs.next()) {
 					ImageInformation info = new ImageInformation(rs.getInt("contentfile_id"), nodeId, rs.getString("webrootpath"), rs.getInt("edate"));
 					ImageDescription desc = new ImageDescription(rs.getInt("entity_id"), rs.getInt("entity_type"), rs.getString("transform"));
 					result.add(new ImageVariant(rs.getString("field_key"), desc, info));
@@ -1283,26 +1287,30 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		IntegerColumnRetriever retr = new IntegerColumnRetriever("imagestoretarget_id") {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, (Integer) fkey[0]);
-				stmt.setInt(2, (Integer) fkey[1]);
-				stmt.setInt(3, (Integer) fkey[2]);
+				stmt.setInt(1, (int) fkey[0]);
+				stmt.setInt(2, (int) fkey[1]);
+				stmt.setInt(3, (int) fkey[2]);
 				stmt.setString(4, (String) fkey[3]);
+				stmt.setString(5, (String) fkey[4]);
+				stmt.setString(6, (String) fkey[5]);
 			}
 		};
 		// We need to access data written in the publish transaction, so we declare this to be an update statement
-		DBUtils.executeStatement("SELECT imagestoretarget_id from meshpublish_imagestoretarget where node_id = ? and entity_id = ? and entity_type = ? and field_key = ?", retr, Transaction.UPDATE_STATEMENT);
+		DBUtils.executeStatement("SELECT imagestoretarget_id from meshpublish_imagestoretarget where node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and webrootpath = ? and transform = ? ", retr, Transaction.UPDATE_STATEMENT);
 		Set<Integer> existingTargetIds = new HashSet<>(retr.getValues());
 		Set<Integer> excessTargetIds = new HashSet<>(existingTargetIds);
 		excessTargetIds.removeAll(usedTargetIds);
 		if (excessTargetIds.size() > 0) {
-			DBUtils.executeMassStatement("DELETE from meshpublish_imagestoretarget WHERE node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and imagestoretarget_id in", "", 
+			DBUtils.executeMassStatement("DELETE from meshpublish_imagestoretarget WHERE node_id = ? and entity_id = ? and entity_type = ? and field_key = ? and webrootpath = ? and transform = ? and imagestoretarget_id in", "", 
 					excessTargetIds, 2, new SQLExecutor() {
 				@Override
 				public void prepareStatement(PreparedStatement stmt) throws SQLException {
-					stmt.setInt(1, (Integer) fkey[0]);
-					stmt.setInt(2, (Integer) fkey[1]);
-					stmt.setInt(3, (Integer) fkey[2]);
+					stmt.setInt(1, (int) fkey[0]);
+					stmt.setInt(2, (int) fkey[1]);
+					stmt.setInt(3, (int) fkey[2]);
 					stmt.setString(4, (String) fkey[3]);
+					stmt.setString(5, (String) fkey[4]);
+					stmt.setString(6, (String) fkey[5]);
 				}
 			}, Transaction.DELETE_STATEMENT);
 		}

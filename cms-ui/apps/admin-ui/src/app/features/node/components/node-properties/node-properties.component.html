@@ -86,6 +86,13 @@
                 ></gtx-checkbox>
             </div>
 
+            <div class="gtx-two-col-options">
+                <gtx-checkbox
+                    [label]="'node.pub_img_variants' | i18n"
+                    formControlName="publishImageVariants"
+                ></gtx-checkbox>
+            </div>
+
             <ng-container *ngIf="allowEditingDefaultUploadFolders">
                 <gtx-input
                     [label]="'node.default_file_folder' | i18n"

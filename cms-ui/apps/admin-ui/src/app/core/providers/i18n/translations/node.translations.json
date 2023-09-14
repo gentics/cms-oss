@@ -123,6 +123,10 @@
         "en": "Publish Directory Segments",
         "de": "Verzeichnissegmente veröffentlichen"
     },
+    "pub_img_variants": {
+        "en": "Publish Gentics GIS image variants",
+        "de": "Gentics GIS Bildvarianten publizieren"
+    },
     "pub_disable_updates": {
         "en": "Disable updates of content repository / filesystem",
         "de": "Updates von Content Repository / Dateisystem deaktivieren"

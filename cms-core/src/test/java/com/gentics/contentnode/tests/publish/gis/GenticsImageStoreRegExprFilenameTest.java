@@ -281,6 +281,6 @@ public class GenticsImageStoreRegExprFilenameTest {
 		String fullPath = expected.replaceAll("//+", "/");
 		Map<String, ImageInformation> allImageData = new HashMap<String, CNGenticsImageStore.ImageInformation>();
 		allImageData.put(fullPath, new ImageInformation(1, 1, expected, 1));
-		assertNotNull(hostname + imageUrl + " does not match expected path " + expected, CNGenticsImageStore.getImage(hostname, imageUrl, allImageData));
+		assertNotNull(hostname + imageUrl + " does not match expected path " + expected, CNGenticsImageStore.getImage(hostname, imageUrl, allImageData, true));
 	}
 }

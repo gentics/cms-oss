@@ -59,6 +59,10 @@
         "en": "Contained",
         "de": "Enthalten"
     },
+    "consistency_check_button" : {
+        "en": "Check package again",
+        "de": "Erneut überprüfen"
+    },
     "consistency_check_filter_label" : {
         "en": "Check all packages",
         "de": "Alle Pakete überpfüen"

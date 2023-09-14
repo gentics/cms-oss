@@ -14,10 +14,6 @@
 
     .table-action-button + .table-action-button {
         margin-left: 0.5rem;
-
-        &.reload-button {
-            margin-left: auto;
-        }
     }
 }
 
@@ -26,11 +22,11 @@
     margin-left: 0.5rem;
 }
 
-.reload-button {
-    margin-left: auto;
+.check-package-button {
+    margin-left: 1rem;
 }
 
 
-#no-result-text {
+.no-result-text {
     font-size: 18px;
 }

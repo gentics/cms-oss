@@ -1,20 +1,20 @@
 <div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
     <gtx-checkbox
         class="package-check-checkbox"
-        [(ngModel)]="isChecked"
+        [(ngModel)]="checkAll"
         [label]="'package.consistency_check_filter_label' | i18n"
     ></gtx-checkbox>
 
     <gtx-button
         *ngIf="!hideActions"
-        class="table-action-button reload-button"
+        class="table-action-button check-package-button"
         flat
         size="small"
         type="primary"
         [disabled]="disabled || loading"
         (click)="handleLoadButtonClick()"
     >
-        <icon left>refresh</icon> {{ 'common.reload_table_button' | i18n }}
+        <icon left>refresh</icon> {{ 'package.consistency_check_button' | i18n }}
     </gtx-button>
 </div> 
 

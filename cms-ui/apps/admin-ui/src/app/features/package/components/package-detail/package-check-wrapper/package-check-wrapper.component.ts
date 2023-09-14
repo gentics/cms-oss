@@ -58,12 +58,11 @@ export class PackageCheckWrapperComponent
 
     public handleLoadButtonClick(packageName: string): void {
         const subscription = this.packageCheckLoader
-            .getNewCheckResult({ packageName })
+            .triggerNewCheck({ packageName })
             .pipe(
                 tap(() => this.isCheckResultAvailable = true),
                 catchError(() => {
                     this.isCheckResultAvailable = false;
-                    // todo: poll the result
                     return of(false);
                 }),
             )

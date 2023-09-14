@@ -15,6 +15,7 @@ export interface PackageDependency extends BasePackageDependency {
 export interface ReferenceDependency extends BasePackageDependency {
     isInPackage: boolean;
     isInOtherPackage: boolean;
+    isContained: boolean;
 }
 
 export type PackageDependencyEntity = PackageDependency | ReferenceDependency

@@ -289,9 +289,9 @@ spec:
             steps {
                 script {
                     def imageHost = "gtx-docker-products.docker.apa-it.at"
-                    if (params.deployTesting) {
-                        imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
-                    }
+                    // if (params.deployTesting) {
+                    //     imageHost = "gtx-docker-releases-test-system.docker.apa-it.at"
+                    // }
                     def imageName = "${imageHost}/gentics/cms"
                     def imageNameWithTag = "${imageName}:${branchName}"
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://${imageHost}/v2" ]) {

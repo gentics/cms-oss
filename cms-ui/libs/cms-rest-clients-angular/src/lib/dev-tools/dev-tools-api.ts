@@ -162,11 +162,6 @@ export class DevToolsApi {
      */
     check(packageName: string, options?: PackageCheckOptions): Observable<PackageCheckResult> {
         const sanitizedPackageName = this.sanitizePackageNameString(packageName);
-        if(!options) {
-            return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/check`, {
-                wait: 5000,
-            });
-        }
         return this.apiBase.get(`devtools/packages/${sanitizedPackageName}/check`, options);
     }
 

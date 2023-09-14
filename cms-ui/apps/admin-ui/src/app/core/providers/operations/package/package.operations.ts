@@ -39,11 +39,12 @@ import {
     TemplateResponse,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { forkJoin, Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { forkJoin, interval, Observable, of, Subject, throwError } from 'rxjs';
+import { catchError, filter, map, mergeMap, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification';
 import { ExtendedEntityOperationsBase } from '../extended-entity-operations';
+import { PackageCheckTrableLoaderOptions } from '../../dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 import { PackageEntitiesManagerService } from './package-entities-manager.service';
 
 @Injectable()
@@ -467,6 +468,40 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
     getCheckResult(packageName: string): Observable<PackageCheckResult> {
         return this.api.devTools.getCheckResult(packageName);
     }
+
+
+    /**
+     * Poll the check result
+     */
+    pollCheckResultUntilResultIsAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
+        const pollStop = new Subject();
+
+        return interval(10000).pipe(
+            startWith(0),
+            mergeMap(() => this.isCheckResultAvailable(options)),
+            filter(isAvailable => isAvailable === true),
+            tap(() => {
+                pollStop.next();
+                pollStop.complete();
+            }),
+            takeUntil(pollStop),
+        );
+    }
+
+    /**
+     * Determines if a check result is available
+     */
+
+    isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
+        return this.api.devTools.getCheckResult(options.packageName)
+            .pipe(
+                switchMap(() => of(true)),
+                catchError(() => {
+                    return of(false);
+                }),
+            )
+    }
+
 
     // GENERIC ENTITIES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

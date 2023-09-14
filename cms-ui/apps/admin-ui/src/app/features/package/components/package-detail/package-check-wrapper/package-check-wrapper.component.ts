@@ -1,4 +1,4 @@
-import { PackageCheckTrableLoaderService } from '@admin-ui/core';
+import { PackageCheckTrableLoaderService, PackageOperations } from '@admin-ui/core';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -6,10 +6,8 @@ import {
     Input,
     OnChanges,
     OnDestroy,
-    OnInit,
 } from '@angular/core';
-import { Subscription, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'gtx-dev-tool-check-wrapper',
@@ -18,7 +16,7 @@ import { catchError, tap } from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PackageCheckWrapperComponent
-    implements OnInit, OnChanges, OnDestroy
+    implements OnChanges, OnDestroy
 {
     @Input()
     public packageName;
@@ -28,12 +26,11 @@ export class PackageCheckWrapperComponent
     private subscriptions: Subscription[] = [];
 
     constructor(
+        private packageOperations: PackageOperations,
         private packageCheckLoader: PackageCheckTrableLoaderService,
         private changeDetector: ChangeDetectorRef,
     ) {}
 
-    ngOnInit(): void {
-    }
 
     public ngOnChanges(): void {
         this.isPackageCheckResultAvailable(this.packageName);
@@ -46,7 +43,7 @@ export class PackageCheckWrapperComponent
     }
 
     protected isPackageCheckResultAvailable(packageName: string): void {
-        const sub = this.packageCheckLoader
+        const sub = this.packageOperations
             .isCheckResultAvailable({ packageName })
             .subscribe((isAvailable) => {
                 this.isCheckResultAvailable = isAvailable;
@@ -59,16 +56,10 @@ export class PackageCheckWrapperComponent
     public handleLoadButtonClick(packageName: string): void {
         const subscription = this.packageCheckLoader
             .triggerNewCheck({ packageName })
-            .pipe(
-                tap(() => this.isCheckResultAvailable = true),
-                catchError(() => {
-                    this.isCheckResultAvailable = false;
-                    return of(false);
-                }),
-            )
-            .subscribe(() =>
-                this.changeDetector.markForCheck(),
-            );
+            .subscribe({complete: () => {
+                this.isCheckResultAvailable = true;
+                this.changeDetector.markForCheck();
+            }});
 
         this.subscriptions.push(subscription);
     }

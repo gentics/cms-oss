@@ -19,7 +19,7 @@ import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loade
 export interface PackageCheckTrableLoaderOptions {
     packageName: string;
     checkAll?: boolean;
-    shouldReload?: boolean;
+    triggerNewCheck?: boolean;
 }
 
 @Injectable()
@@ -44,6 +44,10 @@ PackageCheckTrableLoaderOptions
         options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO[]> {
         if (!parent) {
+            if (options?.triggerNewCheck) {
+                return this.getNewCheckResult(options)
+            }
+
             return this.api.devTools.getCheckResult(options.packageName)
                 .pipe(
                     map((checkResult: PackageCheckResult) =>

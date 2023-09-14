@@ -29,12 +29,9 @@ export class PackageCheckTrableComponent
     @Input()
     public packageName: string;
 
-    @Input()
-    public checkAll: boolean;
+    public checkAll = false;
 
-    public isChecked: boolean;
-
-    private shouldReload = false;
+    private triggerNewCheck = false;
 
     public rawColumns: TableColumn<PackageDependencyEntityBO>[] = [
         {
@@ -73,13 +70,18 @@ export class PackageCheckTrableComponent
         return {
             packageName: this.packageName,
             checkAll: this.checkAll,
-            shouldReload: this.shouldReload,
+            triggerNewCheck: this.triggerNewCheck,
         };
     }
 
     protected rebuildColumns(): void {
         const columnsToTranslate = [...this.rawColumns];
         this.columns = this.translateColumns(columnsToTranslate);
+    }
+
+    public handleLoadButtonClick(): void {
+        this.triggerNewCheck = true;
+        this.loadRootElements();
     }
 
 }

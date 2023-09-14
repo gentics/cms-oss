@@ -7,7 +7,6 @@ import {
     OnChanges,
     OnDestroy,
     OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import { Subscription, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -36,7 +35,7 @@ export class PackageCheckWrapperComponent
     ngOnInit(): void {
     }
 
-    public ngOnChanges(changes: SimpleChanges): void {
+    public ngOnChanges(): void {
         this.isPackageCheckResultAvailable(this.packageName);
     }
 
@@ -64,6 +63,7 @@ export class PackageCheckWrapperComponent
                 tap(() => this.isCheckResultAvailable = true),
                 catchError(() => {
                     this.isCheckResultAvailable = false;
+                    // todo: poll the result
                     return of(false);
                 }),
             )
@@ -73,4 +73,5 @@ export class PackageCheckWrapperComponent
 
         this.subscriptions.push(subscription);
     }
+
 }

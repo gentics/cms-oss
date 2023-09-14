@@ -1,7 +1,6 @@
 <gtx-dev-tool-package-trable
     *ngIf="isCheckResultAvailable else noResultAvailable" 
     [packageName]="packageName"
-    [checkAll]="true"
 >
 </gtx-dev-tool-package-trable>
 
@@ -11,7 +10,7 @@
 
         <gtx-button
             *ngIf="!hideActions"
-            id="trigger-check-btn"
+            class="trigger-check-btn"
             flat
             size="small"
             type="primary"

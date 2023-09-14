@@ -14,8 +14,9 @@ import {
     BO_PERMISSIONS,
     PackageDependencyEntityBO,
 } from '@admin-ui/common';
-import { catchError, filter, map, mergeMap, retry, startWith, switchMap, take, takeUntil, tap, toArray } from 'rxjs/operators';
+import { catchError, first, map, switchMap, toArray } from 'rxjs/operators';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
+import { PackageOperations } from '../operations';
 
 export interface PackageCheckTrableLoaderOptions {
     packageName: string;
@@ -29,7 +30,9 @@ PackageDependencyEntity,
 PackageDependencyEntityBO,
 PackageCheckTrableLoaderOptions
 > {
-    constructor(protected api: GcmsApi) {
+    constructor(
+        protected api: GcmsApi,
+        private packageOperations: PackageOperations) {
         super();
     }
 
@@ -37,16 +40,16 @@ PackageCheckTrableLoaderOptions
         entity: PackageDependencyEntity,
         options?: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO> {
-        return null;
+        return of(this.mapToBusinessObject(entity))
     }
 
     protected loadEntityChildren(
         parent: PackageDependencyEntityBO | null,
-        options?: PackageCheckTrableLoaderOptions,
+        options: PackageCheckTrableLoaderOptions,
     ): Observable<PackageDependencyEntityBO[]> {
         if (!parent) {
             if (options?.triggerNewCheck) {
-                return this.triggerNewCheck(options)
+                return this.triggerNewCheck(options);
             }
 
             return this.api.devTools.getCheckResult(options.packageName)
@@ -69,47 +72,24 @@ PackageCheckTrableLoaderOptions
         }
     }
 
-    public isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
-        return this.api.devTools.getCheckResult(options.packageName)
-            .pipe(
-                switchMap(() => of(true)),
-                catchError(() => {
-                    return of(false);
-                }),
-            )
-    }
-
-
-    public triggerNewCheck(options?: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
+    public triggerNewCheck(options: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
         return this.api.devTools.check(options.packageName, {
-            wait: 1, // todo: fix
-            checkAll: options.checkAll,
+            checkAll: options.checkAll ?? false,
         }).pipe(
+            switchMap((apiResponse)=> {
+                if (apiResponse.items) {
+                    return of(apiResponse);
+                }
+                return this.packageOperations.pollCheckResultUntilResultIsAvailable(options).pipe(
+                    switchMap(() => this.api.devTools.getCheckResult(options.packageName)),
+                )
+            }),
             map((checkResult: PackageCheckResult) =>
                 checkResult.items.map((packageDependency) =>
                     this.mapToBusinessObject(packageDependency),
                 ),
             ),
-            catchError(()=> {
-                this.pollUntilResultIsAvailable(options)
-                return of(null)
-            }),
         )
-    }
-
-    private pollUntilResultIsAvailable(options: PackageCheckTrableLoaderOptions) {
-        const pollStop = new Subject();
-        interval(1000).pipe(
-            startWith(0),
-            mergeMap(() => this.isCheckResultAvailable(options)),
-            take(10),
-            filter(isAvailable => isAvailable === true),
-            tap(() => {
-                pollStop.next();
-                pollStop.complete();
-            }),
-            takeUntil(pollStop),
-        ).subscribe()
     }
 
 

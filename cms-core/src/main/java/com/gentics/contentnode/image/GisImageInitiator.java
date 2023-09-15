@@ -17,20 +17,6 @@ public interface GisImageInitiator<T> {
 	public T getInitiatorForeignKey();
 
 	/**
-	 * Should the GIS proceed with the variant initialization, if the existing image is not found?
-	 * 
-	 * @return
-	 */
-	public boolean initiateIfNotFound();
-
-	/**
-	 * Should the GIS not attempting loading image data from DB, if no cached data found?
-	 * 
-	 * @return
-	 */
-	public boolean useOnlyCachedImageData();
-
-	/**
 	 * Set the image variant data
 	 * 
 	 * @param webrootPath image path

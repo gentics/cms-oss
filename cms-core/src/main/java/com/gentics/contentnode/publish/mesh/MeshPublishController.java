@@ -364,6 +364,20 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	}
 
 	/**
+	 * Collect image data for variants creation, if applicable.
+	 * 
+	 * @throws NodeException
+	 */
+	public void collectImageData() throws NodeException {
+		state = State.collectImageData;
+		try (WorkPhaseHandler phase = new WorkPhaseHandler(foldersAndFilesPhase)) {
+			for (MeshPublisher mp : publishers) {
+				mp.collectImageData(phase);
+			}
+		}
+	}
+
+	/**
 	 * Publish folders and files
 	 * @throws NodeException
 	 */
@@ -591,6 +605,6 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * States of the publish controller
 	 */
 	public static enum State {
-		init, checkSchemas, waitForMigrations, publishFoldersAndFiles, publishPages, createImageVariants, checkOfflineFiles, handlePostponedTasks, removeOfflineObjects, waitForRenderers, waitForWriteTasks, done
+		init, checkSchemas, waitForMigrations, collectImageData, publishFoldersAndFiles, publishPages, createImageVariants, checkOfflineFiles, handlePostponedTasks, removeOfflineObjects, waitForRenderers, waitForWriteTasks, done
 	}
 }

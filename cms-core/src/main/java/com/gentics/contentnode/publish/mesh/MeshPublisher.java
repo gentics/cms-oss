@@ -70,6 +70,7 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
@@ -109,6 +110,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.PublishQueue.NodeObjectWithAttributes;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
+import com.gentics.contentnode.publish.Publisher;
 import com.gentics.contentnode.publish.SimplePublishInfo;
 import com.gentics.contentnode.publish.TagmapEntryWrapper;
 import com.gentics.contentnode.publish.WorkPhaseHandler;
@@ -213,7 +215,6 @@ import com.gentics.mesh.rest.client.MeshResponse;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
-import com.gentics.mesh.rest.client.MeshWebrootResponse;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
 import com.gentics.mesh.util.UUIDUtil;
@@ -1874,6 +1875,17 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Collect all current image variants.
+	 * 
+	 * @param phase
+	 * @throws NodeException 
+	 */
+	public void collectImageData(WorkPhaseHandler phase) throws NodeException {
+		Publisher.writeFiles(publishInfo, cr.getNodes().stream().filter(Node::isPublishImageVariants).collect(Collectors.toList()), 
+				allImageData, renderResult, false, Optional.empty(), Optional.empty());
+	}
+
+	/**
 	 * Create variants for image binaries, collected during the publish phase.
 	 * 
 	 * @param phase
@@ -1894,12 +1906,12 @@ public class MeshPublisher implements AutoCloseable {
 			for (ImageVariant variant : variants) {
 				String fieldKey = "binarycontent";
 				String webroot = variant.information.getFilePath();
-//				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
-//						? webroot.split(node.getPublishDir())[1] : webroot;
-//				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
-//						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
-//				webroot = webroot.startsWith("/" + node.getFolder().getPublishDir()) 
-//						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
+						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
+						? webroot.split(node.getPublishDir())[1] : webroot;
+				webroot = (webroot.startsWith("/" + node.getFolder().getPublishDir()))
+						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
 
 				String uuid;
 				if (variant.information.getFileId() != 0) {
@@ -2714,12 +2726,6 @@ public class MeshPublisher implements AutoCloseable {
 					task.postSave = new ArrayList<>();
 				}
 
-				if (setFocalPointInfo) {
-					String path = String.format("%s%s", file.getFullPublishPath(true, false), file.getFilename());
-					ImageInformation imageInformation = new ImageInformation(file.getId(), nodeId, path, file.getEDate().getIntTimestamp());
-					allImageData.put(node.getHostname() + path, imageInformation);
-				}
-
 				if (uploadBinary) {
 					// add dependencies
 					RenderType renderType = rTrx.get();
@@ -3036,16 +3042,16 @@ public class MeshPublisher implements AutoCloseable {
 		RenderType renderType = t.getRenderType();
 
 		try (ContentLanguageTrx clTrx = new ContentLanguageTrx(language)) {
-		for (TagmapEntryRenderer entry : tagmapEntries) {
-			if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
-				renderType.preserveDependencies(entry.getMapname());
-			} else {
-				// set the rendered property
-				renderType.setRenderedProperty(entry.getMapname());
-				RenderResult renderResult = createRenderResult ? new RenderResult() : t.getRenderResult();
-				renderedEntries.put(entry, entry.getRenderedTransformedValue(renderType, renderResult, LINKTRANSFORMER));
+			for (TagmapEntryRenderer entry : tagmapEntries) {
+				if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+					renderType.preserveDependencies(entry.getMapname());
+				} else {
+					// set the rendered property
+					renderType.setRenderedProperty(entry.getMapname());
+					RenderResult renderResult = createRenderResult ? new RenderResult() : t.getRenderResult();
+					renderedEntries.put(entry, entry.getRenderedTransformedValue(renderType, renderResult, LINKTRANSFORMER));
+				}
 			}
-		}
 		}
 
 		return renderedEntries;

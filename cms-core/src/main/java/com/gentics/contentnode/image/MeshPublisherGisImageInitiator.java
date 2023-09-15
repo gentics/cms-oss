@@ -34,14 +34,4 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	public Object[] getInitiatorForeignKey() {
 		return new Object[] {nodeId, entityId, entityType, fieldKey, webrootpath, transform};
 	}
-
-	@Override
-	public boolean initiateIfNotFound() {
-		return true;
-	}
-
-	@Override
-	public boolean useOnlyCachedImageData() {
-		return false;
-	}
 }

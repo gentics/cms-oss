@@ -21,14 +21,4 @@ public class FilePublisherGisImageInitiator implements GisImageInitiator<Integer
 	public Integer getInitiatorForeignKey() {
 		return publishId;
 	}
-
-	@Override
-	public boolean initiateIfNotFound() {
-		return false;
-	}
-
-	@Override
-	public boolean useOnlyCachedImageData() {
-		return true;
-	}
 }

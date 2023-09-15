@@ -675,11 +675,10 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @param host the image is looked up in the node identified by this hostname
 	 * @param fullImagePath full publish path of the image
 	 * @param allImageData map containing all image data (may be null)
-	 * @param useOnlyCachedData 
 	 * @return image information or null if not found
 	 * @throws TransactionException
 	 */
-	protected static ImageInformation getImageInformation(String host, String fullImagePath, Map<String, ImageInformation> allImageData, boolean useOnlyCachedData) throws NodeException {
+	protected static ImageInformation getImageInformation(String host, String fullImagePath, Map<String, ImageInformation> allImageData) throws NodeException {
 
 		if (fullImagePath == null) {
 			return null;
@@ -694,18 +693,16 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		if (!fullImagePath.startsWith("/")) {
 			fullImagePath = "/" + fullImagePath;
 		}
-		final ImageInformation[] image = new ImageInformation[1];
 
 		// when the map of all image data is given, we get the data from the map
 		if (allImageData != null) {
-			image[0] = (ImageInformation) allImageData.get(host + fullImagePath);
-			if (image[0] != null || useOnlyCachedData) {
-				return image[0];
-			}
+			return (ImageInformation) allImageData.get(host + fullImagePath);
 		}
 
 		// Warning: The code below does not correctly determine the publish path for images in multichannelling environments.
 		// If you don't specify a complete allImageData in the method call, you're doomed.
+		final ImageInformation[] image = new ImageInformation[1];
+
 		final String paramFullImagePath = fullImagePath;
 		DBUtils.executeStatement("select c.id id, cn.id nodeId, c.edate edate from contentfile c "
 				+ " left join folder cf on c.folder_id = cf.id "
@@ -1019,10 +1016,10 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 
 			String imageUrl = m.group("imageurl");
-			ImageInformation image = getImage(hostname, imageUrl, allImageData, initiator.useOnlyCachedImageData());
-			if (image != null || initiator.initiateIfNotFound()) {
-				int fileId = image != null ? image.getFileId() : 0;
-				int nodeId = image != null ? image.getNodeId() : pageNode.getId(); // TODO or make 0?
+			ImageInformation image = getImage(hostname, imageUrl, allImageData);
+			if (image != null) {
+				int fileId = image.getFileId();
+				int nodeId = image.getNodeId();
 				String transform = m.group("transform");
 				ImageDescription idesc = new ImageDescription(0, fileId, transform);
 				FileDescription fdesc = new FileDescription(idesc, nodeId);
@@ -1047,11 +1044,11 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	 * @return image information object or null if not found
 	 * @throws NodeException
 	 */
-	public static ImageInformation getImage(String hostname, String imageUrl, Map<String, ImageInformation> allImageData, boolean useOnlyCachedData) throws NodeException {
-		ImageInformation image = getImageInformation(hostname, imageUrl, allImageData, useOnlyCachedData);
+	public static ImageInformation getImage(String hostname, String imageUrl, Map<String, ImageInformation> allImageData) throws NodeException {
+		ImageInformation image = getImageInformation(hostname, imageUrl, allImageData);
 		while (image == null && !imageUrl.isEmpty()) {
 			imageUrl = imageUrl.substring(0, imageUrl.length() - 1);
-			image = getImageInformation(hostname, imageUrl, allImageData, useOnlyCachedData);
+			image = getImageInformation(hostname, imageUrl, allImageData);
 		}
 
 		return image;
@@ -1061,8 +1058,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		List<ImageVariant> result = new ArrayList<>();
 		DBUtils.executeStatement("SELECT distinct mit.entity_id entity_id, mit.entity_type entity_type, mit.field_key field_key, isi.contentfile_id contentfile_id, mit.transform transform, mit.webrootpath webrootpath, isi.edate edate "
 				+ " from meshpublish_imagestoretarget mit "
-				+ " left join imagestoretarget ist on mit.imagestoretarget_id = ist.id "
-				+ " left join imagestoreimage isi on ist.imagestoreimage_id = isi.id "
+				+ " inner join imagestoretarget ist on mit.imagestoretarget_id = ist.id "
+				+ " inner join imagestoreimage isi on ist.imagestoreimage_id = isi.id "
 				+ " where mit.node_id = ? ", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
@@ -1076,7 +1073,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 					result.add(new ImageVariant(rs.getString("field_key"), desc, info));
 				}
 			}
-		}, Transaction.UPDATE_STATEMENT);
+		});
 		return result;
 	}
 

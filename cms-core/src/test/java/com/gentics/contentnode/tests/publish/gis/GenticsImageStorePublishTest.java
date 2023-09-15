@@ -217,6 +217,7 @@ public class GenticsImageStorePublishTest {
 		operate(() -> clear(node));
 
 		node = update(node, n -> {
+			n.setPublishFilesystem(!mesh);
 			n.setPubDirSegment(segments);
 			n.setPublishContentmap(mesh);
 			n.setContentrepositoryId(mesh ? crId : 0);
@@ -263,9 +264,9 @@ public class GenticsImageStorePublishTest {
 		}
 
 		try (Trx trx = new Trx()) {
-			File imageFile = assertPublishFS(context.getPubDir(), image, node, true);
-			assertPublishFS(context.getPubDir(), page, node, true);
-			File gisFile = assertPublishGISFS(context.getPubDir(), image, node, "50", "auto", "smart", true);
+			File imageFile = assertPublishFS(context.getPubDir(), image, node, !mesh);
+			assertPublishFS(context.getPubDir(), page, node, !mesh);
+			File gisFile = assertPublishGISFS(context.getPubDir(), image, node, "50", "auto", "smart", !mesh);
 
 			String source = DBUtils.select("SELECT source FROM publish WHERE page_id = ? AND node_id = ? AND active = ?", ps -> {
 				ps.setInt(1, page.getId());
@@ -282,7 +283,6 @@ public class GenticsImageStorePublishTest {
 				Matcher m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl);
 				while (m.find()) {
 					ImageManipulationParametersImpl imageManipulationParameters = new ImageManipulationParametersImpl();
-					String url = m.group("imageurl");
 					imageManipulationParameters.setWidth(m.group("width"));
 					imageManipulationParameters.setHeight(m.group("height"));
 					String mode = m.group("mode");
@@ -297,7 +297,7 @@ public class GenticsImageStorePublishTest {
 						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
 					}
 					ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
-					variants.getVariants();
+					assertThat(variants.getVariants().size()).isEqualTo(1);
 				}
 			}
 

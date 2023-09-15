@@ -571,10 +571,7 @@ public class FolderFactory extends AbstractFactory {
 					f = f.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(f,
-						new String[] { ObjectTransformer.getString(getNode().getId(), ""),
-								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
-						Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(TransactionalTriggerEvent.deleteIntoWastebin(getNode(), f));
 			}
 
 			// if the folder is a localized copy, it was hiding other folders (which are now "created")

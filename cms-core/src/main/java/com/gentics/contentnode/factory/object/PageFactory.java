@@ -531,10 +531,7 @@ public class PageFactory extends AbstractFactory {
 					p = p.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(p,
-						new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
-								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
-						Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(TransactionalTriggerEvent.deleteIntoWastebin(getFolder().getNode(), p));
 			}
 
 			// if the page is a localized copy, it was hiding other pages (which are now "created")

@@ -22,6 +22,7 @@ export interface PackageCheckTrableLoaderOptions {
     packageName: string;
     checkAll?: boolean;
     triggerNewCheck?: boolean;
+    wait?: number;
 }
 
 @Injectable()
@@ -59,6 +60,9 @@ PackageCheckTrableLoaderOptions
                             this.mapToBusinessObject(packageDependency),
                         ),
                     ),
+                    map(dependencies =>  dependencies.sort((a,b) => {
+                        return a.dependencyType > b.dependencyType ? 1  : -1;
+                    })),
                 );
         } else if ((parent as PackageDependency).referenceDependencies) {
             return from(
@@ -74,7 +78,8 @@ PackageCheckTrableLoaderOptions
 
     public triggerNewCheck(options: PackageCheckTrableLoaderOptions): Observable<PackageDependencyEntityBO[]> {
         return this.api.devTools.check(options.packageName, {
-            checkAll: options.checkAll ?? false,
+            checkAll: options.checkAll ?? true,
+            wait: options.wait ?? 5_000,
         }).pipe(
             switchMap((apiResponse)=> {
                 if (apiResponse.items) {
@@ -89,6 +94,9 @@ PackageCheckTrableLoaderOptions
                     this.mapToBusinessObject(packageDependency),
                 ),
             ),
+            map(dependencies =>  dependencies.sort((a,b) => {
+                return a.dependencyType > b.dependencyType ? 1  : -1;
+            })),
         )
     }
 

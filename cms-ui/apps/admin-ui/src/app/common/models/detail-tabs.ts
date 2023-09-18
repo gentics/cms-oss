@@ -12,6 +12,7 @@ export enum ContentRepositoryDetailTabs {
     TAGMAP = 'tagmap',
     STURCTURE_CHECK_RESULT = 'structure-check-result',
     DATA_CHECK_RESULT = 'data-check-result',
+    MANAGEMENT = 'management',
 }
 
 export enum ContentRepositoryFragmentDetailTabs {
@@ -98,4 +99,14 @@ export enum UserDetailTabs {
     PEROMSSIONS_CONTENT = 'permissions-content',
     PERMISSIONS_ADMIN = 'permissions-admin',
     USER_GROUPS = 'user-groups',
+}
+
+export enum MeshMangementTabs {
+    OVERVIEW = 'overview',
+    USERS = 'users',
+    GROUPS = 'groups',
+    ROLES = 'roles',
+    PROJECTS = 'projects',
+    SCHEMAS = 'schemas',
+    MICROSCHEMAS = 'microschemas',
 }

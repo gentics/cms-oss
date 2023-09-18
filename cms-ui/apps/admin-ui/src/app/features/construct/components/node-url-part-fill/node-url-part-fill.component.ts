@@ -2,7 +2,7 @@ import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Node, NodeTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 import { Observable } from 'rxjs';
 
 @Component({

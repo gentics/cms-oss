@@ -15,14 +15,14 @@ describe('DataSourceApi', () => {
         const options = { pageSize: -1 };
         contetrepositoryApi.getDataSources(options);
 
-        expect(apiBase.get).toHaveBeenCalledWith('dataSource', options);
+        expect(apiBase.get).toHaveBeenCalledWith('datasource', options);
     });
 
     it('getContentRepositoryFragment sends a GET request to "dataSource/id"', () => {
         const id = 'globalId';
         contetrepositoryApi.getDataSource(id);
 
-        expect(apiBase.get).toHaveBeenCalledWith(`dataSource/${id}`);
+        expect(apiBase.get).toHaveBeenCalledWith(`datasource/${id}`);
     });
 
 });

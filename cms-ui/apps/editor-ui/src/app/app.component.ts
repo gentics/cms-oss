@@ -11,7 +11,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     Observable,

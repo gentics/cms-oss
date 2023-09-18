@@ -214,5 +214,9 @@
     "result_entries_checked": {
         "en": "Tagmap entries of {{name}} checked",
         "de": "Tagmap-Einträge von {{name}} üperprüft"
+    },
+    "management": {
+        "en": "Management",
+        "de": "Verwaltung"
     }
 }

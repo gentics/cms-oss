@@ -1,7 +1,6 @@
 import { DataSourceEntryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { DataSourceEntry, DataSourceEntryCreateRequest, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -25,7 +24,7 @@ export class CreateDataSourceEntryModalComponent extends BaseModal<DataSourceEnt
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.form = new UntypedFormControl({});
     }
 
     /**

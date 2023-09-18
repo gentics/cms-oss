@@ -1,5 +1,5 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, tick, flush } from '@angular/core/testing';
+import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import {
@@ -24,11 +24,6 @@ import {
     Tags,
     Template,
 } from '@gentics/cms-models';
-import { GenticsUICoreModule } from '@gentics/ui-core';
-import { cloneDeep } from 'lodash-es';
-import { BehaviorSubject, of as observableOf, of } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import {
     getExampleFileData,
     getExampleFolderData,
@@ -36,7 +31,12 @@ import {
     getExampleLanguageData,
     getExampleNodeData,
     getExamplePageData,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
+import { GenticsUICoreModule } from '@gentics/ui-core';
+import { cloneDeep } from 'lodash-es';
+import { BehaviorSubject, of as observableOf, of } from 'rxjs';
+import { componentTest, configureComponentTest } from '../../../../testing';
+import { mockPipes } from '../../../../testing/mock-pipe';
 import { getExampleEditableTag, mockEditableObjectTag } from '../../../../testing/test-tag-editor-data.mock';
 import { ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { Api } from '../../../core/providers/api/api.service';

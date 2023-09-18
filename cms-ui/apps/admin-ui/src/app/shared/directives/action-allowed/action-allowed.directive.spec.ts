@@ -5,7 +5,7 @@ import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { AccessControlledType, GcmsPermission, GcmsUiLanguage } from '@gentics/cms-models';
 import { ButtonComponent, GenticsUICoreModule, InputComponent } from '@gentics/ui-core';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 import { BehaviorSubject, Observable, combineLatest, of as observableOf } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
 import { MockI18nServiceWithSpies } from '../../../core/providers/i18n/i18n.service.mock';

@@ -1,0 +1,7 @@
+{
+  "name": "@gentics/mesh-models",
+  "version": "6.1.0-SNAPSHOT",
+  "publishConfig": {
+    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+  }
+}

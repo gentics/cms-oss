@@ -1,4 +1,4 @@
-import {getExampleUserData} from '../../../../testing/test-data.mock';
+import {getExampleUserData} from '@gentics/cms-models/testing/test-data.mock';
 import {UserFullNamePipe} from './user-full-name.pipe';
 
 const MOCK_USER = getExampleUserData();

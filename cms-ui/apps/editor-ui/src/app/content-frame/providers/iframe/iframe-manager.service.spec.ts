@@ -14,8 +14,6 @@ import { ManagedIFrameCollection } from './managed-iframe-collection.class';
 import { getTestPageUrl, MockIFrame, MockManagedIFrame } from './testing-helpers';
 import createSpy = jasmine.createSpy;
 
-let currentItem: any;
-
 describe('IFrameManager', () => {
 
     let iframeManager: IFrameManager;
@@ -26,7 +24,7 @@ describe('IFrameManager', () => {
     let mockMasterIFrame: MockIFrame;
     let mockMasterFrame: MockManagedIFrame;
     let mockHostComponent: MockHostComponent;
-    let mockEditorState: EditorState = {
+    const mockEditorState: EditorState = {
         editMode: 'preview',
         itemType: 'page',
         contentModified: false,
@@ -78,8 +76,8 @@ describe('IFrameManager', () => {
         });
 
         it('initialize() should create a master frame with the given iframe element', () => {
-            let spy = spyOn(iframeCollectionService, 'create').and.callThrough();
-            let mockIFrame = {};
+            const spy = spyOn(iframeCollectionService, 'create').and.callThrough();
+            const mockIFrame = {};
             iframeManager.initialize(<any> mockIFrame, <any> new MockHostComponent());
 
             expect(spy).toHaveBeenCalledWith(mockIFrame);
@@ -100,7 +98,7 @@ describe('IFrameManager', () => {
         });
 
         it('should invoke hostComponent.setContentModified(false) when closing', waitForAsync(() => {
-            let spy = createSpy('closed');
+            const spy = createSpy('closed');
             iframeManager.onMasterFrameClosed(spy);
             iframeManager.initiateUserClose();
             mockMasterFrame.unload$.next({ iframe: mockMasterIFrame });
@@ -109,7 +107,7 @@ describe('IFrameManager', () => {
         }));
 
         it('should invoke masterFrameClosedCallback when closing', fakeAsync(() => {
-            let spy = createSpy('closed');
+            const spy = createSpy('closed');
             iframeManager.onMasterFrameClosed(spy);
             iframeManager.initiateUserClose();
             mockMasterFrame.unload$.next({ iframe: mockMasterIFrame });
@@ -118,7 +116,7 @@ describe('IFrameManager', () => {
         }));
 
         it('should not invoke masterFrameClosedCallback when unloading without closing', fakeAsync(() => {
-            let spy = createSpy('closed');
+            const spy = createSpy('closed');
             iframeManager.onMasterFrameClosed(spy);
             mockMasterFrame.unload$.next({ iframe: mockMasterIFrame });
             tick();
@@ -160,7 +158,7 @@ describe('IFrameManager', () => {
         });
 
         it('should call setUrl() on the master frame', fakeAsync(() => {
-            let spy = spyOn(iframeManager.collection.masterFrame, 'setUrl').and.callThrough();
+            const spy = spyOn(iframeManager.collection.masterFrame, 'setUrl').and.callThrough();
             setMockState();
             tick();
             expect(spy).toHaveBeenCalled();
@@ -182,11 +180,11 @@ describe('IFrameManager', () => {
         });
 
         it('should wrap any child iframes in a ManagedIFrame on DOMContentLoaded', () => {
-            let qsaSpy = spyOn(mockMasterIFrame.contentWindow.document, 'querySelectorAll')
+            const qsaSpy: any = spyOn(mockMasterIFrame.contentWindow.document, 'querySelectorAll')
                 .and.callFake(((selector: string) => {
                     return (selector === 'iframe') ? [childIFrame1, childIFrame2] : [];
                 }) as any);
-            let collectionAddSpy = spyOn(iframeManager.collection, 'add').and.callThrough();
+            const collectionAddSpy = spyOn(iframeManager.collection, 'add').and.callThrough();
 
             mockMasterFrame.domContentLoaded$.next({ iframe: mockMasterIFrame });
 
@@ -197,9 +195,9 @@ describe('IFrameManager', () => {
         });
 
         it('should wrap any child iframes added after DOMContentLoaded in a ManagedIFrame', (done: DoneFn) => {
-            let mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
+            const mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
             let calls = 0;
-            let addSpy = spyOn(iframeManager.collection, 'add').and.callFake((iframe: any) => {
+            const addSpy = spyOn(iframeManager.collection, 'add').and.callFake((iframe: any) => {
                 calls++;
 
                 if (calls === 1) {
@@ -225,7 +223,7 @@ describe('IFrameManager', () => {
         it('should ignore iframes that have data-gcms-ui-skip-injection set', (done: DoneFn) => {
             childIFrame1.dataset['gcmsUiSkipInjection'] = 'true';
             const mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
-            let addSpy = spyOn(iframeManager.collection, 'add').and.callFake((iframe: any) => {
+            const addSpy = spyOn(iframeManager.collection, 'add').and.callFake((iframe: any) => {
                 expect(addSpy.calls.count()).toBe(1);
                 expect(addSpy).toHaveBeenCalledWith(childIFrame2);
                 done();
@@ -237,10 +235,10 @@ describe('IFrameManager', () => {
         });
 
         it('should remove iframes from the ManagedIFrameCollection when directly removed from DOM', (done: DoneFn) => {
-            let mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
+            const mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
             mockDocumentElement.appendChild(childIFrame1);
 
-            let removeSpy = spyOn(iframeManager.collection, 'removeByNativeElement').and.callFake(() => {
+            const removeSpy = spyOn(iframeManager.collection, 'removeByNativeElement').and.callFake(() => {
                 expect(removeSpy.calls.count()).toBe(1);
                 expect(removeSpy).toHaveBeenCalledWith(childIFrame1);
                 done();
@@ -251,15 +249,15 @@ describe('IFrameManager', () => {
         });
 
         it('should remove iframes from the ManagedIFrameCollection when ancestor removed from DOM', (done: DoneFn) => {
-            let mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
-            let outerDiv = document.createElement('div');
-            let innerDiv = document.createElement('div');
+            const mockDocumentElement = mockMasterIFrame.contentWindow.document.documentElement;
+            const outerDiv = document.createElement('div');
+            const innerDiv = document.createElement('div');
             outerDiv.appendChild(innerDiv);
             innerDiv.appendChild(childIFrame1);
 
             mockDocumentElement.appendChild(outerDiv);
 
-            let removeSpy = spyOn(iframeManager.collection, 'removeByNativeElement').and.callFake(() => {
+            const removeSpy = spyOn(iframeManager.collection, 'removeByNativeElement').and.callFake(() => {
                 expect(removeSpy.calls.count()).toBe(1);
                 expect(removeSpy).toHaveBeenCalledWith(childIFrame1);
                 done();
@@ -270,7 +268,7 @@ describe('IFrameManager', () => {
         });
 
         it('should invoke ManagedIFrameCollection.removeAllChildren() when master frame unloads', waitForAsync(() => {
-            let removeAllChildrenSpy = spyOn(iframeManager.collection, 'removeAllChildren');
+            const removeAllChildrenSpy = spyOn(iframeManager.collection, 'removeAllChildren');
             mockMasterFrame.unload$.next({ iframe: mockMasterIFrame });
             expect(removeAllChildrenSpy).toHaveBeenCalled();
         }));
@@ -301,33 +299,33 @@ describe('IFrameManager', () => {
         });
 
         it('preview page', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'pagePreview');
+            const spy = spyOn(resourceUrlBuilder, 'pagePreview');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
             editorState.editMode = 'preview';
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(currentItem.id, editorState.nodeId);
+                expect(spy).toHaveBeenCalledWith(CURRENT_ITEM.id, editorState.nodeId);
             });
         }));
 
         it('edit page', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'pageEditor');
+            const spy = spyOn(resourceUrlBuilder, 'pageEditor');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
             editorState.editMode = 'edit';
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(currentItem.id, editorState.nodeId);
+                expect(spy).toHaveBeenCalledWith(CURRENT_ITEM.id, editorState.nodeId);
             });
         }));
 
         it('compare page languages', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'comparePageLanguages');
+            const spy = spyOn(resourceUrlBuilder, 'comparePageLanguages');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
             editorState.editMode = 'preview';
             editorState.compareWithId = 4;
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(editorState.nodeId, currentItem.id, editorState.compareWithId);
+                expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id, editorState.compareWithId);
             });
         }));
 
@@ -341,35 +339,35 @@ describe('IFrameManager', () => {
         }));
 
         it('preview version', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'previewPageVersion');
+            const spy = spyOn(resourceUrlBuilder, 'previewPageVersion');
             editorState.nodeId = 1;
             editorState.editMode = 'previewVersion';
             editorState.version = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(editorState.nodeId, currentItem.id, editorState.version.timestamp);
+                expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id, editorState.version.timestamp);
             });
         }));
 
         it('compare version contents', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'comparePageVersions');
+            const spy = spyOn(resourceUrlBuilder, 'comparePageVersions');
             editorState.nodeId = 1;
             editorState.editMode = 'compareVersionContents';
             editorState.version = { timestamp: 5678 } as any;
             editorState.oldVersion = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(editorState.nodeId, currentItem.id,
+                expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id,
                     editorState.oldVersion.timestamp, editorState.version.timestamp);
             });
         }));
 
         it('compare version sources', waitForAsync(() => {
-            let spy = spyOn(resourceUrlBuilder, 'comparePageVersionSources');
+            const spy = spyOn(resourceUrlBuilder, 'comparePageVersionSources');
             editorState.nodeId = 1;
             editorState.editMode = 'compareVersionSources';
             editorState.version = { timestamp: 5678 } as any;
             editorState.oldVersion = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {
-                expect(spy).toHaveBeenCalledWith(editorState.nodeId, currentItem.id,
+                expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id,
                     editorState.oldVersion.timestamp, editorState.version.timestamp);
             });
         }));
@@ -394,8 +392,8 @@ describe('IFrameManager', () => {
 
 class MockIFrameCollectionService {
     create(iframe: any): ManagedIFrameCollection {
-        let mif = new MockManagedIFrame(iframe);
-        let collection = new ManagedIFrameCollection(mif as any);
+        const mif = new MockManagedIFrame(iframe);
+        const collection = new ManagedIFrameCollection(mif as any);
         collection.managedIFrameCtor = MockManagedIFrame as any;
         return collection;
     }
@@ -406,19 +404,20 @@ class MockCustomerScriptService {
     invokeCustomerScript = jasmine.createSpy('createGCMSUIObject');
 }
 
-currentItem = {
+const CURRENT_ITEM = {
     folderId: 4,
     id: 42,
     type: 'page',
 };
+
 class MockHostComponent {
     setMasterFrameLoaded = createSpy('setMasterFrameLoaded');
     setContentModified = createSpy('setContentModified');
     get currentItem(): any {
-        return currentItem;
+        return CURRENT_ITEM;
     }
     getCurrentItem(): Promise<any> {
-        return Promise.resolve(currentItem);
+        return Promise.resolve(CURRENT_ITEM);
     }
 }
 

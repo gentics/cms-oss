@@ -1,13 +1,12 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormGroup, UntypedFormGroup } from '@angular/forms';
-import { BaseFormElementComponent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { AbstractControl, FormGroup, ValidationErrors, Validator } from '@angular/forms';
+import { BaseFormElementComponent, FormProperties } from '@gentics/ui-core';
+import { isEqual } from'lodash-es'
 import { combineLatest } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
-import { CONTROL_INVALID_VALUE } from '../../../common';
+import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 
 @Component({ template: '' })
-export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges {
+export abstract class BasePropertiesComponent<T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, Validator {
 
     /**
      * Flag which indicates that the provided value is a new initial value.
@@ -51,7 +50,7 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
     /**
      * The form which should be used in the component template for all form interactions.
      */
-    public form: UntypedFormGroup;
+    public form: FormGroup<FormProperties<T>>;
 
     /**
      * Internal flag if the form should setup the value changes only after the first configuration.
@@ -59,9 +58,16 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected delayedSetup = false;
 
-    constructor(changeDetector: ChangeDetectorRef) {
+    /** The control to which this component is bound to. */
+    protected boundControl: AbstractControl<any, any>;
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+    ) {
         super(changeDetector);
         this.booleanInputs.push(['initialValue', true]);
+        // Set the value to this flag. Used to ignore changes until intial value has been provided.
+        this.value = null;
     }
 
     public ngOnInit(): void {
@@ -73,9 +79,13 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
 
         // When the initialValue flag is updated, it means that the value may be significantly changed (usually full entity change).
         // Therefore, configure the form with the current value again to properly update the controls.
-        if (changes.initialValue && this.initialValue && this.form) {
-            this.configureForm(this.form.value);
-            this.form.updateValueAndValidity();
+        if (changes.initialValue && this.initialValue) {
+            if (this.form) {
+                this.configureForm(this.form.value as any);
+                this.form.updateValueAndValidity();
+            }
+
+            this.onValueReset();
         }
     }
 
@@ -84,17 +94,16 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected initializeForm(): void {
         this.form = this.createForm();
-
         this.configureForm(this.value);
 
         // For some reason, changes from `configureForm` are only really applied,
         // when this is done a tick later. No idea why.
         setTimeout(() => {
-            this.form.updateValueAndValidity();
             if (this.delayedSetup) {
                 this.setupFormSubscription();
             }
-            this.form.markAsPristine();
+
+            this.form.updateValueAndValidity();
         });
 
         if (!this.delayedSetup) {
@@ -107,43 +116,34 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
         this.subscriptions.push(combineLatest([
             this.form.valueChanges.pipe(
                 distinctUntilChanged(isEqual),
-                tap(value => {
-                    this.configureForm(value);
-
-                    // See comment above
-                    setTimeout(() => {
-                        this.form.updateValueAndValidity();
-                        this.changeDetector.markForCheck();
-                    });
-                }),
+                tap(value => this.configureForm(value)),
+                map(() => this.form.value),
             ),
             this.form.statusChanges,
         ]).pipe(
+            // Do not emit values if the disabled state and value hasn't initialized yet
+            filter(() => this.hasSetInitialDisabled),
             // Do not emit values if disabled/pending
             filter(([, status]) => status !== 'DISABLED' && status !== 'PENDING'),
-            map(([value, status]) => {
-                if (status === 'VALID') {
-                    return this.assembleValue(value);
-                }
-                return CONTROL_INVALID_VALUE;
-            }),
+            map(([value]) => this.assembleValue(value as any)),
             distinctUntilChanged(isEqual),
-            debounceTime(100),
         ).subscribe(value => {
             // Only trigger a change if the value actually changed or gone invalid.
             // Ignores the first value change, as it's a value from the initial setup.
-            if (value === CONTROL_INVALID_VALUE || (!this.initialValue && !isEqual(this.value, value))) {
+            if (!this.initialValue && !isEqual(value, this.value)) {
                 this.triggerChange(value);
+                this.onValueTrigger(value);
             }
             // Set it, in case that the parent-component has no binding for it
             this.initialValue = false;
             this.initialValueChange.emit(false);
         }));
-    }
 
-    // Override to fix the typings
-    override triggerChange(value: T | typeof CONTROL_INVALID_VALUE): void {
-        super.triggerChange(value as any);
+        this.subscriptions.push(this.form.statusChanges.subscribe(() => {
+            if (this.boundControl) {
+                this.boundControl.updateValueAndValidity();
+            }
+        }));
     }
 
     /**
@@ -169,26 +169,50 @@ export abstract class BasePropertiesComponent<T> extends BaseFormElementComponen
      */
     protected abstract assembleValue(value: T): T;
 
+    /** Hook which is called whenever `initialValue` is getting reset to `true`. */
+    protected onValueReset(): void {}
+
+    /** Hook which is called whenever the value has been dispatched to the parent. */
+    protected onValueTrigger(value: T): void {}
+
+    /** Validation implementation which simply forwards this forms validation state */
+    public validate(control: AbstractControl<any, any>): ValidationErrors {
+        this.boundControl = control;
+
+        if (this.form.valid) {
+            return null;
+        }
+
+        const err: ValidationErrors = {};
+        Object.entries(this.form.controls).forEach(([name, ctl]) => {
+            if (ctl.invalid) {
+                err[name] = ctl.errors;
+            }
+        });
+
+        return { propertiesError: err };
+    }
+
     /**
      * Basic implementation which will simply put the value into the form.
      */
     protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
+        if (this.form) {
             const tmpObj = {};
             Object.keys(this.form.controls).forEach(controlName => {
-                tmpObj[controlName] = this.value?.[controlName] || null;
+                if (this.value != null && this.value.hasOwnProperty(controlName)) {
+                    tmpObj[controlName] = this.value[controlName];
+                }
             });
-            this.form.setValue(tmpObj);
+            this.form.patchValue(tmpObj);
         }
     }
 
     public override setDisabledState(isDisabled: boolean): void {
         super.setDisabledState(isDisabled);
 
-        if (isDisabled) {
-            this.form.disable({ emitEvent: false });
-        } else {
-            this.form.enable({ emitEvent: false });
+        if (this.form) {
+            this.form.updateValueAndValidity();
         }
     }
 

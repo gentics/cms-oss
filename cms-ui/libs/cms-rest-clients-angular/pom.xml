@@ -23,7 +23,7 @@
         <ui.application>false</ui.application>
         <ui.library>true</ui.library>
         <ui.skip.build>false</ui.skip.build>
-        <ui.skip.test>true</ui.skip.test>
+        <ui.skip.test>false</ui.skip.test>
         <ui.skip.assembly>true</ui.skip.assembly>
         <ui.assembly.phase></ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>

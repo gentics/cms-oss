@@ -21,7 +21,7 @@ import {
     StagedItemsMap,
     getNoPermissions,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { PaginationInstance, PaginationService } from 'ngx-pagination';
 import { BehaviorSubject, Observable, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, startWith } from 'rxjs/operators';

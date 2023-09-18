@@ -4,7 +4,7 @@ import { FolderLinkEvent } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { EntityIdType, Folder } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { intersection } from 'lodash';
+import { intersection } from'lodash-es'
 import { combineLatest, Observable, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 

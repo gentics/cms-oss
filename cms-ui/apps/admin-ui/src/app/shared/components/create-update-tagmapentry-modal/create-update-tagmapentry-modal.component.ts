@@ -1,7 +1,6 @@
 import { ContentRepositoryFragmentTagmapEntryOperations, ContentRepositoryTagmapEntryOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Normalized, TagmapEntryBO, TagmapEntryCreateRequest, TagmapEntryParentType, TagmapEntryUpdateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -73,7 +72,7 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             fragmentName: this.value?.fragmentName ?? '',
         };
         // instantiate form
-        this.form = new UntypedFormControl(payload, createNestedControlValidator());
+        this.form = new UntypedFormControl(payload);
     }
 
     /**

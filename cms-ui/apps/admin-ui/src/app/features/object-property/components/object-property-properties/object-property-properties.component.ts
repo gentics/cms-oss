@@ -11,7 +11,7 @@ import {
     Output,
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { BasePropertiesComponent } from '@gentics/cms-components';
 import {
     Feature,
     Language,
@@ -24,7 +24,7 @@ import {
     TagType,
     TagTypeBO,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -44,7 +44,10 @@ export enum ObjectpropertyPropertiesMode {
     templateUrl: './object-property-properties.component.html',
     styleUrls: ['./object-property-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ObjectpropertyPropertiesComponent)],
+    providers: [
+        generateFormProvider(ObjectpropertyPropertiesComponent),
+        generateValidatorProvider(ObjectpropertyPropertiesComponent),
+    ],
 })
 export class ObjectpropertyPropertiesComponent
     extends BasePropertiesComponent<ObjectPropertyBO<Normalized>> implements OnInit {
@@ -145,7 +148,7 @@ export class ObjectpropertyPropertiesComponent
             this.objTagSyncEnabled = objTagSyncEnabled;
 
             if (this.form) {
-                this.configureForm(this.form.value);
+                this.configureForm(this.form.value as any);
             }
 
             this.changeDetector.markForCheck();
@@ -238,24 +241,6 @@ export class ObjectpropertyPropertiesComponent
                 ...formData,
                 constructId: Number(formData.constructId),
             };
-        }
-    }
-
-    protected onValueChange(): void {
-        if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                nameI18n: this.value?.nameI18n ?? null,
-                descriptionI18n: this.value?.descriptionI18n ?? null,
-                keyword: this.value?.keyword ?? null,
-                type: this.value?.type ?? null,
-                constructId: this.value?.constructId,
-                categoryId: this.value?.categoryId ?? null,
-                required: this.value?.required ?? false,
-                inheritable: this.value?.inheritable ?? false,
-                syncContentset: this.value?.syncContentset ?? false,
-                syncChannelset: this.value?.syncChannelset ?? false,
-                syncVariants: this.value?.syncVariants ?? false,
-            });
         }
     }
 

@@ -23,7 +23,7 @@ import {
     Template,
     User,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     Observable,

@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } f
 import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, ConstructCategoryBO, Language } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 export enum ConstructCategoryPropertiesMode {
     CREATE = 'create',
@@ -16,7 +16,10 @@ export enum ConstructCategoryPropertiesMode {
     templateUrl: './construct-category-properties.component.html',
     styleUrls: ['./construct-category-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ConstructCategoryPropertiesComponent)],
+    providers: [
+        generateFormProvider(ConstructCategoryPropertiesComponent),
+        generateValidatorProvider(ConstructCategoryPropertiesComponent),
+    ],
 })
 export class ConstructCategoryPropertiesComponent
     extends BasePropertiesComponent<ConstructCategoryBO>

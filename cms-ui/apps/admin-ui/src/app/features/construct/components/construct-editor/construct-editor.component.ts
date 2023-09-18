@@ -5,7 +5,7 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { ConstructUpdateRequest, Language, Raw, TagPart, TagPartType, TagType } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { ConstructPropertiesMode } from '../construct-properties/construct-properties.component';
@@ -128,7 +128,7 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<Editable
     }
 
     protected initializeTabHandles(): void {
-        this.fgProperties = new FormControl(this.entity, createNestedControlValidator());
+        this.fgProperties = new FormControl(this.entity);
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
 
         this.fgParts = new FormControl((this.entity.parts || []).map(normalizeTagPart), (control) => tagPartValidator(control.value));

@@ -1,0 +1,67 @@
+<div class="modal-title">
+    <h5>{{ 'mesh.manage_role_instance_permissions' | i18n:{ entityName: role.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <div [formGroup]="form" class="row">
+        <gtx-checkbox
+            *ngIf="form.get('create').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_create' | i18n"
+            formControlName="create"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            *ngIf="form.get('read').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_read' | i18n"
+            formControlName="read"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            *ngIf="form.get('update').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_update' | i18n"
+            formControlName="update"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            *ngIf="form.get('delete').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_delete' | i18n"
+            formControlName="delete"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            *ngIf="form.get('publish').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_publish' | i18n"
+            formControlName="publish"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            *ngIf="form.get('readPublished').enabled"
+            class="columns small-12"
+            [label]="'mesh.permission_readPublished' | i18n"
+            formControlName="readPublished"
+        ></gtx-checkbox>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="primary"
+        [disabled]="!form.valid"
+        (click)="applyPermissions(false)"
+    >
+        {{ 'common.save_button' | i18n }}
+    </gtx-button>
+
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="closeFn(false)"
+    >
+        {{ 'common.cancel_button' | i18n }}
+    </gtx-button>
+</div>

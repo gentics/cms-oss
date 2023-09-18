@@ -1,7 +1,7 @@
 import { AdminUIModuleRoutes, PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
 import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { PublishInfo } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { distinctUntilChanged, filter, startWith, switchMap } from 'rxjs/operators';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';

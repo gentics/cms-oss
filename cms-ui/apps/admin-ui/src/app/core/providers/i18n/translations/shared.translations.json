@@ -515,6 +515,10 @@
         "en": "Datacheck result of \"{{ entityName }}\"",
         "de": "Datenprüfergebnis von „{{ entityName }}“"
     },
+    "title_management_of_entity": {
+        "en": "Management of \"{{ entityName }}\"",
+        "de": "Verwaltung von „{{ entityName }}“"
+    },
     "title_properties_of_folder": {
         "en": "Properties of Folder \"{{ entityName }}\"",
         "de": "Eigenschaften von Ordner „{{ entityName }}“"
@@ -798,6 +802,10 @@
     "option_value": {
         "en": "Value",
         "de": "Wert"
+    },
+    "confirm_button": {
+        "en": "Confirm",
+        "de": "Bestätigen"
     },
     "confirm_selection": {
         "en": "Confirm",

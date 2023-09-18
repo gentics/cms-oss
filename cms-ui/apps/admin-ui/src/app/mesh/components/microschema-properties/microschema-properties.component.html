@@ -1,0 +1,43 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <div class="row">
+        <gtx-input
+            class="columns small-12"
+            [label]="('common.name' | i18n) + ' *'"
+            formControlName="name"
+        ></gtx-input>
+    </div>
+
+    <div class="row">
+        <gtx-input
+            class="columns small-12"
+            [label]="('common.description' | i18n) + ' *'"
+            formControlName="description"
+        ></gtx-input>
+    </div>
+
+    <div class="row">
+        <div class="columns small-12">
+            <gtx-json-input
+                [label]="'mesh.elasticsearch' | i18n"
+                formControlName="elasticsearch"
+            ></gtx-json-input>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="columns small-12">
+            <gtx-mesh-schema-fields-manager
+                class="fields-manager"
+                [label]="'mesh.schema_fields' | i18n"
+                [type]="SchemaFieldPropertiesType.MICROSCHEMA"
+                [ownName]="form.value.name"
+                [schemaNames]="schemaNames"
+                [microschemaNames]="microschemaNames"
+                formControlName="fields"
+            ></gtx-mesh-schema-fields-manager>
+        </div>
+    </div>
+</form>

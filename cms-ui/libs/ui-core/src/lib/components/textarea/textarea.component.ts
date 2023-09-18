@@ -4,11 +4,13 @@ import {
     ChangeDetectorRef,
     Component,
     ElementRef,
+    EventEmitter,
     Input,
     OnChanges,
     OnDestroy,
+    Output,
     SimpleChanges,
-    ViewChild
+    ViewChild,
 } from '@angular/core';
 import { AutosizeDirective } from 'ngx-autosize';
 import { generateFormProvider } from '../../utils';
@@ -69,6 +71,9 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
      */
     @Input()
     public id: string;
+
+    @Output()
+    public blur = new EventEmitter<void>();
 
     @ViewChild(AutosizeDirective, { static: true })
     private autosizeDir: AutosizeDirective;
@@ -135,8 +140,13 @@ export class TextareaComponent extends BaseFormElementComponent<string> implemen
         this.triggerChange(elementValue);
     }
 
+    public blurHandler(): void {
+        this.blur.emit();
+        this.triggerTouch();
+    }
+
     protected onValueChange(): void {
-        // Nothing to do
+        this.autosizeDir.adjust(true);
     }
 
     protected override getFinalValue(): string {

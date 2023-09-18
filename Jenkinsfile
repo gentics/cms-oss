@@ -86,6 +86,7 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
+        booleanParam(name: 'e2eTests',                  defaultValue: false,  description: "Whether to run end-to-end tests.")
         string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
         string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
     }
@@ -253,8 +254,7 @@ spec:
                                 junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit  testResults: "cms-ui/apps/admin-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
-                            junit  testResults: "cms-ui/apps/editor-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
+                            junit  testResults: "cms-ui/.reports/**/KARMA-report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }
@@ -281,10 +281,80 @@ spec:
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
                         sh "cd cms-oss-server ; docker build --network=host -t ${imageNameWithTag} ."
 
-                        // Push released image
                         if (tagName != null) {
                             String dockerImageVersionTag = imageName + ":" + tagName
                             sh "docker tag " + imageNameWithTag + " " + dockerImageVersionTag
+                        } 
+                    }
+                }
+            }
+		}
+
+        stage("E2E Tests") {
+			when {
+				expression {
+                    // Requires Docker image
+					return params.runDockerBuild && params.e2eTests
+				}
+			}
+
+            environment {
+                DOCKER_TAG   = "${branchName}"
+            }
+
+            steps {
+                script {
+                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageNameWithTag = "${imageName}:${branchName}"
+                    withCredentials([usernamePassword(credentialsId: 'repo.gentics.com', usernameVariable: 'repoUsername', passwordVariable: 'repoPassword')]) {
+                        try {
+                            // prior to starting the tests, start the docker containers with CMS
+                            sh 'docker login -u $repoUsername -p $repoPassword docker.apa-it.at'
+                            sh "mvn -pl :cms-integration-tests docker:start -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
+                            
+                            // run the e2e tests
+                            sh "mvn integration-test -B -am -fae -pl :admin-ui-e2e,:editor-ui-e2e -Dui.skip.install=true"
+                        } finally {
+                            // finally stop the docker containers
+                            sh "mvn -pl :cms-integration-tests docker:stop -DintegrationTest.cms.image=${imageName} -DintegrationTest.cms.version=${branchName}"
+                        }
+                    }
+                }
+            }
+
+            post {
+                always {
+                    script {
+                        // Ignore missing test results if we only run one test
+                        boolean allowEmptyResults = (params.singleTest ? true : false)
+                        junit  testResults: "cms-ui/.reports/**/CYPRESS-report.xml", allowEmptyResults: allowEmptyResults
+                    }
+                }
+            }
+		}
+
+        stage("Docker Push") {
+			when {
+				expression {
+					// Build the docker image only if the parameter runDockerBuild is enabled and
+					return params.runDockerBuild &&
+						(!env.gitlabTargetBranch || qaDeployBranchList.contains(branchName))
+				}
+			}
+
+            environment {
+                DOCKER_TAG   = "${branchName}"
+            }
+
+            steps {
+                script {
+                    def imageName = "gtx-docker-products.docker.apa-it.at/gentics/cms-oss"
+                    def imageNameWithTag = "${imageName}:${branchName}"
+                    withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://gtx-docker-products.docker.apa-it.at/v2" ]) {
+
+                        // Push released image
+                        if (tagName != null) {
+                            String dockerImageVersionTag = imageName + ":" + tagName
                             sh "docker push " + dockerImageVersionTag
                         } else if (params.deploy) {
                             // push snapshot build image

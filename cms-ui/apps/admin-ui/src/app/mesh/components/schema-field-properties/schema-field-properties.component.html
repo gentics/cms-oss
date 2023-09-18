@@ -1,0 +1,116 @@
+<form
+    *ngIf="form"
+    [formGroup]="form"
+>
+    <div class="row">
+        <gtx-input
+            class="columns small-6"
+            [label]="('common.name' | i18n) + ' *'"
+            formControlName="name"
+        ></gtx-input>
+
+        <gtx-input
+            class="columns small-6"
+            [label]="'mesh.label' | i18n"
+            formControlName="label"
+        ></gtx-input>
+    </div>
+
+    <div class="row">
+        <gtx-select
+            class="columns small-12"
+            [class.small-6]="form.get('listType').enabled"
+            [class.small-12]="!form.get('listType').enabled"
+            [label]="('mesh.schema_type' | i18n) + ' *'"
+            formControlName="type"
+        >
+            <gtx-option
+                *ngFor="let option of validTypes"
+                [value]="option"
+            >{{ ('mesh.fieldType_' + option) | i18n }}</gtx-option>
+        </gtx-select>
+
+        <gtx-select
+            *ngIf="form.get('listType').enabled"
+            class="columns small-6"
+            [label]="('mesh.schema_listType' | i18n) + ' *'"
+            formControlName="listType"
+        >
+            <gtx-option
+                *ngFor="let option of validListTypes"
+                [value]="option"
+            >{{ ('mesh.fieldType_' + option) | i18n }}</gtx-option>
+        </gtx-select>
+    </div>
+
+    <div class="row checkbox-row">
+        <gtx-checkbox
+            class="columns small-4"
+            [label]="'mesh.required' | i18n"
+            formControlName="required"
+        ></gtx-checkbox>
+
+        <ng-container *ngIf="form.get('extract').enabled" formGroupName="extract">
+            <gtx-checkbox
+                class="columns small-4"
+                [label]="'mesh.extract_content' | i18n"
+                formControlName="content"
+            ></gtx-checkbox>
+
+            <gtx-checkbox
+                class="columns small-4"
+                [label]="'mesh.extract_metadata' | i18n"
+                formControlName="metadata"
+            ></gtx-checkbox>
+        </ng-container>
+    </div>
+
+    <div *ngIf="form.get('allow').enabled" class="row">
+        <ng-container [ngSwitch]="effectiveType">
+            <gtx-select
+                *ngSwitchCase="FieldType.NODE"
+                class="columns small-12"
+                [label]="'mesh.allow' | i18n"
+                [multiple]="true"
+                [disableUnknownValues]="true"
+                formControlName="allow"
+            >
+                <gtx-option
+                    *ngFor="let schema of schemaNames | gtxConcat:(type === SchemaFieldPropertiesType.SCHEMA ? ownName : null) | gtxSort"
+                    [value]="schema"
+                >{{ schema }}</gtx-option>
+            </gtx-select>
+
+            <gtx-select
+                *ngSwitchCase="FieldType.MICRONODE"
+                class="columns small-12"
+                [label]="'mesh.allow' | i18n"
+                [multiple]="true"
+                [disableUnknownValues]="true"
+                formControlName="allow"
+            >
+                <gtx-option
+                    *ngFor="let schema of microschemaNames | gtxConcat:(type === SchemaFieldPropertiesType.MICROSCHEMA ? ownName : null) | gtxSort"
+                    [value]="schema"
+                >{{ schema }}</gtx-option>
+            </gtx-select>
+
+            <gtx-string-list
+                *ngSwitchCase="FieldType.STRING"
+                class="columns small-12"
+                [label]="'mesh.allow' | i18n"
+                [addLabel]="'mesh.allow_addString' | i18n"
+                formControlName="allow"
+            ></gtx-string-list>
+        </ng-container>
+    </div>
+
+    <div class="row">
+        <div class="columns small-12">
+            <gtx-json-input
+                [label]="'mesh.elasticsearch' | i18n"
+                formControlName="elasticsearch"
+            ></gtx-json-input>
+        </div>
+    </div>
+</form>

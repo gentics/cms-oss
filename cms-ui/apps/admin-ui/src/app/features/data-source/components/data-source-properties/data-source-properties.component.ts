@@ -2,14 +2,17 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { BasePropertiesComponent } from '@gentics/cms-components';
 import { AnyModelType, DataSource } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-data-source-properties',
     templateUrl: './data-source-properties.component.html',
     styleUrls: ['./data-source-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(DataSourcePropertiesComponent)],
+    providers: [
+        generateFormProvider(DataSourcePropertiesComponent),
+        generateValidatorProvider(DataSourcePropertiesComponent),
+    ],
 })
 export class DataSourcePropertiesComponent extends BasePropertiesComponent<DataSource> {
 

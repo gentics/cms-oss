@@ -1,7 +1,6 @@
-import {TestBed} from '@angular/core/testing';
-import {TranslateLoader, TranslateModule, TranslateService} from '@ngx-translate/core';
-
-import {LocalTranslateLoader} from './local-translate-loader';
+import { TestBed } from '@angular/core/testing';
+import { TranslateLoader, TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocalTranslateLoader } from './local-translate-loader';
 
 describe('LocalTranslateLoader and ngx-translate', () => {
 
@@ -11,9 +10,9 @@ describe('LocalTranslateLoader and ngx-translate', () => {
         TestBed.configureTestingModule({
             imports: [
                 TranslateModule.forRoot({
-                    loader: { provide: TranslateLoader, useClass: LocalTranslateLoader }
-                })
-            ]
+                    loader: { provide: TranslateLoader, useClass: LocalTranslateLoader },
+                }),
+            ],
         }).compileComponents();
 
         translator = TestBed.get(TranslateService);

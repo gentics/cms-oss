@@ -1,0 +1,43 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "ui-core",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/ui-core/src",
+    "implicitDependencies": [],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/ui-core/tsconfig.lib.json",
+                "project": "libs/ui-core/ng-package.json"
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/ui-core/**/*.ts",
+                    "libs/ui-core/**/*.html"
+                ]
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/ui-core/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "ui-core:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

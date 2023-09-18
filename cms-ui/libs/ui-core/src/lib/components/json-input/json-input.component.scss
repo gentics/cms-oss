@@ -1,0 +1,16 @@
+@import '../../../styles/base-import';
+
+:host {
+    display: contents;
+
+    &.ng-touched.ng-invalid {
+        .input::ng-deep {
+            textarea:not(:focus) {
+                border-color: $gtx-color-alert;
+            }
+            label {
+                color: $gtx-color-alert;
+            }
+        }
+    }
+}

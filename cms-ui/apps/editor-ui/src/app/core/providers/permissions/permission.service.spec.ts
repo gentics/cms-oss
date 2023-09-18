@@ -12,7 +12,7 @@ import {
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of as observableOf } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { getExampleFolderData } from '../../../../testing/test-data.mock';
+import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';

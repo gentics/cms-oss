@@ -1,4 +1,4 @@
-import { BusinessObject } from '@admin-ui/common';
+import { BO_ID, BusinessObject } from '@admin-ui/common';
 import { I18nService } from '@admin-ui/core';
 import { BaseTrableLoaderService } from '@admin-ui/core/providers/base-trable-loader/base-trable-loader.service';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
@@ -12,7 +12,8 @@ import {
     TrableRowExpandEvent,
     coerceInstance,
 } from '@gentics/ui-core';
-import { Observable, Subscription, forkJoin } from 'rxjs';
+import { Observable, Subscription, forkJoin, Subject, combineLatest, of } from 'rxjs';
+import { debounceTime, map, switchMap } from 'rxjs/operators';
 
 @Component({ template: '' })
 export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = never> implements OnInit, OnChanges, OnDestroy {
@@ -32,7 +33,10 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     public activeEntity: string;
 
     @Input()
-    public selection: string[] = [];
+    public selected: string[] = [];
+
+    @Input()
+    public extraActions: TableAction<O>[] = [];
 
     @Input()
     public inlineExpansion = false;
@@ -47,7 +51,7 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     public actionClick = new EventEmitter<TableActionClickEvent<O>>();
 
     @Output()
-    public selectionChange = new EventEmitter<string[]>();
+    public selectedChange = new EventEmitter<string[]>();
 
     @Output()
     public select = new EventEmitter<TrableRow<O>>();
@@ -63,6 +67,9 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
 
     protected subscriptions: Subscription[] = [];
     protected booleanInputs: CoerceOption<this>[] = ['selectable', ['multiple', true], 'hideActions', 'inlineExpansion', 'inlineSelection'];
+
+    protected actionRebuildTrigger = new Subject<void>();
+    protected actionRebuildTrigger$ = this.actionRebuildTrigger.asObservable();
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -83,15 +90,56 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
             this.changeDetector.markForCheck();
         }));
 
+        this.setupActionLoading();
         this.loadRootElements();
+
+        this.actionRebuildTrigger.next();
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
         coerceInstance(this, this.booleanInputs, changes);
+
+        if (changes.selected) {
+            this.selected = (this.selected || []).map(value => {
+                if (value != null && typeof value === 'object') {
+                    return (value as object)[BO_ID];
+                }
+                return String(value);
+            });
+        }
+
+        if (changes.extraActions) {
+            this.actionRebuildTrigger.next();
+        }
     }
 
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    protected setupActionLoading(): void {
+        this.subscriptions.push(combineLatest([
+            this.actionRebuildTrigger$.pipe(
+                debounceTime(50),
+            ),
+            this.createTableActionLoading(),
+        ]).pipe(
+            map(([_, actions]) => actions),
+        ).subscribe(actions => {
+            this.applyActions(actions);
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    protected createTableActionLoading(): Observable<TableAction<O>[]> {
+        // Override me when needed
+        return this.actionRebuildTrigger$.pipe(
+            switchMap(() => of([])),
+        );
+    }
+
+    protected applyActions(actions: TableAction<O>[]): void {
+        this.actions = [...this.extraActions, ...actions];
     }
 
     /**
@@ -163,8 +211,8 @@ export abstract class BaseEntityTrableComponent<T, O = T & BusinessObject, A = n
     }
 
     public updateSelection(newSelection: string[]): void {
-        this.selection = newSelection;
-        this.selectionChange.emit(newSelection);
+        this.selected = newSelection;
+        this.selectedChange.emit(newSelection);
     }
 
     public forwardSelect(row: TrableRow<O>): void {

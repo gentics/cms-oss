@@ -7,7 +7,7 @@ import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '../../../../testing/test-data.mock';
+import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';

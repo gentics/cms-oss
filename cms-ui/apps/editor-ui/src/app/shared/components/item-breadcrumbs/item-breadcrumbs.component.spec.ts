@@ -11,7 +11,7 @@ import {
     getExampleFolderDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ItemBreadcrumbsComponent } from './item-breadcrumbs.component';
 

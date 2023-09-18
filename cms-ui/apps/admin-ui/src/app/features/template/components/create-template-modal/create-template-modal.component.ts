@@ -2,7 +2,6 @@ import { I18nNotificationService } from '@admin-ui/core';
 import { TemplateDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Node, Raw, TemplateBO, TemplateCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -29,7 +28,7 @@ export class CreateTemplateModalComponent extends BaseModal<TemplateBO<Raw>> imp
     public loading = false;
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.form = new UntypedFormControl({});
     }
 
     okayClicked(): void {

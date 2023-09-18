@@ -17,7 +17,7 @@ describe('AdminApi', () => {
     });
 
     it('getFeature sends the correct GET request', () => {
-        adminApi.getFeature(Feature.nice_urls);
+        adminApi.getFeature(Feature.NICE_URLS);
         expect(apiBase.get).toHaveBeenCalledWith('admin/features/nice_urls');
     });
 

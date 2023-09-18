@@ -22,7 +22,7 @@ import {
     Page,
     Raw,
 } from '@gentics/cms-models';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 import { Subject } from 'rxjs';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorConfigurationService, FormEditorService } from '../../providers';

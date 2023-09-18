@@ -1,4 +1,5 @@
-import { UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { AbstractControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { JSON_VALUE_INVALID } from '../common';
 
 export function setControlsEnabled(
     group: UntypedFormGroup,
@@ -28,7 +29,7 @@ export function setControlsEnabled(
 export function setControlsValidators(
     group: UntypedFormGroup,
     controls: string[],
-    validators: ValidatorFn | ValidatorFn[] | null
+    validators: ValidatorFn | ValidatorFn[] | null,
 ): void {
     for (const ctlName of controls) {
         const ctl = group.get(ctlName);
@@ -38,4 +39,29 @@ export function setControlsValidators(
 
         ctl.setValidators(validators);
     }
+}
+
+/**
+ * Utility type which is ment to be used on typed FormGroups, to properly
+ * enforce the typings and required fields:
+ * ```typescript
+ * type MyEntity = {
+ *      name: string;
+ *      description: string;
+ *      version: number;
+ * }
+ * const form = new FormGroup<FormProperties<MyEntity>>({
+ *      // ...
+ * });
+ * ```
+ */
+export type FormProperties<T> = {
+    [P in keyof T]: AbstractControl<T[P]>;
+};
+
+export const createJsonValidator: () => ValidatorFn = () => (control) => {
+    if (control.value === JSON_VALUE_INVALID) {
+        return { jsonInvalid: true };
+    }
+    return null;
 }

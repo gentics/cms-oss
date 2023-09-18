@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { BooleanTagPartProperty, TagPropertyType } from '@gentics/cms-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-import { pick } from 'lodash';
+import { pick } from'lodash-es'
 
 @Component({
     selector: 'gtx-boolean-part-fill',

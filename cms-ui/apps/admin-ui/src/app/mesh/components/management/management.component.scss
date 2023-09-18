@@ -1,0 +1,48 @@
+@import 'variables';
+
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.management-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 100%;
+    width: 100%;
+
+    .management-content {
+        flex: 1 1 auto;
+        min-height: 1px;
+        min-width: 1px;
+    }
+
+    .user-information {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: $gtx-color-light-gray;
+            display: flex;
+
+            > icon {
+                height: 24px;
+                width: 24px;
+                margin: auto;
+            }
+        }
+    }
+
+    .management-controls {
+        flex: 0 0;
+        padding: 1rem 1.5rem;
+    }
+}

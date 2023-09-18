@@ -189,11 +189,14 @@ export abstract class BaseEntityEditorComponent<K extends EditableEntity>
 
         this.entityIsClean = true;
         this.isLoading = false;
+        this.changeDetector.markForCheck();
 
         // For whatever reason, the form doesn't properly update within one tick.
         // Therefore we have to delay this and then the save button is displayed correctly again.
         setTimeout(() => {
             this.onEntityChange();
+            // Just to be sure, as `onEntityChange` could change the clean state
+            this.entityIsClean = true;
             this.changeDetector.markForCheck();
         });
     }

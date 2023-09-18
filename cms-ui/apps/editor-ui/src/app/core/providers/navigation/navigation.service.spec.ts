@@ -7,7 +7,7 @@ describe('NavigationService', () => {
 
     let navigationService: NavigationService;
     let router: MockRouter;
-    let encodeOptions: Function;
+    let encodeOptions: (val: any) => any;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -113,7 +113,7 @@ describe('NavigationService', () => {
                     folderId: 42,
                 },
             }).navigate();
-            expect(result).toBe('mocked return value');
+            expect(result).toBe('mocked return value' as any);
         });
 
         it('invokes Router.navigate() with correct commands', () => {

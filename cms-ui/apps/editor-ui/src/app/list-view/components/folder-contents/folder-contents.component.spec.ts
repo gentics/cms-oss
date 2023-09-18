@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { ItemsInfo, emptyItemInfo } from '@editor-ui/app/common/models';
+import { ItemsInfo } from '@editor-ui/app/common/models';
 import { Api } from '@editor-ui/app/core/providers/api';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
@@ -67,14 +67,14 @@ import {
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
+import { WindowRef } from '@gentics/cms-components';
+import { AccessControlledType, EditorPermissions, PermissionResponse, TypePermissions, UniformTypePermissions, getNoPermissions } from '@gentics/cms-models';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
-} from '@editor-ui/testing/test-data.mock';
-import { WindowRef } from '@gentics/cms-components';
-import { AccessControlledType, EditorPermissions, PermissionResponse, TypePermissions, UniformTypePermissions, getNoPermissions } from '@gentics/cms-models';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { NgxPaginationModule } from 'ngx-pagination';
@@ -171,8 +171,8 @@ const PERMISSIONS = {
     template: `
     <folder-contents #componentToBeTested>
     </folder-contents>
-    `
-    })
+    `,
+})
 class TestComponent {
     @ViewChild('componentToBeTested', { static: true })
     componentToBeTested: FolderContentsComponent;
@@ -246,8 +246,8 @@ class MockPermissionService {
 
 @Component({
     selector: 'item-context-menu',
-    template: ''
-    })
+    template: '',
+})
 class MockItemContextMenu {
     @Input() isFolderStartPage = false;
     @Input() permissions: EditorPermissions = getNoPermissions();
@@ -494,7 +494,7 @@ describe('FolderContentsComponent', () => {
     let apiService: Api;
 
     /** Updates the folder.folders portion of the AppState with the specified changes. */
-    let updateItemsInfoState = (changes: Partial<ItemsInfo>) => {
+    const updateItemsInfoState = (changes: Partial<ItemsInfo>) => {
         state.mockState({
             ...state.now,
             folder: {
@@ -828,7 +828,7 @@ describe('FolderContentsComponent', () => {
             const listService: ListService = TestBed.inject(ListService);
             spyOn(listService, 'init');
 
-            let folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
+            const folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
             spyOn(folderContentsComponent, 'initFolderContents');
 
             fixture.detectChanges();
@@ -856,7 +856,7 @@ describe('FolderContentsComponent', () => {
             expect(state.now.folder.folders.list.length).toBe(10);
             expect(state.now.folder.folders.total).toBe(26);
 
-            let folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
+            const folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
             folderContentsComponent.pageChange( 'folder', 2 );
 
             fixture.detectChanges();
@@ -886,7 +886,7 @@ describe('FolderContentsComponent', () => {
             expect(state.now.folder.folders.list.length).toBe(10);
             expect(state.now.folder.folders.total).toBe(26);
 
-            let folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
+            const folderContentsComponent: FolderContentsComponent = fixture.debugElement.query(By.directive(FolderContentsComponent)).componentInstance;
             folderContentsComponent.itemsPerPageChange( 'folder', 25 );
 
             fixture.detectChanges();

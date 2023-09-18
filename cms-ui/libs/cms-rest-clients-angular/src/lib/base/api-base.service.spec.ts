@@ -3,12 +3,11 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { TestBed } from '@angular/core/testing';
 import { PagingSortOption, PagingSortOrder, User } from '@gentics/cms-models';
 import { BehaviorSubject, NEVER, Observable } from 'rxjs';
-
 import { ApiError } from '../error/api-error';
 import { FileUploaderFactory } from '../util/file-uploader/file-uploader.factory';
 import { API_BASE_URL, expectOneRequest, respondTo } from '../util/http-test-utils/http-test-utils';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
-import { ApiBase, HttpRequestOptions } from './api-base.service';
+import { ApiBase, CONTENT_TYPE_JSON, HTTP_HEADER_CONTENT_TYPE, HttpRequestOptions } from './api-base.service';
 
 const TEST_SID = 1234;
 const TEST_URL = 'some/url';
@@ -66,9 +65,9 @@ describe('ApiBase', () => {
                 (url: string, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
 
                     return NEVER;
                 });
@@ -98,7 +97,7 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.get(TEST_URL).subscribe(done, done.fail);
+            apiBase.get(TEST_URL).subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'GET');
             respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
         });
@@ -212,7 +211,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -336,9 +335,9 @@ describe('ApiBase', () => {
                 (url: string, body: any, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
                     expect(body).toBe('post body');
 
                     return NEVER;
@@ -392,7 +391,7 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.post(TEST_URL, 'body').subscribe(done, done.fail);
+            apiBase.post(TEST_URL, 'body').subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'POST');
             respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
         });
@@ -503,7 +502,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -551,7 +550,7 @@ describe('ApiBase', () => {
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(200);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('A page with Nice URL exists:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -627,9 +626,9 @@ describe('ApiBase', () => {
                 (url: string, body: any, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
                     expect(body).toBe('put body');
 
                     return NEVER;
@@ -683,7 +682,7 @@ describe('ApiBase', () => {
         });
 
         it('succeeds when the server returns a responseCode "OK"', (done: DoneFn) => {
-            apiBase.put(TEST_URL, 'body').subscribe(done, done.fail);
+            apiBase.put(TEST_URL, 'body').subscribe(() => done(), err => done.fail(err));
             const req = expectOneRequest(httpTestingController, TEST_URL, 'PUT');
             respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
         });
@@ -794,7 +793,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -843,7 +842,7 @@ describe('ApiBase', () => {
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(201);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('A page with Nice URL exists:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -920,9 +919,9 @@ describe('ApiBase', () => {
                 (url: string, options: HttpRequestOptions) => {
                     expect(url).toEqual(API_BASE_URL + '/' + TEST_URL);
                     expect(options.params.get('paramA')).toBe('a');
-                    expect(options.params.get('paramB')).toBe(2 as any);
-                    expect(options.params.get('paramC')).toBe(true as any);
-                    expect(options.headers.get('Content-Type')).toBe('application/json');
+                    expect(options.params.get('paramB')).toBe('2');
+                    expect(options.params.get('paramC')).toBe('true');
+                    expect((options.headers as HttpHeaders).get(HTTP_HEADER_CONTENT_TYPE)).toBe(CONTENT_TYPE_JSON);
 
                     return NEVER;
                 });
@@ -1077,7 +1076,7 @@ describe('ApiBase', () => {
                 respondTo(req, {
                     status: 502,
                     headers: new HttpHeaders({
-                        'Content-Type': 'text/html',
+                        [HTTP_HEADER_CONTENT_TYPE]: 'text/html',
                     }),
                     body: '<html><body><h1>502: Bad Gateway</h1></body></html>',
                 });
@@ -1125,7 +1124,7 @@ describe('ApiBase', () => {
                     sub.unsubscribe();
 
                     expect(error.statusCode).toBe(200);
-                    expect(error.reason).toBe('failed');
+                    expect(error.reason).toBe('invalid_data');
                     expect(error.message).toEqual('No permissions on page:<br/> /GCN5 Demo/News/testFileName\nSecond Error message.');
                 });
 
@@ -1203,7 +1202,7 @@ describe('ApiBase', () => {
         ] as any[];
 
         it('creates a new FileUploader with the passed options', () => {
-            let uploader = apiBase.upload([], 'file/create', {
+            const uploader = apiBase.upload([], 'file/create', {
                 fileField: 'fileToUpload',
                 fileNameField: 'uploadName',
                 params: {
@@ -1222,7 +1221,7 @@ describe('ApiBase', () => {
         });
 
         it('adds the SID to the passed url parameters', () => {
-            let uploader = apiBase.upload([], 'file/create', { fileField: 'files' });
+            const uploader = apiBase.upload([], 'file/create', { fileField: 'files' });
 
             expect(uploader.setOptions).toHaveBeenCalledWith(jasmine.objectContaining({
                 parameters: jasmine.objectContaining({
@@ -1232,8 +1231,8 @@ describe('ApiBase', () => {
         });
 
         it('adds all files to the uploader via upload()', () => {
-            let uploader = apiBase.upload(mockFiles, 'file/create', { fileField: 'files' });
-            let firstArgs = (uploader.upload as jasmine.Spy).calls.allArgs().map(args => args[0]);
+            const uploader = apiBase.upload(mockFiles, 'file/create', { fileField: 'files' });
+            const firstArgs = (uploader.upload as jasmine.Spy).calls.allArgs().map(args => args[0]);
 
             expect(uploader.upload).toHaveBeenCalledTimes(mockFiles.length);
             expect(firstArgs).toEqual(mockFiles);

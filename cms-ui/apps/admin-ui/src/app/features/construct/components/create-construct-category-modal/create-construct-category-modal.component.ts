@@ -3,7 +3,6 @@ import { ConstructCategoryHandlerService } from '@admin-ui/core/providers/constr
 import { ConstructCategoryPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
@@ -38,7 +37,7 @@ export class CreateConstructCategoryModalComponent
     }
 
     ngOnInit(): void {
-        this.form = new UntypedFormControl(null, createNestedControlValidator());
+        this.form = new UntypedFormControl(null);
 
         // get available system languages for i18n-properties
         this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();

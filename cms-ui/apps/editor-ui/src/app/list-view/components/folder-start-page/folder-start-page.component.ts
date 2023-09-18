@@ -3,7 +3,7 @@ import { EditorTab, UIMode } from '@editor-ui/app/common/models';
 import { getNestedObject } from '@editor-ui/app/common/utils/get-nested-object';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Folder, Page, StagedItemsMap } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

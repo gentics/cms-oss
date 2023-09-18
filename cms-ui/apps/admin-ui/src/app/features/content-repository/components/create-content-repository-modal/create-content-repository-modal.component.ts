@@ -2,7 +2,6 @@ import { ContentRepositoryBO } from '@admin-ui/common';
 import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
 import { ContentRepositoryPropertiesMode } from '../content-repository-properties/content-repository-properties.component';
 
@@ -26,7 +25,7 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.form = new UntypedFormControl({});
     }
 
     /**

@@ -2,10 +2,9 @@ import { EditableEntity } from '@admin-ui/common';
 import { LanguageHandlerService, LanguageTableLoaderService } from '@admin-ui/core';
 import { BaseEntityEditorComponent } from '@admin-ui/core/components';
 import { AppStateService } from '@admin-ui/state';
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 
 @Component({
@@ -37,7 +36,7 @@ export class LanguageEditorComponent extends BaseEntityEditorComponent<EditableE
     }
 
     protected initializeTabHandles(): void {
-        this.fgProperties = new FormControl(this.entity, createNestedControlValidator());
+        this.fgProperties = new FormControl(this.entity);
         this.tabHandles[this.Tabs.PROPERTIES] = this.createTabHandle(this.fgProperties);
     }
 

@@ -21,7 +21,7 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ColorThemes, ModalService, NotificationService } from '@gentics/ui-core';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 import { ItemsInfo } from '../../common/models/items-info';
 import { AppService } from '../../services/app/app.service';
 import { FilterService } from '../../services/filter/filter.service';

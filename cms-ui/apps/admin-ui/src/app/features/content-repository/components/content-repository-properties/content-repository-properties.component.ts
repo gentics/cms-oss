@@ -19,7 +19,7 @@ import {
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
 import { AnyModelType, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, Feature } from '@gentics/cms-models';
-import { generateFormProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -36,7 +36,10 @@ type CRDisplayType = {
     templateUrl: './content-repository-properties.component.html',
     styleUrls: ['./content-repository-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ContentRepositoryPropertiesComponent)],
+    providers: [
+        generateFormProvider(ContentRepositoryPropertiesComponent),
+        generateValidatorProvider(ContentRepositoryPropertiesComponent),
+    ],
 })
 export class ContentRepositoryPropertiesComponent extends BasePropertiesComponent<ContentRepository> implements OnInit, OnChanges {
 
@@ -52,9 +55,10 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     public crTypes: CRDisplayType[] = [];
 
     public passwordRepeat = '';
+    public meshCrEnabled = false;
 
     /** selectable options for contentRepository input passwordType */
-    readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
+    public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
         {
             id: ContentRepositoryPasswordType.NONE,
             label: 'contentRepository.passwordType_none',
@@ -68,8 +72,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             label: 'contentRepository.passwordType_property',
         },
     ];
-
-    meshCrEnabled = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -110,11 +112,14 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         if (changes.mode && this.form) {
             setControlsEnabled(this.form, ['crType'], this.mode !== ContentRepositoryPropertiesMode.UPDATE, { emitEvent: true });
         }
+    }
 
-        // When the root element changes, we have to reset the repeat value
-        if (changes.initialValue && this.initialValue) {
-            this.passwordRepeat = '';
+    protected override onValueReset(): void {
+        super.onValueReset();
+        if (this.form) {
+            this.form.controls.password.setValue(null);
         }
+        this.passwordRepeat = '';
     }
 
     public updatePasswordRepeat(value: string): void {
@@ -158,7 +163,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             name: new UntypedFormControl(this.value?.name || '', Validators.required),
             passwordType: new UntypedFormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
             password: new UntypedFormControl('', this.validatorPasswordsDontMatch),
-            passwordProperty: new UntypedFormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):[^\}]+\}$/)),
+            passwordProperty: new UntypedFormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):[^}]+\}$/)),
             permissionProperty: new UntypedFormControl(this.value?.permissionProperty || ''),
             permissionInformation: new UntypedFormControl(this.value?.permissionInformation ?? false),
             projectPerNode: new UntypedFormControl(this.value?.projectPerNode ?? false),
@@ -173,8 +178,13 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         const options = { emitEvent: !!loud };
 
         setControlsEnabled(this.form, ['crType'], this.crType == null || this.mode !== ContentRepositoryPropertiesMode.UPDATE, options);
-        setControlsEnabled(this.form, ['password', 'repeat_password'], value?.passwordType == ContentRepositoryPasswordType.VALUE ?? false, options);
-        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType == ContentRepositoryPasswordType.PROPERTY ?? false, options);
+        setControlsEnabled(
+            this.form,
+            ['password', 'repeat_password'],
+            value?.passwordType === ContentRepositoryPasswordType.VALUE ?? false,
+            options,
+        );
+        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY ?? false, options);
 
         const dbControls =  [
             'basepath',

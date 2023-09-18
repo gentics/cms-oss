@@ -36,7 +36,7 @@ import {
     FormPropertiesConfiguration,
 } from '@gentics/form-generator';
 import { UILanguage } from '@gentics/image-editor';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Observable, Subscription, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';

@@ -50,6 +50,9 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     public selected: string[] = [];
 
     @Input()
+    public multiple = true;
+
+    @Input()
     public activeEntity: string;
 
     @Input()
@@ -103,7 +106,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     protected loadTrigger = new Subject<void>();
     protected actionRebuildTrigger = new Subject<void>();
     protected actionRebuildTrigger$ = this.actionRebuildTrigger.asObservable();
-    protected builtActions: TableAction<O>[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -416,6 +418,6 @@ export abstract class  BaseEntityTableComponent<T, O = T & BusinessObject, A = n
     }
 
     protected callToDeleteEntity(id: string): Promise<void> {
-        return this.loader.deleteEntity(id);
+        return this.loader.deleteEntity(id, this.createAdditionalLoadOptions());
     }
 }

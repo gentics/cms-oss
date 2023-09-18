@@ -11,17 +11,31 @@ import {
     TagPropertyMap,
     TagPropertyType,
     TagType,
+    Translator,
     ValidationResult,
     VariableTagEditorContext,
 } from '@gentics/cms-models';
-import { BehaviorSubject } from 'rxjs';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { TagEditorContextImpl } from '../app/tag-editor/common/impl/tag-editor-context-impl';
-import { getMockTagEditorTranslator } from '../app/tag-editor/common/impl/tag-editor-context.spec';
-import { getExampleNodeData, getExamplePageData } from './test-data.mock';
 
 /**
  * Contains test data and mocks for TagEditor and TagPropertyEditor tests.
  */
+
+class MockTranslator {
+    instant(key: string): string {
+        return key;
+    }
+    get(key: string): Observable<string> {
+        return Observable.of(key);
+    }
+}
+
+/** Returns a mocked Translator that will always return the key for instant() and Observable.of(key) for get(). */
+export function getMockTagEditorTranslator(): Translator {
+    return new MockTranslator() as any;
+}
 
 
 /**
@@ -181,7 +195,7 @@ function createTagProperty<T extends TagPartProperty>(src: MockTagPropertyInfo<T
 }
 
 /** Creates an example EditableTag object with String TagParts. */
-export function getExampleEditableTag(): EditableTag {
+export const getExampleEditableTag: () => EditableTag = () => {
     const tagPropInfos: MockTagPropertyInfo<StringTagPartProperty>[] = [
         {
             stringValue: '',
@@ -218,7 +232,8 @@ export function getExampleEditableTag(): EditableTag {
             typeId: TagPartType.Text,
         },
     ];
-    return mockEditableTag(tagPropInfos);
+    const mocked = mockEditableTag(tagPropInfos);
+    return mocked;
 }
 
 /**

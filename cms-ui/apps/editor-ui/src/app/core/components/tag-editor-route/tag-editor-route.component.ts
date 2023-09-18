@@ -16,7 +16,7 @@ import {
     Template,
     noItemPermissions,
 } from '@gentics/cms-models';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, isEqual } from'lodash-es'
 import { Schema, normalize } from 'normalizr';
 import { Observable, Subscription, combineLatest, from, of, throwError } from 'rxjs';
 import { distinctUntilChanged, filter, map, publishReplay, refCount, startWith, switchMap, tap } from 'rxjs/operators';

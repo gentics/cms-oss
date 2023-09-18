@@ -1,0 +1,34 @@
+{
+  "name": "editor-ui-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/editor-ui-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/editor-ui-e2e/cypress.config.ts",
+        "devServerTarget": "editor-ui:serve:development",
+        "testingType": "e2e",
+        "watch": false
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "editor-ui:serve:production"
+        },
+        "ci": {
+          "devServerTarget": "editor-ui:serve-static:e2e"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/editor-ui-e2e/**/*.{js,ts}"]
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["editor-ui"]
+}

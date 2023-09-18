@@ -77,27 +77,23 @@
         </span>
 
         <div
-            [hidden]="!form.get('password').enabled"
+            *ngIf="form.get('password').enabled"
             class="gtx-password-box"
         >
             <gtx-input
-                *ngIf="form.get('password').enabled"
                 type="password"
                 maxlength="255"
                 [label]="'contentRepository.password' | i18n"
                 formControlName="password"
-            >
-            </gtx-input>
+            ></gtx-input>
 
             <gtx-input
-                *ngIf="form.get('password').enabled"
                 type="password"
                 maxlength="255"
                 [label]="'contentRepository.repeatPassword' | i18n"
                 [value]="passwordRepeat"
                 (change)="updatePasswordRepeat($event)"
-            >
-            </gtx-input>
+            ></gtx-input>
 
             <span
                 *ngIf="form.get('password')?.hasError('passwordsDontMatch')"

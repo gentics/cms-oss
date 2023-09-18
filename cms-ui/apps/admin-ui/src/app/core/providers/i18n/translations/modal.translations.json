@@ -470,5 +470,9 @@
     "sort_construct_categories_title": {
         "en": "Sort construct categories",
         "de": "Tagtyp Kategorien sortieren"
+    },
+    "update_button": {
+        "de": "Aktualisieren",
+        "en": "Update"
     }
 }

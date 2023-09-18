@@ -1,7 +1,6 @@
 {
   "name": "@gentics/ui-core",
-  "version": "6.0.0-SNAPSHOT",
-  "dependencies": {},
+  "version": "6.1.0-SNAPSHOT",
   "peerDependencies": {
     "@angular/animations": "15.2.5",
     "@angular/common": "15.2.5",

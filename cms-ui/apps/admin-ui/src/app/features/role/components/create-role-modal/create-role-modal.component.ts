@@ -1,7 +1,6 @@
 import { LanguageHandlerService, RoleOperations } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language, RoleBO, RoleCreateRequest } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
@@ -28,7 +27,7 @@ export class CreateRoleModalComponent extends BaseModal<RoleBO> implements OnIni
 
     ngOnInit(): void {
         // instantiate form
-        this.form = new UntypedFormControl({}, createNestedControlValidator());
+        this.form = new UntypedFormControl({});
         this.supportedLanguages$ = this.languageHandler.getSupportedLanguages();
     }
     /**

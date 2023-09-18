@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Ho
 import { Router } from '@angular/router';
 import { Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { distinctUntilChanged, map, publishReplay, refCount, tap } from 'rxjs/operators';
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';

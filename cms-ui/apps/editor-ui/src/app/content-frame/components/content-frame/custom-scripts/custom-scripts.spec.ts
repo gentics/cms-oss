@@ -1,7 +1,7 @@
 import { EditMode, Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { Subscription } from 'rxjs';
 import { SpyEventTarget } from '../../../../../testing/spy-event-target';
-import { getExamplePageData } from '../../../../../testing/test-data.mock';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { GCMSUI } from '../../../providers/customer-script/customer-script.service';
 import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../common';
@@ -49,7 +49,7 @@ describe('custom scripts', () => {
             // which should prevent navigation without using event.preventDefault().
 
             let defaultPrevented: boolean;
-            let clickEventListener = (event: MouseEvent) => {
+            const clickEventListener = (event: MouseEvent) => {
                 // Store the original defaultPrevented value (which should be false)
                 // and then prevent the default action.
                 defaultPrevented = event.defaultPrevented;
@@ -148,7 +148,7 @@ describe('custom scripts', () => {
             expect(fixture.window.open).not.toHaveBeenCalled();
             expect(fixture.scriptHost.navigateToPagePreview).toHaveBeenCalledWith(
                 fixture.linkToOtherPage.nodeId,
-                fixture.linkToOtherPage.pageId
+                fixture.linkToOtherPage.pageId,
             );
         });
 
@@ -245,7 +245,7 @@ class CustomScriptsTestFixture {
     private readonly ALOHAPAGE_URL_OF_OTHER_PAGE = '/alohapage?nodeid=1&language=2&sid=123&real=newview&realid=47';
     private readonly ALOHAPAGE_URL_OF_EXTERNAL_PAGE = '/some/other/page';
     readonly linkToOtherPage = { nodeId: 1, pageId: 47 };
-    readonly urlOfInternalLink = `internal link (node 1 page 47)`;
+    readonly urlOfInternalLink = 'internal link (node 1 page 47)';
 
     window: FakeWindow;
     document: FakeDocument;
@@ -302,7 +302,7 @@ class CustomScriptsTestFixture {
         const script = new PreLoadScript(
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
-            this.scriptHost as any as CustomScriptHostService
+            this.scriptHost as any as CustomScriptHostService,
         );
         script.run();
     }
@@ -311,7 +311,7 @@ class CustomScriptsTestFixture {
         const script = new PostLoadScript(
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
-            this.scriptHost as any as CustomScriptHostService
+            this.scriptHost as any as CustomScriptHostService,
         );
         script.run();
     }
@@ -539,8 +539,8 @@ class CustomScriptsTestFixture {
     }
 
     private findClickableElement<T extends Element>(selector: string): ClickableElementFixture<T> | undefined {
-        const element = this.document.body.querySelector(selector) as T;
-        return element ? ClickableElementFixture.from(element) : undefined;
+        const element = this.document.body.querySelector(selector) ;
+        return element ? ClickableElementFixture.from(element) as any : undefined;
     }
 
     private preventLinkClicksFromNavigating(): void {
@@ -565,12 +565,12 @@ class FakeWindow extends SpyEventTarget {
     document = new FakeDocument();
     jQuery: FakeJQuery;
     location = {
-        href: ''
+        href: '',
     };
     name: string;
     frameElement = {
         id: '',
-        dataset: {} as DOMStringMap
+        dataset: {} as DOMStringMap,
     };
     JSI3_objprop_new_0 = ['JSI3_objprop_new_0'];
     JSI3_objprop_new_1 = ['JSI3_objprop_new_1'];
@@ -643,11 +643,11 @@ class FakeDocument {
     }
 
     querySelector(selector: string): HTMLElement {
-        return this.documentElement.querySelector(selector) as HTMLElement;
+        return this.documentElement.querySelector(selector) ;
     }
 
     querySelectorAll(selector: string): NodeListOf<HTMLElement> {
-        return this.documentElement.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+        return this.documentElement.querySelectorAll(selector) ;
     }
 }
 
@@ -656,7 +656,7 @@ class FakeAlohaGlobal implements AlohaGlobal {
 
     // tslint:disable:variable-name
     Selection = {
-        getRangeObject(): void { }
+        getRangeObject(): void { },
     };
 
     bind(): void { }
@@ -690,13 +690,13 @@ class FakeGCNJSLib implements GCNJSLib {
                 const [tag, property] = path.split('/');
                 self.page._data.tags[tag].properties[property] = {
                     ...self.page._data.tags[tag].properties[property],
-                    stringValue: value
+                    stringValue: value,
                 } as StringTagPartProperty;
             },
             tag(tagName: string, callback: (tag: FakeGCNJSLibTag) => void): void {
                 const tag = new FakeGCNJSLibTag(self, tagName);
                 callback(tag);
-            }
+            },
         };
         return pageObject;
     }
@@ -712,10 +712,10 @@ class FakeGCNJSLib implements GCNJSLib {
                     id: 2,
                     partId: 2,
                     type: TagPropertyType.STRING,
-                    stringValue: 'text before'
-                }
+                    stringValue: 'text before',
+                },
             },
-            type: 'CONTENTTAG'
+            type: 'CONTENTTAG',
         };
 
         const objectProperty1: Tag = {
@@ -728,18 +728,18 @@ class FakeGCNJSLib implements GCNJSLib {
                     id: 4,
                     partId: 4,
                     stringValue: 'value before',
-                    type: TagPropertyType.STRING
-                }
+                    type: TagPropertyType.STRING,
+                },
             },
-            type: 'OBJECTTAG'
+            type: 'OBJECTTAG',
         };
 
         return {
             ...getExamplePageData({ id: 123 }),
             tags: {
                 tag1,
-                'object.prop1': objectProperty1
-            }
+                'object.prop1': objectProperty1,
+            },
         };
     }
 
@@ -853,7 +853,7 @@ class ClickableElementFixture<T extends Element> {
     }
 
     static create<K extends keyof HTMLElementTagNameMap>(
-            tagName: K, attributes: { [name: string]: string }
+        tagName: K, attributes: { [name: string]: string },
     ): ClickableElementFixture<HTMLElementTagNameMap[K]> {
         const element = document.createElement(tagName);
         for (const name of Object.keys(attributes)) {
@@ -930,7 +930,7 @@ class ClickableElementFixture<T extends Element> {
             shiftKey: shiftKey || false,
             metaKey: metaKeyArg,
             button: button,
-            relatedTarget: relatedTargetArg
+            relatedTarget: relatedTargetArg,
         });
     }
 
@@ -1005,8 +1005,8 @@ class FormGeneratorToolbarFixture {
                 (other buttons)
             </ul>`;
 
-        const saveButtonText = this.nativeElement.querySelector('#toolbar-button-save .ui-button-text') as HTMLSpanElement;
-        this.saveButtonFixture = saveButtonText && ClickableElementFixture.from(saveButtonText);
+        const saveButtonText = this.nativeElement.querySelector('#toolbar-button-save .ui-button-text') ;
+        this.saveButtonFixture = saveButtonText && ClickableElementFixture.from(saveButtonText) as any;
     }
 
     prependTo(element: Element): this {

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angul
 import { ActivatedRoute, Router } from '@angular/router';
 import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable } from 'rxjs';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService, FolderActionsService } from '../../../state';

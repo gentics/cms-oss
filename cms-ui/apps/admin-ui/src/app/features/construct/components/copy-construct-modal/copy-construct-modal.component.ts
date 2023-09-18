@@ -3,7 +3,6 @@ import { ALL_TRANSLATIONS, ConstructHandlerService, I18nNotificationService, Lan
 import { ConstructPropertiesMode } from '@admin-ui/features/construct/components';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { CmsI18nValue, Language, TagTypeBO } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -73,7 +72,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
     }
 
     initForm(): void {
-        this.form = new UntypedFormControl(this.construct, createNestedControlValidator());
+        this.form = new UntypedFormControl(this.construct);
     }
 
     buttonCopyEntityClicked(): void {

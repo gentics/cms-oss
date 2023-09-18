@@ -1,0 +1,2 @@
+For Mesh ContentRepositories, the new REST API Endpoint @/rest/contentrepositores/[id]/proxy@ will act as a proxy to the Mesh REST API.
+The new REST API Endpoint @/rest/contentrepositories/[id]/proxylogin@ will perform a login with the credentials stored in the MEsh ContentRepository.

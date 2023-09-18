@@ -24,6 +24,8 @@
         <ui.application>false</ui.application>
         <!-- If the UI module is a library -->
         <ui.library>false</ui.library>
+        <!-- If the UI module are e2e tests -->
+        <ui.e2e>false</ui.e2e>
 
         <!-- If the UI should skip npm install -->
         <ui.skip.install>false</ui.skip.install>
@@ -31,8 +33,10 @@
         <ui.skip.build>true</ui.skip.build>
         <!-- If the UI module should skip the assembly step -->
         <ui.skip.assembly>true</ui.skip.assembly>
-        <!-- If the UI module should skip testing -->
+        <!-- If the UI module should skip unit/component testing -->
         <ui.skip.test>true</ui.skip.test>
+        <!-- If the UI module should skip e2e tests -->
+        <ui.skip.e2e>true</ui.skip.e2e>
 
         <!-- The browsers to use when executing the tests -->
         <ui.test.browsers>ChromeDocker</ui.test.browsers>
@@ -42,15 +46,24 @@
     </properties>
 
 	<modules>
+        <!-- Libraries -->
+        <module>libs/mesh-models</module>
         <module>libs/cms-models</module>
         <module>libs/cms-rest-clients-angular</module>
+        <module>libs/mesh-rest-client</module>
+        <module>libs/mesh-rest-client-angular</module>
         <module>libs/ui-core</module>
         <module>libs/image-editor</module>
         <module>libs/cms-components</module>
         <module>libs/form-generator</module>
+        <!-- Applications -->
         <module>apps/admin-ui</module>
         <module>apps/editor-ui</module>
         <module>apps/ct-link-checker</module>
+        <!-- E2E Tests -->
+        <module>apps/admin-ui-e2e</module>
+        <module>apps/ct-link-checker-e2e</module>
+        <module>apps/editor-ui-e2e</module>
 	</modules>
 
     <build>
@@ -86,7 +99,7 @@
 
 						<configuration>
                             <skip>${ui.skip.install}</skip>
-							<arguments>install --no-audit --no-fund</arguments>
+							<arguments>ci --no-audit --no-fund</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>
@@ -102,7 +115,23 @@
 
 						<configuration>
                             <skip>${ui.skip.test}</skip>
-							<arguments>test ${project.artifactId} -- --browsers=${ui.test.browsers} --reporters=junit</arguments>
+							<arguments>run test -- ${project.artifactId} --configuration=ci --browsers=${ui.test.browsers} --reporters=junit</arguments>
+                            <workingDirectory>${npm.workingDirectory}</workingDirectory>
+						</configuration>
+					</execution>
+
+                    <execution>
+						<?m2e ignore?>
+						<id>npm e2e</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+
+						<phase>integration-test</phase>
+
+						<configuration>
+                            <skip>${ui.skip.e2e}</skip>
+							<arguments>run e2e -- ${project.artifactId} --browsers=${ui.test.browsers}</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>
@@ -118,7 +147,7 @@
 
 						<configuration>
                             <skip>${ui.skip.build}</skip>
-							<arguments>run build ${project.artifactId}</arguments>
+							<arguments>run build -- ${project.artifactId}</arguments>
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>

@@ -21,6 +21,8 @@ module.exports = (config, options, targetOptions) => {
         loader: 'yaml-loader',
     });
 
+    // `precompile-scss` files, are for inline use, as these are styles which are
+    // getting injected into the aloha iframe when editing a page.
     config.module.rules.push({
         test: /\.precompile-scss$/,
         use: [

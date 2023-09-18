@@ -1,10 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
+        "module": "commonjs",
         "types": [
             "jasmine",
-            "node",
-            "jasminewd2"
+            "node"
         ]
     },
     "files": [
@@ -12,11 +12,7 @@
         "src/polyfills.ts"
     ],
     "include": [
-        "src/**/*.d.ts",
-        "src/**/*.spec.ts",
-        "../../libs/cms-components/src/public-api.ts",
-        "../../libs/cms-rest-clients-angular/src/public-api.ts",
-        "../../libs/cms-models/src/public-api.ts",
-        "../../libs/ui-core/src/public-api.ts"
-    ],
+        "**/*.spec.ts",
+        "**/*.d.ts"
+    ]
 }

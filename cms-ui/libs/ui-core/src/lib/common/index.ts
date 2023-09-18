@@ -3,6 +3,7 @@ export * from './date-time-picker';
 export * from './docs';
 export * from './dropdown';
 export * from './file-drop-area';
+export * from './forms';
 export * from './keycodes';
 export * from './mapping';
 export * from './modal';

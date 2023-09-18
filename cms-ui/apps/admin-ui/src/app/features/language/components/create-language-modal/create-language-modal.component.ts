@@ -1,7 +1,6 @@
 import { LanguageHandlerService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { createNestedControlValidator } from '@gentics/cms-components';
 import { Language } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 
@@ -26,7 +25,7 @@ export class CreateLanguageModalComponent extends BaseModal<Language> implements
         this.form = new UntypedFormControl({
             name: '',
             code: '',
-        }, createNestedControlValidator());
+        });
     }
 
     /**

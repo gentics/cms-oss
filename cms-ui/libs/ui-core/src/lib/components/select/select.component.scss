@@ -50,7 +50,10 @@ label {
 
     @include input-label-styles;
 
-    &.ng-touched.ng-invalid .view-value {
+    &.ng-touched.ng-invalid .view-value,
+    &.ng-invalid .view-value.has-disabled-unknowns,
+    &.ng-touched.ng-invalid .addon-button,
+    &.ng-invalid .addon-button.has-disabled-unknowns {
         border-color: $gtx-color-alert;
     }
 

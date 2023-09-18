@@ -1,9 +1,8 @@
-import {enableProdMode} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-
-import {AppModule} from './app/app.module';
-import {KeycloakService} from './app/login/providers/keycloak/keycloak.service';
-import {environment} from './environments/environment';
+import { enableProdMode } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+import { KeycloakService } from './app/login/providers/keycloak/keycloak.service';
+import { environment } from './environments/environment';
 
 if (environment.production) {
     enableProdMode();
@@ -20,6 +19,6 @@ KeycloakService.checkKeycloakAuth()
         platformBrowserDynamic().bootstrapModule(
             AppModule,
             // Enable preservation of whitespaces for default spacing between components.
-            { preserveWhitespaces: true }
-        )
+            { preserveWhitespaces: true },
+        ),
     ).catch(err => console.error(err));

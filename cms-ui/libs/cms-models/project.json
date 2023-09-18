@@ -1,0 +1,44 @@
+{
+    "name": "cms-models",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/cms-models/src",
+    "projectType": "library",
+    "tags": ["lib", "models"],
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/cms-models",
+          "tsConfig": "libs/cms-models/tsconfig.lib.json",
+          "packageJson": "libs/cms-models/package.json",
+          "main": "libs/cms-models/src/public-api.ts",
+          "assets": ["libs/cms-models/*.md"]
+        }
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": [
+            "libs/cms-models/**/*.ts",
+            "libs/cms-models/package.json"
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/cms-models/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": {
+          "ci": {
+            "ci": true,
+            "codeCoverage": true
+          }
+        }
+      }
+    }
+  }

@@ -1,0 +1,141 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "ct-link-checker",
+    "projectType": "application",
+    "prefix": "gtx",
+    "sourceRoot": "apps/ct-link-checker/src",
+    "implicitDependencies": [
+        "cms-components",
+        "cms-models",
+        "cms-rest-clients-angular",
+        "mesh-models",
+        "ui-core"
+    ],
+    "tags": ["app", "ct", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:webpack-browser",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/apps/ct-link-checker",
+                "index": "apps/ct-link-checker/src/index.html",
+                "main": "apps/ct-link-checker/src/main.ts",
+                "polyfills": ["apps/ct-link-checker/src/polyfills.ts"],
+                "tsConfig": "apps/ct-link-checker/tsconfig.app.json",
+                "assets": [
+                    "apps/ct-link-checker/src/favicon.ico",
+                    "apps/ct-link-checker/src/assets",
+                    "apps/ct-link-checker/src/formgenerator",
+                    "apps/ct-link-checker/src/customer-config"
+                ],
+                "styles": ["apps/ct-link-checker/src/styles/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/ct-link-checker/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "scripts": [],
+                "allowedCommonJsDependencies": [
+                    "@bevacqua/rome",
+                    "@gentics/ui-core"
+                ],
+                "aot": true,
+                "buildOptimizer": false,
+                "optimization": false,
+                "vendorChunk": true,
+                "extractLicenses": false,
+                "sourceMap": true,
+                "namedChunks": true
+            },
+            "configurations": {
+                "production": {
+                    "budgets": [
+                        {
+                            "type": "initial",
+                            "maximumWarning": "3mb",
+                            "maximumError": "5mb"
+                        },
+                        {
+                            "type": "anyComponentStyle",
+                            "maximumWarning": "20kb",
+                            "maximumError": "30kb"
+                        }
+                    ],
+                    "fileReplacements": [
+                        {
+                            "replace": "apps/ct-link-checker/src/environments/environment.ts",
+                            "with": "apps/ct-link-checker/src/environments/environment.prod.ts"
+                        }
+                    ],
+                    "outputHashing": "all",
+                    "optimization": true,
+                    "sourceMap": false,
+                    "namedChunks": false,
+                    "extractLicenses": true,
+                    "vendorChunk": false,
+                    "buildOptimizer": true
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@nx/angular:webpack-dev-server",
+            "options": {
+                "proxyConfig": "proxy.conf.json",
+                "liveReload": false
+            },
+            "configurations": {
+                "production": {
+                    "browserTarget": "ct-link-checker:build:production"
+                },
+                "development": {
+                    "browserTarget": "ct-link-checker:build:development"
+                }
+            },
+            "defaultConfiguration": "development"
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "apps/ct-link-checker/**/*.ts",
+                    "apps/ct-link-checker/**/*.html"
+                ]
+            }
+        },
+        "serve-static": {
+            "executor": "@nx/web:file-server",
+            "options": {
+                "buildTarget": "ct-link-checker:build"
+            },
+            "configurations": {
+                "e2e": {
+                    "proxyUrl": "http://localhost:8080",
+                    "proxyOptions": {
+                        "secure": false,
+                        "changeOrigin": true
+                    }
+                }
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/ct-link-checker/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "ct-link-checker:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

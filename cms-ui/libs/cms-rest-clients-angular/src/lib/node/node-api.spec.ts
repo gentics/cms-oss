@@ -13,6 +13,7 @@ import {
 import { GcmsTestData } from '@gentics/cms-models';
 import { MockApiBase } from '../util/api-base.mock';
 import { NodeApi } from './node-api';
+import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 
 const NODE_ID = 1;
 
@@ -28,7 +29,7 @@ describe('NodeApi', () => {
 
     it('getNodes() sends the correct GET request', () => {
         nodeApi.getNodes();
-        expect(apiBase.get).toHaveBeenCalledWith(`node`, undefined);
+        expect(apiBase.get).toHaveBeenCalledWith('node', undefined);
     });
 
     it('addNode() sends the correct PUT request', () => {
@@ -37,12 +38,12 @@ describe('NodeApi', () => {
         };
 
         nodeApi.addNode(payload);
-        expect(apiBase.put).toHaveBeenCalledWith(`node`, payload);
+        expect(apiBase.put).toHaveBeenCalledWith('node', payload);
     });
 
     it('getNodeFeatureList() sends the correct GET request', () => {
         nodeApi.getNodeFeatureList();
-        expect(apiBase.get).toHaveBeenCalledWith(`node/features`, undefined);
+        expect(apiBase.get).toHaveBeenCalledWith('node/features', undefined);
     });
 
     it('getNodeFeatureList() sends the correct GET request with query parameters', () => {
@@ -53,7 +54,7 @@ describe('NodeApi', () => {
         };
 
         nodeApi.getNodeFeatureList(options);
-        expect(apiBase.get).toHaveBeenCalledWith(`node/features`, options);
+        expect(apiBase.get).toHaveBeenCalledWith('node/features', { ...options, sort: stringifyPagingSortOptions(options.sort) });
     });
 
     it('removeNode() sends the correct DELETE request', () => {
@@ -193,15 +194,15 @@ describe('NodeApi', () => {
     });
 
     it('deactivateNodeFeature() sends the correct DELETE request', () => {
-        nodeApi.deactivateNodeFeature(NODE_ID, NodeFeature.alwaysLocalize);
-        expect(apiBase.delete).toHaveBeenCalledWith(`node/${NODE_ID}/features/${NodeFeature.alwaysLocalize}`);
+        nodeApi.deactivateNodeFeature(NODE_ID, NodeFeature.ALWAYS_LOCALIZE);
+        expect(apiBase.delete).toHaveBeenCalledWith(`node/${NODE_ID}/features/${NodeFeature.ALWAYS_LOCALIZE}`);
     });
 
     it('activateNodeFeature() sends the correct PUT request', () => {
-        nodeApi.activateNodeFeature(NODE_ID, NodeFeature.alwaysLocalize);
+        nodeApi.activateNodeFeature(NODE_ID, NodeFeature.ALWAYS_LOCALIZE);
 
         /** Second params is 'undefined' because we pass an empty body for PUT */
-        expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/features/${NodeFeature.alwaysLocalize}`, undefined);
+        expect(apiBase.put).toHaveBeenCalledWith(`node/${NODE_ID}/features/${NodeFeature.ALWAYS_LOCALIZE}`, undefined);
     });
 
     it('removeNodeLanguage() sends the correct DELETE request', () => {

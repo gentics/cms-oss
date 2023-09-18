@@ -15,14 +15,16 @@ import {
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
+import { locale } from 'moment';
 import { NEVER, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import {
-    DateTimePickerStrings,
     DEFAULT_DATE_TIME_PICKER_STRINGS,
+    DateTimePickerStrings,
     Moment,
-    momentjs,
+    getInstance,
     rome,
+    unix,
 } from '../../common';
 import { BaseFormElementComponent } from '../../components/base-form-element/base-form-element.component';
 import { DateTimePickerFormatProvider } from '../../providers/date-time-picker-format-provider/date-time-picker-format-provider.service';
@@ -134,7 +136,7 @@ export class DateTimePickerControlsComponent
     public selectedYear: number;
 
     /** The value as timestamp to be used with momentjs */
-    public momentValue: Moment = momentjs();
+    public momentValue: Moment = getInstance();
 
     /** The time value */
     public time: any = {
@@ -263,7 +265,7 @@ export class DateTimePickerControlsComponent
     }
 
     protected updateMomentValue(timestamp: number): void {
-        this.momentValue = momentjs.unix(timestamp);
+        this.momentValue = unix(timestamp);
         this.updateInternalValues();
     }
 
@@ -324,11 +326,11 @@ export class DateTimePickerControlsComponent
 
         // If the current value would be out of range, limit it and trigger a change
         if (this.momentValue.isBefore(min)) {
-            this.momentValue = momentjs.unix(min.getTime());
+            this.momentValue = unix(min.getTime());
             this.updateInternalValues();
             this.triggerChange(this.getUnixTimestamp());
         } else if (this.momentValue.isAfter(max)) {
-            this.momentValue = momentjs.unix(max.getTime());
+            this.momentValue = unix(max.getTime());
             this.updateInternalValues();
             this.triggerChange(this.getUnixTimestamp());
         }
@@ -466,7 +468,7 @@ export class DateTimePickerControlsComponent
             }
         }
 
-        const newLocale: string = momentjs.locale(`x-gtx-date-picker-${momentLocales.length}`, {
+        const newLocale: string = locale(`x-gtx-date-picker-${momentLocales.length}`, {
             months: localeStrings.months,
             monthsShort: localeStrings.monthsShort
                 || (
@@ -487,7 +489,7 @@ export class DateTimePickerControlsComponent
 
     private determineDateOrder(): void {
         // Stringify 1999-08-22 with the dateProvider to determine the date order (D-M-Y, M-D-Y or Y-M-D).
-        const time: string = this.formatProvider.format(momentjs(935272800000), false, false);
+        const time: string = this.formatProvider.format(unix(935272800000), false, false);
         const yearPos = time.indexOf('99');
         const monthPos = time.indexOf('8');
         const dayPos = time.indexOf('22');

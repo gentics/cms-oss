@@ -6,12 +6,10 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter,
     Input,
     OnChanges,
     OnInit,
-    Output,
-    SimpleChange,
+    SimpleChange
 } from '@angular/core';
 import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
@@ -27,7 +25,7 @@ import {
     Raw,
     TagTypeBO,
 } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
@@ -86,7 +84,10 @@ const CONSTRUCT_ICONS = {
     templateUrl: './construct-properties.component.html',
     styleUrls: ['./construct-properties.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(ConstructPropertiesComponent)],
+    providers: [
+        generateFormProvider(ConstructPropertiesComponent),
+        generateValidatorProvider(ConstructPropertiesComponent),
+    ],
 })
 export class ConstructPropertiesComponent
     extends BasePropertiesComponent<ConstructPropertiesFormData>

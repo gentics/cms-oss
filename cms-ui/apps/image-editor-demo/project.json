@@ -1,0 +1,131 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "image-editor-demo",
+    "projectType": "application",
+    "prefix": "gtx",
+    "sourceRoot": "apps/image-editor-demo/src",
+    "implicitDependencies": ["image-editor", "ui-core"],
+    "tags": ["app", "docs", "demo", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:webpack-browser",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "customWebpackConfig": {
+                    "path": "apps/ui-core-docs/webpack.partial.js"
+                },
+                "outputPath": "dist/apps/image-editor-demo",
+                "index": "apps/image-editor-demo/src/index.html",
+                "main": "apps/image-editor-demo/src/main.ts",
+                "polyfills": ["apps/image-editor-demo/src/polyfills.ts"],
+                "tsConfig": "apps/image-editor-demo/tsconfig.app.json",
+                "assets": [
+                    "apps/image-editor-demo/src/favicon.ico",
+                    "apps/image-editor-demo/src/assets"
+                ],
+                "styles": ["apps/image-editor-demo/src/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/image-editor-demo/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "scripts": [],
+                "allowedCommonJsDependencies": [
+                    "@bevacqua/rome",
+                    "@gentics/ui-core",
+                    "cropperjs"
+                ],
+                "aot": true,
+                "buildOptimizer": false,
+                "optimization": false,
+                "vendorChunk": true,
+                "extractLicenses": false,
+                "sourceMap": true,
+                "namedChunks": true
+            },
+            "configurations": {
+                "production": {
+                    "budgets": [
+                        {
+                            "type": "initial",
+                            "maximumWarning": "3mb",
+                            "maximumError": "5mb"
+                        },
+                        {
+                            "type": "anyComponentStyle",
+                            "maximumWarning": "20kb",
+                            "maximumError": "30kb"
+                        }
+                    ],
+                    "outputHashing": "all",
+                    "optimization": true,
+                    "sourceMap": false,
+                    "namedChunks": false,
+                    "extractLicenses": true,
+                    "vendorChunk": false,
+                    "buildOptimizer": true
+                },
+                "development": {}
+            },
+            "defaultConfiguration": "production"
+        },
+        "serve": {
+            "executor": "@nx/angular:webpack-dev-server",
+            "options": {
+                "proxyConfig": "proxy.conf.json",
+                "liveReload": false
+            },
+            "configurations": {
+                "production": {
+                    "browserTarget": "image-editor-demo:build:production"
+                },
+                "development": {
+                    "browserTarget": "image-editor-demo:build:development"
+                }
+            },
+            "defaultConfiguration": "development"
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "apps/image-editor-demo/**/*.ts",
+                    "apps/image-editor-demo/**/*.html"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@angular-devkit/build-angular:karma",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "main": "apps/image-editor-demo/src/test.ts",
+                "tsConfig": "apps/image-editor-demo/tsconfig.spec.json",
+                "karmaConfig": "apps/image-editor-demo/karma.conf.js",
+                "polyfills": "apps/image-editor-demo/src/polyfills.ts",
+                "styles": ["apps/image-editor-demo/src/styles/styles.scss"],
+                "stylePreprocessorOptions": {
+                    "includePaths": [
+                        "apps/image-editor-demo/src/styles",
+                        "libs",
+                        "node_modules"
+                    ]
+                },
+                "assets": ["apps/image-editor-demo/src/assets"]
+            },
+            "configurations": {
+                "ci": {
+                    "codeCoverage": true
+                }
+            }
+        },
+        "serve-static": {
+            "executor": "@nx/web:file-server",
+            "options": {
+                "buildTarget": "image-editor-demo:build"
+            }
+        }
+    }
+}

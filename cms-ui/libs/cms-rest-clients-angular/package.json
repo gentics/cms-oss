@@ -4,7 +4,7 @@
   "peerDependencies": {
     "@angular/common": "15.2.5",
     "@angular/core": "15.2.5",
-    "@gentics/cms-models": "^6.0.0",
+    "@gentics/cms-models": "^6.1.0-SNAPSHOT",
     "rxjs": "^6.6.3"
   },
   "publishConfig": {

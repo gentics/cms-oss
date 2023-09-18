@@ -48,6 +48,7 @@
             <gtx-button
                 *ngFor="let action of multiActions; trackBy: trackElement"
                 class="action-button"
+                [attr.data-id]="action.id"
                 [icon]="true"
                 [size]="'small'"
                 [disabled]="disabled || (rows?.length < 1 && totalCount < 1) || selected.length < 1 || !selectable || !(action | gtxTableActionEnabled)"
@@ -125,6 +126,7 @@
             <gtx-button
                 *ngFor="let action of singleActions; trackBy: trackElement"
                 class="action-button"
+                [attr.data-id]="action.id"
                 [icon]="true"
                 [size]="'small'"
                 [disabled]="disabled || !(action | gtxTableActionEnabled:row.item)"

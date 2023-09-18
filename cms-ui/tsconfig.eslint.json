@@ -4,6 +4,8 @@
         "noEmit": true
     },
     "include": [
+        "tools/*.js",
+        "**/karma.conf.js",
         ".eslintrc.js",
         "apps/**/*.ts",
         "libs/**/*.ts",

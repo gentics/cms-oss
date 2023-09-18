@@ -18,6 +18,7 @@ export * from './dynamic-modal/dynamic-modal.component';
 export * from './file-picker/file-picker.component';
 export * from './grouped-tabs/grouped-tabs.component';
 export * from './input/input.component';
+export * from './json-input/json-input.component';
 export * from './menu-toggle-button/menu-toggle-button.component';
 export * from './modal-dialog/modal-dialog.component';
 export * from './overlay-host/overlay-host.component';

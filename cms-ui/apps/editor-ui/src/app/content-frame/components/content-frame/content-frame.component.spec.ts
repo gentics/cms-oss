@@ -15,17 +15,17 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
-import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { NEVER, Observable, of as observableOf, of } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../testing';
-import { mockPipes } from '../../../../testing/mock-pipe';
 import {
     getExampleFormDataNormalized,
     getExampleLanguageData,
     getExampleNodeDataNormalized,
     getExamplePageData,
     getExamplePageDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
+import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
+import { NEVER, Observable, of as observableOf, of } from 'rxjs';
+import { componentTest, configureComponentTest } from '../../../../testing';
+import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';

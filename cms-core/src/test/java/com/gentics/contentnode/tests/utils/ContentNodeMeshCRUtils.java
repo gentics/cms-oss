@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -50,7 +52,6 @@ import com.gentics.mesh.core.rest.schema.impl.SchemaResponse;
 import com.gentics.mesh.core.rest.tag.TagReference;
 import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
-import com.gentics.mesh.parameter.client.GenericParametersImpl;
 import com.gentics.mesh.parameter.client.NodeParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
 import com.gentics.mesh.rest.client.MeshRestClient;
@@ -861,6 +862,26 @@ public class ContentNodeMeshCRUtils {
 		} else {
 			assertThat(optionalRole).as("Role").isEmpty();
 			return null;
+		}
+	}
+
+	/**
+	 * Assert that hte given throwable is a {@link MeshRestClientMessageException} (or has one as it's cause) with the given expected status
+	 * @param e throwable
+	 * @param expected expected status
+	 */
+	public static void assertErrorCode(Throwable e, Response.Status expected) {
+		if (e instanceof MeshRestClientMessageException) {
+			MeshRestClientMessageException mrcme = (MeshRestClientMessageException) e;
+			assertThat(Response.Status.fromStatusCode(mrcme.getStatusCode())).as("Response Error Status").isEqualTo(expected);
+		} else {
+			if (e.getCause() != null && e.getCause() != e) {
+				assertErrorCode(e.getCause(), expected);
+			} else {
+				fail(String.format(
+						"Throwable is expected to be a MeshRestClientMessageException or have one at it's cause, but was a %s instead",
+						e.getClass().getName()));
+			}
 		}
 	}
 }

@@ -1,5 +1,21 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { InheritableItem, ItemPermissions, ItemType, LocalizationsResponse, Node, Normalized, Page } from '@gentics/cms-models';
+import {
+    File,
+    Folder,
+    FolderItemType,
+    FolderListOptions,
+    Image,
+    InheritableItem,
+    ItemPermissions,
+    ItemType,
+    LocalizationsResponse,
+    Node,
+    Normalized,
+    Page,
+    PageListOptions,
+    Raw,
+} from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable } from 'rxjs';
@@ -893,11 +909,18 @@ class MockApi {
     };
 }
 
-class MockFolderActions {
-    localizeItem(): Promise<any> {
+class MockFolderActions implements Partial<FolderActionsService> {
+    localizeItem(type: 'folder', itemId: number, channelId: number): Promise<Folder<Raw>>;
+    localizeItem(type: 'page', itemId: number, channelId: number): Promise<Page<Raw>>;
+    localizeItem(type: 'file', itemId: number, channelId: number): Promise<File<Raw>>;
+    localizeItem(type: 'image', itemId: number, channelId: number): Promise<Image<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw>>;
+    localizeItem(type: FolderItemType, itemId: number, channelId: number): Promise<InheritableItem<Raw> | void>{
         throw new Error('localizeItem called but not mocked');
     }
-    getItems(): void {
+    getItems(parentId: number, type: 'page', fetchAll?: boolean, options?: PageListOptions): Promise<void>;
+    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options?: FolderListOptions): Promise<void>;
+    getItems(parentId: number, type: FolderItemType, fetchAll?: boolean, options: any = {}): Promise<void> {
         throw new Error('getItems called but not mocked');
     }
 }

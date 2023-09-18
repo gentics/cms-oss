@@ -2,7 +2,7 @@ import { LocationStrategy } from '@angular/common';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { File as FileModel, Folder, Form, Image, Node, Normalized, Page } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import {
     debounceTime,

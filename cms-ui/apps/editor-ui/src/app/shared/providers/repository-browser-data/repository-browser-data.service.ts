@@ -42,7 +42,7 @@ import {
     TotalUsageResponse,
     Usage,
 } from '@gentics/cms-models';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
     combineLatest,

@@ -1,7 +1,7 @@
+import { getExampleEditableTag, getMockTagEditorTranslator } from '@editor-ui/testing/test-tag-editor-data.mock';
 import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-models';
+import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { getExampleFolderData, getExampleImageData, getExampleNodeData, getExamplePageData } from '../../../../testing/test-data.mock';
-import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { TagEditorContextImpl } from './tag-editor-context-impl';
 
 const READ_ONLY = false;
@@ -9,13 +9,13 @@ const SID = 7890;
 const VAR_CONTEXTS: VariableTagEditorContext[] = [
     { uiLanguage: 'de' },
     { uiLanguage: 'en' },
-    { uiLanguage: 'de' }
+    { uiLanguage: 'de' },
 ];
 
-const TAG = getExampleEditableTag();
 const PAGE = getExamplePageData();
-const FOLDER = getExampleFolderData();
-const IMAGE = getExampleImageData();
+const TAG = getExampleEditableTag();
+// const FOLDER = getExampleFolderData();
+// const IMAGE = getExampleImageData();
 const NODE = getExampleNodeData();
 
 /** Asserts that the specified TagEditorContexts are equal. */
@@ -37,11 +37,6 @@ export function assertTagEditorContextsEqual(expected: TagEditorContext, actual:
     expect(!!expected.variableContext).toBe(!!actual.variableContext);
 }
 
-/** Returns a mocked Translator that will always return the key for instant() and Observable.of(key) for get(). */
-export function getMockTagEditorTranslator(): Translator {
-    return new MockTranslator() as any;
-}
-
 describe('TagEditorContextImpl', () => {
 
     let variableContext$: BehaviorSubject<VariableTagEditorContext>;
@@ -53,7 +48,7 @@ describe('TagEditorContextImpl', () => {
         translator = getMockTagEditorTranslator();
         gcmsUiServices = {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
-            openImageEditor: jasmine.createSpy('openImageEditor')
+            openImageEditor: jasmine.createSpy('openImageEditor'),
         };
     });
 
@@ -227,12 +222,3 @@ describe('TagEditorContextImpl', () => {
     });
 
 });
-
-class MockTranslator {
-    instant(key: string): string {
-        return key;
-    }
-    get(key: string): Observable<string> {
-        return Observable.of(key);
-    }
-}

@@ -16,6 +16,7 @@ import * as ELASTICSEARCHINDEX_TRANSLATIONS from './translations/elastic-search-
 import * as GROUP_TRANSLATIONS from './translations/group.translations.json';
 import * as LOGS_TRANSLATIONS from './translations/logs.translations.json';
 import * as MAINTENANCEMODE_TRANSLATIONS from './translations/maintenance-mode.translations.json';
+import * as MESH_TRANSLATIONS from './translations/mesh.translations.json';
 import * as MODAL_TRANSLATIONS from './translations/modal.translations.json';
 import * as NODE_TRANSLATIONS from './translations/node.translations.json';
 import * as OBJECTPROPERTY_TRANSLATIONS from './translations/object-property.translations.json';
@@ -30,7 +31,7 @@ import * as USER_TRANSLATIONS from './translations/user.translations.json';
 import * as WIDGET_TRANSLATIONS from './translations/widget.translations.json';
 
 function getTranslations(jsonModule: any): any {
-    return jsonModule.default;
+    return jsonModule;
 }
 
 export const ALL_TRANSLATIONS = {
@@ -48,6 +49,7 @@ export const ALL_TRANSLATIONS = {
     group: getTranslations(GROUP_TRANSLATIONS),
     logs: getTranslations(LOGS_TRANSLATIONS),
     maintenancemode: getTranslations(MAINTENANCEMODE_TRANSLATIONS),
+    mesh: getTranslations(MESH_TRANSLATIONS),
     modal: getTranslations(MODAL_TRANSLATIONS),
     node: getTranslations(NODE_TRANSLATIONS),
     objectProperty: getTranslations(OBJECTPROPERTY_TRANSLATIONS),
@@ -83,7 +85,7 @@ export class LocalTranslateLoader implements TranslateLoader {
         const translation: SingleLanguageTranslationsSet = {};
 
         Object.keys(ALL_TRANSLATIONS).forEach(section => {
-            const srcSection = ALL_TRANSLATIONS[section];
+            const srcSection = ALL_TRANSLATIONS[section] || {};
             const destSection: IndexByKey<string> = {};
 
             Object.keys(srcSection).forEach(key => {

@@ -1,0 +1,43 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "cms-components",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/cms-components/src",
+    "implicitDependencies": ["cms-models", "mesh-models", "ui-core"],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/cms-components/tsconfig.lib.json",
+                "project": "libs/cms-components/ng-package.json"
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/cms-components/**/*.ts",
+                    "libs/cms-components/**/*.html"
+                ]
+            }
+        },
+        "component-test": {
+            "executor": "@nx/cypress:cypress",
+            "options": {
+                "cypressConfig": "apps/cms-components/cypress.config.ts",
+                "testingType": "component",
+                "skipServe": true,
+                "devServerTarget": "cms-components:build",
+                "watch": false
+            },
+            "configurations": {
+                "watch": {
+                    "watch": true
+                }
+            }
+        }
+    }
+}

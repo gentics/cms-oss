@@ -1,5 +1,6 @@
 import { BaseListOptionsWithPaging, BaseListOptionsWithSkipCount, PackageCreateRequest, PagingSortOrder } from '@gentics/cms-models';
 import { MockApiBase } from '../util/api-base.mock';
+import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
 import { DevToolsApi } from './dev-tools-api';
 
 const NODE_ID = 42;
@@ -56,7 +57,7 @@ describe('DevToolsApi', () => {
     // PACKAGES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getPackages() sends the correct GET request', () => {
         devtoolsApi.getPackages(OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith('devtools/packages', OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith('devtools/packages', { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getPackage() sends the correct GET request', () => {
@@ -77,7 +78,7 @@ describe('DevToolsApi', () => {
     // NODE PACKAGES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getPackagesOfNode() sends the correct GET request', () => {
         devtoolsApi.getPackagesOfNode(NODE_ID, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/nodes/${NODE_ID}/packages`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/nodes/${NODE_ID}/packages`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('createPackageInNode() sends the correct PUT request', () => {
@@ -97,18 +98,18 @@ describe('DevToolsApi', () => {
 
     it('syncPackageToFilesystem() sends the correct PUT request', () => {
         devtoolsApi.syncPackageToFilesystem(PACKAGE_CREATE_PAYLOAD.name);
-        expect(apiBase.put).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_CREATE_PAYLOAD.name}/cms2fs`, null);
+        expect(apiBase.put).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_CREATE_PAYLOAD.name}/cms2fs`, null, undefined);
     });
 
     it('syncPackageFromFilesystem() sends the correct PUT request', () => {
         devtoolsApi.syncPackageFromFilesystem(PACKAGE_CREATE_PAYLOAD.name);
-        expect(apiBase.put).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_CREATE_PAYLOAD.name}/fs2cms`, null);
+        expect(apiBase.put).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_CREATE_PAYLOAD.name}/fs2cms`, null, undefined);
     });
 
     // CONSTRUCTS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getConstructs() sends the correct GET request', () => {
         devtoolsApi.getConstructs(PACKAGE_NAME, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/constructs`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/constructs`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getConstruct() sends the correct GET request', () => {
@@ -129,7 +130,7 @@ describe('DevToolsApi', () => {
     // CONTENTREPOSITORIES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getContentrepositories() sends the correct GET request', () => {
         devtoolsApi.getContentrepositories(PACKAGE_NAME, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/contentrepositories`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/contentrepositories`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getContentRepository() sends the correct GET request', () => {
@@ -150,7 +151,7 @@ describe('DevToolsApi', () => {
     // CR_FRAGMENTS ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getContentRepositoryFragments() sends the correct GET request', () => {
         devtoolsApi.getContentRepositoryFragments(PACKAGE_NAME, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/cr_fragments`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/cr_fragments`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getContentRepositoryFragment() sends the correct GET request', () => {
@@ -171,7 +172,7 @@ describe('DevToolsApi', () => {
     // DATASOURCE ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getDataSources() sends the correct GET request', () => {
         devtoolsApi.getDataSources(PACKAGE_NAME, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/datasources`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/datasources`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getDataSource() sends the correct GET request', () => {
@@ -192,7 +193,7 @@ describe('DevToolsApi', () => {
     // OBJECTPROPERTY ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getObjectproperties() sends the correct GET request', () => {
         devtoolsApi.getObjectproperties(PACKAGE_NAME, OPTIONS);
-        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/objectproperties`, OPTIONS);
+        expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/objectproperties`, { ...OPTIONS, sort: stringifyPagingSortOptions(OPTIONS.sort) });
     });
 
     it('getObjectProperty() sends the correct GET request', () => {
@@ -212,7 +213,7 @@ describe('DevToolsApi', () => {
 
     // TEMPLATES ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     it('getTemplates() sends the correct GET request', () => {
-        devtoolsApi.getTemplates(PACKAGE_NAME, OPTIONS_WITH_SKIPCOUNT);
+        devtoolsApi.getTemplates(PACKAGE_NAME, OPTIONS_WITH_SKIPCOUNT as any);
         expect(apiBase.get).toHaveBeenCalledWith(`devtools/packages/${PACKAGE_NAME}/templates`, OPTIONS_WITH_SKIPCOUNT);
     });
 

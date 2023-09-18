@@ -14,7 +14,7 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFolderData } from '../../../../testing/test-data.mock';
+import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { emptyItemInfo } from '../../../common/models';
 import { EditableProperties } from '../../../content-frame/components/properties-editor/properties-editor.component';
 import { Api } from '../../../core/providers/api/api.service';

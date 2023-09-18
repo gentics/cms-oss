@@ -1,7 +1,7 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { GtxVersionCompatibility, UsersnapSettings } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import * as _ from 'lodash';
+import * as _ from'lodash-es'
 import { AuthStateModule } from '../auth/auth.state';
 import { AppStateService } from '../providers/app-state/app-state.service';
 import { TestAppState, TEST_APP_STATE } from '../utils/test-app-state';

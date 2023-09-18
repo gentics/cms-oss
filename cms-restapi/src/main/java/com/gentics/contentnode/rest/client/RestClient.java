@@ -276,4 +276,12 @@ public class RestClient {
 			throw new RestException("Could not find CookieStore for Client");
 		}
 	}
+
+	/**
+	 * Get the cookie handler
+	 * @return cookie handler
+	 */
+	public CookieHandler getCookieHandler() {
+		return cookieHandler;
+	}
 }

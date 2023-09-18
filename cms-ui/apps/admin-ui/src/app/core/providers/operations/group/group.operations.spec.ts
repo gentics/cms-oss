@@ -29,7 +29,7 @@ import {
     User,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { cloneDeep as _cloneDeep } from 'lodash';
+import { cloneDeep as _cloneDeep } from'lodash-es'
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

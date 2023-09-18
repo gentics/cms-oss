@@ -5,7 +5,7 @@
 
     <div class="modal-content">
         <gtx-template-folder-link-trable
-            [selection]="selectedIds | values"
+            [selected]="selectedIds | values"
             (link)="onLinkEvent($event)"
             (unlink)="onUnlinkEvent($event)"
         ></gtx-template-folder-link-trable>

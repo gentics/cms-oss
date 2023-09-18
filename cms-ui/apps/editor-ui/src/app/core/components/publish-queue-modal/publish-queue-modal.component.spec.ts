@@ -10,7 +10,7 @@ import { NavigationService } from '@editor-ui/app/core/providers/navigation/navi
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { BaseListResponse, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
-import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/lib/testing/test-data.mock';
+import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 

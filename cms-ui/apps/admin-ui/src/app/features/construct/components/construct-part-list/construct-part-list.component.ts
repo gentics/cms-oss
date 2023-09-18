@@ -12,10 +12,10 @@ import {
     Output,
 } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormControl, UntypedFormArray, UntypedFormControl, Validators } from '@angular/forms';
-import { CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
+import { CONTROL_INVALID_VALUE } from '@gentics/cms-components';
 import { DataSource, Language, MarkupLanguage, Raw, TagPart } from '@gentics/cms-models';
 import { ModalService, generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from'lodash-es'
 import { cloneDeep } from 'lodash-es';
 import { Subscription, combineLatest } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
@@ -190,7 +190,7 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
             this.clonedParts = cloneDeep(parts);
 
             parts.forEach((singlePart, index) => {
-                const ctl = new UntypedFormControl(singlePart, createNestedControlValidator());
+                const ctl = new UntypedFormControl(singlePart);
                 this.form.push(ctl);
                 this.observeSingleTag(ctl, index);
 

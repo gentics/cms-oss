@@ -8,7 +8,7 @@ import {
     getExampleNodeDataNormalized,
     getExamplePageData,
     getExampleUserDataNormalized,
-} from '../../../../testing/test-data.mock';
+} from '@gentics/cms-models/testing/test-data.mock';
 import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '../../../common/models';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -143,11 +143,11 @@ describe('FolderActionsService', () => {
 
     describe('updateItem()', () => {
         it('calls with right parameters if name was changed', fakeAsync(() => {
-            let page = getExamplePageData();
-            let payload = {
+            const page = getExamplePageData();
+            const payload = {
                 name: 'Test Page',
             };
-            let expectedPage = {...page};
+            const expectedPage = {...page};
 
             expectedPage.name = payload.name;
             folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
@@ -161,17 +161,17 @@ describe('FolderActionsService', () => {
 
         describe('updateItemChanges()', () => {
             it('calls with right parameters if niceUrl was removed', fakeAsync(() => {
-                let page = getExamplePageData();
+                const page = getExamplePageData();
                 page.niceUrl = 'Test';
-                let payload: any = {
+                const payload: any = {
                     niceUrl: null,
                 };
-                let expectedPage = {...page};
+                const expectedPage = {...page};
                 delete expectedPage.niceUrl;
 
                 folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
                 // spyOn(state.actions.folder, 'fetchItemSuccess');
-                let result = folderActions.updateItem(page.type, page.id, payload);
+                const result = folderActions.updateItem(page.type, page.id, payload);
                 tick();
                 expect(api.folders.updateItem).toHaveBeenCalledWith(page.type, page.id, payload, undefined);
                 // expect(state.actions.folder.fetchItemSuccess).toHaveBeenCalledWith({ type: expectedPage.type, item: expectedPage });
@@ -554,12 +554,10 @@ describe('FolderActionsService', () => {
 
         });
 
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
         function getMethodName(type: FolderItemType): keyof FolderActionsService {
             return `get${type.charAt(0).toUpperCase() + type.slice(1)}s` as any;
         }
 
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
         function getItemsDelegate(type: FolderItemType): typeof FolderActionsService.prototype.getPages {
             return folderActions[getMethodName(type)].bind(folderActions);
         }
@@ -576,7 +574,7 @@ describe('FolderActionsService', () => {
                 template: true,
                 sortby: 'filename',
                 skipCount: 0,
-            });
+            } as any);
         }));
 
         it('getPages() passes correct language code', fakeAsync(() => {

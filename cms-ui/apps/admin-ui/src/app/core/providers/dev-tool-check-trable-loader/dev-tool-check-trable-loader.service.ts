@@ -100,6 +100,19 @@ PackageCheckTrableLoaderOptions
         )
     }
 
+    protected override mapToTrableRow(
+        entity: PackageDependencyEntityBO,
+        parent?: TrableRow<PackageDependencyEntityBO>,
+        options?: PackageCheckTrableLoaderOptions,
+    ): TrableRow<PackageDependencyEntityBO> {
+        const row = super.mapToTrableRow(entity, parent, options);
+        row.hasChildren = this.hasChildren(entity);
+        if (!row.hasChildren) {
+            row.loaded = true;
+        }
+
+        return row;
+    }
 
     protected override hasChildren(entity: PackageDependencyEntity): boolean {
         if ((entity as PackageDependency).referenceDependencies) {

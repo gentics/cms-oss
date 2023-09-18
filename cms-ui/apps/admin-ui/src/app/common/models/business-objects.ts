@@ -34,8 +34,6 @@ import {
     File,
     Image,
     Form,
-    PackageCheckResult,
-    PackageDependency,
     PackageDependencyEntity,
 
 } from '@gentics/cms-models';

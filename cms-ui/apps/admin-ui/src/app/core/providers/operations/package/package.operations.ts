@@ -519,7 +519,6 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
     /**
      * Determines if a check result is available
      */
-
     isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
         return this.api.devTools.getCheckResult(options.packageName)
             .pipe(

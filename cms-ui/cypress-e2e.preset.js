@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable import/no-nodejs-modules */
 const { resolve } = require('path');
 
 module.exports = {

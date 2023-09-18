@@ -54,6 +54,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
+import com.gentics.contentnode.rest.model.ContentRepositoryModel.PasswordType;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.TagmapEntryListResponse;
 import com.gentics.contentnode.rest.model.TagmapEntryModel;
@@ -101,6 +102,8 @@ public class MeshPublishTest {
 
 	private static Map<String, ContentLanguage> languages;
 
+	private static String meshCrUrl;
+
 	@Rule
 	public MeshTestRule meshTestRule = new MeshTestRule(mesh);
 
@@ -119,6 +122,8 @@ public class MeshPublishTest {
 		});
 		node = supply(() -> createNode("node", "Node", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
 		crId = createMeshCR(mesh, MESH_PROJECT_NAME);
+
+		meshCrUrl = supply(t -> t.getObject(ContentRepository.class, crId).getUrl());
 
 		TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(crId), false, null, null, null);
 		assertResponseCodeOk(entriesResponse);
@@ -154,9 +159,13 @@ public class MeshPublishTest {
 		contentEntry.setTagname("");
 		crResource.updateEntry(Integer.toString(crId), Integer.toString(contentEntryId), contentEntry);
 
-		// disable instant publishing
+		// disable instant publishing and set username/password and URL
 		ContentRepositoryModel crModel = new ContentRepositoryModel();
 		crModel.setInstantPublishing(false);
+		crModel.setUsername("admin");
+		crModel.setPassword("admin");
+		crModel.setPasswordType(PasswordType.value);
+		crModel.setUrl(meshCrUrl);
 		crResource.update(Integer.toString(crId), crModel);
 	}
 
@@ -1104,5 +1113,34 @@ public class MeshPublishTest {
 				assertThat(node.getAvailableLanguages().get("en")).as("English version").hasFieldOrPropertyWithValue("published", true);
 			});
 		});
+	}
+
+	/**
+	 * Test that the {@link MeshPublisher} uses property substitution for the username/password and URL when connecting to Mesh
+	 * @throws Exception
+	 */
+	@Test
+	public void testPropertySubstitution() throws Exception {
+		// update username, password and URL to a system property
+		ContentRepositoryModel crModel = new ContentRepositoryModel();
+		crModel.setUsername("${sys:TEST_MESH_USER}");
+		crModel.setPassword("${sys:TEST_MESH_PASSWORD}");
+		crModel.setPasswordType(PasswordType.property);
+		crModel.setUrl("${sys:TEST_MESH_URL}");
+		crResource.update(Integer.toString(crId), crModel);
+
+		// set the system properties
+		System.setProperty("TEST_MESH_USER", "admin");
+		System.setProperty("TEST_MESH_PASSWORD", "admin");
+		System.setProperty("TEST_MESH_URL", meshCrUrl);
+
+		// repair the CR
+		ContentRepositoryResponse response = crResource.repair(Integer.toString(crId), 0);
+		ContentNodeRESTUtils.assertResponseOK(response);
+		if (response.getContentRepository().getCheckStatus() != Status.ok) {
+			fail(response.getContentRepository().getCheckResult());
+		}
+
+		assertMeshProject(mesh.client(), MESH_PROJECT_NAME);
 	}
 }

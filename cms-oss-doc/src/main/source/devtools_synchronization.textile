@@ -53,3 +53,12 @@ the global ID.
 h3. Manual synchronization
 
 Besides the automatic synchronization it is also possible to synchronize a single package manually either from the filesystem into the CMS or the other direction.
+
+h3. Exceptions from synchronization
+
+Some objects have attributes, which are partially or completely excepted from synchronization.
+
+|_. _Attribute_ |_. _Description_ |
+| contentrepository.username | The _username_ of a contentrepository will not be synchronized, unless it is set via a property (e.g. @${env:CR_USERNAME}@). |
+| contentrepository.password | The _password_ will never be synchronized, but the _passwordProperty_ will be synchronized. |
+| contentrepository.url      | The _url_ of a contentreporitory will not be synchronized, unless it is set via a property (e.g. @${env:CR_URL}@).   |

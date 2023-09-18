@@ -26,7 +26,9 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected String password;
 
-	protected Boolean usePassword;
+	protected String passwordProperty;
+
+	protected PasswordType passwordType;
 
 	protected Boolean http2;
 
@@ -135,7 +137,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Username for accessing the ContentRepository
+	 * Username for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
 	 * @return username
 	 */
 	public String getUsername() {
@@ -151,7 +153,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Password for accessing the ContentRepository
+	 * Password for accessing the ContentRepository.
 	 * @return password
 	 */
 	public String getPassword() {
@@ -167,19 +169,20 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * True when a password is set
-	 * @return true for password
+	 * Property, which will resolve to the password.
+	 * This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return
 	 */
-	public Boolean getUsePassword() {
-		return usePassword;
+	public String getPasswordProperty() {
+		return passwordProperty;
 	}
 
 	/**
-	 * Set whether a password is set
-	 * @param usePassword true for password
+	 * Set the password property
+	 * @param passwordProperty
 	 */
-	public void setUsePassword(Boolean usePassword) {
-		this.usePassword = usePassword;
+	public void setPasswordProperty(String passwordProperty) {
+		this.passwordProperty = passwordProperty;
 	}
 
 	/**
@@ -200,6 +203,23 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	/**
 	 * URL for accessing the ContentRepository
+	 * Type of password
+	 * @return password type
+	 */
+	public PasswordType getPasswordType() {
+		return passwordType;
+	}
+
+	/**
+	 * Set the type of how the password is set
+	 * @param passwordType type if the password
+	 */
+	public void setPasswordType(PasswordType passwordType) {
+		this.passwordType = passwordType;
+	}
+
+	/**
+	 * URL for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
 	 * @return url
 	 */
 	public String getUrl() {
@@ -215,7 +235,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Basepath for filesystem attributes
+	 * Basepath for filesystem attributes. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
 	 * @return basepath
 	 */
 	public String getBasepath() {
@@ -488,6 +508,26 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 		 * Mesh CR
 		 */
 		mesh
+	}
+
+	/**
+	 * Possible values for how the password is set
+	 */
+	public static enum PasswordType {
+		/**
+		 * No password is set
+		 */
+		none,
+
+		/**
+		 * The password is set as value
+		 */
+		value,
+
+		/**
+		 * The password is set as property
+		 */
+		property
 	}
 
 	/**

@@ -375,6 +375,8 @@ Example @gentics_structure.json@:
 }
 </shell>
 
+Note: Some attributes are excepted from synchronization. See "Exceptions from synchronization":devtools_synchronization.html#exceptions-from-synchronization for details.
+
 h4. Static files
 
 Every file located in the directory @/cms/packages/[package]/files/@ can be adressed as static file in the implementation.

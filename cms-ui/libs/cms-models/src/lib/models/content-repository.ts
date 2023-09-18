@@ -57,6 +57,17 @@ export type ContentRepositoryDataStatus =
     /** Check is queued to run in background */
     'queued';
 
+/**
+ * Possible Password Type values
+ */
+export enum ContentRepositoryPasswordType {
+    /** No password is set */
+    NONE = 'none',
+    /** The password is set as value */
+    VALUE = 'value',
+    /** The password is set as property */
+    PROPERTY = 'property',
+}
 
 /** @see https://www.gentics.com/Content.Node/guides/restapi/json_ContentRepositoryModel.html */
 export interface ContentRepositoryBase<T extends ModelType> {
@@ -72,8 +83,10 @@ export interface ContentRepositoryBase<T extends ModelType> {
     username: string;
     /** Password for accessing the ContentRepository */
     password: string;
-    /** True when a password is set */
-    usePassword: boolean;
+    /** Property, which will resolve to the password. */
+    passwordProperty: string;
+    /** Type of password */
+    passwordType: ContentRepositoryPasswordType;
     /** URL for accessing the ContentRepository */
     url: string;
     /** Basepath for filesystem attributes */

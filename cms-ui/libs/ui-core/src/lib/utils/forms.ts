@@ -1,4 +1,4 @@
-import { UntypedFormGroup } from '@angular/forms';
+import { UntypedFormGroup, ValidatorFn } from '@angular/forms';
 
 export function setControlsEnabled(
     group: UntypedFormGroup,
@@ -22,5 +22,20 @@ export function setControlsEnabled(
         } else {
             ctl.disable(options);
         }
+    }
+}
+
+export function setControlsValidators(
+    group: UntypedFormGroup,
+    controls: string[],
+    validators: ValidatorFn | ValidatorFn[] | null
+): void {
+    for (const ctlName of controls) {
+        const ctl = group.get(ctlName);
+        if (ctl == null) {
+            continue;
+        }
+
+        ctl.setValidators(validators);
     }
 }

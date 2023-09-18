@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.FeatureClosure;
@@ -279,7 +280,7 @@ public abstract class MeshPortalPreviewTestBase {
 		update(node, n -> {
 			n.setPublishContentmap(true);
 			n.setContentrepositoryId(meshCrId);
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/echo");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/echo");
 			n.setPubDirSegment(true);
 		});
 
@@ -287,6 +288,17 @@ public abstract class MeshPortalPreviewTestBase {
 		update(liveEditableConstruct, c -> {
 			c.getParts().get(0).setEditable(2);
 		});
+	}
+
+	/**
+	 * Helper method to set the preview URL to the given node
+	 * @param node node
+	 * @param previewUrl preview URL to set
+	 * @throws ReadOnlyException
+	 */
+	protected void setMeshPreviewUrl(Node node, String previewUrl) throws ReadOnlyException {
+		// basic implementation sets the URL directly
+		node.setMeshPreviewUrl(previewUrl);
 	}
 
 	/**
@@ -362,7 +374,7 @@ public abstract class MeshPortalPreviewTestBase {
 	@Test
 	public void testNoPreviewUrl() throws NodeException {
 		update(node, n -> {
-			n.setMeshPreviewUrl(null);
+			setMeshPreviewUrl(n, null);
 		});
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
@@ -427,7 +439,7 @@ public abstract class MeshPortalPreviewTestBase {
 	@Test
 	public void testPreviewPath() throws NodeException {
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/path");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/path");
 		});
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
@@ -514,7 +526,7 @@ public abstract class MeshPortalPreviewTestBase {
 	@Test
 	public void testRenderModeParam() throws NodeException {
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/query");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/query");
 		});
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
@@ -532,7 +544,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testRenderPreview() throws NodeException {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/render");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
 		});
 
 		String preview = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));
@@ -553,7 +565,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testRenderEdit() throws NodeException {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/render");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
 		});
 
 		String edit = Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA));
@@ -574,7 +586,7 @@ public abstract class MeshPortalPreviewTestBase {
 	public void testRenderTag() throws NodeException {
 		SystemUser user = Trx.supply(t -> t.getObject(SystemUser.class, 1));
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/render");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/render");
 		});
 
 		Set<String> tagNames = Trx.supply(() -> page.getContent().getContentTags().keySet());
@@ -602,7 +614,7 @@ public abstract class MeshPortalPreviewTestBase {
 	@Test(timeout = 20_000L)
 	public void testFreeze() throws NodeException {
 		update(node, n -> {
-			n.setMeshPreviewUrl(getRestAppContext().getBaseUri() + "preview/freeze");
+			setMeshPreviewUrl(n, getRestAppContext().getBaseUri() + "preview/freeze");
 		});
 
 		Trx.supply(() -> RenderUtils.getPreviewTemplate(page, RenderType.EM_ALOHA_READONLY));

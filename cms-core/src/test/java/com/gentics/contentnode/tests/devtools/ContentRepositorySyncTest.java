@@ -1,11 +1,18 @@
 package com.gentics.contentnode.tests.devtools;
 
+import static com.gentics.contentnode.db.DBUtils.IDLIST;
+import static com.gentics.contentnode.db.DBUtils.select;
 import static com.gentics.contentnode.factory.Trx.consume;
 import static com.gentics.contentnode.factory.Trx.execute;
+import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.Builder.create;
+import static com.gentics.contentnode.tests.utils.Builder.update;
+import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createContentRepository;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,6 +66,19 @@ public class ContentRepositorySyncTest {
 
 		pack = Synchronizer.getPackage(PACKAGE_NAME);
 		assertThat(pack).as("package synchronizer").isNotNull();
+
+		// delete all CRs and nodes
+		operate(t -> {
+			for (ContentRepository contentRepository : t.getObjects(ContentRepository.class,
+					select("SELECT id FROM contentrepository", IDLIST))) {
+				contentRepository.delete(true);
+			}
+		});
+		operate(t -> {
+			for (Node node : t.getObjects(Node.class, select("SELECT id FROM node", IDLIST))) {
+				node.delete(true);
+			}
+		});
 	}
 
 	@After
@@ -92,5 +112,194 @@ public class ContentRepositorySyncTest {
 			assertThat(node.getEditor()).as("Last editor of node").isNotNull();
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that the username is not synchronized, if not configured as property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNotSynchronizeUsername() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setUsername("username");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the username
+		cr = update(cr, update -> {
+			update.setUsername("updated_username");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the username is unchanged
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUsername, cr)).as("Username").isEqualTo("updated_username");
+	}
+
+	/**
+	 * Test that the username is synchronized, if configured as property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSynchronizeUsernameProperty() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setUsername("${sys:cr.username}");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the username
+		cr = update(cr, update -> {
+			update.setUsername("updated_username");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the username is changed
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUsername, cr)).as("Username").isEqualTo("${sys:cr.username}");
+	}
+
+	/**
+	 * Test that the password is not synchronized
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNotSynchronizePassword() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setPassword("password");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the password
+		cr = update(cr, update -> {
+			update.setPassword("updated_password");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the password is unchanged
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getPassword, cr)).as("Password").isEqualTo("updated_password");
+	}
+
+	/**
+	 * Test that the password property is synchronized
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSynchronizePasswordProperty() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setPasswordProperty(true);
+			create.setPassword("${sys:cr.password}");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the password property
+		cr = update(cr, update -> {
+			update.setPasswordProperty(false);
+			update.setPassword("updated_password");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the password property is changed
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getPassword, cr)).as("Password").isEqualTo("${sys:cr.password}");
+		assertThat(execute(ContentRepository::isPasswordProperty, cr)).as("Password is Property").isTrue();
+	}
+
+	/**
+	 * Test that the url is not synchronized, if not configured as property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testNotSynchronizeUrl() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setUrl("url");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the url
+		cr = update(cr, update -> {
+			update.setUrl("updated_url");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the url is unchanged
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUrl, cr)).as("Url").isEqualTo("updated_url");
+	}
+
+	/**
+	 * Test that the url is synchronized, if configured as property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testSynchronizeUrlProperty() throws NodeException {
+		Synchronizer.disable();
+
+		// create a CR
+		ContentRepository cr = create(ContentRepository.class, create -> {
+			create.setName("Test CR");
+			create.setUrl("${sys:cr.url}");
+		}).build();
+		GlobalId crGlobalId = execute(ContentRepository::getGlobalId, cr);
+
+		// add the CR to the package
+		new PackageResourceImpl().addContentRepository(PACKAGE_NAME, crGlobalId.toString());
+
+		// change the url
+		cr = update(cr, update -> {
+			update.setUrl("updated_url");
+		}).build();
+
+		// synchronize from the FS -> CMS
+		assertResponseOK(new PackageResourceImpl().synchronizeFromFS(PACKAGE_NAME, 0));
+
+		// assert that the url is changed
+		cr = execute(ContentRepository::reload, cr);
+		assertThat(execute(ContentRepository::getUrl, cr)).as("Url").isEqualTo("${sys:cr.url}");
 	}
 }

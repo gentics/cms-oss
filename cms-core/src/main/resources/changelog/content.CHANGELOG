@@ -788,3 +788,4 @@
 2023-03-30  CH-1696 NOP SQL DROP TABLE IF EXISTS template_processes;
 2023-07-10  CH-1698 OG SQL ALTER TABLE type ADD COLUMN deprecated BOOLEAN NOT NULL DEFAULT 0;
 2023-07-31	CH-1699	SP	SQL ALTER TABLE contentrepository ADD COLUMN http2 TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of http usage per cr
+2023-08-03  CH-1700 NOP SQL ALTER TABLE contentrepository ADD COLUMN password_is_property BOOLEAN NOT NULL DEFAULT 0 AFTER password;

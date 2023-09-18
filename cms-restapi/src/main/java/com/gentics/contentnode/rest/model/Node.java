@@ -507,7 +507,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Preview URL of Mesh Portal
+	 * Preview URL of Mesh Portal. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
 	 * @return URL
 	 */
 	public String getMeshPreviewUrl() {

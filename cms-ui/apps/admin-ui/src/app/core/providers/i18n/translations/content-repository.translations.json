@@ -39,17 +39,37 @@
         "en": "Username",
         "de": "Username"
     },
+    "passwordType": {
+        "en": "Use Password",
+        "de": "Passwort verwenden"
+    },
+    "passwordType_none": {
+        "en": "No Password",
+        "de": "Kein Passwort"
+    },
+    "passwordType_value": {
+        "en": "Enter Password directly",
+        "de": "Passwort direkt eingeben"
+    },
+    "passwordType_property": {
+        "en": "Get Password from Property",
+        "de": "Passwort aus Eigenschaft holen"
+    },
     "password": {
         "en": "Password",
         "de": "Passwort"
     },
-    "usePassword": {
-        "en": "Password active",
-        "de": "Password aktiv"
-    },
     "repeatPassword": {
         "en": "confirm password",
         "de": "Password bestätigen"
+    },
+    "passwordProperty": {
+        "en": "Password Property",
+        "de": "Passwort Eigenschaft"
+    },
+    "passwordProperty_pattern": {
+        "en": "Password property must be entered in format ${env:PROPERTY} or ${sys:PROPERTY}.",
+        "de": "Passwort Eigenschaft muss im Format ${env:PROPERTY} oder ${sys:PROPERTY} angegeben werden."
     },
     "url": {
         "en": "URL",

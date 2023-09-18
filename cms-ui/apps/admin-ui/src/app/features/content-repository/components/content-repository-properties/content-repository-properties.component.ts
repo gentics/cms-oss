@@ -18,8 +18,8 @@ import {
     Validators,
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
-import { AnyModelType, ContentRepository, ContentRepositoryType, Feature } from '@gentics/cms-models';
-import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
+import { AnyModelType, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, Feature } from '@gentics/cms-models';
+import { generateFormProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
     CREATE = 'create',
@@ -52,6 +52,22 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     public crTypes: CRDisplayType[] = [];
 
     public passwordRepeat = '';
+
+    /** selectable options for contentRepository input passwordType */
+    readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
+        {
+            id: ContentRepositoryPasswordType.NONE,
+            label: 'contentRepository.passwordType_none',
+        },
+        {
+            id: ContentRepositoryPasswordType.VALUE,
+            label: 'contentRepository.passwordType_value',
+        },
+        {
+            id: ContentRepositoryPasswordType.PROPERTY,
+            label: 'contentRepository.passwordType_property',
+        },
+    ];
 
     meshCrEnabled = false;
 
@@ -140,13 +156,14 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             instantPublishing: new UntypedFormControl(this.value?.instantPublishing ?? false),
             languageInformation: new UntypedFormControl(this.value?.languageInformation ?? false),
             name: new UntypedFormControl(this.value?.name || '', Validators.required),
+            passwordType: new UntypedFormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
             password: new UntypedFormControl('', this.validatorPasswordsDontMatch),
+            passwordProperty: new UntypedFormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):[^\}]+\}$/)),
             permissionProperty: new UntypedFormControl(this.value?.permissionProperty || ''),
             permissionInformation: new UntypedFormControl(this.value?.permissionInformation ?? false),
             projectPerNode: new UntypedFormControl(this.value?.projectPerNode ?? false),
             version: new UntypedFormControl(this.value?.version || ''),
             url: new UntypedFormControl(this.value?.url || '', Validators.required),
-            usePassword: new UntypedFormControl(this.value?.password ?? false),
             username: new UntypedFormControl(this.value?.username || '', Validators.required),
             http2: new UntypedFormControl(this.value?.http2 ?? false),
         });
@@ -156,7 +173,8 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         const options = { emitEvent: !!loud };
 
         setControlsEnabled(this.form, ['crType'], this.crType == null || this.mode !== ContentRepositoryPropertiesMode.UPDATE, options);
-        setControlsEnabled(this.form, ['password', 'repeat_password'], value?.usePassword ?? false, options);
+        setControlsEnabled(this.form, ['password', 'repeat_password'], value?.passwordType == ContentRepositoryPasswordType.VALUE ?? false, options);
+        setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType == ContentRepositoryPasswordType.PROPERTY ?? false, options);
 
         const dbControls =  [
             'basepath',
@@ -183,6 +201,11 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         } else {
             setControlsEnabled(this.form, dbControls, crType !== ContentRepositoryType.MESH, options);
             setControlsEnabled(this.form, meshControls, crType === ContentRepositoryType.MESH, options);
+        }
+        if (crType === ContentRepositoryType.MESH) {
+            setControlsValidators(this.form, ['username'], null);
+        } else {
+            setControlsValidators(this.form, ['username'], Validators.required);
         }
     }
 

@@ -3,7 +3,7 @@ import { DirtQueueItem, Jobs } from './admin-info';
 import { CmsFormData, Form, FormStatus } from './cms-form';
 import { ConstructCategory } from './construct-category';
 import { ContentPackage } from './content-package';
-import { ContentRepository, ContentRepositoryType, CRElasticsearchModel } from './content-repository';
+import { ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, CRElasticsearchModel } from './content-repository';
 import { ContentRepositoryFragment } from './cr-fragment';
 import { DataSource } from './data-source';
 import { DataSourceEntry } from './data-source-entry';
@@ -1595,8 +1595,10 @@ export interface ContentRepositoryCreateRequest {
     username: string;
     /** Password for accessing the ContentRepository */
     password?: string;
-    /** True when a password is set */
-    usePassword: boolean;
+    /** Property, which will resolve to the password. */
+    passwordProperty: string;
+    /** Type of password */
+    passwordType: ContentRepositoryPasswordType;
     /** URL for accessing the ContentRepository */
     url: string;
     /** Basepath for filesystem attributes */

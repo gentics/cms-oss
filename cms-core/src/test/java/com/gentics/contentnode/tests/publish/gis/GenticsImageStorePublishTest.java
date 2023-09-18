@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -38,7 +40,6 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentRepository;
@@ -162,7 +163,9 @@ public class GenticsImageStorePublishTest {
 				part.setName("template", 1);
 				part.setPartTypeId(getPartTypeId(LongHTMLPartType.class));
 				part.setDefaultValue(create(Value.class, v -> {
-					v.setValueText("#gtx_gis($cms.tag.parts.image.target, {\"width\": 50, \"mode\": \"smart\"})   $cms.tag.parts.image");
+					v.setValueText("#gtx_gis($cms.tag.parts.image.target, {\"width\": 50, \"mode\": \"smart\"})"
+							+ " #gtx_gis($cms.tag.parts.image.target, {\"height\": 100, \"mode\": \"prop\"})"
+							+ " $cms.tag.parts.image");
 				}, false));
 			}, false));
 
@@ -267,7 +270,8 @@ public class GenticsImageStorePublishTest {
 		try (Trx trx = new Trx()) {
 			File imageFile = assertPublishFS(context.getPubDir(), image, node, !mesh);
 			assertPublishFS(context.getPubDir(), page, node, !mesh);
-			File gisFile = assertPublishGISFS(context.getPubDir(), image, node, "50", "auto", "smart", !mesh);
+			File gisFile1 = assertPublishGISFS(context.getPubDir(), image, node, "50", "auto", "smart", !mesh);
+			File gisFile2 = assertPublishGISFS(context.getPubDir(), image, node, "auto", "100", "prop", !mesh);
 
 			String source = DBUtils.select("SELECT source FROM publish WHERE page_id = ? AND node_id = ? AND active = ?", ps -> {
 				ps.setInt(1, page.getId());
@@ -275,13 +279,15 @@ public class GenticsImageStorePublishTest {
 				ps.setBoolean(3, true);
 			}, DBUtils.firstString("source"));
 
-			String gisUrl = getExpectedUrl(gisFile);
+			String gisUrl1 = getExpectedUrl(gisFile1);
+			String gisUrl2 = getExpectedUrl(gisFile2);
 			String imageUrl = getExpectedUrl(imageFile);
 
-			assertThat(gisUrl + "   " + imageUrl).as("URLs").isEqualTo(source);
+			assertThat(gisUrl1 + " " + gisUrl2 + " " + imageUrl).as("URLs").isEqualTo(source);
 
 			if (mesh && publishImageVariants) {
-				Matcher m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl);
+				List<String> params = new ArrayList<>(2);
+				Matcher m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl1);
 				while (m.find()) {
 					ImageManipulationParametersImpl imageManipulationParameters = new ImageManipulationParametersImpl();
 					imageManipulationParameters.setWidth(m.group("width"));
@@ -297,10 +303,29 @@ public class GenticsImageStorePublishTest {
 					if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
 						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
 					}
-					ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
-					assertThat(variants.getVariants().size()).isEqualTo(1);
-					assertThat(variants.getVariants().get(0).setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest().getCacheKey()).isEqualTo(imageManipulationParameters.getCacheKey());
+					params.add(imageManipulationParameters.getCacheKey());
 				}
+				m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl2);
+				while (m.find()) {
+					ImageManipulationParametersImpl imageManipulationParameters = new ImageManipulationParametersImpl();
+					imageManipulationParameters.setWidth(m.group("width"));
+					imageManipulationParameters.setHeight(m.group("height"));
+					String mode = m.group("mode");
+					imageManipulationParameters.setResizeMode(StringUtils.isEmpty(mode) ? null : ResizeMode.get(mode) );
+					String cropMode = m.group("cropmode");
+					imageManipulationParameters.setCropMode(StringUtils.isEmpty(cropMode) ? null : CropMode.get(cropMode));
+					String topleft_x = m.group("tlx");
+					String topleft_y = m.group("tly");
+					String cropwidth = m.group("cw");
+					String cropheight = m.group("ch");
+					if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
+						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
+					}
+					params.add(imageManipulationParameters.getCacheKey());
+				}
+				ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
+				assertThat(variants.getVariants().size()).isEqualTo(2);
+				assertThat(variants.getVariants().stream().map(var -> var.setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest().getCacheKey()).collect(Collectors.toList())).isIn(params);
 			}
 
 			trx.success();

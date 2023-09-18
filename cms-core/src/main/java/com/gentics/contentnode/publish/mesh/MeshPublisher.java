@@ -1933,7 +1933,7 @@ public class MeshPublisher implements AutoCloseable {
 				if (!m.matches()) {
 					throw new NodeException("Couldn't parse " + transform);
 				}
-				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest());
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
 
 				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
 				imageVariantRequest.setWidth(m.group("width"));
@@ -1952,8 +1952,7 @@ public class MeshPublisher implements AutoCloseable {
 				if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
 					imageVariantRequest.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
 				}
-
-				imageManipulationRequest.setVariants(Collections.singletonList(imageVariantRequest));
+				imageManipulationRequest.getVariants().add(imageVariantRequest);
 			}
 			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
 				MeshRequest<?> request;

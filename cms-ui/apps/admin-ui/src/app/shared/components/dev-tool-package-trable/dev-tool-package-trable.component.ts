@@ -14,7 +14,6 @@ import {
 import { PackageDependencyEntity } from '@gentics/cms-models';
 import { TableColumn } from '@gentics/ui-core';
 import { PackageDependencyEntityBO } from '@admin-ui/common';
-import { first } from 'rxjs/operators';
 import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-trable.component';
 
 @Component({
@@ -30,7 +29,7 @@ export class PackageCheckTrableComponent
     @Input()
     public packageName: string;
 
-    public checkAll = false;
+    public checkAll = true;
 
     private triggerNewCheck = false;
 

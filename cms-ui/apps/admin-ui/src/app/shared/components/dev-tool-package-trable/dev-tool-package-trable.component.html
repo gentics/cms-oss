@@ -1,9 +1,4 @@
 <div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
-    <gtx-checkbox
-        class="package-check-checkbox"
-        [(ngModel)]="checkAll"
-        [label]="'package.consistency_check_filter_label' | i18n"
-    ></gtx-checkbox>
 
     <gtx-button
         *ngIf="!hideActions"
@@ -14,7 +9,7 @@
         [disabled]="disabled || loading"
         (click)="handleLoadButtonClick()"
     >
-        <icon left>refresh</icon> {{ 'package.consistency_check_button' | i18n }}
+        <icon left>offline_pin</icon> {{ 'package.consistency_check_button' | i18n }}
     </gtx-button>
 </div> 
 

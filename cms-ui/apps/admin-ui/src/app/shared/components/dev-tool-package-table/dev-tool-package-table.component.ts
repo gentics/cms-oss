@@ -306,6 +306,6 @@ export class DevToolPackageTableComponent
     }
 
     protected performPackageCheck(packageName: string | string[]): Promise<void> {
-        return this.operations.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000 }).toPromise()
+        return this.operations.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000, checkAll: true }).toPromise()
     }
 }

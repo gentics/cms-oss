@@ -11,6 +11,7 @@ import com.gentics.contentnode.object.Datasource;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
 import com.gentics.contentnode.rest.resource.impl.devtools.resolver.AbstractDependencyResolver;
 import com.gentics.lib.log.NodeLogger;
 import java.util.ArrayList;
@@ -51,7 +52,24 @@ public class PackageDependencyChecker {
 										Boolean.FALSE.equals(reference.getIsInOtherPackage())))
 				.collect(Collectors.toList());
 
+		missingDependencies.forEach(dependency -> {
+			dependency.withReferenceDependencies(getDistinctReferenceList(dependency.getReferenceDependencies()));
+		});
+
 		return removeEmptyDependencyList(missingDependencies);
+	}
+
+	private static List<ReferenceDependency> getDistinctReferenceList(List<ReferenceDependency> references) {
+		List<ReferenceDependency> distinctList = new ArrayList<>();
+
+		references.forEach(reference -> {
+			boolean alreadyInList = distinctList.stream()
+					.noneMatch(item -> item.getGlobalId().equals(reference.getGlobalId()));
+			if (alreadyInList) {
+				distinctList.add(reference);
+			}
+		});
+		return distinctList;
 	}
 
 	/**

@@ -106,7 +106,6 @@ PackageCheckTrableLoaderOptions
         options?: PackageCheckTrableLoaderOptions,
     ): TrableRow<PackageDependencyEntityBO> {
         const row = super.mapToTrableRow(entity, parent, options);
-        row.hasChildren = this.hasChildren(entity);
         if (!row.hasChildren) {
             row.loaded = true;
         }

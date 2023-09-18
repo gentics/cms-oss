@@ -15,13 +15,14 @@ import {
     MeshProjectAPI,
     MeshRestClientConfig,
     MeshRestClientInterceptorData,
+    MeshRestClientRequest,
     MeshRoleAPI,
     MeshSchemaAPI,
     MeshServerAPI,
     MeshTagFamiliesAPI,
     MeshTagsAPI,
     MeshUserAPI,
-    RequestMethod
+    RequestMethod,
 } from './models';
 import { toRelativePath, trimTrailingSlash } from './utils';
 
@@ -33,10 +34,12 @@ export class MeshRestClient {
         public apiKey?: string,
     ) { }
 
-    protected createUrl(
+    protected prepareRequest(
+        requestMethod: RequestMethod,
         path: string,
         queryParams: Record<string, any>,
-    ): string {
+        requestHeaders: Record<string, string>,
+    ): MeshRestClientRequest {
         let buildPath = '';
 
         if (this.config.connection.basePath) {
@@ -47,26 +50,46 @@ export class MeshRestClient {
         }
         buildPath += toRelativePath(path);
 
-        const { protocol, host, port, path: finalPath, params } = this.handleInterceptors({
-            protocol: this.config.connection.ssl ? 'https' : 'http',
+        const data: MeshRestClientInterceptorData = this.config.connection.absolute ? {
+            method: requestMethod,
+            protocol: typeof this.config.connection.ssl === 'boolean'
+                ? (this.config.connection.ssl ? 'https' : 'http')
+                : null,
             host: this.config.connection.host,
             port: this.config.connection.port,
             path: buildPath,
             params: queryParams,
-        });
+            headers: requestHeaders,
+        } : {
+            method: requestMethod,
+            protocol: null,
+            host: null,
+            port: null,
+            path: buildPath,
+            params: queryParams,
+            headers: requestHeaders,
+        };
 
-        let url = `${protocol}://${host}`;
-        if (port) {
-            url += `:${port}`;
+        const { method, protocol, host, port, path: finalPath, params, headers } = this.handleInterceptors(data);
+
+        let url: string;
+
+        if (this.config.connection.absolute) {
+            url = `${protocol ?? ''}://${host}`;
+            if (port) {
+                url += `:${port}`;
+            }
+            url += finalPath;
+        } else {
+            url = finalPath;
         }
-        url += finalPath;
 
-        const buildParams = new URLSearchParams(params || {}).toString();
-        if (params) {
-            url += `?${buildParams}`;
-        }
-
-        return url;
+        return {
+            method,
+            url,
+            params,
+            headers,
+        };
     }
 
     protected handleInterceptors(data: MeshRestClientInterceptorData): MeshRestClientInterceptorData {
@@ -77,13 +100,12 @@ export class MeshRestClient {
         return data;
     }
 
-    protected performReqeust<T>(
+    protected executeJsonRequest<T>(
         method: RequestMethod,
         path: string,
         body?: null | any,
         queryParams?: Record<string, any>,
     ): Promise<T> {
-        const url = this.createUrl(path, queryParams);
         const headers: Record<string, string> = {
             [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_JSON,
         };
@@ -92,175 +114,177 @@ export class MeshRestClient {
             headers[HTTP_HEADER_AUTHORIZATION] = `Bearer ${this.apiKey}`;
         }
 
-        return this.driver.performJsonRequest(method, url, headers, body) as any;
+        const req = this.prepareRequest(method, path, queryParams, headers);
+
+        return this.driver.performJsonRequest(req, body) as any;
     }
 
     public auth: MeshAuthAPI = {
-        login: (body) => this.performReqeust(POST, '/auth/login', body),
-        me: () => this.performReqeust(GET, '/auth/me'),
-        logout: () => this.performReqeust(GET, '/auth/logout'),
+        login: (body) => this.executeJsonRequest(POST, '/auth/login', body),
+        me: () => this.executeJsonRequest(GET, '/auth/me'),
+        logout: () => this.executeJsonRequest(GET, '/auth/logout'),
     } as const;
 
     public users: MeshUserAPI = {
-        list: (params?) => this.performReqeust(GET, '/users', null, params),
-        create: (body) => this.performReqeust(POST, '/users', body),
-        get: (uuid, params?) => this.performReqeust(GET, `/users/${uuid}`, null, params),
-        update: (uuid, body) => this.performReqeust(POST, `/users/${uuid}`, body),
-        delete: (uuid) => this.performReqeust(DELETE, `/users/${uuid}`),
+        list: (params?) => this.executeJsonRequest(GET, '/users', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/users', body),
+        get: (uuid, params?) => this.executeJsonRequest(GET, `/users/${uuid}`, null, params),
+        update: (uuid, body) => this.executeJsonRequest(POST, `/users/${uuid}`, body),
+        delete: (uuid) => this.executeJsonRequest(DELETE, `/users/${uuid}`),
 
-        createAPIToken: (uuid) => this.performReqeust(POST, `/users/${uuid}/token`),
+        createAPIToken: (uuid) => this.executeJsonRequest(POST, `/users/${uuid}/token`),
     } as const;
 
     public roles: MeshRoleAPI = {
-        list: (params?) => this.performReqeust(GET, '/roles', null, params),
-        create: (body) => this.performReqeust(POST, '/roles', body),
-        get: (uuid, params?) => this.performReqeust(GET, `/roles/${uuid}`, null, params),
-        update: (uuid, body) => this.performReqeust(POST, `/roles/${uuid}`, body),
-        delete: (uuid) => this.performReqeust(DELETE, `/roles/${uuid}`),
+        list: (params?) => this.executeJsonRequest(GET, '/roles', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/roles', body),
+        get: (uuid, params?) => this.executeJsonRequest(GET, `/roles/${uuid}`, null, params),
+        update: (uuid, body) => this.executeJsonRequest(POST, `/roles/${uuid}`, body),
+        delete: (uuid) => this.executeJsonRequest(DELETE, `/roles/${uuid}`),
     } as const;
 
     public groups: MeshGroupAPI = {
-        list: (params?) => this.performReqeust(GET, '/groups', null, params),
-        create: (body) => this.performReqeust(POST, '/groups', body),
-        get: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
-        update: (uuid, body) => this.performReqeust(POST, `/groups/${uuid}`, body),
-        delete: (uuid) => this.performReqeust(DELETE, `/groups/${uuid}`),
+        list: (params?) => this.executeJsonRequest(GET, '/groups', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/groups', body),
+        get: (uuid, params?) => this.executeJsonRequest(GET, `/groups/${uuid}`, null, params),
+        update: (uuid, body) => this.executeJsonRequest(POST, `/groups/${uuid}`, body),
+        delete: (uuid) => this.executeJsonRequest(DELETE, `/groups/${uuid}`),
 
-        getRoles: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}`, null, params),
-        assignRole: (uuid, roleUuid) => this.performReqeust(POST, `/groups/${uuid}/roles/${roleUuid}`),
-        unassignRole: (uuid, roleUuid) => this.performReqeust(DELETE, `/groups/${uuid}/roles/${roleUuid}`),
+        getRoles: (uuid, params?) => this.executeJsonRequest(GET, `/groups/${uuid}`, null, params),
+        assignRole: (uuid, roleUuid) => this.executeJsonRequest(POST, `/groups/${uuid}/roles/${roleUuid}`),
+        unassignRole: (uuid, roleUuid) => this.executeJsonRequest(DELETE, `/groups/${uuid}/roles/${roleUuid}`),
 
-        getUsers: (uuid, params?) => this.performReqeust(GET, `/groups/${uuid}/users`, null, params),
-        assignUser: (uuid, userUuid) => this.performReqeust(POST, `/groups/${uuid}/users/${userUuid}`),
-        unassignUser: (uuid, userUuid) => this.performReqeust(DELETE, `/groups/${uuid}/users/${userUuid}`),
+        getUsers: (uuid, params?) => this.executeJsonRequest(GET, `/groups/${uuid}/users`, null, params),
+        assignUser: (uuid, userUuid) => this.executeJsonRequest(POST, `/groups/${uuid}/users/${userUuid}`),
+        unassignUser: (uuid, userUuid) => this.executeJsonRequest(DELETE, `/groups/${uuid}/users/${userUuid}`),
     } as const;
 
     public permissions: MeshPermissionAPI = {
-        get: (roleUuid, path) => this.performReqeust(GET, `/roles/${roleUuid}/permissions/${path}`),
-        set: (roleUuid, path, body) => this.performReqeust(POST, `/roles/${roleUuid}/permissions/${path}`, body),
+        get: (roleUuid, path) => this.executeJsonRequest(GET, `/roles/${roleUuid}/permissions/${path}`),
+        set: (roleUuid, path, body) => this.executeJsonRequest(POST, `/roles/${roleUuid}/permissions/${path}`, body),
 
-        check: (userUuid, path) => this.performReqeust(GET, `/user/${userUuid}/permissions/${path}`),
+        check: (userUuid, path) => this.executeJsonRequest(GET, `/user/${userUuid}/permissions/${path}`),
     } as const;
 
     public projects: MeshProjectAPI = {
-        list: (params?) => this.performReqeust(GET, '/projects', null, params),
-        create: (body) => this.performReqeust(POST, '/projects', body),
-        get: (project, params?) => this.performReqeust(GET, `/projects/${project}`, null, params),
-        update: (project, body) => this.performReqeust(POST, `/projects/${project}`, body),
-        delete: (project) => this.performReqeust(DELETE, `/projects/${project}`),
+        list: (params?) => this.executeJsonRequest(GET, '/projects', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/projects', body),
+        get: (project, params?) => this.executeJsonRequest(GET, `/projects/${project}`, null, params),
+        update: (project, body) => this.executeJsonRequest(POST, `/projects/${project}`, body),
+        delete: (project) => this.executeJsonRequest(DELETE, `/projects/${project}`),
 
-        listSchemas: (project) => this.performReqeust(GET, `/${project}/schemas`),
-        getSchema: (project, uuid) => this.performReqeust(GET, `/${project}/schemas/${uuid}`),
-        assignSchema: (project, uuid) => this.performReqeust(POST, `/${project}/schemas/${uuid}`),
-        unassignSchema: (project, uuid) => this.performReqeust(DELETE, `/${project}/schemas/${uuid}`),
+        listSchemas: (project) => this.executeJsonRequest(GET, `/${project}/schemas`),
+        getSchema: (project, uuid) => this.executeJsonRequest(GET, `/${project}/schemas/${uuid}`),
+        assignSchema: (project, uuid) => this.executeJsonRequest(POST, `/${project}/schemas/${uuid}`),
+        unassignSchema: (project, uuid) => this.executeJsonRequest(DELETE, `/${project}/schemas/${uuid}`),
 
-        listMicroschemas: (project) => this.performReqeust(GET, `/${project}/microschemas`),
-        getMicroschema: (project, uuid) => this.performReqeust(GET, `/${project}/microschemas/${uuid}`),
-        assignMicroschema: (project, uuid) => this.performReqeust(POST, `/${project}/microschemas/${uuid}`),
-        unassignMicroschema: (project, uuid) => this.performReqeust(DELETE, `/${project}/microschemas/${uuid}`),
+        listMicroschemas: (project) => this.executeJsonRequest(GET, `/${project}/microschemas`),
+        getMicroschema: (project, uuid) => this.executeJsonRequest(GET, `/${project}/microschemas/${uuid}`),
+        assignMicroschema: (project, uuid) => this.executeJsonRequest(POST, `/${project}/microschemas/${uuid}`),
+        unassignMicroschema: (project, uuid) => this.executeJsonRequest(DELETE, `/${project}/microschemas/${uuid}`),
     } as const;
 
     public schemas: MeshSchemaAPI = {
-        list: (params?) => this.performReqeust(GET, '/schemas', null, params),
-        create: (body) => this.performReqeust(POST, '/schemas', body),
-        get: (uuid, params) => this.performReqeust(GET, `/schemas/${uuid}`, null, params),
-        update: (uuid, body) => this.performReqeust(POST, `/schemas/${uuid}`, body),
-        delete: (uuid) => this.performReqeust(DELETE, `/schemas/${uuid}`),
-        diff: (uuid, body) => this.performReqeust(POST, `/schemas/${uuid}/diff`, body),
-        changes: (uuid, body) => this.performReqeust(POST, `/schemas/${uuid}/changes`, body),
+        list: (params?) => this.executeJsonRequest(GET, '/schemas', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/schemas', body),
+        get: (uuid, params) => this.executeJsonRequest(GET, `/schemas/${uuid}`, null, params),
+        update: (uuid, body) => this.executeJsonRequest(POST, `/schemas/${uuid}`, body),
+        delete: (uuid) => this.executeJsonRequest(DELETE, `/schemas/${uuid}`),
+        diff: (uuid, body) => this.executeJsonRequest(POST, `/schemas/${uuid}/diff`, body),
+        changes: (uuid, body) => this.executeJsonRequest(POST, `/schemas/${uuid}/changes`, body),
     } as const;
 
     public microschemas: MeshMicroschemaAPI = {
-        list: (params?) => this.performReqeust(GET, '/microschemas', null, params),
-        create: (body) => this.performReqeust(POST, '/microschemas', body),
-        get: (uuid, params?) => this.performReqeust(GET, `/microschemas/${uuid}`, null, params),
-        update: (uuid, body) => this.performReqeust(POST, `/microschemas/${uuid}`, body),
-        delete: (uuid) => this.performReqeust(DELETE, `/microschemas/${uuid}`),
-        diff: (uuid, body) => this.performReqeust(POST, `/microschemas/${uuid}/diff`, body),
-        changes: (uuid, body) => this.performReqeust(POST, `/microschemas/${uuid}/changes`, body),
+        list: (params?) => this.executeJsonRequest(GET, '/microschemas', null, params),
+        create: (body) => this.executeJsonRequest(POST, '/microschemas', body),
+        get: (uuid, params?) => this.executeJsonRequest(GET, `/microschemas/${uuid}`, null, params),
+        update: (uuid, body) => this.executeJsonRequest(POST, `/microschemas/${uuid}`, body),
+        delete: (uuid) => this.executeJsonRequest(DELETE, `/microschemas/${uuid}`),
+        diff: (uuid, body) => this.executeJsonRequest(POST, `/microschemas/${uuid}/diff`, body),
+        changes: (uuid, body) => this.executeJsonRequest(POST, `/microschemas/${uuid}/changes`, body),
     } as const;
 
     public nodes: MeshNodeAPI = {
-        list: (project, params?) => this.performReqeust(GET, `/${project}/nodes`, null, params),
-        create: (project, body) => this.performReqeust(POST, `/${project}/nodes`, body),
-        get: (project, uuid, params?) => this.performReqeust(GET, `/${project}/nodes/${uuid}`, null, params),
-        update: (project, uuid, body) => this.performReqeust(POST, `/${project}/nodes/${uuid}`, body),
-        delete: (project, uuid, params?) => this.performReqeust(DELETE, `/${project}/nodes/${uuid}`, null, params),
+        list: (project, params?) => this.executeJsonRequest(GET, `/${project}/nodes`, null, params),
+        create: (project, body) => this.executeJsonRequest(POST, `/${project}/nodes`, body),
+        get: (project, uuid, params?) => this.executeJsonRequest(GET, `/${project}/nodes/${uuid}`, null, params),
+        update: (project, uuid, body) => this.executeJsonRequest(POST, `/${project}/nodes/${uuid}`, body),
+        delete: (project, uuid, params?) => this.executeJsonRequest(DELETE, `/${project}/nodes/${uuid}`, null, params),
 
-        deleteLanguage: (project, uuid, language) => this.performReqeust(DELETE, `/${project}/nodes/${uuid}/languages/${language}`),
-        children: (project, uuid, params?) => this.performReqeust(GET, `/${project}/nodes/${uuid}/children`, null, params),
-        versions: (project, uuid) => this.performReqeust(GET, `/${project}/nodes/${uuid}/versions`),
+        deleteLanguage: (project, uuid, language) => this.executeJsonRequest(DELETE, `/${project}/nodes/${uuid}/languages/${language}`),
+        children: (project, uuid, params?) => this.executeJsonRequest(GET, `/${project}/nodes/${uuid}/children`, null, params),
+        versions: (project, uuid) => this.executeJsonRequest(GET, `/${project}/nodes/${uuid}/versions`),
 
         publishStatus: (project, uuid, language?) => {
             const path = language
                 ? `/${project}/nodes/${uuid}/languages/${language}/published`
                 : `/${project}/nodes/${uuid}/published`;
-            return this.performReqeust(GET, path);
+            return this.executeJsonRequest(GET, path);
         },
         publish: (project, uuid, language?, params?) => {
             const path = language
                 ? `/${project}/nodes/${uuid}/languages/${language}/published`
                 : `/${project}/nodes/${uuid}/published`;
-            return this.performReqeust(POST, path, null, params);
+            return this.executeJsonRequest(POST, path, null, params);
         },
         unpublish: (project, uuid, language?) => {
             const path = language
                 ? `/${project}/nodes/${uuid}/languages/${language}/published`
                 : `/${project}/nodes/${uuid}/published`;
-            return this.performReqeust(DELETE, path);
+            return this.executeJsonRequest(DELETE, path);
         },
 
-        listTags: (project, uuid) => this.performReqeust(GET, `/${project}/nodes/${uuid}/tags`),
-        setTags: (project, uuid, body) => this.performReqeust(POST, `/${project}/nodes/${uuid}/tags`, body),
-        assignTag: (project, uuid, tag) => this.performReqeust(POST, `/${project}/nodes/${uuid}/tags/${tag}`),
-        removeTag: (project, uuid, tag) => this.performReqeust(DELETE, `/${project}/nodes/${uuid}/tags/${tag}`),
+        listTags: (project, uuid) => this.executeJsonRequest(GET, `/${project}/nodes/${uuid}/tags`),
+        setTags: (project, uuid, body) => this.executeJsonRequest(POST, `/${project}/nodes/${uuid}/tags`, body),
+        assignTag: (project, uuid, tag) => this.executeJsonRequest(POST, `/${project}/nodes/${uuid}/tags/${tag}`),
+        removeTag: (project, uuid, tag) => this.executeJsonRequest(DELETE, `/${project}/nodes/${uuid}/tags/${tag}`),
     } as const;
 
     public branches: MeshBranchAPI = {
-        list: (project) => this.performReqeust(GET, `/${project}/branches`),
-        create: (project, body) => this.performReqeust(POST, `/${project}/branches`, body),
-        get: (project, uuid) => this.performReqeust(GET, `/${project}/branches/${uuid}`),
-        update: (project, uuid, body) => this.performReqeust(POST, `/${project}/branches/${uuid}`, body),
-        asLatest: (project, uuid) => this.performReqeust(POST, `/${project}/branches/${uuid}/latest`),
+        list: (project) => this.executeJsonRequest(GET, `/${project}/branches`),
+        create: (project, body) => this.executeJsonRequest(POST, `/${project}/branches`, body),
+        get: (project, uuid) => this.executeJsonRequest(GET, `/${project}/branches/${uuid}`),
+        update: (project, uuid, body) => this.executeJsonRequest(POST, `/${project}/branches/${uuid}`, body),
+        asLatest: (project, uuid) => this.executeJsonRequest(POST, `/${project}/branches/${uuid}/latest`),
     } as const;
 
     public tagFamilies: MeshTagFamiliesAPI = {
-        list: (project, params?) => this.performReqeust(GET, `/${project}/tagFamilies`, null, params),
-        create: (project, body) => this.performReqeust(POST, `/${project}/tagFamilies`, body),
-        get: (project, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${uuid}`, null, params),
-        update: (project, uuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${uuid}`, body),
-        delete: (project, uuid) => this.performReqeust(DELETE, `/${project}/tagFamilies/${uuid}`),
+        list: (project, params?) => this.executeJsonRequest(GET, `/${project}/tagFamilies`, null, params),
+        create: (project, body) => this.executeJsonRequest(POST, `/${project}/tagFamilies`, body),
+        get: (project, uuid, params?) => this.executeJsonRequest(GET, `/${project}/tagFamilies/${uuid}`, null, params),
+        update: (project, uuid, body) => this.executeJsonRequest(POST, `/${project}/tagFamilies/${uuid}`, body),
+        delete: (project, uuid) => this.executeJsonRequest(DELETE, `/${project}/tagFamilies/${uuid}`),
     } as const;
 
     public tags: MeshTagsAPI = {
-        list: (project, familyUuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags`, null, params),
-        create: (project, familyUuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${familyUuid}/tags`, body),
-        get: (project, familyUuid, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, null, params),
-        update: (project, familyUuid, uuid, body) => this.performReqeust(POST, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, body),
-        delete: (project, familyUuid, uuid) => this.performReqeust(DELETE, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`),
+        list: (project, familyUuid, params?) => this.executeJsonRequest(GET, `/${project}/tagFamilies/${familyUuid}/tags`, null, params),
+        create: (project, familyUuid, body) => this.executeJsonRequest(POST, `/${project}/tagFamilies/${familyUuid}/tags`, body),
+        get: (project, familyUuid, uuid, params?) => this.executeJsonRequest(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, null, params),
+        update: (project, familyUuid, uuid, body) => this.executeJsonRequest(POST, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`, body),
+        delete: (project, familyUuid, uuid) => this.executeJsonRequest(DELETE, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}`),
 
-        nodes: (project, familyUuid, uuid, params?) => this.performReqeust(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}/nodes`, null, params),
+        nodes: (project, familyUuid, uuid, params?) => this.executeJsonRequest(GET, `/${project}/tagFamilies/${familyUuid}/tags/${uuid}/nodes`, null, params),
     } as const;
 
     public server: MeshServerAPI = {
-        info: () => this.performReqeust(GET, '/'),
-        config: () => this.performReqeust(GET, '/admin/config'),
-        status: () => this.performReqeust(GET, '/admin/status'),
+        info: () => this.executeJsonRequest(GET, '/'),
+        config: () => this.executeJsonRequest(GET, '/admin/config'),
+        status: () => this.executeJsonRequest(GET, '/admin/status'),
     } as const;
 
     public coordinator: MeshCoordinatorAPI = {
-        config: () => this.performReqeust(GET, '/admin/coordinator/config'),
-        master: () => this.performReqeust(GET, '/admin/coordinator/master'),
+        config: () => this.executeJsonRequest(GET, '/admin/coordinator/config'),
+        master: () => this.executeJsonRequest(GET, '/admin/coordinator/master'),
     } as const;
 
     public cluster: MeshClusterAPI = {
-        config: () => this.performReqeust(GET, '/admin/cluster/config'),
-        status: () => this.performReqeust(GET, '/admin/cluster/status'),
+        config: () => this.executeJsonRequest(GET, '/admin/cluster/config'),
+        status: () => this.executeJsonRequest(GET, '/admin/cluster/status'),
     } as const;
 
     public plugins: MeshPluginAPI = {
-        list: () => this.performReqeust(GET, '/admin/plugins'),
+        list: () => this.executeJsonRequest(GET, '/admin/plugins'),
     } as const;
 
-    public graphql: MeshGraphQLAPI = (project, body, params) => this.performReqeust(POST, `/${project}/graphql`, body, params);
+    public graphql: MeshGraphQLAPI = (project, body, params) => this.executeJsonRequest(POST, `/${project}/graphql`, body, params);
 }

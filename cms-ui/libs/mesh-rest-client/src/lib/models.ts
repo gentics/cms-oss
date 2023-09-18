@@ -86,9 +86,7 @@ import {
 
 export interface MeshClientDriver {
     performJsonRequest(
-        method: RequestMethod,
-        url: string,
-        headers?: Record<string, string>,
+        request: MeshRestClientRequest,
         body?: null | string,
     ): Promise<Record<string, any>>;
 }
@@ -99,22 +97,40 @@ export interface MeshRestClientConfig {
 }
 
 export interface MeshRestClientInterceptorData {
-    protocol: 'http' | 'https';
+    method: RequestMethod;
+    protocol?: 'http' | 'https';
     host: string;
     port?: number;
     path: string;
     params: Record<string, string>;
+    headers: Record<string, string>;
+}
+
+export interface MeshRestClientRequest {
+    method: RequestMethod;
+    url: string;
+    params: Record<string, string>;
+    headers: Record<string, string>;
 }
 
 export type MeshRestClientInterceptor = (data: MeshRestClientInterceptorData) => MeshRestClientInterceptorData;
 
-export interface MeshClientConnection {
+export interface AbsoluteMeshClientConnection {
+    absolute: true;
     ssl?: boolean;
     host: string;
     port?: number;
     basePath?: string;
     version?: MeshAPIVersion;
 }
+
+export interface RelativeMeshClientConnection {
+    absolute: false;
+    basePath: string;
+    version?: MeshAPIVersion;
+}
+
+export type MeshClientConnection = AbsoluteMeshClientConnection | RelativeMeshClientConnection;
 
 export enum RequestMethod {
     GET = 'GET',

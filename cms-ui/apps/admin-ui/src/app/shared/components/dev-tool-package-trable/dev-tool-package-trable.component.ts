@@ -9,7 +9,7 @@ import {
     Component,
     Input,
     OnChanges,
-    OnInit,
+    SimpleChanges,
 } from '@angular/core';
 import { PackageDependencyEntity } from '@gentics/cms-models';
 import { TableColumn } from '@gentics/ui-core';
@@ -24,7 +24,6 @@ import { BaseEntityTrableComponent } from '../base-entity-trable/base-entity-tra
 })
 export class PackageCheckTrableComponent
     extends BaseEntityTrableComponent<PackageDependencyEntity, PackageDependencyEntityBO, PackageCheckTrableLoaderOptions>
-    implements OnInit, OnChanges
 {
     @Input()
     public packageName: string;

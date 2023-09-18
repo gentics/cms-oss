@@ -20,7 +20,6 @@ public interface GisImageInitiator<T> {
 	 * Set the image variant data
 	 * 
 	 * @param webrootPath image path
-	 * @param transform variant transformation
 	 */
-	public default void setImageData(String webrootPath, String transform) {}
+	public default void setImageData(String webrootPath) {}
 }

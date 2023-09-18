@@ -602,6 +602,13 @@ public class Publisher implements Runnable {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_FILEDEPENDENCIES);
 					}
 
+					checkForError();
+					meshPublishController.waitForRenderAndWrite();
+					meshPublishController.handlePostponedUpdates();
+
+					checkForError();
+					meshPublishController.waitForRenderAndWrite();
+
 					try {
 						publisherInfo.setPhase(PublisherPhase.GENTICSIMAGESTORE);
 						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
@@ -610,12 +617,6 @@ public class Publisher implements Runnable {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 					}
 
-					checkForError();
-					meshPublishController.waitForRenderAndWrite();
-					meshPublishController.handlePostponedUpdates();
-
-					checkForError();
-					meshPublishController.waitForRenderAndWrite();
 					meshPublishController.success();
 				}
 

@@ -125,6 +125,7 @@ import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.version.CmpProductVersion;
+import com.gentics.lib.etc.IWorkPhase;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
@@ -1880,7 +1881,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param phase
 	 * @throws NodeException 
 	 */
-	public void collectImageData(WorkPhaseHandler phase) throws NodeException {
+	public void collectImageData(IWorkPhase phase) throws NodeException {
 		Publisher.writeFiles(publishInfo, cr.getNodes().stream().filter(Node::isPublishImageVariants).collect(Collectors.toList()), 
 				allImageData, renderResult, false, Optional.empty(), Optional.empty());
 	}
@@ -1891,7 +1892,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param phase
 	 * @throws NodeException
 	 */
-	public void createImageVariants(WorkPhaseHandler phase) throws NodeException {
+	public void createImageVariants(IWorkPhase phase) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		for (Node node : cr.getNodes()) {
 			if (!node.isPublishImageVariants()) {

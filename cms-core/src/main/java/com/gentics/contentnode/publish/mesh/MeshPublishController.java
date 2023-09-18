@@ -370,10 +370,8 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	public void collectImageData() throws NodeException {
 		state = State.collectImageData;
-		try (WorkPhaseHandler phase = new WorkPhaseHandler(foldersAndFilesPhase)) {
-			for (MeshPublisher mp : publishers) {
-				mp.collectImageData(phase);
-			}
+		for (MeshPublisher mp : publishers) {
+			mp.collectImageData(foldersAndFilesPhase);
 		}
 	}
 
@@ -407,10 +405,8 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	public void createImageVariants() throws NodeException {
 		state = State.createImageVariants;
-		try (WorkPhaseHandler phase = new WorkPhaseHandler(foldersAndFilesPhase)) {
-			for (MeshPublisher mp : publishers) {
-				mp.createImageVariants(phase);
-			}
+		for (MeshPublisher mp : publishers) {
+			mp.createImageVariants(offlinePhase);
 		}
 	}
 

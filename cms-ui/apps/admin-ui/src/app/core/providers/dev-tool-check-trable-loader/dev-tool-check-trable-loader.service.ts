@@ -7,14 +7,14 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { TrableRow } from '@gentics/ui-core';
-import { Observable, Subject, from, interval, of } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import {
     BO_DISPLAY_NAME,
     BO_ID,
     BO_PERMISSIONS,
     PackageDependencyEntityBO,
 } from '@admin-ui/common';
-import { catchError, first, map, switchMap, toArray } from 'rxjs/operators';
+import { map, switchMap, toArray } from 'rxjs/operators';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
 import { PackageOperations } from '../operations';
 

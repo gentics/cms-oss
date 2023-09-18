@@ -454,6 +454,34 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
         );
     }
 
+    /**
+     * Perform a consistency check on packages.
+     */
+    checkOneOrMoreWithSuccessMessage(packageName: string | string[], options?: PackageCheckOptions): Observable<void> {
+        const request = (name: string): Observable<void> => {
+            return this.api.devTools.check(name, options).pipe(
+                tap(() => this.notification.show({
+                    type: 'success',
+                    message: 'package.consistency_check_result',
+                    translationParams: { name },
+                })),
+                switchMap(()=> {return of(void 0) }),
+            );
+        };
+        let stream: Observable<void>;
+        if (Array.isArray(packageName) && packageName.length > 0) {
+            stream = forkJoin(packageName.map(name => request(name))).pipe(
+                map(() => { return; }),
+            );
+        }
+        if (typeof packageName === 'string') {
+            stream = request(packageName);
+        }
+        return stream.pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
 
     /**
      * Perform a consistency check on a package.

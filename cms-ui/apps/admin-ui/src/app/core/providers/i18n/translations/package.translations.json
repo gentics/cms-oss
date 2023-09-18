@@ -67,6 +67,10 @@
         "en": "Check all packages",
         "de": "Alle Pakete überpfüen"
     },
+    "consistency_check_result" : {
+        "en": "Package {{name}} successfully checked",
+        "de": "Paket {{name}} erfolgreich überprüft"
+    },
     "consistency_check_no_result" : {
         "en": "No package check result is available yet.",
         "de": "Es ist noch kein Ergebnis der Konsistenz-Überpfüfung verfügbar."

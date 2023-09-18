@@ -3,7 +3,7 @@ import { ListResponse } from './response';
 
 export interface BasePackageDependency{
     name: string;
-    globalId: number;
+    globalId: string;
     keyword?: string;
     dependencyType: DependencyType;
 }
@@ -26,8 +26,8 @@ export interface PackageCheckResult extends ListResponse<PackageDependency> {
 }
 
 export enum DependencyType {
-    CONSTRUCT,
-    DATASOURCE,
-    OBJECT_TAG_DEFINITION,
-    TEMPLATE
+    CONSTRUCT='CONSTRUCT',
+    DATASOURCE='DATASOURCE',
+    OBJECT_TAG_DEFINITION='OBJECT_TAG_DEFINITION',
+    TEMPLATE='TEMPLATE',
 }

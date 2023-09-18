@@ -1505,11 +1505,12 @@ export interface PackageSyncOptions {
 }
 
 export interface PackageCheckFilter {
-    type: DependencyType;
-    filter: Filter;
+    type?: DependencyType;
+    filter?: PackageCheckCompletenessFilter;
 }
 
-enum Filter {
+
+enum PackageCheckCompletenessFilter {
     INCOMPLETE,
     ALL
 }

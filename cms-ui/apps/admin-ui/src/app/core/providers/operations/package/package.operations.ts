@@ -38,7 +38,7 @@ import {
     TemplateFolderListRequest,
     TemplateResponse,
 } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { forkJoin, interval, Observable, of, Subject, throwError } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { EntityManagerService } from '../../entity-manager';
@@ -465,13 +465,13 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
                     message: 'package.consistency_check_result',
                     translationParams: { name },
                 })),
-                switchMap(()=> {return of(void 0) }),
+                discard(),
             );
         };
         let stream: Observable<void>;
         if (Array.isArray(packageName) && packageName.length > 0) {
             stream = forkJoin(packageName.map(name => request(name))).pipe(
-                map(() => { return; }),
+                discard(),
             );
         }
         if (typeof packageName === 'string') {
@@ -522,10 +522,14 @@ export class PackageOperations extends ExtendedEntityOperationsBase<'package'> {
     isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
         return this.api.devTools.getCheckResult(options.packageName)
             .pipe(
-                switchMap(() => of(true)),
-                catchError(() => {
-                    return of(false);
+                map(() => true),
+                catchError((err) => {
+                    if (err instanceof ApiError && err.statusCode === 404) {
+                        return of(false);
+                    }
+                    return throwError(err);
                 }),
+                this.catchAndRethrowError(),
             )
     }
 

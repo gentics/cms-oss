@@ -46,6 +46,7 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
@@ -612,7 +613,7 @@ public class Publisher implements Runnable {
 					try {
 						publisherInfo.setPhase(PublisherPhase.GENTICSIMAGESTORE);
 						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
-						meshPublishController.createImageVariants();
+						Trx.operate(() -> meshPublishController.createImageVariants());
 					} finally {
 						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 					}

@@ -14,6 +14,7 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	private final int entityId;
 	private final int entityType;
 	private final String fieldKey;
+	private String source;
 	private String webrootpath;
 
 	public MeshPublisherGisImageInitiator(int nodeId, int entityId, int entityType, String fieldKey) {
@@ -21,6 +22,11 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 		this.entityId = entityId;
 		this.entityType = entityType;
 		this.fieldKey = fieldKey;
+	}
+
+	public MeshPublisherGisImageInitiator setSource(String source) {
+		this.source = source;
+		return this;
 	}
 
 	@Override
@@ -31,5 +37,9 @@ public class MeshPublisherGisImageInitiator implements GisImageInitiator<Object[
 	@Override
 	public Object[] getInitiatorForeignKey() {
 		return new Object[] {nodeId, entityId, entityType, fieldKey, webrootpath};
+	}
+
+	public String getSource() {
+		return source;
 	}
 }

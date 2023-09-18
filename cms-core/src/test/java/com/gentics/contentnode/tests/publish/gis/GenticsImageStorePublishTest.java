@@ -61,6 +61,7 @@ import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.lib.etc.StringUtils;
+import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
 import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.etc.config.ImageManipulationMode;
 import com.gentics.mesh.parameter.client.ImageManipulationParametersImpl;
@@ -298,6 +299,7 @@ public class GenticsImageStorePublishTest {
 					}
 					ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
 					assertThat(variants.getVariants().size()).isEqualTo(1);
+					assertThat(variants.getVariants().get(0).setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest().getCacheKey()).isEqualTo(imageManipulationParameters.getCacheKey());
 				}
 			}
 

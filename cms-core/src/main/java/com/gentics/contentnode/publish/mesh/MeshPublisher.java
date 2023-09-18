@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -497,6 +499,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Map of ID sets of objects already handled (per node ID)
 	 */
 	protected Map<Integer, Map<Integer, Set<Integer>>> handled = new ConcurrentHashMap<>();
+
+	/**
+	 * A queue of image variants to be created.
+	 */
+	protected Deque<MeshPublisherGisImageInitiator> variantsQueue = new ConcurrentLinkedDeque<>();
 
 	/**
 	 * MeshPublisherController, when the publisher was started in a publish process
@@ -2618,7 +2625,14 @@ public class MeshPublisher implements AutoCloseable {
 										String.format("Error while preparing '%s' for publishing into '%s'", o.getObject(), cr.getName()), e));
 							}
 						});
-
+						Trx.operate(() -> {
+							while (!variantsQueue.isEmpty()) {
+								MeshPublisherGisImageInitiator initiator = variantsQueue.pop();
+								CNGenticsImageStore.processGISUrls(initiator, node, initiator.getSource(), null, allImageData,
+										CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
+								initiator.setSource(null);
+							}
+						});
 						if (phase != null) {
 							phase.work();
 						}
@@ -3286,8 +3300,8 @@ public class MeshPublisher implements AutoCloseable {
 		if (!node.isPublishImageVariants()) {
 			return;
 		}
-		CNGenticsImageStore.processGISUrls(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey), node, source, null, allImageData,
-				CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
+
+		this.variantsQueue.add(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey).setSource(source));
 	}
 
 	/**

@@ -1067,7 +1067,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			}
 			@Override
 			public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-				while (rs.next()) {
+				 while (rs.next()) {
 					ImageInformation info = new ImageInformation(rs.getInt("contentfile_id"), nodeId, rs.getString("webrootpath"), rs.getInt("edate"));
 					ImageDescription desc = new ImageDescription(rs.getInt("entity_id"), rs.getInt("entity_type"), rs.getString("transform"));
 					result.add(new ImageVariant(rs.getString("field_key"), desc, info));

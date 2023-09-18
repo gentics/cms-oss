@@ -13,7 +13,7 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ContentRepository, Response } from '@gentics/cms-models';
+import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
 import { MeshAPIVersion, MeshClientConnection, RequestFailedError } from '@gentics/mesh-rest-client';
@@ -85,7 +85,10 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     setupConnection(): void {
-        this.canLoginWithCR = this.repository.username?.length > 0 && this.repository.usePassword;
+        this.canLoginWithCR = this.repository.username?.length > 0 && (
+            this.repository.passwordType === ContentRepositoryPasswordType.VALUE
+            || this.repository.passwordType === ContentRepositoryPasswordType.PROPERTY
+        );
 
         const connection: MeshClientConnection = {
             ssl: false,

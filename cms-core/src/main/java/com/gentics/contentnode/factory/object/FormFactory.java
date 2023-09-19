@@ -1150,10 +1150,7 @@ public class FormFactory extends AbstractFactory {
 
 			ActionLogger.logCmd(ActionLogger.WASTEBIN, Form.TYPE_FORM, getId(), null, "Form.delete()");
 			t.dirtObjectCache(Form.class, getId(), true);
-			t.addTransactional(new TransactionalTriggerEvent(this,
-					new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
-							MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
-					Events.DELETE | Events.WASTEBIN));
+			t.addTransactional(TransactionalTriggerEvent.deleteIntoWastebin(getFolder().getNode(), this));
 		}
 
 		/**

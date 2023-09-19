@@ -31,6 +31,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.PropertyTrx;
+import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -708,12 +709,31 @@ public class FormFactory extends AbstractFactory {
 
 			ObjectNode copy = data.deepCopy();
 			convertI18n(copy, getI18nCodes(language));
-			renderReferencedPages(copy, language);
+
+			Transaction t = TransactionManager.getCurrentTransaction();
+			RenderType renderType = t.getRenderType();
+			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
+			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
+
+			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false)) {
+				// for the StaticUrlFactory, forbid auto detection of the linkway
+				RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
+				if (renderUrlFactory instanceof StaticUrlFactory) {
+					((StaticUrlFactory) renderUrlFactory).setAllowAutoDetection(false);
+				}
+
+				renderReferencedPages(copy, language);
+
+				// take over the collected dependencies
+				if (handleDependencies && storeDependencies) {
+					for (Dependency dep : rTrx.get().getDependencies()) {
+						renderType.addDependency(dep.getSource(), dep.getSourceProperty());
+					}
+				}
+			}
 
 			// if an (existing) success page is set, render the URL (also doing language fallback)
 			if (successPageId > 0) {
-				Transaction t = TransactionManager.getCurrentTransaction();
-
 				try (ChannelTrx cTrx = new ChannelTrx(successNodeId)) {
 					Page successPage = t.getObject(Page.class, successPageId);
 					if (successPage != null) {
@@ -811,12 +831,6 @@ public class FormFactory extends AbstractFactory {
 		protected void renderReferencedPages(JsonNode node, String language) throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
 
-			// if the transaction already has a renderType (e.g. during the publish process),
-			// we get the dependency handling settings, otherwise dependencies are not handled (and not stored)
-			RenderType renderType = t.getRenderType();
-			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
-			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
-
 			if (node.isObject()) {
 				ObjectNode objectNode = (ObjectNode) node;
 				Map<String, String> replace = new HashMap<>();
@@ -826,15 +840,7 @@ public class FormFactory extends AbstractFactory {
 						int pageId = objectNode.path(name).asInt();
 						try (PropertyTrx linkWayTrx = new PropertyTrx("contentnode.linkway", "host");
 								PropertyTrx fileLinkWayTrx = new PropertyTrx("contentnode.linkway_file", "host");
-								RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, storeDependencies);
 								PublishCacheTrx pcTrx = new PublishCacheTrx(false)) {
-
-							// for the StaticUrlFactory, forbid auto detection of the linkway
-							RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
-							if (renderUrlFactory instanceof StaticUrlFactory) {
-								((StaticUrlFactory) renderUrlFactory).setAllowAutoDetection(false);
-							}
-
 							Page page = t.getObject(Page.class, pageId);
 							if (page != null) {
 								page = PageLanguageFallbackList.doFallback(page, LanguageFactory.get(language),

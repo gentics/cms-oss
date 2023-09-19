@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { GenericErrorResponse } from '@gentics/mesh-models';
-import { MeshClientDriver, RequestFailedError, RequestMethod } from '@gentics/mesh-rest-client';
+import { MeshClientDriver, MeshRestClientRequest, RequestFailedError } from '@gentics/mesh-rest-client';
 
 export class AngularMeshClientDriver implements MeshClientDriver {
 
@@ -9,15 +9,14 @@ export class AngularMeshClientDriver implements MeshClientDriver {
     ) {}
 
     async performJsonRequest(
-        method: RequestMethod,
-        url: string,
-        headers?: Record<string, string>,
+        request: MeshRestClientRequest,
         body?: string,
     ): Promise<Record<string, any>> {
         try {
-            const res = await this.http.request(method, url, {
+            const res = await this.http.request(request.method, request.url, {
                 body,
-                headers,
+                headers: request.headers,
+                params: request.params,
                 observe: 'response',
                 responseType: 'text',
             }).toPromise();
@@ -27,11 +26,11 @@ export class AngularMeshClientDriver implements MeshClientDriver {
             }
 
             throw new HttpErrorResponse({
-                headers: new HttpHeaders(headers),
+                headers: new HttpHeaders(request.headers),
                 status: res.status,
                 statusText: res.statusText,
                 error: res.body,
-                url: url,
+                url: request.url,
             });
         } catch (err) {
             if (!(err instanceof HttpErrorResponse)) {
@@ -54,9 +53,8 @@ export class AngularMeshClientDriver implements MeshClientDriver {
             }
 
             throw new RequestFailedError(
-                `Request "${method} ${url}" responded with error code ${err.status}: "${err.statusText}"`,
-                method,
-                url,
+                `Request "${request.method} ${request.url}" responded with error code ${err.status}: "${err.statusText}"`,
+                request,
                 err.status,
                 raw,
                 parsed,

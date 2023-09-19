@@ -91,8 +91,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
         );
 
         const connection: MeshClientConnection = {
-            ssl: false,
-            host: window.location.host,
+            absolute: false,
             basePath: `/rest/contentrepositories/${this.repository.id}/proxy/api/v2`,
             version: MeshAPIVersion.V2,
         };

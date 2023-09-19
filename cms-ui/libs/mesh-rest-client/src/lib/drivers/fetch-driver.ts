@@ -1,21 +1,27 @@
 import { GenericErrorResponse } from '@gentics/mesh-models';
 import { RequestFailedError } from '../errors';
-import { MeshClientDriver, RequestMethod } from '../models';
+import { MeshClientDriver, MeshRestClientRequest } from '../models';
 
 export class MeshFetchDriver implements MeshClientDriver {
 
     constructor() {}
 
     async performJsonRequest(
-        method: RequestMethod,
-        url: string,
-        headers?: Record<string, string>,
+        request: MeshRestClientRequest,
         body?: null | string,
     ): Promise<Record<string, any>> {
+        let fullUrl = request.url;
+        if (request.params) {
+            const params = new URLSearchParams(request.params).toString();
+            if (params) {
+                fullUrl += `?${params}`;
+            }
+        }
+
         const res = await fetch({
-            method,
-            url,
-            headers: headers,
+            method: request.method,
+            url: fullUrl,
+            headers: request.headers,
             body: body,
         } as any);
 
@@ -39,9 +45,8 @@ export class MeshFetchDriver implements MeshClientDriver {
         }
 
         throw new RequestFailedError(
-            `Request "${method} ${url}" responded with error code ${res.status}: "${res.statusText}"`,
-            method,
-            url,
+            `Request "${request.method} ${request.url}" responded with error code ${res.status}: "${res.statusText}"`,
+            request,
             res.status,
             raw,
             parsed,

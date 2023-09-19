@@ -85,10 +85,8 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     setupConnection(): void {
-        this.canLoginWithCR = this.repository.username?.length > 0 && (
-            this.repository.passwordType === ContentRepositoryPasswordType.VALUE
-            || this.repository.passwordType === ContentRepositoryPasswordType.PROPERTY
-        );
+        this.canLoginWithCR = (this.repository.passwordType === ContentRepositoryPasswordType.VALUE && this.repository.username?.length > 0)
+            || (this.repository.passwordType === ContentRepositoryPasswordType.PROPERTY && this.repository.passwordProperty?.length > 0);
 
         const connection: MeshClientConnection = {
             absolute: false,

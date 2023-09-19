@@ -33,7 +33,7 @@ export class SchemaTableLoaderService extends BaseTableLoaderService<Schema, Mes
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshSchemaBO>> {
         return from(this.handler.listMapped({
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,

@@ -38,8 +38,9 @@ export class TagFamilyTableLoaderService extends BaseTableLoaderService<TagFamil
 
     protected loadEntities(options: TableLoadOptions, additionalOptions?: TagFamilyTableLoaderOptions): Observable<EntityPageResponse<MeshTagFamilyBO>> {
         return from(this.handler.listWithTags(additionalOptions.project, {
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
+            // FIXME: Not supported/working currently in Mesh
             // order: options.sortOrder == null ? null : (options.sortOrder === TableSortOrder.ASCENDING ? 'ASCENDING' : 'DESCENDING') as any,
             // sortBy: options.sortBy,
         })).pipe(

@@ -33,7 +33,7 @@ export class MicroschemaTableLoaderService extends BaseTableLoaderService<Micros
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshMicroschemaBO>> {
         return from(this.handler.listMapped({
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,

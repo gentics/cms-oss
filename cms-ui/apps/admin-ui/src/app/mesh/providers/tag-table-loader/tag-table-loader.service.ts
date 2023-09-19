@@ -38,7 +38,7 @@ export class TagTableLoaderService extends BaseTableLoaderService<Tag, MeshTagBO
 
     protected loadEntities(options: TableLoadOptions, additionalOptions?: TagTableLoaderOptions): Observable<EntityPageResponse<MeshTagBO>> {
         return from(this.handler.listMapped(additionalOptions.project, additionalOptions.family.uuid, {
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,

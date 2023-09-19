@@ -37,7 +37,7 @@ export class MeshGroupTableLoaderService extends BaseTableLoaderService<Group, M
 
     protected loadEntities(options: TableLoadOptions, additionalOptions?: MeshGroupTableLoaderOptions): Observable<EntityPageResponse<MeshGroupBO>> {
         return from(this.handler.listMapped({
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,

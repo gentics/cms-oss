@@ -33,7 +33,7 @@ export class MeshUserTableLoaderService extends BaseTableLoaderService<User, Mes
 
     protected loadEntities(options: TableLoadOptions): Observable<EntityPageResponse<MeshUserBO>> {
         return from(this.handler.listMapped({
-            page: options.page + 1,
+            page: Math.max(options.page, 1),
             perPage: options.perPage,
             order: options.sortOrder?.toLowerCase?.() as any,
             sortBy: options.sortBy,

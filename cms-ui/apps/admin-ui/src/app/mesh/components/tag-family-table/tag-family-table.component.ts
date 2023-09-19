@@ -38,7 +38,7 @@ export class TagFamilyTableComponent extends BaseEntityTableComponent<TagFamily,
             id: 'name',
             label: 'common.name',
             fieldPath: 'name',
-            sortable: true,
+            // sortable: true,
         },
         {
             id: 'tags',

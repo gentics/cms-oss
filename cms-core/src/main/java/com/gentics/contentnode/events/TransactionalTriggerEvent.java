@@ -15,7 +15,9 @@ import com.gentics.contentnode.factory.Transactional;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.object.LocalizableNodeObject;
+import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
+import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -31,6 +33,19 @@ public class TransactionalTriggerEvent extends AbstractTransactional {
 	public static final String PREVENT_KEY = "TransactionalTriggerEvent.prevent";
 
 	protected static NodeLogger logger = NodeLogger.getNodeLogger(TransactionalTriggerEvent.class);
+
+	/**
+	 * Create an instance of {@link TransactionalTriggerEvent} for triggering the event that the object has been put into the wastebin
+	 * @param node node of the object
+	 * @param object object
+	 * @return TransactionalTriggerEvent instance
+	 * @throws NodeException
+	 */
+	public static TransactionalTriggerEvent deleteIntoWastebin(Node node, NodeObject object) throws NodeException {
+		return new TransactionalTriggerEvent(object, new String[] { ObjectTransformer.getString(node.getId(), ""),
+				MeshPublisher.getMeshUuid(object), MeshPublisher.getMeshLanguage(object) },
+				Events.DELETE | Events.WASTEBIN);
+	}
 
 	/**
 	 * The trigger event prevent implementation. This transactional can be used as a substitute for the {@link TransactionalTriggerEvent} class. The trigger event

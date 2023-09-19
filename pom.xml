@@ -185,14 +185,14 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.5.1</version>
+					<version>3.11.0</version>
 					<configuration>
 						<executable>${env.JAVA_HOME}/bin/javac</executable>
 						<verbose>true</verbose>
 						<fork>true</fork>
 						<compilerVersion>1.8</compilerVersion>
-						<source>11</source>
-						<target>11</target>
+						<source>17</source>
+						<target>17</target>
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>

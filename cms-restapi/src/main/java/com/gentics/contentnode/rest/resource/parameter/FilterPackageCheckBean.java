@@ -20,7 +20,7 @@ public class FilterPackageCheckBean {
 	 * Query string for filtering
 	 */
 	@QueryParam("filter")
-	@DefaultValue("ALL")
+	@DefaultValue("INCOMPLETE")
 	public Filter completeness;
 
 

@@ -67,7 +67,7 @@
 		<jetty.version>9.4.49.v20220914</jetty.version>
 		<jackson.version>2.14.1</jackson.version>
 
-		<enunciate.version>2.14.0</enunciate.version>
+		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
 		<mockito.version>3.7.7</mockito.version>
@@ -226,14 +226,14 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.5.1</version>
+					<version>3.11.0</version>
 					<configuration>
 						<executable>${env.JAVA_HOME}/bin/javac</executable>
 						<verbose>true</verbose>
 						<fork>true</fork>
 						<compilerVersion>1.8</compilerVersion>
-						<source>11</source>
-						<target>11</target>
+						<source>17</source>
+						<target>17</target>
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>

@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.assertMeshCr;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -207,8 +208,8 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 	public Response login(@PathParam("id") String id) throws NodeException {
 		ContentRepository cr = validate(id);
 
-		String username = cr.getUsername();
-		String password = cr.getPassword();
+		String username = substituteSingleProperty(cr.getUsername());
+		String password = cr.isPasswordProperty() ? substituteSingleProperty(cr.getPassword()) : cr.getPassword();
 
 		if (StringUtils.isBlank(password)) {
 			throw new RestMappedException(I18NHelper.get("meshcr.apitoken.missing", cr.getName())).setMessageType(Message.Type.CRITICAL)
@@ -270,9 +271,10 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 	protected <T extends HttpRequestBase> Response forward(String id, String path, T method, Consumer<T> prepareHandler) throws NodeException {
 		ContentRepository cr = validate(id);
 
-		Matcher urlMatcher = MeshPublisher.URL_PATTERN.matcher(cr.getUrl());
+		String crUrl = substituteSingleProperty(cr.getUrl());
+		Matcher urlMatcher = MeshPublisher.URL_PATTERN.matcher(crUrl);
 		if (!urlMatcher.matches()) {
-			throw new RestMappedException(I18NHelper.get("meshcr.invalid.url", cr.getUrl(), cr.getName())).setMessageType(Message.Type.CRITICAL)
+			throw new RestMappedException(I18NHelper.get("meshcr.invalid.url", crUrl, cr.getName())).setMessageType(Message.Type.CRITICAL)
 					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 		}
 
@@ -365,14 +367,14 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 			};
 			return responseBuilder.entity(streamingOutput).build();
 		} catch (UnknownHostException e) {
-			throw new RestMappedException(I18NHelper.get("meshcr.unknown.host", cr.getName(), cr.getUrl())).setMessageType(Message.Type.CRITICAL)
+			throw new RestMappedException(I18NHelper.get("meshcr.unknown.host", cr.getName(), crUrl)).setMessageType(Message.Type.CRITICAL)
 				.setResponseCode(ResponseCode.FAILURE).setStatus(Status.BAD_GATEWAY);
 		} catch (HttpHostConnectException e) {
-			throw new RestMappedException(I18NHelper.get("meshcr.connect.error", cr.getName(), cr.getUrl())).setMessageType(Message.Type.CRITICAL)
+			throw new RestMappedException(I18NHelper.get("meshcr.connect.error", cr.getName(), crUrl)).setMessageType(Message.Type.CRITICAL)
 				.setResponseCode(ResponseCode.FAILURE).setStatus(Status.BAD_GATEWAY);
 		} catch (IOException e) {
-			logger.error(String.format("Error while connecting to Mesh CR %s via URL %s", cr.getName(), cr.getUrl()), e);
-			throw new RestMappedException(I18NHelper.get("meshcr.io.error", cr.getUrl(), cr.getName())).setMessageType(Message.Type.CRITICAL)
+			logger.error(String.format("Error while connecting to Mesh CR %s via URL %s", cr.getName(), crUrl), e);
+			throw new RestMappedException(I18NHelper.get("meshcr.io.error", crUrl, cr.getName())).setMessageType(Message.Type.CRITICAL)
 				.setResponseCode(ResponseCode.FAILURE).setStatus(Status.BAD_GATEWAY);
 		}
 	}

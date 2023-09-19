@@ -286,7 +286,7 @@ public class GenticsImageStorePublishTest {
 			assertThat(gisUrl1 + " " + gisUrl2 + " " + imageUrl).as("URLs").isEqualTo(source);
 
 			if (mesh && publishImageVariants) {
-				List<String> params = new ArrayList<>(2);
+				List<ImageManipulationParametersImpl> params = new ArrayList<>(2);
 				Matcher m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl1);
 				while (m.find()) {
 					ImageManipulationParametersImpl imageManipulationParameters = new ImageManipulationParametersImpl();
@@ -303,7 +303,7 @@ public class GenticsImageStorePublishTest {
 					if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
 						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
 					}
-					params.add(imageManipulationParameters.getCacheKey());
+					params.add(imageManipulationParameters);
 				}
 				m = CNGenticsImageStore.SANE_IMAGESTORE_URL_PATTERN.matcher(gisUrl2);
 				while (m.find()) {
@@ -321,13 +321,15 @@ public class GenticsImageStorePublishTest {
 					if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
 						imageManipulationParameters.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
 					}
-					params.add(imageManipulationParameters.getCacheKey());
+					params.add(imageManipulationParameters);
 				}
 				ImageVariantsResponse variants = meshContext.client().getNodeBinaryFieldImageVariants(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "binarycontent").blockingGet();
 				assertThat(variants.getVariants().size()).isEqualTo(2);
-				assertThat(variants.getVariants().stream().map(var -> var.setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest().getCacheKey()).collect(Collectors.toList())).isIn(params);
+				assertThat(variants.getVariants().stream()
+							.map(var -> var.setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest(var.getHeight() == null || !var.getHeight().equals(100)).getCacheKey())
+							.collect(Collectors.toList()))
+					.containsOnlyElementsOf(params.stream().map(ImageManipulationParametersImpl::getCacheKey).collect(Collectors.toList()));
 			}
-
 			trx.success();
 		}
 	}

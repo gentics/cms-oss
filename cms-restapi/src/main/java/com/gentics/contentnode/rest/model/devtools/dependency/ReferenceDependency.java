@@ -15,6 +15,11 @@ public class ReferenceDependency extends AbstractDependencyModel {
 	private Boolean isInOtherPackage;
 
 	/**
+	 * The name of the package where a reference was found.
+	 */
+	private String foundInPackage;
+
+	/**
 	 * Returns true if the object is in the current package, false otherwise.
 	 *
 	 * @return Whether the object is in the current package.
@@ -47,11 +52,27 @@ public class ReferenceDependency extends AbstractDependencyModel {
 	 * Sets whether the object is located in a different package.
 	 *
 	 * @param isInOtherPackage True if the object is located in a different package, false otherwise.
-	 * @return fluent Api
 	 */
-	public ReferenceDependency withIsInOtherPackage(Boolean isInOtherPackage) {
+	public void setIsInOtherPackage(Boolean isInOtherPackage) {
 		this.isInOtherPackage = isInOtherPackage;
-		return this;
+	}
+
+	/**
+	 * Gets the package name where a reference was found.
+	 *
+	 * @return the value of foundInPackage
+	 */
+	public String getFoundInPackage() {
+		return foundInPackage;
+	}
+
+	/**
+	 * Sets the name of the package where a reference was found.
+	 *
+	 * @param foundInPackage the new value to set
+	 */
+	public void setFoundInPackage(String foundInPackage) {
+		this.foundInPackage = foundInPackage;
 	}
 
 }

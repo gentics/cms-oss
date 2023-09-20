@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Service to collect and check packages concurrently
@@ -35,7 +36,7 @@ public class ConcurrentPackageDependencyChecker {
 	private static final NodeLogger LOGGER = NodeLogger.getNodeLogger(
 			ConcurrentPackageDependencyChecker.class);
 	private static final ExecutorService executor = Operator.getExecutor();
-	private List<Future<Map<Class<?>, List<?>>>> dependencyCheckerTasks;
+	private List<Future<Map<Pair<Class<?>, String>, List<?>>>> dependencyCheckerTasks;
 	private final List<Class<? extends SynchronizableNodeObject>> dependencyClasses = Arrays.asList(
 			Construct.class, ObjectTagDefinition.class, Template.class, Datasource.class);
 
@@ -54,14 +55,14 @@ public class ConcurrentPackageDependencyChecker {
 				excludedPackage));
 
 		for (String packageName : packages) {
-			Callable<Map<Class<?>, List<?>>> collectPackageObjectTask = () -> {
-				Map<Class<?>, List<?>> classPackageObjectMap = new HashMap<>();
+			Callable<Map<Pair<Class<?>, String>, List<?>>> collectPackageObjectTask = () -> {
+				Map<Pair<Class<?>, String>, List<?>> classPackageObjectMap = new HashMap<>();
 				PackageSynchronizer synchronizer = Synchronizer.getPackage(packageName);
 
 				try (Trx trx = ContentNodeHelper.trx()) {
 					for (Class<? extends SynchronizableNodeObject> dependencyClass : dependencyClasses) {
 						List<?> packageObjects = synchronizer.getObjects(dependencyClass);
-						classPackageObjectMap.put(dependencyClass, packageObjects);
+						classPackageObjectMap.put(Pair.of(dependencyClass, synchronizer.getName()), packageObjects);
 					}
 				}
 
@@ -81,8 +82,8 @@ public class ConcurrentPackageDependencyChecker {
 	public void checkAllPackageDependencies(
 			List<ReferenceDependency> searchDependencyInOtherPackagesList)
 			throws ExecutionException, InterruptedException, NodeException {
-		for (Future<Map<Class<?>, List<?>>> task : dependencyCheckerTasks) {
-			Map<Class<?>, List<?>> collectedPackageObjects = task.get();
+		for (Future<Map<Pair<Class<?>, String>, List<?>>> task : dependencyCheckerTasks) {
+			Map<Pair<Class<?>, String>, List<?>> collectedPackageObjects = task.get();
 			checkOtherPackages(searchDependencyInOtherPackagesList, collectedPackageObjects);
 		}
 	}
@@ -97,12 +98,13 @@ public class ConcurrentPackageDependencyChecker {
 	 */
 	private static void checkOtherPackages(
 			List<ReferenceDependency> searchDependencyInOtherPackagesList,
-			Map<Class<?>, List<?>> collectedDependencies) throws NodeException {
+			Map<Pair<Class<?>, String>, List<?>> collectedDependencies) throws NodeException {
 		for (ReferenceDependency searchReference : searchDependencyInOtherPackagesList) {
+			String foundInPackage = null;
 			boolean isInOtherPkg = false;
 
-			for (Entry<Class<?>, List<?>> entry : collectedDependencies.entrySet()) {
-				Class<?> clazz = entry.getKey();
+			for (Entry<Pair<Class<?>, String>, List<?>> entry : collectedDependencies.entrySet()) {
+				Class<?> clazz = entry.getKey().getLeft();
 				if (getImplementationClassForReference(searchReference.getDependencyType()) != clazz) {
 					continue;
 				}
@@ -115,13 +117,15 @@ public class ConcurrentPackageDependencyChecker {
 								searchReference.getGlobalId()));
 
 				if (isInOtherPkg) {
-					LOGGER.info(String.format("Found missing dependency for '%s' with id '%s'", clazz,
-							searchReference.getGlobalId()));
+					foundInPackage = entry.getKey().getRight();
+					LOGGER.info(String.format("Found missing dependency for '%s' with id '%s' in package '%s'", clazz,
+							searchReference.getGlobalId(), foundInPackage));
 					break;
 				}
 			}
 
-			searchReference.withIsInOtherPackage(isInOtherPkg);
+			searchReference.setIsInOtherPackage(isInOtherPkg);
+			searchReference.setFoundInPackage(foundInPackage);
 		}
 	}
 

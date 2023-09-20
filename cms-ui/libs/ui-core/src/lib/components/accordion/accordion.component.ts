@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef } from '@angular/core';
-import { coerceToBoolean } from '../../../common/utils';
+import { coerceToBoolean } from '../../utils';
 
 @Component({
     selector: 'gtx-accordion',
@@ -18,7 +18,7 @@ import { coerceToBoolean } from '../../../common/utils';
                 marginTop: '0px',
             })),
             transition('* <=> *', animate('200ms')),
-        ])
+        ]),
     ],
 })
 export class AccordionComponent implements OnChanges {

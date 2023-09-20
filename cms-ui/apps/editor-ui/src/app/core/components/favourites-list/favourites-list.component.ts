@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
+import { EditMode, Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
 import { isEqual } from'lodash-es'
 import { Observable } from 'rxjs';
@@ -13,8 +13,8 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     selector: 'favourites-list',
     templateUrl: './favourites-list.component.html',
     styleUrls: ['./favourites-list.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class FavouritesList {
 
     @Output() navigate = new EventEmitter<Favourite>(false);
@@ -56,7 +56,7 @@ export class FavouritesList {
     }
 
     reorder(e: ISortableEvent): void {
-        let newOrder = e.sort(this.favourites.getList());
+        const newOrder = e.sort(this.favourites.getList());
         this.favourites.reorder(newOrder);
     }
 
@@ -114,7 +114,7 @@ export class FavouritesList {
             .then(parentFolderId => this.navigateToFolder(parentFolderId, item.nodeId))
             .then(succeeded => {
                 if (succeeded) {
-                    const editMode = type === 'page' ? 'preview' : 'editProperties';
+                    const editMode = type === 'page' ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
                     this.navigate.emit(item);
                     this.navigationService
                         .detailOrModal(item.nodeId, type, item.id, editMode)

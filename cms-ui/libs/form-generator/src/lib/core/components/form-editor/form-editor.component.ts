@@ -19,14 +19,13 @@ import {
     Form,
     FormBO,
     Normalized,
-    Page,
     Raw,
 } from '@gentics/cms-models';
 import { cloneDeep as _cloneDeep } from'lodash-es'
 import { Subject } from 'rxjs';
+import { FormEditorConfiguration } from '../../../common/models/form-editor-configuration';
 import { GTX_FORM_EDITOR_ANIMATIONS } from '../../animations/form-editor.animations';
 import { FormEditorConfigurationService, FormEditorService } from '../../providers';
-import { FormEditorConfiguration } from '../../../common/models/form-editor-configuration';
 import { FormEditorMappingService } from '../../providers/form-editor-mapping/form-editor-mapping.service';
 import { FormEditorElementListComponent } from '../form-editor-element-list/form-editor-element-list.component';
 
@@ -38,20 +37,21 @@ import { FormEditorElementListComponent } from '../form-editor-element-list/form
     animations: GTX_FORM_EDITOR_ANIMATIONS,
 })
 export class FormEditorComponent implements OnInit, OnDestroy {
-    private _form: FormBO<Raw | Normalized>;
+
+    private mappedForm: FormBO<Raw | Normalized>;
 
     private configurationFetched = false;
 
     get form(): Form<Raw | Normalized> {
-        return this.formEditorMappingService.mapFormBOToForm(this._form);
+        return this.formEditorMappingService.mapFormBOToForm(this.mappedForm);
     }
 
     @Input() set form(value: Form) {
         this.formEditorConfigurationService.getConfiguration$(
-            !!value.data.type ? value.data.type : CmsFormType.GENERIC,
+            value.data.type ? value.data.type : CmsFormType.GENERIC,
         ).subscribe((configuration: FormEditorConfiguration) => {
             this.configurationFetched = true;
-            this._form = this.formEditorMappingService.mapFormToFormBO(value, configuration);
+            this.mappedForm = this.formEditorMappingService.mapFormToFormBO(value, configuration);
             this.onFormUpdated();
             this.changeDetectorRef.markForCheck();
             this.setFormEditorMenu();
@@ -59,16 +59,16 @@ export class FormEditorComponent implements OnInit, OnDestroy {
     }
 
     get formElements(): CmsFormElementBO[] {
-        if (this._form && this._form.data) {
-            return this._form.data.elements;
+        if (this.mappedForm && this.mappedForm.data) {
+            return this.mappedForm.data.elements;
         } else {
             return undefined;
         }
     }
 
     get formType(): CmsFormType {
-        if (this._form && this._form.data) {
-            return this._form.data.type;
+        if (this.mappedForm && this.mappedForm.data) {
+            return this.mappedForm.data.type;
         } else {
             return undefined;
         }
@@ -79,7 +79,7 @@ export class FormEditorComponent implements OnInit, OnDestroy {
 
     @Input()
     set formEditMode(v: EditMode) {
-        this._formEditMode = v;
+        this.internalFormEditMode = v;
         if (v === 'preview') {
             this.menuVisible = false;
         } else if (v === 'edit') {
@@ -90,9 +90,9 @@ export class FormEditorComponent implements OnInit, OnDestroy {
     }
 
     get formEditMode(): EditMode {
-        return this._formEditMode;
+        return this.internalFormEditMode;
     }
-    private _formEditMode: EditMode = 'preview';
+    private internalFormEditMode: EditMode = EditMode.PREVIEW;
 
     /** Current UI language. */
     @Input()
@@ -186,9 +186,9 @@ export class FormEditorComponent implements OnInit, OnDestroy {
     }
 
     private onFormUpdated(): void {
-        this._form = _cloneDeep(this._form);
-        this.formMemory = JSON.stringify(this._form);
-        this.formEditorService.formLanguages = this._form.languages;
+        this.mappedForm = _cloneDeep(this.mappedForm);
+        this.formMemory = JSON.stringify(this.mappedForm);
+        this.formEditorService.formLanguages = this.mappedForm.languages;
     }
 
     ngOnDestroy(): void {
@@ -209,17 +209,17 @@ export class FormEditorComponent implements OnInit, OnDestroy {
     }
 
     public onElementsChange(elements: CmsFormElementBO[]): void {
-        if (this._form && this._form.data) {
-            this._form.data.elements = elements;
+        if (this.mappedForm && this.mappedForm.data) {
+            this.mappedForm.data.elements = elements;
         }
-        if (this.formMemory !== JSON.stringify(this._form)) {
+        if (this.formMemory !== JSON.stringify(this.mappedForm)) {
             this.formModified.emit(this.form);
         }
     }
 
     onFormElementInsert(insertionInformation: CmsFormElementInsertionInformation): void {
         if (insertionInformation.insertionType === CmsFormElementInsertionType.MOVE) {
-            this.removeElementByName(this._form.data.elements, insertionInformation.element.name)
+            this.removeElementByName(this.mappedForm.data.elements, insertionInformation.element.name)
         }
     }
 

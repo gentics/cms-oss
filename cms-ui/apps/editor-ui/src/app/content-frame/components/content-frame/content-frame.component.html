@@ -1,231 +1,19 @@
 <div class="content-frame-container">
 
-    <div class="editor-toolbar">
-        <gtx-breadcrumbs
-            [routerLinks]="breadcrumbs$ | async"
-            [multiline]="true"
-            [multilineExpanded]="multilineExpanded$ | async"
-            [class.isInherited]="isInherited$ | async"
-            [class.notInherited]="!(isInherited$ | async)"
-            (linkClick)="changeFocus()"
-            (multilineExpandedChange)="expandedChanged($event)"
-        >
-            <icon *ngIf="isInherited$ | async" class="iconChannel">input</icon>
-        </gtx-breadcrumbs>
-
-        <div class="row expanded small-collapse toolbar-row">
-            <div class="columns left-items">
-                <div class="editor-title">
-                    <div class="title-name" [title]="currentItem?.name | replaceEscapedCharacters">
-                        <ng-template [ngIf]="currentItem?.type !== 'node'">
-                            <inherited-localized-icon [item]="currentItem" [editorNodeId]="editorNodeId" ></inherited-localized-icon>
-                            <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
-                        </ng-template>
-                    </div>
-
-                    <div class="item-version" *ngIf="(currentItem?.type === 'page' || currentItem?.type === 'form') && version">
-                        <span *ngIf="oldVersion">v{{ oldVersion.number }} <i class="material-icons comparison-icon" [attr.translate]="'no'">compare_arrows</i> v{{ version.number }}</span>
-                        <span *ngIf="!oldVersion">v{{ version.number }}</span>
-                    </div>
-
-                    <div *ngIf="currentItem?.type === 'form' || (currentItem?.type === 'page' && $any(currentItem)?.contentGroupId)" class="item-language">
-                        <div>{{ itemLanguage?.code | i18n }}</div>
-
-                        <div *ngIf="(editorState$ | async)?.compareWithId">
-                            <i class="material-icons comparison-icon" [attr.translate]="'no'">compare_arrows</i>
-                        </div>
-                        <div *ngIf="(editorState$ | async)?.compareWithId">
-                            {{ pageComparisonLanguage?.code | i18n }}
-                        </div>
-                    </div>
-
-                    <div class="form-type" *ngIf="currentItem && currentItem.type === 'form'">
-                        {{ 'editor.item_type_label' | i18n }}: {{ 'gtxFormGenerator.form_type_' + ((!!currentItem['data']?.type ? currentItem['data']?.type : CMS_FORM_TYPE.GENERIC) | lowercase) | i18n }}
-                    </div>
-                </div>
-            </div>
-
-            <div class="columns shrink">
-                <div class="item-status">
-                    <item-status-label
-                        [item]="currentItem"
-                        [nodeLanguages]="activeNodeLanguages$ | async"
-                        [activeNodeId]="currentNode?.id">
-                    </item-status-label>
-                </div>
-
-                <gtx-button
-                    *ngIf="buttons.saveAsCopy"
-                    class="primary-action"
-                    size="small"
-                    flat
-                    [disabled]="saveAsCopyButtonIsDisabled"
-                    [title]="'editor.content_frame_save_copy_tooltip' | i18n"
-                    (click)="saveAsCopy()"
-                >
-                    <icon left>file_copy</icon>
-                    <span [innerHTML]="'editor.content_frame_save_copy_button' | i18n"></span>
-                </gtx-button>
-
-                <gtx-button
-                    *ngIf="buttons.previewPage"
-                    class="primary-action"
-                    flat
-                    size="small"
-                    [routerLink]="previewLink"
-                >
-                    <div *ngIf="!version">
-                        <icon left>pageview</icon>
-                        <span>{{ 'editor.preview_label' | i18n }}</span>
-                    </div>
-                    <div *ngIf="version">
-                        <icon left>update</icon>
-                        <span>{{ 'editor.preview_current_version_label' | i18n }}</span>
-                    </div>
-                </gtx-button>
-
-                <gtx-button
-                    *ngIf="buttons.edit"
-                    class="primary-action edit-button"
-                    size="small"
-                    flat
-                    (click)="editItem()"
-                    [title]="'editor.edit_tooltip' | i18n"
-                >
-                    <icon left>edit</icon>
-                    <span>{{ 'editor.edit_type_button' | i18n:{ _type: currentItem?.type  } }}</span>
-                </gtx-button>
-
-                <gtx-button
-                    *ngIf="buttons.lockedEdit"
-                    class="primary-action"
-                    size="small"
-                    type="secondary"
-                    flat
-                    disabled="true"
-                    [title]="'editor.content_frame_page_locked_tooltip' | i18n"
-                >
-                    <icon left>lock</icon>
-                    <span>{{ 'editor.edit_type_button' | i18n:{ _type: currentItem?.type  } }}</span>
-                </gtx-button>
-
-                <gtx-split-button
-                    *ngIf="buttons.save"
-                    class="primary-action"
-                    size="small"
-                    [disabled]="saveButtonIsDisabled || (saving$ | async)"
-                    [title]="'editor.content_frame_save_changes_tooltip' | i18n"
-                >
-                    <gtx-split-button-primary-action (click)="saveChanges()">
-                        <div class="save-button-primary-action">
-                            <icon left>save</icon>
-                            <span [innerHTML]="'editor.content_frame_save_changes_button' | i18n"></span>
-                        </div>
-                    </gtx-split-button-primary-action>
-
-                    <gtx-dropdown-item
-                        *ngIf="currentItem?.type === 'folder' && openPropertiesTab !== ITEM_PROPERTIES_TAB"
-                        (click)="saveChangesAndApplyToSubfolders()"
-                    >
-                        <icon left>save</icon>
-                        <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_subfolders_button' | i18n"></span>
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="editMode === 'editProperties' && currentItem?.type === 'page' && openPropertiesTab !== ITEM_PROPERTIES_TAB"
-                        (click)="saveChangesAndApplyToLanguageVariants()"
-                    >
-                        <icon left>save</icon>
-                        <span [innerHTML]="'editor.content_frame_save_changes_and_apply_to_language_variants_button' | i18n"></span>
-                    </gtx-dropdown-item>
-                </gtx-split-button>
-            </div>
-
-            <div class="columns shrink dropdown">
-                <gtx-dropdown-list class="content-frame-context-menu" *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'">
-                    <gtx-dropdown-trigger>
-                        <gtx-button icon type="secondary">
-                            <i class="material-icons" [attr.translate]="'no'">more_vert</i>
-                        </gtx-button>
-                    </gtx-dropdown-trigger>
-
-                    <gtx-dropdown-content>
-                        <gtx-dropdown-item *ngIf="buttons.editProperties" (click)="editProperties()">
-                            <icon left>settings</icon> {{ 'editor.properties_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="buttons.editItem" (click)="editItem()">
-                            <icon left>edit</icon> {{ 'editor.edit_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="buttons.compareSources" (click)="switchToCompareSources()">
-                            <icon left>code</icon> {{ 'editor.compare_version_sources_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="buttons.compareContents" (click)="switchToCompareContents()">
-                            <icon left>pageview</icon> {{ 'editor.compare_version_contents_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="buttons.versionHistory" (click)="showPageVersionsModal()">
-                            <icon left>history</icon> {{ 'editor.version_history_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="buttons.timeManagement" (click)="showTimeManagement(currentItem)">
-                            <icon left>date_range</icon> {{ 'editor.time_management_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="!(focusModeEnabled$ | async) && (currentItem?.type === 'page' || currentItem?.type === 'form')"
-                            class="focus-mode-button"
-                            (click)="setFocusMode(true)"
-                        >
-                            <icon left>fullscreen</icon>{{ 'editor.enable_focus_mode_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="(focusModeEnabled$ | async) && (currentItem?.type === 'page' || currentItem?.type === 'form')"
-                            class="focus-mode-button"
-                            (click)="setFocusMode(false)"
-                        >
-                            <icon left>fullscreen_exit</icon>{{ 'editor.disable_focus_mode_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item *ngIf="(isInQueue$ | async)" (click)="approve()" class="success">
-                            <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="buttons.publish"
-                            class="success"
-                            (click)="saveAndPublishItem()"
-                        >
-                            <icon left>cloud_upload</icon> {{ 'editor.publish_label' | i18n }}
-                        </gtx-dropdown-item>
-
-                        <gtx-dropdown-item
-                            *ngIf="buttons.takeOffline"
-                            class="alert"
-                            (click)="takeItemOffline()"
-                        >
-                            <icon left>cloud_off</icon> {{ 'editor.take_offline_label' | i18n }}
-                        </gtx-dropdown-item>
-                    </gtx-dropdown-content>
-                </gtx-dropdown-list>
-            </div>
-
-            <div class="columns shrink">
-                <gtx-button
-                    icon
-                    type="secondary"
-                    (click)="closeEditor()"
-                >
-                    <icon>close</icon>
-                </gtx-button>
-            </div>
-        </div>
-
-        <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>
-    </div>
+    <gtx-editor-toolbar
+        [nodeInherited]="isInherited$ | async"
+        [currentNode]="currentNode"
+        [currentItem]="currentItem"
+        [editorState]="editorState$ | async"
+        [showSave]="saveButtonVisible"
+        [saveDisabled]="saveButtonIsDisabled"
+        [copyDisabled]="saveAsCopyButtonIsDisabled"
+        [locked]="isLocked"
+        [itemPermissions]="itemPermissions"
+        (close)="closeEditor()"
+        (save)="handleItemSave($event)"
+        (timeManagement)="showTimeManagement($event)"
+    ></gtx-editor-toolbar>
 
     <gtx-tabs
         *ngIf="editMode === 'editProperties' && (currentItem?.type === 'file' || currentItem?.type === 'image')"
@@ -264,7 +52,7 @@
     >
         <combined-properties-editor
             [item]="currentItem"
-            [isDisabled]="!buttons.save"
+            [isDisabled]="!saveButtonVisible"
         ></combined-properties-editor>
     </div>
 

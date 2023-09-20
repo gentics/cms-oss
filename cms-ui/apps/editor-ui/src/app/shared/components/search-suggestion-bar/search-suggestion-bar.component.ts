@@ -1,5 +1,6 @@
 import {
     AfterContentInit,
+    AfterViewChecked,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -58,7 +59,7 @@ export enum EventKey {
     styleUrls: ['./search-suggestion-bar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SearchSuggestionBarComponent implements AfterContentInit, OnInit, OnChanges, OnDestroy {
+export class SearchSuggestionBarComponent implements OnInit, OnChanges, OnDestroy, AfterContentInit, AfterViewChecked {
 
     @Input() recentVisible = false;
     @Output() recentVisibleChange = new EventEmitter<boolean>()
@@ -349,23 +350,23 @@ export class SearchSuggestionBarComponent implements AfterContentInit, OnInit, O
 
                     switch (item.mode) {
                         case 'edit':
-                            openEditorInMode('edit');
+                            openEditorInMode(EditMode.EDIT);
                             break;
 
                         case 'preview':
-                            openEditorInMode('preview')
+                            openEditorInMode(EditMode.PREVIEW)
                                 .then(navigated => navigated && changeTab('preview'));
                             break;
 
                         case 'properties':
-                            openEditorInMode('editProperties')
+                            openEditorInMode(EditMode.EDIT_PROPERTIES)
                                 .then(navigated => navigated && changeTab('properties'));
                             break;
 
                         default:
                             // We need the default case, because in GCMS 5.34 and before it was possible to
                             // have a mode 'objectProperties'.
-                            openEditorInMode('editProperties')
+                            openEditorInMode(EditMode.EDIT_PROPERTIES)
                                 .then(navigated => navigated && changeTab('properties'));
                             break;
                     }

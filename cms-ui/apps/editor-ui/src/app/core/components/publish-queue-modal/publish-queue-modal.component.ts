@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
-import { Page, PageRequestOptions } from '@gentics/cms-models';
+import { EditMode, Page, PageRequestOptions } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '../../../state';
@@ -59,7 +59,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
 
         this.api.folders.getItem(page.id, 'page', options).toPromise()
             .then(res => {
-                let pageWithVersion: Page = res.page;
+                const pageWithVersion: Page = res.page;
                 const oldVersion = this.getLastVersion(pageWithVersion);
                 const version = pageWithVersion.currentVersion;
 
@@ -68,7 +68,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
                 this.navigationService.instruction({
                     modal: null,
                     detail: {
-                        nodeId, itemType: 'page', itemId: pageWithVersion.id, editMode: 'compareVersionContents', options: { version, oldVersion },
+                        nodeId, itemType: 'page', itemId: pageWithVersion.id, editMode: EditMode.COMPARE_VERSION_CONTENTS, options: { version, oldVersion },
                     },
                 }).navigate({ replaceUrl: false });
             })
@@ -78,7 +78,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
                 this.navigationService.instruction({
                     modal: null,
                     detail: {
-                        nodeId, itemType: 'page', itemId: page.id, editMode: 'edit',
+                        nodeId, itemType: 'page', itemId: page.id, editMode: EditMode.EDIT,
                     },
                 }).navigate({ replaceUrl: false });
 

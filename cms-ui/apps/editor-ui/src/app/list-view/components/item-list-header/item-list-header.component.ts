@@ -3,6 +3,7 @@ import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-u
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import {
+    EditMode,
     EditableFormProps,
     EditablePageProps,
     EditorPermissions,
@@ -261,10 +262,10 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             .then((newItem: Page | Form) => {
                 this.folderActions.refreshList(this.itemType);
                 if (isPage) {
-                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, EditMode.EDIT).navigate();
                 }
                 if (isForm) {
-                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, EditMode.EDIT).navigate();
                 }
             })
             .catch(this.errorHandler.catch);

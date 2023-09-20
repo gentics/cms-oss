@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { StateContext } from '@ngxs/store';
 import { append, iif, patch, removeItem } from '@ngxs/store/operators';
-import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
+import { EditMode, EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {
     AddExpandedTabGroupAction,
@@ -110,7 +110,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'compareVersionContents',
+            editMode: EditMode.COMPARE_VERSION_CONTENTS,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',
@@ -130,7 +130,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'compareVersionSources',
+            editMode: EditMode.COMPARE_VERSION_SOURCES,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',
@@ -206,7 +206,7 @@ export class EditorStateModule {
             // Static changes
             compareWithId: undefined,
             contentModified: false,
-            editMode: 'previewVersion',
+            editMode: EditMode.PREVIEW_VERSION,
             editorIsOpen: true,
             editorIsFocused: true,
             itemType: 'page',

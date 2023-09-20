@@ -6,11 +6,11 @@ import { DefaultModelType, ModelType } from './type-util';
 export interface ConstructCategoryBase<T extends ModelType> {
     /** Name of this construct category */
     name: string
-    /** of Construct	Map of constructs for this category */
-    constructs: TagType<T>[];
+    /** Map of constructs for this category */
+    constructs: Record<string, TagType<T>>;
     /** Global ID */
     globalId: string;
-    /** of string */
+    /** Map of names in the different languages */
     nameI18n: CmsI18nValue;
     /** The sort order of the category */
     sortOrder?: number;

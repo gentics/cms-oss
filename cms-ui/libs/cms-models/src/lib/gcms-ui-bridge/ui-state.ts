@@ -10,5 +10,11 @@
 export type GcmsUiLanguage = string;
 
 /** The possible edit modes of the content-frame. */
-export type EditMode = 'preview' | 'edit' | 'editProperties' | 'previewVersion' |
-                       'compareVersionContents' | 'compareVersionSources';
+export enum EditMode {
+    PREVIEW = 'preview',
+    EDIT = 'edit',
+    EDIT_PROPERTIES = 'editProperties',
+    PREVIEW_VERSION = 'previewVersion',
+    COMPARE_VERSION_CONTENTS = 'compareVersionContents',
+    COMPARE_VERSION_SOURCES = 'compareVersionSources',
+}

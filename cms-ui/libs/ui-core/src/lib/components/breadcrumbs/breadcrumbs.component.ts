@@ -19,19 +19,19 @@ import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { coerceInstance } from '../../utils';
 
-export interface IBreadcrumbLink {
-    href?: string;
-    route?: any;
+export interface IBreadcrumbItem {
     text: string;
     tooltip?: string;
     [key: string]: any;
 }
 
-export interface IBreadcrumbRouterLink {
+export interface IBreadcrumbLink extends IBreadcrumbItem {
+    href?: string;
+    route?: any;
+}
+
+export interface IBreadcrumbRouterLink extends IBreadcrumbItem{
     route: any[];
-    text: string;
-    tooltip?: string;
-    [key: string]: any;
 }
 
 /** The width configured in the .ellipsis CSS class. */
@@ -56,13 +56,13 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
      * A list of links to display
      */
     @Input()
-    public links: IBreadcrumbLink[];
+    public links: (IBreadcrumbItem | IBreadcrumbLink)[];
 
     /**
      * A list of RouterLinks to display
      */
     @Input()
-    public routerLinks: IBreadcrumbRouterLink[];
+    public routerLinks: (IBreadcrumbItem | IBreadcrumbRouterLink)[];
 
     /**
      * A color that is used for collapsed state background.
@@ -176,8 +176,8 @@ export class BreadcrumbsComponent implements OnChanges, OnDestroy, AfterViewInit
     }
 
     private setUpResizeSub() {
-        let prevLinks: IBreadcrumbLink[];
-        let prevRouterLinks: IBreadcrumbRouterLink[];
+        let prevLinks: (IBreadcrumbItem | IBreadcrumbLink)[];
+        let prevRouterLinks: (IBreadcrumbItem | IBreadcrumbRouterLink)[];
         let prevIsExpanded: boolean;
         let prevNavWidth = -1;
 

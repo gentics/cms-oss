@@ -1,0 +1,160 @@
+<div class="format-section formatting-group">
+    <button
+        class="format-button"
+        [title]="'editor.format_bold' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'bold'"
+        (click)="toggleFormat('bold')"
+    >
+        <icon>format_bold</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_italic' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'italic'"
+        (click)="toggleFormat('italic')"
+    >
+        <icon>format_italic</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_underline' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'underline'"
+        (click)="toggleFormat('underline')"
+    >
+        <icon>format_underlined</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_code' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'code'"
+        (click)="toggleFormat('code')"
+    >
+        <icon>code</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_quote' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'quote'"
+        (click)="toggleFormat('quote')"
+    >
+        <icon>format_quote</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_sub' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'sub'"
+        (click)="toggleFormat('sub')"
+    >
+        <icon>subscript</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.format_sup' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'sup'"
+        (click)="toggleFormat('sup')"
+    >
+        <icon>superscript</icon>
+    </button>
+</div>
+
+<div class="format-section link-group">
+    <button
+        class="format-button"
+        [title]="'editor.format_link' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'link'"
+        (click)="toggleFormat('link')"
+    >
+        <icon>{{ (activeFormats | gtxIncludes:'link') ? 'link_off' : 'link' }}</icon>
+    </button>
+</div>
+
+<div class="format-section list-group">
+    <button
+        class="format-button"
+        [title]="'editor.list_unsorted' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'list_unsorted'"
+        (click)="toggleFormat('list_unsorted')"
+    >
+        <icon>format_list_bulleted</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.list_sorted' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'list_sorted'"
+        (click)="toggleFormat('list_sorted')"
+    >
+        <icon>format_list_numbered</icon>
+    </button>
+</div>
+
+<div class="format-section typography-group">
+    <button
+        class="format-button"
+        [title]="'editor.text_p' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'p'"
+        (click)="toggleFormat('p')"
+    >
+        <icon>format_paragraph</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h1' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h1'"
+        (click)="toggleFormat('h1')"
+    >
+        <icon>format_h1</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h2' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h2'"
+        (click)="toggleFormat('h2')"
+    >
+        <icon>format_h2</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h3' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h3'"
+        (click)="toggleFormat('h3')"
+    >
+        <icon>format_h3</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h4' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h4'"
+        (click)="toggleFormat('h4')"
+    >
+        <icon>format_h4</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h5' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h5'"
+        (click)="toggleFormat('h5')"
+    >
+        <icon>format_h5</icon>
+    </button>
+
+    <button
+        class="format-button"
+        [title]="'editor.text_h6' | i18n"
+        [class.active]="activeFormats | gtxIncludes:'h6'"
+        (click)="toggleFormat('h6')"
+    >
+        <icon>format_h6</icon>
+    </button>
+</div>

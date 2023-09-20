@@ -1,0 +1,39 @@
+<div class="content">
+    <div *ngFor="let group of groups" class="construct-group" [attr.data-id]="group.id">
+        <gtx-accordion
+            [trigger]="groupLabel"
+            [triggerToggle]="true"
+            [open]="true"
+        >
+            <div class="group-entries">
+                <div
+                    *ngFor="let construct of group.constructs"
+                    class="construct"
+                    [title]="construct.description"
+                    [attr.draggable]="true"
+                    [attr.data-id]="construct.id"
+                    (dragStart)="setupDragOnElement($event, construct)"
+                >
+                    <div class="construct-icon">
+                        <icon>{{ construct | gtxConstructIconNormalizer }}</icon>
+                    </div>
+                    <div class="construct-name">
+                        {{ construct.name }}
+                    </div>
+                </div>
+            </div>
+        </gtx-accordion>
+
+        <ng-template #groupLabel>
+            <div class="group-label">{{ group.id === -1 ? (group.label | i18n) : group.label }}</div>
+        </ng-template>
+    </div>
+</div>
+
+<div class="search-bar">
+    <gtx-search-bar
+        [query]="filterText"
+        (change)="updateFilterText($event)"
+        (clear)="updateFilterText('')"
+    ></gtx-search-bar>
+</div>

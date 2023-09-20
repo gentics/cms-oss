@@ -20,7 +20,7 @@ import { ApplicationStateService, UsageActionsService } from '../../../state';
     selector: 'usage-modal',
     templateUrl: './usage-modal.tpl.html',
     styleUrls: ['./usage-modal.scss'],
-    })
+})
 export class UsageModalComponent implements IModalDialog, OnInit {
 
     item: Item;
@@ -120,7 +120,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             // The current node does not have multiple languages configured, so skip this step.
             return pages;
         }
-        let languageGroups: { [contentSetId: number]: Page[] } = {};
+        const languageGroups: { [contentSetId: number]: Page[] } = {};
         pages.forEach(page => {
             if (!languageGroups[page.contentSetId]) {
                 languageGroups[page.contentSetId] = [];
@@ -128,17 +128,17 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             languageGroups[page.contentSetId].push(page);
         });
 
-        let groupedPages: Page[] = [];
-        for (let contentSetId in languageGroups) {
+        const groupedPages: Page[] = [];
+        for (const contentSetId in languageGroups) {
             if (languageGroups.hasOwnProperty(contentSetId)) {
-                let pages = languageGroups[contentSetId];
+                const pages = languageGroups[contentSetId];
                 let primaryPage: Page;
                 if (pages.length === 1) {
                     primaryPage = pages[0];
                 } else {
                     primaryPage = this.getPrimaryPage(pages, currentLanguageId);
                 }
-                let variants = pages.filter(p => p !== primaryPage);
+                const variants = pages.filter(p => p !== primaryPage);
                 primaryPage.languageVariants = {
                     [primaryPage.contentGroupId]: primaryPage.id,
                 };
@@ -155,7 +155,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      * Handle the item being clicked.
      */
     itemClicked(item: InheritableItem): void {
-        const editMode: EditMode = item.type === 'page' ? 'preview' : 'editProperties';
+        const editMode: EditMode = item.type === 'page' ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
         this.navigationService
             .detailOrModal(item.inheritedFromId, item.type, item.id, editMode)
             .navigate();
@@ -179,7 +179,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      */
     private getPrimaryPage(pages: Page[], languageId: number): Page {
         let primaryPage: Page;
-        let currentLanguagePages = pages.filter(p => p.contentGroupId === languageId);
+        const currentLanguagePages = pages.filter(p => p.contentGroupId === languageId);
         if (currentLanguagePages.length === 1) {
             primaryPage = currentLanguagePages[0];
         } else {

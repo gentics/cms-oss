@@ -75,7 +75,7 @@ export class PreLoadScript {
                 event.stopPropagation();
 
                 // Trigger save changes if the button is not disabled
-                if (!this.scriptHost.contentFrame.isSaveButtonIsDisabled()) {
+                if (!this.scriptHost.contentFrame.determineSaveButtonIsDisabled()) {
                     this.scriptHost.contentFrame.saveChanges();
                 }
 

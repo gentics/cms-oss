@@ -7,6 +7,7 @@ import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
 import { NgxPaginationModule } from 'ngx-pagination';
 import {
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
@@ -80,6 +81,7 @@ import {
 } from './providers';
 
 export const UI_CORE_COMPONENTS: Type<any>[] = [
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,

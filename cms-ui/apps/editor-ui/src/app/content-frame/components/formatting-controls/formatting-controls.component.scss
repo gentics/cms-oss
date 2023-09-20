@@ -1,0 +1,56 @@
+@import 'variables';
+
+:host {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 0.5rem -0.25rem 0.25rem;
+}
+
+.format-section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    border: 1px solid $gtx-color-mid-gray;
+    margin: 0.25rem;
+    padding: 0.25rem;
+}
+
+.format-button {
+    display: inline-block;
+    border: none;
+    background: $gtx-color-very-light-gray;
+    color: $gtx-color-off-black;
+    box-shadow: rgba(0, 0, 0, 0.14) 0px 2px 2px 0;
+    border-radius: 3px;
+    text-align: center;
+
+    width: 20px;
+    height: 20px;
+    padding: 0.25rem;
+    margin: 0.25rem;
+    box-sizing: content-box;
+    font-size: 20px;
+    transition: 300ms;
+
+    icon {
+        width: 20px;
+        height: 20px;
+        font-size: inherit;
+        color: inherit;
+    }
+
+    &:hover {
+        background: darken($gtx-color-very-light-gray, 10%);
+        cursor: pointer;
+    }
+
+    &.active {
+        color: $gtx-color-primary;
+        background: darken($gtx-color-very-light-gray, 5%);
+
+        &:hover {
+            background: darken($gtx-color-very-light-gray, 15%);
+        }
+    }
+}

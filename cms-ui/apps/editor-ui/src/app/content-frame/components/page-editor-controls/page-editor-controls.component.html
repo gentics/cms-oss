@@ -1,0 +1,40 @@
+<gtx-tabs pure [activeId]="activeTab">
+    <gtx-tab
+        icon="border_color"
+        [title]="'editor.page_controls_tab_formatting' | i18n"
+        [id]="DefaultEditorControlTabs.FORMATTING"
+        (select)="setActiveTab($event)"
+    >
+        <gtx-formatting-controls></gtx-formatting-controls>
+    </gtx-tab>
+
+    <gtx-tab
+        icon="web"
+        [title]="'editor.page_controls_tab_constructs' | i18n"
+        [id]="DefaultEditorControlTabs.CONSTRUCTS"
+        (select)="setActiveTab($event)"
+    >
+        <gtx-construct-controls
+            [constructs]="constructs"
+            [categories]="constructCategories"
+        ></gtx-construct-controls>
+    </gtx-tab>
+
+    <gtx-tab
+        icon="insert_link"
+        [title]="'editor.page_controls_tab_link_settings' | i18n"
+        [id]="DefaultEditorControlTabs.LINK_SETTINGS"
+        (select)="setActiveTab($event)"
+    >
+        HERE BE LINK SETTINGS
+    </gtx-tab>
+
+    <gtx-tab
+        icon="table"
+        [title]="'editor.page_controls_tab_table_settings' | i18n"
+        [id]="DefaultEditorControlTabs.TABLE_SETTINGS"
+        (select)="setActiveTab($event)"
+    >
+        HERE BE TABLE SETTINGS
+    </gtx-tab>
+</gtx-tabs>

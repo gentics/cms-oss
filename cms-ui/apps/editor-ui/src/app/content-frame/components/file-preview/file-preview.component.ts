@@ -11,6 +11,7 @@ import {
     ViewChild,
 } from '@angular/core';
 import {
+    EditMode,
     File as FileModel,
     Folder,
     Image as ImageModel,
@@ -122,7 +123,7 @@ export class FilePreview implements OnChanges, OnDestroy {
 
     editImage(): void {
         const nodeId = this.appState.now.editor.nodeId;
-        this.navigationService.modal(nodeId, 'image', this.file.id, 'edit').navigate();
+        this.navigationService.modal(nodeId, 'image', this.file.id, EditMode.EDIT).navigate();
     }
 
     rotateImage(direction: 'cw' | 'ccw'): void {

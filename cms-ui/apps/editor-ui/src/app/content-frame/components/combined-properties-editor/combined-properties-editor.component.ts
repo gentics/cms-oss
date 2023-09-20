@@ -40,6 +40,7 @@ import {
 } from '@editor-ui/app/tag-editor';
 import { EditableObjectTag } from '@editor-ui/app/tag-editor/common';
 import {
+    EditMode,
     EditableFileProps,
     EditableFolderProps,
     EditableFormProps,
@@ -354,7 +355,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     onTabChange(newTabId: string, readOnly: boolean = false): void {
         this.navigationService
-            .detailOrModal(this.currentNode.id, this.item.type, this.item.id, 'editProperties', {
+            .detailOrModal(this.currentNode.id, this.item.type, this.item.id, EditMode.EDIT_PROPERTIES, {
                 openTab: 'properties',
                 propertiesTab: newTabId,
                 readOnly,

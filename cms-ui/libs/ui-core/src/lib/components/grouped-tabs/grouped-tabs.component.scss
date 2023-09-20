@@ -1,10 +1,4 @@
 @import '../../../styles/base-import';
-@import 'material-design-icons-iconfont/src/mixins';
-@import 'material-design-icons-iconfont/src/variables';
-
-$tab-active-icon: material-icons-content(map-get($material-icons-codepoints, 'radio_button_checked'));
-$tab-inactive-icon: material-icons-content(map-get($material-icons-codepoints, 'radio_button_unchecked'));
-$tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, 'not_interested'));
 
 @mixin is-active {
     border-left: 2px solid $gtx-tabs-active-border-color;
@@ -21,7 +15,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
 }
 
 @mixin status-icon {
-    content: $tab-active-icon;
+    content: '\e836';
     position: absolute;
     left: -9px;
     top: 0;
@@ -29,7 +23,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
     margin: auto;
     width: 16px;
     height: 13px;
-    font-family: 'Material Icons';
+    font-family: 'Material Symbols';
     font-weight: 400;
     font-style: normal;
     font-size: 16px;
@@ -117,7 +111,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 }
 
                 &.status-icon.inactive::before {
-                    content: $tab-inactive-icon;
+                    content: '\e837';
                 }
 
                 &.status-icon.is-active::before {
@@ -141,7 +135,7 @@ $tab-readonly-icon: material-icons-content(map-get($material-icons-codepoints, '
                 }
 
                 &.status-icon.readonly.inactive::before {
-                    content: $tab-readonly-icon;
+                    content: '\e14b';
                     background: white;
                 }
 

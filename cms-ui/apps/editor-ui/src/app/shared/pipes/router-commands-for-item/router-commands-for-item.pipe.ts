@@ -16,7 +16,7 @@ export class RouterCommandsForItemPipe implements PipeTransform {
             return [`../${item.id}`];
         }
 
-        const editMode: EditMode = (item.type === 'page' || item.type === 'form') ? 'preview' : 'editProperties';
+        const editMode: EditMode = (item.type === 'page' || item.type === 'form') ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
         if (!this.state.now.folder.activeNode) {
             return null;
         }

@@ -29,7 +29,7 @@ export class ConstructCategoryApi {
      * Get all construct categories.
      * **Important:** This method only works for Admin users.
      */
-    getConstructCategoryCategories(options: ConstructCategoryListOptions): Observable<ConstructCategoryListResponse> {
+    getConstructCategoryCategories(options?: ConstructCategoryListOptions): Observable<ConstructCategoryListResponse> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);

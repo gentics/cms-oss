@@ -4,13 +4,13 @@ import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ContentFrame } from '../content-frame/content-frame.component';
 
 /**
- * A modal for the user to
+ * A modal for the user to choose what to do with the edited data before navigating.
  */
 @Component({
     selector: 'confirm-navigation-modal',
     templateUrl: './confirm-navigation-modal.component.html',
-    styleUrls: ['./confirm-navigation-modal.component.scss']
-    })
+    styleUrls: ['./confirm-navigation-modal.component.scss'],
+})
 export class ConfirmNavigationModal extends BaseModal<boolean> {
 
     allowSaving = true;
@@ -35,6 +35,6 @@ export class ConfirmNavigationModal extends BaseModal<boolean> {
     }
 
     cancelAndClose(): void {
-        this.closeFn(null);
+        this.closeFn(false);
     }
 }

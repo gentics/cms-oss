@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
+import { EditMode, Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { isEqual } from'lodash-es'
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
@@ -17,8 +17,8 @@ import { MessageModal } from '../message-modal/message-modal.component';
     selector: 'message-inbox',
     templateUrl: './message-inbox.component.html',
     styleUrls: ['./message-inbox.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class MessageInbox implements OnInit {
 
     /** Emits when a link in a message is clicked */
@@ -279,7 +279,7 @@ export class MessageInbox implements OnInit {
                 return this.navigateToFolder(folder.id, nodeId);
             })
             .then(succeeded => succeeded &&
-                this.navigationService.detailOrModal(nodeId, 'page', link.id, 'preview').navigate(),
+                this.navigationService.detailOrModal(nodeId, 'page', link.id, EditMode.PREVIEW).navigate(),
             );
     }
 
@@ -289,7 +289,7 @@ export class MessageInbox implements OnInit {
             return undefined;
         }
 
-        for (let nodeId of Object.keys(nodes)) {
+        for (const nodeId of Object.keys(nodes)) {
             if ((<any> nodes)[nodeId].name === nodeName) {
                 return Number(nodeId);
             }
@@ -299,7 +299,7 @@ export class MessageInbox implements OnInit {
     }
 
     private fetchPage(pageId: number): Promise<Page> {
-        let page = this.entityResolver.getPage(pageId);
+        const page = this.entityResolver.getPage(pageId);
         if (page) {
             return Promise.resolve(page);
         } else {
@@ -308,7 +308,7 @@ export class MessageInbox implements OnInit {
     }
 
     private fetchFolder(folderId: number): Promise<Folder> {
-        let folder = this.entityResolver.getFolder(folderId);
+        const folder = this.entityResolver.getFolder(folderId);
         if (folder) {
             return Promise.resolve(folder);
         } else {
@@ -317,7 +317,7 @@ export class MessageInbox implements OnInit {
     }
 
     private navigateToFolder(folderId: number, nodeId: number): Promise<boolean> {
-        let newRoute = ['/editor', { outlets: { list: ['node', nodeId, 'folder', folderId] } }];
+        const newRoute = ['/editor', { outlets: { list: ['node', nodeId, 'folder', folderId] } }];
         if (this.router.url === newRoute.join('')) {
             return Promise.resolve(true);
         }

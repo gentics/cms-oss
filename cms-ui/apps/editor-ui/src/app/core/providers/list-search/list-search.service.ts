@@ -1,7 +1,7 @@
 import { EventEmitter, Injectable } from '@angular/core';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
-import { Node, Page, Raw } from '@gentics/cms-models';
+import { EditMode, Node, Page, Raw } from '@gentics/cms-models';
 import { defer, iif, of } from 'rxjs';
 import { Observable } from 'rxjs/Observable';
 import { catchError, mergeMap, take, tap } from 'rxjs/operators';
@@ -71,7 +71,7 @@ export class ListSearchService {
                             nodeId: page.inheritedFromId,
                             itemType: 'page',
                             itemId: page.id,
-                            editMode: 'preview',
+                            editMode: EditMode.PREVIEW,
                         },
                     }).navigate();
                     return;
@@ -127,7 +127,7 @@ export class ListSearchService {
                         nodeId: page.nodeId,
                         itemType: 'page',
                         itemId: page.page.id,
-                        editMode: 'preview',
+                        editMode: EditMode.PREVIEW,
                     },
                 }).navigate();
             });

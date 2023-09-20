@@ -293,7 +293,7 @@ export class CustomScriptHostService {
      */
     navigateToPagePreview(nodeId: number, pageId: number): void {
         this.navigationService
-            .detailOrModal(nodeId, 'page', pageId, 'preview')
+            .detailOrModal(nodeId, 'page', pageId, EditMode.PREVIEW)
             .navigate();
     }
 

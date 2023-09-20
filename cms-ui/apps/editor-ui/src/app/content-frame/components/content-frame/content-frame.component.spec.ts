@@ -1075,7 +1075,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is enabled when item properties are edited and are valid and have been modified', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1087,7 +1087,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is disabled when object properties are edited but are invalid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1099,7 +1099,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
         }));
 
         it('is enabled when properties are edited and valid despite the user has no permissions to save', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1115,7 +1115,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is enabled when properties are edited and valid and the user is allowed to save', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1131,7 +1131,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is enabled despite a form item has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1144,7 +1144,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is disabled when a form item is edited but not valid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1156,7 +1156,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
         }));
 
         it('is enabled when a form item is edited, has not been modified and is valid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1169,7 +1169,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is disabled when a non-form item is edited but neither aloha editor is ready nor master frame is loaded', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1183,7 +1183,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
         }));
 
         it('is enabled when a non-form item is edited despite it has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1197,7 +1197,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
 
         }));
 
@@ -1213,7 +1213,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
 
         }));
 
@@ -1230,7 +1230,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }))
     });
 });

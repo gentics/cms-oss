@@ -898,3 +898,15 @@ user_no_nodes_message:
 admin_ui_button_link:
     en: Open Administration Interface
     de: Administrator Oberfläche öffnen
+page_controls_tab_formatting:
+    en: Formatting
+    de: Formartierung
+page_controls_tab_constructs:
+    en: Insert
+    de: Einfügen
+page_controls_tab_link_settings:
+    en: Link Settings
+    de: Verweis Einstellungen
+page_controls_tab_table_settings:
+    en: Table Settings
+    de: Tabellen Einstelleungen

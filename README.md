@@ -89,7 +89,7 @@ Gentics CMS is actively developed by a dedicated team at Gentics Software GmbH i
 Austria.
 
 <p align="center">
-    <img src="https://getmesh.io/blog/gentics-mesh-1-0/gentics-team.jpg" alt="photo of the Gentics Mesh team" style="max-width: 80%" />
+    <img src="CMP_DEV.jpg" alt="CMP DEV" style="max-width: 80%" />
 </p>
 
 The Gentics CMS core team consists of the following members:

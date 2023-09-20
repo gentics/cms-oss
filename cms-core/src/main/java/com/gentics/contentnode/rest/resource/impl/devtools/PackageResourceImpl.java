@@ -211,8 +211,7 @@ public class PackageResourceImpl implements PackageResource {
 
 				if (checkAll) {
 					ConcurrentPackageDependencyChecker concurrentChecker = new ConcurrentPackageDependencyChecker();
-					concurrentChecker.createDependencyCheckerTasks(packageName,
-							dependencyChecker.getDependencyClasses());
+					concurrentChecker.createDependencyCheckerTasks(packageName);
 
 					List<ReferenceDependency> missingReferencesOnly = filterMissingDependencies(
 							dependencies).stream().flatMap(d -> d.getReferenceDependencies().stream())

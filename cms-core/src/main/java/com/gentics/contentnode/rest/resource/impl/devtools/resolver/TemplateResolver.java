@@ -61,7 +61,7 @@ public class TemplateResolver extends AbstractDependencyResolver {
 							objectTagDefinition.getGlobalId().toString())
 					.withName(objectTagDefinition.getName())
 					.withType(Type.OBJECT_TAG_DEFINITION)
-					.build().withIsInOtherPackage(
+					.build().withIsInPackage(
 							isInPackage(ObjectTagDefinition.class, objectTagDefinition.getGlobalId().toString()));
 
 			referencedDependencies.add(dependency);

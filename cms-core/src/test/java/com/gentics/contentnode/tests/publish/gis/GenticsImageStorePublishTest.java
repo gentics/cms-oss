@@ -15,6 +15,7 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertPub
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertPublishGISFS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.imaging.Imaging;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -329,6 +331,16 @@ public class GenticsImageStorePublishTest {
 							.map(var -> var.setFocalPoint(new FocalPoint(0.5f, 0.5f)).toRequest(var.getHeight() == null || !var.getHeight().equals(100)).getCacheKey())
 							.collect(Collectors.toList()))
 					.containsOnlyElementsOf(params.stream().map(ImageManipulationParametersImpl::getCacheKey).collect(Collectors.toList()));
+
+				for (ImageManipulationParametersImpl param : params) {
+					BufferedImage bufferedImage = Imaging.getBufferedImage(meshContext.client().downloadBinaryField(node.getMeshProject(), MeshPublisher.getMeshUuid(image), "en", "binarycontent", param).blockingGet().getStream());
+					if ("auto".equals(param.getHeight())) {
+						assertThat(bufferedImage.getWidth()).isEqualTo(50);
+					}
+					if ("auto".equals(param.getWidth())) {
+						assertThat(bufferedImage.getHeight()).isEqualTo(100);
+					}
+				}
 			}
 			trx.success();
 		}

@@ -16,8 +16,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 
 import com.gentics.mesh.core.rest.MeshEvent;
-import com.gentics.mesh.etc.config.ImageManipulatorOptions;
 import com.gentics.mesh.etc.config.ImageManipulationMode;
+import com.gentics.mesh.etc.config.ImageManipulatorOptions;
 import com.gentics.mesh.etc.config.MeshOptions;
 import com.gentics.mesh.etc.config.search.ElasticSearchOptions;
 import com.gentics.mesh.rest.client.MeshRestClient;
@@ -31,7 +31,7 @@ public class MeshContext extends GenericContainer<MeshContext> {
 	/**
 	 * Currently tested Mesh Version
 	 */
-	public final static String TESTED_MESH_VERSION = "2.1.0-SNAPSHOT-variants-130923";
+	public final static String TESTED_MESH_VERSION = "2.1.0-SNAPSHOT-variants-200923-6";
 
 	protected LogBuffer logBuffer = new LogBuffer();
 

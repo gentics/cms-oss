@@ -58,8 +58,7 @@ public class PackageDependencyList extends AbstractListResponse<PackageDependenc
 	 * @return true if all referenced objects are included
 	 */
 	private boolean isSane(ReferenceDependency dependency) {
-		return Boolean.TRUE.equals(dependency.getIsInPackage())
-				|| Boolean.TRUE.equals(dependency.getIsInOtherPackage());
+		return Boolean.TRUE.equals(dependency.getIsInPackage());
 	}
 
 	/**

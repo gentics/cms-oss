@@ -1,6 +1,6 @@
 <h1 align="center">
   <a href="https://www.gentics.com/infoportal/">
-    <img src="Gentics_CMS_Logo.png" width="420" alt="Gentics CMS" />
+    <img src="https://getmesh.io/blog/JPGs/Gentics_CMS_Logo.jpg" alt="Gentics CMS" style="max-width: 80%" />
   </a>
 </h1>
 
@@ -89,7 +89,7 @@ Gentics CMS is actively developed by a dedicated team at Gentics Software GmbH i
 Austria.
 
 <p align="center">
-    <img src="CMP_DEV.jpg" alt="CMP DEV" style="max-width: 80%" />
+    <img src="https://getmesh.io/blog/JPGs/CMP-DEV.jpg" alt="CMP DEV" style="max-width: 80%" />
 </p>
 
 The Gentics CMS core team consists of the following members:

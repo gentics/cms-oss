@@ -1,0 +1,1 @@
+Adds a fix to prevent duplicate filenames when multiple files are uploaded, moved or copied in parallel.

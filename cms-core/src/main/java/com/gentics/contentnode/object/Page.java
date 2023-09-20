@@ -1119,7 +1119,12 @@ public interface Page extends GCNRenderable, StageableVersionedNodeObject, Stage
 
 	@Override
 	public default Node getNode() throws NodeException {
-		return getFolder().getNode();
+		Folder folder;
+		try (NoMcTrx noMc = new NoMcTrx()) {
+			folder = getFolder();
+		}
+
+		return folder.getNode();
 	}
 
 	/**

@@ -1,0 +1,2 @@
+Some REST API requests could fail with an Internal Error (due to incorrect permission checks).
+This has been fixed.

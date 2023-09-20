@@ -37,6 +37,12 @@
             formControlName="url"
         ></gtx-input>
 
+        <gtx-checkbox
+            *ngIf="form.get('http2').enabled"
+            formControlName="http2"
+            [label]="'contentRepository.http2' | i18n"
+        ></gtx-checkbox>
+
         <gtx-input
             *ngIf="form.get('username').enabled"
             type="text"

@@ -8,10 +8,15 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createRestFileUploadMultiPart;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestUtils.assertResponseCodeOk;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +26,11 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 
+import com.gentics.contentnode.rest.model.request.FileCopyRequest;
+import com.gentics.contentnode.rest.model.request.MultiObjectMoveRequest;
+import com.gentics.contentnode.rest.model.request.page.TargetFolder;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.testutils.Creator;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
@@ -44,6 +54,10 @@ import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.resource.FileResource;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
+
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 /**
  * Test cases for upload multiple files in parallel
@@ -97,6 +111,195 @@ public class FileUniquenessTest {
 						throw new NodeException(e);
 					}
 				}
+			}
+		};
+	}
+
+	/**
+	 * Create Callable instance that uploads a new file via the createSimple endpoint.
+	 * @param filename filename
+	 * @return callable
+	 */
+	private static Callable<FileUploadResponse> uploadSimple(String filename) {
+		return () -> {
+			try (Trx trx = new Trx(user)) {
+				HttpServletRequestWrapper httpServletRequest = mock(HttpServletRequestWrapper.class);
+
+				try (
+					ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream("testcontent".getBytes(StandardCharsets.UTF_8))) {
+					ServletInputStream servletInputStream = new ServletInputStream() {
+						private boolean isFinished;
+
+						@Override
+						public boolean isFinished() {
+							return isFinished;
+						}
+
+						@Override
+						public boolean isReady() {
+							return byteArrayInputStream.available() > 0;
+						}
+
+						@Override
+						public void setReadListener(ReadListener readListener) {
+						}
+
+						public int read() throws IOException {
+							int next = byteArrayInputStream.read();
+
+							isFinished = next < 0;
+
+							return next;
+						}
+					};
+
+					when(httpServletRequest.getInputStream()).thenReturn(servletInputStream);
+				}
+
+				FileUploadResponse response = getFileResource().createSimple(
+					httpServletRequest,
+					folder.getId(),
+					node.getId(),
+					"binary",
+					filename,
+					"",
+					false);
+
+				assertResponseCodeOk(response);
+
+				trx.success();
+
+				return response;
+			}
+		};
+	}
+
+	/**
+	 * Callable that uploads a file (multipart) and returns the FileUploadResponse
+	 * @param filename filename
+	 * @return callable
+	 */
+	private static Callable<FileUploadResponse> uploadSimpleMultipart(String filename) {
+		return () -> {
+			MultiPart uploadMultiPart = null;
+
+			try (Trx trx = new Trx(user)) {
+				uploadMultiPart = createRestFileUploadMultiPart(filename, folder.getId(), node.getId(), "", false, "testcontent");
+
+				HttpServletRequestWrapper httpServletRequest = mock(HttpServletRequestWrapper.class);
+				FileUploadResponse response = getFileResource().createSimpleMultiPartFallback(
+					uploadMultiPart,
+					httpServletRequest,
+					folder.getId().toString(),
+					node.getId().toString(),
+					"binary",
+					filename,
+					"",
+					false);
+				trx.success();
+
+				return response;
+			} catch (ParseException e) {
+				throw new NodeException(e);
+			} finally {
+				if (uploadMultiPart != null) {
+					try {
+						uploadMultiPart.close();
+					} catch (IOException e) {
+						throw new NodeException(e);
+					}
+				}
+			}
+		};
+	}
+
+	/**
+	 * Callable that uploads a file in the specified folder and then moves it to the test folder.
+	 * @param filename filename
+	 * @param creationFolderId ID of the folder to create the file in.
+	 * @return callable
+	 */
+	private static Callable<GenericResponse> uploadAndMove(String filename, Integer creationFolderId) {
+		return () -> {
+			MultiPart uploadMultiPart = null;
+			FileUploadResponse uploadResponse;
+
+			try (Trx trx = new Trx(user)) {
+				uploadMultiPart = createRestFileUploadMultiPart(filename, creationFolderId, node.getId(), "", false, "testcontent");
+				uploadResponse = getFileResource().create(uploadMultiPart);
+
+				trx.success();
+			} catch (ParseException e) {
+				throw new NodeException(e);
+			} finally {
+				if (uploadMultiPart != null) {
+					try {
+						uploadMultiPart.close();
+					} catch (IOException e) {
+						throw new NodeException(e);
+					}
+				}
+			}
+
+			try (Trx trx = new Trx(user)) {
+				MultiObjectMoveRequest moveRequest = new MultiObjectMoveRequest();
+
+				moveRequest.setFolderId(folder.getId());
+				moveRequest.setNodeId(node.getId());
+				moveRequest.setIds(Arrays.asList(uploadResponse.getFile().getId().toString()));
+
+				GenericResponse moveResponse = getFileResource().move(moveRequest);
+
+				trx.success();
+
+				return moveResponse;
+			}
+		};
+	}
+
+	/**
+	 * Callable that uploads a file in the specified folder and then copies it to the test folder.
+	 * @param filename filename
+	 * @param creationFolderId ID of the folder to create the file in.
+	 * @return callable
+	 */
+	private static Callable<FileUploadResponse> uploadAndCopy(String filename, Integer creationFolderId) {
+		return () -> {
+			MultiPart uploadMultiPart = null;
+			FileUploadResponse uploadResponse;
+
+			try (Trx trx = new Trx(user)) {
+				uploadMultiPart = createRestFileUploadMultiPart(filename, creationFolderId, node.getId(), "", false, "testcontent");
+				uploadResponse = getFileResource().create(uploadMultiPart);
+
+				trx.success();
+			} catch (ParseException e) {
+				throw new NodeException(e);
+			} finally {
+				if (uploadMultiPart != null) {
+					try {
+						uploadMultiPart.close();
+					} catch (IOException e) {
+						throw new NodeException(e);
+					}
+				}
+			}
+
+			try (Trx trx = new Trx(user)) {
+				FileCopyRequest copyRequest = new FileCopyRequest();
+				TargetFolder targetFolder = new TargetFolder(folder.getId(), folder.getNode().getId());
+
+				copyRequest.setTargetFolder(targetFolder);
+				copyRequest.setNodeId(node.getId());
+				copyRequest.setFile(uploadResponse.getFile());
+
+				FileUploadResponse copyResponse = getFileResource().copyFile(copyRequest);
+
+				trx.success();
+
+				assertResponseCodeOk(copyResponse);
+
+				return copyResponse;
 			}
 		};
 	}
@@ -420,6 +623,108 @@ public class FileUniquenessTest {
 			for (int fileId : fileIds) {
 				responses.add(service.submit(upload(fileId, String.format(LONG_FILENAME_PATTERN, fileId))));
 			}
+			assertNoDuplicates(responses, r -> r.getFile().getName());
+		} finally {
+			service.shutdownNow();
+		}
+	}
+	/**
+	 * Upload files using the createSimple endpoint.
+	 */
+	@Test
+	public void testUploadSimple() throws NodeException {
+		performUpload(FileUniquenessTest::uploadSimple);
+	}
+
+	/**
+	 * Upload files using the multipart/form-data createSimple endpoint.
+	 */
+	@Test
+	public void testUploadSimpleMultipart() throws NodeException {
+		performUpload(FileUniquenessTest::uploadSimpleMultipart);
+	}
+
+	/**
+	 * Upload files to different folders, then move in parallel to the same folder.
+	 * @throws NodeException
+	 */
+	@Test
+	public void testUploadAndMove() throws NodeException {
+		ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+		List<Future<GenericResponse>> responses = new ArrayList<>();
+		List<Integer> folderIds = new ArrayList<>();
+
+		for (int i = 0; i < NUM_THREADS; i++) {
+			String folderName = String.format("Folder_%04d", i);
+
+			folderIds.add(supply(() -> Creator.createFolder(node.getFolder(), folderName, folderName).getId()));
+		}
+
+		try {
+			for (int i = 0; i < NUM_THREADS; i++) {
+				responses.add(service.submit(uploadAndMove(String.format("test.txt", i), folderIds.get(i))));
+			}
+
+			long numOk = responses.stream()
+				.map(r -> {
+					try {
+						return r.get();
+					} catch (ExecutionException | InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				})
+				.map(r -> r.getResponseInfo().getResponseCode())
+				.filter(code -> code == ResponseCode.OK)
+				.count();
+
+			assertThat(numOk)
+				.as("Successfully moved files")
+				.isEqualTo(1);
+		} finally {
+			service.shutdownNow();
+		}
+	}
+
+	/**
+	 * Upload to different folders, then copy the files in parallel to the same folder.
+	 * @throws NodeException
+	 */
+	@Test
+	public void testUploadAndCopy() throws NodeException {
+		ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+		List<Future<FileUploadResponse>> responses = new ArrayList<>();
+		List<Integer> folderIds = new ArrayList<>();
+
+		for (int i = 0; i < NUM_THREADS; i++) {
+			String folderName = String.format("Folder_%04d", i);
+
+			folderIds.add(supply(() -> Creator.createFolder(node.getFolder(), folderName, folderName).getId()));
+		}
+
+		try {
+			for (int i = 0; i < NUM_THREADS; i++) {
+				responses.add(service.submit(uploadAndCopy(String.format(SHORT_FILENAME, i), folderIds.get(i))));
+			}
+
+			assertNoDuplicates(responses, r -> r.getFile().getName());
+		} finally {
+			service.shutdownNow();
+		}
+	}
+
+	/**
+	 * Call the {@code uploader} function {@code NUM_THREADS} times and verify afterward, that all filenames are distinct.
+	 * @param uploader The uploading function to tuse.
+	 */
+	private void performUpload(Function<String, Callable<FileUploadResponse>> uploader) throws NodeException {
+		ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+		List<Future<FileUploadResponse>> responses = new ArrayList<>();
+
+		try {
+			for (int i = 0; i < NUM_THREADS; i++) {
+				responses.add(service.submit(uploader.apply(String.format(SHORT_FILENAME, i))));
+			}
+
 			assertNoDuplicates(responses, r -> r.getFile().getName());
 		} finally {
 			service.shutdownNow();

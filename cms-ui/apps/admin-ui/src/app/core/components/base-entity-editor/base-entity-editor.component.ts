@@ -29,6 +29,8 @@ export abstract class BaseEntityEditorComponent<K extends EditableEntity>
     implements OnInit, OnChanges, OnDestroy, OnDiscardChanges {
 
     public readonly Tabs: typeof EDITABLE_ENTITY_DETAIL_TABS[K];
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly skipClose = true;
 
     // eslint-disable-next-line @angular-eslint/no-input-rename
     @Input({ alias: ROUTE_PARAM_ENTITY_ID, transform: toValidNumber })

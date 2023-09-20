@@ -60,11 +60,11 @@ import com.gentics.lib.i18n.CNI18nString;
 
 /**
  * Test case for testing editing of files
- * 
+ *
  * @author johannes2
  */
 public class FileEditSandboxTest {
-	
+
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
 
@@ -85,7 +85,7 @@ public class FileEditSandboxTest {
 
 	/**
 	 * Test editing meta data of a file
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	@Test
@@ -142,7 +142,7 @@ public class FileEditSandboxTest {
 
 	/**
 	 * Will test the suggestNewFileName method
-	 * New files with the same parent folder and the same filename as existing files should be renamed 
+	 * New files with the same parent folder and the same filename as existing files should be renamed
 	 * @throws Exception
 	 */
 	@Test
@@ -153,13 +153,13 @@ public class FileEditSandboxTest {
 		file.setName("image-dpi72x72-res250x188-alpha.png");
 		file.setFiletype("image/gif");
 		file.setFolderId(FOLDER_ID);
-		
+
 		String oldFileName = file.getName();
 		FileFactory.suggestNewFilename(file);
 
 		assertFalse("Both filenames should not be the same.", file.getName().equals(oldFileName));
 	}
-	
+
 	/**
 	 * Will test the suggestNewFilename method
 	 * Existing files that have no conflict with other files should get the same name.
@@ -173,34 +173,34 @@ public class FileEditSandboxTest {
 
 		assertEquals("Both filenames should have the same name.", oldFilename, file.getName());
 	}
-	
+
 	/**
 	 * Will test the suggestNewFilename method
-	 * New files with a different parent folder (that has a different pubdir path) and the same filename as existing files should not renamed 
+	 * New files with a different parent folder (that has a different pubdir path) and the same filename as existing files should not renamed
 	 * @throws Exception
 	 */
 	@Test
 	public void testSuggestNewFileName3() throws Exception {
-		
+
 		Transaction t = testContext.startTransactionWithPermissions(true);
 		File file = (File) t.createObject(File.class);
 
 		file.setName("textimage1.1.gif");
 		file.setFiletype("image/gif");
 		file.setFolderId(FOLDER_ID - 2);
-		
+
 		String oldFileName = file.getFilename();
 		FileFactory.suggestNewFilename(file);
 
 		assertEquals("Both filenames should be the same", oldFileName, file.getName());
 
 	}
-	
+
 	/**
 	 * Test if the selected file can be copied and the suggestion code is also working there as expected.
 	 * @throws Exception
 	 */
-	@Test 
+	@Test
 	public void testCopyFile() throws Exception {
 
 		Transaction t = testContext.startTransactionWithPermissions(true);
@@ -218,7 +218,7 @@ public class FileEditSandboxTest {
 	 * Test if the selected file can be copied and the suggestion code is also working there as expected.
 	 * @throws Exception
 	 */
-	@Test 
+	@Test
 	public void testCopyFileWithNewFilename() throws Exception {
 
 		String newFilename = "Test1234";
@@ -235,7 +235,7 @@ public class FileEditSandboxTest {
 	}
 
 	/**
-	 * Test that edit of the .name dirts the correct pages 
+	 * Test that edit of the .name dirts the correct pages
 	 */
 	@Test
 	public void testDirtPageByFilename() throws Exception {
@@ -261,7 +261,7 @@ public class FileEditSandboxTest {
 	}
 
 	/**
-	 * Test that edit of the .description dirts the correct pages 
+	 * Test that edit of the .description dirts the correct pages
 	 */
 	@Test
 	public void testDirtPageByDescription() throws Exception {
@@ -283,7 +283,7 @@ public class FileEditSandboxTest {
 		// wait until no more entry in dirtqueue exists (all events have been
 		// handled)
 		testContext.waitForDirtqueueWorker();
-		
+
 		// 7: Target[Garbage.data].editdate
 		int[] pageIds = {7, 9};
 
@@ -291,7 +291,7 @@ public class FileEditSandboxTest {
 	}
 
 	/**
-	 * Test that edit of the .folder dirts the correct pages 
+	 * Test that edit of the .folder dirts the correct pages
 	 */
 	@Test
 	public void testDirtPageByFolder() throws Exception {
@@ -323,7 +323,7 @@ public class FileEditSandboxTest {
 	}
 
 	/**
-	 * Test that edit of the .type dirts the correct pages  
+	 * Test that edit of the .type dirts the correct pages
 	 */
 	@Test
 	public void testDirtPageByFiletype() throws Exception {
@@ -355,7 +355,7 @@ public class FileEditSandboxTest {
 	}
 
 	/**
-	 * Test that edit of the .size dirts the correct pages 
+	 * Test that edit of the .size dirts the correct pages
 	 */
 	@Test
 	public void testDirtPageBySize() throws Exception {
@@ -451,7 +451,7 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testCreateNewTwice() throws Exception {
-	
+
 		String fileName = "newFile.jpg";
 		String fileDescription = "Some new file";
 		String fileType = "application/octet-stream";
@@ -497,9 +497,9 @@ public class FileEditSandboxTest {
 
 			assertFalse("Both names should be different.", newFileName.equals(oldFileName));
 			assertTrue("Both file extensions should be the same.", newFileExtension.equals(oldFileExtension) );
-			
+
 		}
-		
+
 	}
 
 	/**
@@ -566,7 +566,7 @@ public class FileEditSandboxTest {
 			t.commit();
 
 			newFileId = ObjectTransformer.getInt(newFile.getId(), 0);
-			
+
 			// // Check dirtqueue
 			// ResultSet res = dbUtils.executeQuery("SELECT * FROM dirtqueue where sid = '" + t.getSessionId() +"'" );
 			// if(res.next()){
@@ -589,7 +589,7 @@ public class FileEditSandboxTest {
 			// fail("Could not find the needed dirtqueue entry within database");
 			// }
 			// //res.close();
-			
+
 			// Check logcmd
 			ResultSet res = testContext.getDBSQLUtils().executeQuery("SELECT * FROM logcmd where user_id = " + DBTestContext.USER_WITH_PERMS);
 
@@ -604,7 +604,7 @@ public class FileEditSandboxTest {
 			} else {
 				fail("Could not find the needed Logcmd entry within database");
 			}
-			
+
 			if (res.next()) {
 				assertEquals("Logcmd timestamp does not match.", transactionTimestamp, res.getInt("timestamp"));
 				assertEquals("Logcmd cmd_desc_id does not match.", 339, res.getInt("cmd_desc_id"));
@@ -617,7 +617,7 @@ public class FileEditSandboxTest {
 				fail("Could not find the needed Logcmd entry within database");
 			}
 			res.close();
-			
+
 		} // Phase #2 - Get the stored file and update it
 		{
 			t = testContext.startTransactionWithPermissions(false);
@@ -648,7 +648,7 @@ public class FileEditSandboxTest {
 			} else {
 				fail("Could not find the needed Logcmd entry within database");
 			}
-			
+
 			if (res.next()) {
 				assertEquals("Logcmd timestamp does not match.", transactionTimestamp, res.getInt("timestamp"));
 				assertEquals("Logcmd cmd_desc_id does not match.", 339, res.getInt("cmd_desc_id"));
@@ -661,7 +661,7 @@ public class FileEditSandboxTest {
 				fail("Could not find the needed Logcmd entry within database");
 			}
 			res.close();
-			
+
 		} // Phase #3 - Get the file again and check its content
 		{
 			t = testContext.startTransactionWithPermissions(false);
@@ -686,7 +686,7 @@ public class FileEditSandboxTest {
 		String fileName = "newFile.jpg";
 		String fileDescription = "Some new file";
 		String fileHash = "476a5533998c2b31c81c2d56a25b83a7";
-		String fileType = "application/octet-stream"; 
+		String fileType = "application/octet-stream";
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 
@@ -694,14 +694,14 @@ public class FileEditSandboxTest {
 		File newFile = (File) t.createObject(File.class);
 		int transactionTimestamp = t.getUnixTimestamp();
 
-		// set some attributes 
+		// set some attributes
 		newFile.setName(fileName);
 		newFile.setFiletype(fileType);
 		newFile.setFilesize(fileSize);
 		newFile.setDescription(fileDescription);
 		newFile.setFileStream(generateDataFile(fileContent));
 		newFile.setFolderId(FOLDER_ID);
-		
+
 		assertNull("Check whether the new file has no id", newFile.getId());
 
 		// save the file
@@ -739,7 +739,7 @@ public class FileEditSandboxTest {
 		// check that the channelset_id of the file was set
 		assertTrue("Channelset ID must be set", ObjectTransformer.getInt(file.getChannelSetId(), 0) != 0);
 	}
-	
+
 	/**
 	 * Tests filename sanitize.
 	 * @throws Exception
@@ -749,7 +749,7 @@ public class FileEditSandboxTest {
 		File file = createAndSaveFile("äüï.jpg");
 		assertEquals("aeuei.jpg", file.getName());
 	}
-	
+
 	/**
 	 * Creates and saves a file.
 	 * @param fileName
@@ -760,21 +760,21 @@ public class FileEditSandboxTest {
 		testContext.startTransactionWithPermissions(true);
 
 		String fileDescription = "Some new file";
-		String fileType = "application/octet-stream"; 
+		String fileType = "application/octet-stream";
 		String fileContent = "HalloWelt";
 		int fileSize = 9999;
 
 		Transaction t = TransactionManager.getCurrentTransaction();
 		File newFile = (File) t.createObject(File.class);
 
-		// set some attributes 
+		// set some attributes
 		newFile.setName(fileName);
 		newFile.setFiletype(fileType);
 		newFile.setFilesize(fileSize);
 		newFile.setDescription(fileDescription);
 		newFile.setFileStream(generateDataFile(fileContent));
 		newFile.setFolderId(FOLDER_ID);
-		
+
 		// save the file
 		newFile.save();
 		t.commit();
@@ -786,7 +786,7 @@ public class FileEditSandboxTest {
 		// now load the file
 		return t.getObject(File.class, newFileId);
 	}
-	
+
 	/**
 	 * Test creation of a new file
 	 * @throws Exception
@@ -797,18 +797,18 @@ public class FileEditSandboxTest {
 
 		String fileName = "newFile.jpg";
 		String fileDescription = "Some new file";
-		String fileType = "application/octet-stream"; 
+		String fileType = "application/octet-stream";
 
 		Transaction t = TransactionManager.getCurrentTransaction();
 		File newFile = (File) t.createObject(File.class);
 
-		// set some attributes 
+		// set some attributes
 		newFile.setName(fileName);
 		newFile.setFiletype(fileType);
 		newFile.setDescription(fileDescription);
 		newFile.setFileStream(generateDataFile(1025));
 		newFile.setFolderId(FOLDER_ID);
-		
+
 		assertNull("Check whether the new file has no id", newFile.getId());
 
 		// save the file
@@ -899,8 +899,8 @@ public class FileEditSandboxTest {
 
 	/**
 	 * Test overwriting file with the same file name in a specific order with the create method
-	 * @throws NodeException 
-	 * @throws IOException 
+	 * @throws NodeException
+	 * @throws IOException
 	 */
 	@Test
 	public void testMultiPartCreateOverwrite() throws Exception {
@@ -941,7 +941,7 @@ public class FileEditSandboxTest {
 				}
 			}
 
-			
+
 			try {
 				// Upload the file with the same folder ID and name again and create a new one this time
 				multiPart = ContentNodeTestDataUtils.createRestFileUploadMultiPart(
@@ -949,7 +949,7 @@ public class FileEditSandboxTest {
 				fileUploadResponse = fileResource.create(multiPart);;
 				ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 				newFileId = fileUploadResponse.getFile().getId();
-	
+
 				assertNotEquals("The file ID of the new uploaded file must not match the first", fileId, newFileId);
 			} finally {
 				if (multiPart != null) {
@@ -964,7 +964,7 @@ public class FileEditSandboxTest {
 				fileUploadResponse = fileResource.create(multiPart);;
 				ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 				newFileId = fileUploadResponse.getFile().getId();
-	
+
 				assertNotEquals("The file ID of the new uploaded file must not match the first", fileId, newFileId);
 			} finally {
 				if (multiPart != null) {
@@ -980,24 +980,32 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testMultiPartCreateSimpleOverwrite() throws Exception {
+		HttpServletRequestWrapper httpServletRequest;
+		FileUploadResponse fileUploadResponse;
+		Node node;
+		Folder folder;
+		Integer fileId;
+
 		try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
 			FileResourceImpl fileResource = new FileResourceImpl();
 
-			Node node = ContentNodeTestDataUtils.createNode();
-			Folder folder = node.getFolder();
+			node = ContentNodeTestDataUtils.createNode();
+			folder = node.getFolder();
 
-			HttpServletRequestWrapper httpServletRequest = mock(HttpServletRequestWrapper.class);
+			httpServletRequest = mock(HttpServletRequestWrapper.class);
 			when(httpServletRequest.getInputStream()).thenReturn(StringtoServletInputStream("content"));
 
-			FileUploadResponse fileUploadResponse = fileResource.createSimple(
-					httpServletRequest, folder.getId(), node.getId(), "binary", "blah.txt", "", true);
+			fileUploadResponse = fileResource.createSimple(httpServletRequest, folder.getId(), node.getId(), "binary", "blah.txt", "", true);
 			ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
-			Integer fileId = fileUploadResponse.getFile().getId();
+			fileId = fileUploadResponse.getFile().getId();
+		}
+
+		try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
+			FileResourceImpl fileResource = new FileResourceImpl();
 
 			// Upload the file iwth the same folder ID and name again to replace it
 			when(httpServletRequest.getInputStream()).thenReturn(StringtoServletInputStream("content2"));
-			fileUploadResponse = fileResource.createSimple(
-					httpServletRequest, folder.getId(), node.getId(), "binary", "blah.txt", "", true);
+			fileUploadResponse = fileResource.createSimple(httpServletRequest, folder.getId(), node.getId(), "binary", "blah.txt", "", true);
 			ContentNodeTestUtils.assertResponseCodeOk(fileUploadResponse);
 			Integer newFileId = fileUploadResponse.getFile().getId();
 
@@ -1017,7 +1025,7 @@ public class FileEditSandboxTest {
 	/**
 	 * Test creating 10 files with the same filename in parallel. The rest endpoint should create a lock
 	 * on the filename and ensure that the file names for each file are unique.
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Test
 	public void testMultiPartCreateConcurrency() throws Exception {
@@ -1081,7 +1089,7 @@ public class FileEditSandboxTest {
 			try (Trx trx = new Trx(ContentNodeTestDataUtils.createSession(), true)) {
 				FileResourceImpl fileResource = new FileResourceImpl();
 				fileResource.setTransaction(trx.getTransaction());
-	
+
 				try {
 					Random rand = new Random();
 					String filename = "abcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyzabcdefghijklmnopqrstuvxyz.txt";

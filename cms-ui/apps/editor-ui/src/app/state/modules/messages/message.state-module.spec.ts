@@ -27,6 +27,7 @@ describe('MessageStateModule', () => {
             all: [],
             read: [],
             unread: [],
+            deliveredInstantMessages: [],
             lastError: undefined,
         } as MessageState);
     });
@@ -46,6 +47,7 @@ describe('MessageStateModule', () => {
             timestamp: 1234567890,
             type: 'INFO',
             unread: false,
+            isInstantMessage: false,
         };
 
         state.mockState({
@@ -62,6 +64,7 @@ describe('MessageStateModule', () => {
                 all: [1],
                 read: [1],
                 unread: [],
+                deliveredInstantMessages: [],
             },
         });
 
@@ -72,6 +75,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
             {
                 id: 3,
@@ -79,6 +83,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
         ];
 
@@ -89,6 +94,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             },
         ];
 
@@ -174,6 +180,7 @@ describe('MessageStateModule', () => {
                     all: [1, 2],
                     read: [1],
                     unread: [2],
+                    deliveredInstantMessages: [],
                 },
             });
         });
@@ -185,6 +192,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 3, firstName: 'Third', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             };
 
             state.dispatch(new MessagesFetchingSuccessAction(true, [unreadMessage]));
@@ -216,6 +224,7 @@ describe('MessageStateModule', () => {
                 sender: { id: 2, firstName: 'Second', lastName: 'User' } as User<Raw>,
                 timestamp: 1122334455,
                 type: 'INFO',
+                isInstantMessage: false,
             };
 
             const stateBefore = state.now;
@@ -274,6 +283,7 @@ describe('MessageStateModule', () => {
                 all: [1, 2, 3],
                 read: [],
                 unread: [1, 2, 3],
+                deliveredInstantMessages: [],
             },
         });
         const message1 = state.now.entities.message[1];

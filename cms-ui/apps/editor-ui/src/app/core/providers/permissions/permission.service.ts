@@ -410,7 +410,7 @@ export class PermissionService {
             itemType = typeOrNodeId as FolderItemOrTemplateType;
 
             const appState = this.appState.now;
-            let item = (appState.entities[itemType] || [])[itemId];
+            const item = (appState.entities[itemType] || [])[itemId];
 
             if (item) {
                 item$ = observableOf(item);
@@ -448,7 +448,7 @@ export class PermissionService {
         return item$.pipe(
             take(1),
             switchMap((item) => {
-                let parentFolderId = this.getParentFolderId(item);
+                const parentFolderId = this.getParentFolderId(item);
                 itemType =
                     itemType ||
                     (item )
@@ -767,6 +767,7 @@ export class PermissionService {
 
         // permissions only available in legacy property
         if (priv) {
+            result.folder.create = priv.privileges.createfolder;
             result.folder.inherit = priv.privileges.inheritance;
             result.form.inherit = priv.privileges.inheritance;
             result.page.inherit = priv.privileges.inheritance;
@@ -779,12 +780,11 @@ export class PermissionService {
         if (perm) {
             result.assignPermissions = perm.setperm;
             result.folder = Object.assign(result.folder, {
-                create: perm.createitems,
                 delete: perm.deletefolder,
                 edit: perm.updatefolder,
                 localize: perm.createitems,
                 unlocalize: perm.deletefolder,
-                view: perm.readitems,
+                view: perm.readitems, // priv.privileges.viewfolder ?
             });
             result.form = Object.assign(result.form, {
                 create: perm.createform,
@@ -985,7 +985,7 @@ export class PermissionService {
         const { languages, privileges } = map;
         const languageHash = {} as { [lang: number]: RolePrivileges };
         if (languages && languages.length) {
-            for (let languagePriv of languages) {
+            for (const languagePriv of languages) {
                 languageHash[languagePriv.language.id] =
                     languagePriv.privileges;
             }

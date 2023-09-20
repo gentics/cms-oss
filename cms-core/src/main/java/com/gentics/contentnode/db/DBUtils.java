@@ -735,10 +735,27 @@ public final class DBUtils {
 	 * @throws NodeException
 	 */
 	public static int deleteWithPK(String tablename, final String primaryKeyColumn, String sqlWhere, final Object[] whereParams) throws NodeException {
+		return deleteWithPK(tablename, primaryKeyColumn, sqlWhere, whereParams, 0);
+	}
+
+	/**
+	 * Perform delete statement with a specific where clause, by first selecting the primary keys and then deleting them
+	 * @param tablename name of the table
+	 * @param primaryKeyColumn name of the primary key column
+	 * @param sqlWhere SQL Statement to select something (without the keyword WHERE)
+	 * @param whereParams parameters to be inserted into sqlWhere
+	 * @param limit maximum number of records to delete (if > 0)
+	 * @return update count
+	 * @throws NodeException
+	 */
+	public static int deleteWithPK(String tablename, final String primaryKeyColumn, String sqlWhere, final Object[] whereParams, final int limit) throws NodeException {
 		// first make a select statement (selecting the primary keys)
 		StringBuffer selectSQL = new StringBuffer();
 
 		selectSQL.append("SELECT ").append(primaryKeyColumn).append(" FROM ").append(tablename).append(" WHERE ").append(sqlWhere);
+		if (limit > 0) {
+			selectSQL.append(" LIMIT ").append(limit);
+		}
 
 		// execute the select statement and collect the ids
 		List<Integer> ids = select(selectSQL.toString(), ps -> {

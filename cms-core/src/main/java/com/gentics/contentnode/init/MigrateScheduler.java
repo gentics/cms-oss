@@ -163,7 +163,7 @@ public class MigrateScheduler extends InitJob {
 	 */
 	protected Map<Integer, Integer> migrateTasks() throws NodeException {
 		// read all old tasks
-		List<OldTask> oldTasks = DBUtils.select("SELECT task.*, tasktemplate.command FROM task LEFT JOIN tasktemplate ON task.tasktemplate_id = tasktemplate.id WHERE task.migrated = false", rs -> {
+		List<OldTask> oldTasks = DBUtils.select("SELECT task.*, tasktemplate.command FROM task LEFT JOIN tasktemplate ON task.tasktemplate_id = tasktemplate.id", rs -> {
 			List<OldTask> tasks = new ArrayList<>();
 			while (rs.next()) {
 				tasks.add(new OldTask(rs));
@@ -178,7 +178,10 @@ public class MigrateScheduler extends InitJob {
 				oldTask.attachParameters();
 
 				// migrate task
-				taskMigrationMap.put(oldTask.id, migrate(oldTask));
+				int newTaskId = migrate(oldTask);
+				if (newTaskId != 0) {
+					taskMigrationMap.put(oldTask.id, newTaskId);
+				}
 			}
 		}
 
@@ -204,7 +207,10 @@ public class MigrateScheduler extends InitJob {
 		Map<Integer, Integer> jobMigrationMap = new HashMap<>();
 		Map<Integer, Set<Integer>> followUpJobs = new HashMap<>();
 		for (OldJob oldJob : oldJobs) {
-			jobMigrationMap.put(oldJob.id, migrate(oldJob, taskMigrationMap, followUpJobs));
+			int newScheduleId = migrate(oldJob, taskMigrationMap, followUpJobs);
+			if (newScheduleId != 0) {
+				jobMigrationMap.put(oldJob.id, newScheduleId);
+			}
 		}
 
 		// migrate possible followup job IDs
@@ -242,7 +248,10 @@ public class MigrateScheduler extends InitJob {
 
 		Map<Integer, Integer> jobRunMigrationMap = new HashMap<>();
 		for (OldJobRun oldJobRun : oldJobRuns) {
-			jobRunMigrationMap.put(oldJobRun.id, migrate(oldJobRun, jobMigrationMap));
+			int newScheduleExecutionId = migrate(oldJobRun, jobMigrationMap);
+			if (newScheduleExecutionId != 0) {
+				jobRunMigrationMap.put(oldJobRun.id, newScheduleExecutionId);
+			}
 		}
 
 		// finally update the last execution IDs
@@ -286,7 +295,8 @@ public class MigrateScheduler extends InitJob {
 					ps.setString(2, internalTaskCmd.getCommand());
 				}, DBUtils.firstInt("id")));
 
-				if (newTask == null) {
+				// create a new task, if the old task was not yet migrated and the internal task does not exist
+				if (!oldTask.migrated && newTask == null) {
 					newTask = t.createObject(SchedulerTask.class);
 					newTask.setInternal(true);
 					newTask.setName(oldTask.name);
@@ -295,29 +305,47 @@ public class MigrateScheduler extends InitJob {
 
 					updateCreatorAndEditor = true;
 				}
-				newTaskId = newTask.getId();
+				if (newTask != null) {
+					newTaskId = newTask.getId();
+				}
 			}
 		} else {
-			// migrate to external task
-			SchedulerTask newTask = t.createObject(SchedulerTask.class);
-			newTask.setInternal(false);
-			newTask.setName(oldTask.name);
-			newTask.setCommand(parsedCommand);
-			newTask.save();
-			newTaskId = newTask.getId();
-			updateCreatorAndEditor = true;
+			if (oldTask.migrated) {
+				// find the already migrated task
+				SchedulerTask migrated = t.getObject(SchedulerTask.class,
+						DBUtils.select("SELECT id FROM scheduler_task WHERE internal = ? AND command = ?", ps -> {
+							ps.setBoolean(1, false);
+							ps.setString(2, parsedCommand);
+						}, DBUtils.firstInt("id")));
+				if (migrated != null) {
+					newTaskId = migrated.getId();
+				}
+			} else {
+				// migrate to external task
+				SchedulerTask newTask = t.createObject(SchedulerTask.class);
+				newTask.setInternal(false);
+				newTask.setName(oldTask.name);
+				newTask.setCommand(parsedCommand);
+				newTask.save();
+				newTaskId = newTask.getId();
+				updateCreatorAndEditor = true;
+			}
 		}
 
-		if (updateCreatorAndEditor) {
+		if (!oldTask.migrated && newTaskId != 0 && updateCreatorAndEditor) {
 			// update creation and editing user/time
 			DBUtils.update("UPDATE scheduler_task SET creator = ?, cdate = ?, editor = ?, edate = ? WHERE id = ?", oldTask.creatorId, oldTask.cdate, oldTask.editorId, oldTask.edate, newTaskId);
 			t.dirtObjectCache(SchedulerTask.class, newTaskId);
 		}
 
-		// migrate permissions
-		DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 160, ?, usergroup_id, perm FROM perm WHERE o_type = 37 and o_id = ?", newTaskId, oldTask.id); 
+		if (!oldTask.migrated && newTaskId != 0) {
+			// migrate permissions
+			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 160, ?, usergroup_id, perm FROM perm WHERE o_type = 37 and o_id = ?", newTaskId, oldTask.id); 
+		}
 
-		DBUtils.update("UPDATE task SET migrated = true WHERE id = ?", oldTask.id);
+		if (!oldTask.migrated) {
+			DBUtils.update("UPDATE task SET migrated = true WHERE id = ?", oldTask.id);
+		}
 
 		t.commit(false);
 
@@ -329,94 +357,97 @@ public class MigrateScheduler extends InitJob {
 	 * @param oldJob job to migrate
 	 * @param taskMigrationMap map of oldTaskId -> newTaskId
 	 * @param followUpJobs map, which will be filled with jobIds for followup jobs
-	 * @return ID of the migrated scheduler_schedule
+	 * @return ID of the migrated scheduler_schedule or 0 if the job could not be migrated, because the task was not migrated before
 	 * @throws NodeException
 	 */
 	protected int migrate(OldJob oldJob, Map<Integer, Integer> taskMigrationMap, Map<Integer, Set<Integer>> followUpJobs) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		int newJobId = 0;
 
-		SchedulerSchedule newSchedule = t.createObject(SchedulerSchedule.class);
-		newSchedule.setName(oldJob.name);
-		newSchedule.setDescription(oldJob.description);
-		newSchedule.setActive(oldJob.active);
-		newSchedule.setParallel(oldJob.parallel);
-		if (!StringUtils.isBlank(oldJob.failedEmails)) {
-			String[] eMails = StringUtils.split(oldJob.failedEmails, ",");
-			for (int i = 0; i < eMails.length; i++) {
-				eMails[i] = StringUtils.trim(eMails[i]);
+		// check whether the old job references a task, which was migrated
+		SchedulerTask task = t.getObject(SchedulerTask.class, taskMigrationMap.get(oldJob.taskId));
+		if (task != null) {
+			SchedulerSchedule newSchedule = t.createObject(SchedulerSchedule.class);
+			newSchedule.setName(oldJob.name);
+			newSchedule.setDescription(oldJob.description);
+			newSchedule.setActive(oldJob.active);
+			newSchedule.setParallel(oldJob.parallel);
+			if (!StringUtils.isBlank(oldJob.failedEmails)) {
+				String[] eMails = StringUtils.split(oldJob.failedEmails, ",");
+				for (int i = 0; i < eMails.length; i++) {
+					eMails[i] = StringUtils.trim(eMails[i]);
+				}
+				newSchedule.setNotificationEmail(Arrays.asList(eMails));
 			}
-			newSchedule.setNotificationEmail(Arrays.asList(eMails));
-		}
 
-		ScheduleData scheduleData = new ScheduleData();
-		scheduleData.setType(oldJob.type);
+			ScheduleData scheduleData = new ScheduleData();
+			scheduleData.setType(oldJob.type);
 
-		if (oldJob.scheduleData != null) {
-			if (oldJob.scheduleData.isArray()) {
-				MixedArray dataArray = oldJob.scheduleData.toArray();
-				if (dataArray.containsKey("start")) {
-					scheduleData.setStartTimestamp(dataArray.getInt("start"));
-				} else if (dataArray.containsKey("timeStamp")) {
-					scheduleData.setStartTimestamp(dataArray.getInt("timeStamp"));
-				}
-				if (dataArray.containsKey("end")) {
-					scheduleData.setEndTimestamp(dataArray.getInt("end"));
-				}
-				switch(scheduleData.getType()) {
-				case followup:
-					ScheduleFollow follow = new ScheduleFollow();
-					follow.setOnlyAfterSuccess(ObjectTransformer.getBoolean(dataArray.get("onSuccess"), false));
-					scheduleData.setFollow(follow);
-
-					// the IDs of the jobs to follow will be stored in the map followUpJobs (because we possibly do not know the new IDs yet)
-					MixedArray jobs = dataArray.getArray("jobs");
-					Set<Integer> jobIdSet = new HashSet<>();
-					for (Object id : jobs.values()) {
-						jobIdSet.add(ObjectTransformer.getInteger(id, 0));
+			if (oldJob.scheduleData != null) {
+				if (oldJob.scheduleData.isArray()) {
+					MixedArray dataArray = oldJob.scheduleData.toArray();
+					if (dataArray.containsKey("start")) {
+						scheduleData.setStartTimestamp(dataArray.getInt("start"));
+					} else if (dataArray.containsKey("timeStamp")) {
+						scheduleData.setStartTimestamp(dataArray.getInt("timeStamp"));
 					}
-					followUpJobs.put(oldJob.id, jobIdSet);
-					break;
-				case interval:
-					ScheduleInterval interval = new ScheduleInterval();
-					String scale = dataArray.getString("scale");
-					switch (scale) {
-					case "min":
-						interval.setUnit(IntervalUnit.minute);
+					if (dataArray.containsKey("end")) {
+						scheduleData.setEndTimestamp(dataArray.getInt("end"));
+					}
+					switch(scheduleData.getType()) {
+					case followup:
+						ScheduleFollow follow = new ScheduleFollow();
+						follow.setOnlyAfterSuccess(ObjectTransformer.getBoolean(dataArray.get("onSuccess"), false));
+						scheduleData.setFollow(follow);
+
+						// the IDs of the jobs to follow will be stored in the map followUpJobs (because we possibly do not know the new IDs yet)
+						MixedArray jobs = dataArray.getArray("jobs");
+						Set<Integer> jobIdSet = new HashSet<>();
+						for (Object id : jobs.values()) {
+							jobIdSet.add(ObjectTransformer.getInteger(id, 0));
+						}
+						followUpJobs.put(oldJob.id, jobIdSet);
 						break;
-					case "std":
-						interval.setUnit(IntervalUnit.hour);
+					case interval:
+						ScheduleInterval interval = new ScheduleInterval();
+						String scale = dataArray.getString("scale");
+						switch (scale) {
+						case "min":
+							interval.setUnit(IntervalUnit.minute);
+							break;
+						case "std":
+							interval.setUnit(IntervalUnit.hour);
+							break;
+						case "day":
+							interval.setUnit(IntervalUnit.day);
+							break;
+						}
+						interval.setValue(dataArray.getInt("every"));
+						scheduleData.setInterval(interval);
 						break;
-					case "day":
-						interval.setUnit(IntervalUnit.day);
+					case manual:
+						break;
+					case once:
 						break;
 					}
-					interval.setValue(dataArray.getInt("every"));
-					scheduleData.setInterval(interval);
-					break;
-				case manual:
-					break;
-				case once:
-					break;
 				}
 			}
+
+			newSchedule.setScheduleData(scheduleData);
+			newSchedule.setSchedulerTask(task);
+			newSchedule.save();
+			newJobId = newSchedule.getId();
+
+			// update creation and editing user/time and statistic data
+			DBUtils.update(
+					"UPDATE scheduler_schedule SET creator = ?, cdate = ?, editor = ?, edate = ?, runs = ?, average_time = ? WHERE id = ?",
+					oldJob.creatorId, oldJob.cdate, oldJob.editorId, oldJob.edate, oldJob.jobRunCount, oldJob.jobRunAverage,
+					newJobId);
+			t.dirtObjectCache(SchedulerSchedule.class, newJobId);
+
+			// migrate permissions
+			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 161, ?, usergroup_id, perm FROM perm WHERE o_type = 39 and o_id = ?", newJobId, oldJob.id); 
 		}
-
-		newSchedule.setScheduleData(scheduleData);
-		newSchedule.setSchedulerTask(t.getObject(SchedulerTask.class, taskMigrationMap.get(oldJob.taskId)));
-		newSchedule.save();
-		newJobId = newSchedule.getId();
-
-		// update creation and editing user/time and statistic data
-		DBUtils.update(
-				"UPDATE scheduler_schedule SET creator = ?, cdate = ?, editor = ?, edate = ?, runs = ?, average_time = ? WHERE id = ?",
-				oldJob.creatorId, oldJob.cdate, oldJob.editorId, oldJob.edate, oldJob.jobRunCount, oldJob.jobRunAverage,
-				newJobId);
-		t.dirtObjectCache(SchedulerSchedule.class, newJobId);
-
-		// migrate permissions
-		DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 161, ?, usergroup_id, perm FROM perm WHERE o_type = 39 and o_id = ?", newJobId, oldJob.id); 
-
 		DBUtils.update("UPDATE job SET migrated = true WHERE id = ?", oldJob.id);
 
 		t.commit(false);
@@ -428,23 +459,28 @@ public class MigrateScheduler extends InitJob {
 	 * Migrate the job run
 	 * @param oldJobRun jobrun to migrate
 	 * @param jobMigrationMap map of oldJobId -> newScheduleId
-	 * @return ID of the migrated scheduler_execution
+	 * @return ID of the migrated scheduler_execution or 0 if it could not be migrated, because the job was not migrated
 	 * @throws NodeException
 	 */
 	protected int migrate(OldJobRun oldJobRun, Map<Integer, Integer> jobMigrationMap) throws NodeException {
-		List<Integer> ids = DBUtils.executeInsert(
-				"INSERT INTO scheduler_execution (scheduler_schedule_id, starttime, endtime, duration, result, log) VALUES (?, ?, ?, ?, ?, ?)",
-				new Object[] { jobMigrationMap.get(oldJobRun.jobId), oldJobRun.starttime, oldJobRun.endtime, oldJobRun.endtime - oldJobRun.starttime, oldJobRun.returnvalue, oldJobRun.output });
+		int newSchedulerExecutionId = 0;
+
+		if (jobMigrationMap.containsKey(oldJobRun.jobId)) {
+			List<Integer> ids = DBUtils.executeInsert(
+					"INSERT INTO scheduler_execution (scheduler_schedule_id, starttime, endtime, duration, result, log) VALUES (?, ?, ?, ?, ?, ?)",
+					new Object[] { jobMigrationMap.get(oldJobRun.jobId), oldJobRun.starttime, oldJobRun.endtime, oldJobRun.endtime - oldJobRun.starttime, oldJobRun.returnvalue, oldJobRun.output });
+			newSchedulerExecutionId = ids.get(0);
+		}
 
 		DBUtils.update("UPDATE jobrun SET migrated = true WHERE id = ?", oldJobRun.id);
 
-		return ids.get(0);
+		return newSchedulerExecutionId;
 	}
 
 	/**
 	 * Class for old tasks
 	 */
-	protected static class OldTask {
+	public static class OldTask {
 		protected int id;
 
 		protected int taskTemplateId;
@@ -460,6 +496,8 @@ public class MigrateScheduler extends InitJob {
 		protected int editorId;
 
 		protected int edate;
+
+		protected boolean migrated;
 
 		protected Map<String, OldTaskParam> params;
 
@@ -477,6 +515,7 @@ public class MigrateScheduler extends InitJob {
 			this.cdate = rs.getInt("cdate");
 			this.editorId = rs.getInt("editor");
 			this.edate = rs.getInt("edate");
+			this.migrated = rs.getBoolean("migrated");
 		}
 
 		/**

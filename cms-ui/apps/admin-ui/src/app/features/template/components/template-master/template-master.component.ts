@@ -1,4 +1,13 @@
-import { AdminUIModuleRoutes, BO_PERMISSIONS, NodeBO, ROUTE_ENTITY_LOADED, ROUTE_ENTITY_RESOLVER_KEY, TemplateBO } from '@admin-ui/common';
+import {
+    AdminUIEntityDetailRoutes,
+    AdminUIModuleRoutes,
+    BO_PERMISSIONS,
+    NodeBO,
+    ROUTE_DETAIL_OUTLET,
+    ROUTE_ENTITY_LOADED,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    TemplateBO,
+} from '@admin-ui/common';
 import {
     ErrorHandler,
     I18nNotificationService,
@@ -118,7 +127,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
     }
 
     public handleNodeSelect(row: TableRow<NodeBO>): void {
-        this.router.navigate([`/${AdminUIModuleRoutes.TEMPLATES}`, { [NODE_ID_PARAM]: row.item.id }], { relativeTo: this.route });
+        this.router.navigate([`/${AdminUIModuleRoutes.TEMPLATES}/${row.item.id}`], { relativeTo: this.route });
     }
 
     public navigateBack(): void {
@@ -168,8 +177,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         const fullUrl = getFullPrimaryPath(this.route);
         const commands: any[] = [
             fullUrl,
-            { [NODE_ID_PARAM]: this.activeNode?.id },
-            { outlets: { detail: [this.detailPath || this.entityIdentifier, row.id] } },
+            { outlets: { [ROUTE_DETAIL_OUTLET]: [AdminUIEntityDetailRoutes.TEMPLATE, this.activeNode?.id, row.id] } },
         ];
         const extras: NavigationExtras = { relativeTo: this.route };
 

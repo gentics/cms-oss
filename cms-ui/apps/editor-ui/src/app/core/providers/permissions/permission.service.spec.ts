@@ -659,7 +659,7 @@ describe('PermissionService', () => {
         });
 
         it('folder.create$', () => {
-            api.permissions.default.permissionsMap.permissions.createitems = true;
+            testState.entities.folder[FOLDER].privilegeMap.privileges.createfolder = true;
             state.mockState(testState);
             expect(takeOneValue(permissions.folder.create$)).toBe(true);
         });

@@ -3,10 +3,17 @@ import { GcmsNormalizer, Message, Raw } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import * as _ from'lodash-es'
 
-import { concatUnique, removeEntries } from '../../common/utils/list-utils/list-utils';
+import {
+    concatUnique,
+    removeEntries,
+} from '../../common/utils/list-utils/list-utils';
 import { AddEntities } from '../entity/entity.actions';
 import { AppStateService } from '../providers/app-state/app-state.service';
-import { ActionDefinition, AppStateBranch, defineInitialState } from '../utils/state-utils';
+import {
+    ActionDefinition,
+    AppStateBranch,
+    defineInitialState,
+} from '../utils/state-utils';
 import {
     ClearMessageState,
     DeleteMessageError,
@@ -23,6 +30,7 @@ export interface MessageStateModel {
     all: number[];
     read: number[];
     unread: number[];
+    deliveredInstantMessages: number[];
     fetching: boolean;
     lastError?: string;
 }
@@ -32,6 +40,7 @@ export const INITIAL_MESSAGE_STATE = defineInitialState<MessageStateModel>({
     all: [],
     read: [],
     unread: [],
+    deliveredInstantMessages: [],
     lastError: undefined,
 });
 
@@ -41,7 +50,6 @@ export const INITIAL_MESSAGE_STATE = defineInitialState<MessageStateModel>({
 })
 @Injectable()
 export class MessageStateModule {
-
     private normalizer = new GcmsNormalizer();
 
     constructor(private appState: AppStateService) {}
@@ -54,13 +62,18 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(FetchAllMessageSuccess)
-    fetchAllMessageSuccess(ctx: StateContext<MessageStateModel>, action: FetchAllMessageSuccess): Promise<void> {
+    fetchAllMessageSuccess(
+        ctx: StateContext<MessageStateModel>,
+        action: FetchAllMessageSuccess,
+    ): Promise<void> {
         const messages = action.allMessagesFromServer as Message<Raw>[];
-        const unreadIds = action.unreadMessagesFromServer.map(msg => msg.id);
+        const unreadIds = action.unreadMessagesFromServer.map((msg) => msg.id);
+        const instantMessagesIds = action.instantMessagesFromServer.map(
+            (msg) => msg.id,
+        );
 
         const readMessages: Message<Raw>[] = [];
         const unreadMessages: Message<Raw>[] = [];
-
         const newMessageEntities: Message<Raw>[] = [];
 
         for (const message of messages) {
@@ -70,22 +83,30 @@ export class MessageStateModule {
             newMessageEntities.push(message);
         }
 
-        const normalized = this.normalizer.normalize('message', newMessageEntities);
+        const normalized = this.normalizer.normalize(
+            'message',
+            newMessageEntities,
+        );
 
-        return ctx.dispatch(new AddEntities(normalized.entities))
+        return ctx
+            .dispatch(new AddEntities(normalized.entities))
             .toPromise()
             .then(() => {
                 ctx.patchState({
                     fetching: false,
-                    all: messages.map(msg => msg.id),
-                    read: readMessages.map(msg => msg.id),
-                    unread: unreadMessages.map(msg => msg.id),
+                    all: messages.map((msg) => msg.id),
+                    read: readMessages.map((msg) => msg.id),
+                    unread: unreadMessages.map((msg) => msg.id),
+                    deliveredInstantMessages: instantMessagesIds,
                 });
             });
     }
 
     @ActionDefinition(FetchAllMessageError)
-    fetchAllMessageError(ctx: StateContext<MessageStateModel>, action: FetchAllMessageError): void {
+    fetchAllMessageError(
+        ctx: StateContext<MessageStateModel>,
+        action: FetchAllMessageError,
+    ): void {
         ctx.patchState({
             fetching: false,
             lastError: action.errorMessage,
@@ -100,11 +121,27 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(FetchUnreadMessageSuccess)
-    fetchUnreadMessagesSuccess(ctx: StateContext<MessageStateModel>, action: FetchUnreadMessageSuccess): void {
-        const newMessages = (action.unreadMessagesFromServer as Message<Raw>[])
-            .filter(msg => !this.appState.now.entity.message[msg.id]);
+    fetchUnreadMessagesSuccess(
+        ctx: StateContext<MessageStateModel>,
+        action: FetchUnreadMessageSuccess,
+    ): void {
+        const instantMessages = action.unreadMessagesFromServer
+            .filter((message) => message.isInstantMessage)
+            .map((instantMessage) => instantMessage.id);
 
-        if (!newMessages.length && ctx.getState().unread.length === action.unreadMessagesFromServer.length) {
+        const newInboxMessage = (
+            action.unreadMessagesFromServer as Message<Raw>[]
+        ).filter(
+            (msg) =>
+                !this.appState.now.entity.message[msg.id] &&
+                !msg.isInstantMessage,
+        );
+
+        if (
+            !newInboxMessage.length &&
+            ctx.getState().unread.length ===
+                action.unreadMessagesFromServer.length
+        ) {
             // Nothing to do
             if (ctx.getState().fetching) {
                 ctx.patchState({
@@ -114,10 +151,13 @@ export class MessageStateModule {
             return;
         }
 
-        const normalized = this.normalizer.normalize('message', newMessages);
-        const allIds = [ ...ctx.getState().all ];
-        const unreadIds = [ ...ctx.getState().unread ];
-        newMessages.forEach(newMsg => {
+        const normalized = this.normalizer.normalize(
+            'message',
+            newInboxMessage,
+        );
+        const allIds = [...ctx.getState().all];
+        const unreadIds = [...ctx.getState().unread];
+        newInboxMessage.forEach((newMsg) => {
             normalized.entities.message[newMsg.id].unread = true;
             allIds.push(newMsg.id);
             unreadIds.push(newMsg.id);
@@ -128,13 +168,17 @@ export class MessageStateModule {
         ctx.patchState({
             fetching: false,
             all: allIds,
-            read: ctx.getState().all.filter(id => unreadIds.indexOf(id) < 0),
+            read: ctx.getState().all.filter((id) => unreadIds.indexOf(id) < 0),
             unread: unreadIds,
+            deliveredInstantMessages: instantMessages,
         });
     }
 
     @ActionDefinition(FetchUnreadMessageError)
-    fetchUnreadMessageError(ctx: StateContext<MessageStateModel>, action: FetchUnreadMessageError): void {
+    fetchUnreadMessageError(
+        ctx: StateContext<MessageStateModel>,
+        action: FetchUnreadMessageError,
+    ): void {
         ctx.patchState({
             fetching: false,
             lastError: action.errorMessage,
@@ -142,15 +186,25 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(MarkMessagesAsRead)
-    markMessagesAsRead(ctx: StateContext<MessageStateModel>, action: MarkMessagesAsRead): void {
+    markMessagesAsRead(
+        ctx: StateContext<MessageStateModel>,
+        action: MarkMessagesAsRead,
+    ): void {
         const readMessageIDs = action.messageIds;
-        const changes = !!readMessageIDs.length && readMessageIDs.some(id => this.appState.now.entity.message[id].unread);
+        const changes =
+            !!readMessageIDs.length &&
+            readMessageIDs.some(
+                (id) => this.appState.now.entity.message[id].unread,
+            );
         if (!changes) {
             // Nothing to do
             return;
         }
 
-        const newMessageEntities = Object.assign({}, this.appState.now.entity.message);
+        const newMessageEntities = Object.assign(
+            {},
+            this.appState.now.entity.message,
+        );
         for (const id of readMessageIDs) {
             if (newMessageEntities[id] && newMessageEntities[id].unread) {
                 newMessageEntities[id] = {
@@ -160,9 +214,11 @@ export class MessageStateModule {
             }
         }
 
-        ctx.dispatch(new AddEntities({
-            message: newMessageEntities,
-        }));
+        ctx.dispatch(
+            new AddEntities({
+                message: newMessageEntities,
+            }),
+        );
 
         ctx.patchState({
             fetching: false,
@@ -177,7 +233,10 @@ export class MessageStateModule {
     }
 
     @ActionDefinition(DeleteMessageError)
-    deleteMessagesError(ctx: StateContext<MessageStateModel>, action: FetchUnreadMessageError): void {
+    deleteMessagesError(
+        ctx: StateContext<MessageStateModel>,
+        action: FetchUnreadMessageError,
+    ): void {
         ctx.patchState({
             fetching: false,
             lastError: action.errorMessage,

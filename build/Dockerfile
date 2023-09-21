@@ -100,5 +100,6 @@ ENV TESTMANAGER_PORT "8080"
 
 # path to the docker.sock file to be mounted in the ryuk container (for testcontainers)
 ENV TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE "/run/user/1000/docker.sock"
+ENV JAVA_HOME "/usr/lib/jvm/java-17-amazon-corretto/"
 
 EXPOSE 80

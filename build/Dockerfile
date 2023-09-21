@@ -1,4 +1,4 @@
-FROM docker.apa-it.at/maven:3.8.6-openjdk-11
+FROM docker.apa-it.at/maven:3.9.2-amazoncorretto-17-debian-bullseye
 LABEL maintainer="Peter Nyari <p.nyari@gentics.com>"
 
 ARG GIT_USER_NAME="Maven Release Manager"
@@ -89,7 +89,7 @@ RUN echo "jenkins ALL=NOPASSWD: /usr/bin/apt-get update" > /etc/sudoers.d/jenkin
 USER ${USER_NAME}
 
 # Workaround for Maven not outputting colors and silence download progress messages
-ENV MAVEN_OPTS "-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxPermSize=128m"
+ENV MAVEN_OPTS "-Djansi.passthrough=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -Xmx2g -XX:MaxMetaspaceSize=128m"
 
 RUN mkdir -p ~/workspace \
  && mkdir -p ~/.m2/repository
@@ -100,5 +100,6 @@ ENV TESTMANAGER_PORT "8080"
 
 # path to the docker.sock file to be mounted in the ryuk container (for testcontainers)
 ENV TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE "/run/user/1000/docker.sock"
+ENV JAVA_HOME "/usr/lib/jvm/java-17-amazon-corretto/"
 
 EXPOSE 80

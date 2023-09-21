@@ -69,7 +69,7 @@ PackageCheckTrableLoaderOptions
                 (parent as PackageDependency).referenceDependencies,
             ).pipe(
                 map((referenceDependency) =>
-                    this.mapToBusinessObject(referenceDependency, true),
+                    this.mapToBusinessObject(referenceDependency, options),
                 ),
                 toArray(),
             );
@@ -124,7 +124,7 @@ PackageCheckTrableLoaderOptions
 
     private mapToBusinessObject(
         packageDependency: PackageDependencyEntity,
-        addFlag?: boolean,
+        options?: PackageCheckTrableLoaderOptions,
     ): PackageDependencyEntityBO {
         const packageEntity: PackageDependencyEntityBO = {
             ...packageDependency,
@@ -133,12 +133,20 @@ PackageCheckTrableLoaderOptions
             [BO_PERMISSIONS]: [],
         }
 
-        if (addFlag) {
+
+        if (this.isReferenceDependency(packageDependency)) {
             const reference = packageDependency as ReferenceDependency;
             packageEntity['isContained'] = (reference.isInPackage ?? false) || (reference.isInOtherPackage ?? false);
+            packageEntity['foundInPackage'] = (packageEntity['isContained'] && !reference.foundInPackage) ? options.packageName : reference.foundInPackage;
         }
 
 
         return packageEntity;
     }
+
+
+    private isReferenceDependency(packageEntity: PackageDependencyEntity): boolean {
+        return 'isInPackage' in packageEntity || 'isInOtherPackage' in packageEntity
+    }
+
 }

@@ -7,6 +7,10 @@
         "en": "Description",
         "de": "Beschreibung"
     },
+    "package_singular": {
+        "en": "Package",
+        "de": "Paket"
+    },
     "package_subpackage_singular": {
         "en": "Sub Package",
         "de": "Sub-Paket"

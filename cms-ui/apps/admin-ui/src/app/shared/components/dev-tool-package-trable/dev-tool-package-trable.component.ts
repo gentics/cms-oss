@@ -50,6 +50,11 @@ export class PackageCheckTrableComponent
             align: 'center',
         },
         {
+            id: 'foundInPackage',
+            label: 'package.package_singular',
+            fieldPath: 'foundInPackage',
+        },
+        {
             id: 'globalId',
             label: 'Id',
             fieldPath: 'globalId',

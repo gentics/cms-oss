@@ -910,3 +910,108 @@ page_controls_tab_link_settings:
 page_controls_tab_table_settings:
     en: Table Settings
     de: Tabellen Einstelleungen
+format_bold:
+    en: Bold
+    de: Fett
+format_italic:
+    en: Italic
+    de: Kursiv
+format_underline:
+    en: Underlined
+    de: Unterstrichen
+format_code:
+    en: Code
+    de: Quellcode
+format_quote:
+    en: Quote
+    de: Zitat
+format_sub:
+    en: Subscript
+    de: Tiefgestellt
+format_sup:
+    en: Superscript
+    de: Hochgestellt
+list_unsorted:
+    en: Unsorted List
+    de: Unsortierte Liste
+list_sorted:
+    en: Sorted List
+    de: Sortierte Liste
+text_p:
+    en: Paragraph
+    de: Absatz
+text_h1:
+    en: Heading 1
+    de: Überschrift 1
+text_h2:
+    en: Heading 2
+    de: Überschrift 2
+text_h3:
+    en: Heading 3
+    de: Überschrift 3
+text_h4:
+    en: Heading 4
+    de: Überschrift 4
+text_h5:
+    en: Heading 5
+    de: Überschrift 5
+text_h6:
+    en: Heading 6
+    de: Überschrift 6
+format_link:
+    en: Link
+    de: Verweis
+format_link_target:
+    en: Link Target
+    de: Verweis Ziel
+format_link_pick_cms_target:
+    en: Pick Target from CMS
+    de: Ziel aus CMS wählen
+format_link_checker:
+    en: Link-Checker result
+    de: Link-Checker Ergebnis
+format_link_additional_options:
+    en: Additional Options
+    de: Weitere Einstellungen
+format_link_anchor:
+    en: Link Anchor
+    de: Verweis Anker
+format_link_title:
+    en: Link Title
+    de: Verweis Titel
+format_link_language:
+    en: Link Language
+    de: Verweis Sprache
+format_link_new_tab:
+    en: Open in new Tab
+    de: In neuen Tab öffenen
+format_table:
+    en: Table
+    de: Tabelle
+format_table_caption:
+    en: Table caption
+    de: Tabellen Überschrift
+format_table_merge_cell:
+    en: Merge Cells
+    de: Zellen verknüpfen
+format_table_split_cell:
+    en: Split Cell
+    de: Zelle spalten
+format_table_add_column_left:
+    en: Add column to left
+    de: Spalte links einfügen
+format_table_add_column_right:
+    en: Add column to right
+    de: Spalte rechts einfügen
+format_table_remove_column:
+    en: Remove column
+    de: Spalte entfernen
+format_table_add_row_above:
+    en: Add row above
+    de: Zeile darüber einfügen
+format_table_add_row_below:
+    en: Add row below
+    de: Zeile darunter einfügen
+format_table_remove_row:
+    en: Remove row
+    de: Zeile entfernen

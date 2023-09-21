@@ -304,7 +304,7 @@
 					<skipTests>${skip.unit.tests}</skipTests>
 					<forkCount>${surefire.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
-					<argLine>-Xms64m -Xmx256m ${surefireArgLine}</argLine>
+					<argLine>-Xms64m -Xmx256m  --add-opens=java.base/java.lang=ALL-UNNAMED ${surefireArgLine}</argLine>
 					<trimStackTrace>false</trimStackTrace>
 					<testFailureIgnore>true</testFailureIgnore>
 					<runOrder>random</runOrder>

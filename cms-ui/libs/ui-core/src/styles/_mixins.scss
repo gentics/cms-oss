@@ -34,7 +34,7 @@
     transition: border 0.2s;
 
     &:focus:not([readonly]) {
-        border: 2px solid $gtx-color-primary;
+        border-color: $gtx-color-primary;
         box-shadow: none;
 
         & + label {
@@ -49,7 +49,7 @@
     &[disabled] {
         background-color: $gtx-color-off-white;
         color: $gtx-color-mid-gray;
-        border: 2px solid $gtx-color-light-gray;
+        border-color: $gtx-color-light-gray;
 
         & + label {
             color: $gtx-color-dark-gray;

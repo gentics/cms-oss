@@ -148,7 +148,7 @@
     </button>
 </div>
 
-<ng-container *ngIf="activeFormats | gtxIncludes:['link', 'table']">
+<ng-container *ngIf="activeFormats | gtxIncludes:['link']">
     <div class="flex-break"></div>
 </ng-container>
 
@@ -167,34 +167,82 @@
         <gtx-input
             class="inline-target"
             [title]="'editor.format_link_target' | i18n"
+            [(ngModel)]="link.target"
         ></gtx-input>
 
-        <ng-container *ngIf="linkCheckerEnabled">
-            <icon>{{ linkValid ? 'check' : 'cross' }}</icon>
+        <button
+            class="format-button"
+            [title]="'editor.format_link_pick_cms_target' | i18n"
+            (click)="selectLinkTarget()"
+        >
+            <icon>pan_tool_alt</icon>
+        </button>
+
+        <ng-container *ngIf="linkChecker.enabled">
+            <gtx-tooltip
+                position="bottom"
+                align="left"
+                type="light"
+            >
+                <icon
+                    gtx-tooltip-trigger
+                    [ngClass]="'link-checker-icon link-checker-' + (linkChecker.valid ? 'valid' : 'invalid')"
+                    (click)="toggleLinkCheckValidity()"
+                >{{ linkChecker.valid ? 'check' : 'close' }}</icon>
+
+                <div class="link-checker-report" gtx-tooltip-content>
+                    <div class="link-checker-report-date">{{ linkChecker.report.date | i18nDate }}</div>
+                    <code class="link-checker-report-url">{{ linkChecker.report.url }}</code>
+                    <div class="link-checker-report-text">{{ linkChecker.report.text }}</div>
+                </div>
+            </gtx-tooltip>
         </ng-container>
 
         <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">
             <gtx-dropdown-trigger>
-                <button class="format-button">
-                    <icon>anchor</icon>
+                <button class="format-button" [title]="'editor.format_link_additional_options' | i18n">
+                    <icon>more_vert</icon>
                 </button>
             </gtx-dropdown-trigger>
 
             <gtx-dropdown-content>
-                <gtx-input
-                    class="inline-target"
-                    [title]="'editor.format_link_anchor' | i18n"
-                ></gtx-input>
+                <div class="link-options-wrapper">
+                    <gtx-input
+                        class="format-input"
+                        [label]="'editor.format_link_anchor' | i18n"
+                        [(ngModel)]="link.anchor"
+                    ></gtx-input>
+
+                    <gtx-input
+                        class="format-input"
+                        [label]="'editor.format_link_title' | i18n"
+                        [(ngModel)]="link.title"
+                    ></gtx-input>
+
+                    <gtx-input
+                        class="format-input"
+                        [label]="'editor.format_link_language' | i18n"
+                        [(ngModel)]="link.language"
+                    ></gtx-input>
+                </div>
             </gtx-dropdown-content>
         </gtx-dropdown-list>
 
-        <button class="format-button">
-            <icon>pan_tool_alt</icon>
-        </button>
+        <icon-checkbox
+            class="format-checkbox"
+            icon="open_in_new"
+            [selected]="link.newTab"
+            [title]="'editor.format_link_new_tab' | i18n"
+            (change)="setLinkNewTab($event)"
+        ></icon-checkbox>
     </ng-container>
 </div>
 
-<div class="format-section table-group">
+<ng-container *ngIf="(activeFormats | gtxIncludes:['table']) && !(activeFormats | gtxIncludes:['link'])">
+    <div class="flex-break"></div>
+</ng-container>
+
+<div class="format-section table-group" [attr.data-active-part]="table.activePart">
     <button
         class="format-button"
         [class.active]="activeFormats | gtxIncludes:'table'"
@@ -206,55 +254,79 @@
 
     <ng-container *ngIf="activeFormats | gtxIncludes:'table'">
         <button
-            class="format-button table-action-button"
-        >
-            <icon>cell_merge</icon>
-        </button>
-
-        <button
-            class="format-button table-action-button"
-        >
-            <icon>arrows_outward</icon>
-        </button>
-
-        <button
-            class="format-button table-action-button"
-        >
-            <icon>delete</icon>
-        </button>
-
-        <button
+            *ngIf="table.activePart === TablePart.CELL || table.activePart === TablePart.CAPTION"
+            [title]="'editor.format_table_caption' | i18n"
             class="format-button table-action-button"
         >
             <icon>title</icon>
         </button>
 
-        <div class="vertical-separator"></div>
+        <ng-container *ngIf="table.activePart === TablePart.CELL">
+            <div class="vertical-separator"></div>
 
-        <button
-            class="format-button table-action-button"
-        >
-            <icon class="hollow">splitscreen_left</icon>
-        </button>
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_merge_cell' | i18n"
+            >
+                <icon>cell_merge</icon>
+            </button>
 
-        <button
-            class="format-button table-action-button"
-        >
-            <icon class="hollow">splitscreen_right</icon>
-        </button>
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_split_cell' | i18n"
+            >
+                <icon>arrows_outward</icon>
+            </button>
+        </ng-container>
 
-        <div class="vertical-separator"></div>
+        <ng-container *ngIf="table.activePart === TablePart.COLUMN">
+            <div class="vertical-separator"></div>
 
-        <button
-            class="format-button table-action-button"
-        >
-            <icon class="hollow">splitscreen_top</icon>
-        </button>
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_add_column_left' | i18n"
+            >
+                <icon class="hollow">splitscreen_left</icon>
+            </button>
 
-        <button
-            class="format-button table-action-button"
-        >
-            <icon class="hollow">splitscreen_bottom</icon>
-        </button>
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_add_column_right' | i18n"
+            >
+                <icon class="hollow">splitscreen_right</icon>
+            </button>
+
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_remove_column' | i18n"
+            >
+                <icon>delete</icon>
+            </button>
+        </ng-container>
+
+        <ng-container *ngIf="table.activePart === TablePart.ROW">
+            <div class="vertical-separator"></div>
+
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_add_row_above' | i18n"
+            >
+                <icon class="hollow">splitscreen_top</icon>
+            </button>
+
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_add_row_below' | i18n"
+            >
+                <icon class="hollow">splitscreen_bottom</icon>
+            </button>
+
+            <button
+                class="format-button table-action-button"
+                [title]="'editor.format_table_remove_row' | i18n"
+            >
+                <icon>delete</icon>
+            </button>
+        </ng-container>
     </ng-container>
 </div>

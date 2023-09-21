@@ -36,6 +36,7 @@ export enum DevToolPackageDetailTabs {
     DATA_SOURCES = 'data-sources',
     OBJECT_PROPERTIES = 'object-properties',
     TEMPLATES = 'templates',
+    CONSISTENCY_CHECK = 'consistency-check',
 }
 
 export enum FolderDetailTabs {

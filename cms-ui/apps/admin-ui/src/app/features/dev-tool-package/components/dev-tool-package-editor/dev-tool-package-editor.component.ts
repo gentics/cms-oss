@@ -42,6 +42,7 @@ export class DevToolPackageEditorComponent extends BaseEntityEditorComponent<Edi
         this.tabHandles[this.Tabs.DATA_SOURCES] = NULL_FORM_TAB_HANDLE;
         this.tabHandles[this.Tabs.OBJECT_PROPERTIES] = NULL_FORM_TAB_HANDLE;
         this.tabHandles[this.Tabs.TEMPLATES] = NULL_FORM_TAB_HANDLE;
+        this.tabHandles[this.Tabs.CONSISTENCY_CHECK] = NULL_FORM_TAB_HANDLE;
     }
 
     protected onEntityChange(): void {

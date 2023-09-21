@@ -1,13 +1,15 @@
 @font-face {
     font-family: 'Material Symbols Outlined';
     font-style: normal;
-    src: url('../assets/MaterialSymbolsOutlined.woff2') format('woff');
+    src: url('../assets/MaterialSymbolsOutlined.woff2') format('woff2'),
+        url('../assets/MaterialSymbolsOutlined.ttf') format('truetype');
 }
 
 @font-face {
     font-family: 'Material Symbols';
     font-style: normal;
-    src: url('../assets/MaterialSymbolsOutlined.woff2') format('woff');
+    src: url('../assets/MaterialSymbolsOutlined.woff2') format('woff2'),
+        url('../assets/MaterialSymbolsOutlined.ttf') format('truetype');
 }
 
 .material-icons,
@@ -23,6 +25,8 @@
     word-wrap: normal;
     white-space: nowrap;
     direction: ltr;
+    -moz-font-feature-settings: 'liga';
+    -moz-osx-font-smoothing: grayscale;
     font-variation-settings: 'FILL' 1;
 
     &.hollow {

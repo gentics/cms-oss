@@ -127,15 +127,15 @@
         >
             <gtx-entity-detail-header
                 [hidden]="isLoading"
-                [title]="'package.consistency_check_title' | i18n: { packageName: entity?.name }"
+                [title]="'package.consistency_check_title' | i18n: { packageName: entity?.name }" 
                 (cancelClick)="detailsClose()"
             ></gtx-entity-detail-header>
 
             <div class="gtx-entity-details-tab-content-body">
-                <gtx-dev-tool-package-trable
+                <gtx-dev-tool-check-wrapper
                     *ngIf="editorTab == Tabs.CONSISTENCY_CHECK"
-                    [packageName]="entity.id"
-                ></gtx-dev-tool-package-trable>
+                    [packageName]="entity.name"
+                ></gtx-dev-tool-check-wrapper>
             </div>
         </gtx-tab>
     </gtx-tabs>

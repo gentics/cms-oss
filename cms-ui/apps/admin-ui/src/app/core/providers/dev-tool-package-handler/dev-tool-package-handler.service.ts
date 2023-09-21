@@ -23,14 +23,15 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { PackageCheckOptions, PackageCheckResult, PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse } from '@gentics/cms-models';
+import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { Observable, Subject, forkJoin, interval, of, throwError } from 'rxjs';
+import { catchError, filter, map, mergeMap, startWith, takeUntil, tap } from 'rxjs/operators';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
 import { ErrorHandler } from '../error-handler';
 import { I18nNotificationService } from '../i18n-notification';
 import { ActivityManagerService } from '../activity-manager';
+import { PackageCheckTrableLoaderOptions } from '../dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 
 @Injectable()
 export class DevToolPackageHandlerService extends BaseEntityHandlerService
@@ -401,4 +402,84 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
             this.errorHandler.notifyAndRethrow(error);
         }
     }
+
+    /**
+     * Perform a consistency check on packages.
+     */
+    checkOneOrMoreWithSuccessMessage(packageName: string | string[], options?: PackageCheckOptions): Observable<void> {
+        const request = (name: string): Observable<void> => {
+            return this.api.devTools.check(name, options).pipe(
+                tap(() => this.notification.show({
+                    type: 'success',
+                    message: 'package.consistency_check_result',
+                    translationParams: { name },
+                })),
+                discard(),
+            );
+        };
+        let stream: Observable<void>;
+        if (Array.isArray(packageName) && packageName.length > 0) {
+            stream = forkJoin(packageName.map(name => request(name))).pipe(
+                discard(),
+            );
+        }
+        if (typeof packageName === 'string') {
+            stream = request(packageName);
+        }
+        return stream.pipe(
+            this.catchAndRethrowError(),
+        );
+    }
+
+
+    /**
+     * Perform a consistency check on a package.
+     */
+    check(packageName: string, options?: PackageCheckOptions): Observable<PackageCheckResult> {
+        return this.api.devTools.check(packageName, options);
+    }
+
+    /**
+     * Get the result of the consistency check for a package
+     */
+    getCheckResult(packageName: string): Observable<PackageCheckResult> {
+        return this.api.devTools.getCheckResult(packageName);
+    }
+
+
+    /**
+     * Poll the check result
+     */
+    pollCheckResultUntilResultIsAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
+        const pollStop = new Subject();
+
+        return interval(10000).pipe(
+            startWith(0),
+            mergeMap(() => this.isCheckResultAvailable(options)),
+            filter(isAvailable => isAvailable === true),
+            tap(() => {
+                pollStop.next();
+                pollStop.complete();
+            }),
+            takeUntil(pollStop),
+        );
+    }
+
+    /**
+     * Determines if a check result is available
+     */
+    isCheckResultAvailable(options: PackageCheckTrableLoaderOptions): Observable<boolean> {
+        return this.api.devTools.getCheckResult(options.packageName)
+            .pipe(
+                map(() => true),
+                catchError((err) => {
+                    if (err instanceof ApiError && err.statusCode === 404) {
+                        return of(false);
+                    }
+                    return throwError(err);
+                }),
+                this.catchAndRethrowError(),
+            )
+    }
+
 }

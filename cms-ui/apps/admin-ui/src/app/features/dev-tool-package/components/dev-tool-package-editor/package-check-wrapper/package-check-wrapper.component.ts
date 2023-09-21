@@ -1,4 +1,4 @@
-import { PackageCheckTrableLoaderService, PackageOperations } from '@admin-ui/core';
+import { PackageCheckTrableLoaderService, DevToolPackageHandlerService } from '@admin-ui/core';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -26,7 +26,7 @@ export class PackageCheckWrapperComponent
     private subscriptions: Subscription[] = [];
 
     constructor(
-        private packageOperations: PackageOperations,
+        private handler: DevToolPackageHandlerService,
         private packageCheckLoader: PackageCheckTrableLoaderService,
         private changeDetector: ChangeDetectorRef,
     ) {}
@@ -43,7 +43,7 @@ export class PackageCheckWrapperComponent
     }
 
     protected isPackageCheckResultAvailable(packageName: string): void {
-        const sub = this.packageOperations
+        const sub = this.handler
             .isCheckResultAvailable({ packageName })
             .subscribe((isAvailable) => {
                 this.isCheckResultAvailable = isAvailable;

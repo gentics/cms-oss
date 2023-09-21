@@ -16,7 +16,8 @@ import {
 } from '@admin-ui/common';
 import { map, switchMap, toArray } from 'rxjs/operators';
 import { BaseTrableLoaderService } from '../base-trable-loader/base-trable-loader.service';
-import { PackageOperations } from '../operations';
+import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
+
 
 export interface PackageCheckTrableLoaderOptions {
     packageName: string;
@@ -33,7 +34,7 @@ PackageCheckTrableLoaderOptions
 > {
     constructor(
         protected api: GcmsApi,
-        private packageOperations: PackageOperations) {
+        private handler: DevToolPackageHandlerService) {
         super();
     }
 
@@ -85,7 +86,7 @@ PackageCheckTrableLoaderOptions
                 if (apiResponse.items) {
                     return of(apiResponse);
                 }
-                return this.packageOperations.pollCheckResultUntilResultIsAvailable(options).pipe(
+                return this.handler.pollCheckResultUntilResultIsAvailable(options).pipe(
                     switchMap(() => this.api.devTools.getCheckResult(options.packageName)),
                 )
             }),

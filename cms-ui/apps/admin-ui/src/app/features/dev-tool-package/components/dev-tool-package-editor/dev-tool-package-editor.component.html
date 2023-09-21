@@ -119,5 +119,24 @@
                 ></gtx-template-table>
             </div>
         </gtx-tab>
+
+        <gtx-tab
+            gtxDetailTabLink
+            [id]="PackageDetailTabs.CONSISTENCY_CHECK"
+            [title]="'package.consistency_check_title' | i18n"
+        >
+            <gtx-entity-detail-header
+                [hidden]="isLoading"
+                [title]="'package.consistency_check_title' | i18n: { packageName: currentEntity?.name }" 
+                (cancelClick)="detailsClose()"
+            ></gtx-entity-detail-header>
+
+            <div class="gtx-entity-details-tab-content-body">
+                <gtx-dev-tool-package-trable
+                    *ngIf="(activeTabId$ | async) == PackageDetailTabs.CONSISTENCY_CHECK"
+                    [packageName]="currentEntity.id"
+                ></gtx-dev-tool-package-trable>
+            </div>
+        </gtx-tab>
     </gtx-tabs>
 </div>

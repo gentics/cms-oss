@@ -15,6 +15,7 @@ export * from './dev-tool-package-handler/dev-tool-package-handler.service';
 export * from './dev-tool-package-manager/dev-tool-package-manager.service';
 export * from './dev-tool-package-table-loader/dev-tool-package-table-loader.service';
 export * from './editor-closer/editor-closer.service';
+export * from './dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 export * from './editor-tab-tracker/editor-tab-tracker.service';
 export * from './editor-ui-local-storage';
 export * from './entity-manager/entity-manager.service';
@@ -43,4 +44,3 @@ export * from './template-table-loader/template-table-loader.service';
 export * from './user-settings/user-settings.service';
 export * from './user-table-loader/user-table-loader.service';
 export * from './usersnap/usersnap.service';
-

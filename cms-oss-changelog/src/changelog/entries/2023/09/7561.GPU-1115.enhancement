@@ -1,0 +1,1 @@
+An integration with the new Mesh image variant manual creation feature has been added. Now each Node contains an option to create the manipulation variants of each GenticsImageStore-referenced image during the publish process.

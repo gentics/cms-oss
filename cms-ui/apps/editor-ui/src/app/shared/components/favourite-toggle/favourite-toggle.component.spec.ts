@@ -6,7 +6,7 @@ import { FavouritesService } from '../../../core/providers/favourites/favourites
 import { ApplicationStateService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { IsFavouritePipe } from '../../pipes/is-favourite/is-favourite.pipe';
-import { FavouriteToggle } from './favourite-toggle.component';
+import { FavouriteToggleComponent } from './favourite-toggle.component';
 
 describe('FavouriteToggle', () => {
 
@@ -22,13 +22,13 @@ describe('FavouriteToggle', () => {
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: FavouritesService, useValue: favouritesService },
             ],
-            declarations: [TestComponent, FavouriteToggle, IsFavouritePipe],
+            declarations: [TestComponent, FavouriteToggleComponent, IsFavouritePipe],
         });
         state = TestBed.get(ApplicationStateService);
     });
 
     function getButtons(fixture: ComponentFixture<any>): { star: HTMLElement, unstar: HTMLElement } {
-        let iconButtons: HTMLElement[] =  Array.from(fixture.nativeElement.querySelectorAll('gtx-button .material-icons'));
+        const iconButtons: HTMLElement[] =  Array.from(fixture.nativeElement.querySelectorAll('gtx-button .material-icons'));
         const buttonWithText = (text: string) => iconButtons.filter(btn => btn.innerText === text)[0];
 
         return {
@@ -50,7 +50,7 @@ describe('FavouriteToggle', () => {
             });
             fixture.detectChanges();
 
-            let {star, unstar} = getButtons(fixture);
+            const {star, unstar} = getButtons(fixture);
 
             expect(star).not.toBeDefined();
             expect(unstar).toBeDefined();
@@ -66,7 +66,7 @@ describe('FavouriteToggle', () => {
             });
             fixture.detectChanges();
 
-            let {star, unstar} = getButtons(fixture);
+            const {star, unstar} = getButtons(fixture);
             expect(star).toBeDefined();
             expect(unstar).not.toBeDefined();
         }),
@@ -109,7 +109,7 @@ describe('FavouriteToggle', () => {
             });
             fixture.detectChanges();
 
-            let {star} = getButtons(fixture);
+            const {star} = getButtons(fixture);
             expect(star).toBeDefined();
             triggerClickEventOn(star);
 
@@ -131,7 +131,7 @@ describe('FavouriteToggle', () => {
             });
             fixture.detectChanges();
 
-            let {unstar} = getButtons(fixture);
+            const {unstar} = getButtons(fixture);
             expect(unstar).toBeDefined('remove button not shown');
             triggerClickEventOn(unstar);
 
@@ -154,8 +154,8 @@ function triggerClickEventOn(element: Element): void {
 }
 
 @Component({
-    template: `<favourite-toggle [item]="item"></favourite-toggle>`
-    })
+    template: '<favourite-toggle [item]="item"></favourite-toggle>',
+})
 class TestComponent {
     item: any = {};
 }

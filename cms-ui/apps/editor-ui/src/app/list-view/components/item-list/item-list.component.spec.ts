@@ -29,8 +29,8 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { Observable } from 'rxjs';
-import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { componentTest, configureComponentTest } from '../../../../testing';
 import { ContextMenuOperationsService } from '../../../core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -44,7 +44,7 @@ import { UploadConflictService } from '../../../core/providers/upload-conflict/u
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { MasonryGridComponent } from '../../../shared/components';
 import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.component';
-import { FavouriteToggle } from '../../../shared/components/favourite-toggle/favourite-toggle.component';
+import { FavouriteToggleComponent } from '../../../shared/components/favourite-toggle/favourite-toggle.component';
 import { IconCheckbox } from '../../../shared/components/icon-checkbox/icon-checkbox.component';
 import { ImageThumbnailComponent } from '../../../shared/components/image-thumbnail/image-thumbnail.component';
 import { ItemBreadcrumbsComponent } from '../../../shared/components/item-breadcrumbs/item-breadcrumbs.component';
@@ -113,8 +113,8 @@ const allPermissions = (): EditorPermissions => // Sorry, but it works.
             [itemInEditor]="itemInEditor"
             [folderPermissions]="permissions"
             [linkPaths]="isSearching"
-            ></item-list>`
-    })
+            ></item-list>`,
+})
 class TestComponent implements OnInit {
     @ViewChild('itemList', { static: true })
     itemList: ItemListComponent;
@@ -220,8 +220,8 @@ class MockContextMenuOperationsService {
 
 @Component({
     selector: 'item-context-menu',
-    template: ''
-    })
+    template: '',
+})
 class MockItemContextMenu {
     @Input() isFolderStartPage = false;
     @Input() permissions: EditorPermissions = getNoPermissions();
@@ -243,7 +243,7 @@ describe('ItemListComponent', () => {
     let folderActions: MockFolderActions;
 
     /** Updates the folder.folders portion of the AppState with the specified changes. */
-    let updateItemsInfoState = (changes: Partial<ItemsInfo>) => {
+    const updateItemsInfoState = (changes: Partial<ItemsInfo>) => {
         state.mockState({
             folder: {
                 folders: {
@@ -287,7 +287,7 @@ describe('ItemListComponent', () => {
                 AnyItemPublishedPipe,
                 AnyPageUnpublishedPipe,
                 DetailChip,
-                FavouriteToggle,
+                FavouriteToggleComponent,
                 FileSizePipe,
                 FilterItemsPipe,
                 GetInheritancePipe,
@@ -409,7 +409,7 @@ describe('ItemListComponent', () => {
         componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
             tick();
-            let listItems: HTMLElement[] = getListItems(fixture);
+            const listItems: HTMLElement[] = getListItems(fixture);
             expect(listItems.length).toBe(3);
         }),
     );
@@ -623,7 +623,7 @@ describe('ItemListComponent', () => {
                 instance.filterTerm = '2';
                 fixture.detectChanges();
                 tick();
-                let listItems: HTMLElement[] = getListItems(fixture);
+                const listItems: HTMLElement[] = getListItems(fixture);
                 expect(listItems.length).toBe(1);
                 expect(getItemName(listItems[0])).toContain('item2');
             }),
@@ -709,16 +709,16 @@ describe('ItemListComponent', () => {
     it('checks the toggleAll checkbox when each row checked',
         componentTest(() => TestComponent, (fixture, instance) => {
             fixture.detectChanges();
-            let checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
+            const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
-            let listItems: HTMLElement[] = getListItems(fixture);
+            const listItems: HTMLElement[] = getListItems(fixture);
 
             expect(state.now.folder.folders.selected).toEqual([]);
             expect(checkboxes[0].selected).toBe(false);
 
             const clickCheckbox = (listItem: any) => listItem.querySelector('input[type="checkbox"]').click();
 
-            for (let listItem of listItems) {
+            for (const listItem of listItems) {
                 clickCheckbox(listItem);
                 tick();
                 fixture.detectChanges();
@@ -732,9 +732,9 @@ describe('ItemListComponent', () => {
     it('toggles all rows when toggleAll checkbox clicked',
         componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
+            const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
-            let toggleAll: HTMLElement = fixture.nativeElement
+            const toggleAll: HTMLElement = fixture.nativeElement
                 .querySelector('.list-header input[type="checkbox"]');
 
             expect(checkboxes[0].selected).toBe(false);
@@ -766,10 +766,10 @@ describe('ItemListComponent', () => {
     it('unchecks toggleAll checkbox when a single row is unchecked',
         componentTest(() => TestComponent, fixture => {
             fixture.detectChanges();
-            let listItems: HTMLElement[] = getListItems(fixture);
-            let checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
+            const listItems: HTMLElement[] = getListItems(fixture);
+            const checkboxes: IconCheckbox[] = fixture.debugElement.queryAll(By.css('icon-checkbox'))
                 .map(checkboxDebugElement => checkboxDebugElement.componentInstance);
-            let toggleAll: HTMLElement = fixture.nativeElement
+            const toggleAll: HTMLElement = fixture.nativeElement
                 .querySelector('.list-header input[type="checkbox"]');
 
             toggleAll.click();
@@ -987,7 +987,7 @@ describe('ItemListComponent', () => {
                 });
                 fixture.detectChanges();
                 tick();
-                let listItems = getListItems(fixture);
+                const listItems = getListItems(fixture);
 
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                 ((listItems[0].querySelector('.item-name-only')) as any).click();
@@ -1008,7 +1008,7 @@ describe('ItemListComponent', () => {
             ];
             fixture.detectChanges();
             tick();
-            let listItems = getListItems(fixture);
+            const listItems = getListItems(fixture);
 
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             ((listItems[0].querySelector('.item-name-only')) as any).click();
@@ -1045,7 +1045,7 @@ describe('ItemListComponent', () => {
             fixture.detectChanges();
             tick();
 
-            let contextMenus: MockItemContextMenu[] = fixture.debugElement
+            const contextMenus: MockItemContextMenu[] = fixture.debugElement
                 .queryAll(By.directive(MockItemContextMenu))
                 .map(debugElement => debugElement.componentInstance);
 
@@ -1080,7 +1080,7 @@ describe('ItemListComponent', () => {
         }
 
         function hasStartPageIcon(fixture: ComponentFixture<TestComponent>): boolean {
-            let icons: any[] = Array.from(fixture.nativeElement.querySelectorAll('start-page-icon'));
+            const icons: any[] = Array.from(fixture.nativeElement.querySelectorAll('start-page-icon'));
             return icons.length > 0;
         }
 

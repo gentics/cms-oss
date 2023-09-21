@@ -21,7 +21,7 @@ import { UploadConflictService } from '@editor-ui/app/core/providers/upload-conf
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import {
     DetailChip,
-    FavouriteToggle,
+    FavouriteToggleComponent,
     IconCheckbox,
     ImageThumbnailComponent,
     ItemBreadcrumbsComponent,
@@ -589,7 +589,7 @@ describe('FolderContentsComponent', () => {
                 AnyItemPublishedPipe,
                 AnyPageUnpublishedPipe,
                 DetailChip,
-                FavouriteToggle,
+                FavouriteToggleComponent,
                 FileSizePipe,
                 FilterItemsPipe,
                 FolderContentsComponent,

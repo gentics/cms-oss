@@ -70,6 +70,9 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public itemPermissions: ItemPermissions;
 
     @Input()
+    public itemLanguage: Language;
+
+    @Input()
     public locked: boolean;
 
     @Input()

@@ -11,6 +11,9 @@ export class FormattingControlsComponent extends BaseControlsComponent {
 
     public activeFormats: string[] = [];
 
+    public linkCheckerEnabled = false;
+    public linkValid = false;
+
     public toggleFormat(format: string): void {
         const idx = this.activeFormats.indexOf(format);
 

@@ -90,7 +90,7 @@
             <ng-template [ngIf]="routerLinks">
                 <ng-container *ngIf="!multilineExpanded && routerLinks[0]">
                     <a
-                        *ngIf="routerLinks[0].href; else breadcrumbSingleText"
+                        *ngIf="routerLinks[0].route; else breadcrumbSingleText"
                         class="breadcrumb link router-link"
                         [routerLink]="routerLinks[0].route"
                         (click)="onLinkClicked(routerLinks[0], $event)"

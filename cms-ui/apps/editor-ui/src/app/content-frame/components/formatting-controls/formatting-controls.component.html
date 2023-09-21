@@ -63,17 +63,6 @@
     </button>
 </div>
 
-<div class="format-section link-group">
-    <button
-        class="format-button"
-        [title]="'editor.format_link' | i18n"
-        [class.active]="activeFormats | gtxIncludes:'link'"
-        (click)="toggleFormat('link')"
-    >
-        <icon>{{ (activeFormats | gtxIncludes:'link') ? 'link_off' : 'link' }}</icon>
-    </button>
-</div>
-
 <div class="format-section list-group">
     <button
         class="format-button"
@@ -157,4 +146,115 @@
     >
         <icon>format_h6</icon>
     </button>
+</div>
+
+<ng-container *ngIf="activeFormats | gtxIncludes:['link', 'table']">
+    <div class="flex-break"></div>
+</ng-container>
+
+<div class="format-section link-group">
+    <button
+        class="format-button"
+        [class.active]="activeFormats | gtxIncludes:'link'"
+        [title]="'editor.format_link' | i18n"
+        (click)="toggleFormat('link')"
+    >
+        <icon>{{ (activeFormats | gtxIncludes:'link') ? 'link_off' : 'link' }}</icon>
+    </button>
+
+    <ng-container *ngIf="activeFormats | gtxIncludes:'link'">
+
+        <gtx-input
+            class="inline-target"
+            [title]="'editor.format_link_target' | i18n"
+        ></gtx-input>
+
+        <ng-container *ngIf="linkCheckerEnabled">
+            <icon>{{ linkValid ? 'check' : 'cross' }}</icon>
+        </ng-container>
+
+        <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">
+            <gtx-dropdown-trigger>
+                <button class="format-button">
+                    <icon>anchor</icon>
+                </button>
+            </gtx-dropdown-trigger>
+
+            <gtx-dropdown-content>
+                <gtx-input
+                    class="inline-target"
+                    [title]="'editor.format_link_anchor' | i18n"
+                ></gtx-input>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+
+        <button class="format-button">
+            <icon>pan_tool_alt</icon>
+        </button>
+    </ng-container>
+</div>
+
+<div class="format-section table-group">
+    <button
+        class="format-button"
+        [class.active]="activeFormats | gtxIncludes:'table'"
+        [title]="'editor.format_table' | i18n"
+        (click)="toggleFormat('table')"
+    >
+        <icon>table</icon>
+    </button>
+
+    <ng-container *ngIf="activeFormats | gtxIncludes:'table'">
+        <button
+            class="format-button table-action-button"
+        >
+            <icon>cell_merge</icon>
+        </button>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon>arrows_outward</icon>
+        </button>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon>delete</icon>
+        </button>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon>title</icon>
+        </button>
+
+        <div class="vertical-separator"></div>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon class="hollow">splitscreen_left</icon>
+        </button>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon class="hollow">splitscreen_right</icon>
+        </button>
+
+        <div class="vertical-separator"></div>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon class="hollow">splitscreen_top</icon>
+        </button>
+
+        <button
+            class="format-button table-action-button"
+        >
+            <icon class="hollow">splitscreen_bottom</icon>
+        </button>
+    </ng-container>
 </div>

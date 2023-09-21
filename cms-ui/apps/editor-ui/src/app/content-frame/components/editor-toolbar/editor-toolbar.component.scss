@@ -42,10 +42,15 @@
                     }
 
                     .breadcrumb {
-                        color: inherit;
+                        color: inherit !important;
                         font-size: inherit;
 
-                        &.last {
+                        &::before {
+                            font-size: 20px;
+                            color: $gtx-color-off-black;
+                        }
+
+                        &.last:not(:first-child) {
                             display: none;
                         }
                     }
@@ -84,7 +89,7 @@
         overflow: hidden;
     }
 
-    .editor-title {
+    .item-info {
         align-items: baseline;
         display: flex;
         white-space: nowrap;
@@ -116,13 +121,24 @@
         }
 
         .title-name {
-            font-size: 17px;
             display: flex;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             align-items: baseline;
+
+            &::before {
+                box-sizing: border-box;
+                color: $gtx-color-off-black;
+                content: "\e5cc";
+                display: inline-block;
+                font-family: "Material Symbols";
+                font-size: 20px;
+                line-height: 16px;
+                margin: auto 0.25rem;
+                transition: 300ms;
+            }
 
             .node-name,
             .item-name {
@@ -133,7 +149,6 @@
             .item-name {
                 color: $gtx-color-dark-gray;
                 font-weight: bold;
-                white-space: pre;
             }
 
             .title-divider {

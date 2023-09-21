@@ -16,6 +16,11 @@
     padding: 0.25rem;
 }
 
+.flex-break {
+    flex-basis: 100%;
+    width: 0;
+}
+
 .format-button {
     display: inline-block;
     border: none;
@@ -52,5 +57,31 @@
         &:hover {
             background: darken($gtx-color-very-light-gray, 15%);
         }
+    }
+}
+
+.link-group {
+    align-items: center;
+
+    .inline-target::ng-deep input {
+        margin: 0;
+        height: calc(2rem - 2px);
+        border-width: 1px;
+        box-shadow: rgba(0, 0, 0, 0.14) 0px 1px 1px 0;
+    }
+}
+
+.vertical-separator {
+    width: 1px;
+    height: 100%;
+    margin: 0 0.5rem;
+    padding: 0.5rem 0;
+
+    &::before {
+        width: 1px;
+        height: 100%;
+        content: '';
+        display: inline-block;
+        background: $gtx-color-dark-gray;
     }
 }

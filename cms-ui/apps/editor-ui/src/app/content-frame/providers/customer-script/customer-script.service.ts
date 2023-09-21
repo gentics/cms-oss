@@ -28,6 +28,7 @@ import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../components/con
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
+import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 
 const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
@@ -56,7 +57,8 @@ export class CustomerScriptService implements OnDestroy {
     private gcmsUiStylesForIFrameBlob: Blob;
     private gcmsUiStylesForIFrameBlobUrl: string;
 
-    constructor(private http: HttpClient,
+    constructor(
+        private http: HttpClient,
         private state: ApplicationStateService,
         private apiBase: ApiBase,
         private entityResolver: EntityResolver,
@@ -64,6 +66,7 @@ export class CustomerScriptService implements OnDestroy {
         private editorOverlayService: EditorOverlayService,
         private errorHandlerService: ErrorHandler,
         private repositoryBrowserClient: RepositoryBrowserClient,
+        private aloha: AlohaIntegrationService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -228,6 +231,12 @@ export class CustomerScriptService implements OnDestroy {
             },
             callDebugTool: gcmsui_debugTool,
             openTagEditor,
+            forwardContextChange: (event) => {
+                this.aloha.contextChange$.next(event);
+            },
+            forwardSettings: (settings) => {
+                this.aloha.settings$.next(settings);
+            },
         };
 
         window.GCMSUI = gcmsUi;
@@ -265,7 +274,7 @@ export class CustomerScriptService implements OnDestroy {
     /** Runs the post-load script and the customer script, if it exists. */
     private runPostLoadScript(window: CNWindow, document: CNIFrameDocument, scriptHost: CustomScriptHostService): void {
         try {
-            const script = new PostLoadScript(window, document, scriptHost);
+            const script = new PostLoadScript(window, document, scriptHost, this.aloha);
             script.run();
         } catch (error) {
             this.errorHandlerService.catch(error, { notification: false });

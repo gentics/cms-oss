@@ -1,4 +1,4 @@
-import { File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
+import { AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
 import { GCMSUI } from '../../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
@@ -96,6 +96,7 @@ export interface AlohaGlobal {
     bind: Function;
     GCN: GCNJSLib;
     require: AlohaRequireFunction;
+    settings: AlohaSettings;
     Selection: {
         getRangeObject(): any;
     };
@@ -209,7 +210,7 @@ export const OBJECT_PROPERTIES_INFO_ICON_CLASS = 'custom-object-properties-info-
 export function appendTypeIdToUrl(item: Page | FileModel | Folder | Form | ImageModel | Node, url: string): string {
     let newUrl = url;
     if (typeof url === 'string' && -1 < url.indexOf('do=10010')) {
-        let entityKey = getTypeIdKey(item.type);
+        const entityKey = getTypeIdKey(item.type);
         newUrl += `&${entityKey}=${item.id}`;
     }
     return newUrl;
@@ -241,14 +242,14 @@ export function getTypeIdKey(type: string): string {
 export function logIFrameLifecycle(mIframe: any, message: string, color?: string): void {
     const enableLogging = false;
     if (enableLogging) {
-        let iframe: HTMLIFrameElement = mIframe.hasOwnProperty('iframe') ? mIframe.iframe : mIframe;
+        const iframe: HTMLIFrameElement = mIframe.hasOwnProperty('iframe') ? mIframe.iframe : mIframe;
         const location = iframe.contentWindow.location.href;
         const iframeName: string = iframe.name || iframe.id || mIframe.id;
         const frameColor = stringToColour(iframeName);
         console.log(`%c${message}: %c${iframeName} %c(${location.substr(0, 50)})`,
             `color: ${color || 'black'}`,
             `color: ${frameColor}`,
-            `color: #ccc`);
+            'color: #ccc');
     }
 
     function stringToColour(str: string): string {
@@ -257,7 +258,7 @@ export function logIFrameLifecycle(mIframe: any, message: string, color?: string
         }
         // tslint:disable
         for (var i = 0, hash = 0; i < str.length; hash = str.charCodeAt(i++) + ((hash << 5) - hash));
-        for (var i = 0, colour = "#"; i < 3; colour += ("00" + ((hash >> i++ * 8) & 0xFF).toString(16)).slice(-2));
+        for (var i = 0, colour = '#'; i < 3; colour += ('00' + ((hash >> i++ * 8) & 0xFF).toString(16)).slice(-2));
         // tslint:enable
         return colour;
     }

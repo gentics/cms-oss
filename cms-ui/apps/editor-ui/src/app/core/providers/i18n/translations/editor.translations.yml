@@ -910,54 +910,66 @@ page_controls_tab_link_settings:
 page_controls_tab_table_settings:
     en: Table Settings
     de: Tabellen Einstelleungen
-format_bold:
+format_style_bold:
     en: Bold
     de: Fett
-format_italic:
+format_style_italic:
     en: Italic
     de: Kursiv
-format_underline:
+format_style_underline:
     en: Underlined
     de: Unterstrichen
-format_code:
+format_style_strikethrough:
+    en: Strikethrough
+    de: Durchstrichen
+format_style_code:
     en: Code
     de: Quellcode
-format_quote:
+format_style_quote:
     en: Quote
     de: Zitat
-format_sub:
+format_style_citation:
+    en: Citation
+    de: Zitierung
+format_style_abbreviation:
+    en: Abbreviation
+    de: Abkürzung
+format_style_sub:
     en: Subscript
     de: Tiefgestellt
-format_sup:
+format_style_sup:
     en: Superscript
     de: Hochgestellt
-list_unsorted:
+format_list_unsorted:
     en: Unsorted List
     de: Unsortierte Liste
-list_sorted:
+format_list_sorted:
     en: Sorted List
     de: Sortierte Liste
-text_p:
+format_typography_paragraph:
     en: Paragraph
     de: Absatz
-text_h1:
+format_typography_h1:
     en: Heading 1
     de: Überschrift 1
-text_h2:
+format_typography_h2:
     en: Heading 2
     de: Überschrift 2
-text_h3:
+format_typography_h3:
     en: Heading 3
     de: Überschrift 3
-text_h4:
+textformat_typography_h4:
     en: Heading 4
     de: Überschrift 4
-text_h5:
+format_typography_h5:
     en: Heading 5
     de: Überschrift 5
-text_h6:
+format_typography_h6:
     en: Heading 6
     de: Überschrift 6
+format_typography_pre:
+    en: Preformatted
+    de: Vorformartiert
 format_link:
     en: Link
     de: Verweis

@@ -5,7 +5,11 @@
         [id]="DefaultEditorControlTabs.FORMATTING"
         (select)="setActiveTab($event)"
     >
-        <gtx-formatting-controls></gtx-formatting-controls>
+        <gtx-formatting-controls
+            [aloha]="alohaRef"
+            [settings]="alohaSettings"
+            [range]="alohaRange"
+        ></gtx-formatting-controls>
     </gtx-tab>
 
     <gtx-tab
@@ -15,6 +19,9 @@
         (select)="setActiveTab($event)"
     >
         <gtx-construct-controls
+            [aloha]="alohaRef"
+            [settings]="alohaSettings"
+            [range]="alohaRange"
             [constructs]="constructs"
             [categories]="constructCategories"
         ></gtx-construct-controls>

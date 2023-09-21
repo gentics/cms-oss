@@ -21,6 +21,25 @@ export interface AlohaSettings {
     toolbar?: any;
 }
 
+export interface AlohaRangeObject {
+    commonAncestorContainer: HTMLElement;
+    endContainer: HTMLElement;
+    endOffset: number;
+    inselection: boolean;
+    limitObject: HTMLElement;
+    markupEffectiveAtStart: HTMLElement[];
+    selectionTree?: any;
+    splitObject: HTMLElement;
+    startContainer: HTMLElement;
+    startOffset: number;
+    unmodifiableMarkupAtStart: HTMLElement[];
+}
+
+export interface AlohaContextChangeEvent {
+    event: Event;
+    range: AlohaRangeObject;
+}
+
 export interface BlockPluginSettings {
     defaults?: any;
     sidebarAttributeEditor?: boolean;

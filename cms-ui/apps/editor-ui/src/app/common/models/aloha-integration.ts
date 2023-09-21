@@ -1,0 +1,96 @@
+export const TAG_ALIASES: Record<string, string> = {
+    /* eslint-disable @typescript-eslint/naming-convention */
+    STRONG: 'B',
+    EM: 'I',
+    /* eslint-enable @typescript-eslint/naming-convention */
+}
+
+export const COMMAND_STYLE_BOLD = 'bold';
+export const COMMAND_STYLE_ITALIC = 'italic';
+export const COMMAND_STYLE_UNDERLINE = 'underline';
+export const COMMAND_STYLE_STRIKE_THROUGH = 'strikethrough';
+export const COMMAND_STYLE_CODE = 'code';
+export const COMMAND_STYLE_QUOTE = 'quote';
+export const COMMAND_STYLE_CITATION = 'citation';
+export const COMMAND_STYLE_ABBREVIATION = 'abbreviation';
+export const COMMAND_STYLE_SUBSCRIPT = 'subscript';
+export const COMMAND_STYLE_SUPERSCRIPT = 'superscript';
+
+export const COMMAND_LIST_UNORDERED = 'list_unordered';
+export const COMMAND_LIST_ORDERED = 'list_ordered';
+
+export const COMMAND_TYPOGRAPHY_PARAGRAPH = 'paragraph';
+export const COMMAND_TYPOGRAPHY_HEADING1 = 'h1';
+export const COMMAND_TYPOGRAPHY_HEADING2 = 'h2';
+export const COMMAND_TYPOGRAPHY_HEADING3 = 'h3';
+export const COMMAND_TYPOGRAPHY_HEADING4 = 'h4';
+export const COMMAND_TYPOGRAPHY_HEADING5 = 'h5';
+export const COMMAND_TYPOGRAPHY_HEADING6 = 'h6';
+export const COMMAND_TYPOGRAPHY_PREFORMATTED = 'pre';
+
+export const COMMAND_LINK = 'link';
+export const COMMAND_TABLE = 'table';
+
+export const LINK_NODE_NAME = 'A';
+export const INLINE_LINK_CLASS = 'aloha-link-text';
+
+export const TABLE_NODE_NAME = 'TABLE';
+export const TABLE_CLASS = 'aloha-table';
+export const TABLE_CELL_NODE_NAME = 'TD';
+export const TABLE_CELL_HEADER_NODE_NAME = 'TH';
+
+export const NODE_NAME_TO_COMMAND: Record<string, string> = {
+    /* eslint-disable @typescript-eslint/naming-convention */
+    B: COMMAND_STYLE_BOLD,
+    I: COMMAND_STYLE_ITALIC,
+    U: COMMAND_STYLE_UNDERLINE,
+    S: COMMAND_STYLE_STRIKE_THROUGH,
+    CODE: COMMAND_STYLE_CODE,
+    Q: COMMAND_STYLE_QUOTE,
+    CITE: COMMAND_STYLE_CITATION,
+    ABBR: COMMAND_STYLE_ABBREVIATION,
+    SUB: COMMAND_STYLE_SUBSCRIPT,
+    SUP: COMMAND_STYLE_SUPERSCRIPT,
+
+    UL: COMMAND_LIST_UNORDERED,
+    OL: COMMAND_LIST_ORDERED,
+
+    P: COMMAND_TYPOGRAPHY_PARAGRAPH,
+    H1: COMMAND_TYPOGRAPHY_HEADING1,
+    H2: COMMAND_TYPOGRAPHY_HEADING2,
+    H3: COMMAND_TYPOGRAPHY_HEADING3,
+    H4: COMMAND_TYPOGRAPHY_HEADING4,
+    H5: COMMAND_TYPOGRAPHY_HEADING5,
+    H6: COMMAND_TYPOGRAPHY_HEADING6,
+    PRE: COMMAND_TYPOGRAPHY_PREFORMATTED,
+    /* eslint-enable @typescript-eslint/naming-convention */
+};
+
+export const STYLE_COMMANDS = [
+    COMMAND_STYLE_BOLD,
+    COMMAND_STYLE_ITALIC,
+    COMMAND_STYLE_UNDERLINE,
+    COMMAND_STYLE_STRIKE_THROUGH,
+    COMMAND_STYLE_CODE,
+    COMMAND_STYLE_QUOTE,
+    COMMAND_STYLE_CITATION,
+    COMMAND_STYLE_ABBREVIATION,
+    COMMAND_STYLE_SUBSCRIPT,
+    COMMAND_STYLE_SUPERSCRIPT,
+];
+
+export const LIST_COMMANDS = [
+    COMMAND_LIST_UNORDERED,
+    COMMAND_LIST_ORDERED,
+];
+
+export const TYPOGRAPHY_COMMANDS = [
+    COMMAND_TYPOGRAPHY_PARAGRAPH,
+    COMMAND_TYPOGRAPHY_HEADING1,
+    COMMAND_TYPOGRAPHY_HEADING2,
+    COMMAND_TYPOGRAPHY_HEADING3,
+    COMMAND_TYPOGRAPHY_HEADING4,
+    COMMAND_TYPOGRAPHY_HEADING5,
+    COMMAND_TYPOGRAPHY_HEADING6,
+    COMMAND_TYPOGRAPHY_PREFORMATTED,
+];

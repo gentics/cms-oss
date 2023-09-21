@@ -1,11 +1,15 @@
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { AlohaSettings } from '../../../common/models/aloha';
+import { AlohaRangeObject, AlohaSettings } from '@gentics/cms-models';
+import { AlohaGlobal } from '../content-frame/common';
 
 @Component({ template: '' })
 export abstract class BaseControlsComponent {
 
     @Input()
-    public selectedElement: HTMLElement;
+    public aloha: AlohaGlobal;
+
+    @Input()
+    public range: AlohaRangeObject;
 
     @Input()
     public settings: AlohaSettings;

@@ -1,7 +1,8 @@
+import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions } from '../common';
+import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions, appendTypeIdToUrl } from '../common';
 
 // Force TypeScript to report errors when using the global window/document object
 let document: never;
@@ -35,9 +36,32 @@ export class PostLoadScript {
     constructor(
         private window: CNWindow,
         private document: CNIFrameDocument,
-        private scriptHost: CustomScriptHostService) { }
+        private scriptHost: CustomScriptHostService,
+        private aloha: AlohaIntegrationService,
+    ) { }
 
     run(): void {
+        this.aloha.reference$.next(this.window.Aloha);
+
+        let innerSettings = this.window.Aloha.settings;
+        this.aloha.settings$.next(innerSettings);
+
+        Object.defineProperty(this.window.Aloha, 'settings', {
+            configurable: true,
+            enumerable: true,
+            get: () => {
+                return innerSettings;
+            },
+            set: (newSettings) => {
+                innerSettings = newSettings;
+                this.aloha.settings$.next(innerSettings);
+            },
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.window.Aloha.require('PubSub').sub('aloha.selection.context-change', (event) => {
+            this.aloha.contextChange$.next(event);
+        });
+
         // Determine which type of editor frame is opened (previewing page, tagfill, ...)
         const editFrameType = this.determineEditFrameType();
 
@@ -64,9 +88,6 @@ export class PostLoadScript {
                 this.handleClickEventsOnLinks();
                 this.notifyWhenContentsChange();
                 break;
-
-            default:
-                const unhandledCase: never = editFrameType;
         }
 
         this.scriptHost.runChangeDetection();
@@ -114,7 +135,7 @@ export class PostLoadScript {
     }
 
     appendTypeIdToTagfillForm(): void {
-        const tagfillForm = this.document.querySelector(TAGFILL_FORM_SELECTOR) as HTMLFormElement;
+        const tagfillForm: HTMLFormElement = this.document.querySelector(TAGFILL_FORM_SELECTOR) ;
         if (tagfillForm && tagfillForm.tagName === 'FORM') {
             tagfillForm.action = appendTypeIdToUrl(this.scriptHost.currentItem, tagfillForm.action);
         }
@@ -247,7 +268,7 @@ export class PostLoadScript {
 
                 return {
                     image: {
-                        id: image.id
+                        id: image.id,
                     },
                     cropHeight: info.ch,
                     cropWidth: info.cw,
@@ -260,7 +281,7 @@ export class PostLoadScript {
                     mode: 'cropandresize',
                     resizeMode: 'force',
                     targetFormat: format,
-                    copyFile: false
+                    copyFile: false,
                 };
             });
         });
@@ -509,7 +530,7 @@ export class PostLoadScript {
      */
     private safelyStringifyAlohaPageObject(page: Page): string {
         const copy = {
-            ...page
+            ...page,
         };
         delete copy.pageVariants;
         delete copy.languageVariants;
@@ -553,15 +574,15 @@ function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId:
     const isPresentationalLink = anchor.getAttribute('role') === 'presentation';
 
     if (isInternalLink && !isEditModeLink && !isPresentationalLink) {
-        const nodeIdMatches = href.match(/[?&]nodeid=(\d+)/);
+        const nodeIdMatches = /[?&]nodeid=(\d+)/.exec(href);
         const nodeId = nodeIdMatches && +nodeIdMatches[1];
-        const pageIdMatches = href.match(/[?&]realid=(\d+)/);
+        const pageIdMatches = /[?&]realid=(\d+)/.exec(href);
         const pageId = nodeIdMatches && +pageIdMatches[1];
 
         if (nodeId && pageId) {
             return {
                 nodeId,
-                pageId
+                pageId,
             };
         }
     }

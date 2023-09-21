@@ -1,4 +1,4 @@
-FROM docker.apa-it.at/maven:3.8.6-openjdk-11
+FROM docker.apa-it.at/maven:3.8.6-openjdk-17
 LABEL maintainer="Peter Nyari <p.nyari@gentics.com>"
 
 ARG GIT_USER_NAME="Maven Release Manager"

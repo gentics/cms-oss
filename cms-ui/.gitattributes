@@ -1,2 +1,5 @@
 * eol=lf
 *.png    binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary

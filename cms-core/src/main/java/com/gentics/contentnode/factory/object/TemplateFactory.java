@@ -5,11 +5,15 @@
  */
 package com.gentics.contentnode.factory.object;
 
+import static com.gentics.api.lib.etc.ObjectTransformer.getInt;
+import static com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration.isFeature;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -152,6 +156,11 @@ public class TemplateFactory extends AbstractFactory {
 		 * Map holding the localized variants of this page
 		 */
 		protected Map<Integer, Integer> channelSet;
+
+		/**
+		 * IDs of folders the template is linked to
+		 */
+		protected Set<Integer> folderIds;
 
 		/**
 		 * Create new empty instance of a template
@@ -472,34 +481,30 @@ public class TemplateFactory extends AbstractFactory {
 		 * @see com.gentics.contentnode.object.Template#getFolders()
 		 */
 		public List<Folder> getFolders() throws NodeException {
+			if (isFeature(Feature.MULTICHANNELLING) && !isMaster()) {
+				return getMaster().getFolders();
+			}
+
 			Transaction t = TransactionManager.getCurrentTransaction();
+			return t.getObjects(Folder.class, getFolderIds());
+		}
 
-			PreparedStatement stmt = null;
-			ResultSet rs = null;
-			List<Integer> folderIds = new ArrayList<Integer>();
-			Object tId = getId();
-
-			// when multichannelling is used, we need to get the master's id (since references are always stored for the master objects)
-			if (t.getNodeConfig().getDefaultPreferences().isFeature(Feature.MULTICHANNELLING)) {
-				tId = getMaster().getId();
+		@Override
+		public Set<Integer> getFolderIds() throws NodeException {
+			if (isFeature(Feature.MULTICHANNELLING) && !isMaster()) {
+				return getMaster().getFolderIds();
 			}
-
-			try {
-				stmt = t.prepareStatement("SELECT folder_id FROM template_folder WHERE template_id = ?");
-				stmt.setInt(1, ObjectTransformer.getInteger(tId, 0));
-				rs = stmt.executeQuery();
-
-				while (rs.next()) {
-					folderIds.add(rs.getInt("folder_id"));
+			if (folderIds == null) {
+				int tId = getInt(getId(), 0);
+				if (tId > 0) {
+					folderIds = DBUtils.select("SELECT folder_id id FROM template_folder WHERE template_id = ?", pst -> {
+						pst.setInt(1, tId);
+					}, DBUtils.IDS);
+				} else {
+					folderIds = Collections.emptySet();
 				}
-
-				return t.getObjects(Folder.class, folderIds);
-			} catch (SQLException e) {
-				throw new NodeException("Could not load linked folder_ids.", e);
-			} finally {
-				t.closeResultSet(rs);
-				t.closeStatement(stmt);
 			}
+			return folderIds;
 		}
 
 		/* (non-Javadoc)
@@ -1946,6 +1951,7 @@ public class TemplateFactory extends AbstractFactory {
 			// dirt caches for all folders the template is linked to
 			Flowable.fromIterable(toAdd).map(folder -> folder.getId())
 					.blockingForEach(id -> t.dirtObjectCache(Folder.class, id));
+			t.dirtObjectCache(Template.class, templateId);
 		}
 	}
 
@@ -1981,6 +1987,7 @@ public class TemplateFactory extends AbstractFactory {
 
 			// dirt caches for all folders the template is linked to
 			Flowable.fromIterable(folders).map(Folder::getId).blockingForEach(id -> t.dirtObjectCache(Folder.class, id));
+			t.dirtObjectCache(Template.class, templateId);
 		}
 	}
 }

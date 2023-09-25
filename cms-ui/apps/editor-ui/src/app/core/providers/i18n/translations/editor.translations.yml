@@ -973,12 +973,27 @@ format_typography_pre:
 format_link:
     en: Link
     de: Verweis
+format_link_insert:
+    en: Insert Link
+    de: Verweis einfügen
+format_link_remove:
+    en: Remove Link
+    de: Verweis entfernen
 format_link_target:
     en: Link Target
     de: Verweis Ziel
+format_link_target_loading:
+    en: Loading ...
+    de: Lade ...
 format_link_pick_cms_target:
     en: Pick Target from CMS
     de: Ziel aus CMS wählen
+format_link_pick_cms_target_modal_title:
+    en: Pick a target for the Link
+    de: Ziel für Verweis auswählen
+format_link_remove_cms_target:
+    en: Clear target
+    de: Ziel bereinigen
 format_link_checker:
     en: Link-Checker result
     de: Link-Checker Ergebnis

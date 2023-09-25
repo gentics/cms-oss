@@ -1,4 +1,5 @@
-import { AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
+/* eslint-disable @typescript-eslint/naming-convention */
+import { AlohaRangeObject, AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
 import { GCMSUI } from '../../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
@@ -98,9 +99,10 @@ export interface AlohaGlobal {
     require: AlohaRequireFunction;
     settings: AlohaSettings;
     Selection: {
-        getRangeObject(): any;
+        getRangeObject(): AlohaRangeObject;
     };
     isModified(): boolean;
+    trigger: (eventName: string, data: any) => void;
 }
 
 export interface GCNJSLib {

@@ -1,5 +1,5 @@
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
-import { Page } from '@gentics/cms-models';
+import { AlohaContextChangeEvent, Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions, appendTypeIdToUrl } from '../common';
@@ -57,9 +57,19 @@ export class PostLoadScript {
                 this.aloha.settings$.next(innerSettings);
             },
         });
+
+        // Update to the current selection
+        this.aloha.contextChange$.next(this.window.Aloha.Selection.getRangeObject());
+
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.window.Aloha.require('PubSub').sub('aloha.selection.context-change', (event) => {
-            this.aloha.contextChange$.next(event);
+        this.window.Aloha.require('PubSub').sub('aloha.selection.context-change', (event: AlohaContextChangeEvent) => {
+            this.aloha.contextChange$.next(event.range);
+        });
+
+        this.window.addEventListener('unload', () => {
+            this.aloha.contextChange$.next(null);
+            this.aloha.settings$.next(null);
+            this.aloha.reference$.next(null);
         });
 
         // Determine which type of editor frame is opened (previewing page, tagfill, ...)

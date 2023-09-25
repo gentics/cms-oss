@@ -33,6 +33,15 @@ export const COMMAND_TABLE = 'table';
 
 export const LINK_NODE_NAME = 'A';
 export const INLINE_LINK_CLASS = 'aloha-link-text';
+export const INLINE_LINK_URL_ATTRIBUTE = 'data-gentics-gcn-url';
+export const INLINE_LINK_ANCHOR_ATTRIBUTE = 'data-gentics-gcn-anchor';
+export const INLINE_LINK_OBJECT_ID_ATTRIBUTE = 'data-gentics-aloha-object-id';
+export const INLINE_LINK_OBJECT_NODE_ATTRIBUTE = 'data-gcn-channelid';
+export const INLINE_LINK_LANGUAGE_ATTRIBUTE = 'hreflang';
+export const INLINE_LINK_TITLE_ATTRIBUTE = 'title';
+export const INLINE_LINK_HREF_ATTRIBUTE = 'href';
+export const INLINE_LINK_TARGET_ATTRIBUTE = 'target';
+export const LINK_TARGET_NEW_TAB = '_blank';
 
 export const TABLE_NODE_NAME = 'TABLE';
 export const TABLE_CLASS = 'aloha-table';

@@ -86,7 +86,7 @@ export class PreLoadScript {
 
     /** Add Debug Tool hotkey access to iframe */
     bindExternalDebugHotkey(): void {
-        let mousetrapListener = new Mousetrap(this.document as any);
+        const mousetrapListener = new Mousetrap(this.document as any);
         mousetrapListener.bind(DebugToolService.hotkey, (event) => {
             if (event.preventDefault) {
                 event.preventDefault();
@@ -141,10 +141,10 @@ export class PreLoadScript {
                 document.body && document.body.dataset,
             () => {
                 const iframeDataset = this.window.frameElement.dataset;
-                for (let key in iframeDataset) {
+                for (const key in iframeDataset) {
                     this.document.body.dataset[key] = iframeDataset[key];
                 }
-            }
+            },
         );
     }
 
@@ -200,7 +200,7 @@ export class PreLoadScript {
      * Therefore we need to do a check for its presence, and if it is there, use some JavaScript to help hide it.
      */
     hideSyncScrollTextWhenComparingLanguages(): void {
-        const syncScrollCheckbox = this.document.querySelector('#syncscroll') as HTMLElement;
+        const syncScrollCheckbox = this.document.querySelector('#syncscroll') ;
         if (syncScrollCheckbox) {
             this.document.body.classList.add('gcms-hide-syncscroll');
         }
@@ -288,7 +288,7 @@ export class PreLoadScript {
 
                 const options: RepositoryBrowserOptions = {
                     allowedSelection: type as any,
-                    selectMultiple: fieldName === 'overview'
+                    selectMultiple: fieldName === 'overview',
                 };
 
                 this.scriptHost.openRepositoryBrowser(options, selected => {
@@ -312,7 +312,7 @@ export class PreLoadScript {
             const objects = selectedItems.map(item => ({
                 type: typeNameToId(item.type),
                 id: item.id,
-                nodeId: item.nodeId
+                nodeId: item.nodeId,
             }));
             const postData = JSON.stringify({ objects });
 
@@ -336,7 +336,7 @@ export class PreLoadScript {
                 error: (jqhxr: any, textStatus: string, error: string) => {
                     this.scriptHost.setRequesting(false);
                     this.scriptHost.showErrorMessage('message.add_items_error');
-                }
+                },
             });
         } else {
             // A single item was selected in a tag fill dialog
@@ -389,10 +389,10 @@ export class PreLoadScript {
                         console.log(`LinkBrowser.show(types = ${linkBrowser.getObjectTypeFilter().join(', ')})`);
                     }
 
-                    let options: RepositoryBrowserOptions = {
+                    const options: RepositoryBrowserOptions = {
                         allowedSelection: types,
                         selectMultiple: false,
-                        submitLabel: 'modal.repository_browser_submit_link'
+                        submitLabel: 'modal.repository_browser_submit_link',
                     };
 
                     // Set currentItem's language if the item supports
@@ -417,7 +417,7 @@ export class PreLoadScript {
                         this.document.body.classList.remove('gcn-stop-scrolling');
                     });
                 };
-            }
+            },
         );
     }
 
@@ -452,7 +452,7 @@ function mapApiItemToOldRepositoryBrowserItem(item: ItemInNode): Object {
         baseType: 'document',
         renditions: [],
         repositoryId: 'com.gentics.aloha.GCN.Page',
-        loaded: false
+        loaded: false,
     });
 
     return newItem;

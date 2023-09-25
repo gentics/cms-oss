@@ -61,8 +61,8 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.changeDetector.markForCheck();
         }))
 
-        this.subscriptions.push(this.aloha.contextChange$.asObservable().subscribe(event => {
-            this.alohaRange = event?.range;
+        this.subscriptions.push(this.aloha.contextChange$.asObservable().subscribe(range => {
+            this.alohaRange = range;
             this.changeDetector.markForCheck();
         }));
 

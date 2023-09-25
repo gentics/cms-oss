@@ -178,10 +178,10 @@ export class InputComponent implements AfterViewInit, ControlValueAccessor, OnIn
     change = new EventEmitter<string | number>();
 
     @ViewChild('inputElement', { static: true })
-    private inputElement: ElementRef;
+    public inputElement: ElementRef<HTMLInputElement>;
 
     @ViewChild('labelElement', { static: true })
-    private labelElement: ElementRef;
+    private labelElement: ElementRef<HTMLLabelElement>;
 
     private currentValue: string | number;
 

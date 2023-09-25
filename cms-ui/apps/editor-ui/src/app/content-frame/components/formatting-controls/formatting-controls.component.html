@@ -34,100 +34,12 @@
     </button>
 </div>
 
-<ng-container *ngIf="activeFormats | gtxIncludes:COMMAND_LINK">
-    <div class="flex-break"></div>
-</ng-container>
-
-<div *ngIf="linkPlugin" class="format-section link-group">
-    <button
-        class="format-button"
-        [class.active]="activeFormats | gtxIncludes:COMMAND_LINK"
-        [title]="'editor.format_link' | i18n"
-        (click)="toggleFormat(COMMAND_LINK)"
-    >
-        <icon>{{ (activeFormats | gtxIncludes:COMMAND_LINK) ? 'link_off' : 'link' }}</icon>
-    </button>
-
-    <ng-container *ngIf="activeFormats | gtxIncludes:COMMAND_LINK">
-
-        <gtx-input
-            class="inline-target"
-            [title]="'editor.format_link_target' | i18n"
-            [value]="link.target"
-            (change)="updateLinkTarget($event)"
-        ></gtx-input>
-
-        <button
-            class="format-button"
-            [title]="'editor.format_link_pick_cms_target' | i18n"
-            (click)="selectLinkTarget()"
-        >
-            <icon>pan_tool_alt</icon>
-        </button>
-
-        <ng-container *ngIf="linkChecker.enabled">
-            <gtx-tooltip
-                position="bottom"
-                align="left"
-                type="light"
-            >
-                <icon
-                    gtx-tooltip-trigger
-                    [ngClass]="'link-checker-icon link-checker-' + (linkChecker.valid ? 'valid' : 'invalid')"
-                    (click)="toggleLinkCheckValidity()"
-                >{{ linkChecker.valid ? 'check' : 'close' }}</icon>
-
-                <div class="link-checker-report" gtx-tooltip-content>
-                    <div class="link-checker-report-date">{{ linkChecker.report.date | i18nDate }}</div>
-                    <code class="link-checker-report-url">{{ linkChecker.report.url }}</code>
-                    <div class="link-checker-report-text">{{ linkChecker.report.text }}</div>
-                </div>
-            </gtx-tooltip>
-        </ng-container>
-
-        <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">
-            <gtx-dropdown-trigger>
-                <button class="format-button" [title]="'editor.format_link_additional_options' | i18n">
-                    <icon>more_vert</icon>
-                </button>
-            </gtx-dropdown-trigger>
-
-            <gtx-dropdown-content>
-                <div class="link-options-wrapper">
-                    <gtx-input
-                        class="format-input"
-                        [label]="'editor.format_link_anchor' | i18n"
-                        [(ngModel)]="link.anchor"
-                    ></gtx-input>
-
-                    <gtx-input
-                        class="format-input"
-                        [label]="'editor.format_link_title' | i18n"
-                        [(ngModel)]="link.title"
-                    ></gtx-input>
-
-                    <gtx-input
-                        class="format-input"
-                        [label]="'editor.format_link_language' | i18n"
-                        [(ngModel)]="link.language"
-                    ></gtx-input>
-                </div>
-            </gtx-dropdown-content>
-        </gtx-dropdown-list>
-
-        <icon-checkbox
-            class="format-checkbox"
-            icon="open_in_new"
-            [selected]="link.newTab"
-            [title]="'editor.format_link_new_tab' | i18n"
-            (change)="setLinkNewTab($event)"
-        ></icon-checkbox>
-    </ng-container>
-</div>
-
-<ng-container *ngIf="(activeFormats | gtxIncludes:COMMAND_TABLE) && !(activeFormats | gtxIncludes:COMMAND_LINK)">
-    <div class="flex-break"></div>
-</ng-container>
+<gtx-link-controls
+    [aloha]="aloha"
+    [range]="range"
+    [settings]="settings"
+    (activeChange)="setLinkActive($event)"
+></gtx-link-controls>
 
 <div class="format-section table-group" [attr.data-active-part]="table.activePart">
     <button

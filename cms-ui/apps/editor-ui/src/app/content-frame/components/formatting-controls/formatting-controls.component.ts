@@ -1,42 +1,14 @@
-import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { BaseControlsComponent } from '../base-controls/base-controls.component';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, SimpleChanges } from '@angular/core';
 import {
     COMMAND_LINK,
     COMMAND_TABLE,
-    INLINE_LINK_CLASS,
-    LINK_NODE_NAME,
     LIST_COMMANDS,
     NODE_NAME_TO_COMMAND,
     STYLE_COMMANDS,
-    TABLE_CELL_NODE_NAME,
     TABLE_NODE_NAME,
     TYPOGRAPHY_COMMANDS,
 } from '../../../common/models/aloha-integration';
-
-interface LinkSettings {
-    target?: string | {
-        type: 'page' | 'file' | 'image';
-        displayName: string;
-        id: number;
-        nodeId?: number;
-    };
-    anchor: string;
-    newTab: boolean;
-    title?: string;
-    language?: string;
-}
-
-interface LinkCheckerSettings {
-    enabled?: boolean;
-    valid?: boolean;
-    report?: LinkCheckerReport;
-}
-
-interface LinkCheckerReport {
-    date: Date;
-    url: string;
-    text: string;
-}
+import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
 enum TablePart {
     CELL = 'cell',
@@ -65,42 +37,19 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
     public readonly COMMAND_TABLE = COMMAND_TABLE;
 
     public activeFormats: string[] = [];
-
-    public link: LinkSettings = {
-        anchor: '',
-        newTab: false,
-    };
-
-    public linkChecker: LinkCheckerSettings = {
-        enabled: true,
-        valid: true,
-        report: {
-            date: new Date(),
-            url: 'https://example.copm',
-            text: 'sample text',
-        },
-    };
+    public linkActive = false;
 
     public table: TableSettings = {
         activePart: null,
     }
 
-    public linkPlugin: any;
+    constructor(
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
 
     public ngOnChanges(changes: SimpleChanges): void {
-        if (changes.aloha) {
-            if (this.aloha) {
-                try {
-                    this.linkPlugin = this.aloha.require('link/link-plugin');
-                } catch (err) {
-                    console.warn('Error while loading link-plugin!', err);
-                    this.linkPlugin = null;
-                }
-            } else {
-                this.linkPlugin = null;
-            }
-        }
-
         if (changes.range || changes.settings) {
             this.updateStateFromAloha();
         }
@@ -124,18 +73,6 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             if (command) {
                 newFormat.add(command);
                 continue;
-            }
-
-            // Only enable the link handling when the plugin is available
-            if (this.linkPlugin) {
-                if (elem.nodeName === LINK_NODE_NAME && elem.classList.contains(INLINE_LINK_CLASS)) {
-                    newFormat.add(COMMAND_LINK);
-                    /* eslint-disable @typescript-eslint/no-unsafe-call */
-                    this.link.target = this.linkPlugin.hrefField?.getValue?.();
-                    this.link.anchor = this.linkPlugin.anchorField?.getValue?.();
-                    /* eslint-enable @typescript-eslint/no-unsafe-call */
-                    continue;
-                }
             }
 
             if (elem.nodeName === TABLE_NODE_NAME && elem.classList.contains(TABLE_NODE_NAME)) {
@@ -182,12 +119,9 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
         }
     }
 
-    public updateLinkTarget(value: string): void {
-        this.link.target = value;
-    }
-
-    public setLinkNewTab(newTab: boolean): void {
-        this.link.newTab = newTab;
+    public setLinkActive(active: boolean): void {
+        this.linkActive = active;
+        this.changeDetector.markForCheck();
     }
 
     public cycleTablePart(): void {
@@ -199,13 +133,5 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             idx++;
         }
         this.table.activePart = entries[idx][1];
-    }
-
-    public toggleLinkCheckValidity(): void {
-        this.linkChecker.valid = !this.linkChecker.valid;
-    }
-
-    public selectLinkTarget(): void {
-        alert('todo, work in progress!');
     }
 }

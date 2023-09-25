@@ -1,4 +1,4 @@
-import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO, typeIdsToName } from '@admin-ui/common';
+import { AdminUIEntityDetailRoutes, EditableEntity, ObjectPropertyBO } from '@admin-ui/common';
 import {
     DevToolPackageTableLoaderService,
     I18nService,
@@ -9,6 +9,7 @@ import {
 import { ContextMenuService, DELETE_ACTION, UNASSIGN_FROM_PACKAGE_ACTION } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { typeIdsToName } from '@gentics/cms-components';
 import { AnyModelType, NormalizableEntityTypesMap, ObjectPropertiesObjectType, ObjectProperty } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';

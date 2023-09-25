@@ -14,6 +14,7 @@ import { EditorToolbarComponent } from './components/editor-toolbar/editor-toolb
 import { FilePreview } from './components/file-preview/file-preview.component';
 import { FormReportsListComponent } from './components/form-reports-list/form-reports-list.component';
 import { FormattingControlsComponent } from './components/formatting-controls/formatting-controls.component';
+import { LinkControlsComponent } from './components/link-controls/link-controls.component';
 import { NodePropertiesForm } from './components/node-properties-form/node-properties-form.component';
 import { PageEditorControlsComponent } from './components/page-editor-controls/page-editor-controls.component';
 import { PropertiesEditor } from './components/properties-editor/properties-editor.component';
@@ -36,6 +37,7 @@ const COMPONENTS = [
     FilePreview,
     FormReportsListComponent,
     FormattingControlsComponent,
+    LinkControlsComponent,
     NodePropertiesForm,
     PageEditorControlsComponent,
     PropertiesEditor,

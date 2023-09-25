@@ -1,4 +1,4 @@
-@import 'variables';
+@import '../base-controls/base-controls.component.scss';
 
 :host {
     display: flex;
@@ -7,76 +7,9 @@
     margin: 0.5rem -0.25rem 0.25rem;
 }
 
-@mixin format-element {
-    display: inline-block;
-    border: none;
-    background: $gtx-color-very-light-gray;
-    color: $gtx-color-off-black;
-    box-shadow: rgba(0, 0, 0, 0.14) 0px 2px 2px 0;
-    border-radius: 3px;
-    text-align: center;
-
-    width: 20px;
-    height: 20px;
-    padding: 0.25rem;
-    margin: 0.25rem;
-    box-sizing: content-box;
-    font-size: 20px;
-    transition: 300ms;
-
-    &:hover {
-        background: darken($gtx-color-very-light-gray, 10%);
-        cursor: pointer;
-    }
-}
-
-.format-section {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    border: 1px solid $gtx-color-mid-gray;
-    margin: 0.25rem;
-    padding: 0.25rem;
-}
-
 .flex-break {
     flex-basis: 100%;
     width: 0;
-}
-
-.format-button {
-    @include format-element;
-
-    icon {
-        width: 20px;
-        height: 20px;
-        font-size: inherit;
-        color: inherit;
-    }
-
-    &.active {
-        color: $gtx-color-primary;
-        background: darken($gtx-color-very-light-gray, 5%);
-
-        &:hover {
-            background: darken($gtx-color-very-light-gray, 15%);
-        }
-    }
-}
-
-.link-group {
-    align-items: center;
-
-    .inline-target::ng-deep input {
-        margin: 0;
-        height: calc(2rem - 2px);
-        border-width: 1px;
-        box-shadow: rgba(0, 0, 0, 0.14) 0px 1px 1px 0;
-
-        &:focus:not([readonly]) {
-            box-shadow: rgba(0, 0, 0, 0.14) 0px 1px 1px 0 !important;
-        }
-    }
 }
 
 .vertical-separator {
@@ -94,73 +27,3 @@
     }
 }
 
-.link-checker-icon {
-    @include format-element;
-
-    &.link-checker-valid {
-        color: $gtx-color-success;
-    }
-
-    &.link-checker-invalid {
-        color: $gtx-color-alert;
-    }
-}
-
-.format-checkbox {
-    @include format-element;
-
-    &::ng-deep {
-        .icon-checkbox-wrapper {
-            width: 20px;
-            height: 20px;
-            font-size: 20px;
-
-            .item-icon {
-                width: inherit;
-                height: inherit;
-                font-size: inherit;
-
-                >* {
-                    width: inherit;
-                    height: inherit;
-                    font-size: inherit;
-                }
-            }
-
-            .item-checkbox {
-                position: relative;
-                top: unset;
-                left: unset;
-                width: inherit;
-                height: inherit;
-                font-size: inherit;
-
-                gtx-checkbox {
-                    width: inherit;
-                    height: inherit;
-                    font-size: inherit;
-
-                    input[type="checkbox"] {
-                        +label::before {
-                            left: 4px;
-                            width: 10px;
-                            height: 10px;
-                            top: 3px;
-                        }
-
-                        &:checked+label::before {
-                            top: 0px;
-                            left: 0px;
-                            width: 4px;
-                            height: 12px;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-.link-options-wrapper {
-    padding: 1rem 1rem 0 1rem;
-}

@@ -1,3 +1,5 @@
+import { Item } from '../models';
+
 export interface AlohaSettings {
     base: string;
     baseUrl: string;
@@ -33,6 +35,7 @@ export interface AlohaRangeObject {
     startContainer: HTMLElement;
     startOffset: number;
     unmodifiableMarkupAtStart: HTMLElement[];
+    select(): void;
 }
 
 export interface AlohaContextChangeEvent {
@@ -155,3 +158,94 @@ export interface GcnLinkCheckerPluginSettings {
     enabled?: boolean;
     relativeBase?: string;
 }
+
+export interface AlohaUiComponent {
+    id: number;
+    isInstance: boolean;
+    container: any | null;
+    type: string | null;
+    visible: boolean;
+    show(showOptions: any): void;
+    hide(): void;
+    focus(): void;
+    foreground(): void;
+    enable(enableOptions: any): void;
+    disable(): void;
+}
+
+export interface AlohaTextUiComponent extends AlohaUiComponent {
+    setValue(value: string): void;
+    getValue(): string;
+    updateValue(value: string): void;
+    element: JQueryElement<HTMLElement>;
+}
+
+/** Placeholder */
+type JQueryElement<T = HTMLElement> = {
+    [idx: number]: T;
+    length: number;
+};
+
+export interface AlohaAttributeFieldUiComponent extends AlohaUiComponent  {
+    addAdditionalTargetObject(target: HTMLElement): void;
+    addListener(eventName: string, handler: (data: any) => void): void;
+    disableInput(): void;
+    enableInput(): void;
+    finishEditing(selectElement: boolean): void;
+    getInputElem(): HTMLElement | null;
+    getInputId(): string;
+    getInputJQuery(): JQueryElement<HTMLElement>;
+    getItem(): Item;
+    getTargetObject(): JQueryElement<HTMLElement>;
+    getValue(allowModification: boolean): void;
+    hasInputElem(): true;
+    /**
+     * Sets an attribute optionally based on a regex on reference
+     * @param attribute The Attribute name which should be set. Ex. "lang"
+     * @param value The value to set. Ex. "de-AT"
+     * @param regex The regex when the attribute should be set. The regex is applied to the value of refernece.
+     * @param reference The value for the regex.
+     */
+    setAttribute(attribute: string, value: string, regex: string, reference: string): void;
+    setItem(item: Item): void;
+    setObjectTypeFilter(filter: string[]): void;
+    setValue(value: string): void;
+}
+
+export interface AlohaPlugin {
+    readonly name: string;
+}
+
+export interface AlohaLinkPlugin extends AlohaPlugin {
+    anchorField?: AlohaTextUiComponent & {
+        clear(): void;
+    },
+    anchorLinks?: boolean;
+    hrefField: AlohaAttributeFieldUiComponent;
+    config: string[];
+    title: string;
+    titleregex?: string | null;
+    targetregex?: string | null;
+    target: string;
+    cssclassregex?: string | null;
+    cssclass: string;
+    objectTypeFilter: string[];
+    onHrefChange?: () => void;
+    ignoreNextSelectionChangeEvent: boolean;
+    hrefValue: string;
+    flags: boolean;
+    nsSel: () => string;
+    nsClass: () => string;
+    toggleLinkScope: (show: boolean) => void;
+    findLinkMarkup: (range: AlohaRangeObject) => HTMLAnchorElement | null;
+    findAllLinkMarkup: (range: AlohaRangeObject) => HTMLAnchorElement[];
+    insertLink: (extendToWord?: boolean) => boolean | void;
+    removeLink: (terminateLinkScope?: boolean) => void;
+}
+
+export interface AlohaPubSub {
+    sub: (eventName: string, handler: (eventData: any) => void) => void;
+    pub: (eventName: string, eventData: any) => void;
+    unsub: (eventName: string, handler: (eventData: any) => void) => void;
+}
+

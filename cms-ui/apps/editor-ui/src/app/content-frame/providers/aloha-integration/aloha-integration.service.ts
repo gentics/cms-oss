@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AlohaContextChangeEvent, AlohaSettings } from '@gentics/cms-models';
+import { AlohaRangeObject, AlohaSettings } from '@gentics/cms-models';
 import { BehaviorSubject } from 'rxjs';
 import { AlohaGlobal } from '../../components/content-frame/common';
 
@@ -8,6 +8,6 @@ export class AlohaIntegrationService {
 
     public reference$ = new BehaviorSubject<AlohaGlobal>(null);
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
-    public contextChange$ = new BehaviorSubject<AlohaContextChangeEvent>(null);
+    public contextChange$ = new BehaviorSubject<AlohaRangeObject>(null);
 
 }

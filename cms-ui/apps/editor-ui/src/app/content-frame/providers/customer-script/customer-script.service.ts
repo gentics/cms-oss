@@ -232,7 +232,7 @@ export class CustomerScriptService implements OnDestroy {
             callDebugTool: gcmsui_debugTool,
             openTagEditor,
             forwardContextChange: (event) => {
-                this.aloha.contextChange$.next(event);
+                this.aloha.contextChange$.next(event?.range);
             },
             forwardSettings: (settings) => {
                 this.aloha.settings$.next(settings);

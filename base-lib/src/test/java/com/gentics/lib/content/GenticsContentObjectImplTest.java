@@ -1,5 +1,6 @@
 package com.gentics.lib.content;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -19,7 +20,6 @@ import com.gentics.lib.datasource.CNDatasource;
 import com.gentics.lib.datasource.SQLHandle;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
-import com.gentics.lib.db.PoolConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +79,7 @@ public class GenticsContentObjectImplTest {
 		when(sqlHandle.getDBHandle()).thenReturn(dbHandle);
 		when(handlePool.getHandle()).thenReturn(sqlHandle);
 		when(datasource.getHandlePool()).thenReturn(handlePool);
+		when(datasource.getDatabaseProductName()).thenReturn(driverName);
 
 		// Mock the datatype helper
 		AttributeType attrType = mock(AttributeType.class);
@@ -88,10 +89,7 @@ public class GenticsContentObjectImplTest {
 				.thenReturn(attrType);
 
 		db.when(() -> DB.getDatabaseProductName(dbHandle)).thenReturn(driverName);
-		db.when(() -> DB.getPoolConnection(any())).thenReturn(mock(PoolConnection.class));
 
-		CNDatasource ds = mock(CNDatasource.class);
-		when(ds.getDatabaseProductName()).thenReturn(driverName);
 
 		// Mock a simple contentobject. We will add it multiple times to the
 		// final set of objects to save some time.

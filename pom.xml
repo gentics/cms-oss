@@ -70,7 +70,7 @@
 		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
-		<mockito.version>3.7.7</mockito.version>
+		<mockito.version>5.0.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.6.0</jsonpath.version>

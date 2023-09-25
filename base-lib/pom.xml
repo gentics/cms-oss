@@ -315,23 +315,9 @@
 			<artifactId>base-api</artifactId>
 		</dependency>
 
-		<!-- Test dependencies / JDBC Driver -->
-		<!-- <dependency>
-			<groupId>com.gentics</groupId>
-			<artifactId>node-meta</artifactId>
-			<version>${project.version}</version>
-			<type>jar</type>
-			<classifier>cr-structure</classifier>
-			<scope>test</scope>
-		</dependency> -->
 		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-module-junit4</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito2</artifactId>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

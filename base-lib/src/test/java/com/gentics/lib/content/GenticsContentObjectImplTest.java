@@ -20,6 +20,8 @@ import com.gentics.lib.datasource.SQLHandle;
 import com.gentics.lib.db.DB;
 import com.gentics.lib.db.DBHandle;
 import com.gentics.lib.db.PoolConnection;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockedStatic;
@@ -33,6 +35,25 @@ import org.mockito.Mockito;
  */
 @Category(BaseLibTest.class)
 public class GenticsContentObjectImplTest {
+
+	private static MockedStatic<DatatypeHelper> datatypeHelper;
+	private static MockedStatic<DB> db;
+	private static MockedStatic<SortedValue> sortedValue;
+
+
+	@Before()
+	public void setup(){
+		datatypeHelper = mockStatic(DatatypeHelper.class);
+ 		db = mockStatic(DB.class);
+		sortedValue = mockStatic(SortedValue.class);
+	}
+
+	@After()
+	public void tearDown(){
+		datatypeHelper.close();
+		db.close();
+		sortedValue.close();
+	}
 
 	/**
 	 * Invoke the test for the given parameters.
@@ -63,15 +84,12 @@ public class GenticsContentObjectImplTest {
 		AttributeType attrType = mock(AttributeType.class);
 		when(attrType.getColumn()).thenReturn(ATTRIBUTE_COLUMN);
 
-		MockedStatic<DatatypeHelper> datatypeHelper = mockStatic(DatatypeHelper.class);
 		datatypeHelper.when(() -> DatatypeHelper.getComplexDatatype(dbHandle, "name"))
 				.thenReturn(attrType);
 
-		MockedStatic<DB> db = mockStatic(DB.class);
 		db.when(() -> DB.getDatabaseProductName(dbHandle)).thenReturn(driverName);
 		db.when(() -> DB.getPoolConnection(any())).thenReturn(mock(PoolConnection.class));
 
-		mockStatic(SortedValue.class);
 		CNDatasource ds = mock(CNDatasource.class);
 		when(ds.getDatabaseProductName()).thenReturn(driverName);
 
@@ -89,6 +107,7 @@ public class GenticsContentObjectImplTest {
 		// Now spy upon our class under test
 		try (MockedStatic<GenticsContentObjectImpl> genticsContentObject = mockStatic(
 				GenticsContentObjectImpl.class, Mockito.CALLS_REAL_METHODS)) {
+			// this method is actually invoked
 			GenticsContentObjectImpl.prefillContentObjects(datasource, objects, prefetchAttribs,
 					timeStamp, true, false);
 

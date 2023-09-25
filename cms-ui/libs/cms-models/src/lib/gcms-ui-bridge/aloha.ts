@@ -15,6 +15,7 @@ export interface AlohaSettings {
         gcn?: GcnPluginSettings;
         'gcn-linkbrowser'?: GcnLinkBrowserPluginSettings;
         gcnlinkchecker?: GcnLinkCheckerPluginSettings;
+        format: FormatPluginSettings;
         [key: string]: any;
     };
     proxyUrl?: string;
@@ -36,6 +37,8 @@ export interface AlohaRangeObject {
     startOffset: number;
     unmodifiableMarkupAtStart: HTMLElement[];
     select(): void;
+    isCollapsed(): boolean;
+    findMarkup(comparator: (this: HTMLElement) => boolean, limit: JQuery, atEnd?: boolean): any | false;
 }
 
 export interface AlohaContextChangeEvent {
@@ -159,6 +162,11 @@ export interface GcnLinkCheckerPluginSettings {
     relativeBase?: string;
 }
 
+export interface FormatPluginSettings {
+    config: string[];
+    editables?: Record<string, string[]>;
+}
+
 export interface AlohaUiComponent {
     id: number;
     isInstance: boolean;
@@ -177,14 +185,8 @@ export interface AlohaTextUiComponent extends AlohaUiComponent {
     setValue(value: string): void;
     getValue(): string;
     updateValue(value: string): void;
-    element: JQueryElement<HTMLElement>;
+    element: JQuery<HTMLElement>;
 }
-
-/** Placeholder */
-type JQueryElement<T = HTMLElement> = {
-    [idx: number]: T;
-    length: number;
-};
 
 export interface AlohaAttributeFieldUiComponent extends AlohaUiComponent  {
     addAdditionalTargetObject(target: HTMLElement): void;
@@ -194,9 +196,9 @@ export interface AlohaAttributeFieldUiComponent extends AlohaUiComponent  {
     finishEditing(selectElement: boolean): void;
     getInputElem(): HTMLElement | null;
     getInputId(): string;
-    getInputJQuery(): JQueryElement<HTMLElement>;
+    getInputJQuery(): JQuery<HTMLElement>;
     getItem(): Item;
-    getTargetObject(): JQueryElement<HTMLElement>;
+    getTargetObject(): JQuery<HTMLElement>;
     getValue(allowModification: boolean): void;
     hasInputElem(): true;
     /**
@@ -241,6 +243,36 @@ export interface AlohaLinkPlugin extends AlohaPlugin {
     findAllLinkMarkup: (range: AlohaRangeObject) => HTMLAnchorElement[];
     insertLink: (extendToWord?: boolean) => boolean | void;
     removeLink: (terminateLinkScope?: boolean) => void;
+}
+
+export interface AlohaDOM {
+    /**
+     * Apply the given markup additively to the given range. The given rangeObject will be modified if necessary
+     * @param rangeObject range to which the markup shall be added
+     * @param markup markup to be applied as jQuery object
+     * @param nesting true when nesting of the added markup is allowed, false if not (default: false)
+     */
+    addMarkup: (rangeObject: AlohaRangeObject, markup: any, nesting?: boolean) => void;
+    /**
+     * Remove the given DOM object from the DOM and modify the given range to reflect the user expected range after the object was removed
+     * @param object DOM object to remove
+     * @param range range which eventually be modified
+     * @param preserveContent true if the contents of the removed DOM object shall be preserved, false if not (default: false)
+     */
+    removeFromDOM: (object: any, range: AlohaRangeObject, preserveContent) => void;
+    /**
+     * Remove the given markup from the given range. The given rangeObject will be modified if necessary
+     * @param rangeObject range from which the markup shall be removed
+     * @param markup markup to be removed as jQuery object
+     * @param limit Limiting node(s) as jQuery object
+     * @param removeNonEditables Whether to remove nodes which are not content editable (default: true)
+     */
+    removeMarkup: (rangeObject: AlohaRangeObject, markup: any, limit: any, removeNonEditables?: boolean) => void;
+}
+
+export interface AlohaEditable {
+    smartContentChange: (event: any) => false | void;
+    obj: JQuery;
 }
 
 export interface AlohaPubSub {

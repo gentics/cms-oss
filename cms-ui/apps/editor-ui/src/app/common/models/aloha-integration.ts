@@ -75,6 +75,11 @@ export const NODE_NAME_TO_COMMAND: Record<string, string> = {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
+export const COMMAND_TO_NODE_NAME: Record<string, string> = Object.entries(NODE_NAME_TO_COMMAND).reduce((acc, [name, command]) => {
+    acc[command] = name;
+    return acc;
+}, {});
+
 export const STYLE_COMMANDS = [
     COMMAND_STYLE_BOLD,
     COMMAND_STYLE_ITALIC,
@@ -102,4 +107,10 @@ export const TYPOGRAPHY_COMMANDS = [
     COMMAND_TYPOGRAPHY_HEADING5,
     COMMAND_TYPOGRAPHY_HEADING6,
     COMMAND_TYPOGRAPHY_PREFORMATTED,
+];
+
+export const DEFAULT_COMMANDS = [
+    ...STYLE_COMMANDS,
+    ...LIST_COMMANDS,
+    ...TYPOGRAPHY_COMMANDS,
 ];

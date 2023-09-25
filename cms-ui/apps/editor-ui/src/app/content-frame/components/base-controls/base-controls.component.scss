@@ -42,6 +42,11 @@
         color: inherit;
     }
 
+    &:disabled {
+        background: $gtx-color-mid-gray;
+        cursor: not-allowed;
+    }
+
     &.active {
         color: $gtx-color-primary;
         background: darken($gtx-color-very-light-gray, 5%);

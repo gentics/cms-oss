@@ -198,7 +198,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
     public updateStateFromAloha(): void {
         this.currentElement = null;
 
-        if (!this.linkPlugin || !this.range) {
+        if (!this.linkPlugin || !this.range || !this.range.markupEffectiveAtStart) {
             this.updateActive(false);
             this.changeDetector.markForCheck();
             return;

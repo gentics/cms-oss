@@ -4,6 +4,7 @@
         class="format-button"
         [title]="'editor.format_style_' + item | i18n"
         [class.active]="activeFormats | gtxIncludes:item"
+        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
         (click)="toggleFormat(item)"
     >
         <icon>{{ item | gtxCommandToPipe }}</icon>
@@ -16,6 +17,7 @@
         class="format-button"
         [title]="'editor.format_' + item | i18n"
         [class.active]="activeFormats | gtxIncludes:item"
+        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
         (click)="toggleFormat(item)"
     >
         <icon>{{ item | gtxCommandToPipe }}</icon>
@@ -28,6 +30,7 @@
         class="format-button"
         [title]="'editor.format_typography_' + item | i18n"
         [class.active]="activeFormats | gtxIncludes:item"
+        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
         (click)="toggleFormat(item)"
     >
         <icon>{{ item | gtxCommandToPipe }}</icon>

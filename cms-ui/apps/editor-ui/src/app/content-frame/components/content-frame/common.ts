@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AlohaRangeObject, AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
+import { AlohaEditable, AlohaRangeObject, AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
 import { GCMSUI } from '../../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
@@ -103,6 +103,8 @@ export interface AlohaGlobal {
     };
     isModified(): boolean;
     trigger: (eventName: string, data: any) => void;
+    activeEditable?: AlohaEditable;
+    jQuery: JQueryStatic;
 }
 
 export interface GCNJSLib {

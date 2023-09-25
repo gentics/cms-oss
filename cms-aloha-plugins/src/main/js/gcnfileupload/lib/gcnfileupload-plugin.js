@@ -9,10 +9,10 @@
 define(
 [
 	'jquery',
-	'aloha/plugin', 
+	'aloha/plugin',
 	'ui/ui',
 	'ui/button',
-	'i18n!gcnfileupload/nls/i18n', 
+	'i18n!gcnfileupload/nls/i18n',
 	'i18n!aloha/nls/i18n',
 	'link/link-plugin',
 	'gcn/gcn-plugin',
@@ -21,7 +21,7 @@ define(
 	],
 function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 	"use strict";
-	
+
 	var $ = jQuery,
 		GENTICS = window.GENTICS,
 		Aloha = window.Aloha;
@@ -34,12 +34,12 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 		languages: ['en', 'de'],
 
 		/**
-		 * List of accepted image extensions. All other files will be treaded 
-		 * as regular files. The filetype (image/file) determins the selected 
+		 * List of accepted image extensions. All other files will be treaded
+		 * as regular files. The filetype (image/file) determins the selected
 		 * upload folder.
 		 */
 		imageExtensions: ['jpeg', 'jpg', 'png', 'gif'],
-				
+
 		/**
 		 * Initialize the plugin
 		 */
@@ -70,23 +70,23 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 				fileDescription : this.nsClass('fileDescription')
 			};
 			this.createButtons();
-			
+
 		},
-		
+
 		// Pseudo-namespace prefix
 		ns : 'aloha-gcnfileupload',
 		uid  :  +new Date(),
 		// namespaced classnames
 		nsClasses : {},
-		
-		
+
+
 		/**
 		 * Initialize the buttons
 		 */
 		createButtons : function () {
 			var that = this;
 			var lp = Aloha.require('link/link-plugin');
-			
+
 			// Button for adding a language markup to the current selection
 			this._gcnFileUploadButton = Ui.adopt('gcnFileUpload', Button, {
 				tooltip: i18n.t('button.gcnfileupload.tooltip'),
@@ -97,21 +97,21 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 			});
 
 			this._gcnFileUploadButton.show(false);
-			Aloha.bind('aloha-link-selected', function (event, rangeObject) {
+			Aloha.on('aloha-link-selected', function (event, rangeObject) {
 				that._gcnFileUploadButton.show();
 			});
-			Aloha.bind('aloha-link-unselected', function (event, rangeObject) {
+			Aloha.on('aloha-link-unselected', function (event, rangeObject) {
 				that._gcnFileUploadButton.show(false);
 			});
 		},
-		
+
 		supplant : function (str, obj) {
 			return str.replace(/\{([a-z0-9\-\_]+)\}/ig, function (str, p1, offset, s) {
 				var replacement = obj[p1] || str;
 				return (typeof replacement === 'function') ? replacement() : replacement;
 			});
 		},
-		
+
 		/**
 		 * Wrapper to all the supplant method on a given string, taking the
 		 * nsClasses object as the associative array containing the replacement
@@ -123,7 +123,7 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 		renderTemplate : function (str) {
 			return (typeof str === 'string') ? this.supplant(str, this.nsClasses) : str;
 		},
-		
+
 		/**
 		 * Generates a selector string with this component's namepsace prefixed the
 		 * each classname
@@ -137,12 +137,12 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 		 */
 		nsSel : function () {
 			var strBldr = [], prx = this.ns;
-			$.each(arguments, function () { 
-				strBldr.push('.' + (this === '' ? prx : prx + '-' + this)); 
+			$.each(arguments, function () {
+				strBldr.push('.' + (this === '' ? prx : prx + '-' + this));
 			});
 			return $.trim(strBldr.join(' '));
 		},
-		
+
 		/**
 		 * Generates s string with this component's namepsace prefixed the each
 		 * classname
@@ -156,12 +156,12 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 		 */
 		nsClass : function () {
 			var strBldr = [], prx = this.ns;
-			$.each(arguments, function () { 
-				strBldr.push(this === '' ? prx : prx + '-' + this); 
+			$.each(arguments, function () {
+				strBldr.push(this === '' ? prx : prx + '-' + this);
 			});
 			return $.trim(strBldr.join(' '));
 		},
-		
+
 		/**
 		 * Brings the image modal into view
 		 */
@@ -175,22 +175,22 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 			modal.find('form#' + that.nsClass('form'))[0].reset();
 			modal.show().css('opacity', 0);
 			var overlay = $(this.nsSel('overlay'));
-			
+
 			overlay.show();
-			
+
 			var	w = modal.width(),
 				h = modal.height(),
 				win	= $(window);
-			
+
 			modal.css({
 				opacity : 1,
 				left    : (win.width() - w) / 2,
 				top     : (win.height() - h) / 3
 			});
-			
-			
+
+
 		},
-		
+
 		/**
 		 * Guess what, yes, this closes the opened modal
 		 */
@@ -205,14 +205,14 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 				this.editable.activate();
 			}
 		},
-		
+
 		/**
-		 * Returns the filename of the selected file. Undefined will be 
+		 * Returns the filename of the selected file. Undefined will be
 		 * returned when no file was selected.
-		 * 
+		 *
 		 * @private
 		 * @name getFileName
-		 * @return {string} Filename of the currently selected file or undefined 
+		 * @return {string} Filename of the currently selected file or undefined
 		 *					if no file was selected.
 		 */
 		getFileName : function () {
@@ -227,10 +227,10 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 			if (fileName.lastIndexOf("\\") > 0) {
 				fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
 			}
-			
+
 			return fileName;
 		},
-		
+
 		/**
 		 * Returns the modal, creating it if needed.
 		 * The modal and overlay elements are only created if and when needed to minimize adding unneed objects to the DOM
@@ -239,10 +239,10 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 		getModal : function () {
 			var that = this;
 			var modal = $(this.nsSel('modal'));
-			
+
 			if (modal.length === 0) {
 				var overlay = $(this.renderTemplate('<div class="{overlay}">')).hide();
-				
+
 				modal = $(this.renderTemplate(
 					'<div class="{modal}">' +
 						'<div class="{header}">' +
@@ -270,8 +270,8 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 						'</form>' +
 					'</div>'
 				));
-				
-				modal.find('#' + this.nsClass('insert')).click(function () { 
+
+				modal.find('#' + this.nsClass('insert')).click(function () {
 					var modal = that.getModal();
 					var form = modal.find('#' + that.nsClass('form'));
 					var fileName = that.getFileName();
@@ -279,7 +279,7 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 						window.alert(i18n.t("validation.gcnfileupload.choosefile"));
 						return false;
 					}
-				
+
 					// Set the filename into the hidden field. This is necessary for IE, because depending on some security setting
 					// ID will post the full path (wrong encoded), and Jersey will strip the backslashes, so that the resulting file
 					// name is wrong
@@ -293,23 +293,23 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 							modal.find('#' + that.nsClass('insert')).html(i18n.t("button.gcnfileupload.text")).attr('disabled', false);
 							return false;
 						}
-						
-						
-					}); 
-					
+
+
+					});
+
 					return false;
 				});
 				modal.find('#' + this.nsClass('cancel')).click(function () {
 					that.closeModal();
 					return false;
 				});
-				
+
 				$('body').append(overlay, modal);
 			}
-			
+
 			return modal;
 		},
-		
+
 		/*
 		 * Creates a link to the given file.
 		 */
@@ -341,9 +341,9 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 				var fileName = that.getFileName();
 				var extension =  fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
 				var isImageFile = jQuery.inArray(extension, that.imageExtensions) > 0;
-					
-				// 2. Change the upload folder to the default image upload folder 
-				// when this is an image and the image upload folder was 
+
+				// 2. Change the upload folder to the default image upload folder
+				// when this is an image and the image upload folder was
 				// set for this node. Select the default file upload folder
 				// when one was specified for this node.
 				if (isImageFile && typeof defaultImageFolderId !== 'undefined') {
@@ -356,8 +356,8 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 					var filterContentType = encodeURIComponent('text/html;charset=utf8');
 					var restUrl = folder.multipartUploadURL(true, filterContentType);
 					form.attr('action', restUrl);
-					
-					// Add more parts to the form. Those parts will contain 
+
+					// Add more parts to the form. Those parts will contain
 					// information that will be used by the server side upload
 					// handler.
 					if (form.find('#folderId').length <= 0) {
@@ -380,7 +380,7 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 				});
 			});
 		},
-		
+
 		/**
 		* Transform the given data (fetched from the backend) into a repository item
 		* @param {Object} data data of a page fetched from the backend
@@ -391,7 +391,7 @@ function (jQuery, Plugin, Ui, Button, i18n, i18nCore) {
 
 				if (!data) {
 					return null;
-				}	
+				}
 
 				objecttype = objecttype || 10007;
 				// set the id

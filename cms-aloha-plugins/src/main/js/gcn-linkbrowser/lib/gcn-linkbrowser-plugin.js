@@ -47,7 +47,7 @@ function(
 	 * @const
 	 */
 	var RX_ID_PARTS = /(\d+)\.(\d+)/;
-	
+
 	/**
 	 * Max number of languages to displayed in the 'translations' colum;
 	 * @type {number}
@@ -120,25 +120,25 @@ function(
 
 		return url;
 	}
-	
+
 	/**
 	 * Gets id of the master folder of folder channel 'channelFolderId' from a list of items.
 	 * @param {Object} items List of node and channels
 	 * @param {number} channelFolderId Id of channel folder
-	 * @return {number} Id of the master node. 
+	 * @return {number} Id of the master node.
 	 */
 	function getMasterNodeId(items, channelFolderId) {
 		var i;
-		
+
 		for (i = 0; i < items.length; i++) {
 			if (items[i].type === 'channel' && items[i].folderId === channelFolderId) {
 				return items[i].masterFolderId;
 			}
 		}
-		
+
 		return channelFolderId;
 	}
-	
+
 	/**
 	 * Checks if auto target is configured.
 	 *
@@ -156,7 +156,7 @@ function(
 	 *   "en": "Path",
 	 *   "de": "Pfad"
 	 * }
-	 * 
+	 *
 	 * If the translation in the current language is not found,
 	 * the first translation will be returned
 	 * @param i18nObject {Object} i18n Object
@@ -230,11 +230,11 @@ function(
 				this._gcnLinkBrowserButton.show();
 			}
 
-			Aloha.bind( 'aloha-link-selected', function ( event, rangeObject ) {
+			Aloha.on( 'aloha-link-selected', function ( event, rangeObject ) {
 				that._gcnLinkBrowserButton.show();
 			});
 
-			Aloha.bind( 'aloha-link-unselected', function ( event, rangeObject ) {
+			Aloha.on( 'aloha-link-unselected', function ( event, rangeObject ) {
 				that._gcnLinkBrowserButton.show(false);
 			});
 
@@ -469,7 +469,7 @@ function(
 				this.$preview = null;
 			}
 		},
-		
+
 		/**
 		 * Invokes the onSelect() callback; passing it to the selected
 		 * repository document.
@@ -568,7 +568,7 @@ function(
 			if (typeof item.sizeX !== 'undefined'
 				&& typeof item.sizeY !== 'undefined' && item.sizeX > 0) {
 				html += item.sizeX + ' × ' + item.sizeY;
-				
+
 				if (filesize) {
 					html += ' - ';
 				}
@@ -750,7 +750,7 @@ function(
 		handleTimeout: function () {
 			Console.error(i18n.t('repository.browser.timeout'));
 		},
-		
+
 		/**
 		 * Filters items before displaying it in the tree browser. Only channels from
 		 * the master will be displayed.
@@ -760,17 +760,17 @@ function(
 			var filteredItems = [];
 			var i;
 			var masterNodeId = getMasterNodeId(items, parseInt(GCNPlugin.settings.nodeFolderId, 10));
-			
+
 			for (i = 0; i < items.length; i++) {
 				if (items[i].type !== 'channel' || items[i].masterFolderId === masterNodeId) {
 					filteredItems.push(items[i]);
 				}
 			}
-			
+
 			this._super(filteredItems, metainfo, callback);
 		}
 	});
-	
+
 	var LinkBrowserPlugin = Plugin.create( 'gcn-linkbrowser', {
 		browser: null,
 		init: function () {
@@ -862,10 +862,10 @@ function(
 
 			if (config.columns) {
 				var columns = {};
-				
+
 				jQuery.each(config.columns, function (i, value) {
 					jQuery.each(value, function(k, v) {
-						
+
 						if (typeof v.resizable === 'string') {
 							v.resizable = (v.resizable.toLowerCase() === 'true' || v.resizable.toLowerCase() === '1');
 						}
@@ -902,7 +902,7 @@ function(
 					path         : { title: i18n.t('column.folder'), width: 200, sortable: false }
 				};
 			}
-			
+
 			this.browser = new LinkBrowser(config);
 		}
 	});

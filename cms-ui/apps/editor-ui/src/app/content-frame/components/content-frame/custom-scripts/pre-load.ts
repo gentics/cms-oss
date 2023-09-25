@@ -124,11 +124,11 @@ export class PreLoadScript {
 
     /** Set content modified when aloha ready to ensure save button is immediately active */
     listenToAlohaReady(): void {
-        this.pollUntilAvailable(window => window.Aloha && window.Aloha.bind, () => {
+        this.pollUntilAvailable(window => window.Aloha && window.Aloha.on, () => {
             if (DEBUG) {
-                console.log('Aloha.bind found!');
+                console.log('Aloha.on found!');
             }
-            this.window.Aloha.bind('aloha-ready', (event: Event) => {
+            this.window.Aloha.on('aloha-ready', (event: Event) => {
                 this.scriptHost.setAlohaReady(true);
             });
         });

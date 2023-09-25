@@ -93,7 +93,7 @@ export interface CNWindow extends CNParentWindow {
 }
 
 export interface AlohaGlobal {
-    bind: Function;
+    on: Function;
     GCN: GCNJSLib;
     require: AlohaRequireFunction;
     Selection: {

@@ -253,10 +253,10 @@ define([
 		buttons: {},
 
 		/**
-		 * Contains references to all tag insert buttons/menues (including the ones for a specific editable) 
+		 * Contains references to all tag insert buttons/menues (including the ones for a specific editable)
 		 */
 		tagInsertMenus: {},
-		
+
 		/**
 		 * @type {Aloha.Editable} The last active editable since we disable all
 		 *                        editables when a lightbox opens. We can use
@@ -433,7 +433,7 @@ define([
 			var that = this;
 
 			GCN.page(pageId).node().constructCategories(function (categoriesData) {
-				
+
 				if (!categoriesData) {
 					return;
 				}
@@ -443,8 +443,8 @@ define([
 				that.populateTagInsertMenu(categoriesData);
 			});
 		},
-		
-		
+
+
 		/**
 		 * Convinience method that can be used to hide the given buttonset
 		 * @param {object} buttonSet
@@ -452,22 +452,22 @@ define([
 		_hideTagInsertButtonSet: function (buttonSet) {
 			this._setTagInsertButtonSetVisibility(buttonSet, false);
 		},
-		
+
 		/**
 		 * Convinence method that can be used to show the given buttonset
 		 * @param {object} buttonSet
 		 */
 		_showTagInsertButtonSet: function (buttonSet) {
-			this._setTagInsertButtonSetVisibility(buttonSet, true);	
+			this._setTagInsertButtonSetVisibility(buttonSet, true);
 		},
-		
+
 		/**
 		 * This method will hide/show the given tag insert buttonset according to the visible flag
 		 * @param {object} buttonSet
 		 * @param {Boolean} visible
 		 */
 		_setTagInsertButtonSetVisibility: function (buttonSet, visible) {
-			
+
 			if (buttonSet && buttonSet.tagInsertDropDownButton) {
 				buttonSet.tagInsertDropDownButton.show(visible);
 			}
@@ -475,17 +475,17 @@ define([
 			if (buttonSet && buttonSet.uncategorizedTagInsertButtons && typeof buttonSet.uncategorizedTagInsertButtons === 'object') {
 				for (var i = 0; i < buttonSet.uncategorizedTagInsertButtons.length; i++) {
 					var currentButton = buttonSet.uncategorizedTagInsertButtons[i];
-					
-					// Only handle buttons with valid data 
+
+					// Only handle buttons with valid data
 					if (!currentButton) {
 						continue;
 					}
-					
+
 					currentButton.show(visible);
 				}
 			}
 		},
-		
+
 		/**
 		 * This method will create a button set for the tag insert buttons. These buttons will be filtered according to the whitelist
 		 * @param {object} constructWhitelist
@@ -506,7 +506,7 @@ define([
 					var category = constructData.categories[categoryName];
 					var filteredCategoryConstructButtons = [];
 					var wasConstructHandled = false;
-					// Skip categories that have no constructs. This might be 
+					// Skip categories that have no constructs. This might be
 					// the case when the system has no uncategorized tagtypes
 					if (!category) {
 						continue;
@@ -596,9 +596,9 @@ define([
 
 			return buttonSet;
 		},
-		
+
 		/**
-         * Adds the given buttons to the floating menu 
+         * Adds the given buttons to the floating menu
          * Gets the component types for the given buttons.
 		 *
 		 * @param {object} buttons Buttonset with dropdown and uncategorized buttons
@@ -622,7 +622,7 @@ define([
 				}
 			}
 		},
-		
+
 		/**
 		 * Populates the tag insert menu. This method will create multiple
 		 * variations for the tag insert buttons. For each editable a
@@ -634,7 +634,7 @@ define([
 		populateTagInsertMenu: function (categoryData) {
 			var that = this,
 				loadingArena = this.arena;
-			
+
 			that.arena = Ui.adopt("gcnArena", Arena);
 			that.arena.hide();
 
@@ -645,7 +645,7 @@ define([
 					if (!editableConfiguration.tagtypeWhitelist) {
 						return true;
 					}
-					
+
 					var key = index;
 					that.tagInsertMenus[key] = that.createSpecificEditableMenu(categoryData, editableConfiguration.tagtypeWhitelist);
 					that._addTagInsertButtonsToArena(that.arena, that.tagInsertMenus[key]);
@@ -725,8 +725,8 @@ define([
 		 */
 		registerAlohaHandlers: function () {
 			var that = this;
-			
-			Aloha.bind('aloha-editable-activated', function (e, params) {
+
+			Aloha.on('aloha-editable-activated', function (e, params) {
 				// if an editable is activated all block icons have to be
 
 				// hidden jQuery('.aloha-editicons').fadeOut('normal');
@@ -746,7 +746,7 @@ define([
 				}
 			});
 
-			Aloha.bind('aloha-smart-content-changed', function (event, data) {
+			Aloha.on('aloha-smart-content-changed', function (event, data) {
 				if (data.editable.isActive && data.triggerType === 'block-change') {
 					Misc.addEditingHelpers(data.editable.obj);
 				}
@@ -754,7 +754,7 @@ define([
 
 			// when focus leaves the editable, the helper elements are removed
 			// (if empty) or cleaned of editing-attributes
-			Aloha.bind('aloha-editable-deactivated', function (e, params) {
+			Aloha.on('aloha-editable-deactivated', function (e, params) {
 				// remove editing helpers from the deactivated element and all it's parent editables,
 				// but not if the element will be the new editable (or any of it's parents)
 				var doNotDeactivate = jQuery();
@@ -810,7 +810,7 @@ define([
 			}
 			return false;
 		},
-		
+
 		/**
 		 * Determine if we are operating in backend mode.  Backend mode means
 		 * that backend GCN facilities are available to use.
@@ -842,7 +842,7 @@ define([
 			} else {
 				GCN.settings.proxy_prefix = "";
 			}
-			
+
 			// Set rendermode (frontend/backend)
 			GCN.settings.linksRenderMode = this.settings.links || 'backend';
 
@@ -905,7 +905,7 @@ define([
 					}
 				}
 			};
-			
+
 			// register the handler for copying tags
 			if (this.settings.copy_tags) {
 				ContentHandlerManager.register('gcn-tagcopy', TagCopyContentHandler);
@@ -926,7 +926,7 @@ define([
 		 * function will be called during saving and receive, as the only
 		 * argument, the page that is being saved, so that it can operate on it
 		 * before its data is sent to the server.
-		 * 
+		 *
 		 * @param {function(GCN.PageAPI)} callback The function to register.
 		 */
 		addPageObjectHandler: function (callback) {
@@ -958,7 +958,7 @@ define([
 		openFolderTree: function () {
 			var that = this;
 			GCN.page(this.settings.id).folder(function (folder) {
-				// Currently the GCN JSAPI / RestAPI can't distinguish between 
+				// Currently the GCN JSAPI / RestAPI can't distinguish between
 				// master objects and inherited channel objects. It will always return the master object.
 				// We therefor need to modify the atposidx parameter and replace the node folder id.
 				var atposidx = folder.prop('atposidx');
@@ -971,7 +971,7 @@ define([
 				}
 			});
 		},
-		
+
 		/**
 		 * Passes the magiclinkconstruct value, that was received from the
 		 * settings, on to the GCN JS API.  The magic link is the the
@@ -1453,17 +1453,17 @@ define([
 				}
 			}
 		},
-		
+
 		/**
 		 * Strips unwanted classes before saving (eg. aloha-block)
 		 * @param classes String that contains all the classes sperated by spaces
 		 * @return the sanitized classes string
 		 */
 		cleanBlockClasses: function (classes) {
-			
+
 			if (classes) {
 				return classes.replace(/aloha-block\s|aloha-block$|^aloha-block$/g, "");
-			} 
+			}
 			return classes;
 		},
 
@@ -1563,7 +1563,7 @@ define([
 
 	/**
 	 * Determines the editdo for a given tagid.
-	 * 
+	 *
 	 * @param {number} tagid The id of the tag.
 	 * @param {function} success Callback, which will receive the editdo as
 	 *                           the first parameter.
@@ -1584,7 +1584,7 @@ define([
 		}, error);
 	},
 
-	
+
 	/**
 	 * Saves the page and open the tagfill dialog for the given tag in a
 	 * new window.
@@ -1894,7 +1894,7 @@ define([
 
 		/**
 		 * Render previews for the forms found under the given element.
-		 * 
+		 *
 		 * @param {jQuery} $element jQuery root element
 		 */
 		previewForms: function ($element) {

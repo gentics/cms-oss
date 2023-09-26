@@ -279,7 +279,7 @@
 						</goals>
 						<configuration>
 							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<propertyName>surefireArgLine</propertyName>
+							<propertyName>argLine</propertyName>
 						</configuration>
 					</execution>
 					<execution>

@@ -283,7 +283,7 @@
 					<version>2.22.0</version>
 					<configuration>
 						<jvm>${test.jvm.home}/bin/java</jvm>
-						<argLine>@{surefireArgLine} ${surefire.argLine}</argLine>
+						<argLine>${surefire.argLine} @{argLine}</argLine>
 						<skip>${skip.unit.tests}</skip>
 						<forkCount>${surefire.forkcount}</forkCount>
 						<reuseForks>false</reuseForks>

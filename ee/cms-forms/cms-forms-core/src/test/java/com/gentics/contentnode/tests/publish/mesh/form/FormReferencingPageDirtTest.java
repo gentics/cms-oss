@@ -44,6 +44,16 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 	protected Page refPageDe;
 
 	/**
+	 * Other referenced page (english variant)
+	 */
+	protected Page otherRefPageEn;
+
+	/**
+	 * Other referenced page (german variant)
+	 */
+	protected Page otherRefPageDe;
+
+	/**
 	 * Form (german only) using the referenced page
 	 */
 	protected Form formDe;
@@ -67,6 +77,21 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 			create.setContentsetId(refPageEn.getContentsetId());
 		}).at(1).publish().build();
 
+		otherRefPageEn = create(Page.class, create -> {
+			create.setFolderId(node.getFolder().getId());
+			create.setTemplateId(eMailTemplate.getId());
+			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			create.setLanguage(getLanguage("en"));
+		}).at(1).publish().build();
+
+		otherRefPageDe = create(Page.class, create -> {
+			create.setFolderId(node.getFolder().getId());
+			create.setTemplateId(eMailTemplate.getId());
+			getPartType(LongHTMLPartType.class, create.getContentTag("content"), TEMPLATE_PARTNAME).setText("");
+			create.setLanguage(getLanguage("de"));
+			create.setContentsetId(otherRefPageEn.getContentsetId());
+		}).at(1).publish().build();
+
 		formDe = create(Form.class, f -> {
 			f.setName("Test Form");
 			f.setLanguages(Arrays.asList("de"));
@@ -75,6 +100,8 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 			try {
 				ObjectNode data = mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class);
 				data.put("mailsource_pageid", refPageEn.getId());
+				ObjectNode element = (ObjectNode)data.get("elements").get(0);
+				element.put("test_pageid", otherRefPageEn.getId());
 				f.setData(data);
 			} catch (IOException e) {
 				throw new NodeException(e);
@@ -97,6 +124,20 @@ public class FormReferencingPageDirtTest extends AbstractFormPublishTest {
 	@Test
 	public void testModifyRefPage() throws NodeException {
 		refPageDe = update(refPageDe, update -> {
+			getPartType(LongHTMLPartType.class, update.getContentTag("content"), TEMPLATE_PARTNAME).setText("modified");
+		}).at(2).publish().build();
+
+		operate(() -> context.waitForDirtqueueWorker());
+		assertThat(supply(() -> PublishQueue.getDirtedObjectIds(Form.class, false, node))).as("Dirted form IDs").contains(formDe.getId());
+	}
+
+	/**
+	 * Test that modifying the used language variant of the other referenced page dirts the form
+	 * @throws NodeException
+	 */
+	@Test
+	public void testModifyOtherRefPage() throws NodeException {
+		otherRefPageDe = update(otherRefPageDe, update -> {
 			getPartType(LongHTMLPartType.class, update.getContentTag("content"), TEMPLATE_PARTNAME).setText("modified");
 		}).at(2).publish().build();
 

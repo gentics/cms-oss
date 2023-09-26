@@ -29,7 +29,6 @@
 					<skipTests>${skip.unit.tests}</skipTests>
 					<forkCount>${surefire.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
-					<argLine>${surefire.argLine}</argLine>
 					<trimStackTrace>false</trimStackTrace>
 					<testFailureIgnore>true</testFailureIgnore>
 					<runOrder>random</runOrder>

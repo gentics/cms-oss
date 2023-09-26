@@ -28,7 +28,6 @@
 					<jvm>${test.jvm.home}/bin/java</jvm>
 					<skipTests>${skip.unit.tests}</skipTests>
 					<forkCount>${surefire.forkcount}</forkCount>
-					<argLine>${surefire.argLine}</argLine>
 					<reuseForks>false</reuseForks>
 					<trimStackTrace>false</trimStackTrace>
 					<testFailureIgnore>true</testFailureIgnore>
@@ -106,7 +105,6 @@
 			<groupId>com.gentics.cms</groupId>
 			<artifactId>cms-license</artifactId>
 		</dependency>
-
 
 		<!--Test dependencies -->
 		<dependency>

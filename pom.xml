@@ -14,12 +14,10 @@
 	<licenses>
 		<license>
 			<name>Gentics Software GmbH - Commercial License</name>
-			<!-- TODO license -->
-			<url>http://www.gentics.com/licenses/LICENSE.txt</url>
+			<url>https://www.gentics.com/licenses/LICENSE.txt</url>
 		</license>
 	</licenses>
 
-	<!-- TODO: do we need this?-->
 	<scm>
 		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
 		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
@@ -41,15 +39,6 @@
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
-
-		<!--
-		<module>static</module>
-		-->
-
-		<!--module>contentnode-manual</module>
-		<module>contentnode-doc</module>
-		<module>contentnode-changelog</module -->
-
 	</modules>
 
 	<properties>
@@ -101,6 +90,7 @@
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
+		<surefire.argLine>-Xms64m -Xmx256m --add-opens=java.base/java.lang=ALL-UNNAMED</surefire.argLine>
 	</properties>
 
 	<build>

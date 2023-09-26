@@ -6,6 +6,8 @@ endprologue.
 
 The scheduler is automatically started with Gentics CMS, no further configuration is necessary besides creating tasks and schedules in the admin UI.
 
+NOTE: For security reasons the default configuration for the scheduler requires custom scripts to be placed in @/cms/scheduler-commands@. See "Custom Tasks":#custom-tasks for more information.
+
 h3. Scheduler REST API
 
 The status of the scheduler itself as well as tasks, schedules and executions can be queried and modified via the REST API. For further details see the documentation for the  "scheduler resource":https://www.gentics.com/Content.Node/guides/restapi/resource_SchedulerResource.html.
@@ -109,3 +111,11 @@ This task will execute the link checker. The configuration options are described
 h4. @publish@
 
 This task will start a publish run.
+
+h3. Custom Tasks
+
+When creating a custom task, only scripts in @/cms/scheduler-commands@ are valid commands by default. Unless the feature "INSECURE_SCHEDULER_COMMAND":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#insecure-scheduler-command is enabled, only scripts in @/cms/scheduler-commands@ may be executed. Other commands will be not be started by the scheduler.
+
+NOTE: Enabling the @INSECURE_SCHEDULER_COMMAND@ feature is not recommended for production environments, and should only be used while transitioning old tasks.
+
+To migrate existing tasks to the new scheduler, create a script in @/cms/scheduler-commands@ with the old tasks commands and call this script from the custom task. Make sure that the @node@ user can read and execute scripts in that directory.

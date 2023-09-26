@@ -30,14 +30,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>${surefireArgLine}</argLine>
-					<skip>${skip.unit.tests}</skip>
-					<forkCount>${test.forkcount}</forkCount>
-					<reuseForks>false</reuseForks>
-					<!-- Don't execute more than one test per jvm fork! -->
-					<testFailureIgnore>true</testFailureIgnore>
-					<runOrder>random</runOrder>
-					<trimStackTrace>false</trimStackTrace>
 					<forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>
 					<includes>
 						<include>**/*Test.java</include>

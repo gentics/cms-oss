@@ -300,15 +300,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<jvm>${test.jvm.home}/bin/java</jvm>
-					<skipTests>${skip.unit.tests}</skipTests>
-					<forkCount>${surefire.forkcount}</forkCount>
-					<reuseForks>false</reuseForks>
-					<argLine>-Xms64m -Xmx256m  --add-opens=java.base/java.lang=ALL-UNNAMED ${surefireArgLine}</argLine>
-					<trimStackTrace>false</trimStackTrace>
-					<testFailureIgnore>true</testFailureIgnore>
-					<runOrder>random</runOrder>
-					<rerunFailingTestsCount>${surefire.rerunFailingTestsCount}</rerunFailingTestsCount>
 					<!-- 45min -->
 					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
 					<excludes>

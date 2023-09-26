@@ -90,7 +90,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<skip>true</skip>
-					<argLine>--add-opens=java.base/java.lang=ALL-UNNAMED </argLine>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -34,8 +34,6 @@ import {
     Template,
     TemplateTag,
     User,
-    PackageCheckResult,
-    PackageDependency,
     PackageDependencyEntity,
 
 } from '@gentics/cms-models';

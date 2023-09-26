@@ -299,19 +299,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<!-- 45min -->
-					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
-					<excludes>
-						<!-- Exclude integration tests within (unit) test phase. -->
-						<exclude>**/*AbstractTest.java</exclude>
-						<exclude>**/AbstractMetaDataCompareTest</exclude>
-						<exclude>**/AbstractMetaDataCompareTest*</exclude>
-						<exclude>**/*Abstract*Test.java</exclude>
-						<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
-						<exclude>**/MeshPortalPreviewSslTest.java</exclude>
-					</excludes>
-				</configuration>
 				<executions>
 					<execution>
 						<?m2e ignore?>

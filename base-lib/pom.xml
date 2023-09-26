@@ -38,11 +38,6 @@
 						<include>**/*IntegrationTest.java</include>
 						<include>**/*SandboxTest.java</include>
 					</includes>
-					<excludes>
-						<exclude>**/*AbstractTest.java</exclude>
-						<exclude>**/*Abstract*.java</exclude>
-						<exclude>**/Abstract*.java</exclude>
-					</excludes>
 				</configuration>
 				<executions>
 					<execution>

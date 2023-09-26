@@ -11,6 +11,18 @@
     </button>
 </div>
 
+<div class="format-section style-group">
+    <button
+        *ngFor="let item of SPECIAL_STYLE_COMMANDS"
+        class="format-button"
+        [title]="'editor.format_style_' + item | i18n"
+        [disabled]="!(allowedFormats | gtxIncludes:item)"
+        (click)="toggleFormat(item)"
+    >
+        <icon>{{ item | gtxCommandToPipe }}</icon>
+    </button>
+</div>
+
 <div class="format-section list-group">
     <button
         *ngFor="let item of LIST_COMMANDS"

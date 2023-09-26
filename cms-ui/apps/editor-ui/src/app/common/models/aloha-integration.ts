@@ -16,6 +16,8 @@ export const COMMAND_STYLE_ABBREVIATION = 'abbreviation';
 export const COMMAND_STYLE_SUBSCRIPT = 'subscript';
 export const COMMAND_STYLE_SUPERSCRIPT = 'superscript';
 
+export const COMMAND_SPECIAL_STYLE_REMOVE_FORMAT = 'removeFormat';
+
 export const COMMAND_LIST_UNORDERED = 'list_unordered';
 export const COMMAND_LIST_ORDERED = 'list_ordered';
 
@@ -93,6 +95,10 @@ export const STYLE_COMMANDS = [
     COMMAND_STYLE_SUPERSCRIPT,
 ];
 
+export const SPECIAL_STYLE_COMMANDS = [
+    COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
+];
+
 export const LIST_COMMANDS = [
     COMMAND_LIST_UNORDERED,
     COMMAND_LIST_ORDERED,
@@ -111,6 +117,7 @@ export const TYPOGRAPHY_COMMANDS = [
 
 export const DEFAULT_COMMANDS = [
     ...STYLE_COMMANDS,
+    ...SPECIAL_STYLE_COMMANDS,
     ...LIST_COMMANDS,
     ...TYPOGRAPHY_COMMANDS,
 ];

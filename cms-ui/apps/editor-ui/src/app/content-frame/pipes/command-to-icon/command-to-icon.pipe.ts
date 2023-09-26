@@ -20,6 +20,7 @@ import {
     COMMAND_STYLE_CITATION,
     COMMAND_STYLE_ABBREVIATION,
     COMMAND_TYPOGRAPHY_PREFORMATTED,
+    COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
 } from '../../../common/models/aloha-integration';
 
 @Pipe({
@@ -49,6 +50,8 @@ export class CommandToIconPipe implements PipeTransform {
                 return 'subscript';
             case COMMAND_STYLE_SUPERSCRIPT:
                 return 'superscript';
+            case COMMAND_SPECIAL_STYLE_REMOVE_FORMAT:
+                return 'format_clear';
             case COMMAND_LIST_UNORDERED:
                 return 'format_list_bulleted';
             case COMMAND_LIST_ORDERED:

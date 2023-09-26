@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, Simpl
 import { AlohaDOM } from '@gentics/cms-models';
 import {
     COMMAND_LINK,
+    COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
     COMMAND_TABLE,
     COMMAND_TO_NODE_NAME,
     DEFAULT_COMMANDS,
     LIST_COMMANDS,
     NODE_NAME_TO_COMMAND,
+    SPECIAL_STYLE_COMMANDS,
     STYLE_COMMANDS,
-    TABLE_NODE_NAME,
     TAG_ALIASES,
     TYPOGRAPHY_COMMANDS,
 } from '../../../common/models/aloha-integration';
@@ -35,6 +36,7 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
 
     public readonly TablePart = TablePart;
     public readonly STYLE_COMMANDS = STYLE_COMMANDS;
+    public readonly SPECIAL_STYLE_COMMANDS = SPECIAL_STYLE_COMMANDS;
     public readonly LIST_COMMANDS = LIST_COMMANDS;
     public readonly TYPOGRAPHY_COMMANDS = TYPOGRAPHY_COMMANDS;
     public readonly COMMAND_LINK = COMMAND_LINK;
@@ -108,7 +110,8 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             }
         }
 
-        this.activeFormats = Array.from(newActiveFormat);
+        this.activeFormats = Array.from(newActiveFormat)
+            .filter(val => COMMAND_TO_NODE_NAME[val] != null);
         this.allowedFormats = newAllowedFormats.map(nodeOrCommand => {
             const nodeName = nodeOrCommand.toUpperCase();
             const alias = TAG_ALIASES[nodeName];
@@ -117,6 +120,11 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
     }
 
     public toggleFormat(format: string): void {
+        if (format === COMMAND_SPECIAL_STYLE_REMOVE_FORMAT) {
+            this.clearFormatFromSelection();
+            return;
+        }
+
         // The range may be out of date, as it's only being updated on block/element changes, but not on actual selection changes.
         const currentRange = this.aloha.Selection.getRangeObject();
         const nodeName = COMMAND_TO_NODE_NAME[format];
@@ -163,5 +171,9 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             idx++;
         }
         this.table.activePart = entries[idx][1];
+    }
+
+    protected clearFormatFromSelection(): void {
+
     }
 }

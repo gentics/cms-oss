@@ -940,6 +940,9 @@ format_style_sub:
 format_style_sup:
     en: Superscript
     de: Hochgestellt
+format_style_removeFormat:
+    en: Remove formatting
+    de: Formartierung entfernen
 format_list_unsorted:
     en: Unsorted List
     de: Unsortierte Liste

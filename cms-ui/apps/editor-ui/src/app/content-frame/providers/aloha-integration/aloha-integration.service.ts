@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AlohaRangeObject, AlohaSettings } from '@gentics/cms-models';
+import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { BehaviorSubject } from 'rxjs';
 import { AlohaGlobal } from '../../components/content-frame/common';
 

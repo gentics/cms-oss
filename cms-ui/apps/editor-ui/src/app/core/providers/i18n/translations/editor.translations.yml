@@ -961,7 +961,7 @@ format_typography_h2:
 format_typography_h3:
     en: Heading 3
     de: Überschrift 3
-textformat_typography_h4:
+format_typography_h4:
     en: Heading 4
     de: Überschrift 4
 format_typography_h5:

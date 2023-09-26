@@ -1,39 +1,73 @@
 <div class="content">
-    <div *ngFor="let group of groups" class="construct-group" [attr.data-id]="group.id">
-        <gtx-accordion
-            [trigger]="groupLabel"
-            [triggerToggle]="true"
-            [open]="true"
-        >
-            <div class="group-entries">
-                <div
-                    *ngFor="let construct of group.constructs"
-                    class="construct"
-                    [title]="construct.description"
-                    [attr.draggable]="true"
-                    [attr.data-id]="construct.id"
-                    (dragStart)="setupDragOnElement($event, construct)"
-                >
-                    <div class="construct-icon">
-                        <icon>{{ construct | gtxConstructIconNormalizer }}</icon>
+    <gtx-dropdown-list
+        #dropdown
+        class="dropdown"
+        [belowTrigger]="false"
+        [sticky]="true"
+        [width]="'trigger'"
+        [disabled]="true"
+    >
+        <gtx-dropdown-trigger>
+            <div class="construct-overview">
+                <ng-container *ngTemplateOutlet="constructs; context: { list: availableConstructs }"></ng-container>
+            </div>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="full-view-wrapper">
+                <div class="groups-container">
+                    <div
+                        *ngFor="let group of groups"
+                        class="construct-group"
+                        [attr.data-id]="group.id"
+                    >
+                        <div class="group-label">
+                            {{ group.label }}
+                        </div>
+                        <div class="group-entries">
+                            <ng-template *ngTemplateOutlet="constructs; context: { list: group.constructs }"></ng-template>
+                        </div>
                     </div>
-                    <div class="construct-name">
-                        {{ construct.name }}
+
+                    <div *ngIf="groups.length === 0" class="no-elements">
+                        TODO: Translation<br>
+                        No elements for your search
                     </div>
                 </div>
+
+                <div class="search-bar">
+                    <gtx-search-bar
+                        [query]="filterText"
+                        (change)="updateFilterText($event)"
+                        (clear)="updateFilterText('')"
+                    ></gtx-search-bar>
+                </div>
             </div>
-        </gtx-accordion>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
 
-        <ng-template #groupLabel>
-            <div class="group-label">{{ group.id === -1 ? (group.label | i18n) : group.label }}</div>
-        </ng-template>
+    <gtx-button
+        class="dropdown-toggle"
+        icon
+        [disabled]="availableConstructs.length === 0"
+        (click)="openDropdown()"
+    >
+        <icon>keyboard_arrow_down</icon>
+    </gtx-button>
+</div>
+
+<ng-template #constructs let-list="list">
+    <div
+        *ngFor="let construct of list"
+        class="construct"
+        [title]="construct.description"
+        [attr.data-id]="construct.id"
+    >
+        <div class="construct-icon">
+            <icon>{{ construct | gtxConstructIconNormalizer }}</icon>
+        </div>
+        <div class="construct-name">
+            {{ construct.name }}
+        </div>
     </div>
-</div>
-
-<div class="search-bar">
-    <gtx-search-bar
-        [query]="filterText"
-        (change)="updateFilterText($event)"
-        (clear)="updateFilterText('')"
-    ></gtx-search-bar>
-</div>
+</ng-template>

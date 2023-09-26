@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { TagType, ConstructCategory } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { ConstructCategory, TagType } from '@gentics/cms-models';
+import { DropdownListComponent } from '@gentics/ui-core';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
 interface GroupedConstructs {
@@ -9,7 +10,6 @@ interface GroupedConstructs {
     constructs: TagType[];
 }
 
-const DRAG_TYPE = 'x-application/gtx-aloha';
 const UNCATEGORIZED_CONSTRUCTS_ID = -1;
 const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
 
@@ -30,8 +30,12 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     @Input()
     public categories: ConstructCategory[] = [];
 
+    @ViewChild('dropdown', { static: true })
+    public dropdown: DropdownListComponent;
+
     public filterText: string;
 
+    public availableConstructs: TagType[] = [];
     public groups: GroupedConstructs[] = [];
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -47,10 +51,12 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
 
     public updateConstructs(): void {
         const haystack = (this.filterText || '').toLocaleLowerCase();
-        const constructMap: Record<number, TagType> = this.constructs
+        this.availableConstructs = this.constructs
             .filter(construct => construct.visibleInMenu)
-            // TODO: Apply the correct white-/blacklist filtering for the current element
-            // .filter(construct => true)
+            .sort((a, b) => a.name.localeCompare(b.name));
+        // TODO: Apply the correct white-/blacklist filtering for the current element
+
+        const constructMap: Record<number, TagType> = this.availableConstructs
             // Filter out all constructs which do not match the current search/filtering
             .filter(construct => haystack.length > 1
                 ? construct.name.toLocaleLowerCase().includes(haystack)
@@ -101,14 +107,16 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
             }
             return 1;
         });
+
+        if (this.dropdown && this.dropdown.isOpen) {
+            this.dropdown.resize();
+        }
     }
 
-    public setupDragOnElement(event: DragEvent, construct: TagType): void {
-        event.dataTransfer.setData(DRAG_TYPE, JSON.stringify({
-            id: construct.id,
-            keyword: construct.keyword,
-            name: construct.name,
-        }));
-        event.dataTransfer.effectAllowed = 'copy';
+    public openDropdown(): void {
+        if (!this.dropdown || this.availableConstructs.length === 0) {
+            return;
+        }
+        this.dropdown.openDropdown(true);
     }
 }

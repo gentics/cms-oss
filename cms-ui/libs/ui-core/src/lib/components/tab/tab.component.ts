@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, HostBinding } from '@angular/core';
 
 /**
  * For documentation, see the Tabs
@@ -31,6 +31,7 @@ export class TabComponent {
     @Output()
     public select = new EventEmitter<string>();
 
+    @HostBinding('class.is-active')
     public active = false;
 
     constructor(

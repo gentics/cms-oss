@@ -1,0 +1,19 @@
+.page-control-tabs {
+    height: 9rem;
+    display: flex;
+    flex-direction: column;
+
+    &::ng-deep > gtx-tab {
+        height: 0;
+
+        &.is-active {
+            flex: 1 1 auto;
+            min-height: 1px;
+        }
+
+        .tab-content {
+            width: 100%;
+            height: 100%;
+        }
+    }
+}

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AlohaEditable, AlohaRangeObject, AlohaSettings, File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
+import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { File as FileModel, Folder, Form, Image as ImageModel, Node, Page } from '@gentics/cms-models';
 import { GCMSUI } from '../../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { AlohaDOM } from '@gentics/cms-models';
+import { AlohaDOM } from '@gentics/aloha-models';
 import {
     COMMAND_LINK,
     COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,

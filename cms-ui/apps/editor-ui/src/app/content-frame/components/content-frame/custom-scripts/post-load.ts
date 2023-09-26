@@ -1,5 +1,6 @@
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
-import { AlohaContextChangeEvent, Page } from '@gentics/cms-models';
+import { AlohaContextChangeEvent } from '@gentics/aloha-models';
+import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions, appendTypeIdToUrl } from '../common';

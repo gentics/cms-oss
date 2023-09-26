@@ -11,8 +11,9 @@ import {
 } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { AlohaLinkPlugin, AlohaPubSub } from '@gentics/aloha-models';
 import { nameToTypeId, typeIdsToName } from '@gentics/cms-components';
-import { AllowedItemSelectionType, AllowedSelectionType, AlohaLinkPlugin, AlohaPubSub, File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
+import { AllowedItemSelectionType, AllowedSelectionType, File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { InputComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';

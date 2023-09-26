@@ -59,6 +59,9 @@
             "@gentics/cms-models/*": [
                 "libs/cms-models/src/lib/*"
             ],
+            "@gentics/aloha-models": [
+                "libs/aloha-models/src/public-api"
+            ],
             "@gentics/cms-rest-clients-angular": [
                 "libs/cms-rest-clients-angular/src/public-api"
             ],

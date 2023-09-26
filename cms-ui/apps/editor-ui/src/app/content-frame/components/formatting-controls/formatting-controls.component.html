@@ -1,146 +1,161 @@
-<div class="format-section style-group">
-    <button
-        *ngFor="let item of STYLE_COMMANDS"
-        class="format-button"
-        [title]="'editor.format_style_' + item | i18n"
-        [class.active]="activeFormats | gtxIncludes:item"
-        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
-        (click)="toggleFormat(item)"
-    >
-        <icon>{{ item | gtxCommandToPipe }}</icon>
-    </button>
-</div>
+<div class="format-row root-row">
+    <div class="format-column rows-wrapper">
+        <div class="format-row">
+            <div class="format-section style-group">
+                <button
+                    *ngFor="let item of STYLE_COMMANDS"
+                    class="format-button"
+                    [title]="'editor.format_style_' + item | i18n"
+                    [class.active]="activeFormats | gtxIncludes:item"
+                    [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
+                    (click)="toggleFormat(item)"
+                >
+                    <icon>{{ item | gtxCommandToPipe }}</icon>
+                </button>
+            </div>
 
-<div class="format-section style-group">
-    <button
-        *ngFor="let item of SPECIAL_STYLE_COMMANDS"
-        class="format-button"
-        [title]="'editor.format_style_' + item | i18n"
-        [disabled]="!(allowedFormats | gtxIncludes:item)"
-        (click)="toggleFormat(item)"
-    >
-        <icon>{{ item | gtxCommandToPipe }}</icon>
-    </button>
-</div>
+            <div class="format-section style-group">
+                <button
+                    *ngFor="let item of SPECIAL_STYLE_COMMANDS"
+                    class="format-button"
+                    [title]="'editor.format_style_' + item | i18n"
+                    [disabled]="!(allowedFormats | gtxIncludes:item)"
+                    (click)="toggleFormat(item)"
+                >
+                    <icon>{{ item | gtxCommandToPipe }}</icon>
+                </button>
+            </div>
 
-<div class="format-section list-group">
-    <button
-        *ngFor="let item of LIST_COMMANDS"
-        class="format-button"
-        [title]="'editor.format_' + item | i18n"
-        [class.active]="activeFormats | gtxIncludes:item"
-        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
-        (click)="toggleFormat(item)"
-    >
-        <icon>{{ item | gtxCommandToPipe }}</icon>
-    </button>
-</div>
+            <div class="format-section list-group">
+                <button
+                    *ngFor="let item of LIST_COMMANDS"
+                    class="format-button"
+                    [title]="'editor.format_' + item | i18n"
+                    [class.active]="activeFormats | gtxIncludes:item"
+                    [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
+                    (click)="toggleFormat(item)"
+                >
+                    <icon>{{ item | gtxCommandToPipe }}</icon>
+                </button>
+            </div>
+        </div>
 
-<div class="format-section typography-group">
-    <button
-        *ngFor="let item of TYPOGRAPHY_COMMANDS"
-        class="format-button"
-        [title]="'editor.format_typography_' + item | i18n"
-        [class.active]="activeFormats | gtxIncludes:item"
-        [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
-        (click)="toggleFormat(item)"
-    >
-        <icon>{{ item | gtxCommandToPipe }}</icon>
-    </button>
-</div>
+        <div class="format-row">
+            <gtx-link-controls
+                [aloha]="aloha"
+                [range]="range"
+                [settings]="settings"
+                (activeChange)="setLinkActive($event)"
+            ></gtx-link-controls>
 
-<gtx-link-controls
-    [aloha]="aloha"
-    [range]="range"
-    [settings]="settings"
-    (activeChange)="setLinkActive($event)"
-></gtx-link-controls>
+            <div class="format-section table-group" [attr.data-active-part]="table.activePart">
+                <button
+                    class="format-button"
+                    [class.active]="activeFormats | gtxIncludes:COMMAND_TABLE"
+                    [title]="'editor.format_table' | i18n"
+                    (click)="toggleFormat(COMMAND_TABLE)"
+                >
+                    <icon>table</icon>
+                </button>
 
-<div class="format-section table-group" [attr.data-active-part]="table.activePart">
-    <button
-        class="format-button"
-        [class.active]="activeFormats | gtxIncludes:COMMAND_TABLE"
-        [title]="'editor.format_table' | i18n"
-        (click)="toggleFormat(COMMAND_TABLE)"
-    >
-        <icon>table</icon>
-    </button>
+                <ng-container *ngIf="activeFormats | gtxIncludes:COMMAND_TABLE">
+                    <button
+                        *ngIf="table.activePart === TablePart.CELL || table.activePart === TablePart.CAPTION"
+                        [title]="'editor.format_table_caption' | i18n"
+                        class="format-button table-action-button"
+                    >
+                        <icon>title</icon>
+                    </button>
 
-    <ng-container *ngIf="activeFormats | gtxIncludes:COMMAND_TABLE">
+                    <ng-container *ngIf="table.activePart === TablePart.CELL">
+                        <div class="vertical-separator"></div>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_merge_cell' | i18n"
+                        >
+                            <icon>cell_merge</icon>
+                        </button>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_split_cell' | i18n"
+                        >
+                            <icon>arrows_outward</icon>
+                        </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="table.activePart === TablePart.COLUMN">
+                        <div class="vertical-separator"></div>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_add_column_left' | i18n"
+                        >
+                            <icon class="hollow">splitscreen_left</icon>
+                        </button>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_add_column_right' | i18n"
+                        >
+                            <icon class="hollow">splitscreen_right</icon>
+                        </button>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_remove_column' | i18n"
+                        >
+                            <icon>delete</icon>
+                        </button>
+                    </ng-container>
+
+                    <ng-container *ngIf="table.activePart === TablePart.ROW">
+                        <div class="vertical-separator"></div>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_add_row_above' | i18n"
+                        >
+                            <icon class="hollow">splitscreen_top</icon>
+                        </button>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_add_row_below' | i18n"
+                        >
+                            <icon class="hollow">splitscreen_bottom</icon>
+                        </button>
+
+                        <button
+                            class="format-button table-action-button"
+                            [title]="'editor.format_table_remove_row' | i18n"
+                        >
+                            <icon>delete</icon>
+                        </button>
+                    </ng-container>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+
+    <div class="format-section typography-group">
         <button
-            *ngIf="table.activePart === TablePart.CELL || table.activePart === TablePart.CAPTION"
-            [title]="'editor.format_table_caption' | i18n"
-            class="format-button table-action-button"
+            *ngFor="let item of TYPOGRAPHY_COMMANDS"
+            class="typography-button"
+            [title]="'editor.format_typography_' + item | i18n"
+            [class.active]="activeFormats | gtxIncludes:item"
+            [disabled]="!(activeFormats | gtxIncludes:item) && !(allowedFormats | gtxIncludes:item)"
+            (click)="toggleFormat(item)"
         >
-            <icon>title</icon>
+            <div class="typography-icon">
+                <icon>{{ item | gtxCommandToPipe }}</icon>
+            </div>
+            <div class="typography-label">
+                {{ 'editor.format_typography_' + item | i18n }}
+            </div>
         </button>
-
-        <ng-container *ngIf="table.activePart === TablePart.CELL">
-            <div class="vertical-separator"></div>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_merge_cell' | i18n"
-            >
-                <icon>cell_merge</icon>
-            </button>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_split_cell' | i18n"
-            >
-                <icon>arrows_outward</icon>
-            </button>
-        </ng-container>
-
-        <ng-container *ngIf="table.activePart === TablePart.COLUMN">
-            <div class="vertical-separator"></div>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_add_column_left' | i18n"
-            >
-                <icon class="hollow">splitscreen_left</icon>
-            </button>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_add_column_right' | i18n"
-            >
-                <icon class="hollow">splitscreen_right</icon>
-            </button>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_remove_column' | i18n"
-            >
-                <icon>delete</icon>
-            </button>
-        </ng-container>
-
-        <ng-container *ngIf="table.activePart === TablePart.ROW">
-            <div class="vertical-separator"></div>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_add_row_above' | i18n"
-            >
-                <icon class="hollow">splitscreen_top</icon>
-            </button>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_add_row_below' | i18n"
-            >
-                <icon class="hollow">splitscreen_bottom</icon>
-            </button>
-
-            <button
-                class="format-button table-action-button"
-                [title]="'editor.format_table_remove_row' | i18n"
-            >
-                <icon>delete</icon>
-            </button>
-        </ng-container>
-    </ng-container>
+    </div>
 </div>
+
+

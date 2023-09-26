@@ -182,9 +182,10 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
 
     /**
      * Open the dropdown contents in the correct position.
+     * @param ignoreDisabled If it should ignore that this dropdown is disabled. Useful for programmatic opening.
      */
-    openDropdown(): void {
-        if (this.disabled) {
+    openDropdown(ignoreDisabled: boolean = false): void {
+        if (this.disabled && !ignoreDisabled) {
             return;
         }
 

@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { AlohaRangeObject, AlohaSettings } from '@gentics/cms-models';
+import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { AlohaGlobal } from '../content-frame/common';
 
 @Component({ template: '' })

@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { AlohaRangeObject, AlohaSettings, ConstructCategory, TagType } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { ConstructCategory, TagType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Subscription } from 'rxjs';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';

@@ -1,6 +1,5 @@
 import { File, Folder, Form, Image, Language, Node, Normalized, Page, Raw, Tag, TagType } from '../models';
 import { ItemInNode, RepositoryBrowserOptions, TagInContainer } from '../repository-browser';
-import { AlohaContextChangeEvent, AlohaSettings } from './aloha';
 import { EditMode, GcmsUiLanguage } from './ui-state';
 
 /**
@@ -91,10 +90,4 @@ export interface GcmsUiBridge {
      * and when the user clicks Cancel, rejects.
      */
     openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>) => Promise<Tag>;
-    /**
-     * Call to forward the event to the Aloha Service, so that the UI can react to selection changes.
-     * @param event The event from Aloha that the selection/context has changed
-     */
-    forwardContextChange: (event: AlohaContextChangeEvent) => void;
-    forwardSettings: (settings: AlohaSettings) => void;
 }

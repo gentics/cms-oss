@@ -1,10 +1,29 @@
 @import '../base-controls/base-controls.component.scss';
 
 :host {
+    width: 100%;
+    height: 100%;
+    margin: 0.25rem -0.25rem 0.25rem;
+    display: block;
+}
+
+.format-row {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    margin: 0.5rem -0.25rem 0.25rem;
+}
+
+.format-column {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.rows-wrapper {
+    >* {
+        flex: 1 1 auto;
+        width: 100%;
+    }
 }
 
 .flex-break {
@@ -27,3 +46,60 @@
     }
 }
 
+.format-section.typography-group {
+    height: 6.55rem;
+}
+
+.typography-button {
+    @include format-element;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    height: 90px;
+    width: 90px;
+    font-size: 0.9rem;
+
+    &:disabled {
+        background: $gtx-color-mid-gray;
+        cursor: not-allowed;
+    }
+
+    &.active {
+        color: $gtx-color-primary;
+        background: darken($gtx-color-very-light-gray, 5%);
+
+        &:hover {
+            background: darken($gtx-color-very-light-gray, 15%);
+        }
+    }
+
+    .typography-icon {
+        height: 20px;
+        width: 20px;
+        font-size: 20px;
+        margin-top: 1rem;
+        color: inherit;
+
+        >icon {
+            height: inherit;
+            width: inherit;
+            font-size: inherit;
+            color: inherit;
+        }
+    }
+
+    .typography-label {
+        overflow: hidden;
+        white-space: normal;
+        word-break: break-word;
+        text-overflow: ellipsis;
+        margin-top: 0.25rem;
+        color: inherit;
+    }
+}
+
+.root-row {
+    justify-content: space-between;
+}

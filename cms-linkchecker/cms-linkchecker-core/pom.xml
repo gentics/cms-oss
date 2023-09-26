@@ -28,8 +28,8 @@
 					<jvm>${test.jvm.home}/bin/java</jvm>
 					<skipTests>${skip.unit.tests}</skipTests>
 					<forkCount>${surefire.forkcount}</forkCount>
+					<argLine>${surefire.argLine}</argLine>
 					<reuseForks>false</reuseForks>
-					<argLine>-Xms64m -Xmx256m</argLine>
 					<trimStackTrace>false</trimStackTrace>
 					<testFailureIgnore>true</testFailureIgnore>
 					<runOrder>random</runOrder>

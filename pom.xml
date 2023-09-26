@@ -57,6 +57,7 @@
 
 		<surefire.forkcount>16</surefire.forkcount>
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
+		<surefire.argLine>-Xms64m -Xmx256m --add-opens=java.base/java.lang=ALL-UNNAMED</surefire.argLine>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
 		<enunciate.version>2.15.0</enunciate.version>
@@ -250,6 +251,9 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.22.0</version>
+					<configuration>
+						<argLine>${surefire.argLine}</argLine>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>

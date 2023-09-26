@@ -165,6 +165,7 @@ export interface GcnLinkCheckerPluginSettings {
 export interface FormatPluginSettings {
     config: string[];
     editables?: Record<string, string[]>;
+    removeFormats?: string[];
 }
 
 export interface AlohaUiComponent {
@@ -245,6 +246,10 @@ export interface AlohaLinkPlugin extends AlohaPlugin {
     removeLink: (terminateLinkScope?: boolean) => void;
 }
 
+export interface AlohaFormatPlugin extends AlohaPlugin {
+    removeFormat: () => void;
+}
+
 export interface AlohaDOM {
     /**
      * Apply the given markup additively to the given range. The given rangeObject will be modified if necessary
@@ -268,6 +273,7 @@ export interface AlohaDOM {
      * @param removeNonEditables Whether to remove nodes which are not content editable (default: true)
      */
     removeMarkup: (rangeObject: AlohaRangeObject, markup: any, limit: any, removeNonEditables?: boolean) => void;
+    getEditingHostOf: (obj: any) => any;
 }
 
 export interface AlohaEditable {

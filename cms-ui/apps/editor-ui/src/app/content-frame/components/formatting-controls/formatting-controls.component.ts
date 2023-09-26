@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { AlohaDOM } from '@gentics/aloha-models';
+import { AlohaDOM, AlohaFormatPlugin } from '@gentics/aloha-models';
 import {
     COMMAND_LINK,
     COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
@@ -13,6 +13,7 @@ import {
     TAG_ALIASES,
     TYPOGRAPHY_COMMANDS,
 } from '../../../common/models/aloha-integration';
+import { findAndToggleFormats } from '../../utils';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
 enum TablePart {
@@ -52,6 +53,7 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
     }
 
     protected alohaDom: AlohaDOM;
+    protected formatPlugin: AlohaFormatPlugin;
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -65,7 +67,14 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
                 try {
                     this.alohaDom = this.aloha.require('util/dom');
                 } catch (err) {
+                    this.alohaDom = null;
                     console.error('Could not load aloha-dom!', err);
+                }
+                try {
+                    this.formatPlugin = this.aloha.require('format/format-plugin');
+                } catch (err) {
+                    this.formatPlugin = null;
+                    console.error('Could not load aloha format-plugin!', err);
                 }
             }
         }
@@ -128,33 +137,24 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
         // The range may be out of date, as it's only being updated on block/element changes, but not on actual selection changes.
         const currentRange = this.aloha.Selection.getRangeObject();
         const nodeName = COMMAND_TO_NODE_NAME[format];
-        const allNodeNames = TAG_ALIASES[nodeName] ? [nodeName, TAG_ALIASES[nodeName]] : [nodeName];
-        const foundMarkup = currentRange.findMarkup(function() {
-            return allNodeNames.indexOf(this.nodeName) > -1;
-        }, this.aloha.activeEditable.obj);
+        const applied = findAndToggleFormats(
+            currentRange,
+            this.alohaDom,
+            this.aloha.activeEditable,
+            this.aloha.jQuery,
+            [nodeName],
+            {
+                allowAdd: true,
+                allowRemove: true,
+            },
+        );
 
-        // Push/Splice can't be used, as the change detection isn't triggered, because it's still
-        // the same array. Even with `markForCheck`, it simply doesn't re-run the includes pipe.
-        if (!foundMarkup) {
-            this.alohaDom.addMarkup(currentRange, this.aloha.jQuery(`<${nodeName}>`));
-            if (this.aloha.activeEditable) {
-                this.aloha.activeEditable.smartContentChange({type: 'block-change'});
-            }
-        } else {
-            // remove the markup
-            if (currentRange.isCollapsed()) {
-                // when the range is collapsed, we remove exactly the one DOM element
-                this.alohaDom.removeFromDOM(foundMarkup, currentRange, true);
-            } else {
-                // the range is not collapsed, so we remove the markup from the range
-                this.alohaDom.removeMarkup(currentRange, this.aloha.jQuery(foundMarkup), this.aloha.activeEditable.obj);
-            }
+        if (applied.length > 0) {
+            // select the modified range and update our state
+            currentRange.select();
+            this.range = this.aloha.Selection.getRangeObject();
+            this.updateStateFromRange();
         }
-
-        // select the modified range and update our state
-        currentRange.select();
-        this.range = this.aloha.Selection.getRangeObject();
-        this.updateStateFromRange();
     }
 
     public setLinkActive(active: boolean): void {
@@ -174,6 +174,8 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
     }
 
     protected clearFormatFromSelection(): void {
-
+        if (this.formatPlugin) {
+            this.formatPlugin.removeFormat();
+        }
     }
 }

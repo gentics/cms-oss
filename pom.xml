@@ -90,7 +90,7 @@
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
-		<surefire.argLine>-Xms64m -Xmx256m --add-opens=java.base/java.lang=ALL-UNNAMED</surefire.argLine>
+		<argLine>-Xms64m -Xmx256m --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
 	</properties>
 
 	<build>
@@ -283,7 +283,6 @@
 					<version>2.22.0</version>
 					<configuration>
 						<jvm>${test.jvm.home}/bin/java</jvm>
-						<argLine>${surefire.argLine} @{argLine}</argLine>
 						<skip>${skip.unit.tests}</skip>
 						<forkCount>${surefire.forkcount}</forkCount>
 						<reuseForks>false</reuseForks>

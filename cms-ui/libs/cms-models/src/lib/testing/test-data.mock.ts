@@ -899,6 +899,7 @@ export function getExampleNodeData(config: MockNodeConfig = { id: 1, userId: 3 }
         masterNodeId: config.masterNodeId,
         omitPageExtension: false,
         pageLanguageCode: GtxNodePageLanguageCode.FILENAME,
+        publishImageVariants: false,
     };
 }
 

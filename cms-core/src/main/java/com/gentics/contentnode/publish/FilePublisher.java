@@ -418,11 +418,13 @@ public class FilePublisher {
 		long durationCleanup = System.currentTimeMillis() - start - durationParse;
 		renderResult.info(FilePublisher.class, "Cleanup finished after " + durationCleanup + "ms");
 
-		GenticsImageStoreResult result = imageStore.renderImages(cnMapPublisher);
+		Set<Integer> gisImageIds = imageStore.getGISImagesToFilesystem();
+
+		GenticsImageStoreResult result = imageStore.renderImages(cnMapPublisher, gisImageIds);
 		long durationRender = System.currentTimeMillis() - start - durationCleanup - durationParse;
 		renderResult.info(FilePublisher.class, "Rendering finished after " + durationRender + "ms");
 
-		imageStore.createLinks(this);
+		imageStore.createLinks(this, gisImageIds);
 		long durationLink = System.currentTimeMillis() - start - durationRender - durationCleanup - durationParse;
 		renderResult.info(FilePublisher.class, "Linking finished after " + durationLink + "ms");
 

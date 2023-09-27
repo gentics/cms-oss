@@ -15,10 +15,12 @@ import { FilePreview } from './components/file-preview/file-preview.component';
 import { FormReportsListComponent } from './components/form-reports-list/form-reports-list.component';
 import { FormattingControlsComponent } from './components/formatting-controls/formatting-controls.component';
 import { LinkControlsComponent } from './components/link-controls/link-controls.component';
+import { ListControlsComponent } from './components/list-controls/list-controls.component';
 import { NodePropertiesForm } from './components/node-properties-form/node-properties-form.component';
 import { PageEditorControlsComponent } from './components/page-editor-controls/page-editor-controls.component';
 import { PropertiesEditor } from './components/properties-editor/properties-editor.component';
 import { SimpleDeleteModalComponent } from './components/simple-delete-modal/simple-delete-modal.component';
+import { TableControlsComponent } from './components/table-controls/table-controls.component';
 import { contentFrameRoutes } from './content-frame.routes';
 import { CommandToIconPipe } from './pipes/command-to-icon/command-to-icon.pipe';
 import { TagTypeIconPipe } from './pipes/tag-type-icon/tag-type-icon.pipe';
@@ -38,9 +40,11 @@ const COMPONENTS = [
     FormReportsListComponent,
     FormattingControlsComponent,
     LinkControlsComponent,
+    ListControlsComponent,
     NodePropertiesForm,
     PageEditorControlsComponent,
     PropertiesEditor,
+    TableControlsComponent,
     TagTypeIconPipe,
 ];
 

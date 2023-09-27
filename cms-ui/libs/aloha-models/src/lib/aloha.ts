@@ -46,6 +46,10 @@ export interface AlohaContextChangeEvent {
     range: AlohaRangeObject;
 }
 
+export interface AlohaContentRules {
+    isAllowed: (editable: JQuery, nodeName: string) => boolean;
+}
+
 export interface BlockPluginSettings {
     defaults?: any;
     sidebarAttributeEditor?: boolean;
@@ -217,6 +221,7 @@ export interface AlohaAttributeFieldUiComponent extends AlohaUiComponent  {
 
 export interface AlohaPlugin {
     readonly name: string;
+    getEditableConfig: (editable: JQuery) => string[];
 }
 
 export interface AlohaLinkPlugin extends AlohaPlugin {
@@ -248,6 +253,18 @@ export interface AlohaLinkPlugin extends AlohaPlugin {
 
 export interface AlohaFormatPlugin extends AlohaPlugin {
     removeFormat: () => void;
+}
+
+export type AlohaListType = 'ul' | 'ol' | 'dl';
+
+export interface AlohaListPlugin extends AlohaPlugin {
+    transformList: (listType: AlohaListType) => void;
+    createList: (listType: AlohaListType, element: HTMLElement) => void;
+    prepareNewList: (listType: AlohaListType) => HTMLElement;
+    indentList: () => boolean;
+    outdentList: () => boolean;
+    refreshSelection: () => void;
+    transformListToParagraph: (element: HTMLElement, listType: AlohaListType) => void;
 }
 
 export interface AlohaDOM {

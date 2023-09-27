@@ -1,9 +1,15 @@
 @import '../base-controls/base-controls.component.scss';
 
+
+.target-input-wrapper {
+    margin: 0 0.25rem;
+}
+
 .link-group {
     align-items: center;
 
     .inline-target::ng-deep input {
+        width: 226px;
         margin: 0;
         height: calc(2rem - 2px);
         border-width: 1px;
@@ -11,24 +17,6 @@
 
         &:focus:not([readonly]) {
             box-shadow: rgba(0, 0, 0, 0.14) 0px 1px 1px 0 !important;
-        }
-    }
-}
-
-.active-indicator-button{
-    .button-icon::before {
-        display: inline-block;
-        content: '\e157';
-    }
-
-    &.active {
-        &:focus,
-        &:hover {
-            color: $gtx-color-alert;
-
-            .button-icon::before {
-                content: '\e16f';
-            }
         }
     }
 }

@@ -39,13 +39,19 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     public groups: GroupedConstructs[] = [];
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.constructs || changes.categories || changes.range || changes.settings) {
+        super.ngOnChanges(changes);
+
+        if (changes.constructs || changes.categories) {
             this.updateConstructs();
         }
     }
 
     public updateFilterText(text: string): void {
         this.filterText = text;
+        this.updateConstructs();
+    }
+
+    protected selectionOrEditableChanged(): void {
         this.updateConstructs();
     }
 

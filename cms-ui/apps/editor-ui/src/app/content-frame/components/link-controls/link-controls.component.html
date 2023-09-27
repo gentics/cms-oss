@@ -1,11 +1,12 @@
 <div *ngIf="linkPlugin" class="format-section link-group">
     <button
-        class="format-button active-indicator-button"
+        class="format-button off-icon active-indicator-button"
         [class.active]="active"
         [title]="(active ? 'editor.format_link_remove' : 'editor.format_link_insert') | i18n"
+        [disabled]="!active && !allowed"
         (click)="toggleActive()"
     >
-        <div class="button-icon material-symbols-outlined"></div>
+        <icon data-icon-on="link" data-icon-off="link_off"></icon>
     </button>
 
     <ng-container *ngIf="active">

@@ -946,7 +946,7 @@ format_style_removeFormat:
 format_list_unsorted:
     en: Unsorted List
     de: Unsortierte Liste
-format_list_sorted:
+format_list_ordered:
     en: Sorted List
     de: Sortierte Liste
 format_typography_paragraph:
@@ -1045,3 +1045,30 @@ format_table_add_row_below:
 format_table_remove_row:
     en: Remove row
     de: Zeile entfernen
+format_list_unordered_insert:
+    en: Insert unsorted list
+    de: Unsortierte Liste einfügen
+format_list_unordered_remove:
+    en: Remove unsorted list
+    de: Unsortierte Liste entfernen
+format_list_unordered_convert_to:
+    en: Convert to unsorted list
+    de: Zu unsortierter Liste konvertieren
+format_list_ordered_insert:
+    en: Insert sorted list
+    de: Sortierte Liste einfügen
+format_list_ordered_remove:
+    en: Remove sorted list
+    de: Sortierte liste entfernen
+format_list_ordered_convert_to:
+    en: Convert to sorted list
+    de: Zu sortierter Liste konvertieren
+format_list_description_insert:
+    en: Insert description list
+    de: Beschreibungsliste einfügen
+format_list_description_remove:
+    en: Remove description list
+    de: Beschreibunsliste entfernen
+format_list_description_convert_to:
+    en: Convert to description list
+    de: Zu Beschreibungsliste konvertieren

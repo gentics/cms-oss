@@ -1,0 +1,32 @@
+<div *ngIf="listPlugin" class="format-section list-group">
+    <button
+        *ngFor="let command of LIST_COMMANDS"
+        class="format-button off-icon"
+        [title]="('editor.format_' + command + (active ? (command === activeCommand ? '_remove' : '_convert_to') : '_insert')) | i18n"
+        [class.active]="command === activeCommand"
+        [disabled]="command !== activeCommand && !(availableCommands | gtxIncludes:command)"
+        (click)="toggleFormat(command)"
+    >
+        <icon [attr.data-icon-on]="command | gtxCommandToPipe" [attr.data-icon-off]="command | gtxCommandToPipe:'off':true"></icon>
+    </button>
+
+    <ng-container *ngIf="active">
+        <div class="vertical-separator"></div>
+
+        <button
+            class="format-button"
+            [title]="'editor.format_list_ident_increase' | i18n"
+            (click)="increaseIndent()"
+        >
+            <icon>format_indent_increase</icon>
+        </button>
+
+        <button
+            class="format-button"
+            [title]="'editor.format_list_ident_decrease' | i18n"
+            (click)="decreaseIndent()"
+        >
+            <icon>format_indent_decrease</icon>
+        </button>
+    </ng-container>
+</div>

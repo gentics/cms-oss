@@ -18,6 +18,7 @@ import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { InputComponent } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import {
+    COMMAND_LINK,
     INLINE_LINK_ANCHOR_ATTRIBUTE,
     INLINE_LINK_CLASS,
     INLINE_LINK_HREF_ATTRIBUTE,
@@ -29,6 +30,7 @@ import {
     INLINE_LINK_URL_ATTRIBUTE,
     LINK_NODE_NAME,
     LINK_TARGET_NEW_TAB,
+    NODE_NAME_TO_COMMAND,
 } from '../../../common/models/aloha-integration';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
@@ -75,6 +77,8 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
 
     /** If currently a link is focused adn therefore the options for it should be displayed. */
     public active = false;
+    /** If it's allowed to use links in the current context. */
+    public allowed = false;
 
     /** The anchor of the target. */
     public anchor = '';
@@ -110,8 +114,6 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
 
     /** Instance of the link-plugin from the iFrame. */
     protected linkPlugin: AlohaLinkPlugin;
-    /** Instance of the PubSub from the iFrame. */
-    protected pubSub: AlohaPubSub;
 
     /** Subscription which loads the picked item from the CMS. */
     protected linkLoader: Subscription | null;
@@ -126,14 +128,10 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
         if (changes.aloha) {
             if (this.aloha) {
-                try {
-                    this.pubSub = this.aloha.require('PubSub');
-                } catch (err) {
-                    console.warn('Error while loading pub-sub!', err);
-                    this.pubSub = null;
-                }
                 try {
                     this.linkPlugin = this.aloha.require('link/link-plugin');
                 } catch (err) {
@@ -143,10 +141,6 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
             } else {
                 this.linkPlugin = null;
             }
-        }
-
-        if (changes.range || changes.settings) {
-            this.updateStateFromAloha();
         }
     }
 
@@ -196,14 +190,22 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         this.updateActive(false);
     }
 
-    public updateStateFromAloha(): void {
+    public selectionOrEditableChanged(): void {
         this.currentElement = null;
 
-        if (!this.linkPlugin || !this.range || !this.range.markupEffectiveAtStart) {
+        if (!this.linkPlugin || !this.range || !this.range.markupEffectiveAtStart || !this.aloha.activeEditable?.obj) {
+            this.allowed = false;
             this.updateActive(false);
             this.changeDetector.markForCheck();
             return;
         }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.allowed = (this.linkPlugin.getEditableConfig(this.aloha.activeEditable?.obj) || [])
+            .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable?.obj, nodeName))
+            .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
+            .filter(val => val != null)
+            .includes(COMMAND_LINK);
 
         for (const elem of this.range.markupEffectiveAtStart) {
             // Only enable the link handling when the plugin is available

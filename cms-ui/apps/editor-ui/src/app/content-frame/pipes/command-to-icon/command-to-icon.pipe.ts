@@ -21,59 +21,60 @@ import {
     COMMAND_STYLE_ABBREVIATION,
     COMMAND_TYPOGRAPHY_PREFORMATTED,
     COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
+    COMMAND_LIST_DESCRIPTION,
+    COMMAND_LINK,
 } from '../../../common/models/aloha-integration';
+
+const COMMAND_ICON_MAP: Record<string, string> = {
+    [COMMAND_STYLE_BOLD]:                   'format_bold',
+    [COMMAND_STYLE_ITALIC]:                 'format_italic',
+    [COMMAND_STYLE_UNDERLINE]:              'format_underlined',
+    [COMMAND_STYLE_STRIKE_THROUGH]:         'format_strikethrough',
+    [COMMAND_STYLE_CODE]:                   'code',
+    [COMMAND_STYLE_QUOTE]:                  'format_quote',
+    [COMMAND_STYLE_CITATION]:               'comment_bank',
+    [COMMAND_STYLE_ABBREVIATION]:           'book',
+    [COMMAND_STYLE_SUBSCRIPT]:              'subscript',
+    [COMMAND_STYLE_SUPERSCRIPT]:            'superscript',
+    [COMMAND_SPECIAL_STYLE_REMOVE_FORMAT]:  'format_clear',
+    [COMMAND_LIST_UNORDERED]:               'format_list_bulleted',
+    [COMMAND_LIST_ORDERED]:                 'format_list_numbered',
+    [COMMAND_LIST_DESCRIPTION]:             'label',
+    [COMMAND_TYPOGRAPHY_PARAGRAPH]:         'format_paragraph',
+    [COMMAND_TYPOGRAPHY_HEADING1]:          'format_h1',
+    [COMMAND_TYPOGRAPHY_HEADING2]:          'format_h2',
+    [COMMAND_TYPOGRAPHY_HEADING3]:          'format_h3',
+    [COMMAND_TYPOGRAPHY_HEADING4]:          'format_h4',
+    [COMMAND_TYPOGRAPHY_HEADING5]:          'format_h5',
+    [COMMAND_TYPOGRAPHY_HEADING6]:          'format_h6',
+    [COMMAND_TYPOGRAPHY_PREFORMATTED]:      'segment',
+    [COMMAND_LINK]:                         'link',
+};
+
+const OFF_COMMAND_ICON_MAP: Record<string, string> = {
+    [COMMAND_LINK]:                         'link_off',
+};
 
 @Pipe({
     name: 'gtxCommandToPipe',
 })
 export class CommandToIconPipe implements PipeTransform {
 
-    transform(value: string): string {
-        switch (value) {
-            case COMMAND_STYLE_BOLD:
-                return 'format_bold';
-            case COMMAND_STYLE_ITALIC:
-                return 'format_italic';
-            case COMMAND_STYLE_UNDERLINE:
-                return 'format_underlined';
-            case COMMAND_STYLE_STRIKE_THROUGH:
-                return 'format_strikethrough';
-            case COMMAND_STYLE_CODE:
-                return 'code';
-            case COMMAND_STYLE_QUOTE:
-                return 'format_quote';
-            case COMMAND_STYLE_CITATION:
-                return 'comment_bank';
-            case COMMAND_STYLE_ABBREVIATION:
-                return 'book'
-            case COMMAND_STYLE_SUBSCRIPT:
-                return 'subscript';
-            case COMMAND_STYLE_SUPERSCRIPT:
-                return 'superscript';
-            case COMMAND_SPECIAL_STYLE_REMOVE_FORMAT:
-                return 'format_clear';
-            case COMMAND_LIST_UNORDERED:
-                return 'format_list_bulleted';
-            case COMMAND_LIST_ORDERED:
-                return 'format_list_numbered';
-            case COMMAND_TYPOGRAPHY_PARAGRAPH:
-                return 'format_paragraph';
-            case COMMAND_TYPOGRAPHY_HEADING1:
-                return 'format_h1';
-            case COMMAND_TYPOGRAPHY_HEADING2:
-                return 'format_h2';
-            case COMMAND_TYPOGRAPHY_HEADING3:
-                return 'format_h3';
-            case COMMAND_TYPOGRAPHY_HEADING4:
-                return 'format_h4';
-            case COMMAND_TYPOGRAPHY_HEADING5:
-                return 'format_h5';
-            case COMMAND_TYPOGRAPHY_HEADING6:
-                return 'format_h6';
-            case COMMAND_TYPOGRAPHY_PREFORMATTED:
-                return 'segment';
-            default:
-                return value;
+    transform(value: string, type: 'on' | 'off' = 'on', returnEmpty: boolean = false): string {
+        switch (type) {
+            case 'on':
+                if (COMMAND_ICON_MAP[value]) {
+                    return COMMAND_ICON_MAP[value]
+                }
+                break;
+
+            case 'off':
+                if (OFF_COMMAND_ICON_MAP[value]) {
+                    return OFF_COMMAND_ICON_MAP[value] || value;
+                }
+                break;
         }
+
+        return returnEmpty ? '' : value;
     }
 }

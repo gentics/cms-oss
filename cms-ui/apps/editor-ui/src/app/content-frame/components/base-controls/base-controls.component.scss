@@ -59,4 +59,69 @@
             background: darken($gtx-color-very-light-gray, 15%);
         }
     }
+
+    &.off-icon {
+        icon::before {
+            display: inline-block;
+            content: attr(data-icon-on);
+        }
+
+        /*
+            Special "off" styling for icons which do not have a off version like `link` and `link_off` have.
+            This mimics it as good as I can get it to work in a reasonable time.
+            If a proper off-version of the icon exists, please use that instead.
+        */
+        icon:not([data-icon-off]),
+        icon[data-icon-off=""] {
+            position: relative;
+
+            &::after {
+                content: '\e15b';
+                display: none;
+                position: absolute;
+                left: -11px;
+                top: -10px;
+                font-size: 2em;
+                transform: rotate(45deg);
+                font-variation-settings: "FILL" 1, 'wght' 200;
+                text-shadow: 0px -2px 1px darken($gtx-color-very-light-gray, 15%);
+            }
+        }
+
+        &.active:not([disabled]):hover,
+        &.active:not([disabled]):focus {
+            color: $gtx-color-alert;
+
+            icon[data-icon-off]:not([data-icon-off=""]) {
+                &::before {
+                    content: attr(data-icon-off);
+                }
+            }
+
+            icon:not([data-icon-off]),
+            icon[data-icon-off=""] {
+                content: attr(data-icon-on);
+
+                &::before,
+                &::after {
+                    display: inline-block;
+                }
+            }
+        }
+    }
+}
+
+.vertical-separator {
+    width: 1px;
+    height: 100%;
+    margin: 0 0.5rem;
+    padding: 0.5rem 0;
+
+    &::before {
+        width: 1px;
+        height: 100%;
+        content: '';
+        display: inline-block;
+        background: $gtx-color-dark-gray;
+    }
 }

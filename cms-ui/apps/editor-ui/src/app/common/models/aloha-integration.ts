@@ -20,6 +20,7 @@ export const COMMAND_SPECIAL_STYLE_REMOVE_FORMAT = 'removeFormat';
 
 export const COMMAND_LIST_UNORDERED = 'list_unordered';
 export const COMMAND_LIST_ORDERED = 'list_ordered';
+export const COMMAND_LIST_DESCRIPTION = 'list_description';
 
 export const COMMAND_TYPOGRAPHY_PARAGRAPH = 'paragraph';
 export const COMMAND_TYPOGRAPHY_HEADING1 = 'h1';
@@ -32,6 +33,8 @@ export const COMMAND_TYPOGRAPHY_PREFORMATTED = 'pre';
 
 export const COMMAND_LINK = 'link';
 export const COMMAND_TABLE = 'table';
+
+export const TEXT_NODE_NAME = '#text';
 
 export const LINK_NODE_NAME = 'A';
 export const INLINE_LINK_CLASS = 'aloha-link-text';
@@ -65,8 +68,10 @@ export const NODE_NAME_TO_COMMAND: Record<string, string> = {
 
     UL: COMMAND_LIST_UNORDERED,
     OL: COMMAND_LIST_ORDERED,
+    DL: COMMAND_LIST_DESCRIPTION,
 
     P: COMMAND_TYPOGRAPHY_PARAGRAPH,
+    [TEXT_NODE_NAME]: COMMAND_TYPOGRAPHY_PARAGRAPH,
     H1: COMMAND_TYPOGRAPHY_HEADING1,
     H2: COMMAND_TYPOGRAPHY_HEADING2,
     H3: COMMAND_TYPOGRAPHY_HEADING3,
@@ -74,6 +79,9 @@ export const NODE_NAME_TO_COMMAND: Record<string, string> = {
     H5: COMMAND_TYPOGRAPHY_HEADING5,
     H6: COMMAND_TYPOGRAPHY_HEADING6,
     PRE: COMMAND_TYPOGRAPHY_PREFORMATTED,
+
+    A: COMMAND_LINK,
+    TABLE: COMMAND_TABLE,
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
@@ -102,6 +110,7 @@ export const SPECIAL_STYLE_COMMANDS = [
 export const LIST_COMMANDS = [
     COMMAND_LIST_UNORDERED,
     COMMAND_LIST_ORDERED,
+    COMMAND_LIST_DESCRIPTION,
 ];
 
 export const TYPOGRAPHY_COMMANDS = [

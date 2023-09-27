@@ -25,10 +25,12 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.ServletDeploymentContext;
 import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-
-class JmxServletTest extends JerseyTest {
+@RunWith(JUnit4.class)
+public class JmxServletTest extends JerseyTest {
 
 
 	@Inject

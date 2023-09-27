@@ -253,8 +253,8 @@ spec:
                                 junit  testResults: "cms-oss-server/target/surefire-reports/TEST-*.xml", allowEmptyResults: allowEmptyResults
                             }
 
-                            junit  testResults: "cms-ui/apps/admin-ui/.reports/**/report.xml", allowEmptyResults: true
-                            junit  testResults: "cms-ui/apps/editor-ui/.reports/**/report.xml", allowEmptyResults: true
+                            junit  testResults: "cms-ui/apps/admin-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
+                            junit  testResults: "cms-ui/apps/editor-ui/.reports/**/report.xml", allowEmptyResults: allowEmptyResults
                         }
                     }
                 }

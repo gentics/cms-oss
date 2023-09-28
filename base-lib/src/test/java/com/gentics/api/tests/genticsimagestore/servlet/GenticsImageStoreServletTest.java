@@ -97,7 +97,7 @@ public class GenticsImageStoreServletTest {
 		server.setExecutor(null);
 		server.start();
 
-        runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/Portal.Node");
+		runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/Portal.Node");
 	}
 
 	@After

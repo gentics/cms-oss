@@ -1,9 +1,19 @@
 package com.gentics.contentnode.rest.resource.impl.devtools;
 
+import static com.gentics.contentnode.rest.resource.impl.devtools.PackageDependencyChecker.filterMissingDependencies;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import com.gentics.contentnode.utils.JsonSerializer;
+import com.gentics.contentnode.rest.model.devtools.dependency.PackageDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.ReferenceDependency;
+import com.gentics.contentnode.rest.model.devtools.dependency.Type;
+import com.gentics.contentnode.rest.model.response.devtools.PackageDependencyList;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean;
+import com.gentics.contentnode.rest.resource.parameter.FilterPackageCheckBean.Filter;
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -161,10 +171,120 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}")
 	public Response delete(@PathParam("name") String name) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			getPackage(name);
+			PackageSynchronizer synchronizer = getPackage(name);
 			Synchronizer.removePackage(name);
+
+			File checkResultFile = new File(getCheckResultFileName(synchronizer));
+			if (checkResultFile.exists()) {
+				checkResultFile.delete();
+			}
+
 			return Response.noContent().build();
 		}
+	}
+
+	@Override
+	@GET
+	@Path("/packages/{name}/check")
+	public GenericResponse performPackageConsistencyCheck(
+			@PathParam("name") String packageName,
+			@QueryParam("checkAll") boolean checkAll,
+			@QueryParam("wait") @DefaultValue("0") long waitMs,
+			@BeanParam FilterPackageCheckBean filter,
+			@BeanParam PagingParameterBean paging) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer synchronizer = getPackage(packageName);
+			CNI18nString description = new CNI18nString("devtools_package.action.check");
+			description.addParameter(packageName);
+
+			return Operator.executeLocked(description.toString(), waitMs, null, () -> {
+				PackageDependencyChecker dependencyChecker = new PackageDependencyChecker(packageName);
+
+				if (filter != null && filter.type != null && !filter.type.isEmpty()) {
+					dependencyChecker.setDependencyClasses(getFilteredDependencyClassList(filter));
+				}
+
+				List<PackageDependency> dependencies = dependencyChecker.collectDependencies();
+				PackageDependencyList consistencyCheckResult = new PackageDependencyList();
+				consistencyCheckResult.setItems(dependencies);
+				consistencyCheckResult.checkCompleteness();
+
+				if (checkAll) {
+					ConcurrentPackageDependencyChecker concurrentChecker = new ConcurrentPackageDependencyChecker();
+					concurrentChecker.createDependencyCheckerTasks(packageName);
+
+					List<ReferenceDependency> missingReferencesOnly = filterMissingDependencies(
+							dependencies).stream().flatMap(d -> d.getReferenceDependencies().stream())
+							.collect(Collectors.toList());
+
+					concurrentChecker.checkAllPackageDependencies(missingReferencesOnly);
+					// check again after other packages where scanned
+					consistencyCheckResult.checkCompleteness();
+				}
+
+				dependencies = filterAndSortDependencyList(filter, dependencies);
+				JsonSerializer.jsonToFile(consistencyCheckResult, new File(getCheckResultFileName(synchronizer)));
+
+				CNI18nString resultMessage = new CNI18nString("devtools_package.action.check.result");
+				resultMessage.addParameter(String.valueOf(resultMessage));
+				consistencyCheckResult.addMessage(new Message(Message.Type.SUCCESS, resultMessage.toString()));
+
+				return ListBuilder.from(dependencies, (x) -> x)
+						.page(paging)
+						.to(consistencyCheckResult);
+			});
+		}
+	}
+
+	private List<PackageDependency> filterAndSortDependencyList(FilterPackageCheckBean filter,
+			List<PackageDependency> dependencies) {
+		if (filter != null && filter.completeness == Filter.INCOMPLETE) {
+			dependencies = filterMissingDependencies(dependencies);
+		}
+		return dependencies.stream().sorted(
+				Comparator.comparing(PackageDependency::getDependencyType)).collect(
+				Collectors.toList());
+	}
+
+	private List<Class<? extends SynchronizableNodeObject>> getFilteredDependencyClassList(FilterPackageCheckBean filter) {
+		List<Class<? extends SynchronizableNodeObject>> dependencyClasses = new ArrayList<>();
+		for (Type typeFilter : filter.type) {
+			if (typeFilter == Type.CONSTRUCT) {
+				dependencyClasses.add(Construct.class);
+			} else if (typeFilter == Type.OBJECT_PROPERTY) {
+				dependencyClasses.add(ObjectTagDefinition.class);
+			} else if (typeFilter == Type.TEMPLATE) {
+				dependencyClasses.add(Template.class);
+			} else if (typeFilter == Type.DATASOURCE) {
+				dependencyClasses.add(Datasource.class);
+			}
+		}
+		return dependencyClasses;
+	}
+
+	@Override
+	@GET
+	@Path("/packages/{name}/check/result")
+	public Response obtainPackageConsistencyCheckResult(@PathParam("name") String packageName) throws NodeException {
+		try (Trx trx = ContentNodeHelper.trx()) {
+			MainPackageSynchronizer synchronizer = getPackage(packageName);
+			File checkResultFile = new File(getCheckResultFileName(synchronizer));
+			if (checkResultFile.exists()) {
+				return Response.ok()
+						.entity(checkResultFile)
+						.type(MediaType.APPLICATION_JSON)
+						.build();
+			}
+			else {
+				CNI18nString description = new CNI18nString("devtools_package.action.check.unavailable");
+				throw new EntityNotFoundException(description.toString());
+			}
+		}
+	}
+
+	private String getCheckResultFileName(PackageSynchronizer synchronizer) {
+		final String CHECK_RESULT_FILE_SUFFIX = "_check.result.json";
+		return  synchronizer.getPackagePath().toString() + CHECK_RESULT_FILE_SUFFIX;
 	}
 
 	@Override
@@ -440,7 +560,7 @@ public class PackageResourceImpl implements PackageResource {
 	@Path("/packages/{name}/datasources/{datasource}")
 	public Response removeDatasource(@PathParam("name") String name, @PathParam("datasource") String datasource) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
-			PackageSynchronizer packageSynchronizer = getPackage(name);
+			PackageSynchronizer packageSynchronizer = getPackage(name);/**/
 
 			PackageObject<Datasource> datasourceInPackage = getDatasource(packageSynchronizer, datasource);
 			if (!ObjectTransformer.isEmpty(datasourceInPackage.getPackageName())) {

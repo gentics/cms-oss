@@ -16,7 +16,7 @@ export abstract class BaseTrableLoaderService<T, O = T & BusinessObject, A = nev
     private reloadSubject = new BehaviorSubject<void>(null);
     /**
      * Subject which should be triggered whenever the view of the trable should be refreshed.
-     * This is usefull when reloading/modifying a row purely via this service.
+     * This is useful when reloading/modifying a row purely via this service.
      */
     private refreshViewSubject = new BehaviorSubject<void>(null);
 

@@ -1,0 +1,4 @@
+When publishing into a Mesh CR with instant publishing enabled, it could happen that objects, which were published and then deleted into the wastebin
+between two regular publish runs where not removed from Mesh. This could lead to conflicts during subsequent publish runs, if objects with the same publish
+path should be published afterwards.
+This has been fixed.

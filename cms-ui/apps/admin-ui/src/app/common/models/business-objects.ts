@@ -34,6 +34,8 @@ import {
     Template,
     TemplateTag,
     User,
+    PackageDependencyEntity,
+
 } from '@gentics/cms-models';
 import { Permission } from '@gentics/mesh-models';
 
@@ -131,3 +133,5 @@ export const CONTENT_ITEM_TYPES: ContentItemTypes[] = [
     'form',
     'template',
 ];
+
+export type PackageDependencyEntityBO = PackageDependencyEntity & BusinessObject;

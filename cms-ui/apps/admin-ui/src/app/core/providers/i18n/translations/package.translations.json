@@ -7,6 +7,10 @@
         "en": "Description",
         "de": "Beschreibung"
     },
+    "package_singular": {
+        "en": "Package",
+        "de": "Paket"
+    },
     "package_subpackage_singular": {
         "en": "Sub Package",
         "de": "Sub-Paket"
@@ -50,6 +54,34 @@
     "package_create": {
         "en": "Create new package",
         "de": "Neues Paket erstellen"
+    },
+    "consistency_check_title" : {
+        "en": "Consistency Check",
+        "de": "Konsistenz-Überprüfung"
+    },
+    "consistency_check_contained" : {
+        "en": "Contained",
+        "de": "Enthalten"
+    },
+    "consistency_check_button" : {
+        "en": "Check package again",
+        "de": "Erneut überprüfen"
+    },
+    "consistency_check_filter_label" : {
+        "en": "Check all packages",
+        "de": "Alle Pakete überpfüen"
+    },
+    "consistency_check_result" : {
+        "en": "Package {{name}} successfully checked",
+        "de": "Paket {{name}} erfolgreich überprüft"
+    },
+    "consistency_check_no_result" : {
+        "en": "No package check result is available yet.",
+        "de": "Es ist noch kein Ergebnis der Konsistenz-Überpfüfung verfügbar."
+    },
+    "consistency_check_no_result_button" : {
+        "en": "Trigger check",
+        "de": "Paket überprüfen"
     },
     "package_successfully_synced_to_filesystem": {
         "en": "Package {{name}} successfully synced to filesystem",

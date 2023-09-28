@@ -10,7 +10,7 @@ import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.log.RuntimeProfiler;
 import com.gentics.lib.log.profilerconstants.JavaParserConstants;
 import com.gentics.lib.util.FileUtil;
-import jakarta.activation.MimetypesFileTypeMap;
+import javax.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;

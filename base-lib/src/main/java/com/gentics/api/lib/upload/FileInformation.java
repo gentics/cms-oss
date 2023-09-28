@@ -8,7 +8,7 @@ package com.gentics.api.lib.upload;
 
 import com.gentics.api.lib.resolving.ResolvableBean;
 import com.gentics.lib.log.NodeLogger;
-import jakarta.activation.MimetypesFileTypeMap;
+import javax.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;

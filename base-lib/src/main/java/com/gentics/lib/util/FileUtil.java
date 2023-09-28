@@ -1,5 +1,10 @@
 package com.gentics.lib.util;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.log.NodeLogger;
+import jakarta.activation.MimetypesFileTypeMap;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,9 +24,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Vector;
 import java.util.regex.Pattern;
-
-import javax.activation.MimetypesFileTypeMap;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.pool.BasePoolableObjectFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
@@ -32,11 +34,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypes;
-
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.log.NodeLogger;
 
 /**
  * Utilities Class for File handling
@@ -692,7 +689,7 @@ public class FileUtil {
 	/**
 	 * Determines the extension for a given mimetype
 	 * 
-	 * @param fileName The filename including the extension
+	 * @param mimeTypeString The mimetype string including the extension
 	 * @return The mimetype in the format "type/subtype"
 	 */
 	public static String getExtensionByMimeType(String mimeTypeString) {

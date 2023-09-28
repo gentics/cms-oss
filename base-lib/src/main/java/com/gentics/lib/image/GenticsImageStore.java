@@ -1,5 +1,16 @@
 package com.gentics.lib.image;
 
+import com.gentics.api.lib.cache.PortalCache;
+import com.gentics.api.lib.cache.PortalCacheException;
+import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.api.lib.upload.FileInformation;
+import com.gentics.lib.etc.StringUtils;
+import com.gentics.lib.log.NodeLogger;
+import com.gentics.lib.log.RuntimeProfiler;
+import com.gentics.lib.log.profilerconstants.JavaParserConstants;
+import com.gentics.lib.util.FileUtil;
+import jakarta.activation.MimetypesFileTypeMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,11 +29,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -40,17 +48,6 @@ import org.jmage.ConfigurationException;
 import org.jmage.ImageRequest;
 import org.jmage.JmageException;
 import org.jmage.dispatcher.RequestDispatcher;
-
-import com.gentics.api.lib.cache.PortalCache;
-import com.gentics.api.lib.cache.PortalCacheException;
-import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.api.lib.exception.NodeException;
-import com.gentics.api.lib.upload.FileInformation;
-import com.gentics.lib.etc.StringUtils;
-import com.gentics.lib.log.NodeLogger;
-import com.gentics.lib.log.RuntimeProfiler;
-import com.gentics.lib.log.profilerconstants.JavaParserConstants;
-import com.gentics.lib.util.FileUtil;
 
 public class GenticsImageStore {
 

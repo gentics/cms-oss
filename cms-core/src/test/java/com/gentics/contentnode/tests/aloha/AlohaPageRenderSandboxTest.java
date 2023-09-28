@@ -3,18 +3,6 @@ package com.gentics.contentnode.tests.aloha;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameters;
-
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.NodePreferences;
@@ -26,14 +14,24 @@ import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.testutils.DBTestContext;
-import com.gentics.testutils.junit.LabelledParameterized;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import org.apache.commons.io.IOUtils;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Tests rendering of pages in Aloha mode and checks if the result is the expected result.
  * 
  * @author floriangutmann
  */
-@RunWith(LabelledParameterized.class)
+@RunWith(Parameterized.class)
 public class AlohaPageRenderSandboxTest {
 
 	@ClassRule

@@ -2,27 +2,25 @@ package com.gentics.contentnode.tests.aloha;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.InputStream;
-import java.util.Collection;
-
-import org.apache.commons.io.IOUtils;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized.Parameters;
-
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.testutils.GenericTestUtils;
-import com.gentics.testutils.junit.LabelledParameterized;
+import java.io.InputStream;
+import java.util.Collection;
+import org.apache.commons.io.IOUtils;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * Tests the Aloha editable rendering
  * 
  * @author floriangutmann
  */
-@RunWith(LabelledParameterized.class)
+@RunWith(Parameterized.class)
 public class AlohaEditableRendererTest {
 	
 
@@ -38,7 +36,7 @@ public class AlohaEditableRendererTest {
 	 * Get the filenames for which the tests should run
 	 * @return Collection of filenames
 	 */
-	@Parameters
+	@Parameters(name = "{index}: filename: {0}")
 	public static Collection<String[]> getFilenames() throws Exception {
 		return GenericTestUtils.getFilenamesForParameterizedTest(AlohaEditableRendererTest.class, "editableinputs", new String[] { "html"});
 	}

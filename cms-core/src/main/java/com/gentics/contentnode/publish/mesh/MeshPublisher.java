@@ -71,11 +71,17 @@ import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FileOnlineStatus.FileListForNode;
+import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
+import com.gentics.contentnode.image.CNGenticsImageStore;
+import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
+import com.gentics.contentnode.image.CNGenticsImageStore.ImageVariant;
+import com.gentics.contentnode.image.MeshPublisherGisImageInitiator;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.object.AbstractContentObject;
 import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentFile;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.ContentTag;
@@ -106,6 +112,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.publish.PublishQueue.NodeObjectWithAttributes;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
+import com.gentics.contentnode.publish.Publisher;
 import com.gentics.contentnode.publish.SimplePublishInfo;
 import com.gentics.contentnode.publish.TagmapEntryWrapper;
 import com.gentics.contentnode.publish.WorkPhaseHandler;
@@ -120,6 +127,7 @@ import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.version.CmpProductVersion;
+import com.gentics.lib.etc.IWorkPhase;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
@@ -152,6 +160,9 @@ import com.gentics.mesh.core.rest.node.field.BinaryField;
 import com.gentics.mesh.core.rest.node.field.MicronodeField;
 import com.gentics.mesh.core.rest.node.field.NodeFieldListItem;
 import com.gentics.mesh.core.rest.node.field.image.FocalPoint;
+import com.gentics.mesh.core.rest.node.field.image.ImageManipulationRequest;
+import com.gentics.mesh.core.rest.node.field.image.ImageVariantRequest;
+import com.gentics.mesh.core.rest.node.field.image.ImageVariantsResponse;
 import com.gentics.mesh.core.rest.node.field.impl.BinaryFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.BooleanFieldImpl;
 import com.gentics.mesh.core.rest.node.field.impl.DateFieldImpl;
@@ -201,12 +212,16 @@ import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
+import com.gentics.mesh.parameter.image.CropMode;
+import com.gentics.mesh.parameter.image.ResizeMode;
 import com.gentics.mesh.rest.client.MeshRequest;
+import com.gentics.mesh.rest.client.MeshResponse;
 import com.gentics.mesh.rest.client.MeshRestClient;
 import com.gentics.mesh.rest.client.MeshRestClientConfig;
 import com.gentics.mesh.rest.client.MeshRestClientMessageException;
 import com.gentics.mesh.rest.client.ProtocolVersion;
 import com.gentics.mesh.rest.client.impl.MeshRestOkHttpClientImpl;
+import com.gentics.mesh.util.UUIDUtil;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.reactivex.Completable;
@@ -603,6 +618,9 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected RenderResult renderResult;
 
+	/**
+	 * Micronode publisher
+	 */
 	protected MeshMicronodePublisher micronodePublisher;
 
 	/**
@@ -614,6 +632,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Map containing the IDs of all objects, which were already checked and are known to be missing in Mesh (per nodeId and objectType)
 	 */
 	protected Map<Integer, Map<Integer, Set<Integer>>> missing = Collections.synchronizedMap(new HashMap<>());
+
+	/**
+	 * Image data
+	 */
+	protected Map<String, ImageInformation> allImageData = Collections.synchronizedMap(new HashMap<>());
 
 	/**
 	 * Lambda that handles errors
@@ -1856,6 +1879,113 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Collect all current image variants.
+	 * 
+	 * @param phase
+	 * @throws NodeException 
+	 */
+	public void collectImageData(IWorkPhase phase) throws NodeException {
+		Publisher.writeFiles(publishInfo, cr.getNodes().stream().filter(Node::isPublishImageVariants).collect(Collectors.toList()), 
+				allImageData, renderResult, false, Optional.empty(), Optional.empty());
+	}
+
+	/**
+	 * Create variants for image binaries, collected during the publish phase.
+	 * 
+	 * @param phase
+	 * @throws NodeException
+	 */
+	public void createImageVariants(IWorkPhase phase) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		for (Node node : cr.getNodes()) {
+			if (!node.isPublishImageVariants()) {
+				continue;
+			}
+			int nodeId = node.getId();
+
+			info(String.format("Creating variants of images at '%s' into '%s'", node, cr.getName()));
+
+			// get images with stale variants and remove all variants from mesh
+			List<ContentFile> files = CNGenticsImageStore.getStaleMeshPublishFiles(nodeId);
+			for (ContentFile file : files) {
+				String uuid = getMeshUuid(file);
+				ImageManipulationRequest imageManipulationRequest = new ImageManipulationRequest().setVariants(Collections.emptyList()).setDeleteOther(true);
+
+				MeshRequest<ImageVariantsResponse> request = client.upsertNodeBinaryFieldImageVariants(node.getMeshProject(), uuid, "binarycontent", imageManipulationRequest);
+				request.getResponse()
+						.doOnError(error -> error("Error during removal of image variants of %s (%s) / %s :\n %s", 
+								uuid, "binarycontent", imageManipulationRequest, error))
+						.doOnSuccess(creationResponse -> info("Variants creation for %s (%s) resulted in %d / %s", 
+								uuid, "binarycontent", creationResponse.getStatusCode(), imageManipulationRequest))
+						.blockingGet();
+			}
+
+			HashMap<Pair<String, String>, ImageManipulationRequest> uuidKeyRequests = new HashMap<>();
+
+			List<ImageVariant> variants = CNGenticsImageStore.collectImageVariants(nodeId);
+			for (ImageVariant variant : variants) {
+				String fieldKey = "binarycontent";
+				String webroot = variant.information.getFilePath();
+				webroot = (StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getBinaryPublishDir())) 
+						? webroot.split(node.getBinaryPublishDir())[1] : webroot;
+				webroot = (StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) && webroot.startsWith("/" + node.getPublishDir())) 
+						? webroot.split(node.getPublishDir())[1] : webroot;
+				webroot = (webroot.startsWith("/" + node.getFolder().getPublishDir()))
+						? webroot.split(node.getFolder().getPublishDir())[1] : webroot;
+
+				String uuid;
+				if (variant.information.getFileId() != 0) {
+					uuid = getMeshUuid(t.getObject(ImageFile.class, variant.information.getFileId()));
+				} else {
+					uuid = null;
+				}
+				String transform = variant.description.transform;
+
+				Matcher m = CNGenticsImageStore.TRANSFORM_PATTERN.matcher(transform);
+				if (!m.matches()) {
+					throw new NodeException("Couldn't parse " + transform);
+				}
+				ImageManipulationRequest imageManipulationRequest = uuidKeyRequests.computeIfAbsent(Pair.of(uuid != null ? uuid : webroot, fieldKey), key -> new ImageManipulationRequest().setVariants(new ArrayList<>()));
+				imageManipulationRequest.setDeleteOther(true);
+
+				ImageVariantRequest imageVariantRequest = new ImageVariantRequest();
+				imageVariantRequest.setWidth(m.group("width"));
+				imageVariantRequest.setHeight(m.group("height"));
+
+				String mode = m.group("mode");
+				imageVariantRequest.setResizeMode(StringUtils.isEmpty(mode) ? null : ResizeMode.get(mode) );
+
+				String cropMode = m.group("cropmode");
+				imageVariantRequest.setCropMode(StringUtils.isEmpty(cropMode) ? null : CropMode.get(cropMode));
+
+				String topleft_x = m.group("tlx");
+				String topleft_y = m.group("tly");
+				String cropwidth = m.group("cw");
+				String cropheight = m.group("ch");
+				if (StringUtils.isInteger(topleft_x) && StringUtils.isInteger(topleft_y) && StringUtils.isInteger(cropwidth) && StringUtils.isInteger(cropheight)) {
+					imageVariantRequest.setRect(Integer.parseInt(topleft_x), Integer.parseInt(topleft_y), Integer.parseInt(cropwidth), Integer.parseInt(cropheight));
+				}
+				imageManipulationRequest.getVariants().add(imageVariantRequest);
+			}
+			for (Entry<Pair<String, String>, ImageManipulationRequest> uuidKeyRequest : uuidKeyRequests.entrySet()) {
+				MeshRequest<?> request;
+				if (UUIDUtil.isUUID(uuidKeyRequest.getKey().getKey())) {
+					request = client.upsertNodeBinaryFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue());
+				} else {
+					request = client.upsertWebrootFieldImageVariants(node.getMeshProject(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getValue());
+				}
+				MeshResponse<?> response = request.getResponse()
+					.doOnError(error -> error("Error during creation of image variants of %s (%s) / %s :\n %s", 
+							uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), uuidKeyRequest.getValue(), error))
+					.doOnSuccess(creationResponse -> info("Variants creation for %s (%s) resulted in %d / %s", 
+							uuidKeyRequest.getKey().getKey(), uuidKeyRequest.getKey().getValue(), creationResponse.getStatusCode(), uuidKeyRequest.getValue()))
+					.blockingGet();
+				debug("Image creation responded with: %d: %s", response.getStatusCode(), response.getBodyAsString());
+			}
+		}
+	}
+
+	/**
 	 * Begin publishing dirted folders and files
 	 * @param phase workphase handler
 	 * @throws NodeException
@@ -1991,7 +2121,7 @@ public class MeshPublisher implements AutoCloseable {
 			}
 			logger.debug(String.format("Handling postponed update of %d.%d", task.objType, task.objId));
 			if (task.postponed != null) {
-			handleRenderedEntries(task.nodeId, task.postponed, null, fields -> task.fields = fields, null, null);
+				handleRenderedEntries(task.nodeId, task.objId, task.objType, task.postponed, null, fields -> task.fields = fields, null, null, null);
 			}
 			if (!task.fields.isEmpty()) {
 				task.postponed = null;
@@ -2109,6 +2239,8 @@ public class MeshPublisher implements AutoCloseable {
 			Class<? extends NodeObject> clazz = t.getClass(objectType);
 
 			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
+
+			Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
 
 			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
 			if (objectType == Form.TYPE_FORM) {
@@ -2507,7 +2639,6 @@ public class MeshPublisher implements AutoCloseable {
 										String.format("Error while preparing '%s' for publishing into '%s'", o.getObject(), cr.getName()), e));
 							}
 						});
-
 						if (phase != null) {
 							phase.work();
 						}
@@ -2596,12 +2727,16 @@ public class MeshPublisher implements AutoCloseable {
 				renderedEntries.keySet().removeIf(e -> "folder.pub_dir".equals(e.getTagname()));
 			}
 
-			handleRenderedEntries(task.nodeId, renderedEntries, o.getAttributes(), fields -> {
+			handleRenderedEntries(task.nodeId, task.objId, task.objType, renderedEntries, o.getAttributes(), fields -> {
 				task.fields = fields;
 			}, roles -> {
 				task.roles = roles;
 			}, postponed -> {
 				task.postponed = postponed;
+			}, func -> {
+				if (func != null) {
+					task.addPostSave(func);
+				}
 			});
 
 			task.publisher = this;
@@ -2612,10 +2747,6 @@ public class MeshPublisher implements AutoCloseable {
 				boolean uploadBinary = (ObjectTransformer.isEmpty(o.getAttributes()) || o.getAttributes().contains("binarycontent")) && file.getFilesize() > 0;
 				boolean setFocalPointInfo = file.isImage();
 
-				if (uploadBinary || setFocalPointInfo) {
-					task.postSave = new ArrayList<>();
-				}
-
 				if (uploadBinary) {
 					// add dependencies
 					RenderType renderType = rTrx.get();
@@ -2624,7 +2755,7 @@ public class MeshPublisher implements AutoCloseable {
 					renderType.addDependency(file, "type");
 					renderType.addDependency(file, "filesize");
 
-					task.postSave.add(resp -> {
+					task.addPostSave(resp -> {
 						return Trx.supply(() -> {
 							InputStream in = file.getFileStream();
 							if (in == null) {
@@ -2665,7 +2796,7 @@ public class MeshPublisher implements AutoCloseable {
 
 				if (setFocalPointInfo) {
 					ImageFile image = (ImageFile) file;
-					task.postSave.add(resp -> {
+					task.addPostSave(resp -> {
 						return Trx.supply(() -> {
 							if (needFocalPointUpdate(resp, image)) {
 								NodeUpdateRequest update = new NodeUpdateRequest();
@@ -2932,16 +3063,16 @@ public class MeshPublisher implements AutoCloseable {
 		RenderType renderType = t.getRenderType();
 
 		try (ContentLanguageTrx clTrx = new ContentLanguageTrx(language)) {
-		for (TagmapEntryRenderer entry : tagmapEntries) {
-			if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
-				renderType.preserveDependencies(entry.getMapname());
-			} else {
-				// set the rendered property
-				renderType.setRenderedProperty(entry.getMapname());
-				RenderResult renderResult = createRenderResult ? new RenderResult() : t.getRenderResult();
-				renderedEntries.put(entry, entry.getRenderedTransformedValue(renderType, renderResult, LINKTRANSFORMER));
+			for (TagmapEntryRenderer entry : tagmapEntries) {
+				if (entry.canSkip() && !ObjectTransformer.isEmpty(attributes) && !attributes.contains(entry.getMapname())) {
+					renderType.preserveDependencies(entry.getMapname());
+				} else {
+					// set the rendered property
+					renderType.setRenderedProperty(entry.getMapname());
+					RenderResult renderResult = createRenderResult ? new RenderResult() : t.getRenderResult();
+					renderedEntries.put(entry, entry.getRenderedTransformedValue(renderType, renderResult, LINKTRANSFORMER));
+				}
 			}
-		}
 		}
 
 		return renderedEntries;
@@ -3153,17 +3284,43 @@ public class MeshPublisher implements AutoCloseable {
 	 * Entries, that need to be handled later, can be postponed.
 	 * Entries that resolve to mesh roles can be handled in a separate consumer
 	 * @param nodeId node ID
+	 * @param objectId
+	 * @param objectType
 	 * @param tagmapEntries rendered tagmap entries
 	 * @param attributes optional set of attributes that were rendered (if empty or null, all attributes were rendered)
 	 * @param fieldMapHandler handler for the fieldmap
 	 * @param roleHandler handler for roles
 	 * @param postpone Consumer that handles postponed tagmap entries
+	 * @param postSaveFuncConsumer
 	 * @return FieldMap
 	 * @throws NodeException
 	 */
-	public void handleRenderedEntries(int nodeId, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes, Consumer<FieldMap> fieldMapHandler,
-			Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
-		handleRenderedEntries(false, nodeId, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone);
+	public void handleRenderedEntries(int nodeId, int objectId, int objectType, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes, Consumer<FieldMap> fieldMapHandler,
+			Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone, Consumer<Function<NodeResponse, Single<NodeResponse>>> postSaveFuncConsumer) throws NodeException {
+		handleRenderedEntries(false, nodeId, objectId, objectType, null, tagmapEntries, attributes, fieldMapHandler, roleHandler, postpone, postSaveFuncConsumer);
+	}
+
+	/**
+	 * If the given source contains the term /GenticsImageStore/, return an Optional of {@link MeshPublisherGisImageInitiator}, otherwise return an empty Optional
+	 * @param source source to check
+	 * @param nodeId node ID
+	 * @param entityId entity ID
+	 * @param fieldKey field key
+	 * @param entityType entity Type
+	 * @return Optional
+	 * @throws NodeException
+	 */
+	public Optional<MeshPublisherGisImageInitiator> handleCollectingGisImages(String source, int nodeId, int entityId, String fieldKey, int entityType) throws NodeException {
+		if (source == null || !source.contains("/GenticsImageStore/")) {
+			return Optional.empty();
+		}
+
+		Node node = TransactionManager.getCurrentTransaction().getObject(Node.class, nodeId);
+		if (!node.isPublishImageVariants()) {
+			return Optional.empty();
+		}
+
+		return Optional.of(new MeshPublisherGisImageInitiator(nodeId, entityId, entityType, fieldKey).setSource(source));
 	}
 
 	/**
@@ -3173,18 +3330,21 @@ public class MeshPublisher implements AutoCloseable {
 	 * Entries that resolve to mesh roles can be handled in a separate consumer
 	 * @param preview true for preview, false for publishing
 	 * @param nodeId node ID
+	 * @param objectId
+	 * @param objectType
 	 * @param fieldMapSupplier field map supplier
 	 * @param tagmapEntries rendered tagmap entries
 	 * @param attributes optional set of attributes that were rendered (if empty or null, all attributes were rendered)
 	 * @param fieldMapHandler handler for the fieldmap
 	 * @param roleHandler handler for roles
 	 * @param postpone Consumer that handles postponed tagmap entries
+	 * @param postSaveFuncConsumer Consumer that handles post save functions
 	 * @return FieldMap
 	 * @throws NodeException
 	 */
 	@SuppressWarnings("unchecked")
-	public void handleRenderedEntries(boolean preview, int nodeId, Supplier<FieldMap> fieldMapSupplier, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes,
-			Consumer<FieldMap> fieldMapHandler, Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone) throws NodeException {
+	public void handleRenderedEntries(boolean preview, int nodeId, int objectId, int objectType, Supplier<FieldMap> fieldMapSupplier, Map<TagmapEntryRenderer, Object> tagmapEntries, Set<String> attributes,
+			Consumer<FieldMap> fieldMapHandler, Consumer<Collection<String>> roleHandler, Consumer<Map<TagmapEntryRenderer, Object>> postpone, Consumer<Function<NodeResponse, Single<NodeResponse>>> postSaveFuncConsumer) throws NodeException {
 		FieldMap fields = null;
 		if (fieldMapSupplier != null) {
 			fields = fieldMapSupplier.get();
@@ -3194,6 +3354,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		Map<TagmapEntryRenderer, Object> postponed = new HashMap<>();
 		Collection<String> roles = null;
+		List<MeshPublisherGisImageInitiator> gisInitiators = new ArrayList<>();
 
 		for (Map.Entry<TagmapEntryRenderer, Object> mapEntry : tagmapEntries.entrySet()) {
 			TagmapEntryRenderer entry = mapEntry.getKey();
@@ -3238,10 +3399,17 @@ public class MeshPublisher implements AutoCloseable {
 							String string = ObjectTransformer.getString(o, null);
 							if (string != null) {
 								field.add(string);
+								if (!preview && postSaveFuncConsumer != null) {
+									handleCollectingGisImages(string, nodeId, objectId, entry.getMapname(), objectType).ifPresent(gisInitiators::add);
+								}
 							}
 						}
 					} else {
-						fields.put(entry.getMapname(), new StringFieldImpl().setString(ObjectTransformer.getString(value, null)));
+						String string = ObjectTransformer.getString(value, null);
+						fields.put(entry.getMapname(), new StringFieldImpl().setString(string));
+						if (!preview && postSaveFuncConsumer != null) {
+							handleCollectingGisImages(string, nodeId, objectId, entry.getMapname(), objectType).ifPresent(gisInitiators::add);
+						}
 					}
 					break;
 				}
@@ -3363,6 +3531,13 @@ public class MeshPublisher implements AutoCloseable {
 
 		if (!postponed.isEmpty() && postpone != null) {
 			postpone.accept(postponed);
+		}
+
+		if (!ObjectTransformer.isEmpty(gisInitiators) && postSaveFuncConsumer != null) {
+			postSaveFuncConsumer.accept(resp -> {
+				handleGisInitiators(nodeId, gisInitiators);
+				return Single.just(resp);
+			});
 		}
 	}
 
@@ -3614,7 +3789,7 @@ public class MeshPublisher implements AutoCloseable {
 						if (task.postponed != null) {
 							logger.debug(String.format("Postponing update of %d.%d", task.objType, task.objId));
 							task.exists = true;
-							task.postSave = null;
+							task.clearPostSave();
 							postponedTasks.add(task);
 						} else {
 							task.reportDone();
@@ -3761,10 +3936,10 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return single node response
 	 */
 	protected Single<NodeResponse> postSave(WriteTask task, NodeResponse node) {
-		if (!ObjectTransformer.isEmpty(task.postSave)) {
+		if (task.hasPostSave()) {
 			Single<NodeResponse> singleResponse = Single.just(node);
 
-			for (Function<NodeResponse, Single<NodeResponse>> function : task.postSave) {
+			for (Function<NodeResponse, Single<NodeResponse>> function : task.getPostSave()) {
 				singleResponse = singleResponse.flatMap(function);
 			}
 
@@ -3832,6 +4007,26 @@ public class MeshPublisher implements AutoCloseable {
 			} else {
 				MeshPublisher.logger.debug(String.format("Found no languages for form %s", uuid));
 				return Collections.emptySet();
+			}
+		});
+	}
+
+	/**
+	 * Handle the list of {@link MeshPublisherGisImageInitiator} by processing for GIS URLs and storing them in the DB
+	 * @param nodeId node ID
+	 * @param gisInitiators list of gis initiators
+	 * @throws NodeException
+	 */
+	protected void handleGisInitiators(int nodeId, List<MeshPublisherGisImageInitiator> gisInitiators) throws NodeException {
+		if (ObjectTransformer.isEmpty(gisInitiators)) {
+			return;
+		}
+		Trx.operate(t -> {
+			Node node = t.getObject(Node.class, nodeId, -1, false);
+			for (MeshPublisherGisImageInitiator initiator : gisInitiators) {
+				CNGenticsImageStore.processGISUrls(initiator, node, initiator.getSource(), null, allImageData,
+						CNGenticsImageStore::storeGISLink, CNGenticsImageStore::deleteExcessGISLinksForPublishId);
+				initiator.setSource(null);
 			}
 		});
 	}

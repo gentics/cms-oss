@@ -150,6 +150,11 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
      */
     pubDirSegment?: boolean;
 
+    /**
+     * True, if GIS image references should be looked through the node content, and their variants should be created in Mesh.
+     */
+    publishImageVariants: boolean;
+
     /** Preview URL of Mesh Portal */
     meshPreviewUrl: string;
 

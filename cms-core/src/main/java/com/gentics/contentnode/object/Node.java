@@ -168,6 +168,21 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	Collection<File> getLocalChannelFiles() throws NodeException;
 
 	/**
+	 * get the flag of creating image variants for the binaries used by the page/object property.
+	 * @return the base publish directory path.
+	 */
+	@FieldGetter("pub_img_variants")
+	boolean isPublishImageVariants();
+
+	/**
+	 * Set the flag of creating image variants for the binaries used by the page/object property.
+	 * @param publishImageVariants flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("pub_img_variants")
+	void setPublishImageVariants(boolean publishImageVariants) throws ReadOnlyException;
+
+	/**
 	 * get the base publish directory path for this node.
 	 * @return the base publish directory path.
 	 */

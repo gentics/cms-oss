@@ -1,10 +1,12 @@
 package com.gentics.contentnode.publish.mesh;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.object.File;
@@ -67,7 +69,7 @@ class WriteTask extends AbstractWriteTask {
 	/**
 	 * Optional list of post save operations (e.g. for uploading binary data)
 	 */
-	protected List<Function<NodeResponse, Single<NodeResponse>>> postSave;
+	private List<Function<NodeResponse, Single<NodeResponse>>> postSave;
 
 	/**
 	 * Optional postponed tagmap entries
@@ -132,5 +134,39 @@ class WriteTask extends AbstractWriteTask {
 		} else {
 			return String.format("Update %s as %s (uuid %s)", description, schema, uuid);
 		}
+	}
+
+	/**
+	 * Add the function to the list of functions to be executed after saving.
+	 * @param func function to add
+	 */
+	public void addPostSave(Function<NodeResponse, Single<NodeResponse>> func) {
+		if (postSave == null) {
+			postSave = new ArrayList<>();
+		}
+		postSave.add(func);
+	}
+
+	/**
+	 * Get the list of postsave functions (may be empty or null)
+	 * @return function list
+	 */
+	public List<Function<NodeResponse, Single<NodeResponse>>> getPostSave() {
+		return postSave;
+	}
+
+	/**
+	 * Check whether the WriteTask has postsave functions
+	 * @return true iff postsave functions are present
+	 */
+	public boolean hasPostSave() {
+		return !ObjectTransformer.isEmpty(postSave);
+	}
+
+	/**
+	 * Clear the list of postsave functions
+	 */
+	public void clearPostSave() {
+		postSave = null;
 	}
 }

@@ -146,6 +146,7 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
                 publishContentMapPages: !!publishingData.contentRepositoryPages,
                 publishContentMapFiles: !!publishingData.contentRepositoryFiles,
                 publishContentMapFolders: !!publishingData.contentRepositoryFolders,
+                publishImageVariants: !!nodeProperties.publishImageVariants,
                 pubDirSegment: !!nodeProperties.pubDirSegment,
                 omitPageExtension: !!publishingData.omitPageExtension,
                 pageLanguageCode: publishingData.pageLanguageCode || null,

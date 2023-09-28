@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -30,6 +31,7 @@ import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.etc.ObjectTransformer.InputStreamReaderRunnable;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentMap;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
@@ -38,14 +40,18 @@ import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.factory.ContentNodeFactory;
+import com.gentics.contentnode.factory.HandleDependenciesTrx;
 import com.gentics.contentnode.factory.PublishData;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.TransactionManager.Executable;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.FileOnlineStatus;
 import com.gentics.contentnode.factory.object.FormFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
+import com.gentics.contentnode.image.CNGenticsImageStore;
+import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.PublisherInfo;
 import com.gentics.contentnode.jmx.PublisherPhase;
@@ -168,6 +174,116 @@ public class Publisher implements Runnable {
 	private static SimpleDateFormat logfilenameformatCsv = new SimpleDateFormat("'publishrun_'yyyy-MM-dd_HH-mm-ss'.etastat.csv.txt'");
 	// private static SimpleDateFormat logfilenameformatCsvPng = new SimpleDateFormat("'publishrun_'yyyy-MM-dd_HH-mm-ss'.etastat.png'");
 	private static String logfilenameformatCsvPngCurrent = "publishrun_current.etastat.png";
+
+	/**
+	 * Write all dbfiles into the filesystem.
+	 * @param phase publish phase
+	 * @param maybeMapPublisher CnMapPublisher instance
+	 */
+	public static void writeFiles(IWorkPhase phase, Collection<Node> nodesToWrite, Map<String, ImageInformation> allImageData, RenderResult renderResult, 
+			boolean endThisWorkPhase, Optional<Consumer<WrittenFile>> maybeFileConsumer, Optional<CnMapPublisher> maybeMapPublisher) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+		NodePreferences defaultPreferences = t.getNodeConfig().getDefaultPreferences();
+		boolean tagImageResizer = defaultPreferences.isFeature(Feature.TAG_IMAGE_RESIZER);
+		boolean multichannelling = defaultPreferences.isFeature(Feature.MULTICHANNELLING);
+		boolean niceUrls = defaultPreferences.isFeature(Feature.NICE_URLS);
+
+		renderResult.info(FilePublisher.class, "Starting to write files into filesystem");
+		int totalFileCount = 0;
+		long startWriteFile = System.currentTimeMillis();
+
+		try (HandleDependenciesTrx noDeps = new HandleDependenciesTrx(false)) {
+			for (Node node : nodesToWrite) {
+				if (multichannelling && node.isChannel()) {
+					t.setChannelId(node.getId());
+				}
+
+				try {
+					// get all files to be written into the filesystem
+					Collection<com.gentics.contentnode.object.File> files = node.getOnlineFiles();
+
+					if (files.size() > 0) {
+						renderResult.info(FilePublisher.class,
+								"Starting to write " + files.size() + " " + (files.size() > 1 ? "files" : "file") + " into filesystem for " + node + "");
+						long startWriteFileForNode = System.currentTimeMillis();
+
+						// iterate over the files
+						for (com.gentics.contentnode.object.File file : files) {
+							// check for interruption of publish process
+							PublishRenderResult.checkInterrupted();
+
+							if (maybeMapPublisher.isPresent()) {
+								maybeMapPublisher.get().keepContentmapsAlive();
+							}
+
+							// get the file data
+							int fileId = ObjectTransformer.getInt(file.getId(), -1);
+							String filename = file.getName();
+							int eDate = file.getEDate().getIntTimestamp();
+							int filesize = file.getFilesize();
+
+							String path = node.getHostname() + StaticUrlFactory.getPublishPath(file, false);
+
+							Set<String> niceAndAlternateURLs = null;
+							if (niceUrls) {
+								niceAndAlternateURLs = new HashSet<>();
+								if (!ObjectTransformer.isEmpty(file.getNiceUrl())) {
+									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), file.getNiceUrl()));
+								}
+								for (String altUrl : file.getAlternateUrls()) {
+									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), altUrl));
+								}
+							}
+							if (maybeFileConsumer.isPresent()) {
+								WrittenFile writtenFile = new WrittenFile(fileId, filename, path, filesize, eDate, niceAndAlternateURLs);
+								maybeFileConsumer.get().accept(writtenFile);
+							}
+							if (endThisWorkPhase) {
+								phase.doneWork();
+							}
+
+							totalFileCount++;
+
+							if (tagImageResizer) {
+								// add the information to the map, which will later be used by the GenticsImageStore
+								String filePath = StaticUrlFactory.getPublishPath(file, true);
+
+								StringBuffer publishPath = new StringBuffer();
+
+								publishPath.append(node.getHostname()).append(filePath);
+								allImageData.put(publishPath.toString(),
+										new CNGenticsImageStore.ImageInformation(fileId, node.getId(), filePath, eDate));
+							}
+						}
+
+						// output per node publish statistics
+						long durationForNode = System.currentTimeMillis() - startWriteFileForNode + 1;
+
+						renderResult.info(FilePublisher.class,
+								"Written " + files.size() + " " + (files.size() > 1 ? "files" : "file") + " into filesystem for " + node + " in " + durationForNode
+								+ " ms (" + (files.size() * 1000 / durationForNode) + " files/sec, avg. " + (durationForNode / files.size()) + " ms/file)");
+					} else {
+						renderResult.info(FilePublisher.class, "No files found to write into filesystem for {" + node + "}");
+					}
+				} finally {
+					if (multichannelling && node.isChannel()) {
+						t.resetChannel();
+					}
+				}
+			}
+		}
+
+		// output overall publish statistics
+		if (totalFileCount > 0) {
+			long duration = System.currentTimeMillis() - startWriteFile + 1;
+
+			renderResult.info(FilePublisher.class,
+					"Written " + totalFileCount + " files into filesystem in " + duration + " ms (" + (totalFileCount * 1000 / duration) + " files/sec, avg. "
+					+ (duration / totalFileCount) + " ms/file)");
+		} else {
+			renderResult.info(FilePublisher.class, "No files found to write into filesystem at all");
+		}
+	}
 
 	/**
 	 * Get all nodes that have publishing enabled
@@ -434,6 +550,9 @@ public class Publisher implements Runnable {
 						publisherInfo.setPhase(PublisherPhase.CONTENTMAP);
 						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_UPDATEMAPS);
 
+						// collect the images data
+						meshPublishController.collectImageData();
+
 						// start updating folders and files
 						meshPublishController.publishFoldersAndFiles();
 
@@ -490,6 +609,15 @@ public class Publisher implements Runnable {
 
 					checkForError();
 					meshPublishController.waitForRenderAndWrite();
+
+					try {
+						publisherInfo.setPhase(PublisherPhase.GENTICSIMAGESTORE);
+						RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
+						Trx.operate(() -> meshPublishController.createImageVariants());
+					} finally {
+						RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
+					}
+
 					meshPublishController.success();
 				}
 
@@ -1480,9 +1608,9 @@ public class Publisher implements Runnable {
 
 			MBeanRegistry.getPublisherInfo().setPhase(PublisherPhase.GENTICSIMAGESTORE);
 			writeFsImageStorePhase.begin();
-			RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_WRITEFS_IMAGERESIZER);
+			RuntimeProfiler.beginMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 			filePublisher.writeTagImageResizer(writeFsImageStorePhase, cnMapPublisher);
-			RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_WRITEFS_IMAGERESIZER);
+			RuntimeProfiler.endMark(JavaParserConstants.PUBLISHER_IMAGERESIZER);
 			writeFsImageStorePhase.done();
 
 			filePublisher.finalizeWriter(true);
@@ -1560,6 +1688,25 @@ public class Publisher implements Runnable {
 
 		public String toString() {
 			return "ExitStatus {" + exitStatus + "} Stdout {" + stdout + "} Stderr {" + stderr + "}";
+		}
+	}
+
+	public static class WrittenFile {
+
+		public final int fileId;
+		public final String filename;
+		public final String path;
+		public final int filesize;
+		public final int eDate;
+		public final Set<String> niceAndAlternateURLs;
+
+		public WrittenFile(int fileId, String filename, String path, int filesize, int eDate, Set<String> niceAndAlternateURLs) {
+			this.fileId = fileId;
+			this.filename = filename;
+			this.path = path;
+			this.filesize = filesize;
+			this.eDate = eDate;
+			this.niceAndAlternateURLs = niceAndAlternateURLs;
 		}
 	}
 }

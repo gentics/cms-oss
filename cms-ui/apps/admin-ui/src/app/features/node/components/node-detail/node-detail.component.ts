@@ -290,6 +290,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
                 meshPreviewUrl: nodeProperties.meshPreviewUrl,
                 insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
                 pubDirSegment: nodeProperties.pubDirSegment,
+                publishImageVariants: nodeProperties.publishImageVariants,
                 // TODO: Need repositiry browser support for editing this property
                 // ...(this.nodeProperties.defaultFileFolderId && { defaultFileFolderId: this.nodeProperties.defaultFileFolderId }),
                 // ...(this.nodeProperties.defaultImageFolderId && { defaultImageFolderId: this.nodeProperties.defaultImageFolderId }),
@@ -519,6 +520,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             defaultFileFolderId: node.defaultFileFolderId || null,
             defaultImageFolderId: node.defaultImageFolderId || null,
             pubDirSegment: node.pubDirSegment,
+            publishImageVariants: node.publishImageVariants,
         });
     }
 

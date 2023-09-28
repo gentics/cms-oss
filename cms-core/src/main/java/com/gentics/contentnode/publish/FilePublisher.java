@@ -27,7 +27,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -36,15 +38,14 @@ import com.gentics.contentnode.db.DBUtils.PrepareStatement;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
-import com.gentics.contentnode.factory.HandleDependenciesTrx;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.image.CNGenticsImageStore;
 import com.gentics.contentnode.image.CNGenticsImageStore.ImageInformation;
 import com.gentics.contentnode.image.GenticsImageStoreResult;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.publish.Publisher.WrittenFile;
 import com.gentics.contentnode.render.PublishRenderResult;
 import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.runtime.ConfigurationValue;
@@ -377,7 +378,6 @@ public class FilePublisher {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences defaultPreferences = t.getNodeConfig().getDefaultPreferences();
 		boolean tagImageResizer = defaultPreferences.isFeature(Feature.TAG_IMAGE_RESIZER);
-		boolean multichannelling = defaultPreferences.isFeature(Feature.MULTICHANNELLING);
 		boolean niceUrls = defaultPreferences.isFeature(Feature.NICE_URLS);
 
 		if (tagImageResizer) {
@@ -385,103 +385,8 @@ public class FilePublisher {
 		}
 
 		// iterate over all nodes, which need to be written into the filesystem
-		Collection<Node> nodesToWrite = getNodesToWrite();
-
-		renderResult.info(FilePublisher.class, "Starting to write files into filesystem");
-		int totalFileCount = 0;
-		long startWriteFile = System.currentTimeMillis();
-
-		try (HandleDependenciesTrx noDeps = new HandleDependenciesTrx(false)) {
-			for (Node node : nodesToWrite) {
-				if (!node.doPublishFilesystemFiles()) {
-					continue;
-				}
-
-				if (multichannelling && node.isChannel()) {
-					t.setChannelId(node.getId());
-				}
-
-				try {
-					// get all files to be written into the filesystem
-					Collection<com.gentics.contentnode.object.File> files = node.getOnlineFiles();
-
-					if (files.size() > 0) {
-						renderResult.info(FilePublisher.class,
-								"Starting to write " + files.size() + " " + (files.size() > 1 ? "files" : "file") + " into filesystem for " + node + "");
-						long startWriteFileForNode = System.currentTimeMillis();
-
-						// iterate over the files
-						for (com.gentics.contentnode.object.File file : files) {
-							// check for interruption of publish process
-							PublishRenderResult.checkInterrupted();
-
-							if (cnMapPublisher != null) {
-								cnMapPublisher.keepContentmapsAlive();
-							}
-
-							// get the file data
-							int fileId = ObjectTransformer.getInt(file.getId(), -1);
-							String filename = file.getName();
-							int eDate = file.getEDate().getIntTimestamp();
-							int filesize = file.getFilesize();
-
-							String path = node.getHostname() + StaticUrlFactory.getPublishPath(file, false);
-
-							Set<String> niceAndAlternateURLs = null;
-							if (niceUrls) {
-								niceAndAlternateURLs = new HashSet<>();
-								if (!ObjectTransformer.isEmpty(file.getNiceUrl())) {
-									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), file.getNiceUrl()));
-								}
-								for (String altUrl : file.getAlternateUrls()) {
-									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), altUrl));
-								}
-							}
-							// write the file
-							writeFile(fileId, filename, path, filesize, eDate, niceAndAlternateURLs);
-							phase.doneWork();
-
-							totalFileCount++;
-
-							if (tagImageResizer) {
-								// add the information to the map, which will later be used by the GenticsImageStore
-								String filePath = StaticUrlFactory.getPublishPath(file, true);
-
-								StringBuffer publishPath = new StringBuffer();
-
-								publishPath.append(node.getHostname()).append(filePath);
-								allImageData.put(publishPath.toString(),
-										new CNGenticsImageStore.ImageInformation(fileId, node.getId(), filePath, eDate));
-							}
-						}
-
-						// output per node publish statistics
-						long durationForNode = System.currentTimeMillis() - startWriteFileForNode + 1;
-
-						renderResult.info(FilePublisher.class,
-								"Written " + files.size() + " " + (files.size() > 1 ? "files" : "file") + " into filesystem for " + node + " in " + durationForNode
-								+ " ms (" + (files.size() * 1000 / durationForNode) + " files/sec, avg. " + (durationForNode / files.size()) + " ms/file)");
-					} else {
-						renderResult.info(FilePublisher.class, "No files found to write into filesystem for {" + node + "}");
-					}
-				} finally {
-					if (multichannelling && node.isChannel()) {
-						t.resetChannel();
-					}
-				}
-			}
-		}
-
-		// output overall publish statistics
-		if (totalFileCount > 0) {
-			long duration = System.currentTimeMillis() - startWriteFile + 1;
-
-			renderResult.info(FilePublisher.class,
-					"Written " + totalFileCount + " files into filesystem in " + duration + " ms (" + (totalFileCount * 1000 / duration) + " files/sec, avg. "
-					+ (duration / totalFileCount) + " ms/file)");
-		} else {
-			renderResult.info(FilePublisher.class, "No files found to write into filesystem at all");
-		}
+		Collection<Node> nodesToWrite = getNodesToWrite().stream().filter(Node::doPublishFilesystemFiles).collect(Collectors.toList());
+		Publisher.writeFiles(phase, nodesToWrite, allImageData, renderResult, niceUrls, Optional.of(this::writeFile), Optional.ofNullable(cnMapPublisher));
 	}
 
 
@@ -513,11 +418,13 @@ public class FilePublisher {
 		long durationCleanup = System.currentTimeMillis() - start - durationParse;
 		renderResult.info(FilePublisher.class, "Cleanup finished after " + durationCleanup + "ms");
 
-		GenticsImageStoreResult result = imageStore.renderImages(cnMapPublisher);
+		Set<Integer> gisImageIds = imageStore.getGISImagesToFilesystem();
+
+		GenticsImageStoreResult result = imageStore.renderImages(cnMapPublisher, gisImageIds);
 		long durationRender = System.currentTimeMillis() - start - durationCleanup - durationParse;
 		renderResult.info(FilePublisher.class, "Rendering finished after " + durationRender + "ms");
 
-		imageStore.createLinks(this);
+		imageStore.createLinks(this, gisImageIds);
 		long durationLink = System.currentTimeMillis() - start - durationRender - durationCleanup - durationParse;
 		renderResult.info(FilePublisher.class, "Linking finished after " + durationLink + "ms");
 
@@ -778,6 +685,16 @@ public class FilePublisher {
 		}
 
 		return path.substring(startIndex, endIndex);
+	}
+
+	/**
+	 * write a file to the filesystem.
+	 * @param file file data
+	 * @return true on success.
+	 * @throws PublishException if an error happens during file writing ..
+	 */
+	private boolean writeFile(WrittenFile file) throws PublishException, NodeException {
+		return writeFile(file.fileId, file.filename, file.path, file.filesize, file.eDate, file.niceAndAlternateURLs);
 	}
 
 	/**

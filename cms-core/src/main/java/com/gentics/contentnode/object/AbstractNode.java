@@ -156,6 +156,11 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public void setPublishImageVariants(boolean publishImageVariants) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
 	public void setHostname(String hostname) throws ReadOnlyException {
 		failReadOnly();
 	}

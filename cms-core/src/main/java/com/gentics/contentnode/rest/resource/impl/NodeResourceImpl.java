@@ -902,9 +902,6 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (reqNode.isHttps() != null) {
 				newNode.setHttps(reqNode.isHttps());
 			}
-			if (reqNode.isPublishImageVariants() != null) {
-				newNode.setPublishImageVariants(reqNode.isPublishImageVariants());
-			}
 			if (reqNode.isUtf8() != null) {
 				newNode.setUtf8(reqNode.isUtf8());
 			}
@@ -989,6 +986,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					newNode.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());
+				}
+
+				if (reqNode.isPublishImageVariants() != null) {
+					newNode.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
 			}
 
@@ -1087,9 +1088,6 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 			if (reqNode.isUtf8() != null) {
 				node.setUtf8(reqNode.isUtf8());
-			}
-			if (reqNode.isPublishImageVariants() != null) {
-				node.setPublishImageVariants(reqNode.isPublishImageVariants());
 			}
 			if (reqNode.getEditorVersion() != null) {
 				node.setEditorversion(reqNode.getEditorVersion());
@@ -1239,6 +1237,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					node.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());
+				}
+
+				if (reqNode.isPublishImageVariants() != null) {
+					node.setPublishImageVariants(reqNode.isPublishImageVariants());
 				}
 			}
 

@@ -55,6 +55,11 @@
                     [label]="'node.allow_insecure_mesh_preview_url' | i18n"
                     formControlName="insecurePreviewUrl"
                 ></gtx-checkbox>
+
+                <gtx-checkbox
+                    [label]="'node.pub_img_variants' | i18n"
+                    formControlName="publishImageVariants"
+                ></gtx-checkbox>
             </ng-container>
         </div>
 
@@ -83,13 +88,6 @@
                     *ngIf="pubDirSegmentActivated !== undefined"
                     [label]="'node.pub_dir_segments' | i18n"
                     formControlName="pubDirSegment"
-                ></gtx-checkbox>
-            </div>
-
-            <div class="gtx-two-col-options">
-                <gtx-checkbox
-                    [label]="'node.pub_img_variants' | i18n"
-                    formControlName="publishImageVariants"
                 ></gtx-checkbox>
             </div>
 

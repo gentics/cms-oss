@@ -992,6 +992,7 @@ public class StagingModelBuilder {
 		node.setPublishContentMapPages(nodeNode.doPublishContentMapPages());
 		node.setPublishContentMapFiles(nodeNode.doPublishContentMapFiles());
 		node.setPublishContentMapFolders(nodeNode.doPublishContentMapFolders());
+		node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		node.setPageUrls(UrlRenderWay.fromValue(nodeNode.getUrlRenderWayPages()));
 		node.setFileUrls(UrlRenderWay.fromValue(nodeNode.getUrlRenderWayFiles()));
 		node.setOmitPageExtension(nodeNode.isOmitPageExtension());

@@ -124,8 +124,8 @@
         "de": "Verzeichnissegmente veröffentlichen"
     },
     "pub_img_variants": {
-        "en": "Publish Gentics GIS image variants",
-        "de": "Gentics GIS Bildvarianten publizieren"
+        "en": "Publish GIS image variants to Mesh",
+        "de": "GIS Bildvarianten nach Mesh publizieren"
     },
     "pub_disable_updates": {
         "en": "Disable updates of content repository / filesystem",

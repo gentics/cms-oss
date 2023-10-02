@@ -1990,6 +1990,7 @@ public class ModelBuilder {
 			node.setMeshPreviewUrl(nodeNode.getMeshPreviewUrl());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
+			node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		}
 
 		List<ContentLanguage> languages = nodeNode.getLanguages();

@@ -113,6 +113,16 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	protected IWorkPhase offlinePhase;
 
 	/**
+	 * Collect image data workphase
+	 */
+	protected IWorkPhase collectImageDataPhase;
+
+	/**
+	 * Image Variants workphase
+	 */
+	protected IWorkPhase imageVariantsPhase;
+
+	/**
 	 * State of the publish controller
 	 */
 	protected State state = State.init;
@@ -278,10 +288,14 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		foldersAndFilesPhase = new CNWorkPhase(meshWorkPhase, "mesh.foldersfiles", PublishWorkPhaseConstants.PHASE_NAME_MESH_FOLDERS_FILES);
 		postponedPhase = new CNWorkPhase(meshWorkPhase, "mesh.postponed", PublishWorkPhaseConstants.PHASE_NAME_MESH_POSTPONED);
 		offlinePhase = new CNWorkPhase(meshWorkPhase, "mesh.offline", PublishWorkPhaseConstants.PHASE_NAME_MESH_OFFLINE);
+		collectImageDataPhase = new CNWorkPhase(meshWorkPhase, "mesh.collectimagedata", PublishWorkPhaseConstants.PHASE_NAME_MESH_COLLECTIMAGEDATA);
+		imageVariantsPhase = new CNWorkPhase(meshWorkPhase, "mesh.imagevariants", PublishWorkPhaseConstants.PHASE_NAME_MESH_IMAGEVARIANTS);
 
 		initWorkPhase.addWork(publishers.size());
 		waitWorkPhase.addWork(publishers.size());
 		offlinePhase.addWork(publishers.size());
+		collectImageDataPhase.addWork(publishers.size());
+		imageVariantsPhase.addWork(publishers.size());
 
 		// set the counts of dirted objects
 		for (MeshPublisher mp : publishers) {
@@ -370,8 +384,10 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	public void collectImageData() throws NodeException {
 		state = State.collectImageData;
-		for (MeshPublisher mp : publishers) {
-			mp.collectImageData(foldersAndFilesPhase);
+		try (WorkPhaseHandler phase = new WorkPhaseHandler(collectImageDataPhase)) {
+			for (MeshPublisher mp : publishers) {
+				mp.collectImageData();
+			}
 		}
 	}
 
@@ -405,8 +421,11 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	public void createImageVariants() throws NodeException {
 		state = State.createImageVariants;
-		for (MeshPublisher mp : publishers) {
-			mp.createImageVariants(offlinePhase);
+		try (WorkPhaseHandler phase = new WorkPhaseHandler(imageVariantsPhase)) {
+			for (MeshPublisher mp : publishers) {
+				mp.createImageVariants();
+				phase.work();
+			}
 		}
 	}
 

@@ -55,4 +55,8 @@ public class PublishWorkPhaseConstants {
 	public static final String PHASE_NAME_MESH_POSTPONED = "publish.phase.mesh.postponed";
 
 	public static final String PHASE_NAME_MESH_OFFLINE = "publish.phase.mesh.offline";
+
+	public static final String PHASE_NAME_MESH_COLLECTIMAGEDATA = "publish.phase.mesh.collectimagedata";
+
+	public static final String PHASE_NAME_MESH_IMAGEVARIANTS = "publish.phase.mesh.imagevariants";
 }

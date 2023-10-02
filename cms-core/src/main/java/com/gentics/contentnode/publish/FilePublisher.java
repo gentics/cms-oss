@@ -386,7 +386,7 @@ public class FilePublisher {
 
 		// iterate over all nodes, which need to be written into the filesystem
 		Collection<Node> nodesToWrite = getNodesToWrite().stream().filter(Node::doPublishFilesystemFiles).collect(Collectors.toList());
-		Publisher.writeFiles(phase, nodesToWrite, allImageData, renderResult, niceUrls, Optional.of(this::writeFile), Optional.ofNullable(cnMapPublisher));
+		Publisher.writeFiles(phase, nodesToWrite, allImageData, renderResult, niceUrls, Optional.of(this::writeFile), Optional.ofNullable(cnMapPublisher), node -> node.getOnlineFiles());
 	}
 
 

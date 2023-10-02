@@ -127,7 +127,6 @@ import com.gentics.contentnode.rest.model.response.Message;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.version.CmpProductVersion;
-import com.gentics.lib.etc.IWorkPhase;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogCollector;
 import com.gentics.lib.log.NodeLogger;
@@ -1881,21 +1880,19 @@ public class MeshPublisher implements AutoCloseable {
 	/**
 	 * Collect all current image variants.
 	 * 
-	 * @param phase
 	 * @throws NodeException 
 	 */
-	public void collectImageData(IWorkPhase phase) throws NodeException {
+	public void collectImageData() throws NodeException {
 		Publisher.writeFiles(publishInfo, cr.getNodes().stream().filter(Node::isPublishImageVariants).collect(Collectors.toList()), 
-				allImageData, renderResult, false, Optional.empty(), Optional.empty());
+				allImageData, renderResult, false, Optional.empty(), Optional.empty(), node -> node.getFolder().getImages(new Folder.FileSearch().setRecursive(true)));
 	}
 
 	/**
 	 * Create variants for image binaries, collected during the publish phase.
 	 * 
-	 * @param phase
 	 * @throws NodeException
 	 */
-	public void createImageVariants(IWorkPhase phase) throws NodeException {
+	public void createImageVariants() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		for (Node node : cr.getNodes()) {
 			if (!node.isPublishImageVariants()) {

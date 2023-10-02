@@ -52,6 +52,9 @@ export const TABLE_NODE_NAME = 'TABLE';
 export const TABLE_CLASS = 'aloha-table';
 export const TABLE_CELL_NODE_NAME = 'TD';
 export const TABLE_CELL_HEADER_NODE_NAME = 'TH';
+export const TABLE_ROW_NODE_NAME = 'TR';
+export const TABLE_CAPTION_NODE_NAME = 'CAPTION';
+export const TABLE_SUMMARY_ATTRIBUTE = 'summary';
 
 export const NODE_NAME_TO_COMMAND: Record<string, string> = {
     /* eslint-disable @typescript-eslint/naming-convention */

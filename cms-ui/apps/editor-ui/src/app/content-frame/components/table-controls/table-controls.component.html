@@ -1,28 +1,74 @@
-<div class="format-section table-group" [attr.data-active-part]="activePart">
-    <button
-        class="format-button"
-        [class.active]="active"
-        [title]="'editor.format_table' | i18n"
-        (click)="toggleActive()"
+<div
+    *ngIf="tablePlugin"
+    class="format-section table-group"
+    [attr.data-active-part]="activePart"
+>
+    <gtx-dropdown-list
+        #dropdown
+        [disabled]="true"
+        [sticky]="true"
+        [belowTrigger]="true"
     >
-        <icon>table</icon>
-    </button>
+        <gtx-dropdown-trigger>
+            <button
+                class="format-button off-icon"
+                [class.active]="active"
+                [title]="(active ? 'editor.format_table_delete' : 'editor.format_table_insert') | i18n"
+                [disabled]="!active && !allowed"
+                (click)="toggleActive()"
+            >
+                <icon data-icon-on="table"></icon>
+            </button>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="insert-wrapper">
+                <h3>{{ 'editor.format_table_insert' | i18n }}</h3>
+
+                <gtx-table-size-select
+                    (select)="handleTableSizeSelect($event)"
+                ></gtx-table-size-select>
+            </div>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
 
     <ng-container *ngIf="active">
         <button
-            *ngIf="activePart === TablePart.CELL || activePart === TablePart.CAPTION"
-            [title]="'editor.format_table_caption' | i18n"
-            class="format-button table-action-button"
+            class="format-button table-action-button off-icon"
+            [class.active]="captionElement != null"
+            [title]="(captionElement != null ? 'editor.format_table_caption_delete' : 'editor.format_table_caption_insert') | i18n"
+            (click)="toggleCaption()"
         >
-            <icon>title</icon>
+            <icon data-icon-on="title"></icon>
         </button>
 
-        <ng-container *ngIf="activePart === TablePart.CELL">
+        <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">
+            <gtx-dropdown-trigger>
+                <button class="format-button" [title]="'editor.format_table_additional_options' | i18n">
+                    <icon>more_vert</icon>
+                </button>
+            </gtx-dropdown-trigger>
+
+            <gtx-dropdown-content>
+                <div class="table-options-wrapper">
+                    <gtx-input
+                        class="format-input"
+                        [label]="'editor.format_table_summary' | i18n"
+                        [value]="summaryValue"
+                        (change)="updateSummary($event)"
+                    ></gtx-input>
+                </div>
+            </gtx-dropdown-content>
+        </gtx-dropdown-list>
+
+        <ng-container *ngIf="selectionActive">
             <div class="vertical-separator"></div>
 
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_merge_cell' | i18n"
+                [disabled]="!canMergeCells"
+                (click)="mergeCells()"
             >
                 <icon>cell_merge</icon>
             </button>
@@ -30,6 +76,8 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_split_cell' | i18n"
+                [disabled]="!canSplitCells"
+                (click)="splitCells()"
             >
                 <icon>arrows_outward</icon>
             </button>
@@ -41,6 +89,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_column_left' | i18n"
+                (click)="addColumnLeft()"
             >
                 <icon class="hollow">splitscreen_left</icon>
             </button>
@@ -48,13 +97,24 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_column_right' | i18n"
+                (click)="addColumnRight()"
             >
                 <icon class="hollow">splitscreen_right</icon>
             </button>
 
             <button
-                class="format-button table-action-button"
+                class="format-button table-action-button off-icon"
+                [class.active]="isHeader"
+                [title]="(isHeader ? 'editor.format_table_format_remove_header' : 'editor.format_table_format_as_header') | i18n"
+                (click)="toggleSelectionAsHeader('col')"
+            >
+                <icon data-icon-on="leaderboard"></icon>
+            </button>
+
+            <button
+                class="format-button table-action-button delete-button"
                 [title]="'editor.format_table_remove_column' | i18n"
+                (click)="deleteCurrentColumns()"
             >
                 <icon>delete</icon>
             </button>
@@ -66,6 +126,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_row_above' | i18n"
+                (click)="addRowAbove()"
             >
                 <icon class="hollow">splitscreen_top</icon>
             </button>
@@ -73,13 +134,24 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_row_below' | i18n"
+                (click)="addRowBelow()"
             >
                 <icon class="hollow">splitscreen_bottom</icon>
             </button>
 
             <button
-                class="format-button table-action-button"
+                class="format-button table-action-button off-icon"
+                [class.active]="isHeader"
+                [title]="(isHeader ? 'editor.format_table_format_remove_header' : 'editor.format_table_format_as_header') | i18n"
+                (click)="toggleSelectionAsHeader('row')"
+            >
+                <icon data-icon-on="leaderboard"></icon>
+            </button>
+
+            <button
+                class="format-button table-action-button delete-button"
                 [title]="'editor.format_table_remove_row' | i18n"
+                (click)="deleteCurrentRows()"
             >
                 <icon>delete</icon>
             </button>

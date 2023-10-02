@@ -21,6 +21,7 @@ import { PageEditorControlsComponent } from './components/page-editor-controls/p
 import { PropertiesEditor } from './components/properties-editor/properties-editor.component';
 import { SimpleDeleteModalComponent } from './components/simple-delete-modal/simple-delete-modal.component';
 import { TableControlsComponent } from './components/table-controls/table-controls.component';
+import { TableSizeSelectComponent } from './components/table-size-select/table-size-select.component';
 import { contentFrameRoutes } from './content-frame.routes';
 import { CommandToIconPipe } from './pipes/command-to-icon/command-to-icon.pipe';
 import { TagTypeIconPipe } from './pipes/tag-type-icon/tag-type-icon.pipe';
@@ -45,6 +46,7 @@ const COMPONENTS = [
     PageEditorControlsComponent,
     PropertiesEditor,
     TableControlsComponent,
+    TableSizeSelectComponent,
     TagTypeIconPipe,
 ];
 

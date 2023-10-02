@@ -23,33 +23,24 @@ export abstract class BaseControlsComponent implements OnChanges {
 
     public ngOnChanges(changes: SimpleChanges): void {
         if (changes.aloha) {
-            if (this.aloha) {
-                try {
-                    this.contentRules = this.aloha.require('aloha/content-rules');
-                } catch (err) {
-                    this.contentRules = null;
-                    console.error('Error while loading aloha content-rules!', err);
-                }
-                try {
-                    this.pubSub = this.aloha.require('PubSub');
-                    this.pubSub.sub('aloha.editable.activated', () => {
-                        this.editableChanged();
-                    });
-                    this.pubSub.sub('aloha.editable.deactivated', () => {
-                        this.editableChanged();
-                    });
-                } catch (err) {
-                    console.warn('Error while loading pub-sub!', err);
-                    this.pubSub = null;
-                }
-            } else {
-                this.contentRules = null;
-                this.pubSub = null;
-            }
+            this.contentRules = this.safeRequire('aloha/content-rules');
+            this.pubSub = this.safeRequire('PubSub');
         }
 
         if (changes.range || changes.settings) {
             this.rangeOrSettingsChanged();
+        }
+    }
+
+    protected safeRequire(dependency: string): any {
+        if (!this.aloha) {
+            return null;
+        }
+        try {
+            return this.aloha.require(dependency);
+        } catch (err) {
+            console.warn(`Could not require aloha element "${dependency}"!`, err);
+            return null;
         }
     }
 

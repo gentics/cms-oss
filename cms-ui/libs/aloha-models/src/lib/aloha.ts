@@ -24,7 +24,9 @@ export interface AlohaSettings {
     toolbar?: any;
 }
 
-export interface AlohaRangeObject {
+export declare class AlohaRangeObject {
+    constructor();
+
     commonAncestorContainer: HTMLElement;
     endContainer: HTMLElement;
     endOffset: number;
@@ -47,7 +49,7 @@ export interface AlohaContextChangeEvent {
 }
 
 export interface AlohaContentRules {
-    isAllowed: (editable: JQuery, nodeName: string) => boolean;
+    isAllowed(editable: JQuery, nodeName: string): boolean;
 }
 
 export interface BlockPluginSettings {
@@ -238,33 +240,109 @@ export interface AlohaLinkPlugin extends AlohaPlugin {
     cssclassregex?: string | null;
     cssclass: string;
     objectTypeFilter: string[];
-    onHrefChange?: () => void;
+    onHrefChange?(): void;
     ignoreNextSelectionChangeEvent: boolean;
     hrefValue: string;
     flags: boolean;
-    nsSel: () => string;
-    nsClass: () => string;
-    toggleLinkScope: (show: boolean) => void;
-    findLinkMarkup: (range: AlohaRangeObject) => HTMLAnchorElement | null;
-    findAllLinkMarkup: (range: AlohaRangeObject) => HTMLAnchorElement[];
-    insertLink: (extendToWord?: boolean) => boolean | void;
-    removeLink: (terminateLinkScope?: boolean) => void;
+    nsSel(): string;
+    nsClass(): string;
+    toggleLinkScope(show: boolean): void;
+    findLinkMarkup(range: AlohaRangeObject): HTMLAnchorElement | null;
+    findAllLinkMarkup(range: AlohaRangeObject): HTMLAnchorElement[];
+    insertLink(extendToWord?: boolean): boolean | void;
+    removeLink(terminateLinkScope?: boolean): void;
 }
 
 export interface AlohaFormatPlugin extends AlohaPlugin {
-    removeFormat: () => void;
+    removeFormat(): void;
 }
 
 export type AlohaListType = 'ul' | 'ol' | 'dl';
 
 export interface AlohaListPlugin extends AlohaPlugin {
-    transformList: (listType: AlohaListType) => void;
-    createList: (listType: AlohaListType, element: HTMLElement) => void;
-    prepareNewList: (listType: AlohaListType) => HTMLElement;
-    indentList: () => boolean;
-    outdentList: () => boolean;
-    refreshSelection: () => void;
-    transformListToParagraph: (element: HTMLElement, listType: AlohaListType) => void;
+    transformList(listType: AlohaListType): void;
+    createList(listType: AlohaListType, element: HTMLElement): void;
+    prepareNewList(listType: AlohaListType): HTMLElement;
+    indentList(): boolean;
+    outdentList(): boolean;
+    refreshSelection(): void;
+    transformListToParagraph(element: HTMLElement, listType: AlohaListType): void;
+}
+
+export interface AlohaTablePlugin extends AlohaPlugin {
+    activeTable?: ActiveAlohaTable;
+    parameters: Record<string, string>;
+
+    toggleHeaderStatus(table: ActiveAlohaTable, scope: 'row' | 'col'): void;
+    createTable(columnCount: number, rowCount: number): void;
+    updateWaiImage(): void;
+    makeCaptionEditable(captionElem: JQuery<HTMLTableCaptionElement>, defaultText: string): void;
+    summary: AlohaAttributeFieldUiComponent;
+}
+
+export interface AlohaTablePluginParameters {
+    className: string;
+    classSelectionRow: string;
+    classSelectionColumn: string;
+    classLeftUpperCorner: string;
+    classTableWrapper: string;
+    classCellSelected: string;
+    waiRed: string;
+    waiGreen: string;
+    selectionArea: number;
+}
+
+export interface ActiveAlohaTable {
+    obj?: JQuery<HTMLTableElement>;
+    cells: any[];
+    clickedColumnId?: number;
+    clickedRowId?: number;
+    columnsToSelect?: number[]
+    hasFocus: boolean;
+    isActive: boolean;
+    mouseDownColIdx: boolean;
+    numCols: number;
+    numRows: number;
+    rowsToSelect?: number[];
+    selection: AlohaTableSelection;
+
+    deleteTable(): void;
+    deleteRows(): void;
+    deleteColumns(): void;
+
+    addRowBeforeSelection(): void;
+    addRowAfterSelection(): void;
+    addColumnsLeft(): void;
+    addColumnsRight(): void;
+}
+
+export interface AlohaTableSelectionRectangle {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+export interface AlohaTableSelectionRows {
+    rows: number[];
+}
+
+export interface AlohaTableSelectionColumns {
+    columns: number[];
+}
+
+export declare class AlohaTableSelection {
+    constructor();
+
+    currentRectangle: AlohaTableSelectionRectangle | AlohaTableSelectionRows | AlohaTableSelectionColumns;
+    selectedCells?: HTMLTableCellElement[];
+    selectedColumnIdxs?: number[];
+    selectedRowIdxs?: number[];
+    selectionType: 'cell' | 'row' | 'column';
+    mergeCells(): void;
+    splitCells(): void;
+    cellsAreMergeable(): boolean;
+    cellsAreSplitable(): boolean;
 }
 
 export interface AlohaDOM {
@@ -274,14 +352,14 @@ export interface AlohaDOM {
      * @param markup markup to be applied as jQuery object
      * @param nesting true when nesting of the added markup is allowed, false if not (default: false)
      */
-    addMarkup: (rangeObject: AlohaRangeObject, markup: any, nesting?: boolean) => void;
+    addMarkup(rangeObject: AlohaRangeObject, markup: any, nesting?: boolean): void;
     /**
      * Remove the given DOM object from the DOM and modify the given range to reflect the user expected range after the object was removed
      * @param object DOM object to remove
      * @param range range which eventually be modified
      * @param preserveContent true if the contents of the removed DOM object shall be preserved, false if not (default: false)
      */
-    removeFromDOM: (object: any, range: AlohaRangeObject, preserveContent) => void;
+    removeFromDOM(object: any, range: AlohaRangeObject, preserveContent): void;
     /**
      * Remove the given markup from the given range. The given rangeObject will be modified if necessary
      * @param rangeObject range from which the markup shall be removed
@@ -289,12 +367,12 @@ export interface AlohaDOM {
      * @param limit Limiting node(s) as jQuery object
      * @param removeNonEditables Whether to remove nodes which are not content editable (default: true)
      */
-    removeMarkup: (rangeObject: AlohaRangeObject, markup: any, limit: any, removeNonEditables?: boolean) => void;
-    getEditingHostOf: (obj: any) => any;
+    removeMarkup(rangeObject: AlohaRangeObject, markup: any, limit: any, removeNonEditables?: boolean): void;
+    getEditingHostOf(obj: any): any;
 }
 
 export interface AlohaEditable {
-    smartContentChange: (event: any) => false | void;
+    smartContentChange(event: any): false | void;
     obj: JQuery;
 }
 

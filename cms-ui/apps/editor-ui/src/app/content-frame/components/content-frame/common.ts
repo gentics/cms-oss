@@ -101,6 +101,8 @@ export interface AlohaGlobal {
     settings: AlohaSettings;
     Selection: {
         getRangeObject(): AlohaRangeObject;
+        SelectionRange: typeof AlohaRangeObject;
+        updateSelection(): void;
     };
     isModified(): boolean;
     trigger: (eventName: string, data: any) => void;

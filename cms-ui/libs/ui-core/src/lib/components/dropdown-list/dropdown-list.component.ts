@@ -110,7 +110,7 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
     @Output()
     public close = new EventEmitter<void>();
 
-    @ViewChild(TemplateRef, { static: true })
+    @ViewChild('contents', { static: true, read: TemplateRef })
     protected contentsTemplate: TemplateRef<any>;
 
     @ContentChild(DropdownTriggerDirective, { static: true })
@@ -230,6 +230,10 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
     }
 
     onTriggerClick(): void {
+        if (this.disabled) {
+            return;
+        }
+
         if (!this.isOpen) {
             this.openDropdown();
         } else {

@@ -35,16 +35,7 @@ export class ListControlsComponent extends BaseControlsComponent implements OnCh
         super.ngOnChanges(changes);
 
         if (changes.aloha) {
-            if (this.aloha) {
-                try {
-                    this.listPlugin = this.aloha.require('list/list-plugin');
-                } catch (err) {
-                    this.listPlugin = null;
-                    console.error('Could not load aloha list-plugin!', err);
-                }
-            } else {
-                this.listPlugin = null;
-            }
+            this.listPlugin = this.safeRequire('list/list-plugin');
         }
     }
 

@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { AlohaLinkPlugin, AlohaPubSub } from '@gentics/aloha-models';
+import { AlohaLinkPlugin } from '@gentics/aloha-models';
 import { nameToTypeId, typeIdsToName } from '@gentics/cms-components';
 import { AllowedItemSelectionType, AllowedSelectionType, File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
@@ -131,16 +131,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         super.ngOnChanges(changes);
 
         if (changes.aloha) {
-            if (this.aloha) {
-                try {
-                    this.linkPlugin = this.aloha.require('link/link-plugin');
-                } catch (err) {
-                    console.warn('Error while loading link-plugin!', err);
-                    this.linkPlugin = null;
-                }
-            } else {
-                this.linkPlugin = null;
-            }
+            this.linkPlugin = this.safeRequire('link/link-plugin');
         }
     }
 

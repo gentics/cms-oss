@@ -1,1 +1,17 @@
 @import '../base-controls/base-controls.component.scss';
+
+.format-button.delete-button {
+    color: $gtx-color-alert;
+}
+
+.insert-wrapper {
+    padding: 0.5rem;
+}
+
+.table-options-wrapper {
+    padding: 1rem 1rem 0 1rem;
+}
+
+.vertical-separator {
+    margin: 0 0.53rem;
+}

@@ -1018,9 +1018,27 @@ format_link_new_tab:
 format_table:
     en: Table
     de: Tabelle
+format_table_insert:
+    en: Insert Table
+    de: Tabelle einfügen
+format_table_delete:
+    en: Delete Table
+    de: Tabelle löschen
 format_table_caption:
     en: Table caption
     de: Tabellen Überschrift
+format_table_caption_insert:
+    en: Insert Table caption
+    de: Tabellen Überschrift einfügen
+format_table_caption_delete:
+    en: Delete Table caption
+    de: Tabellen Überschrift löschen
+format_table_additional_options:
+    en: Additional Options
+    de: Weitere Einstellungen
+format_table_summary:
+    en: Summary
+    de: Zusammenfassung
 format_table_merge_cell:
     en: Merge Cells
     de: Zellen verknüpfen
@@ -1045,6 +1063,12 @@ format_table_add_row_below:
 format_table_remove_row:
     en: Remove row
     de: Zeile entfernen
+format_table_format_as_header:
+    en: Format as table header
+    de: Als Tabellenkopf formartieren
+format_table_format_remove_header:
+    en: Remove table header format
+    de: Tabellenkopf formartierung entfernen
 format_list_unordered_insert:
     en: Insert unsorted list
     de: Unsortierte Liste einfügen

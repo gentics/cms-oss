@@ -45,23 +45,8 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
         super.ngOnChanges(changes);
 
         if (changes.aloha) {
-            if (this.aloha) {
-                try {
-                    this.alohaDom = this.aloha.require('util/dom');
-                } catch (err) {
-                    this.alohaDom = null;
-                    console.error('Could not load aloha-dom!', err);
-                }
-                try {
-                    this.formatPlugin = this.aloha.require('format/format-plugin');
-                } catch (err) {
-                    this.formatPlugin = null;
-                    console.error('Could not load aloha format-plugin!', err);
-                }
-            } else {
-                this.alohaDom = null;
-                this.formatPlugin = null;
-            }
+            this.alohaDom = this.safeRequire('util/dom');
+            this.formatPlugin = this.safeRequire('format/format-plugin');
         }
     }
 

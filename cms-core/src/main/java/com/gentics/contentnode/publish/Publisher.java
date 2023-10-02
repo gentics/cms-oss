@@ -35,6 +35,7 @@ import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentMap;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.events.DependencyManager;
@@ -176,12 +177,20 @@ public class Publisher implements Runnable {
 	private static String logfilenameformatCsvPngCurrent = "publishrun_current.etastat.png";
 
 	/**
-	 * Write all dbfiles into the filesystem.
-	 * @param phase publish phase
-	 * @param maybeMapPublisher CnMapPublisher instance
+	 * Write all dbfiles into the filesystem and/or collect image data for GIS resizing
+	 * @param phase work phase
+	 * @param nodesToWrite nodes to be handled
+	 * @param allImageData map for collecting image data
+	 * @param renderResult render result
+	 * @param endThisWorkPhase whether to end the given work phase
+	 * @param maybeFileConsumer optional file consumer
+	 * @param maybeMapPublisher optional publisher
+	 * @param fileFunction function to extract the files to be handled
 	 */
-	public static void writeFiles(IWorkPhase phase, Collection<Node> nodesToWrite, Map<String, ImageInformation> allImageData, RenderResult renderResult, 
-			boolean endThisWorkPhase, Optional<Consumer<WrittenFile>> maybeFileConsumer, Optional<CnMapPublisher> maybeMapPublisher) throws NodeException {
+	public static void writeFiles(IWorkPhase phase, Collection<Node> nodesToWrite,
+			Map<String, ImageInformation> allImageData, RenderResult renderResult, boolean endThisWorkPhase,
+			Optional<Consumer<WrittenFile>> maybeFileConsumer, Optional<CnMapPublisher> maybeMapPublisher,
+			Function<Node, Collection<? extends com.gentics.contentnode.object.File>> fileFunction) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences defaultPreferences = t.getNodeConfig().getDefaultPreferences();
 		boolean tagImageResizer = defaultPreferences.isFeature(Feature.TAG_IMAGE_RESIZER);
@@ -200,7 +209,7 @@ public class Publisher implements Runnable {
 
 				try {
 					// get all files to be written into the filesystem
-					Collection<com.gentics.contentnode.object.File> files = node.getOnlineFiles();
+					Collection<? extends com.gentics.contentnode.object.File> files = fileFunction.apply(node);
 
 					if (files.size() > 0) {
 						renderResult.info(FilePublisher.class,

@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.perm;
 
+import static com.gentics.contentnode.factory.Trx.supply;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,7 +36,6 @@ public class ChannelNonRootFolderPermissionTest extends AbstractChannelPermissio
 	 * Get test parameters
 	 * @return test parameters
 	 */
-	@SuppressWarnings("unchecked")
 	@Parameters(name = "{index}: class {0}, permission: {1}, folder: {2}, object: {3}")
 	public static Collection<Object[]> data() {
 		Collection<Object[]> data = new ArrayList<Object[]>();
@@ -78,7 +79,6 @@ public class ChannelNonRootFolderPermissionTest extends AbstractChannelPermissio
 	 */
 	@Test
 	public void testPermissionCheck() throws Exception {
-		testContext.getContext().startTransaction(userId);
-		doPermissionCheck(createTestFolder());
+		doPermissionCheck(supply(nodeUser, this::createTestFolder));
 	}
 }

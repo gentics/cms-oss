@@ -4,6 +4,7 @@ import static com.gentics.contentnode.object.Folder.FileSearch;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
@@ -12,6 +13,7 @@ import com.gentics.contentnode.logger.LogCollector;
 import com.gentics.contentnode.logger.StringListAppender;
 import com.gentics.contentnode.object.ImageFile;
 import com.gentics.contentnode.object.Node;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.lib.log.NodeLogger;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Level;
@@ -54,6 +56,11 @@ public class ConvertImagesJob {
 				Trx trx = new Trx();
 				WastebinFilter wastebin = Wastebin.INCLUDE.set()) {
 			for (Node node : trx.getTransaction().getObjects(Node.class, DBUtils.select("SELECT id FROM node", DBUtils.IDS))) {
+
+				if (!NodeConfigRuntimeConfiguration.isFeature(Feature.WEBP_CONVERSION, node)) {
+					continue;
+				}
+
 				logger.info(String.format("Converting images for node {%s}", node));
 
 				for (ImageFile image : node.getFolder().getImages(fileSearch)) {

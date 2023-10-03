@@ -1261,6 +1261,8 @@ public class TemplateFactory extends AbstractFactory {
 						t.dirtObjectCache(Node.class, nodeId);
 					}
 				}
+				// reset internally stored folderIds
+				this.folderIds = null;
 			}
 
 			// if the channelset changed, we need to dirt all other templates of the channelset as well

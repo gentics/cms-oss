@@ -2087,7 +2087,7 @@ public class PermHandler {
 		Set<Integer> folderIds = template.getFolderIds();
 
 		// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
-		if (folderIds.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
+		if (folderIds.isEmpty() && rootFolders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
 			return true;
 		}
 		for (int folderId : folderIds) {

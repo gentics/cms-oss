@@ -1110,7 +1110,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		return MultichannellingFactory.isVisibleInNode(node, page, pId -> {
 			Page variant = TransactionManager.getCurrentTransaction().getObject(Page.class, pId, -1, false);
 			// if the page is not online and is modified, we will ignore it
-			return variant.isOnline() || !variant.isModified();
+			return variant != null && variant.isOnline() || !variant.isModified();
 		});
 	}
 

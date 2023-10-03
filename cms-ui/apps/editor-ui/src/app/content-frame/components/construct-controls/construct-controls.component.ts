@@ -1,6 +1,10 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { ConstructCategory, TagType } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { GCNAlohaPlugin, GCNTags } from '@gentics/aloha-models';
+import { ConstructCategory, TagPartType, TagType } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
+import { Subscription } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
+import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
 interface GroupedConstructs {
@@ -19,7 +23,7 @@ const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructControlsComponent extends BaseControlsComponent implements OnChanges {
+export class ConstructControlsComponent extends BaseControlsComponent implements OnInit, OnChanges, OnDestroy {
 
     public readonly UNCATEGORIZED_CONSTRUCTS_ID = UNCATEGORIZED_CONSTRUCTS_ID;
     public readonly UNCATEGORIZED_CONSTRUCTS_LABEL = UNCATEGORIZED_CONSTRUCTS_LABEL;
@@ -38,7 +42,32 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     public availableConstructs: TagType[] = [];
     public groups: GroupedConstructs[] = [];
 
-    ngOnChanges(changes: SimpleChanges): void {
+    public gcnPlugin: GCNAlohaPlugin;
+    public gcnTags: GCNTags;
+
+    protected subscriptions: Subscription[] = [];
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        protected integration: AlohaIntegrationService,
+    ) {
+        super(changeDetector);
+    }
+
+    public ngOnInit(): void {
+        this.subscriptions.push(this.integration.gcnPlugin$.pipe(distinctUntilChanged()).subscribe(plugin => {
+            this.gcnPlugin = plugin;
+            if (this.gcnPlugin) {
+                this.gcnTags = this.safeRequire('gcn/gcn-tags');
+            } else {
+                this.gcnTags = null;
+            }
+            this.updateConstructs();
+            this.changeDetector.markForCheck();
+        }));
+    }
+
+    public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.constructs || changes.categories) {
@@ -46,9 +75,41 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         }
     }
 
+    ngOnDestroy(): void {
+        this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
     public updateFilterText(text: string): void {
         this.filterText = text;
         this.updateConstructs();
+    }
+
+    public insertConstructIntoPage(construct: TagType): void {
+        if (!this.gcnPlugin) {
+            return;
+        }
+        // Tags dependency simply don't want to properly load sometimes for whatever reason
+        if (!this.gcnTags) {
+            this.gcnTags = this.safeRequire('gcn/gcn-tags');
+        }
+        if (!this.gcnTags) {
+            return;
+        }
+
+        this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
+            this.gcnPlugin.handleBlock(data, true, () => {
+                this.gcnTags.decorate(tag, data);
+
+                const editableParts = construct.parts
+                    .filter(part => part.keyword !== 'template' && part.typeId !== TagPartType.Velocity)
+                    .filter(part => part.editable && !part.hideInEditor);
+
+                if (editableParts.length > 0) {
+                    // eslint-disable-next-line no-underscore-dangle
+                    this.gcnPlugin.openTagFill(tag._data.id, tag._chain._data.id);
+                }
+            }, html);
+        });
     }
 
     protected selectionOrEditableChanged(): void {
@@ -57,10 +118,24 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
 
     public updateConstructs(): void {
         const haystack = (this.filterText || '').toLocaleLowerCase();
+        let whitelist: string[] = [];
+        const elem = this.aloha?.activeEditable?.obj?.get?.(0);
+
+        if (this.gcnPlugin && elem) {
+            whitelist = Object.entries(this.gcnPlugin?.settings?.editables || {}).find(([query]) => {
+                return elem.matches(query);
+            })?.[1]?.tagtypeWhitelist || [];
+        }
+
         this.availableConstructs = this.constructs
-            .filter(construct => construct.visibleInMenu)
+            .filter(construct => construct.visibleInMenu && construct.mayBeSubtag)
+            .filter(construct => {
+                return whitelist == null || whitelist.length === 0 || whitelist.includes(construct.keyword);
+            })
+            .filter(construct => {
+                return this.gcnPlugin?.settings?.magiclinkconstruct == null || this.gcnPlugin.settings.magiclinkconstruct !== construct.id;
+            })
             .sort((a, b) => a.name.localeCompare(b.name));
-        // TODO: Apply the correct white-/blacklist filtering for the current element
 
         const constructMap: Record<number, TagType> = this.availableConstructs
             // Filter out all constructs which do not match the current search/filtering

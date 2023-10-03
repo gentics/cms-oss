@@ -1,4 +1,4 @@
-import { Item } from '@gentics/cms-models';
+import { Item, TagType } from '@gentics/cms-models';
 
 export interface AlohaSettings {
     base: string;
@@ -78,6 +78,11 @@ export interface GcnPluginSettings {
     copy_tags?: boolean;
     description?: string;
     devtools?: boolean;
+    editables?: {
+        [cssQuery: string]: {
+            tagtypeWhitelist?: string[];
+        };
+    };
     editableNode?: GcnPluginEditableNodeDefinition[];
     enabled?: boolean;
     fileName?: string;
@@ -343,6 +348,19 @@ export declare class AlohaTableSelection {
     splitCells(): void;
     cellsAreMergeable(): boolean;
     cellsAreSplitable(): boolean;
+    isHeader(): boolean;
+}
+
+export interface GCNAlohaPlugin extends AlohaPlugin {
+    settings: GcnPluginSettings;
+    createTag(constructId: number, async?: boolean, successCallback?: (html: string, tag: any, data: any) => any): void;
+    handleBlock(data: any, insert: boolean, onInsert: () => void, content?: any): void;
+    openTagFill(tagId: string | number, pageId: string | number): void;
+}
+
+export interface GCNTags {
+    insert(data: any, callback?: (data: any) => void): JQuery;
+    decorate(tag: any, data: any, callback?: () => void): void;
 }
 
 export interface AlohaDOM {

@@ -1096,3 +1096,21 @@ format_list_description_remove:
 format_list_description_convert_to:
     en: Convert to description list
     de: Zu Beschreibungsliste konvertieren
+table_delete_warning_title:
+    en: Delete table
+    de: Tabelle löschen
+table_delete_warning_message:
+    en: Are you sure you want to delete the current table?
+    de: Sind Sie sicher, dass Sie die aktuelle Tabelle löschen möchten?
+table_delete_column_warning_title:
+    en: Delete table columns
+    de: Tabellenspalten löschen
+table_delete_column_warning_message:
+    en: Are you sure you want to delete the currently selected table columns?
+    de: Sind Sie sicher, dass Sie die aktuell ausgewählten Tabellenspalten löschen möchten?
+table_delete_row_warning_title:
+    en: Delete table rows
+    de: Tabellenreihen löschen
+table_delete_row_warning_message:
+    en: Are you sure you want to delete the currently selected table rows?
+    de: Sind Sie sicher, dass Sie die aktuell ausgewählten Tabellenreihen löschen möchten?

@@ -1,7 +1,7 @@
 <div
     *ngIf="tablePlugin"
     class="format-section table-group"
-    [attr.data-active-part]="activePart"
+    [attr.data-active-part]="activeParts?.join?.(',')"
 >
     <gtx-dropdown-list
         #dropdown
@@ -83,7 +83,7 @@
             </button>
         </ng-container>
 
-        <ng-container *ngIf="activePart === TablePart.COLUMN">
+        <ng-container *ngIf="activeParts | gtxIncludes:TablePart.COLUMN">
             <div class="vertical-separator"></div>
 
             <button
@@ -120,7 +120,7 @@
             </button>
         </ng-container>
 
-        <ng-container *ngIf="activePart === TablePart.ROW">
+        <ng-container *ngIf="activeParts | gtxIncludes:TablePart.ROW">
             <div class="vertical-separator"></div>
 
             <button

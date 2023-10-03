@@ -47,6 +47,9 @@ export class PostLoadScript {
         let innerSettings = this.window.Aloha.settings;
         this.aloha.settings$.next(innerSettings);
 
+        let innerGcnPlugin = this.window.Aloha.GCN as any;
+        this.aloha.gcnPlugin$.next(innerGcnPlugin);
+
         Object.defineProperty(this.window.Aloha, 'settings', {
             configurable: true,
             enumerable: true,
@@ -56,6 +59,18 @@ export class PostLoadScript {
             set: (newSettings) => {
                 innerSettings = newSettings;
                 this.aloha.settings$.next(innerSettings);
+            },
+        });
+
+        Object.defineProperty(this.window.Aloha, 'GCN', {
+            configurable: true,
+            enumerable: true,
+            get: () => {
+                return innerGcnPlugin;
+            },
+            set: (newPlugin) => {
+                innerGcnPlugin = newPlugin;
+                this.aloha.gcnPlugin$.next(innerGcnPlugin);
             },
         });
 

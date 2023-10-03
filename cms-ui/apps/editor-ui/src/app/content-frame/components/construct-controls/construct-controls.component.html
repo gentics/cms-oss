@@ -62,6 +62,7 @@
         class="construct"
         [title]="construct.description"
         [attr.data-id]="construct.id"
+        (click)="insertConstructIntoPage(construct)"
     >
         <div class="construct-icon">
             <icon>{{ construct | gtxConstructIconNormalizer }}</icon>

@@ -1,17 +1,22 @@
-import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import {
     COMMAND_TABLE,
     NODE_NAME_TO_COMMAND,
     TABLE_CAPTION_NODE_NAME,
-    TABLE_CELL_HEADER_NODE_NAME,
     TABLE_NODE_NAME,
     TABLE_SUMMARY_ATTRIBUTE,
 } from '@editor-ui/app/common/models/aloha-integration';
-import { AlohaTablePlugin, AlohaTableSelection, AlohaTableSelectionColumns, AlohaTableSelectionRows } from '@gentics/aloha-models';
-import { DropdownListComponent } from '@gentics/ui-core';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import {
+    AlohaTablePlugin,
+    AlohaTableSelection,
+    AlohaTableSelectionColumns,
+    AlohaTableSelectionRectangle,
+    AlohaTableSelectionRows,
+} from '@gentics/aloha-models';
+import { DropdownListComponent, ModalService } from '@gentics/ui-core';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 import { TableSizeSelectEvent } from '../table-size-select/table-size-select.component';
-import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 
 enum TablePart {
     CELL = 'cell',
@@ -35,7 +40,7 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
 
     public active = false;
     public allowed = false;
-    public activePart: TablePart | null = null;
+    public activeParts: TablePart[] = [];
     public isHeader = false;
     public selectionActive = false;
     public canMergeCells = false;
@@ -52,6 +57,7 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
     constructor(
         changeDetector: ChangeDetectorRef,
         protected i18n: I18nService,
+        protected modals: ModalService,
     ) {
         super(changeDetector);
     }
@@ -78,7 +84,7 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         // Reset state
         this.active = false;
         this.allowed = false;
-        this.activePart = null;
+        this.activeParts = [];
         this.isHeader = false;
         this.selectionActive = false;
         this.tableSelection = null;
@@ -120,28 +126,34 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         // Now that we're in a table, we need to check which part of the table we're currently active in.
         // First we check for the tables selection data, then the aloha selection
         if (captionFocused) {
-            this.activePart = TablePart.CAPTION;
+            this.activeParts = [TablePart.CAPTION];
         } else if (this.tablePlugin.activeTable?.selection?.selectionType != null) {
             this.tableSelection = this.tablePlugin.activeTable.selection;
-            this.selectionActive = this.tableSelection.selectedCells?.length > 0;
+            this.selectionActive = this.tableSelection.selectedCells?.length > 1;
 
             if (this.selectionActive) {
                 this.canMergeCells = this.tableSelection.cellsAreMergeable();
                 this.canSplitCells = this.tableSelection.cellsAreSplitable();
+                this.isHeader = this.tableSelection.isHeader();
+                this.activeParts.push(TablePart.CELL);
             }
 
             if (this.tableSelection.currentRectangle != null) {
-                if ((this.tableSelection.currentRectangle as AlohaTableSelectionColumns).columns != null) {
-                    this.activePart = TablePart.COLUMN;
-                    this.isHeader = this.tableSelection.selectedCells.every(cell => cell.nodeName === TABLE_CELL_HEADER_NODE_NAME);
-                } else if ((this.tableSelection.currentRectangle as AlohaTableSelectionRows).rows != null) {
-                    this.activePart = TablePart.ROW;
-                    this.isHeader = this.tableSelection.selectedCells.every(cell => cell.nodeName === TABLE_CELL_HEADER_NODE_NAME);
+                if ((this.tableSelection.currentRectangle as AlohaTableSelectionColumns).columns?.length > 0) {
+                    this.activeParts.push(TablePart.COLUMN);
+                } else if ((this.tableSelection.currentRectangle as AlohaTableSelectionRows).rows?.length > 0) {
+                    this.activeParts.push(TablePart.ROW);
                 } else {
-                    this.activePart = TablePart.CELL;
+                    const rect = this.tableSelection.currentRectangle as AlohaTableSelectionRectangle;
+
+                    if (rect.top === 1 && rect.bottom === this.tablePlugin.activeTable.numRows) {
+                        this.activeParts.push(TablePart.COLUMN);
+                    }
+
+                    if (rect.left === 1 && rect.right === this.tablePlugin.activeTable.numCols) {
+                        this.activeParts.push(TablePart.ROW);
+                    }
                 }
-            } else {
-                this.activePart = TablePart.CELL;
             }
         }
     }
@@ -169,11 +181,33 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         this.tablePlugin.createTable(columnCount, rowCount);
     }
 
-    public deleteCurrentTable(): void {
+    public async deleteCurrentTable(): Promise<void> {
         if (!this.tablePlugin.activeTable) {
             return;
         }
-        // TODO: Open confirm dialog
+
+        const dialog = await this.modals.dialog({
+            title: this.i18n.translate('editor.table_delete_warning_title'),
+            body: this.i18n.translate('editor.table_delete_warning_message'),
+            buttons: [
+                {
+                    label: this.i18n.translate('modal.confirm'),
+                    type: 'default',
+                    returnValue: true,
+                },
+                {
+                    label: this.i18n.translate('modal.cancel'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                },
+            ],
+        });
+        const doDelete = await dialog.open();
+        if (!doDelete) {
+            return;
+        }
+
         this.tablePlugin.activeTable.deleteTable();
     }
 
@@ -183,8 +217,11 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         } else {
             this.captionElement.remove();
             this.captionElement = null;
-            if (this.activePart === TablePart.CAPTION) {
-                this.activePart = null;
+            const idx = this.activeParts.indexOf(TablePart.CAPTION);
+            if (idx > -1) {
+                this.activeParts.splice(idx, 1);
+                // Otherwise angular doesn't detect this as a new array and doesn't change anything
+                this.activeParts = [...this.activeParts];
             }
         }
     }
@@ -232,11 +269,33 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         this.tablePlugin.activeTable.addColumnsRight();
     }
 
-    public deleteCurrentColumns(): void {
+    public async deleteCurrentColumns(): Promise<void> {
         if (!this.tablePlugin.activeTable) {
             return;
         }
-        // TODO: Open confirm dialog
+
+        const dialog = await this.modals.dialog({
+            title: this.i18n.translate('editor.table_delete_column_warning_title'),
+            body: this.i18n.translate('editor.table_delete_column_warning_message'),
+            buttons: [
+                {
+                    label: this.i18n.translate('modal.confirm'),
+                    type: 'default',
+                    returnValue: true,
+                },
+                {
+                    label: this.i18n.translate('modal.cancel'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                },
+            ],
+        });
+        const doDelete = await dialog.open();
+        if (!doDelete) {
+            return;
+        }
+
         this.tablePlugin.activeTable.deleteColumns();
     }
 
@@ -256,11 +315,33 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         this.tablePlugin.activeTable.addRowAfterSelection();
     }
 
-    public deleteCurrentRows(): void {
+    public async deleteCurrentRows(): Promise<void> {
         if (!this.tablePlugin.activeTable) {
             return;
         }
-        // TODO: Open confirm dialog
+
+        const dialog = await this.modals.dialog({
+            title: this.i18n.translate('editor.table_delete_row_warning_title'),
+            body: this.i18n.translate('editor.table_delete_row_warning_message'),
+            buttons: [
+                {
+                    label: this.i18n.translate('modal.confirm'),
+                    type: 'default',
+                    returnValue: true,
+                },
+                {
+                    label: this.i18n.translate('modal.cancel'),
+                    type: 'secondary',
+                    flat: true,
+                    returnValue: false,
+                },
+            ],
+        });
+        const doDelete = await dialog.open();
+        if (!doDelete) {
+            return;
+        }
+
         this.tablePlugin.activeTable.deleteRows();
     }
 

@@ -78,6 +78,9 @@ export interface GcnPluginSettings {
     copy_tags?: boolean;
     description?: string;
     devtools?: boolean;
+    config?: {
+        tagtypeWhitelist?: string[];
+    };
     editables?: {
         [cssQuery: string]: {
             tagtypeWhitelist?: string[];

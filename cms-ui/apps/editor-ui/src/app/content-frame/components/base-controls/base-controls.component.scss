@@ -17,7 +17,7 @@
     font-size: 20px;
     transition: 300ms;
 
-    &:hover {
+    &:hover:not(.no-hover) {
         background: darken($gtx-color-very-light-gray, 10%);
         cursor: pointer;
     }

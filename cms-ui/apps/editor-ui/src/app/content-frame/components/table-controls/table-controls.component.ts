@@ -3,6 +3,8 @@ import {
     COMMAND_TABLE,
     NODE_NAME_TO_COMMAND,
     TABLE_CAPTION_NODE_NAME,
+    TABLE_CELL_HEADER_NODE_NAME,
+    TABLE_CELL_NODE_NAME,
     TABLE_NODE_NAME,
     TABLE_SUMMARY_ATTRIBUTE,
 } from '@editor-ui/app/common/models/aloha-integration';
@@ -97,14 +99,15 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
             return;
         }
 
-        this.allowed = (this.tablePlugin.getEditableConfig(this.aloha.activeEditable?.obj) || [])
-            .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable?.obj, nodeName))
+        this.allowed = this.aloha?.activeEditable?.obj != null && (this.tablePlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
+            .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable.obj, nodeName))
             .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
             .filter(val => val != null)
             .includes(COMMAND_TABLE);
 
-
         let captionFocused = false;
+        let inTableCell = false;
+
         // First we need to check if we're in a table with the cursor
         for (const elem of this.range.markupEffectiveAtStart) {
             if (elem.nodeName === TABLE_NODE_NAME && elem.classList.contains(this.tablePlugin.parameters.className)) {
@@ -112,6 +115,8 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
                 this.tableElement = elem as any;
             } else if (elem.nodeName === TABLE_CAPTION_NODE_NAME) {
                 captionFocused = true;
+            } else if (elem.nodeName === TABLE_CELL_HEADER_NODE_NAME || elem.nodeName === TABLE_CELL_NODE_NAME) {
+                inTableCell = true;
             }
         }
 
@@ -127,34 +132,49 @@ export class TableControlsComponent extends BaseControlsComponent implements OnC
         // First we check for the tables selection data, then the aloha selection
         if (captionFocused) {
             this.activeParts = [TablePart.CAPTION];
-        } else if (this.tablePlugin.activeTable?.selection?.selectionType != null) {
-            this.tableSelection = this.tablePlugin.activeTable.selection;
-            this.selectionActive = this.tableSelection.selectedCells?.length > 1;
+            return;
+        }
 
-            if (this.selectionActive) {
-                this.canMergeCells = this.tableSelection.cellsAreMergeable();
-                this.canSplitCells = this.tableSelection.cellsAreSplitable();
-                this.isHeader = this.tableSelection.isHeader();
-                this.activeParts.push(TablePart.CELL);
+        if (this.tablePlugin.activeTable?.selection?.selectionType == null) {
+            if (inTableCell) {
+                this.activeParts = [TablePart.CELL];
             }
+            return;
+        }
 
-            if (this.tableSelection.currentRectangle != null) {
-                if ((this.tableSelection.currentRectangle as AlohaTableSelectionColumns).columns?.length > 0) {
-                    this.activeParts.push(TablePart.COLUMN);
-                } else if ((this.tableSelection.currentRectangle as AlohaTableSelectionRows).rows?.length > 0) {
-                    this.activeParts.push(TablePart.ROW);
-                } else {
-                    const rect = this.tableSelection.currentRectangle as AlohaTableSelectionRectangle;
+        this.tableSelection = this.tablePlugin.activeTable.selection;
+        this.selectionActive = this.tableSelection.selectedCells?.length > 0;
 
-                    if (rect.top === 1 && rect.bottom === this.tablePlugin.activeTable.numRows) {
-                        this.activeParts.push(TablePart.COLUMN);
-                    }
+        if (this.selectionActive) {
+            this.canMergeCells = this.tableSelection.cellsAreMergeable();
+            this.canSplitCells = this.tableSelection.cellsAreSplitable();
+            this.isHeader = this.tableSelection.isHeader();
+            this.activeParts.push(TablePart.CELL);
+        }
 
-                    if (rect.left === 1 && rect.right === this.tablePlugin.activeTable.numCols) {
-                        this.activeParts.push(TablePart.ROW);
-                    }
-                }
-            }
+        if (this.tableSelection.currentRectangle == null) {
+            return;
+        }
+
+        if ((this.tableSelection.currentRectangle as AlohaTableSelectionColumns).columns?.length > 0) {
+            this.activeParts.push(TablePart.COLUMN);
+            return;
+        }
+
+        if ((this.tableSelection.currentRectangle as AlohaTableSelectionRows).rows?.length > 0) {
+            this.activeParts.push(TablePart.ROW);
+            return;
+        }
+
+        // Determine the selection from the rect
+        const rect = this.tableSelection.currentRectangle as AlohaTableSelectionRectangle;
+
+        if (rect.top === 1 && rect.bottom === this.tablePlugin.activeTable.numRows) {
+            this.activeParts.push(TablePart.COLUMN);
+        }
+
+        if (rect.left === 1 && rect.right === this.tablePlugin.activeTable.numCols) {
+            this.activeParts.push(TablePart.ROW);
         }
     }
 

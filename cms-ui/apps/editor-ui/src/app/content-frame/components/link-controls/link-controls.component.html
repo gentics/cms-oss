@@ -39,23 +39,14 @@
         </button>
 
         <ng-container *ngIf="linkChecker.enabled">
-            <gtx-tooltip
-                position="bottom"
-                align="left"
-                type="light"
+            <button
+                class="format-button no-hover"
+                [ngClass]="'link-checker-icon link-checker-' + linkChecker.status"
+                [title]="('editor.format_link_checker_' + linkChecker.status) | i18n"
             >
-                <icon
-                    gtx-tooltip-trigger
-                    [ngClass]="'link-checker-icon link-checker-' + (linkChecker.valid ? 'valid' : 'invalid')"
-                    (click)="toggleLinkCheckValidity()"
-                >{{ linkChecker.valid ? 'check' : 'close' }}</icon>
-
-                <div class="link-checker-report" gtx-tooltip-content>
-                    <div class="link-checker-report-date">{{ linkChecker.report.date | i18nDate }}</div>
-                    <code class="link-checker-report-url">{{ linkChecker.report.url }}</code>
-                    <div class="link-checker-report-text">{{ linkChecker.report.text }}</div>
-                </div>
-            </gtx-tooltip>
+                <icon>{{ (linkChecker.status === LinkCheckerStatus.LOADING ? 'hourglass_top'
+                    : (linkChecker.status === LinkCheckerStatus.VALID ? 'check' : 'close')) }}</icon>
+            </button>
         </ng-container>
 
         <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">

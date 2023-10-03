@@ -5,18 +5,21 @@ import {
     EventEmitter,
     OnChanges,
     OnDestroy,
+    OnInit,
     Output,
     SimpleChanges,
     ViewChild,
 } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaLinkPlugin } from '@gentics/aloha-models';
 import { nameToTypeId, typeIdsToName } from '@gentics/cms-components';
-import { AllowedItemSelectionType, AllowedSelectionType, File, Image, ItemRequestOptions, Page } from '@gentics/cms-models';
+import { AllowedItemSelectionType, AllowedSelectionType, File, Image, ItemRequestOptions, NodeFeature, Page } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { InputComponent } from '@gentics/ui-core';
-import { Subscription } from 'rxjs';
+import { InputComponent, waitTake } from '@gentics/ui-core';
+import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
+import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import {
     COMMAND_LINK,
     INLINE_LINK_ANCHOR_ATTRIBUTE,
@@ -34,16 +37,15 @@ import {
 } from '../../../common/models/aloha-integration';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
 
-interface LinkCheckerSettings {
-    enabled?: boolean;
-    valid?: boolean;
-    report?: LinkCheckerReport;
+enum LinkCheckerStatus {
+    VALID = 'valid',
+    INVALID = 'invalid',
+    LOADING = 'loading',
 }
 
-interface LinkCheckerReport {
-    date: Date;
-    url: string;
-    text: string;
+interface LinkCheckerSettings {
+    enabled: boolean;
+    status: LinkCheckerStatus;
 }
 
 const ALLOWED_SELECTION_TYPES: AllowedSelectionType[] = [
@@ -66,7 +68,9 @@ const ALOHA_REPOSITORY_ID = 'com.gentics.aloha.GCN.Page';
     styleUrls: ['./link-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LinkControlsComponent extends BaseControlsComponent implements OnChanges, OnDestroy {
+export class LinkControlsComponent extends BaseControlsComponent implements OnInit, OnChanges, OnDestroy {
+
+    public readonly LinkCheckerStatus = LinkCheckerStatus;
 
     @Output()
     public activeChange = new EventEmitter<boolean>();
@@ -100,34 +104,60 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
 
     /** Infos of the link-checker */
     public linkChecker: LinkCheckerSettings = {
-        enabled: true,
-        valid: true,
-        report: {
-            date: new Date(),
-            url: 'https://example.copm',
-            text: 'sample text',
-        },
+        enabled: false,
+        status: LinkCheckerStatus.LOADING,
     };
 
     /** The currently selected Link Element in the iFrame. */
     protected currentElement: HTMLAnchorElement | null;
+    /** Subject for the links to check. */
+    protected linkToCheck = new BehaviorSubject<string>(null);
 
     /** Instance of the link-plugin from the iFrame. */
     protected linkPlugin: AlohaLinkPlugin;
 
     /** Subscription which loads the picked item from the CMS. */
     protected linkLoader: Subscription | null;
+    /** Subscription for the link-checker loading. */
+    protected linkCheckLoader: Subscription | null;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         protected api: GcmsApi,
         protected i18n: I18nService,
         protected repositoryBrowser: RepositoryBrowserClient,
+        protected appState: ApplicationStateService,
     ) {
         super(changeDetector);
     }
 
-    public ngOnChanges(changes: SimpleChanges): void {
+    public ngOnInit(): void {
+        this.linkCheckLoader = combineLatest([
+            this.appState.select(state => state.editor.nodeId).pipe(
+                mergeMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
+                map(([nodeFeatures]) => (nodeFeatures || []).includes(NodeFeature.LINK_CHECKER)),
+                tap(enabled => {
+                    this.linkChecker.enabled = enabled;
+                    this.changeDetector.markForCheck();
+                }),
+            ),
+            this.linkToCheck.asObservable().pipe(
+                tap(() => {
+                    this.linkChecker.status = LinkCheckerStatus.LOADING;
+                    this.changeDetector.markForCheck();
+                }),
+                waitTake(500),
+            ),
+        ]).pipe(
+            filter(([enabled, link]) => enabled && link != null),
+            switchMap(([, link]) => this.api.linkChecker.checkLink(link)),
+        ).subscribe(status => {
+            this.linkChecker.status = status.valid ? LinkCheckerStatus.VALID : LinkCheckerStatus.INVALID;
+            this.changeDetector.markForCheck();
+        });
+    }
+
+    public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.aloha) {
@@ -135,8 +165,12 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         }
     }
 
-    ngOnDestroy(): void {
+    public ngOnDestroy(): void {
         this.clearLinkLoader();
+        if (this.linkCheckLoader) {
+            this.linkCheckLoader.unsubscribe();
+            this.linkCheckLoader = null;
+        }
     }
 
     public toggleActive(): void {
@@ -182,9 +216,8 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
     }
 
     public selectionOrEditableChanged(): void {
-        this.currentElement = null;
-
         if (!this.linkPlugin || !this.range || !this.range.markupEffectiveAtStart || !this.aloha.activeEditable?.obj) {
+            this.currentElement = null;
             this.allowed = false;
             this.updateActive(false);
             this.changeDetector.markForCheck();
@@ -192,11 +225,13 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.allowed = (this.linkPlugin.getEditableConfig(this.aloha.activeEditable?.obj) || [])
+        this.allowed = this.aloha?.activeEditable?.obj != null && (this.linkPlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
             .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable?.obj, nodeName))
             .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
             .filter(val => val != null)
             .includes(COMMAND_LINK);
+
+        let foundElement: HTMLAnchorElement | null = null;
 
         for (const elem of this.range.markupEffectiveAtStart) {
             // Only enable the link handling when the plugin is available
@@ -207,30 +242,16 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
                 continue;
             }
 
-            this.updateActive(true);
-            this.clearLinkLoader();
-            this.currentElement = elem as HTMLAnchorElement;
-
-            // Set the common/easy properties
-            this.anchor = elem.getAttribute(INLINE_LINK_ANCHOR_ATTRIBUTE) || '';
-            this.language = elem.getAttribute(INLINE_LINK_LANGUAGE_ATTRIBUTE) || '';
-            this.title = elem.getAttribute(INLINE_LINK_TITLE_ATTRIBUTE) || '';
-            this.newTab = elem.getAttribute(INLINE_LINK_TARGET_ATTRIBUTE) === LINK_TARGET_NEW_TAB;
-
-            const linkObjectId = elem.getAttribute(INLINE_LINK_OBJECT_ID_ATTRIBUTE);
-            const linkObjectNodeId = elem.getAttribute(INLINE_LINK_OBJECT_NODE_ATTRIBUTE);
-
-            // If it's a referenced item, then we need to load it and properly save it.
-            if (linkObjectId) {
-                this.loadLinkObject(linkObjectId, linkObjectNodeId);
-            } else {
-                this.loadingObject = false;
-                this.isTargetObject = false;
-                this.targetObject = null;
-                this.targetUrl = elem.getAttribute(INLINE_LINK_URL_ATTRIBUTE) || '';
-            }
-
+            foundElement = elem as HTMLAnchorElement;
             break;
+        }
+
+        if (!foundElement) {
+            this.currentElement = null;
+        } else if (foundElement !== this.currentElement) {
+            this.currentElement = foundElement;
+            this.updateActive(true);
+            this.loadDataFromElement();
         }
 
         if (this.currentElement == null) {
@@ -238,13 +259,36 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         }
     }
 
-    public toggleLinkCheckValidity(): void {
-        this.linkChecker.valid = !this.linkChecker.valid;
+    protected loadDataFromElement(): void {
+        this.clearLinkLoader();
+
+        // Set the common/easy properties
+        this.anchor = this.currentElement.getAttribute(INLINE_LINK_ANCHOR_ATTRIBUTE) || '';
+        this.language = this.currentElement.getAttribute(INLINE_LINK_LANGUAGE_ATTRIBUTE) || '';
+        this.title = this.currentElement.getAttribute(INLINE_LINK_TITLE_ATTRIBUTE) || '';
+        this.newTab = this.currentElement.getAttribute(INLINE_LINK_TARGET_ATTRIBUTE) === LINK_TARGET_NEW_TAB;
+
+        const linkObjectId = this.currentElement.getAttribute(INLINE_LINK_OBJECT_ID_ATTRIBUTE);
+        const linkObjectNodeId = this.currentElement.getAttribute(INLINE_LINK_OBJECT_NODE_ATTRIBUTE);
+
+        // If it's a referenced item, then we need to load it and properly save it.
+        if (linkObjectId) {
+            // internal links are always valid
+            this.linkChecker.status = LinkCheckerStatus.VALID;
+            this.loadLinkObject(linkObjectId, linkObjectNodeId);
+        } else {
+            this.loadingObject = false;
+            this.isTargetObject = false;
+            this.targetObject = null;
+            this.targetUrl = this.currentElement.getAttribute(INLINE_LINK_URL_ATTRIBUTE) || '';
+            this.linkToCheck.next(this.targetUrl);
+        }
     }
 
     public updateLinkTarget(value: string): void {
         this.targetUrl = value;
         this.isTargetObject = false;
+        this.linkToCheck.next(this.targetUrl);
         this.forwardStateToIFrame();
     }
 
@@ -381,7 +425,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnCh
         if (this.pubSub) {
             this.pubSub.pub('aloha.link.changed', {
                 href: href,
-                element: this.currentElement,
+                element: this.aloha.jQuery(this.currentElement),
                 input: null,
             });
         }

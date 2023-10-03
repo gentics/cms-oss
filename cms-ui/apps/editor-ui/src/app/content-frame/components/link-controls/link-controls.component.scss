@@ -55,8 +55,9 @@
     }
 }
 
-.link-checker-icon {
-    @include format-element;
+.format-button.link-checker-icon {
+    cursor: default;
+    user-select: none;
 
     &.link-checker-valid {
         color: $gtx-color-success;
@@ -64,6 +65,10 @@
 
     &.link-checker-invalid {
         color: $gtx-color-alert;
+    }
+
+    &.link-checker-loading {
+        color: $gtx-color-warning;
     }
 }
 

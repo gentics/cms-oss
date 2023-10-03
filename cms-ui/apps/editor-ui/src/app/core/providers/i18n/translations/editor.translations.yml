@@ -998,8 +998,17 @@ format_link_remove_cms_target:
     en: Clear target
     de: Ziel bereinigen
 format_link_checker:
-    en: Link-Checker result
-    de: Link-Checker Ergebnis
+    en: Link-Checker
+    de: Link-Checker
+format_link_checker_valid:
+    en: "Link-Checker: valid"
+    de: "Link-Checker: valide"
+format_link_checker_invalid:
+    en: "Link-Checker: invalid"
+    de: "Link-Checker: invalide"
+format_link_checker_loading:
+    en: "Link-Checker: validating ..."
+    de: "Link-Checker: am validieren ..."
 format_link_additional_options:
     en: Additional Options
     de: Weitere Einstellungen
@@ -1114,3 +1123,9 @@ table_delete_row_warning_title:
 table_delete_row_warning_message:
     en: Are you sure you want to delete the currently selected table rows?
     de: Sind Sie sicher, dass Sie die aktuell ausgewählten Tabellenreihen löschen möchten?
+constructs_no_results:
+    en: No Constructs are matching your search
+    de: Es wurden keine TagTypen passend zu ihrerer Suche gefunden
+constructs_loading:
+    en: Loading ...
+    de: Lade daten ...

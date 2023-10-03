@@ -75,7 +75,7 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             .filter(val => COMMAND_TO_NODE_NAME[val] != null);
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.allowedFormats = (this.formatPlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
+        this.allowedFormats = this.aloha?.activeEditable?.obj != null && (this.formatPlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
             .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable.obj, nodeName))
             .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
             .filter(command => command != null);

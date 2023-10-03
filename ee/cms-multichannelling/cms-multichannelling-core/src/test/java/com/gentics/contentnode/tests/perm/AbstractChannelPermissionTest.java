@@ -1,5 +1,7 @@
 package com.gentics.contentnode.tests.perm;
 
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
@@ -7,9 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -32,66 +36,68 @@ import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.perm.PermHandler.ObjectPermission;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
+import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.lib.db.SQLExecutor;
 
 /**
  * Abstract test cases for channel specific permissions
  */
 @RunWith(value = Parameterized.class)
+@GCNFeature(set = Feature.MULTICHANNELLING)
 public abstract class AbstractChannelPermissionTest {
 
-	@Rule
-	public DBTestContext testContext = new DBTestContext();
-	
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
 	/**
-	 * ID of the user with all permissions
+	 * User with all permissions
 	 */
-	protected int userId;
-	
+	protected static SystemUser nodeUser;
+
 	/**
-	 * ID of the user with restricted permissions
+	 * User with restricted permissions
 	 */
-	protected int restrictedUserId;
-	
+	protected static SystemUser restrictedUser;
+
 	/**
 	 * Tested class
 	 */
 	protected Class<? extends NodeObject> clazz;
-	
+
 	/**
 	 * Tested permission
 	 */
 	protected ObjectPermission perm;
-	
+
 	/**
 	 * Setting for the folder
 	 */
 	protected ChannelSetting folderSetting;
-	
+
 	/**
 	 * Setting for the object
 	 */
 	protected ChannelSetting objectSetting;
-	
+
 	/**
 	 * Master Node
 	 */
-	protected Node master;
-	
+	protected static Node master;
+
 	/**
 	 * Channel
 	 */
-	protected Node channel;
-	
+	protected static Node channel;
+
 	/**
 	 * Subchannel
 	 */
-	protected Node subChannel;
-	
+	protected static Node subChannel;
+
 	/**
 	 * Sidechannel
 	 */
-	protected Node sideChannel;
+	protected static Node sideChannel;
 
 	/**
 	 * Create a test instance
@@ -107,29 +113,25 @@ public abstract class AbstractChannelPermissionTest {
 		this.objectSetting = objectSetting;
 	}
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUpOnce() throws Exception {
+		testContext.getContext().getTransaction().commit();
 
-		// activate multichannelling
-		testContext.getContext().setFeature(Feature.MULTICHANNELLING, true);
+		nodeUser = supply(t -> t.getObject(SystemUser.class, ContentNodeTestDataUtils.getNodeUserId()));
+		master = supply(nodeUser, () -> ContentNodeTestDataUtils.createNode("Node", "hode", "/", null, false, false));
+		channel = supply(nodeUser, () -> ContentNodeTestDataUtils.createChannel(master, "Channel", "channel", "/"));
+		subChannel = supply(nodeUser, () -> ContentNodeTestDataUtils.createChannel(channel, "SubChannel", "subchannel", "/"));
+		sideChannel = supply(nodeUser, () -> ContentNodeTestDataUtils.createChannel(master, "SideChannel", "sidechannel", "/"));
 
-		userId = ContentNodeTestDataUtils.getNodeUserId();
-		testContext.getContext().startTransaction(userId);
-		master = ContentNodeTestDataUtils.createNode("Node", "hode", "/", null, false, false);
-		channel = ContentNodeTestDataUtils.createChannel(master, "Channel", "channel", "/");
-		subChannel = ContentNodeTestDataUtils.createChannel(channel, "SubChannel", "subchannel", "/");
-		sideChannel = ContentNodeTestDataUtils.createChannel(master, "SideChannel", "sidechannel", "/");
-
-		final UserGroup userGroup = ContentNodeTestDataUtils.createUserGroup("test group", ContentNodeTestDataUtils.NODE_GROUP_ID);
-		SystemUser systemUser = ContentNodeTestDataUtils.createSystemUser("Tester", "Tester", "", "Tester", "", new ArrayList<UserGroup>());
-		restrictedUserId = ObjectTransformer.getInt(systemUser.getId(), 0);
+		final UserGroup userGroup = supply(() -> ContentNodeTestDataUtils.createUserGroup("test group", ContentNodeTestDataUtils.NODE_GROUP_ID));
+		restrictedUser = supply(() -> ContentNodeTestDataUtils.createSystemUser("Tester", "Tester", "", "Tester", "", new ArrayList<UserGroup>()));
 
 		final int[] userGroupId = new int[1];
 		// assign to group
-		DBUtils.executeStatement("INSERT INTO user_group (user_id, usergroup_id) VALUES (?, ?)", new SQLExecutor() {
+		operate(() -> DBUtils.executeStatement("INSERT INTO user_group (user_id, usergroup_id) VALUES (?, ?)", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
-				stmt.setInt(1, restrictedUserId);
+				stmt.setInt(1, restrictedUser.getId());
 				stmt.setInt(2, ObjectTransformer.getInt(userGroup.getId(), 0));
 			}
 
@@ -140,16 +142,25 @@ public abstract class AbstractChannelPermissionTest {
 					userGroupId[0] = keys.getInt(1);
 				}
 			}
-		}, Transaction.INSERT_STATEMENT);
+		}, Transaction.INSERT_STATEMENT));
 
 		// restrict to channel
-		DBUtils.executeStatement("INSERT INTO user_group_node (user_group_id, node_id) VALUES (?, ?)", new SQLExecutor() {
+		operate(() -> DBUtils.executeStatement("INSERT INTO user_group_node (user_group_id, node_id) VALUES (?, ?)", new SQLExecutor() {
 			@Override
 			public void prepareStatement(PreparedStatement stmt) throws SQLException {
 				stmt.setInt(1, userGroupId[0]);
 				stmt.setInt(2, ObjectTransformer.getInt(channel.getId(), 0));
 			}
-		}, Transaction.INSERT_STATEMENT);
+		}, Transaction.INSERT_STATEMENT));
+	}
+
+	@After
+	public void tearDown() throws NodeException {
+		operate(() -> {
+			for (Node n : Arrays.asList(sideChannel, subChannel, channel, master)) {
+				ContentNodeTestDataUtils.clear(n);
+			}
+		});
 	}
 
 	/**
@@ -167,50 +178,55 @@ public abstract class AbstractChannelPermissionTest {
 		case edit:
 		case publish:
 		case view:
-			NodeObject testObject = createTestObject(folder);
-			testContext.getContext().startTransaction(userId);
-			// when the object is created locally, we do not check permissions
-			// in the master or side channel, because the object does not exist
-			// there
-			if (objectSetting != ChannelSetting.LOCAL) {
-				checkObjectPermission(master, testObject, true);
-			}
-			checkObjectPermission(channel, testObject, true);
-			checkObjectPermission(subChannel, testObject, true);
-			if (objectSetting != ChannelSetting.LOCAL) {
-				checkObjectPermission(sideChannel, testObject, true);
-			}
+			NodeObject testObject = supply(nodeUser, () -> createTestObject(folder));
 
-			testContext.getContext().startTransaction(restrictedUserId);
-			if (objectSetting != ChannelSetting.LOCAL) {
-				checkObjectPermission(master, testObject, dataChange ? allowDataChange : false);
-			}
-			checkObjectPermission(channel, testObject, dataChange ? allowDataChange : true);
-			checkObjectPermission(subChannel, testObject, dataChange ? allowDataChange : false);
-			if (objectSetting != ChannelSetting.LOCAL) {
-				checkObjectPermission(sideChannel, testObject, dataChange ? allowDataChange : false);
-			}
+			operate(nodeUser, () -> {
+				// when the object is created locally, we do not check permissions
+				// in the master or side channel, because the object does not exist
+				// there
+				if (objectSetting != ChannelSetting.LOCAL) {
+					checkObjectPermission(master, testObject, true);
+				}
+				checkObjectPermission(channel, testObject, true);
+				checkObjectPermission(subChannel, testObject, true);
+				if (objectSetting != ChannelSetting.LOCAL) {
+					checkObjectPermission(sideChannel, testObject, true);
+				}
+			});
+
+			operate(restrictedUser, () -> {
+				if (objectSetting != ChannelSetting.LOCAL) {
+					checkObjectPermission(master, testObject, dataChange ? allowDataChange : false);
+				}
+				checkObjectPermission(channel, testObject, dataChange ? allowDataChange : true);
+				checkObjectPermission(subChannel, testObject, dataChange ? allowDataChange : false);
+				if (objectSetting != ChannelSetting.LOCAL) {
+					checkObjectPermission(sideChannel, testObject, dataChange ? allowDataChange : false);
+				}
+			});
 		case create:
 			if (perm == ObjectPermission.create || !clazz.equals(Folder.class)) {
-				testContext.getContext().startTransaction(userId);
-				if (objectSetting != ChannelSetting.LOCAL) {
-					checkClassPermission(master, folder, true);
-				}
-				checkClassPermission(channel, folder, true);
-				checkClassPermission(subChannel, folder, true);
-				if (objectSetting != ChannelSetting.LOCAL) {
-					checkClassPermission(sideChannel, folder, true);
-				}
+				operate(nodeUser, () -> {
+					if (objectSetting != ChannelSetting.LOCAL) {
+						checkClassPermission(master, folder, true);
+					}
+					checkClassPermission(channel, folder, true);
+					checkClassPermission(subChannel, folder, true);
+					if (objectSetting != ChannelSetting.LOCAL) {
+						checkClassPermission(sideChannel, folder, true);
+					}
+				});
 
-				testContext.getContext().startTransaction(restrictedUserId);
-				if (objectSetting != ChannelSetting.LOCAL) {
-					checkClassPermission(master, folder, false);
-				}
-				checkClassPermission(channel, folder, true);
-				checkClassPermission(subChannel, folder, false);
-				if (objectSetting != ChannelSetting.LOCAL) {
-					checkClassPermission(sideChannel, folder, false);
-				}
+				operate(restrictedUser, () -> {
+					if (objectSetting != ChannelSetting.LOCAL) {
+						checkClassPermission(master, folder, false);
+					}
+					checkClassPermission(channel, folder, true);
+					checkClassPermission(subChannel, folder, false);
+					if (objectSetting != ChannelSetting.LOCAL) {
+						checkClassPermission(sideChannel, folder, false);
+					}
+				});
 			}
 			break;
 		}

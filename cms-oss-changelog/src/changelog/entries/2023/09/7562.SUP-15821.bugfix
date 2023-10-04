@@ -1,0 +1,2 @@
+Performance of checking template permissions has been improved.
+This especially reduces load time for the REST API call to @/rest/node/[node_id]/templates@.

@@ -11,13 +11,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -44,6 +44,7 @@ import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.UserLanguage;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueContainer;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -456,6 +457,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setEditable(int editable) throws ReadOnlyException {
 			if (this.editable != editable) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': editable changed from '%d' to '%d'", this,
+							this.editable, editable));
+				}
 				this.editable = editable;
 				this.modified = true;
 			}
@@ -464,6 +469,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setHidden(boolean hidden) throws ReadOnlyException {
 			if (this.hidden != hidden) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': hidden changed from '%b' to '%b'", this,
+							this.hidden, hidden));
+				}
 				this.hidden = hidden;
 				this.modified = true;
 			}
@@ -472,6 +481,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setInfoInt(int infoInt) throws ReadOnlyException {
 			if (this.infoInt != infoInt) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': infoInt changed from '%d' to '%d'", this,
+							this.infoInt, infoInt));
+				}
 				this.infoInt = infoInt;
 				this.modified = true;
 			}
@@ -480,6 +493,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setInfoText(String infoText) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.infoText, infoText)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': infoText changed from '%s' to '%s'", this,
+							this.infoText, infoText));
+				}
 				this.infoText = infoText;
 				this.modified = true;
 			}
@@ -488,6 +505,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setKeyname(String keyname) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.keyword, keyname)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': keyword changed from '%s' to '%s'", this,
+							this.keyword, keyname));
+				}
 				this.keyword = keyname;
 				this.modified = true;
 			}
@@ -496,6 +517,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setMlId(int mlId) throws ReadOnlyException {
 			if (ObjectTransformer.getInt(this.mlId, -1) != mlId) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': mlId changed from '%d' to '%d'", this,
+							this.mlId, mlId));
+				}
 				this.mlId = mlId;
 				this.modified = true;
 			}
@@ -512,6 +537,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setPartOrder(int partOrder) throws ReadOnlyException {
 			if (this.partOrder != partOrder) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': partOrder changed from '%d' to '%d'", this,
+							this.partOrder, partOrder));
+				}
 				this.partOrder = partOrder;
 				this.modified = true;
 			}
@@ -520,6 +549,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setPartTypeId(int partTypeId) throws ReadOnlyException {
 			if (this.partTypeId != partTypeId) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': partTypeId changed from '%d' to '%d'", this,
+							this.partTypeId, partTypeId));
+				}
 				this.partTypeId = partTypeId;
 				this.modified = true;
 			}
@@ -528,6 +561,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setPolicy(String policy) throws ReadOnlyException, NodeException {
 			if (!StringUtils.isEqual(this.policy, policy)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': policy changed from '%s' to '%s'", this,
+							this.policy, policy));
+				}
 				this.policy = policy;
 				this.modified = true;
 				this.policyURI = newPolicyURI(getId(), this.policy);
@@ -537,6 +574,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setRequired(boolean required) throws ReadOnlyException {
 			if (this.required != required) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': required changed from '%b' to '%b'", this,
+							this.required, required));
+				}
 				this.required = required;
 				this.modified = true;
 			}
@@ -553,6 +594,10 @@ public class PartFactory extends AbstractFactory {
 		@Override
 		public void setHideInEditor(boolean hideInEditor) throws ReadOnlyException {
 			if (this.hideInEditor != hideInEditor) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': hopeditHook changed from '%b' to '%b'", this,
+							this.hideInEditor, hideInEditor));
+				}
 				this.hideInEditor = hideInEditor;
 				this.modified = true;
 			}
@@ -562,6 +607,10 @@ public class PartFactory extends AbstractFactory {
 		public void setExternalEditorUrl(String externalEditorUrl) throws ReadOnlyException {
 			externalEditorUrl = ObjectTransformer.getString(externalEditorUrl, "");
 			if (!StringUtils.isEqual(this.externalEditorUrl, externalEditorUrl)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': externalEditorUrl changed from '%s' to '%s'", this,
+							this.externalEditorUrl, externalEditorUrl));
+				}
 				this.externalEditorUrl = externalEditorUrl;
 				this.modified = true;
 			}
@@ -629,7 +678,12 @@ public class PartFactory extends AbstractFactory {
 					t.addTransactional(new TransactionalTriggerEvent(Part.class, getId(), null, Events.CREATE));
 				} else {
 					// get modified attributes
-					t.addTransactional(new TransactionalTriggerEvent(Part.class, getId(), getModifiedData(origPart, this), Events.UPDATE));
+					String[] modifiedData = getModifiedData(origPart, this);
+					if (logger.isDebugEnabled() && modifiedData != null) {
+						logger.debug(String.format("Change in '%s': modified properties: %s", this,
+								Arrays.asList(modifiedData)));
+					}
+					t.addTransactional(new TransactionalTriggerEvent(Part.class, getId(), modifiedData, Events.UPDATE));
 				}
 			}
 

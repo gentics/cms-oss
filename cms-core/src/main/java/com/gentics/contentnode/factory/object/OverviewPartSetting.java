@@ -6,6 +6,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.BiFunction;
@@ -178,16 +180,27 @@ public class OverviewPartSetting {
 	public void setTo(Part part) throws NodeException {
 		assertPart(part);
 
-		StringBuilder infoText = new StringBuilder();
-		infoText.append(restrictedObjectTypes.stream().map(type -> Integer.toString(type.getTtype())).collect(Collectors.joining(",")));
-		infoText.append(";");
-		infoText.append(restrictedSelectionTypes.stream().map(type -> Integer.toString(type.getCode())).collect(Collectors.joining(",")));
-		infoText.append(";");
-		infoText.append(hideSortOption ? "1" : "");
-		infoText.append(";");
-		infoText.append(stickyChannel ? "1" : "");
+		// before setting the encoded infoText, we do a change detection.
+				// this is necessary, because the order of elements in restrictedObjectTypes and restrictedSelectionTypes does not matter
+				// and reordering should not trigger an update
 
-		part.setInfoText(infoText.toString());
+		OverviewPartSetting current = new OverviewPartSetting(part);
+		if (
+				!CollectionUtils.isEqualCollection(restrictedObjectTypes, current.restrictedObjectTypes) ||
+				!CollectionUtils.isEqualCollection(restrictedSelectionTypes, current.restrictedSelectionTypes) ||
+				hideSortOption != current.hideSortOption ||
+				stickyChannel != current.stickyChannel) {
+			StringBuilder infoText = new StringBuilder();
+			infoText.append(restrictedObjectTypes.stream().map(type -> Integer.toString(type.getTtype())).collect(Collectors.joining(",")));
+			infoText.append(";");
+			infoText.append(restrictedSelectionTypes.stream().map(type -> Integer.toString(type.getCode())).collect(Collectors.joining(",")));
+			infoText.append(";");
+			infoText.append(hideSortOption ? "1" : "");
+			infoText.append(";");
+			infoText.append(stickyChannel ? "1" : "");
+	
+			part.setInfoText(infoText.toString());
+		}
 	}
 
 	/**

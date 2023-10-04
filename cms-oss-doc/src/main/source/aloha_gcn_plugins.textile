@@ -16,7 +16,7 @@ h3. Configure list of loaded plugins
 With the following setting, the global plugin list can be configured. The example seen below will show you how to extend the default set of enabled plugins:
 
 <javascript filename="conf/*.yml">
-custom_aloha_plugins:
+aloha_plugins_global:
   "common/characterpicker": true # add common/characterpicker
   "extra/cite": true # add extra/cite
   "common/format": false # deactivate common/format
@@ -28,15 +28,15 @@ Therefore it is recommended to extend the array (as shown) rather than overwriti
 
 h3. Per Node Plugin List
 
-It is also possible to configure the loaded plugins per node, using either the local ID or global ID or the name of the node.
+It is also possible to configure the loaded plugins per node, using either the local ID or global ID or the name of the node. Note that this will override the plugin list defined in @aloha_plugins_global@, and can therefore also be used to disable a certain global plugin for a node by specifying a custom plugin list without the plugin to exclude.
 
 <javascript filename="conf/*.yml">
 # Define the Aloha Editor plugins list for Node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f
 aloha_plugins_node:
   "3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f":
-  	"common/characterpicker": true # add common/characterpicker
-  	"extra/cite": true # add extra/cite
-  	"common/format": false # deactivate common/format
+    - "common/characterpicker"
+    - "extra/cite"
+    - "common/format"
 </javascript>
 
 
@@ -58,6 +58,6 @@ NOTE: You don't have to specify these in your config.
 You need to enable the block plugin when using the new gcn plugin. Please note that this feature might be enabled by default in future releases.
 
 <javascript filename="conf/*.yml">
-custom_aloha_plugins:
+aloha_plugins_global:
 	"common/block": true
 </javascript>

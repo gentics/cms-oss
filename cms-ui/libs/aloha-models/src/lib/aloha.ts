@@ -390,11 +390,33 @@ export interface AlohaDOM {
      */
     removeMarkup(rangeObject: AlohaRangeObject, markup: any, limit: any, removeNonEditables?: boolean): void;
     getEditingHostOf(obj: any): any;
+
+    setCursorInto(element: HTMLElement): void;
+    selectDomNode(element: HTMLElement): void;
+}
+
+export interface AlohaBlockManager {
+    getBlock(idOrElement: string | HTMLElement): AlohaAbstractBlock;
+}
+
+export interface AlohaAbstractBlock {
+    title: string;
+    id: string;
+    $element: JQuery;
+    destroy(force: boolean): void;
+    unblock(): void;
+    free(): void;
+    isDraggable(): boolean;
+    activate(eventTarget: HTMLElement | JQuery, event?: Event): void;
+    deactivate(): void;
+    isActive(): boolean;
+    update($element: JQuery, postProcessFn: () => void): void;
 }
 
 export interface AlohaEditable {
     smartContentChange(event: any): false | void;
     obj: JQuery;
+    activate(): void;
 }
 
 export interface AlohaPubSub {

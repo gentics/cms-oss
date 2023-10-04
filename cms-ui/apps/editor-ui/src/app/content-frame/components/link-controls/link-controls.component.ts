@@ -13,13 +13,24 @@ import {
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaLinkPlugin } from '@gentics/aloha-models';
+import { AlohaBlockManager, AlohaDOM, AlohaLinkPlugin } from '@gentics/aloha-models';
 import { nameToTypeId, typeIdsToName } from '@gentics/cms-components';
-import { AllowedItemSelectionType, AllowedSelectionType, File, Image, ItemRequestOptions, NodeFeature, Page } from '@gentics/cms-models';
+import {
+    AllowedItemSelectionType,
+    AllowedSelectionType,
+    EditMode,
+    ExternalLink,
+    File,
+    Image,
+    ItemRequestOptions,
+    LinkCheckerCheckResponse,
+    NodeFeature,
+    Page,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { InputComponent, waitTake } from '@gentics/ui-core';
-import { BehaviorSubject, Subscription, combineLatest } from 'rxjs';
-import { filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { InputComponent, cancelEvent, waitTake } from '@gentics/ui-core';
+import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
+import { distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import {
     COMMAND_LINK,
     INLINE_LINK_ANCHOR_ATTRIBUTE,
@@ -46,6 +57,7 @@ enum LinkCheckerStatus {
 interface LinkCheckerSettings {
     enabled: boolean;
     status: LinkCheckerStatus;
+    links?: ExternalLink[];
 }
 
 const ALLOWED_SELECTION_TYPES: AllowedSelectionType[] = [
@@ -114,12 +126,16 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     protected linkToCheck = new BehaviorSubject<string>(null);
 
     /** Instance of the link-plugin from the iFrame. */
-    protected linkPlugin: AlohaLinkPlugin;
+    protected plugin: AlohaLinkPlugin;
+    protected alohaDom: AlohaDOM;
+    protected blockManager: AlohaBlockManager;
 
     /** Subscription which loads the picked item from the CMS. */
-    protected linkLoader: Subscription | null;
+    protected internalRefLoader: Subscription | null;
     /** Subscription for the link-checker loading. */
-    protected linkCheckLoader: Subscription | null;
+    protected checkLoader: Subscription | null;
+    /** Other misc subscriptions for cleanup */
+    protected subscriptions: Subscription[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -132,27 +148,58 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     }
 
     public ngOnInit(): void {
-        this.linkCheckLoader = combineLatest([
-            this.appState.select(state => state.editor.nodeId).pipe(
-                mergeMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
-                map(([nodeFeatures]) => (nodeFeatures || []).includes(NodeFeature.LINK_CHECKER)),
-                tap(enabled => {
-                    this.linkChecker.enabled = enabled;
-                    this.changeDetector.markForCheck();
-                }),
-            ),
+        const checkerEnabled$: Observable<boolean> = this.appState.select(state => state.editor.nodeId).pipe(
+            mergeMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
+            map(([nodeFeatures]) => (nodeFeatures || []).includes(NodeFeature.LINK_CHECKER)),
+        );
+
+        this.subscriptions.push(checkerEnabled$.subscribe(enabled => {
+            this.linkChecker.enabled = enabled;
+            this.changeDetector.markForCheck();
+        }))
+
+        this.subscriptions.push(checkerEnabled$.pipe(
+            filter(enabled => enabled),
+            mergeMap(() => this.appState.select(state => state.editor).pipe(
+                filter(editor => editor.editMode === EditMode.EDIT && editor.itemType === 'page'),
+                switchMap(editor => this.api.linkChecker.getPage(editor.itemId)),
+            )),
+        ).subscribe(status => {
+            this.linkChecker.links = status.items
+                .filter(link => link.lastStatus === 'invalid');
+            this.changeDetector.markForCheck();
+        }));
+
+        this.checkLoader = combineLatest([
+            checkerEnabled$,
             this.linkToCheck.asObservable().pipe(
-                tap(() => {
-                    this.linkChecker.status = LinkCheckerStatus.LOADING;
-                    this.changeDetector.markForCheck();
-                }),
-                waitTake(500),
+                distinctUntilChanged(),
             ),
         ]).pipe(
             filter(([enabled, link]) => enabled && link != null),
-            switchMap(([, link]) => this.api.linkChecker.checkLink(link)),
+            tap(() => {
+                this.linkChecker.status = LinkCheckerStatus.LOADING;
+                this.changeDetector.markForCheck();
+            }),
+            waitTake(500),
+            switchMap(([, link]) => {
+                if (link.trim().length === 0) {
+                    return of<LinkCheckerCheckResponse>({
+                        messages: [],
+                        reason: '',
+                        responseInfo: {
+                            responseCode: 'OK',
+                        },
+                        valid: true,
+                    });
+                }
+                return this.api.linkChecker.checkLink(link);
+            }),
         ).subscribe(status => {
             this.linkChecker.status = status.valid ? LinkCheckerStatus.VALID : LinkCheckerStatus.INVALID;
+            this.changeDetector.markForCheck();
+        }, () => {
+            this.linkChecker.status = LinkCheckerStatus.INVALID;
             this.changeDetector.markForCheck();
         });
     }
@@ -161,16 +208,19 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
         super.ngOnChanges(changes);
 
         if (changes.aloha) {
-            this.linkPlugin = this.safeRequire('link/link-plugin');
+            this.plugin = this.safeRequire('link/link-plugin');
+            this.alohaDom = this.safeRequire('util/dom');
+            this.blockManager = this.safeRequire('block/block-manager');
         }
     }
 
     public ngOnDestroy(): void {
         this.clearLinkLoader();
-        if (this.linkCheckLoader) {
-            this.linkCheckLoader.unsubscribe();
-            this.linkCheckLoader = null;
+        if (this.checkLoader) {
+            this.checkLoader.unsubscribe();
+            this.checkLoader = null;
         }
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     public toggleActive(): void {
@@ -187,7 +237,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
             return;
         }
 
-        const res = this.linkPlugin.insertLink(false);
+        const res = this.plugin.insertLink(false);
         // Only newer versions have the boolean return type
         if (typeof res === 'boolean') {
             // If it's false, then it means the link couldn't be created
@@ -211,12 +261,12 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     }
 
     public removeLinkAtCurrentLocation(): void {
-        this.linkPlugin.removeLink();
+        this.plugin.removeLink();
         this.updateActive(false);
     }
 
     public selectionOrEditableChanged(): void {
-        if (!this.linkPlugin || !this.range || !this.range.markupEffectiveAtStart || !this.aloha.activeEditable?.obj) {
+        if (!this.plugin || !this.range || !this.range.markupEffectiveAtStart || !this.aloha.activeEditable?.obj) {
             this.currentElement = null;
             this.allowed = false;
             this.updateActive(false);
@@ -225,7 +275,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.allowed = this.aloha?.activeEditable?.obj != null && (this.linkPlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
+        this.allowed = this.aloha?.activeEditable?.obj != null && (this.plugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
             .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable?.obj, nodeName))
             .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
             .filter(val => val != null)
@@ -256,6 +306,38 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
 
         if (this.currentElement == null) {
             this.updateActive(false);
+        }
+    }
+
+    public focusLink(link: ExternalLink, event?: MouseEvent): void {
+        cancelEvent(event);
+
+        if (!this.aloha || !this.alohaDom) {
+            return;
+        }
+
+        const $contentTag = this.aloha.jQuery(`[data-gcn-tagid="${link.contenttagId}"]`);
+        if (!$contentTag.length) {
+            return;
+        }
+
+        const $host = this.aloha.jQuery(this.alohaDom.getEditingHostOf($contentTag.get(0)));
+        const editable = this.aloha.getEditableById($host.attr('id'));
+        const blockId = $contentTag.eq(0).attr('id');
+        if (editable) {
+            editable.activate();
+            this.alohaDom.setCursorInto($contentTag.get(0));
+            this.aloha.scrollToSelection();
+            this.alohaDom.selectDomNode($contentTag.get(0));
+            this.aloha.Selection.updateSelection();
+        } else {
+            if (this.blockManager && blockId) {
+                const block = this.blockManager.getBlock(blockId);
+                if (block) {
+                    block.activate(block.$element);
+                }
+            }
+            $(window.document).scrollTop($contentTag.offset().top);
         }
     }
 
@@ -314,7 +396,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
 
     public selectLinkTarget(): void {
         this.repositoryBrowser.openRepositoryBrowser({
-            allowedSelection: (this.linkPlugin.objectTypeFilter || ['file', 'image', 'page'])
+            allowedSelection: (this.plugin.objectTypeFilter || ['file', 'image', 'page'])
                 .map(value => (value === 'website' ? 'page' : null) as AllowedItemSelectionType)
                 .filter(value => value != null && ALLOWED_SELECTION_TYPES.includes(value)),
             selectMultiple: false,
@@ -356,13 +438,13 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
         // This would therefore reset the href and anchor all the time, which isn't what we want.
         const hrefValue = this.isTargetObject ? '' : this.targetUrl;
         const anchorValue = this.anchor ? `#${this.anchor}` : '';
-        this.linkPlugin.hrefValue = hrefValue + anchorValue;
-        this.linkPlugin.hrefField.setValue(hrefValue);
+        this.plugin.hrefValue = hrefValue + anchorValue;
+        this.plugin.hrefField.setValue(hrefValue);
 
         // Anchor field is especially funny, because it has setters defined, but they don't do anything.
         // Instead, we have to set the value directly to the HTML Element.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        const anchorHtmlElem = this.linkPlugin.anchorField.element?.[0] as HTMLInputElement;
+        const anchorHtmlElem = this.plugin.anchorField.element?.[0] as HTMLInputElement;
         if (anchorHtmlElem) {
             anchorHtmlElem.value = this.anchor;
         }
@@ -376,7 +458,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
             renditions: [],
             loaded: false,
         } : null;
-        this.linkPlugin.hrefField.setItem(itemForPlugin);
+        this.plugin.hrefField.setItem(itemForPlugin);
     }
 
     /** Update the HTML Elements attribute with the current state/data */
@@ -447,7 +529,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
 
         switch (itemTypeName) {
             case 'page':
-                this.linkLoader = this.api.pages.getPage(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.api.pages.getPage(itemId, options).subscribe(res => {
                     this.targetObject = res.page;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();
@@ -455,7 +537,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
                 break;
 
             case 'file':
-                this.linkLoader = this.api.files.getFile(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.api.files.getFile(itemId, options).subscribe(res => {
                     this.targetObject = res.file;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();
@@ -463,7 +545,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
                 break;
 
             case 'image':
-                this.linkLoader = this.api.images.getImage(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.api.images.getImage(itemId, options).subscribe(res => {
                     this.targetObject = res.image;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();
@@ -485,9 +567,9 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     }
 
     protected clearLinkLoader(): void {
-        if (this.linkLoader != null) {
-            this.linkLoader.unsubscribe();
-            this.linkLoader = null;
+        if (this.internalRefLoader != null) {
+            this.internalRefLoader.unsubscribe();
+            this.internalRefLoader = null;
         }
     }
 }

@@ -77,7 +77,12 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    public setActiveTab(tab: DefaultEditorControlTabs | string): void {
+    public setActiveTab(tab: DefaultEditorControlTabs | string | Event): void {
+        // This handles the "select" event, which is also triggered by the browser events when ... selecting things.
+        // Preventing these browser events from actually changing/breaking the tabs is important here.
+        if (tab == null || tab instanceof Event) {
+            return;
+        }
         this.activeTab = tab;
     }
 }

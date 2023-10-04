@@ -1,5 +1,8 @@
 @import '../base-controls/base-controls.component.scss';
 
+:host {
+    display: contents;
+}
 
 .target-input-wrapper {
     margin: 0 0.25rem;
@@ -129,4 +132,22 @@
 
 .link-options-wrapper {
     padding: 1rem 1rem 0 1rem;
+}
+
+.broken-links-wrapper {
+    padding: 0.5rem 1rem;
+
+    .broken-link-text {
+        display: block;
+        font-weight: bold;
+    }
+
+    .broken-link-item {
+        margin: 0.5rem;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid $gtx-color-dark-gray;
+            padding-bottom: 0.5rem;
+        }
+    }
 }

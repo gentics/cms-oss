@@ -1,4 +1,4 @@
-<div *ngIf="linkPlugin" class="format-section link-group">
+<div *ngIf="plugin" class="format-section link-group">
     <button
         class="format-button off-icon active-indicator-button"
         [class.active]="active"
@@ -90,4 +90,31 @@
             (change)="setLinkNewTab($event)"
         ></icon-checkbox>
     </ng-container>
+</div>
+
+<div *ngIf="linkChecker.enabled" class="format-section">
+    <gtx-dropdown-list
+        [belowTrigger]="true"
+        [disabled]="linkChecker.links?.length === 0"
+    >
+        <gtx-dropdown-trigger>
+            <button
+                class="format-button link-checker-status-button"
+                [title]="'editor.format_link_checker' | i18n"
+                [disabled]="linkChecker.links?.length === 0"
+            >
+                <div *ngIf="linkChecker.links?.length > 0" class="format-button-badge">{{ linkChecker.links?.length }}</div>
+                <icon>cancel</icon>
+            </button>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="broken-links-wrapper">
+                <div *ngFor="let link of linkChecker.links" class="broken-link-item">
+                    <span class="broken-link-text">{{ link.text }}</span>
+                    <a href="#" class="broken-link" (click)="focusLink(link, $event)">{{ link.url }}</a>
+                </div>
+            </div>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
 </div>

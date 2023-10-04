@@ -3,7 +3,7 @@
 @mixin format-element {
     display: inline-block;
     border: none;
-    background: $gtx-color-very-light-gray;
+    background: $gtx-color-light-gray;
     color: $gtx-color-off-black;
     box-shadow: rgba(0, 0, 0, 0.14) 0px 2px 2px 0;
     border-radius: 3px;
@@ -17,8 +17,8 @@
     font-size: 20px;
     transition: 300ms;
 
-    &:hover:not(.no-hover) {
-        background: darken($gtx-color-very-light-gray, 10%);
+    &:hover:not(.no-hover):not(:disabled) {
+        background: darken($gtx-color-light-gray, 10%);
         cursor: pointer;
     }
 }
@@ -39,6 +39,8 @@
 .format-button {
     @include format-element;
 
+    position: relative;
+
     icon, .button-icon {
         width: 20px;
         height: 20px;
@@ -46,17 +48,25 @@
         color: inherit;
     }
 
-    &:disabled {
-        background: $gtx-color-mid-gray;
-        cursor: not-allowed;
+    .format-button-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 0.6rem;
+        background: $gtx-color-alert;
+        padding: 0.2rem 0.25rem;
+        border-radius: 5px;
+        margin-top: -25%;
+        margin-right: -20%;
+        color: $gtx-color-off-white;
     }
 
     &.active {
         color: $gtx-color-primary;
-        background: darken($gtx-color-very-light-gray, 5%);
+        background: darken($gtx-color-light-gray, 5%);
 
         &:hover {
-            background: darken($gtx-color-very-light-gray, 15%);
+            background: darken($gtx-color-light-gray, 15%);
         }
     }
 
@@ -88,8 +98,8 @@
             }
         }
 
-        &.active:not([disabled]):hover,
-        &.active:not([disabled]):focus {
+        &.active:not(:disabled):hover,
+        &.active:not(:disabled):focus {
             color: $gtx-color-alert;
 
             icon[data-icon-off]:not([data-icon-off=""]) {
@@ -108,6 +118,12 @@
                 }
             }
         }
+    }
+
+    &:disabled {
+        background: $gtx-color-very-light-gray;
+        color: $gtx-color-mid-gray;
+        cursor: not-allowed;
     }
 }
 

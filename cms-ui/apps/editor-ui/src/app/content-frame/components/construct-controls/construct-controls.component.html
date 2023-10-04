@@ -15,7 +15,14 @@
     >
         <gtx-dropdown-trigger>
             <div class="construct-overview">
-                <ng-container *ngTemplateOutlet="constructs; context: { list: availableConstructs }"></ng-container>
+                <ng-container *ngIf="noCategroyConstructs.length > 0; else noUncategorizedConstructs">
+                    <ng-container *ngTemplateOutlet="constructs; context: { list: noCategroyConstructs }"></ng-container>
+                </ng-container>
+                <ng-template #noUncategorizedConstructs>
+                    <div class="no-elements">
+                        {{ 'editor.constructs_no_uncategorized' | i18n }}
+                    </div>
+                </ng-template>
             </div>
         </gtx-dropdown-trigger>
 

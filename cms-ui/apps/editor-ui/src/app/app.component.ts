@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnI
 import { NavigationEnd, Router } from '@angular/router';
 import { WindowRef } from '@gentics/cms-components';
 import {
+    EditMode,
     GcmsUiLanguage,
     GtxVersion,
     I18nLanguage,
@@ -17,7 +18,7 @@ import {
     Observable,
     Subject,
     combineLatest,
-    merge as observableMerge,
+    merge,
     of,
     timer,
 } from 'rxjs';
@@ -98,6 +99,9 @@ export class AppComponent implements OnInit {
     @HostBinding('class.maintenance-mode')
     maintenanceModeActive: boolean;
 
+    @HostBinding('class.focus-mode')
+    focusMode: boolean;
+
     @HostBinding('attr.lang')
     language: string;
 
@@ -176,13 +180,27 @@ export class AppComponent implements OnInit {
 
         this.usersnapService.init();
 
-        this.appState.select(state => state.maintenanceMode.active)
-            .subscribe(active => this.maintenanceModeActive = active);
+        this.appState.select(state => state.maintenanceMode.active).subscribe(active => {
+            this.maintenanceModeActive = active;
+            this.changeDetector.markForCheck();
+        });
+        combineLatest([
+            this.appState.select(state => state.editor.focusMode),
+            this.appState.select(state => state.editor.editMode),
+            this.appState.select(state => state.editor.editorIsOpen),
+            this.appState.select(state => state.editor.editorIsFocused),
+        ]).subscribe(([active, editMode, open, focused]) => {
+            this.focusMode = active && editMode === EditMode.EDIT && open && focused;
+            this.changeDetector.markForCheck();
+        });
 
         this.appState.select(state => state.ui.language).pipe(
             // needed to prevent angular from throwing a 'changed after checked' error
             debounceTime(50),
-        ).subscribe(language => this.language = language);
+        ).subscribe(language => {
+            this.language = language;
+            this.changeDetector.markForCheck();
+        });
 
         this.currentUser$ = this.appState.select(state => state.auth).pipe(
             filter(auth => auth.isLoggedIn),
@@ -211,10 +229,10 @@ export class AppComponent implements OnInit {
         this.supportedUiLanguages$ = this.appState.select(state => state.ui.availableUiLanguages);
         this.currentUiLanguage$ = this.appState.select(state => state.ui.language);
 
-        this.appState.select(state => state.auth.sid)
-            .subscribe(sid => {
-                this.userSid = sid;
-            });
+        this.appState.select(state => state.auth.sid).subscribe(sid => {
+            this.userSid = sid;
+            this.changeDetector.markForCheck();
+        });
 
         const onLogin$ = this.appState.select(state => state.auth).pipe(
             distinctUntilChanged(isEqual, state => state.currentUserId),
@@ -229,6 +247,7 @@ export class AppComponent implements OnInit {
             this.authActions.updateAdminState();
 
             this.featuresActions.checkAll();
+            this.changeDetector.markForCheck();
         });
 
         // When the user is logged in and the nodes & folders are loaded,
@@ -239,7 +258,7 @@ export class AppComponent implements OnInit {
             takeWhile(() => this.router.url === '/login' || this.router.url === '/' || this.router.url === ''),
         )
             .subscribe(activeNode => {
-                let node = this.entityResolver.getNode(activeNode);
+                const node = this.entityResolver.getNode(activeNode);
                 if (node) {
                     this.navigationService.list(node.id, node.folderId).navigate();
                 }
@@ -247,16 +266,20 @@ export class AppComponent implements OnInit {
             error => this.errorHandler.catch(error));
 
         // Whenever the active node or editor node changes, load that node's features if necessary.
-        observableMerge(
-            this.appState.select(state => state.folder.activeNode).pipe(filter(nodeId => typeof nodeId === 'number')),
-            this.appState.select(state => state.editor.nodeId).pipe(filter(nodeId => typeof nodeId === 'number')),
+        merge(
+            this.appState.select(state => state.folder.activeNode).pipe(
+                filter(nodeId => Number.isInteger(nodeId)),
+            ),
+            this.appState.select(state => state.editor.nodeId).pipe(
+                filter(nodeId => Number.isInteger(nodeId)),
+            ),
         ).pipe(
             distinctUntilChanged(isEqual),
         ).subscribe(nodeId => {
-            if (typeof this.appState.now.features.nodeFeatures[nodeId] === 'undefined') {
+            if (this.appState.now.features.nodeFeatures[nodeId] == null) {
                 this.featuresActions.loadNodeFeatures(nodeId);
             }
-            if (typeof this.appState.now.nodeSettings.node[nodeId] === 'undefined') {
+            if (this.appState.now.nodeSettings.node[nodeId] == null) {
                 this.nodeSettingsActions.loadNodeSettings(nodeId);
             }
         });
@@ -268,15 +291,14 @@ export class AppComponent implements OnInit {
 
         this.appState.select(state => state.ui.alerts).pipe(
             filter(alerts => Object.values(alerts).length > 0),
-        )
-            .subscribe(alerts => {
-                const alertCount = Object.values(alerts)
-                    .map(alertType => (alertType === Object(alertType) ? Object.values(alertType) : alertType) || [])
-                    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
-                    .reduce((acc, val) => acc + val);
+        ).subscribe(alerts => {
+            const alertCount = Object.values(alerts)
+                .map(alertType => (alertType === Object(alertType) ? Object.values(alertType) : alertType) || [])
+                // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+                .reduce((acc, val) => acc + val);
 
-                this.alertCenterCounter$.next(alertCount);
-            });
+            this.alertCenterCounter$.next(alertCount);
+        });
 
         this.messageService.whenInboxOpens(() => this.userMenuOpened = true);
         this.messageService.poll();

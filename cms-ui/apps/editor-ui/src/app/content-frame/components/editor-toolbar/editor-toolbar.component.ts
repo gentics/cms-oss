@@ -27,7 +27,7 @@ import {
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
 
 /** Used to define which buttons are visible at a certain moment. */
@@ -106,6 +106,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public activeNodeLanguages: Language[];
     public isSaving: boolean;
     public inQueue: boolean;
+    public focusMode: boolean;
 
     /** Subscriptions to cleanup */
     protected subscriptions: Subscription[] = [];
@@ -130,6 +131,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             publishReplay(1),
             refCount(),
         );
+
+        this.subscriptions.push(combineLatest([
+            this.appState.select(state => state.editor.focusMode),
+            this.appState.select(state => state.editor.editMode),
+            this.appState.select(state => state.editor.editorIsOpen),
+            this.appState.select(state => state.editor.editorIsFocused),
+        ]).subscribe(([active, editMode, open, focused]) => {
+            this.focusMode = active && editMode === EditMode.EDIT && open && focused;
+            this.changeDetector.markForCheck();
+        }));
 
         this.subscriptions.push(this.appState.select(state => state.ui.contentFrameBreadcrumbsExpanded).subscribe(expanded => {
             this.multilineExpanded = expanded;
@@ -165,6 +176,11 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    logoClick(): void {
+        this.folderActions.setSearchTerm('');
+        this.appState.dispatch(new FocusListAction());
     }
 
     setUpBreadcrumbs(item: Page | File | Folder | Form | Image | Node | undefined, nodeId: number): void {

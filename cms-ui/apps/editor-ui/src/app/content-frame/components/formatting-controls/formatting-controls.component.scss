@@ -7,10 +7,18 @@
     display: block;
 }
 
+.root-row {
+    flex-wrap: nowrap;
+    display: flex;
+    flex-direction: row;
+    overflow: auto hidden;
+    width: 100%;
+}
+
 .format-row {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .format-column {
@@ -54,11 +62,6 @@
     font-size: 0.8rem;
     flex: 0 0 auto;
 
-    &:disabled {
-        background: $gtx-color-mid-gray;
-        cursor: not-allowed;
-    }
-
     &.active {
         color: $gtx-color-primary;
         background: darken($gtx-color-very-light-gray, 5%);
@@ -66,6 +69,12 @@
         &:hover {
             background: darken($gtx-color-very-light-gray, 15%);
         }
+    }
+
+    &:disabled {
+        background: $gtx-color-very-light-gray;
+        color: $gtx-color-mid-gray;
+        cursor: not-allowed;
     }
 
     .typography-icon {
@@ -91,9 +100,4 @@
         margin-top: 0.25rem;
         color: inherit;
     }
-}
-
-.root-row {
-    flex-wrap: nowrap;
-    // justify-content: space-between;
 }

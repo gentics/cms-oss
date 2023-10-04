@@ -1,5 +1,14 @@
 <div *ngIf="editorState" class="editor-toolbar">
     <div class="element-toolbar">
+        <a
+            *ngIf="focusMode"
+            class="gentics-logo"
+            [routerLink]="['/editor', { outlets: { list: ['node', currentNode.id, 'folder', currentNode.folderId] } } ]"
+            (click)="logoClick()"
+        >
+            <img src="assets/images/gentics-logo-60px.png">
+        </a>
+
         <div class="breadcrumb-info">
             <gtx-breadcrumbs
                 [routerLinks]="breadcrumbs"
@@ -174,21 +183,14 @@
                         <icon left>date_range</icon> {{ 'editor.time_management_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <gtx-dropdown-item
-                        *ngIf="!editorState.focusModeEnabled && (currentItem?.type === 'page' || currentItem?.type === 'form')"
-                        class="focus-mode-button"
-                        (click)="setFocusMode(true)"
-                    >
-                        <icon left>fullscreen</icon>{{ 'editor.enable_focus_mode_label' | i18n }}
-                    </gtx-dropdown-item>
-
-                    <gtx-dropdown-item
-                        *ngIf="editorState.focusModeEnabled && (currentItem?.type === 'page' || currentItem?.type === 'form')"
-                        class="focus-mode-button"
-                        (click)="setFocusMode(false)"
-                    >
-                        <icon left>fullscreen_exit</icon>{{ 'editor.disable_focus_mode_label' | i18n }}
-                    </gtx-dropdown-item>
+                    <ng-container *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'">
+                        <gtx-dropdown-item
+                            class="focus-mode-button"
+                            (click)="setFocusMode(!editorState.focusMode)"
+                        >
+                            <icon left>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>{{ 'editor.enable_focus_mode_label' | i18n }}
+                        </gtx-dropdown-item>
+                    </ng-container>
 
                     <gtx-dropdown-item *ngIf="inQueue" (click)="approve()" class="success">
                         <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | i18n }}

@@ -9,6 +9,15 @@
     flex-direction: column;
     flex-wrap: nowrap;
 
+    .gentics-logo {
+        margin-right: 1rem;
+
+        > img {
+            width: 36px;
+            height: 36px;
+        }
+    }
+
     .element-toolbar {
         display: flex;
         flex-direction: row;

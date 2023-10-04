@@ -1126,6 +1126,12 @@ table_delete_row_warning_message:
 constructs_no_results:
     en: No Constructs are matching your search
     de: Es wurden keine TagTypen passend zu ihrerer Suche gefunden
+construct_no_category:
+    en: No Category
+    de: Kategorielos
 constructs_loading:
     en: Loading ...
     de: Lade daten ...
+constructs_no_uncategorized:
+    en: No Constructs without Category available
+    de: Keine TagTypen ohne Kategorie verfügbar

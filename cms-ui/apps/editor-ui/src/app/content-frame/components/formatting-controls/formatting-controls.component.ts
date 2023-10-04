@@ -5,7 +5,9 @@ import {
     COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
     COMMAND_TABLE,
     COMMAND_TO_NODE_NAME,
+    COMMAND_TYPOGRAPHY_PARAGRAPH,
     NODE_NAME_TO_COMMAND,
+    SPECIAL_NAME_TO_COMMAND,
     SPECIAL_STYLE_COMMANDS,
     STYLE_COMMANDS,
     TYPOGRAPHY_COMMANDS,
@@ -59,16 +61,33 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
             return;
         }
 
+        let foundOtherTypography = false;
+
         for (const elem of this.range.markupEffectiveAtStart ) {
             if (!elem) {
                 continue;
             }
             const command = NODE_NAME_TO_COMMAND[elem.nodeName];
 
-            if (command) {
+            if (!command) {
+                continue;
+            }
+
+            // Special handling for typography types. There should always only be one
+            // selected at any point, where the PARAGRAPH is the fallback/default.
+            if (!TYPOGRAPHY_COMMANDS.includes(command)) {
                 newActiveFormat.add(command);
                 continue;
             }
+
+            if (command !== COMMAND_TYPOGRAPHY_PARAGRAPH && !foundOtherTypography) {
+                newActiveFormat.add(command);
+                foundOtherTypography = true;
+            }
+        }
+
+        if (!foundOtherTypography) {
+            newActiveFormat.add(COMMAND_TYPOGRAPHY_PARAGRAPH);
         }
 
         this.activeFormats = Array.from(newActiveFormat)
@@ -77,7 +96,7 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.allowedFormats = this.aloha?.activeEditable?.obj != null && (this.formatPlugin.getEditableConfig(this.aloha.activeEditable.obj) || [])
             .filter(nodeName => this.contentRules.isAllowed(this.aloha.activeEditable.obj, nodeName))
-            .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()])
+            .map((nodeName: string) => NODE_NAME_TO_COMMAND[nodeName.toUpperCase()] || SPECIAL_NAME_TO_COMMAND[nodeName])
             .filter(command => command != null);
     }
 

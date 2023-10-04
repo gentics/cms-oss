@@ -37,7 +37,7 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     @Input()
     public categories: ConstructCategory[] = [];
 
-    @ViewChild('dropdown', { static: true })
+    @ViewChild('dropdown', { static: false })
     public dropdown: DropdownListComponent;
 
     /** The text the user filtered/searched for in the search bar. */
@@ -48,6 +48,8 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
 
     /** Constructs which are available to be inseted. */
     public availableConstructs: TagType[] = [];
+    /** Constructs without a category set. */
+    public noCategroyConstructs: TagType[] = [];
     /** `availableConstructs`, but grouped by the category. */
     public groups: GroupedConstructs[] = [];
 
@@ -163,6 +165,10 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
             .filter(construct => whitelist == null || (whitelist.length !== 0 && whitelist.includes(construct.keyword)))
             // Sort them by name to be nicely displayed
             .sort((a, b) => a.name.localeCompare(b.name));
+
+
+        this.noCategroyConstructs = this.availableConstructs
+            .filter(con => con.categoryId == null);
 
         this.updateGroups();
     }

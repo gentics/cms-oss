@@ -88,6 +88,10 @@ export const NODE_NAME_TO_COMMAND: Record<string, string> = {
     /* eslint-enable @typescript-eslint/naming-convention */
 };
 
+export const SPECIAL_NAME_TO_COMMAND: Record<string, string> = {
+    removeFormat: COMMAND_SPECIAL_STYLE_REMOVE_FORMAT,
+};
+
 export const COMMAND_TO_NODE_NAME: Record<string, string> = Object.entries(NODE_NAME_TO_COMMAND).reduce((acc, [name, command]) => {
     acc[command] = name;
     return acc;

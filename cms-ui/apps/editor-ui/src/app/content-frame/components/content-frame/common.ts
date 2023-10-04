@@ -105,9 +105,11 @@ export interface AlohaGlobal {
         updateSelection(): void;
     };
     isModified(): boolean;
-    trigger: (eventName: string, data: any) => void;
+    trigger(eventName: string, data: any): void;
     activeEditable?: AlohaEditable;
+    getEditableById(id: string | number): AlohaEditable | null;
     jQuery: JQueryStatic;
+    scrollToSelection(): void;
 }
 
 export interface GCNJSLib {

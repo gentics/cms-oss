@@ -9,13 +9,14 @@ import { UserAgentRef } from '@editor-ui/app/shared/providers/user-agent-ref';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
-import { ItemInNode, Tag } from '@gentics/cms-models';
+import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Observable } from 'rxjs';
 import { CNParentWindow, CNWindow } from '../../components/content-frame/common';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CustomerScriptService } from './customer-script.service';
+import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -37,7 +38,7 @@ describe('CustomerScriptService', () => {
         editor: {
             itemType: 'page',
             itemId: 1,
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
         },
         ui: {
             language: 'en',
@@ -60,6 +61,7 @@ describe('CustomerScriptService', () => {
                 CustomerScriptService,
                 EntityResolver,
                 UserAgentRef,
+                AlohaIntegrationService,
                 { provide: HttpClient, useClass: MockHttpClient },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ApiBase, useClass: MockApiBase },
@@ -215,7 +217,7 @@ describe('CustomerScriptService', () => {
 
             expect(result.appState).toEqual({
                 currentItem: mockPage,
-                editMode: 'edit',
+                editMode: EditMode.EDIT,
                 pageLanguage: mockLanguage,
                 sid: 123,
                 uiLanguage: 'en',

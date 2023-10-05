@@ -24,10 +24,10 @@
 
             <div class="item-info">
                 <div class="title-name" [title]="currentItem?.name | replaceEscapedCharacters">
-                    <ng-template [ngIf]="currentItem?.type !== 'node'">
-                        <inherited-localized-icon [item]="currentItem" [editorNodeId]="editorNodeId" ></inherited-localized-icon>
+                    <ng-container *ngIf="currentItem?.type !== 'node'">
+                        <inherited-localized-icon [item]="currentItem" [editorNodeId]="editorNodeId"></inherited-localized-icon>
                         <span class="item-name">{{ currentItem?.name | replaceEscapedCharacters }}</span>
-                    </ng-template>
+                    </ng-container>
                 </div>
 
                 <div class="item-version" *ngIf="(currentItem?.type === 'page' || currentItem?.type === 'form') && editorState.version">
@@ -188,7 +188,8 @@
                             class="focus-mode-button"
                             (click)="setFocusMode(!editorState.focusMode)"
                         >
-                            <icon left>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>{{ 'editor.enable_focus_mode_label' | i18n }}
+                            <icon left>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
+                            {{ ('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | i18n }}
                         </gtx-dropdown-item>
                     </ng-container>
 

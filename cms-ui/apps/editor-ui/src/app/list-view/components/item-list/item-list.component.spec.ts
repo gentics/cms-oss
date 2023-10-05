@@ -17,6 +17,7 @@ import { ItemsInfo } from '@editor-ui/app/common/models';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { WindowRef } from '@gentics/cms-components';
 import {
+    EditMode,
     EditorPermissions,
     File,
     Folder,
@@ -1050,6 +1051,7 @@ describe('ItemListComponent', () => {
                 .map(debugElement => debugElement.componentInstance);
 
             // __forItem is added by the MockPermissionPipe
+            // eslint-disable-next-line no-underscore-dangle
             const permissionItems = contextMenus.map(menu => (menu.permissions as any).__forItem);
 
             expect(contextMenus.length).toBe(3);
@@ -1191,7 +1193,7 @@ describe('ItemListComponent', () => {
             state.mockState({
                 editor: {
                     editorIsOpen: true,
-                    editMode: 'edit',
+                    editMode: EditMode.EDIT,
                     itemType: 'page',
                     itemId: 3,
                 },
@@ -1235,7 +1237,7 @@ describe('ItemListComponent', () => {
             state.mockState({
                 editor: {
                     editorIsOpen: true,
-                    editMode: 'edit',
+                    editMode: EditMode.EDIT,
                     itemType: 'page',
                     itemId: 12,
                 },
@@ -1269,7 +1271,7 @@ describe('ItemListComponent', () => {
                 },
                 editor: {
                     editorIsOpen: true,
-                    editMode: 'edit',
+                    editMode: EditMode.EDIT,
                     itemType: 'image',
                     itemId: 3,
                 },

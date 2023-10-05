@@ -1,6 +1,6 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
-import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
+import { EditMode, EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
@@ -25,7 +25,7 @@ describe('IFrameManager', () => {
     let mockMasterFrame: MockManagedIFrame;
     let mockHostComponent: MockHostComponent;
     const mockEditorState: EditorState = {
-        editMode: 'preview',
+        editMode: EditMode.PREVIEW,
         itemType: 'page',
         contentModified: false,
         editorIsFocused: true,
@@ -302,7 +302,7 @@ describe('IFrameManager', () => {
             const spy = spyOn(resourceUrlBuilder, 'pagePreview');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
-            editorState.editMode = 'preview';
+            editorState.editMode = EditMode.PREVIEW;
             iframeManager.stateToUrl(editorState).then(() => {
                 expect(spy).toHaveBeenCalledWith(CURRENT_ITEM.id, editorState.nodeId);
             });
@@ -312,7 +312,7 @@ describe('IFrameManager', () => {
             const spy = spyOn(resourceUrlBuilder, 'pageEditor');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
-            editorState.editMode = 'edit';
+            editorState.editMode = EditMode.EDIT;
             iframeManager.stateToUrl(editorState).then(() => {
                 expect(spy).toHaveBeenCalledWith(CURRENT_ITEM.id, editorState.nodeId);
             });
@@ -322,7 +322,7 @@ describe('IFrameManager', () => {
             const spy = spyOn(resourceUrlBuilder, 'comparePageLanguages');
             editorState.nodeId = 1;
             editorState.itemType = 'page';
-            editorState.editMode = 'preview';
+            editorState.editMode = EditMode.PREVIEW;
             editorState.compareWithId = 4;
             iframeManager.stateToUrl(editorState).then(() => {
                 expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id, editorState.compareWithId);
@@ -331,7 +331,7 @@ describe('IFrameManager', () => {
 
         it('edit item-properties', waitForAsync(() => {
             editorState.nodeId = 1;
-            editorState.editMode = 'editProperties';
+            editorState.editMode = EditMode.EDIT_PROPERTIES;
             editorState.openTab = 'properties';
             iframeManager.stateToUrl(editorState).then(result => {
                 expect(result).toEqual(BLANK_PROPERTIES_PAGE);
@@ -341,7 +341,7 @@ describe('IFrameManager', () => {
         it('preview version', waitForAsync(() => {
             const spy = spyOn(resourceUrlBuilder, 'previewPageVersion');
             editorState.nodeId = 1;
-            editorState.editMode = 'previewVersion';
+            editorState.editMode = EditMode.PREVIEW_VERSION;
             editorState.version = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {
                 expect(spy).toHaveBeenCalledWith(editorState.nodeId, CURRENT_ITEM.id, editorState.version.timestamp);
@@ -351,7 +351,7 @@ describe('IFrameManager', () => {
         it('compare version contents', waitForAsync(() => {
             const spy = spyOn(resourceUrlBuilder, 'comparePageVersions');
             editorState.nodeId = 1;
-            editorState.editMode = 'compareVersionContents';
+            editorState.editMode = EditMode.COMPARE_VERSION_CONTENTS;
             editorState.version = { timestamp: 5678 } as any;
             editorState.oldVersion = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {
@@ -363,7 +363,7 @@ describe('IFrameManager', () => {
         it('compare version sources', waitForAsync(() => {
             const spy = spyOn(resourceUrlBuilder, 'comparePageVersionSources');
             editorState.nodeId = 1;
-            editorState.editMode = 'compareVersionSources';
+            editorState.editMode = EditMode.COMPARE_VERSION_SOURCES;
             editorState.version = { timestamp: 5678 } as any;
             editorState.oldVersion = { timestamp: 1234 } as any;
             iframeManager.stateToUrl(editorState).then(() => {

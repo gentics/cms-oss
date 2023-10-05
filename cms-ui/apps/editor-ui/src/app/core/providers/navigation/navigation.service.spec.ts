@@ -92,13 +92,13 @@ describe('NavigationService', () => {
                     nodeId: 1,
                     itemType: 'page',
                     itemId: 6,
-                    editMode: 'preview',
+                    editMode: EditMode.PREVIEW,
                 },
             }).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
                     list: ['node', 3, 'folder', 42],
-                    detail: ['node', 1, 'page', 6, 'preview', encodeOptions({})],
+                    detail: ['node', 1, 'page', 6, EditMode.PREVIEW, encodeOptions({})],
                 },
             }]);
         });

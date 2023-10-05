@@ -1,4 +1,4 @@
-import { MonoTypeOperatorFunction, Observable } from 'rxjs';
+import { MonoTypeOperatorFunction, Observable, SchedulerLike, Subscription, asyncScheduler } from 'rxjs';
 
 /**
  * Operator which will delay the stream by the provided time.
@@ -9,54 +9,57 @@ import { MonoTypeOperatorFunction, Observable } from 'rxjs';
  * @param time The time in milliseconds to wait
  * @returns The latest value after the the timer finished.
  */
-export function waitTake<T>(time: number): MonoTypeOperatorFunction<T> {
+export function waitTake<T>(time: number, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
     return (source$: Observable<T>) => {
         return new Observable<T>(sub => {
 
-            let timeoutId = null;
+            let taskRunner: Subscription = null;
             let isComplete = false;
 
-            function startAgain(value: T): void {
-                if (timeoutId != null) {
-                    clearTimeout(timeoutId);
-                }
-                timeoutId = setTimeout(() => {
-                    sub.next(value);
-                    if (isComplete) {
-                        sub.complete();
-                    }
-                    timeoutId = null;
-                }, time);
-            }
-
             source$.subscribe({
-                next: (val: T) => {
+                next: (value: T) => {
                     if (sub.closed || isComplete) {
                         return;
                     }
-                    startAgain(val);
+
+                    if (taskRunner != null) {
+                        taskRunner.unsubscribe();
+                    }
+
+                    taskRunner = scheduler.schedule(() => {
+                        sub.next(value);
+                        if (isComplete) {
+                            sub.complete();
+                        }
+                        taskRunner = null;
+                    }, time);
                 },
                 complete: () => {
                     if (sub.closed) {
                         return;
                     }
+
+                    isComplete = true;
+
                     // If no timer is running, we can safely complete it.
                     // Otherwise it'll be completed on timer completion.
-                    if (timeoutId == null) {
+                    if (taskRunner == null) {
                         sub.complete();
                     }
-                    isComplete = true;
                 },
                 error: (err) => {
                     if (sub.closed) {
                         return;
                     }
+
                     isComplete = true;
+
                     // In case something is still running
-                    if (timeoutId != null) {
-                        clearTimeout(timeoutId);
-                        timeoutId = null;
+                    if (taskRunner != null) {
+                        taskRunner.unsubscribe();
+                        taskRunner = null;
                     }
+
                     sub.error(err);
                 },
             })

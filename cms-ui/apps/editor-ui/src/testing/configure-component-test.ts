@@ -4,6 +4,7 @@ import { STATE_MODULES } from '@editor-ui/app/state';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable } from 'rxjs';
+import { TestBed } from '@angular/core/testing'
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -35,7 +36,7 @@ export class MockTranslateService {
  * For tests which are testing non-component functionality (e.g. reducer tests), this function is
  * not needed.
  */
-export function configureComponentTest(config: TestModuleMetadata): void {
+export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [NgxsModule.forRoot(STATE_MODULES)],
@@ -51,4 +52,6 @@ export function configureComponentTest(config: TestModuleMetadata): void {
         schemas: mergeUnique(defaultConfig.schemas, config.schemas),
     };
     testBed.configureTestingModule(mergedConfig);
+
+    return testBed;
 }

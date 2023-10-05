@@ -1,5 +1,5 @@
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
-import { AlohaContextChangeEvent } from '@gentics/aloha-models';
+import { AlohaContextChangeEvent, AlohaPubSub } from '@gentics/aloha-models';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
@@ -77,10 +77,12 @@ export class PostLoadScript {
         // Update to the current selection
         this.aloha.contextChange$.next(this.window.Aloha.Selection.getRangeObject());
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.window.Aloha.require('PubSub').sub('aloha.selection.context-change', (event: AlohaContextChangeEvent) => {
-            this.aloha.contextChange$.next(event.range);
-        });
+        const pubSub: AlohaPubSub = this.window.Aloha.require('PubSub');
+        if (pubSub) {
+            pubSub.sub('aloha.selection.context-change', (event: AlohaContextChangeEvent) => {
+                this.aloha.contextChange$.next(event.range);
+            });
+        }
 
         this.window.addEventListener('unload', () => {
             this.aloha.contextChange$.next(null);

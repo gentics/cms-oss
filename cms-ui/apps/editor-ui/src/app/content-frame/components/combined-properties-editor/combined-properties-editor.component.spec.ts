@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import {
+    EditMode,
     EditableObjectTag, File,
     Folder,
     FolderSaveRequestOptions,
@@ -157,7 +158,7 @@ describe('CombinedPropertiesEditorComponent', () => {
         state = TestBed.get(ApplicationStateService);
         state.mockState({
             editor: {
-                editMode: 'editProperties',
+                editMode: EditMode.EDIT_PROPERTIES,
                 itemId: mockPage.id,
                 itemType: 'page',
                 nodeId: mockNode.id,
@@ -1021,7 +1022,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1077,7 +1079,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem0 = cloneDeep(mockFolder);
-                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem0.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem0);
                     const editedItem1 = cloneDeep(editedItem0);
@@ -1152,7 +1155,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 

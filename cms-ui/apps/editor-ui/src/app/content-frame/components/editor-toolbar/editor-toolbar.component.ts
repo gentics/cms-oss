@@ -359,7 +359,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     /**
      * Shifts the logic for determining which buttons to display out of the template.
      */
-    private determineVisibleButtons(): AvailableButtons {
+    public determineVisibleButtons(): AvailableButtons {
         const type = this.currentItem && this.currentItem.type;
         const isPage = type === 'page';
         const isForm = type === 'form';

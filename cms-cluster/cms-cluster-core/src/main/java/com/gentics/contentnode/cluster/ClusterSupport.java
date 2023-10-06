@@ -191,7 +191,7 @@ public final class ClusterSupport {
 		ILock lock = getLock(key);
 		if (lock != null) {
 			if (!lock.tryLock(timeout, unit)) {
-				throw new NodeException(String.format("Timeout of %d %s reached when trying to acquire lock %d", timeout, unit.name(), key));
+				throw new NodeException(String.format("Timeout of %d %s reached when trying to acquire lock %s", timeout, unit.name(), key));
 			}
 		}
 	}

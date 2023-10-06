@@ -50,6 +50,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		entry.setForeignlinkAttribute(nodeEntry.getForeignlinkAttribute());
 		entry.setForeignlinkAttributeRule(nodeEntry.getForeignlinkAttributeRule());
 		entry.setCategory(nodeEntry.getCategory());
+		entry.setNoIndex(nodeEntry.isNoIndex());
 		ContentRepository cr = nodeEntry.getContentRepository();
 		if (cr != null && cr.getCrType() == Type.mesh) {
 			entry.setSegmentfield(nodeEntry.isSegmentfield());
@@ -127,6 +128,9 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		if (entry.getMicronodeFilter() != null) {
 			nodeEntry.setMicronodeFilter(entry.getMicronodeFilter());
 		}
+		if (entry.getNoIndex() != null) {
+			nodeEntry.setNoIndex(entry.getNoIndex());
+		}
 		return nodeEntry;
 	};
 
@@ -163,6 +167,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		resolvableProperties.put("fragmentName", new NodeObjectProperty<>((o, key) -> o.getContentRepositoryFragmentName()));
 		resolvableProperties.put("micronodeFilter", new NodeObjectProperty<>((o, key) -> o.getMicronodeFilter()));
 		resolvableProperties.put("elasticsearch", new NodeObjectProperty<>((o, key) -> o.getElasticsearch()));
+		resolvableProperties.put("noindex", new NodeObjectProperty<>((o, key) -> o.isNoIndex()));
 	}
 
 	/**
@@ -488,6 +493,24 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 */
 	@FieldSetter("urlfield")
 	public void setUrlfield(boolean urlfield) throws ReadOnlyException, NodeException {
+		failReadOnly();
+	}
+
+	/**
+	 * Check whether the tagmap entry should be excluded from indexing
+	 * @return
+	 */
+	@FieldGetter("noindex")
+	public abstract boolean isNoIndex();
+
+	/**
+	 * Set 'exclude from index' flag
+	 * @param noIndex true for no indexing
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	@FieldSetter("noindex")
+	public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
 		failReadOnly();
 	}
 

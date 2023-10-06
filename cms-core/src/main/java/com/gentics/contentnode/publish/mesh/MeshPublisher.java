@@ -2857,6 +2857,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		if (fieldSchema != null) {
 			fieldSchema.setName(entry.getMapname());
+			fieldSchema.setNoIndex(entry.isNoIndex());
 			String elasticsearch = entry.getElasticsearch();
 			if ("null".equals(elasticsearch)) {
 				elasticsearch = null;

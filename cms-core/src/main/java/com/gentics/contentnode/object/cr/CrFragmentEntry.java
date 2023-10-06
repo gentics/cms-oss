@@ -284,6 +284,24 @@ public interface CrFragmentEntry extends NodeObjectWithModel<ContentRepositoryFr
 	}
 
 	/**
+	 * Check whether the tagmap entry should be excluded from indexing
+	 * @return
+	 */
+	@FieldGetter("noindex")
+	boolean isNoIndex();
+
+	/**
+	 * Set 'exclude from indexing' flag
+	 * @param noIndex true for no indexing
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	@FieldSetter("noindex")
+	default void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
+		throw new ObjectReadOnlyException(this);
+	}
+
+	/**
 	 * Get elasticsearch specific configuration for Mesh CR
 	 * The configuration is expected to be in JSON format
 	 * @return elasticsearch configuration

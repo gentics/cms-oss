@@ -56,6 +56,8 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 
 	private Boolean urlfield;
 
+	private Boolean noindex;
+
 	private JsonNode elasticsearch;
 
 	private String micronodeFilter;
@@ -314,6 +316,22 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 */
 	public void setUrlfield(Boolean urlfield) {
 		this.urlfield = urlfield;
+	}
+
+	/**
+	 * True when the entry should be excluded from indexing
+	 * @return true for no indexing
+	 */
+	public Boolean getNoIndex() {
+		return noindex;
+	}
+
+	/**
+	 * Set the 'exclude from indexing' flag
+	 * @param noIndex flag
+	 */
+	public void setNoIndex(Boolean noIndex) {
+		this.noindex = noIndex;
 	}
 
 	/**

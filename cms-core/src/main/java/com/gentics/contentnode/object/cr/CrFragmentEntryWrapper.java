@@ -156,4 +156,9 @@ public class CrFragmentEntryWrapper extends TagmapEntry {
 	public NodeObjectInfo getObjectInfo() {
 		return wrapped.getObjectInfo();
 	}
+
+	@Override
+	public boolean isNoIndex() {
+		return wrapped.isNoIndex();
+	}
 }

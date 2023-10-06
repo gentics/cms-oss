@@ -1302,6 +1302,10 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected boolean segmentfield;
 
+		@DataField("noindex")
+		@Updateable
+		protected boolean noindex;
+
 		@DataField("displayfield")
 		@Updateable
 		protected boolean displayfield;
@@ -1448,6 +1452,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public boolean isUrlfield() {
 			return urlfield;
 		}
+
+		@Override
+		public boolean isNoIndex() {
+			return noindex;
+		};
 
 		@Override
 		public String getElasticsearch() {
@@ -1616,6 +1625,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setTargetType(int targetType) throws ReadOnlyException {
 			if (this.targetType != targetType) {
 				this.targetType = targetType;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
+			if (this.noindex != noIndex) {
+				this.noindex = noIndex;
 				this.modified = true;
 			}
 		}
@@ -2140,6 +2157,11 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public boolean isUrlfield() {
 			return ObjectTransformer.getBoolean(model.getUrlfield(), false);
+		}
+
+		@Override
+		public boolean isNoIndex() {
+			return ObjectTransformer.getBoolean(model.getNoIndex(), false);
 		}
 
 		@Override

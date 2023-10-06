@@ -35,7 +35,7 @@
                             class="construct-group"
                             [attr.data-id]="group.id"
                         >
-                            <div class="group-label">
+                            <div *ngIf="group.label" class="group-label">
                                 {{ group.label }}
                             </div>
                             <div class="group-entries">

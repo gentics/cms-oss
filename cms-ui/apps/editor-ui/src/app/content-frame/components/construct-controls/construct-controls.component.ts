@@ -10,13 +10,12 @@ import { BaseControlsComponent } from '../base-controls/base-controls.component'
 
 interface GroupedConstructs {
     id: number;
-    label: string;
+    label?: string;
     order?: number;
     constructs: TagType[];
 }
 
 const UNCATEGORIZED_CONSTRUCTS_ID = -1;
-const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
 
 @Component({
     selector: 'gtx-construct-controls',
@@ -27,7 +26,6 @@ const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
 export class ConstructControlsComponent extends BaseControlsComponent implements OnInit, OnChanges, OnDestroy {
 
     public readonly UNCATEGORIZED_CONSTRUCTS_ID = UNCATEGORIZED_CONSTRUCTS_ID;
-    public readonly UNCATEGORIZED_CONSTRUCTS_LABEL = UNCATEGORIZED_CONSTRUCTS_LABEL;
 
     /** All constructs which exist. */
     @Input()
@@ -223,7 +221,6 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         if (uncategorized.length > 0) {
             groups.unshift({
                 id: UNCATEGORIZED_CONSTRUCTS_ID,
-                label: UNCATEGORIZED_CONSTRUCTS_LABEL,
                 order: -1,
                 constructs: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
             });

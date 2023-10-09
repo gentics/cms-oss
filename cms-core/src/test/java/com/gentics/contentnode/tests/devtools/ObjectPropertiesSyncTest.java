@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.gentics.contentnode.object.ObjectTag;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -91,7 +92,9 @@ public class ObjectPropertiesSyncTest {
 			transaction.commit();
 		}
 
-		node = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
+		Node newNode = Trx.supply(() -> ContentNodeTestDataUtils.createNode());
+
+		node = Trx.supply(t -> t.getObject(newNode, true));
 		constructId = Trx.supply(() -> createConstruct(node, HTMLPartType.class, "construct", "part"));
 	}
 
@@ -122,6 +125,11 @@ public class ObjectPropertiesSyncTest {
 			Trx.operate(() -> {
 				Transaction t = TransactionManager.getCurrentTransaction();
 				objectProperty = t.getObject(objectProperty, true);
+
+				for (ObjectTag tag : objectProperty.getObjectTags()) {
+					tag.delete();
+				}
+
 				if (objectProperty != null) {
 					objectProperty.delete(true);
 				}
@@ -227,6 +235,20 @@ public class ObjectPropertiesSyncTest {
 				assertThat(objectProperty.getObjectTag().isRequired()).as("Object property required flag").isEqualTo(true);
 			});
 		});
+	}
+
+	@Test
+	public void testNodeAssignment() throws NodeException {
+		syncTest(
+			objProp -> node.addObjectTagDefinition(objProp),
+			objProp -> node.removeObjectTagDefinition(objProp),
+			() -> {},
+			() -> {
+				Trx.operate(() -> assertThat(objectProperty.getNodes())
+					.as("Linked nodes")
+					.containsExactly(node));
+			}
+		);
 	}
 
 	/**

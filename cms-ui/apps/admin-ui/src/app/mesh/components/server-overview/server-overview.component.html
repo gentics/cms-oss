@@ -9,7 +9,7 @@
         <div class="overview-table-wrapper">
             <table  class="overview-table">
                 <tbody>
-                    <tr *ngFor="let entry of (serverInfo | entries)">
+                    <tr *ngFor="let entry of (serverInfo | gtxEntries)">
                         <td>{{ ('mesh.serverInfo_' + entry.key) | i18n }}</td>
                         <td>{{ entry.value }}</td>
                     </tr>
@@ -32,7 +32,7 @@
         <div class="overview-table-wrapper">
             <table class="overview-table">
                 <tbody>
-                    <tr *ngFor="let entry of (serverConfig | entries)">
+                    <tr *ngFor="let entry of (serverConfig | gtxEntries)">
                         <td>{{ entry.key }}</td>
                         <td>{{ entry.value }}</td>
                     </tr>

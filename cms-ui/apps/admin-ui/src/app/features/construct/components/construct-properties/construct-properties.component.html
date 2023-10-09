@@ -35,7 +35,7 @@
             [required]="true"
             formControlName="icon"
         >
-            <gtx-option *ngFor="let iconEntry of CONSTRUCT_ICONS | entries" [value]="iconEntry.value">
+            <gtx-option *ngFor="let iconEntry of CONSTRUCT_ICONS | gtxEntries" [value]="iconEntry.value">
                 {{ iconEntry.value }}
             </gtx-option>
         </gtx-select>

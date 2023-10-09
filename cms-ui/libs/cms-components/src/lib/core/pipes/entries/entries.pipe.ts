@@ -1,9 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'entries',
+    name: 'gtxEntries',
 })
 export class EntriesPipe implements PipeTransform {
+
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     transform(value: any): any {
         if (value == null || typeof value !== 'object') {
             return value;

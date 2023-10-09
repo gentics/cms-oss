@@ -94,7 +94,7 @@ export class CopyConstructModalComponent extends BaseModal<boolean> implements O
         this.loading = true;
         this.form.disable();
 
-        this.subscriptions.push(this.handler.createMapped(body, nodeIds).pipe(
+        this.subscriptions.push(this.handler.createMapped(body, { nodeId: nodeIds }).pipe(
             switchMap(created => this.handler.updateMapped(created.id, {
                 parts: cleanParts,
             })),

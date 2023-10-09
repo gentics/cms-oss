@@ -98,6 +98,7 @@ import {
 import { normalize, schema } from 'normalizr';
 import {
     Observable,
+    combineLatest,
     forkJoin,
     of,
     throwError,
@@ -111,6 +112,7 @@ import {
     publishLast,
     refCount,
     switchMap,
+    filter,
     take,
 } from 'rxjs/operators';
 import {
@@ -3278,16 +3280,17 @@ export class FolderActionsService {
         this.appState.dispatch(new StartListSavingAction('form'));
 
         const requests = formIds.map(id =>
-            this.api.folders.takeFormOffline(id)
-                .catch((error: ApiError) => {
+            this.api.folders.takeFormOffline(id).pipe(
+                catchError((error: ApiError) => {
                     const errorMsg = error && error.message || `Error on taking form offline with id ${id}.`;
                     this.appState.dispatch(new ListSavingErrorAction('form', errorMsg));
                     this.errorHandler.catch(error);
                     return of(error.response);
-                })
-                .map(response =>
+                }),
+                map(response =>
                     ({ id, response, failed: response.responseInfo.responseCode !== 'OK' }),
                 ),
+            ),
         );
         const permissionRequests = formIds.map(id =>
             this.permissions.forItem(id, 'form', id).pipe(
@@ -3388,12 +3391,15 @@ export class FolderActionsService {
         if (nodeId) {
             nodePromise = Promise.resolve(nodeId);
         } else {
-            nodePromise = this.appState
-                .select(state => state.folder.activeNode && state.entities.node[state.folder.activeNode])
-                .filter(Boolean)
-                .take(1)
-                .map((node: Node) => node.id)
-                .toPromise();
+            nodePromise = combineLatest([
+                this.appState.select(state => state.folder.activeNode),
+                this.appState.select(state => state.entities.node),
+            ]).pipe(
+                map(([nodeId, nodes]) => nodes[nodeId]),
+                filter(node => node != null),
+                take(1),
+                map((node: Node) => node.id),
+            ).toPromise();
         }
 
         return nodePromise

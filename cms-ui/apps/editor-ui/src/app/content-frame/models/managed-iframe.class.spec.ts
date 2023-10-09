@@ -1,6 +1,6 @@
-import { BLANK_PAGE } from '../../components/content-frame/common';
-import { ManagedIFrame } from './managed-iframe.class';
-import { getTestPageUrl } from './testing-helpers';
+import { BLANK_PAGE } from './content-frame';
+import { ManagedIFrame } from './managed-iframe';
+import { getTestPageUrl } from '../../../testing/iframe-helpers';
 
 const testPage1 = getTestPageUrl(1);
 const testPage2 = getTestPageUrl(2);

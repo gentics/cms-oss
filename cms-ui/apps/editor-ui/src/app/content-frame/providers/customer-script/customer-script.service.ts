@@ -24,7 +24,7 @@ import {
 } from '@gentics/cms-models';
 import { of as observableOf, Subscription } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
-import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../components/content-frame/common';
+import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';

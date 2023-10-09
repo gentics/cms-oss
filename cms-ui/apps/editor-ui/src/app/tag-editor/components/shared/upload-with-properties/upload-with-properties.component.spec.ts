@@ -222,7 +222,7 @@ class MockRepositoryBrowserClientService {
 
 class MockApi {
     folders = {
-        getItems: (): Observable<any> => Observable.of({
+        getItems: (): Observable<any> => of({
             items: [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 2, type: 'file', name: 'file2.ext' },

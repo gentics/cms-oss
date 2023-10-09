@@ -8,13 +8,13 @@ import {
     Input,
     OnDestroy,
     Optional,
-    QueryList
+    QueryList,
 } from '@angular/core';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
 import * as Masonry from 'masonry-layout';
-import { Observable, Subscription } from 'rxjs';
+import { Subscription, merge } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { MasonryItemDirective } from '../../directives/masonry-item/masonry-item.directive';
-
 
 const gridAnimationDuration = 300;
 const splitViewContainerAnimationDuration = 300;
@@ -36,27 +36,28 @@ const splitViewContainerAnimationDuration = 300;
  */
 @Component({
     selector: 'masonry-grid',
-    template: `<ng-content></ng-content>`,
+    template: '<ng-content></ng-content>',
     styleUrls: ['./masonry-grid.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterContentChecked {
 
     @Input() columnWidth: number;
-    @Input() gutter: number = 0;
+    @Input() gutter = 0;
 
     masonryLayout: masonry.Layout;
-    subscriptions = new Subscription();
+    subscriptions: Subscription[] = [];
     itemOutputSubscriptions = new Subscription();
 
     @ContentChildren(MasonryItemDirective, { descendants: true })
     items: QueryList<MasonryItemDirective>;
-    private anyItemChangedInSize: boolean = false;
+
+    private anyItemChangedInSize = false;
 
     constructor(
         private elementRef: ElementRef,
         @Optional()
-        private splitViewContainer: SplitViewContainerComponent
+        private splitViewContainer: SplitViewContainerComponent,
     ) { }
 
     ngAfterContentInit(): void {
@@ -67,7 +68,8 @@ export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterC
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
+        this.masonryLayout.destroy();
         this.itemOutputSubscriptions.unsubscribe();
     }
 
@@ -92,49 +94,49 @@ export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterC
     }
 
     private initializeMasonryGrid(): void {
-        const grid = this.masonryLayout = new Masonry(this.elementRef.nativeElement, {
+        this.masonryLayout = new Masonry(this.elementRef.nativeElement, {
             itemSelector: 'masonry-item,[masonryItem]',
             columnWidth: Number(this.columnWidth),
             fitWidth: true,
             gutter: this.gutter,
-            transitionDuration: gridAnimationDuration
+            transitionDuration: gridAnimationDuration,
         });
-        this.subscriptions.add(() => grid.destroy());
     }
 
     private triggerLayoutWhenItemsChange(): void {
         const changeSub = this.items.changes
             .subscribe((changes) => this.triggerLayout());
-        this.subscriptions.add(changeSub);
+        this.subscriptions.push(changeSub);
     }
 
     private triggerLayoutWhenSplitViewContainerIsResized(): void {
         const splitViewContainer = this.splitViewContainer;
         if (splitViewContainer) {
-            const resizeSub = Observable
-                .merge(
-                    splitViewContainer.splitDragEnd,
-                    splitViewContainer.rightPanelOpened,
-                    splitViewContainer.rightPanelClosed
-                )
-                .delay(splitViewContainerAnimationDuration)
-                .subscribe(() => this.masonryLayout.layout());
-            this.subscriptions.add(resizeSub);
+            const resizeSub = merge(
+                splitViewContainer.splitDragEnd,
+                splitViewContainer.rightPanelOpened,
+                splitViewContainer.rightPanelClosed,
+            ).pipe(
+                delay(splitViewContainerAnimationDuration),
+            ).subscribe(() => this.masonryLayout.layout());
+
+            this.subscriptions.push(resizeSub);
         }
     }
 
     private triggerLayoutWhenItemSizeChanges(): void {
-        const changeSub = this.items.changes
-            .subscribe((items) => {
-                this.itemOutputSubscriptions.unsubscribe();
-                this.itemOutputSubscriptions = new Subscription();
-                items.forEach((item) => {
-                    this.itemOutputSubscriptions.add(item.heightChange.subscribe(() => {
-                        this.anyItemChangedInSize = true;
-                    }));
-                });
+        const changeSub = this.items.changes.subscribe((items) => {
+            this.itemOutputSubscriptions.unsubscribe();
+            this.itemOutputSubscriptions = new Subscription();
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            items.forEach((item) => {
+                this.itemOutputSubscriptions.add(item.heightChange.subscribe(() => {
+                    this.anyItemChangedInSize = true;
+                }));
             });
-        this.subscriptions.add(changeSub);
+        });
+        this.subscriptions.push(changeSub);
     }
 
 }

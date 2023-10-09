@@ -1,10 +1,9 @@
 import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
-import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
+import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
 import { STATE_MODULES } from '@editor-ui/app/state';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { TestBed } from '@angular/core/testing'
+import { Observable, of } from 'rxjs';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -24,9 +23,9 @@ class MockI18nPipe implements PipeTransform {
 }
 
 export class MockTranslateService {
-    onTranslationChange = Observable.of({});
-    onLangChange = Observable.of({});
-    get(): Observable<string> { return Observable.of('mocked i18n string'); }
+    onTranslationChange = of({});
+    onLangChange = of({});
+    get(): Observable<string> { return of('mocked i18n string'); }
 }
 
 /**

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaContentRules, AlohaPubSub, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
-import { AlohaGlobal } from '../content-frame/common';
+import { AlohaGlobal } from '../../models/content-frame';
 
 @Component({ template: '' })
 export abstract class BaseControlsComponent implements OnChanges {

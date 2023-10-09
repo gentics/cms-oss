@@ -3,7 +3,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { File as FileModel, Folder, Form, Image, Node, Normalized, Page } from '@gentics/cms-models';
 import { isEqual } from'lodash-es'
-import { Observable, Subscription, combineLatest } from 'rxjs';
+import { Observable, Subscription, combineLatest, merge } from 'rxjs';
 import {
     debounceTime,
     distinctUntilChanged,
@@ -257,7 +257,7 @@ export class ListService implements OnDestroy {
             );
 
         /* eslint-disable @typescript-eslint/unbound-method */
-        const sortingStreams$ = Observable.merge(
+        const sortingStreams$ = merge(
             sortStream(state => state.folder.folders, this.folderActions.getFolders),
             sortStream(state => state.folder.pages, this.folderActions.getPages),
             sortStream(state => state.folder.files, this.folderActions.getFiles),
@@ -293,7 +293,9 @@ export class ListService implements OnDestroy {
             filter(() => !this.updatingByUrlParams),
             debounceTime(50),
             withLatestFrom(
-                activeFolderId$.filter(activeFolderId => !!activeFolderId),
+                activeFolderId$.pipe(
+                    filter(activeFolderId => !!activeFolderId),
+                ),
             ),
             skip(1),
         ).subscribe(([[searchFiltersVisible, searchFiltersValid], activeFolderId]) => {

@@ -136,8 +136,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.itemsInfo$ = this.appState.select(state => state.folder)
-            .map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]);
+        this.itemsInfo$ = this.appState.select(state => state.folder).pipe(
+            map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]),
+        );
 
         const basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
             map(term => this.isValidString(term)),
@@ -213,7 +214,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             map(itemsInfo => itemsInfo.hasMore),
             filter(hasMore => hasMore === false),
             take(1),
-            switchMap(() => this.itemsInfo$.map(itemsInfo => itemsInfo.list)),
+            switchMap(() => this.itemsInfo$.pipe(
+                map(itemsInfo => itemsInfo.list)),
+            ),
             // This debounce is required due to the batched update feature
             // (see folder-state-actions.ts, applyListBatch())
             debounceTime(Math.ceil(this.itemsInfo.total / 20) * 15),

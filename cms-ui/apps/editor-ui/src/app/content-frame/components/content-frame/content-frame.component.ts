@@ -90,13 +90,13 @@ import {
     StartSavingAction,
 } from '../../../state';
 import { TagEditorService } from '../../../tag-editor';
+import { CNParentWindow, CNWindow } from '../../models/content-frame';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe/iframe-manager.service';
+import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
-import { CNParentWindow, CNWindow } from './common';
 
 /**
  * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
@@ -118,7 +118,7 @@ const APPLY_CUSTOM_STYLES = true;
     styleUrls: ['./content-frame.component.scss'],
     providers: [IFrameManager, CustomScriptHostService],
 })
-export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
+export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     /**
      * Lodash debounce function used by the ContentFrame.
@@ -187,7 +187,7 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
     private alohaReady = false;
     private contentModifiedByExternalScript = false;
 
-    private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrame._debounce(
+    private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
                 this.appState.dispatch(new CancelEditingAction());
@@ -329,7 +329,8 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
             refCount(),
         );
 
-        this.propertiesTab$ = editorState$.map(state => state.openTab).pipe(
+        this.propertiesTab$ = editorState$.pipe(
+            map(state => state.openTab),
             distinctUntilChanged(isEqual),
         );
 
@@ -398,7 +399,9 @@ export class ContentFrame implements OnInit, AfterViewInit, OnDestroy {
                     );
                 }
                 if (0 < fetchEntities.length) {
-                    return forkJoin(fetchEntities).mapTo(state);
+                    return forkJoin(fetchEntities).pipe(
+                        map(() => state),
+                    );
                 }
 
                 return of(state);

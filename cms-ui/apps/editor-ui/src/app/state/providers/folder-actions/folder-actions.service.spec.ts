@@ -1,7 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FolderItemType, FolderItemTypePlural, folderItemTypes, Language } from '@gentics/cms-models';
-import { NgxsModule } from '@ngxs/store';
-import { Observable, of, throwError } from 'rxjs';
 import {
     getExampleFolderData,
     getExampleLanguageData,
@@ -9,6 +7,8 @@ import {
     getExamplePageData,
     getExampleUserDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { NgxsModule } from '@ngxs/store';
+import { of, throwError } from 'rxjs';
 import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '../../../common/models';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -65,7 +65,7 @@ class MockApi {
 }
 
 const createSpyApiMethod = (name: string, collectionKey: FolderItemTypePlural | 'items'): jasmine.Spy => jasmine.createSpy(name).and
-    .returnValue(Observable.of({
+    .returnValue(of({
         [collectionKey]: RESPONSE_ITEM_LIST,
         hasMoreItems: false,
         numItems: RESPONSE_ITEM_LIST.length,
@@ -362,7 +362,7 @@ describe('FolderActionsService', () => {
             const privilegeMap2 = {};
 
             api.folders.getFolders = jasmine.createSpy('folders.getFolders').and
-                .returnValue(Observable.of({
+                .returnValue(of({
                     folders: [{ privilegeMap: privilegeMap1 }, { privilegeMap: privilegeMap2 }],
                     hasMoreItems: false,
                     numItems: 3,

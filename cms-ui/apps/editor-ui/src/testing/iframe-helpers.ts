@@ -1,7 +1,7 @@
-import {Observable, Subject} from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 
 export function getTestPageUrl(pageNumber: number): string {
-    let { protocol, host } = window.location;
+    const { protocol, host } = window.location;
     return `${protocol}//${host}${getTestPagePath(pageNumber)}`;
 }
 
@@ -17,7 +17,7 @@ export class MockManagedIFrame {
     unload$ = new Subject<any>();
     unloadCancelled$ = new Subject<any>();
     beforeUnload(): void {}
-    setBlank(): Observable<boolean> { return Observable.of(true); }
+    setBlank(): Observable<boolean> { return of(true); }
     prepareToClose(): void {}
     setUrl(): void {}
     destroy(): void {}
@@ -34,18 +34,18 @@ export class MockIFrame {
         contentDocument: {},
         document: {
             head: {
-                appendChild(): void {}
+                appendChild(): void {},
             },
             createElement(): any {
                 return {
                     setAttribute(): void {},
-                    appendChild(): void {}
+                    appendChild(): void {},
                 };
             },
             createTextNode(): void {},
             documentElement: document.createElement('div'),
-            querySelectorAll(): any { return []; }
-        }
+            querySelectorAll(): any { return []; },
+        },
     };
     [key: string]: any;
 }

@@ -18,7 +18,8 @@ import {
 import { WindowRef } from '@gentics/cms-components';
 import { Item, Page, Template, TimeManagement } from '@gentics/cms-models';
 import { SplitViewContainerComponent } from '@gentics/ui-core';
-import { Observable, of, Subject, Subscription } from 'rxjs';
+import { combineLatest, fromEventPattern, merge, Observable, of, Subject, Subscription } from 'rxjs';
+import { debounceTime, map, mapTo, startWith } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { getFormattedTimeMgmtValue } from '../../../core/providers/i18n/i18n-utils';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
@@ -37,7 +38,7 @@ const MAX_HEIGHT = '80px';
     styleUrls: ['./list-item-details.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [ I18nDatePipe ],
-    })
+})
 export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     @Input() fields: string[];
     @Input() item: Item;
@@ -93,22 +94,30 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
 
     ngOnInit(): void {
         if (this.splitViewContainer && this.autoCompact) {
-            this.sizeSub = Observable.merge(
-                this.splitViewContainer.rightPanelOpened.map(() => this.splitViewContainer.split),
-                this.splitViewContainer.rightPanelClosed.mapTo(100),
+            const splitViewData$ = merge(
+                this.splitViewContainer.rightPanelOpened.pipe(
+                    map(() => this.splitViewContainer.split),
+                ),
+                this.splitViewContainer.rightPanelClosed.pipe(
+                    mapTo(100),
+                ),
                 this.splitViewContainer.splitDragEnd,
-            )
-                .startWith(this.splitViewContainer.rightPanelVisible ? this.splitViewContainer.split : 100)
-                .combineLatest(
-                    this.observeWindowResizing(),
-                    this.fields$.startWith(this.fields),
-                )
-                .subscribe(([split, widthInPixels, fields])  => {
-                    if (widthInPixels > 1600 && split < 100) {
-                        widthInPixels = widthInPixels * (split ) / 100;
-                    }
-                    return this.setCompactStatus(widthInPixels);
-                });
+            ).pipe(
+                startWith(this.splitViewContainer.rightPanelVisible ? this.splitViewContainer.split : 100),
+            );
+
+            this.sizeSub = combineLatest([
+                splitViewData$,
+                this.observeWindowResizing(),
+                this.fields$.pipe(
+                    startWith(this.fields),
+                ),
+            ]).subscribe(([split, widthInPixels])  => {
+                if (widthInPixels > 1600 && split < 100) {
+                    widthInPixels = widthInPixels * (split ) / 100;
+                }
+                return this.setCompactStatus(widthInPixels);
+            });
         }
 
         // get current node
@@ -196,13 +205,13 @@ export class ListItemDetails implements OnInit, OnChanges, OnDestroy {
     private observeWindowResizing(): Observable<number> {
         const window = this.windowRef.nativeWindow;
 
-        return Observable
-            .fromEventPattern(
-                (handler: any) => window.addEventListener('resize', handler),
-                (handler: any) => window.removeEventListener('resize', handler),
-            )
-            .map(ev => window.innerWidth)
-            .debounceTime(200)
-            .startWith(window.innerWidth);
+        return fromEventPattern(
+            (handler: any) => window.addEventListener('resize', handler),
+            (handler: any) => window.removeEventListener('resize', handler),
+        ).pipe(
+            map(ev => window.innerWidth),
+            debounceTime(200),
+            startWith(window.innerWidth),
+        );
     }
 }

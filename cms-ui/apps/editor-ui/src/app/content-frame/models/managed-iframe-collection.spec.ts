@@ -1,7 +1,7 @@
 import { waitForAsync } from '@angular/core/testing';
-import {Observable, Subject} from 'rxjs';
-import {ManagedIFrameCollection} from './managed-iframe-collection.class';
-import {MockManagedIFrame} from './testing-helpers';
+import { Observable, Subject, from } from 'rxjs';
+import { MockManagedIFrame } from '../../../testing/iframe-helpers';
+import { ManagedIFrameCollection } from './managed-iframe-collection';
 
 describe('ManagedIFrameCollection', () => {
 
@@ -26,7 +26,7 @@ describe('ManagedIFrameCollection', () => {
 
         it('should emit on DOMContentLoaded$ multiple times', (done: DoneFn) => {
             let emitCount = 0;
-            let values: any[] = [];
+            const values: any[] = [];
             collection.domContentLoaded$.subscribe(val => {
                 values.push(val);
                 emitCount ++;
@@ -97,7 +97,7 @@ describe('ManagedIFrameCollection', () => {
 
             it('should aggregate masterFrame with one childFrame', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -116,7 +116,7 @@ describe('ManagedIFrameCollection', () => {
 
             it('should aggregate masterFrame with two childFrames', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -137,12 +137,12 @@ describe('ManagedIFrameCollection', () => {
             });
 
             it('should aggregate masterFrame with one native iframe by contructing a new ManagedIFrame', (done: DoneFn) => {
-                let nativeFrame = document.createElement('iframe');
+                const nativeFrame = document.createElement('iframe');
                 let emitCount = 0;
-                let values: any[] = [];
-                let childEvent = new Subject<any>();
+                const values: any[] = [];
+                const childEvent = new Subject<any>();
                 collection.managedIFrameCtor = <any> class {
-                    domContentLoaded$ = Observable.from(childEvent);
+                    domContentLoaded$ = from(childEvent);
                 };
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
@@ -170,7 +170,7 @@ describe('ManagedIFrameCollection', () => {
 
             it('should remove the correct childFrame', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -190,7 +190,7 @@ describe('ManagedIFrameCollection', () => {
 
             it('should remove ManagedIframe which is not in collection', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -219,7 +219,7 @@ describe('ManagedIFrameCollection', () => {
 
             it('should remove the correct childFrame', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -238,14 +238,14 @@ describe('ManagedIFrameCollection', () => {
             });
 
             it('should invoke destroy() on the frame being removed', () => {
-                let spy = spyOn(childFrame1, 'destroy');
+                const spy = spyOn(childFrame1, 'destroy');
                 collection.removeByNativeElement(<any> childFrame1.iframe);
                 expect(spy).toHaveBeenCalled();
             });
 
             it('should not remove iframe which is not in collection', (done: DoneFn) => {
                 let emitCount = 0;
-                let values: any[] = [];
+                const values: any[] = [];
                 collection.domContentLoaded$.subscribe(val => {
                     values.push(val);
                     emitCount ++;
@@ -267,8 +267,8 @@ describe('ManagedIFrameCollection', () => {
         describe('removeAllChildren()', () => {
 
             it('should remove all children', waitForAsync(() => {
-                let childFrame1 = new MockManagedIFrame();
-                let childFrame2 = new MockManagedIFrame();
+                const childFrame1 = new MockManagedIFrame();
+                const childFrame2 = new MockManagedIFrame();
                 collection.add(<any> childFrame1);
                 collection.add(<any> childFrame2);
 
@@ -285,13 +285,13 @@ describe('ManagedIFrameCollection', () => {
 
 
             it('should invoke destroy() on child frames', () => {
-                let childFrame1 = new MockManagedIFrame();
-                let childFrame2 = new MockManagedIFrame();
+                const childFrame1 = new MockManagedIFrame();
+                const childFrame2 = new MockManagedIFrame();
                 collection.add(<any> childFrame1);
                 collection.add(<any> childFrame2);
 
-                let spy1 = spyOn(childFrame1, 'destroy');
-                let spy2 = spyOn(childFrame2, 'destroy');
+                const spy1 = spyOn(childFrame1, 'destroy');
+                const spy2 = spyOn(childFrame2, 'destroy');
 
                 collection.removeAllChildren();
 

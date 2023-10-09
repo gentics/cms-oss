@@ -1,7 +1,7 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { File as FileModel } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { FolderActionsService } from '../../../state';
 import { Api } from '../api/api.service';
 import { SortedFiles, UploadConflictService } from './upload-conflict.service';
@@ -81,7 +81,7 @@ describe('UploadConflictService', () => {
 
         it('should handle conflicts correctly', fakeAsync(() => {
             const filesToUpload: any[] = allFilesToUpload;
-            let conflictingFiles: any[] = [
+            const conflictingFiles: any[] = [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 3, type: 'image', name: 'image2.ext' },
             ];
@@ -125,7 +125,7 @@ describe('UploadConflictService', () => {
     describe('checkForConflicts()', () => {
 
         it('should make an api request for all items in the folder', waitForAsync(() => {
-            let spy = spyOn(api.folders, 'getItems').and.callThrough();
+            const spy = spyOn(api.folders, 'getItems').and.callThrough();
             uploadConflictService.checkForConflicts([mockFile('test')], 1, 1)
                 .then(() => {
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -186,7 +186,7 @@ describe('UploadConflictService', () => {
         ];
 
         it('should handle undefined itemsToReplace arg', () => {
-            let result = uploadConflictService.sortFilesForUpload(filesToUpload, <any> undefined);
+            const result = uploadConflictService.sortFilesForUpload(filesToUpload, <any> undefined);
             expect(result.create.images).toEqual(filesToUpload.slice(3));
             expect(result.create.files).toEqual(filesToUpload.slice(0, 3));
             expect(result.replace.images).toEqual([]);
@@ -194,7 +194,7 @@ describe('UploadConflictService', () => {
         });
 
         it('should sort files and images', () => {
-            let result = uploadConflictService.sortFilesForUpload(filesToUpload, []);
+            const result = uploadConflictService.sortFilesForUpload(filesToUpload, []);
             expect(result.create.images).toEqual(filesToUpload.slice(3));
             expect(result.create.files).toEqual(filesToUpload.slice(0, 3));
             expect(result.replace.images).toEqual([]);
@@ -202,11 +202,11 @@ describe('UploadConflictService', () => {
         });
 
         it('should identify files to replace', () => {
-            let itemsToReplace: any[] = [
+            const itemsToReplace: any[] = [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 2, type: 'file', name: 'file2.ext' },
             ];
-            let result = uploadConflictService.sortFilesForUpload(filesToUpload, itemsToReplace);
+            const result = uploadConflictService.sortFilesForUpload(filesToUpload, itemsToReplace);
 
             expect(result.create.images).toEqual(filesToUpload.slice(3), 'x');
             expect(result.create.files).toEqual([filesToUpload[2]], 'a');
@@ -218,10 +218,10 @@ describe('UploadConflictService', () => {
         });
 
         it('should identify images to replace', () => {
-            let itemsToReplace: any[] = [
+            const itemsToReplace: any[] = [
                 { id: 2, type: 'image', name: 'image2.ext' },
             ];
-            let result = uploadConflictService.sortFilesForUpload(filesToUpload, itemsToReplace);
+            const result = uploadConflictService.sortFilesForUpload(filesToUpload, itemsToReplace);
 
             expect(result.create.images).toEqual([filesToUpload[2]]);
             expect(result.create.files).toEqual(filesToUpload.slice(0, 3));
@@ -249,7 +249,7 @@ function mockFile(name: string, type: 'file' | 'image' = 'file'): File {
 
 class MockApi {
     folders = {
-        getItems: (): Observable<any> => Observable.of({
+        getItems: (): Observable<any> => of({
             items: [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 2, type: 'file', name: 'file2.ext' },

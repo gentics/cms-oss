@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { EditMode, Favourite, FavouriteWithDisplayDetails } from '@gentics/cms-models';
 import { ISortableEvent } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
+import { distinctUntilChanged, filter, map, skip, take } from 'rxjs/operators';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FavouritesService } from '../../providers/favourites/favourites.service';
@@ -15,9 +17,11 @@ import { NavigationService } from '../../providers/navigation/navigation.service
     styleUrls: ['./favourites-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FavouritesList {
+export class FavouritesListComponent {
 
-    @Output() navigate = new EventEmitter<Favourite>(false);
+    @Output()
+    public navigate = new EventEmitter<Favourite>(false);
+
     favourites$: Observable<FavouriteWithDisplayDetails[]>;
 
     private canSeeMultipleNodes$: Observable<boolean>;
@@ -75,21 +79,19 @@ export class FavouritesList {
 
         return this.router.navigate(newRoute)
             .then(success => {
-                if (!success) { return false; }
+                if (!success) {
+                    return false;
+                }
+
                 // Wait until loaded
-                return this.appState
-                    .select(state => state.folder)
-                    .map(folderState =>
-                        folderState.folders.fetching ||
-                        folderState.pages.fetching ||
-                        folderState.files.fetching ||
-                        folderState.images.fetching)
-                    .distinctUntilChanged(isEqual)
-                    .skip(1)
-                    .filter(fetching => fetching === false)
-                    .take(1)
-                    .mapTo(true)
-                    .toPromise();
+                return this.appState.select(state => state.folder).pipe(
+                    map(state => areItemsLoading(state)),
+                    distinctUntilChanged(isEqual),
+                    skip(1),
+                    filter(fetching => fetching === false),
+                    take(1),
+                    map(() => true),
+                ).toPromise();
             });
     }
 

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
+import { areItemsLoading } from '@editor-ui/app/common/utils/are-items-loading';
 import { EditMode, Folder, IndexById, Message, Node, Normalized, Page } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { distinctUntilChanged, map, publishReplay, refCount, tap } from 'rxjs/operators';
+import { distinctUntilChanged, filter, map, publishReplay, refCount, take, tap } from 'rxjs/operators';
 import { SendMessageModal } from '../../../shared/components/send-message-modal/send-message-modal.component';
 import { ApplicationStateService, FolderActionsService, MessageActionsService } from '../../../state';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
@@ -19,7 +20,7 @@ import { MessageModal } from '../message-modal/message-modal.component';
     styleUrls: ['./message-inbox.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessageInbox implements OnInit {
+export class MessageInboxComponent implements OnInit {
 
     /** Emits when a link in a message is clicked */
     @Output()
@@ -331,16 +332,12 @@ export class MessageInbox implements OnInit {
                 }
 
                 // Wait until loaded
-                return this.appState
-                    .select(state =>
-                        state.folder.folders.fetching ||
-                        state.folder.pages.fetching ||
-                        state.folder.files.fetching ||
-                        state.folder.images.fetching)
-                    .filter(fetching => fetching === false)
-                    .take(1)
-                    .mapTo(true)
-                    .toPromise();
+                return this.appState.select(state => state.folder).pipe(
+                    map(state => areItemsLoading(state)),
+                    filter(fetching => fetching === false),
+                    take(1),
+                    map(() => true),
+                ).toPromise();
             });
     }
 

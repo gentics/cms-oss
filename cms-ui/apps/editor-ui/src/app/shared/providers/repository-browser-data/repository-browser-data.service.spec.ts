@@ -439,25 +439,25 @@ class MockApi {
     };
     folders = {
         getBreadcrumbs(): Observable<FolderListResponse> {
-            return Observable.of({
+            return of({
                 ...this.responseEnvelope,
                 folders: Object.values(testStateData.entities.folder) as Partial<Folder<Raw>>[],
             });
         },
         getFolders(): Observable<FolderListResponse> {
-            return Observable.of({
+            return of({
                 ...this.responseEnvelope,
                 folders: Object.values(testStateData.entities.folder) as Partial<Folder<Raw>>[],
             });
         },
         getPages(): Observable<PageListResponse> {
-            return Observable.of({
+            return of({
                 ...this.responseEnvelope,
                 pages: Object.values(testStateData.entities.page) as Partial<Page<Raw>>[],
             });
         },
         getNodes(): Observable<FolderListResponse & { nodes: Node<Raw>[] }> {
-            return Observable.of({
+            return of({
                 ...this.responseEnvelope,
                 folders: Object.values(testStateData.entities.folder) as Partial<Folder<Raw>>[],
                 nodes: Object.values(testStateData.entities.node) as Partial<Node<Raw>>[],
@@ -494,7 +494,7 @@ function prefillAppStateWithDefaultTestData(): void {
 //         const nodeFolders = nodes
 //             .map(node => entities.folder[node.folderId]);
 
-//         return Observable.of({ folders: nodeFolders, nodes });
+//         return of({ folders: nodeFolders, nodes });
 //     };
 // }
 
@@ -518,7 +518,7 @@ function prefillAppStateWithDefaultTestData(): void {
 //     });
 
 //     const api: MockApi = TestBed.get(Api);
-//     api.folders.getNodes = () => Observable.of({
+//     api.folders.getNodes = () => of({
 //         folders: [
 //             {
 //                 id: NODE_1_FOLDER_ID

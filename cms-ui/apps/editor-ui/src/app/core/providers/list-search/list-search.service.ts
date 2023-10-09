@@ -84,7 +84,7 @@ export class ListSearchService {
             }),
             catchError(error => {
                 this.errorHandler.catch(error);
-                return of(null).take(1);
+                return of(null);
             }),
         );
     }

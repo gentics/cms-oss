@@ -1,6 +1,7 @@
-import { Component, ElementRef, Input, Optional, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, Optional, ViewChild, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { DropdownListComponent } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 /**
  * A ListFilter wraps a list of items and provides a filter input to filter that list.
@@ -14,38 +15,57 @@ import { Observable, Subscription } from 'rxjs';
     templateUrl: './list-filter.tpl.html',
     styleUrls: ['./list-filter.scss'],
 })
-export class ListFilter {
+export class ListFilterComponent implements OnInit, OnChanges, OnDestroy {
+
     /** The css selector matching the items in the list to be filtered */
-    @Input() selector: string;
+    @Input()
+    public selector: string;
+
     /** A label for the filter input */
-    @Input() label = '';
+    @Input()
+    public label = '';
     /**
      * If the number of list items is lower than the threshhold, the filter
      * input will not be displayed.
      */
-    @Input() set filterThreshhold(value: number) {
-        this._filterThreshhold = parseInt(value as any);
-    }
-    get filterThreshhold(): number { return this._filterThreshhold; }
+    @Input()
+    public filterThreshhold = 10;
 
-    filterString = '';
-    items: HTMLElement[];
-    displayFilter = false;
-    @ViewChild('filterInput', { read: ElementRef }) private filterInput: ElementRef;
+    @ViewChild('filterInput', { read: ElementRef })
+    public filterInput: ElementRef;
+
+    public filterString = '';
+    public items: HTMLElement[];
+    public displayFilter = false;
+
     private subscription: Subscription;
-    private _filterThreshhold = 10;
 
     constructor(
         private elementRef: ElementRef,
         @Optional() private dropdownList?: DropdownListComponent,
-    ) {
-        this.subscription = this.getMutationObservable()
-            .debounceTime(100)
-            .subscribe(() => this.populateItems());
+    ) {}
+
+    ngOnInit(): void {
+        this.subscription = this.getMutationObservable().pipe(
+            debounceTime(100),
+        ).subscribe(() => this.populateItems());
 
         if (this.dropdownList) {
-            this.subscription.add(dropdownList.open.subscribe(() => this.focus()));
-            this.subscription.add(dropdownList.close.subscribe(() => this.clear()));
+            this.subscription.add(this.dropdownList.open.subscribe(() => this.focus()));
+            this.subscription.add(this.dropdownList.close.subscribe(() => this.clear()));
+        }
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.filterThreshhold) {
+            if (!Number.isInteger(this.filterThreshhold)) {
+                // Is NaN, Infinite or another invalid number
+                if (typeof this.filterThreshhold === 'number') {
+                    this.filterThreshhold = 10;
+                } else {
+                    this.filterThreshhold = parseInt(this.filterThreshhold as any, 10);
+                }
+            }
         }
     }
 

@@ -1,17 +1,18 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { NgxsModule } from '@ngxs/store';
+import { take } from 'rxjs/operators';
+import { getTestPageUrl, MockIFrame, MockManagedIFrame } from '../../../../testing/iframe-helpers';
 import { EditMode, EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { BLANK_PROPERTIES_PAGE } from '../../components/content-frame/common';
+import { BLANK_PROPERTIES_PAGE } from '../../models/content-frame';
+import { ManagedIFrameCollection } from '../../models/managed-iframe-collection';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../customer-script/customer-script.service';
-import { IFrameCollectionService } from './iframe-collection.service';
+import { IFrameCollectionService } from '../iframe-collection/iframe-collection.service';
 import { IFrameManager } from './iframe-manager.service';
-import { ManagedIFrameCollection } from './managed-iframe-collection.class';
-import { getTestPageUrl, MockIFrame, MockManagedIFrame } from './testing-helpers';
 import createSpy = jasmine.createSpy;
 
 describe('IFrameManager', () => {
@@ -90,7 +91,7 @@ describe('IFrameManager', () => {
         }));
 
         it('should emit requesting$ false on load of master frame', (done: DoneFn) => {
-            iframeManager.requesting$.take(1).subscribe(value => {
+            iframeManager.requesting$.pipe(take(1)).subscribe(value => {
                 expect(value).toBe(false);
                 done();
             });
@@ -150,7 +151,7 @@ describe('IFrameManager', () => {
         }));
 
         it('should emit requesting$ true', (done: DoneFn) => {
-            iframeManager.requesting$.take(1).subscribe(value => {
+            iframeManager.requesting$.pipe(take(1)).subscribe(value => {
                 expect(value).toBe(true);
                 done();
             });

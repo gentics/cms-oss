@@ -21,8 +21,9 @@ import {
     RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
+import { take, publishReplay, refCount, map } from 'rxjs/operators';
 import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { ContentFrame } from '../../components/content-frame/content-frame.component';
+import { ContentFrameComponent } from '../../components/content-frame/content-frame.component';
 
 /**
  * This service acts as a bridge between the ContentFrame and the custom scripts
@@ -33,11 +34,11 @@ import { ContentFrame } from '../../components/content-frame/content-frame.compo
 @Injectable()
 export class CustomScriptHostService {
 
-    get contentFrame(): ContentFrame {
-        if (!this._contentFrame) {
+    get contentFrame(): ContentFrameComponent {
+        if (!this.contentFrameInstance) {
             throw new Error('ContentFrame has not been set. Please call initialize() before calling other methods');
         }
-        return this._contentFrame;
+        return this.contentFrameInstance;
     }
 
     get currentItem(): Page | FileModel | Folder | Form | Image | Node {
@@ -48,7 +49,7 @@ export class CustomScriptHostService {
         return this.contentFrame.editMode;
     }
 
-    private _contentFrame: ContentFrame;
+    private contentFrameInstance: ContentFrameComponent;
     private saveObjectPropertyHandler: () => Promise<any>;
     private getFocalPointHandler: () => { fpX: number, fpY: number };
     private getCropResizeParamsHandler: () => CropResizeParameters;
@@ -72,8 +73,8 @@ export class CustomScriptHostService {
      * Set a reference to the ContentFrame compoenent.
      * Should be called immediately in the ContentFrame constructor.
      */
-    initialize(contentFrame: ContentFrame): void {
-        this._contentFrame = contentFrame;
+    initialize(contentFrame: ContentFrameComponent): void {
+        this.contentFrameInstance = contentFrame;
     }
 
     /**
@@ -146,7 +147,11 @@ export class CustomScriptHostService {
         // Ensure the options above get applied to the actual file input
         this.contentFrame.runChangeDetection();
 
-        const pickedFiles$ = this.contentFrame.filePicker.fileSelect.take(1).publishReplay(1).refCount();
+        const pickedFiles$ = this.contentFrame.filePicker.fileSelect.pipe(
+            take(1),
+            publishReplay(1),
+            refCount(),
+        );
 
         // Hack to fix inexplicable error in IE11, where the subscribe function in the consumer of openFilePicker
         // will not be invoked. Adding a noop subscribe to the fileSelect stream fixes this, for some reason.
@@ -168,11 +173,12 @@ export class CustomScriptHostService {
         const defaultFolder = type === 'image' ? currentNode.defaultImageFolderId : currentNode.defaultFileFolderId;
         const uploadFolder = defaultFolder || (currentItem as Page).folderId || (currentItem as Folder).motherId;
 
-        return this.folderActions.uploadFiles(type, files, uploadFolder)
-            .map(responses => {
+        return this.folderActions.uploadFiles(type, files, uploadFolder).pipe(
+            map(responses => {
                 const fileModels: FileModel[] = responses.map(r => r.response.file);
                 return fileModels;
-            });
+            }),
+        );
     }
 
     /**

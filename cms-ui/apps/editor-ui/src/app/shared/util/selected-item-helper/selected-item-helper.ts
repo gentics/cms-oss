@@ -1,6 +1,6 @@
 import { FileOrImage, Folder, Form, ItemInNode, Page, Raw } from '@gentics/cms-models';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 import { FolderApi } from '../../../core/providers/api';
 
 /**
@@ -38,7 +38,7 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
         private defaultNodeId: number,
         private folderApi: FolderApi,
     ) {
-        this.selectedItem$ = this.selectedItemSubj$.map(item => item);
+        this.selectedItem$ = this.selectedItemSubj$.asObservable();
     }
 
     /**
@@ -57,7 +57,9 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
     setSelectedItem(item: number | T, nodeId?: number): void {
         if (typeof item === 'number') {
             const item$ = this.loadItem(item, nodeId);
-            item$.take(1).subscribe(item => {
+            item$.pipe(
+                take(1),
+            ).subscribe(item => {
                 this.selectedItemSubj$.next(item);
             }, error => this.loadingErrorSubject.next(error));
         } else {
@@ -71,8 +73,8 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
      */
     private loadItem(itemId: number, nodeId?: number): Observable<T> {
         nodeId = nodeId || this.defaultNodeId;
-        return this.folderApi.getItem(itemId, this.itemType, { nodeId })
-            .map(response => {
+        return this.folderApi.getItem(itemId, this.itemType, { nodeId }).pipe(
+            map(response => {
                 let item: T;
                 if (this.itemType === 'form') {
                     item = (response as any).item;
@@ -83,7 +85,8 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
                     item.nodeId = nodeId;
                 }
                 return item;
-            });
+            }),
+        );
     }
 
 }

@@ -58,7 +58,7 @@ import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/obj
 import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesForm } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
 
@@ -138,7 +138,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesForm,
+                NodePropertiesFormComponent,
                 ObjectTagNamePipe,
                 TagTypeIconPipe,
                 TestComponent,

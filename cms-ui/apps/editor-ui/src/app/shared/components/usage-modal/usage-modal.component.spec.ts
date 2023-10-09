@@ -8,10 +8,9 @@ import { DetailChip } from '../../../shared/components/detail-chip/detail-chip.c
 import { ItemStateContextMenuComponent } from '../../../shared/components/item-state-contextmenu/item-state-contextmenu.component';
 import { ItemStatusLabelComponent } from '../../../shared/components/item-status-label/item-status-label.component';
 import { I18nDatePipe } from '../../../shared/pipes/i18n-date/i18n-date.pipe';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService, UsageActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
-import { UsageActionsService } from '../../../state';
-import { UsageList } from '../usage-list/usage-list.component';
+import { UsageListComponent } from '../usage-list/usage-list.component';
 import { UsageModalComponent } from './usage-modal.component';
 
 class MockUsageActions {
@@ -34,7 +33,7 @@ describe('UsageModal', () => {
             ],
             declarations: [
                 UsageModalComponent,
-                UsageList,
+                UsageListComponent,
                 ItemStatusLabelComponent,
                 DetailChip,
                 I18nDatePipe,
@@ -53,7 +52,7 @@ describe('UsageModal', () => {
     });
 
     beforeEach(() => {
-        let fixture = TestBed.createComponent(UsageModalComponent);
+        const fixture = TestBed.createComponent(UsageModalComponent);
         usageModal = fixture.componentInstance;
     });
 
@@ -91,14 +90,14 @@ describe('UsageModal', () => {
         });
 
         it('should group pages which share a contentSetId', () => {
-            let grouped = usageModal.groupPagesByLanguage(pages);
+            const grouped = usageModal.groupPagesByLanguage(pages);
 
             expect(grouped.length).toBe(3);
             expect(grouped.map(p => p.id)).toEqual([1, 3, 4]);
         });
 
         it('should add variants to the languageVariants object with a single language', () => {
-            let grouped = usageModal.groupPagesByLanguage(pages);
+            const grouped = usageModal.groupPagesByLanguage(pages);
 
             expect(grouped[1].languageVariants).toBeDefined();
             expect(grouped[1].languageVariants).toEqual({
@@ -107,7 +106,7 @@ describe('UsageModal', () => {
         });
 
         it('should add variants to the languageVariants object with multiple languages', () => {
-            let grouped = usageModal.groupPagesByLanguage(pages);
+            const grouped = usageModal.groupPagesByLanguage(pages);
 
             expect(grouped[0].languageVariants).toBeDefined();
             expect(grouped[0].languageVariants).toEqual({
@@ -117,15 +116,15 @@ describe('UsageModal', () => {
         });
 
         it('should not fold up the currentLanguageId', () => {
-            let grouped1 = usageModal.groupPagesByLanguage(pages, 1);
+            const grouped1 = usageModal.groupPagesByLanguage(pages, 1);
             expect(grouped1[0].contentGroupId).toBe(1);
 
-            let grouped2 = usageModal.groupPagesByLanguage(pages, 2);
+            const grouped2 = usageModal.groupPagesByLanguage(pages, 2);
             expect(grouped2[0].contentGroupId).toBe(2);
         });
 
         it('should use the default order if the currentLanguageId is invalid', () => {
-            let grouped1 = usageModal.groupPagesByLanguage(pages, 99);
+            const grouped1 = usageModal.groupPagesByLanguage(pages, 99);
             expect(grouped1[0].contentGroupId).toBe(1);
         });
 

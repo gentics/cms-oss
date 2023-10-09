@@ -3,10 +3,11 @@ import {
     Component,
     ComponentRef,
     Input,
+    OnChanges,
     OnDestroy,
     SimpleChange,
     ViewChild,
-    ViewContainerRef
+    ViewContainerRef,
 } from '@angular/core';
 import { TagPart } from '@gentics/cms-models';
 import { TagPropertyEditor } from '../../common';
@@ -19,9 +20,9 @@ import { TagPropertyEditorResolverService } from '../../providers/tag-property-e
     selector: 'tag-property-editor-host',
     templateUrl: './tag-property-editor-host.component.html',
     styleUrls: ['./tag-property-editor-host.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TagPropertyEditorHostComponent implements OnDestroy {
+export class TagPropertyEditorHostComponent implements OnDestroy, OnChanges {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
     @Input()
@@ -42,7 +43,7 @@ export class TagPropertyEditorHostComponent implements OnDestroy {
     private editorComponent: ComponentRef<TagPropertyEditor>;
 
     constructor(
-        private tagPropertyEditorResolver: TagPropertyEditorResolverService
+        private tagPropertyEditorResolver: TagPropertyEditorResolverService,
     ) {}
 
     ngOnDestroy(): void {
@@ -71,5 +72,4 @@ export class TagPropertyEditorHostComponent implements OnDestroy {
             this.editorComponent = null;
         }
     }
-
 }

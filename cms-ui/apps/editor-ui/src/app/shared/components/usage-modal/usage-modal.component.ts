@@ -10,7 +10,8 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { Version } from '../../../core/providers/user-settings/version.class';
@@ -55,22 +56,41 @@ export class UsageModalComponent implements IModalDialog, OnInit {
         this.supportsExtendedUsage = currentVersion.satisfiesMinimum(targetVersion);
 
         const usageState$ = this.appState.select(state => state.usage);
-        this.linkedPages$ = usageState$.map(state => state.linkedPages.map(id => this.entityResolver.getPage(id)));
-        this.linkedFiles$ = usageState$.map(state => state.linkedFiles.map(id => this.entityResolver.getFile(id)));
-        this.linkedImages$ = usageState$.map(state => state.linkedImages.map(id => this.entityResolver.getImage(id)));
-        this.files$ = usageState$.map(state => state.files.map(id => this.entityResolver.getFile(id)));
-        this.folders$ = usageState$.map(state => state.folders.map(id => this.entityResolver.getFolder(id)));
-        this.images$ = usageState$.map(state => state.images.map(id => this.entityResolver.getImage(id)));
-        this.templates$ = usageState$.map(state => state.templates.map(id => this.entityResolver.getTemplate(id)));
-        this.variants$ = usageState$
-            .map(state => state.variants.map(id => this.entityResolver.getPage(id)))
-            .map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId));
-        this.pages$ = usageState$.map(state => {
-            const pagesAndTags = state.pages.concat(state.tags);
-            return pagesAndTags.map(id => this.entityResolver.getPage(id));
-        })
-            .map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId));
-        this.fetching$ = usageState$.map(state => state.fetching);
+        this.linkedPages$ = usageState$.pipe(
+            map(state => state.linkedPages.map(id => this.entityResolver.getPage(id))),
+        );
+        this.linkedFiles$ = usageState$.pipe(
+            map(state => state.linkedFiles.map(id => this.entityResolver.getFile(id))),
+        );
+        this.linkedImages$ = usageState$.pipe(
+            map(state => state.linkedImages.map(id => this.entityResolver.getImage(id))),
+        );
+        this.files$ = usageState$.pipe(
+            map(state => state.files.map(id => this.entityResolver.getFile(id))),
+        );
+        this.folders$ = usageState$.pipe(
+            map(state => state.folders.map(id => this.entityResolver.getFolder(id))),
+        );
+        this.images$ = usageState$.pipe(
+            map(state => state.images.map(id => this.entityResolver.getImage(id))),
+        );
+        this.templates$ = usageState$.pipe(
+            map(state => state.templates.map(id => this.entityResolver.getTemplate(id))),
+        );
+        this.variants$ = usageState$.pipe(
+            map(state => state.variants.map(id => this.entityResolver.getPage(id))),
+            map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId)),
+        );
+        this.pages$ = usageState$.pipe(
+            map(state => {
+                const pagesAndTags = state.pages.concat(state.tags);
+                return pagesAndTags.map(id => this.entityResolver.getPage(id));
+            }),
+            map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId)),
+        )
+        this.fetching$ = usageState$.pipe(
+            map(state => state.fetching),
+        );
 
         this.usageCount$ = this.sumObservable(
             this.files$,
@@ -87,23 +107,25 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             this.linkedFiles$,
         );
 
-        this.usageEmpty$ = Observable.combineLatest([
+        this.usageEmpty$ = combineLatest([
             this.fetching$,
             this.usageCount$,
-        ])
-            .map((result: any[]) => {
+        ]).pipe(
+            map((result: any[]) => {
                 const [fetching, count] = result;
                 return fetching ? false : 0 === count;
-            });
+            }),
+        );
 
-        this.linksEmpty$ = Observable.combineLatest([
+        this.linksEmpty$ = combineLatest([
             this.fetching$,
             this.linksCount$,
-        ])
-            .map((result: any[]) => {
+        ]).pipe(
+            map((result: any[]) => {
                 const [fetching, count] = result;
                 return fetching ? false : 0 === count;
-            });
+            }),
+        );
     }
 
     ngOnInit(): void {
@@ -167,10 +189,11 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      * of items in all those streams.
      */
     private sumObservable(...streams: Array<Observable<any[]>>): Observable<number> {
-        return Observable.combineLatest([...streams])
-            .map((lists: Array<any[]>) => {
+        return combineLatest([...streams]).pipe(
+            map((lists: Array<any[]>) => {
                 return lists.reduce((sum: number, list: any[]) => sum + (list ? list.length : 0), 0);
-            });
+            }),
+        );
     }
 
     /**

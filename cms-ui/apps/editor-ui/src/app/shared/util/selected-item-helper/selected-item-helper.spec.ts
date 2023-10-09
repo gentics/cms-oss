@@ -2,7 +2,8 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { ItemInNode, Page, PageResponse, Raw } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { cloneDeep } from 'lodash-es';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, of, throwError } from 'rxjs';
+import { delay } from 'rxjs/operators';
 import { SelectedItemHelper } from './selected-item-helper';
 
 const DEFAULT_NODE_ID = 4711;
@@ -122,7 +123,7 @@ describe('SelectedItemHelper', () => {
 
         // Simulate an error.
         const expectedError = new Error('Simulated error');
-        getItemSpy.and.returnValue(Observable.throw(expectedError));
+        getItemSpy.and.returnValue(throwError(expectedError));
         selectedItemHelper.setSelectedItem(PAGE_ID);
         expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: DEFAULT_NODE_ID });
         expect(emittedItem).toBeFalsy();
@@ -162,7 +163,7 @@ function mockResponseObservable(page: Page<Raw>): Observable<PageResponse> {
     const response: Partial<PageResponse> = {
         page: page,
     };
-    return Observable.of(response as any).delay(0);
+    return of(response as any).pipe(delay(0));
 }
 
 class MockFolderActions {

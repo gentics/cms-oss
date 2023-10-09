@@ -1,4 +1,4 @@
-import {CNIFrameDocument} from '../common';
+import { CNIFrameDocument } from '../../../models/content-frame';
 
 export function handleFormGeneratorSaveButton(customOkayButton: HTMLButtonElement, document: CNIFrameDocument): void {
     customOkayButton.classList.add('disabled');

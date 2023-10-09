@@ -10,9 +10,10 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, merge } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 /**
  * Used to edit the following TagParts:
@@ -24,7 +25,7 @@ import { Observable, Subject, Subscription } from 'rxjs';
     selector: 'list-tag-property-editor',
     templateUrl: './list-tag-property-editor.component.html',
     styleUrls: ['./list-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListTagPropertyEditor implements OnInit, OnDestroy, TagPropertyEditor {
 
@@ -62,10 +63,10 @@ export class ListTagPropertyEditor implements OnInit, OnDestroy, TagPropertyEdit
     constructor(private changeDetector: ChangeDetectorRef) { }
 
     ngOnInit(): void {
-        const debouncer = this.listChange.debounceTime(100);
-        const blurOrDebouncedChange = Observable.merge(this.listBlur, debouncer);
+        const debouncer = this.listChange.pipe(debounceTime(100));
+        const blurOrDebouncedChange = merge(this.listBlur, debouncer);
         this.subscriptions.add(
-            blurOrDebouncedChange.subscribe(() => this.onUserChange())
+            blurOrDebouncedChange.subscribe(() => this.onUserChange()),
         );
     }
 
@@ -123,7 +124,7 @@ export class ListTagPropertyEditor implements OnInit, OnDestroy, TagPropertyEdit
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by ListTagPropertyEditor.`);
         }
 
-        this.tagProperty = newValue as (ListTagPartProperty | OrderedUnorderedListTagPartProperty);
+        this.tagProperty = newValue ;
         this.stringifiedList = this.tagProperty.stringValues.join('\n');
         if (this.tagProperty.type === TagPropertyType.LIST) {
             this.isNumberedListUserSelection = this.tagProperty.booleanValue;

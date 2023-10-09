@@ -24,8 +24,9 @@ import {
     Raw,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual as _isEqual } from'lodash-es'
+import { isEqual as _isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ItemsInfo } from '../../../common/models';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { ApplicationStateService } from '../../../state';
@@ -40,7 +41,7 @@ import { MasonryGridComponent } from '../masonry-grid/masonry-grid.component';
     selector: 'repository-browser-list',
     templateUrl: './repository-browser-list.tpl.html',
     styleUrls: ['./repository-browser-list.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, OnDestroy {
 
@@ -124,8 +125,9 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
     isSelected(item: Item): boolean {
         return item && this.selected && this.selected.some(sel =>
             sel.id === item.id &&
-            sel.type == item.type && (this.currentNode && this.currentNode.id > 0
+            sel.type === item.type && (this.currentNode && this.currentNode.id > 0
                 ? (sel.nodeId === this.currentNode.id)
+                // eslint-disable-next-line no-underscore-dangle
                 : ((item as any).__favourite__ && (sel.nodeId === (item as any).__favourite__.nodeId))
             ),
         );
@@ -181,8 +183,9 @@ export class RepositoryBrowserList implements OnInit, AfterViewInit, OnChanges, 
      * fetches items info, however based upon state and not folder shown in repository browser
      */
     getItemsInfo(type: FolderItemType): Observable<ItemsInfo> {
-        return this.appState.select(state => state.folder)
-            .map(folderState => folderState[`${type}s` as FolderItemTypePlural]);
+        return this.appState.select(state => state.folder).pipe(
+            map(folderState => folderState[`${type}s` as FolderItemTypePlural]),
+        );
     }
 
     onPageLanguageIconClicked(data: { page: Page<Raw>; language: Language; }): void {

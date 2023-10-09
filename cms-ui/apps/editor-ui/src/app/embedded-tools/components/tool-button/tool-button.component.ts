@@ -31,7 +31,7 @@ export class ToolButtonComponent implements OnChanges {
         if (changes.tool) {
             const tool = this.tool;
             if (typeof tool.name === 'string') {
-                this.name$ = Observable.of(tool.name);
+                this.name$ = of(tool.name);
             } else {
                 const nameByLanguage = tool.name;
                 this.name$ = this.state.select(state => state.ui.language).pipe(

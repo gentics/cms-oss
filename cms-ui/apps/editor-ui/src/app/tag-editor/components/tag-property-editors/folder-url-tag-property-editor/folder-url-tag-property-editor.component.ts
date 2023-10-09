@@ -20,10 +20,10 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { merge, Observable, of } from 'rxjs';
-import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { Observable, merge, of } from 'rxjs';
+import { catchError, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
 
@@ -225,7 +225,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
 
     onCreateSubfolderClick(): void {
         this.creatingSubfolder = true;
-        this.selectedFolder.selectedItem$.take(1).subscribe(parentFolder => {
+        this.selectedFolder.selectedItem$.pipe(take(1)).subscribe(parentFolder => {
             this.folderActions.createNewFolder({
                 name: this.subfolderName,
                 description: '',
@@ -234,19 +234,19 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                 nodeId: parentFolder.nodeId,
                 failOnDuplicate: true,
             })
-            .then(subfolder => {
-                if (subfolder) {
-                    this.expandCreateSubfolderButton.collapse();
-                    this.subfolderName = '';
-                    this.changeSelectedItem(subfolder);
-                }
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            })
-            .catch(() => {
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            });
+                .then(subfolder => {
+                    if (subfolder) {
+                        this.expandCreateSubfolderButton.collapse();
+                        this.subfolderName = '';
+                        this.changeSelectedItem(subfolder);
+                    }
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                })
+                .catch(() => {
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                });
         });
     }
 
@@ -257,7 +257,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
         if (newValue.type !== TagPropertyType.FOLDER) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FolderUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as FolderTagPartProperty;
+        this.tagProperty = newValue ;
 
         this.selectedFolder.setSelectedItem(this.tagProperty.folderId, this.tagProperty.nodeId);
         this.changeDetector.markForCheck();

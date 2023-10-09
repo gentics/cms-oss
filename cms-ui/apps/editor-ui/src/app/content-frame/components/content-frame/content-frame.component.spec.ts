@@ -49,10 +49,10 @@ import { TagEditorService } from '../../../tag-editor';
 import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe/iframe-manager.service';
+import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesForm } from '../node-properties-form/node-properties-form.component';
-import { ContentFrame } from './content-frame.component';
+import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { ContentFrameComponent } from './content-frame.component';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -162,10 +162,10 @@ class MockEditorOverlayService {}
     `,
 })
 class TestComponent {
-    @ViewChild(ContentFrame, { static: true }) contentFrame: ContentFrame;
+    @ViewChild(ContentFrameComponent, { static: true }) contentFrame: ContentFrameComponent;
 
     // If we want to access the services provided directly by ContentFrame, we need the injector of the ViewContainerRef.
-    @ViewChild(ContentFrame, { static: true, read: ViewContainerRef })
+    @ViewChild(ContentFrameComponent, { static: true, read: ViewContainerRef })
     contentFrameViewContainerRef: ViewContainerRef;
 }
 
@@ -485,7 +485,7 @@ describe('ContentFrame', () => {
                 ResourceUrlBuilder,
             ],
             declarations: [
-                ContentFrame,
+                ContentFrameComponent,
                 DynamicDisableDirective,
                 FolderPropertiesForm,
                 InheritedLocalizedIcon,
@@ -496,7 +496,7 @@ describe('ContentFrame', () => {
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
                 MockTagEditorOverlayHost,
-                NodePropertiesForm,
+                NodePropertiesFormComponent,
                 ItemStatusLabelComponent,
                 TagTypeIconPipe,
                 TestComponent,
@@ -510,7 +510,7 @@ describe('ContentFrame', () => {
             ],
         });
 
-        TestBed.overrideComponent(ContentFrame, {
+        TestBed.overrideComponent(ContentFrameComponent, {
             set: {
                 providers: [{ provide: IFrameManager, useClass: MockIFrameManager }],
             },
@@ -524,12 +524,12 @@ describe('ContentFrame', () => {
 
         // We need to mock the lodash debounce function, otherwise we will get
         // an error about a pending timer in the queue (in newer Angular versions zone.js supports using tick for lodash).
-        origDebounce = ContentFrame._debounce;
-        ContentFrame._debounce = ((fn: any) => fn) as any;
+        origDebounce = ContentFrameComponent._debounce;
+        ContentFrameComponent._debounce = ((fn: any) => fn) as any;
     });
 
     afterEach(() => {
-        ContentFrame._debounce = origDebounce;
+        ContentFrameComponent._debounce = origDebounce;
     });
 
     it('CombinedPropertiesEditor is created and item is set after the state was updated with route params',

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { RecentItem } from '@editor-ui/app/common/models';
 import { Favourite, GcmsUiLanguage, ItemType, SortField } from '@gentics/cms-models';
 import { cloneDeep, flatten, isEqual, merge } from 'lodash-es';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, combineLatest } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { environment } from '../../../development/development-tools';
@@ -67,44 +67,44 @@ export class UserSettingsService {
      * Watches the app state and loads user settings when a user logs in.
      */
     loadUserSettingsWhenLoggedIn(): void {
-        this.appState.select(state => state.auth.currentUserId)
-            .filter(id => id != null)
-            .subscribe(userId => {
-                this.currentUserId = userId;
-                this.loadUserSettings();
-            });
+        this.appState.select(state => state.auth.currentUserId).pipe(
+            filter(id => id != null),
+        ).subscribe(userId => {
+            this.currentUserId = userId;
+            this.loadUserSettings();
+        });
     }
 
     watchForSettingChangesInOtherTabs(): void {
-        this.localStorage.change$
-            .filter(change =>
+        this.localStorage.change$.pipe(
+            filter(change =>
                 this.currentUserId &&
                 change.key.startsWith(`USER-${this.currentUserId}_`),
-            )
-            .subscribe(change => {
-                const name = change.key.replace(/^USER-\d+_/, '');
-                if (name === 'sid') {
-                    // nothing ... yet
-                } else {
-                    this.dispatchChangedSetting(name, change.newValue);
-                }
-            });
+            ),
+        ).subscribe(change => {
+            const name = change.key.replace(/^USER-\d+_/, '');
+            if (name === 'sid') {
+                // nothing ... yet
+            } else {
+                this.dispatchChangedSetting(name, change.newValue);
+            }
+        });
     }
 
     saveRecentItemsOnUpdate(): void {
-        this.appState.select(state => state.folder.recentItems)
-            .filter(recentItems => recentItems && recentItems.length > 0)
-            .filter(() => this.appState.now.auth.isLoggedIn)
-            .subscribe(recentItems => {
-                const savedInLocalStorage = this.localStorage.getForUser(this.currentUserId, 'recentItems');
-                if (!deepEqual(savedInLocalStorage, recentItems)) {
-                    this.localStorage.setForUser(this.currentUserId, 'recentItems', recentItems);
-                }
-            });
+        this.appState.select(state => state.folder.recentItems).pipe(
+            filter(recentItems => recentItems && recentItems.length > 0),
+            filter(() => this.appState.now.auth.isLoggedIn),
+        ).subscribe(recentItems => {
+            const savedInLocalStorage = this.localStorage.getForUser(this.currentUserId, 'recentItems');
+            if (!deepEqual(savedInLocalStorage, recentItems)) {
+                this.localStorage.setForUser(this.currentUserId, 'recentItems', recentItems);
+            }
+        });
     }
 
     private loadUserSettings(): void {
-        for (let setting of userSettingNames) {
+        for (const setting of userSettingNames) {
             let value = this.localStorage.getForUser(this.currentUserId, setting);
             if (value == null) {
                 value = defaultUserSettings[setting];
@@ -158,7 +158,7 @@ export class UserSettingsService {
                 this.setUiLanguage(this.appState.now.ui.language);
             }
 
-            for (let key of Object.keys(settings)) {
+            for (const key of Object.keys(settings)) {
                 if (userSettingNames.indexOf(key as any) === -1
                     || settings[key] == null
                     || deepEqual(settings[key], (<any> currentSettings)[key])
@@ -403,7 +403,7 @@ export class UserSettingsService {
             }
 
             case 'favourites': {
-                let favourites = this.filterAndRemoveNonExistingFavouriteItems(value as Favourite[]);
+                const favourites = this.filterAndRemoveNonExistingFavouriteItems(value as Favourite[]);
                 favourites.then(filteredFavourites => {
                     this.appState.dispatch(new FavouritesLoadedAction(filteredFavourites));
                 });
@@ -481,17 +481,17 @@ export class UserSettingsService {
                 break;
 
             case 'lastNodeId':
-                this.appState.select(state => state.entities.node[value])
-                    .filter(node => !!node)
-                    .take(1)
-                    .subscribe(node => {
-                        if (this.appState.now.folder.activeNode == null) {
-                            this.appState.dispatch(new SetActiveNodeAction(node.id));
-                            this.appState.dispatch(new SetActiveFolderAction(node.folderId));
-                        }
-                        // TODO: Reenable this?
-                        // this.navigationService.list(node.id, node.folderId).navigateIfNotSet();
-                    });
+                this.appState.select(state => state.entities.node[value]).pipe(
+                    filter(node => !!node),
+                    take(1),
+                ).subscribe(node => {
+                    if (this.appState.now.folder.activeNode == null) {
+                        this.appState.dispatch(new SetActiveNodeAction(node.id));
+                        this.appState.dispatch(new SetActiveFolderAction(node.folderId));
+                    }
+                    // TODO: Reenable this?
+                    // this.navigationService.list(node.id, node.folderId).navigateIfNotSet();
+                });
                 break;
 
             case 'openObjectPropertyGroups':
@@ -549,11 +549,11 @@ export class UserSettingsService {
      */
     private filterAndRemoveNonExistingFavouriteItems(items: Favourite[]): Promise<Favourite[]> {
         let grouppedFavs = {} as any;
-        let itemRequests = [];
+        const itemRequests: Observable<any>[] = [];
 
         /* Create groups of favorites to group requests together */
         items.forEach((fav) => {
-            let favObj = {} as any;
+            const favObj = {} as any;
             favObj[fav.nodeId] = {};
             favObj[fav.nodeId][fav.type] = {};
             favObj[fav.nodeId][fav.type][fav.id] = fav;
@@ -561,14 +561,15 @@ export class UserSettingsService {
         });
 
         /* Make the requests per group to check if items are exists */
-        for (let nodeId in grouppedFavs) {
-            for (let type in grouppedFavs[nodeId]) {
-                let ids = (<any> Object).values(grouppedFavs[nodeId][type]).map((fav: Favourite) => fav.id);
-                itemRequests.push(this.folderActions.getExistingItems(ids, parseInt(nodeId), type as ItemType));
-            }
-        }
+        Object.keys(grouppedFavs).forEach(nodeId => {
+            Object.keys(grouppedFavs[nodeId]).forEach(type => {
+                const ids = Object.values(grouppedFavs[nodeId][type])
+                    .map((fav: Favourite) => fav.id);
+                itemRequests.push(this.folderActions.getExistingItems(ids, parseInt(nodeId, 10), type as ItemType));
+            });
+        });
 
-        const existingList$ = Observable.combineLatest(itemRequests).toPromise();
+        const existingList$ = combineLatest(itemRequests).toPromise();
 
         /* Filter the original favourites list by nodeId and id then return as a Promise */
         return existingList$.then(checkItems => {
@@ -576,8 +577,9 @@ export class UserSettingsService {
                 return [];
             }
 
-            let existingItems = flatten(
+            const existingItems = flatten(
                 checkItems.map((item: any) =>
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
                     item.map((existingItem: any) => {
                         // when existing item is a root folder, API returns type as 'channel', change it to 'folder'
                         return {
@@ -605,14 +607,17 @@ export class UserSettingsService {
 
             /* Clone the original favourites list and filter existing items
              * also follow moved items if data returned by the CMS with new nodeId */
-            let filteredItems = cloneDeep(items).filter((fav) => {
-                let existingItem = existingItems.find((item: any) => {
+            const filteredItems = cloneDeep(items).filter((fav) => {
+                const existingItem = existingItems.find((item: any) => {
                     // For an item to match, its ID, type, and nodeId have to match
                     // that of the favorite. However, a node's root folder is returned by the CMS as
                     // type 'node', so we have to account for that exception.
-                    return item.id == fav.id &&
-                    (item.type == fav.type || (item.type === 'node' && fav.type === 'folder')) &&
-                    item._checkedNodeId == fav.nodeId;
+                    return item.id === fav.id && (
+                        item.type === fav.type || (
+                            item.type === 'node'
+                            && fav.type === 'folder'
+                        )
+                    ) && item._checkedNodeId === fav.nodeId;
                 });
 
                 if (existingItem) {

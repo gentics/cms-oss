@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { BaseModal } from '@gentics/ui-core';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
-import { ContentFrame } from '../content-frame/content-frame.component';
+import { ContentFrameComponent } from '../content-frame/content-frame.component';
 
 /**
  * A modal for the user to choose what to do with the edited data before navigating.
@@ -14,7 +14,7 @@ import { ContentFrame } from '../content-frame/content-frame.component';
 export class ConfirmNavigationModal extends BaseModal<boolean> {
 
     allowSaving = true;
-    contentFrame: ContentFrame;
+    contentFrame: ContentFrameComponent;
     iconForItemType = iconForItemType;
 
     saveAndClose(): void {

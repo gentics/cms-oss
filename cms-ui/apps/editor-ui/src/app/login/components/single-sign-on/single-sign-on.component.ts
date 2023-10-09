@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
@@ -13,8 +13,8 @@ import { KeycloakService } from '../../providers/keycloak/keycloak.service';
     selector: 'single-sign-on',
     templateUrl: './single-sign-on.component.html',
     styleUrls: ['./single-sign-on.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class SingleSignOn implements OnDestroy, OnInit {
 
     enabled$ = new BehaviorSubject(false);
@@ -73,19 +73,19 @@ export class SingleSignOn implements OnDestroy, OnInit {
     }
 
     attemptSsoWithIframe(): void {
-        this.appState.select(state => state.auth)
-            .filter(auth => !!auth)
-            .take(1)
-            .filter(auth => !auth.isLoggedIn)
-            .subscribe(() => {
-                this.url = this.domSanitizer.bypassSecurityTrustResourceUrl(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`);
-                this.enabled$.next(true);
-            });
+        this.appState.select(state => state.auth).pipe(
+            filter(auth => !!auth),
+            take(1),
+            filter(auth => !auth.isLoggedIn),
+        ).subscribe(() => {
+            this.url = this.domSanitizer.bypassSecurityTrustResourceUrl(`${API_BASE_URL}/auth/ssologin?ts=${Date.now()}`);
+            this.enabled$.next(true);
+        });
     }
 
     frameLoaded(frame: HTMLIFrameElement): void {
         try {
-            let result = frame.contentDocument.documentElement.textContent;
+            const result = frame.contentDocument.documentElement.textContent;
             this.handleSsoResponse(result);
         } catch (error) {
             this.errorHandler.catch(error, { notification: false });

@@ -37,7 +37,7 @@ import {
     getExampleTemplateDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { NEVER, Observable } from 'rxjs';
 import { RepositoryBrowserClient, RepositoryBrowserDataService } from '../../providers';
 import { RepositoryBrowser } from '../repository-browser/repository-browser.component';
 
@@ -226,7 +226,7 @@ class MockUserSettingsService {
 
 class MockI18nService {
     transform(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 
@@ -236,10 +236,10 @@ class MockI18nNotification {
 
 class MockPermissionService {
     forItemInLanguage(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
     forItem(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 

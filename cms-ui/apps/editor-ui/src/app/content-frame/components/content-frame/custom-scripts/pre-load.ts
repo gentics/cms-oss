@@ -1,9 +1,11 @@
 import { AllowedSelectionType, ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
 import * as Mousetrap from 'mousetrap';
 import { Subscription } from 'rxjs';
+import { mergeMap, filter } from 'rxjs/operators';
 import { DebugToolService } from '../../../../development/providers/debug-tool.service';
+import { CNIFrameDocument, CNWindow, FileUploadPlugin, LinkBrowser, MiniBrowser } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl, CNIFrameDocument, CNWindow, FileUploadPlugin, LinkBrowser, MiniBrowser } from '../common';
+import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
 
 // Force TypeScript to report errors when using the global window/document object
 let document: never;
@@ -223,31 +225,30 @@ export class PreLoadScript {
             this.filePickerSubscription = null;
         }
 
-        this.filePickerSubscription = this.scriptHost
-            .openFilePicker('file')
-            .mergeMap(files => {
+        this.filePickerSubscription = this.scriptHost.openFilePicker('file').pipe(
+            mergeMap(files => {
                 if (files && files[0]) {
                     const type = files[0].type.startsWith('image/') ? 'image' : 'file';
                     return this.scriptHost.uploadForCurrentItem(type, files);
                 }
                 return [];
-            })
-            .filter(results => results && results[0])
-            .subscribe(result => {
-                // Make a clone because fileUploadPlugin.getDocument() mutates the object id
-                const fileClone = { ...result[0] };
+            }),
+            filter(results => results && results[0]),
+        ).subscribe(result => {
+            // Make a clone because fileUploadPlugin.getDocument() mutates the object id
+            const fileClone = { ...result[0] };
 
-                // The following code is adapted from
-                // https://git.gentics.com/psc/contentnode/blob/830e84ee937ca2fa4a80760b86081370e43a212c/
-                // contentnode-aloha-plugins/src/main/js/gcnfileupload/lib/gcnfileupload-plugin.js#L316-325
-                const document = fileUploadPlugin.getDocument(fileClone, '10008');
-                const linkplugin = this.window.Aloha.require('link/link-plugin');
-                const targetObject = linkplugin.hrefField.getTargetObject();
-                const rangeObject = this.window.Aloha.Selection.getRangeObject();
-                rangeObject.select();
-                linkplugin.hrefField.setTargetObject(targetObject, 'href');
-                linkplugin.hrefField.setItem(document);
-            });
+            // The following code is adapted from
+            // https://git.gentics.com/psc/contentnode/blob/830e84ee937ca2fa4a80760b86081370e43a212c/
+            // contentnode-aloha-plugins/src/main/js/gcnfileupload/lib/gcnfileupload-plugin.js#L316-325
+            const document = fileUploadPlugin.getDocument(fileClone, '10008');
+            const linkplugin = this.window.Aloha.require('link/link-plugin');
+            const targetObject = linkplugin.hrefField.getTargetObject();
+            const rangeObject = this.window.Aloha.Selection.getRangeObject();
+            rangeObject.select();
+            linkplugin.hrefField.setTargetObject(targetObject, 'href');
+            linkplugin.hrefField.setItem(document);
+        });
     }
 
     postFormToUrl(url: string, params: any = {}): void {

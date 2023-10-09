@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import {ManagedIFrame} from './managed-iframe.class';
-import {ManagedIFrameCollection} from './managed-iframe-collection.class';
+import {ManagedIFrame} from '../../models/managed-iframe';
+import {ManagedIFrameCollection} from '../../models/managed-iframe-collection';
 
 /**
  * Provides new instances of the ManagedIFrameCollection class. This exists to make unit testing easier, by making
@@ -10,7 +10,7 @@ import {ManagedIFrameCollection} from './managed-iframe-collection.class';
 export class IFrameCollectionService {
 
     create(iframe: HTMLIFrameElement): ManagedIFrameCollection {
-        let masterFrame = new ManagedIFrame(iframe, 'master-frame');
+        const masterFrame = new ManagedIFrame(iframe, 'master-frame');
         return new ManagedIFrameCollection(masterFrame);
     }
 

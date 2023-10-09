@@ -3,11 +3,11 @@ import { ChangeDetectorRef, Component, EventEmitter, NO_ERRORS_SCHEMA } from '@a
 import { TestBed, tick } from '@angular/core/testing';
 import { SetUILanguageAction } from '@editor-ui/app/state';
 import { Form, FormRequestOptions, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
+import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nService } from '../../../core/providers/i18n/i18n.service';
@@ -454,7 +454,7 @@ class MockFolderActions {
 
 class MockI18nService {
     transform(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 
     translate(key: string | string[], params?: any): string {
@@ -482,10 +482,10 @@ class MockTranslateService {
 
 class MockPermissionService {
     forItemInLanguage(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
     forItem(): Observable<any> {
-        return Observable.never();
+        return NEVER;
     }
 }
 

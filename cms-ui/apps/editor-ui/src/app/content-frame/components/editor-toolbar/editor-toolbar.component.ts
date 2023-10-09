@@ -220,15 +220,12 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         const page = this.currentItem as Page;
-        this.subscriptions.push(this.permissions.forItem(page.id, 'page', this.currentNode.id)
-            .map(permissions => permissions.publish)
-            .pipe(
-                map(permissions => permissions && PublishableStateUtil.stateInQueue(page)),
-            ).subscribe(inQueue => {
-                this.inQueue = inQueue;
-                this.changeDetector.markForCheck();
-            }),
-        );
+        this.subscriptions.push(this.permissions.forItem(page.id, 'page', this.currentNode.id).pipe(
+            map(permissions => permissions.publish && PublishableStateUtil.stateInQueue(page)),
+        ).subscribe(inQueue => {
+            this.inQueue = inQueue;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     expandedChanged(multilineExpanded: boolean): void {

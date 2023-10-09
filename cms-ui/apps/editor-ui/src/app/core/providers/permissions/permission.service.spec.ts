@@ -9,10 +9,10 @@ import {
     PermissionResponse, PermissionsMapCollection,
     PrivilegeMap,
 } from '@gentics/cms-models';
-import { NgxsModule } from '@ngxs/store';
-import { Observable, of as observableOf } from 'rxjs';
-import { first } from 'rxjs/operators';
 import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { NgxsModule } from '@ngxs/store';
+import { NEVER, Observable, of as observableOf, of } from 'rxjs';
+import { first } from 'rxjs/operators';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
@@ -31,7 +31,7 @@ const USER = 1234;
 
 function takeOneValue<T>(stream: Observable<T>): T {
     let result: T;
-    let sub = stream.subscribe(res => result = res);
+    const sub = stream.subscribe(res => result = res);
     sub.unsubscribe();
     return result;
 }
@@ -325,11 +325,11 @@ describe('PermissionService', () => {
     describe('all$', () => {
 
         let testState: MockAppState;
-        let firstFolder: Partial<Folder<Normalized>> = {
+        const firstFolder: Partial<Folder<Normalized>> = {
             privilegeMap: privilegesWithPermissions(false),
             permissionsMap: mapWithPermissions(false),
         };
-        let secondFolder: Partial<Folder<Normalized>> = {
+        const secondFolder: Partial<Folder<Normalized>> = {
             privilegeMap: privilegesWithPermissions(false),
             permissionsMap: mapWithPermissions(false),
         };
@@ -372,7 +372,7 @@ describe('PermissionService', () => {
 
         it('emits permissions for items in the current folder', () => {
             state.mockState(testState);
-            let perms = takeOneValue(permissions.all$);
+            const perms = takeOneValue(permissions.all$);
             expect(perms.file.create).toBe(false);
             expect(perms.folder.create).toBe(false);
             expect(perms.page.create).toBe(false);
@@ -532,7 +532,7 @@ describe('PermissionService', () => {
 
             expect(emitted.length).toBe(0);
 
-            let permissionsMap = mapWithPermissions(false);
+            const permissionsMap = mapWithPermissions(false);
             api.permissions.default.permissionsMap.permissions.createitems = true;
             api.permissions.default.permissionsMap.permissions.publishpages = true;
 
@@ -879,14 +879,14 @@ describe('PermissionService', () => {
         });
 
         it('viewInbox$', () => {
-            let emitted = [] as any[];
+            const emitted = [] as any[];
             state.mockState(testState);
 
-            api.permissions.getInboxPermissions = () => Observable.of({ view: false });
+            api.permissions.getInboxPermissions = () => of({ view: false });
             permissions.viewInbox$.subscribe(v => emitted.push(v));
             expect(emitted).toEqual([false]);
 
-            api.permissions.getInboxPermissions = () => Observable.of({ view: true });
+            api.permissions.getInboxPermissions = () => of({ view: true });
             expect(emitted).toEqual([false], 'emitted twice');
 
             mockUserChange(USER + 1);
@@ -894,14 +894,14 @@ describe('PermissionService', () => {
         });
 
         it('viewPublishQueue$', () => {
-            let emitted = [] as any[];
+            const emitted = [] as any[];
             state.mockState(testState);
 
-            api.permissions.getPublishQueuePermissions = () => Observable.of({ view: false });
+            api.permissions.getPublishQueuePermissions = () => of({ view: false });
             permissions.viewPublishQueue$.subscribe(v => emitted.push(v));
             expect(emitted).toEqual([false]);
 
-            api.permissions.getPublishQueuePermissions = () => Observable.of({ view: true });
+            api.permissions.getPublishQueuePermissions = () => of({ view: true });
             expect(emitted).toEqual([false], 'emitted twice');
 
             mockUserChange(USER + 1);
@@ -957,18 +957,18 @@ describe('PermissionService', () => {
             testState.entities.folder[FOLDER].permissionsMap.permissions.createitems = true;
             state.mockState(testState);
 
-            let perms$ = permissions.forFolderInLanguage(FOLDER, NODE, LANGUAGE);
+            const perms$ = permissions.forFolderInLanguage(FOLDER, NODE, LANGUAGE);
 
             expect(api.folders.getItem).not.toHaveBeenCalled();
             expect(api.permissions.getFolderPermissions).toHaveBeenCalled();
 
-            let perms: EditorPermissions = takeOneValue(perms$);
+            const perms: EditorPermissions = takeOneValue(perms$);
             expect(perms.page.create).toBe(true);
         });
 
         it('loads the folder permissions via the API if not in the app state', () => {
             api.permissions.getFolderPermissions = jasmine.createSpy('getFolderPermissions')
-                .and.returnValue(Observable.never());
+                .and.returnValue(NEVER);
 
             state.mockState({
                 entities: {},
@@ -1033,7 +1033,7 @@ describe('PermissionService', () => {
 
             state.mockState(testState);
 
-            let perms = takeOneValue(permissions.forFolderInLanguage(FOLDER, NODE, LANGUAGE));
+            const perms = takeOneValue(permissions.forFolderInLanguage(FOLDER, NODE, LANGUAGE));
 
             expect(perms.page.create).toBe(true);
             expect(perms.page.delete).toBe(false);
@@ -1104,18 +1104,18 @@ describe('PermissionService', () => {
             testState.entities.folder[PARENTFOLDER].permissionsMap.permissions.createitems = true;
             state.mockState(testState);
 
-            let perms$ = permissions.forItemInLanguage('page', PAGE, NODE, LANGUAGE);
+            const perms$ = permissions.forItemInLanguage('page', PAGE, NODE, LANGUAGE);
 
             expect(api.folders.getItem).not.toHaveBeenCalled();
             expect(api.permissions.getFolderPermissions).not.toHaveBeenCalled();
 
-            let perms: PagePermissions = takeOneValue(perms$);
+            const perms: PagePermissions = takeOneValue(perms$);
             expect(perms.create).toBe(true);
         });
 
         it('loads the item via the API if it is not in the app state', () => {
             api.folders.getItem = jasmine.createSpy('getItem')
-                .and.returnValue(Observable.never());
+                .and.returnValue(NEVER);
 
             state.mockState({
                 entities: {},
@@ -1159,8 +1159,8 @@ describe('PermissionService', () => {
             };
             state.mockState(testState);
 
-            let perms$ = permissions.forItemInLanguage('page', PAGE, NODE, LANGUAGE);
-            let perms: PagePermissions = takeOneValue(perms$);
+            const perms$ = permissions.forItemInLanguage('page', PAGE, NODE, LANGUAGE);
+            const perms: PagePermissions = takeOneValue(perms$);
 
             expect(api.folders.getItem).not.toHaveBeenCalled();
             expect(api.permissions.getFolderPermissions).toHaveBeenCalledWith(PARENTFOLDER, NODE);
@@ -1169,7 +1169,7 @@ describe('PermissionService', () => {
 
         it('returns permissions of the parent folder when called for a folder', () => {
 
-            let testState: MockAppState = {
+            const testState: MockAppState = {
                 entities: {
                     folder: {
                         [FOLDER]: {
@@ -1212,8 +1212,8 @@ describe('PermissionService', () => {
                 updatefolder: true,
             };
 
-            let perms$ = permissions.forItemInLanguage('folder', FOLDER, NODE, LANGUAGE);
-            let perms: FolderPermissions = takeOneValue(perms$);
+            const perms$ = permissions.forItemInLanguage('folder', FOLDER, NODE, LANGUAGE);
+            const perms: FolderPermissions = takeOneValue(perms$);
 
             expect(perms.delete).toBe(true);
             expect(perms.edit).toBe(false);
@@ -1313,8 +1313,8 @@ describe('PermissionService', () => {
                 },
             });
 
-            let perms$ = permissions.forFolder(FOLDER, NODE);
-            let perms: EditorPermissions = takeOneValue(perms$);
+            const perms$ = permissions.forFolder(FOLDER, NODE);
+            const perms: EditorPermissions = takeOneValue(perms$);
 
             expect(api.folders.getItem).not.toHaveBeenCalled();
             expect(api.permissions.getFolderPermissions).toHaveBeenCalled();
@@ -1400,7 +1400,7 @@ describe('PermissionService', () => {
                 },
             });
 
-            let perms = takeOneValue(permissions.forFolder(FOLDER, NODE));
+            const perms = takeOneValue(permissions.forFolder(FOLDER, NODE));
 
             expect(perms.page.create).toBe(true);
             expect(perms.page.delete).toBe(false);
@@ -1440,7 +1440,7 @@ describe('PermissionService', () => {
                 },
             });
 
-            let perms = takeOneValue(permissions.forFolder(FOLDER, NODE));
+            const perms = takeOneValue(permissions.forFolder(FOLDER, NODE));
             expect(perms.page.create).toBe(true);
         });
 
@@ -1480,9 +1480,9 @@ describe('PermissionService', () => {
                 },
             });
 
-            let perms$ = permissions.forFolder(FOLDER, NODE);
-            let emittedValues: EditorPermissions[] = [];
-            let sub = perms$.subscribe(val => emittedValues.push(val));
+            const perms$ = permissions.forFolder(FOLDER, NODE);
+            const emittedValues: EditorPermissions[] = [];
+            const sub = perms$.subscribe(val => emittedValues.push(val));
 
             expect(emittedValues.length).toBe(1);
             expect(emittedValues[0].page.create).toBe(true);
@@ -1498,7 +1498,7 @@ describe('PermissionService', () => {
         });
 
         it('returned Observable does not emit after a language change without role permissions', () => {
-            let folder: Partial<Folder<Normalized>> = {
+            const folder: Partial<Folder<Normalized>> = {
                 privilegeMap: {} as PrivilegeMap,
                 permissionsMap: {} as PermissionsMapCollection,
             };
@@ -1533,9 +1533,9 @@ describe('PermissionService', () => {
                 },
             });
 
-            let perms$ = permissions.forFolder(FOLDER, NODE);
-            let emittedValues: EditorPermissions[] = [];
-            let sub = perms$.subscribe(val => emittedValues.push(val));
+            const perms$ = permissions.forFolder(FOLDER, NODE);
+            const emittedValues: EditorPermissions[] = [];
+            const sub = perms$.subscribe(val => emittedValues.push(val));
 
             expect(emittedValues.length).toBe(1);
             mockLanguageChange(OTHERLANGUAGE);
@@ -1578,8 +1578,8 @@ describe('PermissionService', () => {
             };
             state.mockState(testState);
 
-            let perms$ = permissions.forFolder(FOLDER, NODE);
-            let emittedValues: EditorPermissions[] = [];
+            const perms$ = permissions.forFolder(FOLDER, NODE);
+            const emittedValues: EditorPermissions[] = [];
             let sub = perms$.subscribe(val => emittedValues.push(val));
 
             expect(emittedValues.length).toBe(1);
@@ -1663,10 +1663,10 @@ describe('PermissionService', () => {
         };
 
         it('returns all-false permissions object when input is null or undefined', () => {
-            for (let input of [null, undefined] as any[]) {
-                let permissions = mapToPermissions(null, input) as any;
-                for (let itemType of Object.keys(permissions)) {
-                    for (let prop of Object.keys((permissions )[itemType])) {
+            for (const input of [null, undefined] as any[]) {
+                const permissions = mapToPermissions(null, input) as any;
+                for (const itemType of Object.keys(permissions)) {
+                    for (const prop of Object.keys((permissions )[itemType])) {
                         expect(permissions[itemType][prop]).toBe(false);
                     }
                 }

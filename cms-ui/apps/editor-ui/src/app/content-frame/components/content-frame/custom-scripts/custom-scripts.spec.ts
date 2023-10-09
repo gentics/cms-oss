@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
+import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { EditMode, Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { Subscription } from 'rxjs';
 import { SpyEventTarget } from '../../../../../testing/spy-event-target';
+import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { GCMSUI } from '../../../providers/customer-script/customer-script.service';
-import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../common';
 import { OBJECT_PROPERTIES_CONTEXT_MENU_CLASS, OBJECT_PROPERTIES_INFO_BUTTON_CLASS, PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';
-import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
-import { AlohaSettings, AlohaEditable, AlohaRangeObject } from '@gentics/aloha-models';
 
 describe('custom scripts', () => {
 

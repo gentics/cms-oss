@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import { GTX_TOKEN_EXTENDED_TRANSLATIONS } from '@gentics/cms-components';
 import { TranslateLoader } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 // Parse the yaml files into a JS object.
 const CORE_TRANSLATIONS: any = {
@@ -53,16 +53,18 @@ export class CustomLoader implements TranslateLoader {
     }
 
     getTranslation(lang: string): Observable<any> {
-        let output: any = {};
+        const output: any = {};
 
-        for (let section in this.allTranslations) {
+        Object.keys(this.allTranslations).forEach(section => {
             output[section] = {};
-            
+
             const i18nObj = this.allTranslations[section].default;
-            for (let token in i18nObj) {
+
+            Object.keys(i18nObj).forEach(token => {
                 output[section][token] = i18nObj[token][lang];
-            }
-        }
-        return Observable.of(output);
+            });
+        });
+
+        return of(output);
     }
 }

@@ -2,8 +2,9 @@ import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/
 import { AlohaContextChangeEvent, AlohaPubSub } from '@gentics/aloha-models';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
+import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions, appendTypeIdToUrl } from '../common';
+import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
 
 // Force TypeScript to report errors when using the global window/document object
 let document: never;

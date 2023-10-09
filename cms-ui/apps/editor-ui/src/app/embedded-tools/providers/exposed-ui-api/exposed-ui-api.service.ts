@@ -15,6 +15,7 @@ import {
     TagInContainer,
 } from '@gentics/cms-models';
 import { IDialogConfig, INotificationOptions, ModalService, NotificationService } from '@gentics/ui-core';
+import { map } from 'rxjs/operators';
 import { ToolBreadcrumb } from '../../../../../embedded-tools-api/exposed-gcmsui-api';
 import { EditorTab, ITEM_PROPERTIES_TAB, PropertiesTab } from '../../../common/models';
 import { PublishQueueModal } from '../../../core/components/publish-queue-modal/publish-queue-modal.component';
@@ -112,14 +113,15 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
         propertiesTab?: PropertiesTab,
     ): Promise<boolean> {
 
-        return this.api.folders.getItem(itemId, itemType)
-            .map(response =>
+        return this.api.folders.getItem(itemId, itemType).pipe(
+            map(response =>
                 (response as FolderResponse).folder ||
                 (response as PageResponse).page ||
                 (response as FileResponse).file ||
                 (response as ImageResponse).image ||
                 (response as unknown as FormResponse).item,
-            )
+            ),
+        )
             .toPromise()
             .then(item => {
                 nodeId = nodeId || (item as Folder).nodeId || item.inheritedFromId;
@@ -281,6 +283,7 @@ export class ExposedUIAPI implements ExposableGCMSUIAPI {
                 timeout = setTimeout(() => resolve(undefined), options.delay || 3000);
             }
 
+            // eslint-disable-next-line prefer-const
             let toast: { dismiss(): void };
 
             const optionsToUse: INotificationOptions = { ...options };

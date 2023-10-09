@@ -1,6 +1,7 @@
-import { Observable, Subject } from 'rxjs';
-import { filter, map, merge, publish, refCount, take, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
-import { BLANK_PAGE, DYNAMIC_FRAME, logIFrameLifecycle } from '../../components/content-frame/common';
+import { Observable, Subject, fromEvent, merge } from 'rxjs';
+import { filter, map, publish, refCount, take, takeUntil, tap, withLatestFrom, startWith } from 'rxjs/operators';
+import { logIFrameLifecycle } from '../utils';
+import { BLANK_PAGE, DYNAMIC_FRAME } from './content-frame';
 
 export type ManagedIFrameEvent = {
     id: string;
@@ -80,25 +81,25 @@ export class ManagedIFrame {
 
     // Re _hackyBeforeUnload$, _hackyUnload$
     // -------------------------------------
-    // Originally (commit 0984efeab2a18c5e1442f855fabf4c04764aece3) we used `Observable.fromEvent('beforeunload', ...)`
+    // Originally (commit 0984efeab2a18c5e1442f855fabf4c04764aece3) we used `fromEvent('beforeunload', ...)`
     // to produce a stream of "beforeunload" and "unload" events. However, with that implementation there were edge-case
     // bugs (https://jira.gentics.com/browse/GCU-261) which could not be resolved. In certain circumstances, after
     // opening a  tagfill iframe and then attempting to close the ContentFrame, the event streams would not fire.
     //
     // Therefore we are using the native addEventListener API, which always works, and simulating the `fromEvent`
     // functionality by simply emitting a new value on the Subjects _hackyBeforeUnload$ & _hackyUnload$.
-    private _hackyBeforeUnload$ = new Subject<Event>();
-    private _hackyUnload$ = new Subject<Event>();
+    private hackyBeforeUnload$ = new Subject<Event>();
+    private hackyUnload$ = new Subject<Event>();
 
     private onBeforeUnload = (e: BeforeUnloadEvent): BeforeUnloadEvent => {
-        this._hackyBeforeUnload$.next(e);
+        this.hackyBeforeUnload$.next(e);
         if (typeof this.beforeUnloadCallback === 'function') {
             return this.beforeUnloadCallback(e);
         }
     }
 
     private onUnload = (e: Event): void => {
-        this._hackyUnload$.next(e);
+        this.hackyUnload$.next(e);
         this.safelyRemoveEventListener('beforeunload', this.onBeforeUnload);
         this.safelyRemoveEventListener('unload', this.onUnload);
     }
@@ -116,7 +117,7 @@ export class ManagedIFrame {
             currentUrl: this.currentUrl,
         });
 
-        this.nativeLoad$ = Observable.fromEvent(iframe, 'load').pipe(
+        this.nativeLoad$ = fromEvent(iframe, 'load').pipe(
             filter(() => this.onLoadWasInvoked === false),
             filter(() => iframe.contentWindow && iframe.contentWindow.location.toString() !== BLANK_PAGE),
             takeUntil(this.destroy$),
@@ -136,29 +137,31 @@ export class ManagedIFrame {
             this.domContentLoaded$.next(e);
         });
 
-        this.nativeLoad$.pipe(
-            merge(this.timeoutLoad$),
+        merge(
+            this.nativeLoad$,
+            this.timeoutLoad$,
+        ).pipe(
             tap(() => this.onLoadWasInvoked = true),
             map(toManagedIFrameEvent),
             takeUntil(this.destroy$),
-        ).subscribe(e => {
-            this.load$.next(e);
+        ).subscribe(event => {
+            this.load$.next(event);
         });
 
-        this.beforeUnload$ = this._hackyBeforeUnload$.pipe(
+        this.beforeUnload$ = this.hackyBeforeUnload$.pipe(
             map(toManagedIFrameEvent),
             takeUntil(this.destroy$),
             publish(),
             refCount(),
         );
 
-        this.unload$ =  Observable.merge(this.blankPageLoaded$, this._hackyUnload$).pipe(
+        this.unload$ =  merge(this.blankPageLoaded$, this.hackyUnload$).pipe(
             tap(() => logIFrameLifecycle(this, 'unload event fired')),
             filter(() => {
                 const contentWindow = this.safelyGetContentWindow();
                 return contentWindow && contentWindow.location.toString() !== BLANK_PAGE;
             }),
-            withLatestFrom(this.closing$.startWith(false)),
+            withLatestFrom(this.closing$.pipe(startWith(false))),
             tap(([e, isClosing]) => {
                 this.onLoadWasInvoked = false;
                 if (!isClosing) {
@@ -174,7 +177,9 @@ export class ManagedIFrame {
             refCount(),
         );
 
-        this.unloadCancelled$ = this.didNotUnload$.map(toManagedIFrameEvent);
+        this.unloadCancelled$ = this.didNotUnload$.pipe(
+            map(toManagedIFrameEvent),
+        );
 
         // For iframes which already have a document loaded, start the polling process.
         if (iframe.src && iframe.src !== BLANK_PAGE) {
@@ -247,9 +252,9 @@ export class ManagedIFrame {
         if (this.iframe.parentElement && this.iframe.parentElement.removeChild) {
             this.iframe.parentElement.removeChild(this.iframe);
         }
-        for (let timerId in this.timers) {
+        Object.keys(this.timers).forEach(timerId => {
             clearTimeout((this.timers as any)[timerId]);
-        }
+        });
         logIFrameLifecycle(this, 'destroyed');
     }
 
@@ -417,8 +422,8 @@ export class ManagedIFrame {
      * DOMContentLoaded event.
      */
     private injectPageId(): void {
-        let doc = this.iframe.contentWindow.document;
-        let metaTag = doc.createElement('meta');
+        const doc = this.iframe.contentWindow.document;
+        const metaTag = doc.createElement('meta');
         metaTag.setAttribute('name', ID_META_TAG_NAME);
         metaTag.setAttribute('id', `${this.currentPageId}`);
         doc.head.appendChild(metaTag);
@@ -433,7 +438,7 @@ export class ManagedIFrame {
         if (!this.lastPageId) {
             return false;
         }
-        let lastIdMetaTag = iframe.contentWindow.document
+        const lastIdMetaTag = iframe.contentWindow.document
             .querySelector(`meta[name="${ID_META_TAG_NAME}"][id="${this.lastPageId}"]`);
         return lastIdMetaTag !== null;
     }

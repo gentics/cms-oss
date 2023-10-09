@@ -48,7 +48,7 @@ import {
     Raw, RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ApiError } from '../api';
@@ -597,8 +597,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             title: 'modal.copy_item_title',
             submitLabel: 'modal.copy_item_submit',
             requiredPermissions: (selection: any, parent: Folder<Raw> | Node<Raw>, node: Node): Observable<boolean> => {
-                return this.permissions.forFolder(parent.id, node.id)
-                    .map((perms: any) => perms[itemType] ? perms[itemType].create : false);
+                return this.permissions.forFolder(parent.id, node.id).pipe(
+                    map((perms: any) => perms[itemType] ? perms[itemType].create : false),
+                );
             },
             selectMultiple: false,
         };
@@ -678,8 +679,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             title: 'modal.move_item_title',
             submitLabel: 'modal.move_item_submit',
             requiredPermissions: (selection: any, parent: Folder<Raw> | Node<Raw>, node: Node): Observable<boolean> => {
-                return this.permissions.forFolder(parent.id, node.id)
-                    .map((perms: EditorPermissions) => perms[itemType] ? perms[itemType].create : false);
+                return this.permissions.forFolder(parent.id, node.id).pipe(
+                    map((perms: EditorPermissions) => perms[itemType] ? perms[itemType].create : false),
+                );
             },
         };
 
@@ -871,7 +873,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 requests.push(this.folderActions.pushItemsToMaster((type.slice(0, -1)) as FolderItemType | any, item));
             });
         });
-        return Observable.forkJoin(requests);
+        return forkJoin(requests);
     }
 
     private pushFolderToMaster(itemType: FolderItemType, folderResponse: ChannelSyncRequest): Observable<any> {

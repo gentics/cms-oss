@@ -23,7 +23,7 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { merge, Observable, Subscription } from 'rxjs';
@@ -199,7 +199,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
      * user input.
      */
     changeSelectedItem(newSelectedItem: ItemInNode<FileOrImage<Raw>>): void {
-        let idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
+        const idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
         if (newSelectedItem) {
             (<any> this.tagProperty)[idProp] = newSelectedItem.id;
             this.tagProperty.nodeId = newSelectedItem.nodeId;
@@ -239,7 +239,15 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
      * Opens an upload modal to allow the user to upload an item.
      */
     uploadItem(): void {
-        this.modalService.fromComponent(UploadWithPropertiesModalComponent, { padding: true, width: '1000px' }, { allowFolderSelection: true, destinationFolder: this.uploadDestination, itemType: this.itemType })
+        this.modalService.fromComponent(
+            UploadWithPropertiesModalComponent,
+            { padding: true, width: '1000px' },
+            {
+                allowFolderSelection: true,
+                destinationFolder: this.uploadDestination,
+                itemType: this.itemType,
+            },
+        )
             .then(modal => modal.open())
             .then((uploadedItem: FileUpload) => {
                 if (uploadedItem) {
@@ -274,7 +282,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         if (newValue.type !== TagPropertyType.FILE && newValue.type !== TagPropertyType.IMAGE) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FileOrImageUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as FileTagPartProperty | ImageTagPartProperty;
+        this.tagProperty = newValue ;
 
         let itemId: number;
         switch (this.tagProperty.type) {
@@ -336,23 +344,23 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
 
         this.selectedItem.selectedItem$.subscribe(selectedItem => {
             if (selectedItem) {
-                const sub = this.api.folders.getItem(selectedItem.folderId, 'folder')
-                    .map(response => response.folder)
-                    .subscribe(folder => {
-                        this.uploadDestination = folder;
-                        this.changeDetector.markForCheck();
-                    });
+                const sub = this.api.folders.getItem(selectedItem.folderId, 'folder').pipe(
+                    map(response => response.folder),
+                ).subscribe(folder => {
+                    this.uploadDestination = folder;
+                    this.changeDetector.markForCheck();
+                });
                 this.subscriptions.add(sub);
             } else if (folderObj) {
                 this.uploadDestination = folderObj;
                 this.changeDetector.markForCheck();
             } else {
-                const sub = this.api.folders.getItem(folderId, 'folder')
-                    .map(response => response.folder)
-                    .subscribe(folder => {
-                        this.uploadDestination = folder;
-                        this.changeDetector.markForCheck();
-                    });
+                const sub = this.api.folders.getItem(folderId, 'folder').pipe(
+                    map(response => response.folder),
+                ).subscribe(folder => {
+                    this.uploadDestination = folder;
+                    this.changeDetector.markForCheck();
+                });
                 this.subscriptions.add(sub);
             }
         });

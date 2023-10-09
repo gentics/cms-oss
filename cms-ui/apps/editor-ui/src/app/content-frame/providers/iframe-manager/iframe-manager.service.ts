@@ -7,10 +7,10 @@ import { EditorState } from '@editor-ui/app/common/models';
 import { isSameOrigin } from '../../../common/utils/is-same-origin';
 import { ResourceUrlBuilder } from '../../../core/providers/resource-url-builder/resource-url-builder';
 import { ApplicationStateService } from '../../../state';
-import { BLANK_PAGE, BLANK_PROPERTIES_PAGE, DYNAMIC_FRAME } from '../../components/content-frame/common';
-import { ContentFrame } from '../../components/content-frame/content-frame.component';
-import { IFrameCollectionService } from './iframe-collection.service';
-import { ManagedIFrameCollection } from './managed-iframe-collection.class';
+import { BLANK_PAGE, BLANK_PROPERTIES_PAGE, DYNAMIC_FRAME } from '../../models/content-frame';
+import { ContentFrameComponent } from '../../components/content-frame/content-frame.component';
+import { IFrameCollectionService } from '../iframe-collection/iframe-collection.service';
+import { ManagedIFrameCollection } from '../../models/managed-iframe-collection';
 
 /**
  * If an iframe's dataset contains a property with this name that is set to 'true',
@@ -106,7 +106,7 @@ export class IFrameManager {
     // to brute-force them to stop once this component has been destroyed.
     private componentWasDestroyed = false;
     private dispatchCloseActionOnUnload = false;
-    private hostComponent: ContentFrame;
+    private hostComponent: ContentFrameComponent;
     private masterFrameClosedCallback: Function;
     private urlSubscription: Subscription;
 
@@ -116,7 +116,7 @@ export class IFrameManager {
         private iframeCollectionService: IFrameCollectionService,
     ) {}
 
-    public initialize(masterFrameElement: HTMLIFrameElement, hostComponent: ContentFrame): void {
+    public initialize(masterFrameElement: HTMLIFrameElement, hostComponent: ContentFrameComponent): void {
         this.addRequiredGlobalObjects();
         this.collection = this.iframeCollectionService.create(masterFrameElement);
         this.subscribeToCollection(this.collection);

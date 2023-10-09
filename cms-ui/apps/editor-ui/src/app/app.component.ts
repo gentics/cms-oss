@@ -15,6 +15,7 @@ import { ModalService } from '@gentics/ui-core';
 import { isEqual } from'lodash-es'
 import {
     BehaviorSubject,
+    NEVER,
     Observable,
     Subject,
     combineLatest,
@@ -353,14 +354,11 @@ export class AppComponent implements OnInit {
     pollAlertCenter(): void {
         // Load Alert Center after login and then every 15 minutes
         this.appState.select(state => state.auth).pipe(
-            switchMap(state => state.isLoggedIn ?
-                timer(0, 15 * 60 * 1000) : Observable.never(),
-            ),
-        )
-            .subscribe(() => {
-                // Load Alert Center alerts
-                this.uiActions.getAlerts();
-            });
+            switchMap(state => state.isLoggedIn ? timer(0, 15 * 60 * 1000) : NEVER),
+        ).subscribe(() => {
+            // Load Alert Center alerts
+            this.uiActions.getAlerts();
+        });
     }
 
     logoClick(): void {

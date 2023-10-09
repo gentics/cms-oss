@@ -10,10 +10,11 @@ export * from './actions';
 export * from './chip-search';
 export * from './events';
 export * from './list';
+export * from './message';
 export * from './page';
+export * from './page-controls';
 export * from './repository-browser';
 export * from './staging';
-export * from './message';
 
 // State models
 export * from './auth-state';

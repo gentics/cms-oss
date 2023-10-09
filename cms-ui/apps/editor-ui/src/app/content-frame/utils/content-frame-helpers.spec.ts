@@ -1,20 +1,20 @@
-import {appendTypeIdToUrl} from './common';
+import { appendTypeIdToUrl } from './content-frame-helpers';
 
 describe('ContentFrame common functions', () => {
 
     describe('appendTypeIdToUrl()', () => {
 
-        let unaffectedUrl = '/.Node/?sid=15674&time=1477301498&errchk=true&edit_id=440';
-        let affectedUrl = unaffectedUrl + '&do=10010';
+        const unaffectedUrl = '/.Node/?sid=15674&time=1477301498&errchk=true&edit_id=440';
+        const affectedUrl = unaffectedUrl + '&do=10010';
 
         it('does not modify urls without the correct "do" code', () => {
-            let mockPage: any = { id: 1, type: 'page' };
-            let result = appendTypeIdToUrl(mockPage, unaffectedUrl);
+            const mockPage: any = { id: 1, type: 'page' };
+            const result = appendTypeIdToUrl(mockPage, unaffectedUrl);
             expect(result).toEqual(unaffectedUrl);
         });
 
         it('handles unexpected input', () => {
-            let mockPage: any = { id: 1, type: 'page' };
+            const mockPage: any = { id: 1, type: 'page' };
 
             expect(appendTypeIdToUrl(mockPage, <any> undefined)).toBeUndefined('undefined');
             expect(appendTypeIdToUrl(mockPage, <any> null)).toBeNull('null');

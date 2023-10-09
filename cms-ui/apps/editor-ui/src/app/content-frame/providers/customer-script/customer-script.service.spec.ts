@@ -11,12 +11,12 @@ import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-ap
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { CNParentWindow, CNWindow } from '../../components/content-frame/common';
+import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
-import { CustomerScriptService } from './customer-script.service';
+import { CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
+import { CustomerScriptService } from './customer-script.service';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -355,7 +355,7 @@ describe('CustomerScriptService', () => {
 
 class MockHttpClient {
     get(): any {
-        return Observable.of(mockCustomerScript);
+        return of(mockCustomerScript);
     }
 }
 

@@ -3,6 +3,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CloseToolAction, OpenToolAction, SetUIOverridesAction } from '@editor-ui/app/state';
 import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { CUSTOMER_CONFIG_PATH } from '../../../common/config/config';
 import { ApplicationStateService } from '../../../state';
 import { UIOverrideParameters, UIOverrides, UIToolOverride } from './ui-overrides.model';
@@ -25,18 +26,18 @@ export class UIOverridesService implements OnDestroy {
     loadCustomerConfiguration(): void {
         const uiOverridesPath = `${CUSTOMER_CONFIG_PATH}config/ui-overrides.json?t=${Date.now()}`;
 
-        this.http.get(uiOverridesPath, { responseType: 'text' })
-            .filter(text => !!text)
-            .subscribe(jsonResponse => {
-                try {
-                    const uiOverrides = JSON.parse(jsonResponse);
-                    this.state.dispatch(new SetUIOverridesAction(uiOverrides));
-                } catch (err) {
-                    console.error('Invalid JSON in ui-overrides.json!');
-                }
-            }, () => {
-                this.state.dispatch(new SetUIOverridesAction({}));
-            });
+        this.http.get(uiOverridesPath, { responseType: 'text' }).pipe(
+            filter(text => !!text),
+        ).subscribe(jsonResponse => {
+            try {
+                const uiOverrides = JSON.parse(jsonResponse);
+                this.state.dispatch(new SetUIOverridesAction(uiOverrides));
+            } catch (err) {
+                console.error('Invalid JSON in ui-overrides.json!');
+            }
+        }, () => {
+            this.state.dispatch(new SetUIOverridesAction({}));
+        });
     }
 
     runOverride(slotName: keyof UIOverrides, params: UIOverrideParameters = {}): void {

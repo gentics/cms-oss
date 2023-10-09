@@ -1,22 +1,22 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import {
     EditableTag,
-    FormgeneratorListResponse,
     FormTagPartProperty,
+    FormgeneratorListResponse,
     GtxFormWithUuid,
     TagEditorContext,
     TagEditorError,
     TagPart,
-    TagPropertiesChangedFn,
     TagPartProperty,
+    TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
     ValidationResult,
 } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
-import { Observable, Subject } from 'rxjs';
-import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { isEqual } from 'lodash-es';
+import { Observable, Subject, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { FormgeneratorApiService } from '../../../providers/formgenerator-api/formgenerator-api.service';
 
 /**
@@ -72,8 +72,8 @@ export class FormlistTagPropertyEditor implements TagPropertyEditor, OnDestroy, 
             this.forms = forms;
         });
 
-        const debouncer = this.inputChange.debounceTime(100);
-        const blurOrDebouncedChange = Observable.merge(this.blur, debouncer).pipe(
+        const debouncer = this.inputChange.pipe(debounceTime(100));
+        const blurOrDebouncedChange = merge(this.blur, debouncer).pipe(
             distinctUntilChanged(isEqual),
         );
         blurOrDebouncedChange.pipe(

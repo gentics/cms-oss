@@ -4,6 +4,7 @@ import { SendMessageForm } from '@editor-ui/app/common/models';
 import { Group, SendMessageRequest, User } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Api } from '../../../core/providers/api/api.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 
@@ -27,8 +28,12 @@ export class SendMessageModal extends BaseModal<any> implements OnInit {
     }
 
     ngOnInit(): void {
-        this.users$ = this.api.user.getUsers().map(response => response.items);
-        this.groups$ = this.api.group.getGroupsTree().map(response => response.groups);
+        this.users$ = this.api.user.getUsers().pipe(
+            map(response => response.items),
+        );
+        this.groups$ = this.api.group.getGroupsTree().pipe(
+            map(response => response.groups),
+        );
         this.form = new UntypedFormControl({});
     }
 

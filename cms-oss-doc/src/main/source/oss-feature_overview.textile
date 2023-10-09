@@ -509,4 +509,6 @@ feature:
 	webp_conversion: true
 </shell>
 
+NOTE: Publishing WebP images to a "Mesh ContentRepository":https://www.gentics.com/Content.Node/cmp8/guides/oss-feature_overview.html#mesh-contentrepository, requires a version of Mesh that also supports WebP for "image manipulation":https://getmesh.io/docs/image-manipulation/.
+
 When active the CMS will automatically convert uploaded images to WebP format for nodes which have the feature enabled. Only newly uploaded images will be converted automatically. The internal "image conversion":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#convertimages scheduler job is available to convert images that were uploaded when the feature was not active.

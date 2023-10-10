@@ -1,11 +1,40 @@
-<div class="gtx-entity-master gtx-entity-master-with-common-actions">
-    <gtx-mesh-browser-repository-table
-        class="entity-table"
-        [showSearch]="true"
-        [linkDetails]="true"
-        [selectable]="false"
-        [hideActions]=""
-        [activeEntity]="activeEntity"
-        (rowClick)="handleRowClick($event)"
-    ></gtx-mesh-browser-repository-table>
+<div class="gtx-entity-master">
+
+    <ng-container *ngIf="!repository; else displayMeshContent">
+        <gtx-mesh-browser-repository-table
+            class="entity-table"
+            [showSearch]="true"
+            [linkDetails]="true"
+            [selectable]="false"
+            [hideActions]=""
+            [activeEntity]="activeEntity"
+            (rowClick)="handleRowClick($event)"
+        ></gtx-mesh-browser-repository-table>
+    </ng-container>
+    
+    <ng-template #displayMeshContent>
+
+        <div class="overview-header">
+            <gtx-button
+                class="back-button"
+                flat
+                size="small"
+                (click)="navigateBack()"
+            >
+                <icon left>arrow_back</icon> Back
+            </gtx-button>
+
+            <div class="overview-title">Mesh Repositories</div>
+        </div>
+
+        <gtx-mesh-login-gate
+            [repository]="repository"
+            [loggedIn]="loggedIn"
+            (loggedInChange)="handleMeshLogin($event)"
+        >
+            <h1>Mesh Browser for "{{ repository.name }}</h1>
+
+        </gtx-mesh-login-gate>
+
+    </ng-template>
 </div>

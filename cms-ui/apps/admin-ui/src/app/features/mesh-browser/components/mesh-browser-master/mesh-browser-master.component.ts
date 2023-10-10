@@ -1,30 +1,40 @@
 import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, ContentRepositoryBO, EditableEntity } from '@admin-ui/common';
+import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService } from '@admin-ui/core';
+import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
-import { ModalService, TableRow } from '@gentics/ui-core';
-import { MeshBrowserContentRepositoryTableLoaderService } from '../../providers/mesh-browser-repository-table-loader.service';
+import { User } from '@gentics/mesh-models';
+import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
+import { TableRow } from '@gentics/ui-core';
+
+
+const MESH_ID_PARAM = 'meshId';
 
 @Component({
     selector: 'gtx-mesh-browser-master',
     templateUrl: './mesh-browser-master.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> {
+export class MeshBrowserMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit {
 
-    protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
-    protected detailPath = AdminUIEntityDetailRoutes.CONTENT_REPOSITORY;
+    protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY; // todo: check me
+    protected detailPath = AdminUIEntityDetailRoutes.MESH_BROWSER;
 
+    public repository: ContentRepository;
+    public me: User;
+    public meName: string;
+    public loggedIn = false;
 
     constructor(
         changeDetector: ChangeDetectorRef,
         router: Router,
         route: ActivatedRoute,
         appState: AppStateService,
-        protected modalService: ModalService,
-        protected loader: MeshBrowserContentRepositoryTableLoaderService,
+        protected handler: ContentRepositoryHandlerService,
+        protected mesh: MeshRestClientService,
     ) {
         super(
             changeDetector,
@@ -34,8 +44,36 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         );
     }
 
-    public handleRowClick(row: TableRow<ContentRepositoryBO>): void {
-        // todo: check auth / perform login
+    public ngOnInit(): void {
+        super.ngOnInit();
+    }
+
+    public async handleRowClick(row: TableRow<ContentRepositoryBO>): Promise<void> {
+        const response = await this.handler.get(row.item.id).toPromise()
+        this.repository = response.contentRepository;
+        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, { [MESH_ID_PARAM]: row.item.id }], { relativeTo: this.route });
+    }
+
+    public navigateBack(): void {
+        this.repository = null;
+        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], { relativeTo: this.route });
+    }
+
+    public handleMeshLogin(event: { loggedIn: boolean, user?: User }): void {
+        this.loggedIn = event.loggedIn;
+
+        if (event.loggedIn) {
+            if (event.user) {
+                this.me = event.user;
+                this.meName = getUserDisplayName(this.me);
+            } else {
+                this.mesh.auth.me().then(res => {
+                    this.me = res;
+                    this.meName = getUserDisplayName(this.me);
+                    this.changeDetector.markForCheck();
+                });
+            }
+        }
     }
 
 }

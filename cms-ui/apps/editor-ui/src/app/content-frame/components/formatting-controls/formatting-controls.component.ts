@@ -43,7 +43,7 @@ export class FormattingControlsComponent extends BaseControlsComponent implement
         super(changeDetector);
     }
 
-    public ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.aloha) {

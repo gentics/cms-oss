@@ -3,7 +3,7 @@
         class="format-button off-icon active-indicator-button"
         [class.active]="active"
         [title]="(active ? 'editor.format_link_remove' : 'editor.format_link_insert') | i18n"
-        [disabled]="!active && !allowed"
+        [disabled]="disabled || (!active && !allowed)"
         (click)="toggleActive()"
     >
         <icon data-icon-on="link" data-icon-off="link_off"></icon>
@@ -18,6 +18,7 @@
                 [title]="'editor.format_link_target' | i18n"
                 [readonly]="isTargetObject"
                 [value]="!isTargetObject ? targetUrl : (loadingObject ? ('editor.format_link_target_loading' | i18n) : targetObject?.name)"
+                [disabled]="disabled"
                 (change)="updateLinkTarget($event)"
             ></gtx-input>
 
@@ -33,6 +34,7 @@
         <button
             class="format-button"
             [title]="'editor.format_link_pick_cms_target' | i18n"
+            [disabled]="disabled"
             (click)="selectLinkTarget()"
         >
             <icon>pan_tool_alt</icon>
@@ -43,6 +45,7 @@
                 class="format-button no-hover"
                 [ngClass]="'link-checker-icon link-checker-' + linkChecker.status"
                 [title]="('editor.format_link_checker_' + linkChecker.status) | i18n"
+                [disabled]="disabled"
             >
                 <icon>{{ (linkChecker.status === LinkCheckerStatus.LOADING ? 'hourglass_top'
                     : (linkChecker.status === LinkCheckerStatus.VALID ? 'check' : 'close')) }}</icon>
@@ -51,7 +54,11 @@
 
         <gtx-dropdown-list [belowTrigger]="true" [sticky]="true">
             <gtx-dropdown-trigger>
-                <button class="format-button" [title]="'editor.format_link_additional_options' | i18n">
+                <button
+                    class="format-button"
+                    [title]="'editor.format_link_additional_options' | i18n"
+                    [disabled]="disabled"
+                >
                     <icon>more_vert</icon>
                 </button>
             </gtx-dropdown-trigger>
@@ -62,6 +69,7 @@
                         class="format-input"
                         [label]="'editor.format_link_anchor' | i18n"
                         [value]="anchor"
+                        [disabled]="disabled"
                         (change)="updateAnchorValue($event)"
                     ></gtx-input>
 
@@ -69,6 +77,7 @@
                         class="format-input"
                         [label]="'editor.format_link_title' | i18n"
                         [value]="title"
+                        [disabled]="disabled"
                         (change)="updateTitleValue($event)"
                     ></gtx-input>
 
@@ -76,6 +85,7 @@
                         class="format-input"
                         [label]="'editor.format_link_language' | i18n"
                         [value]="language"
+                        [disabled]="disabled"
                         (change)="updateLanguageValue($event)"
                     ></gtx-input>
                 </div>
@@ -87,6 +97,7 @@
             icon="open_in_new"
             [selected]="newTab"
             [title]="'editor.format_link_new_tab' | i18n"
+            [disabled]="disabled"
             (change)="setLinkNewTab($event)"
         ></icon-checkbox>
     </ng-container>
@@ -112,7 +123,11 @@
             <div class="broken-links-wrapper">
                 <div *ngFor="let link of linkChecker.links" class="broken-link-item">
                     <span class="broken-link-text">{{ link.text }}</span>
-                    <a href="#" class="broken-link" (click)="focusLink(link, $event)">{{ link.url }}</a>
+                    <a
+                        href="#"
+                        class="broken-link"
+                        (click)="focusLink(link, $event)"
+                    >{{ link.url }}</a>
                 </div>
             </div>
         </gtx-dropdown-content>

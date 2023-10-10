@@ -27,6 +27,7 @@ export interface EditSettings {
     nodeId: number,
     openTab?: EditorTab,
     openPropertiesTab?: PropertiesTab,
+    focusMode?: boolean;
 }
 
 export const EDITOR_STATE_KEY: keyof AppState = 'editor';

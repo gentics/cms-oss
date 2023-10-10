@@ -25,6 +25,10 @@ export class TabComponent {
     @Input()
     public disabled: boolean;
 
+    @Input()
+    @HostBinding('class.hidden')
+    public hidden: boolean;
+
     /**
      * When the tab is clicked, this event is fired with the tab id.
      */

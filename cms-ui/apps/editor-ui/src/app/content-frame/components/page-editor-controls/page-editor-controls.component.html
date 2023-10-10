@@ -1,29 +1,26 @@
-<gtx-tabs class="page-control-tabs" pure [activeId]="activeTab">
-    <gtx-tab
-        icon="border_color"
-        [title]="'editor.page_controls_tab_formatting' | i18n"
-        [id]="DefaultEditorControlTabs.FORMATTING"
-        (select)="setActiveTab($event)"
-    >
-        <gtx-formatting-controls
-            [aloha]="alohaRef"
-            [settings]="alohaSettings"
-            [range]="alohaRange"
-        ></gtx-formatting-controls>
-    </gtx-tab>
+<ng-container [ngSwitch]="activeTab">
+    <gtx-formatting-controls
+        *ngSwitchCase="DefaultEditorControlTabs.FORMATTING"
+        [aloha]="alohaRef"
+        [settings]="alohaSettings"
+        [range]="alohaRange"
+        [disabled]="overlayActive"
+    ></gtx-formatting-controls>
 
-    <gtx-tab
-        icon="web"
-        [title]="'editor.page_controls_tab_constructs' | i18n"
-        [id]="DefaultEditorControlTabs.CONSTRUCTS"
-        (select)="setActiveTab($event)"
-    >
-        <gtx-construct-controls
-            [aloha]="alohaRef"
-            [settings]="alohaSettings"
-            [range]="alohaRange"
-            [constructs]="constructs"
-            [categories]="constructCategories"
-        ></gtx-construct-controls>
-    </gtx-tab>
-</gtx-tabs>
+    <gtx-construct-controls
+        *ngSwitchCase="DefaultEditorControlTabs.CONSTRUCTS"
+        [aloha]="alohaRef"
+        [settings]="alohaSettings"
+        [range]="alohaRange"
+        [constructs]="constructs"
+        [categories]="constructCategories"
+        [disabled]="overlayActive"
+    ></gtx-construct-controls>
+
+    <ng-container *ngSwitchDefault>
+        <gtx-custom-editor-control
+            [editorUrl]="editors[activeTab]?.editorUrl"
+            [disabled]="overlayActive"
+        ></gtx-custom-editor-control>
+    </ng-container>
+</ng-container>

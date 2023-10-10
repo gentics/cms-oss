@@ -82,6 +82,7 @@ export class EditorActionsService {
             itemId: id,
             nodeId: nodeId,
             itemType: 'page',
+            focusMode: true,
         }));
         this.appState.dispatch(new LockItemAction('page', id, EditMode.EDIT));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());
@@ -96,6 +97,7 @@ export class EditorActionsService {
             itemId: id,
             nodeId: nodeId,
             itemType: 'form',
+            focusMode: true,
         }));
         this.appState.dispatch(new LockItemAction('form', id, EditMode.EDIT));
         this.appState.dispatch(new AddEditedEntityToRecentItemsAction());

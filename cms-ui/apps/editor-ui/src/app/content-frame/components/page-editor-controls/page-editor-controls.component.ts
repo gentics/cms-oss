@@ -1,17 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { DefaultEditorControlTabs, PageEditorTab } from '@editor-ui/app/common/models';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { ConstructCategory, TagType } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Subscription } from 'rxjs';
+import { AlohaGlobal } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
-import { AlohaGlobal } from '../content-frame/common';
-
-enum DefaultEditorControlTabs {
-    FORMATTING = 'formatting',
-    CONSTRUCTS = 'constructs',
-    LINK_SETTINGS = 'link-settings',
-    TABLE_SETTINGS = 'table-settings',
-}
 
 @Component({
     selector: 'gtx-page-editor-controls',
@@ -23,13 +18,15 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
     public readonly DefaultEditorControlTabs = DefaultEditorControlTabs;
 
-    public activeTab: DefaultEditorControlTabs | string = DefaultEditorControlTabs.FORMATTING;
+    public activeTab: string;
+    public editors: Record<string, PageEditorTab> = {};
 
     /*
      * Editor Elements which are handled/loaded in this component
      */
     public constructs: TagType[] = [];
     public constructCategories: ConstructCategory[] = [];
+    public overlayActive = false;
 
     /*
      * Aloha data for the individual tabs
@@ -42,11 +39,15 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected appState: ApplicationStateService,
         protected api: GcmsApi,
         protected aloha: AlohaIntegrationService,
     ) {}
 
     ngOnInit(): void {
+        this.editors = this.aloha.editors;
+        this.activeTab = this.aloha.activeEditor;
+
         this.subscriptions.push(this.api.tagType.getTagTypes().subscribe(res => {
             this.constructs = res.items;
             this.changeDetector.markForCheck();
@@ -60,7 +61,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         this.subscriptions.push(this.aloha.reference$.asObservable().subscribe(ref => {
             this.alohaRef = ref;
             this.changeDetector.markForCheck();
-        }))
+        }));
 
         this.subscriptions.push(this.aloha.contextChange$.asObservable().subscribe(range => {
             this.alohaRange = range;
@@ -71,18 +72,24 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.alohaSettings = settings;
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.aloha.activeEditor$.subscribe(active => {
+            this.activeTab = active;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.aloha.editorsChange$.subscribe(() => {
+            this.editors = this.aloha.editors;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.ui.overlayCount).subscribe(count => {
+            this.overlayActive = count > 0;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
-    }
-
-    public setActiveTab(tab: DefaultEditorControlTabs | string | Event): void {
-        // This handles the "select" event, which is also triggered by the browser events when ... selecting things.
-        // Preventing these browser events from actually changing/breaking the tabs is important here.
-        if (tab == null || tab instanceof Event) {
-            return;
-        }
-        this.activeTab = tab;
     }
 }

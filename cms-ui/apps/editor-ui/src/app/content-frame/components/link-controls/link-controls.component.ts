@@ -134,8 +134,6 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     protected internalRefLoader: Subscription | null;
     /** Subscription for the link-checker loading. */
     protected checkLoader: Subscription | null;
-    /** Other misc subscriptions for cleanup */
-    protected subscriptions: Subscription[] = [];
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -214,13 +212,13 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
         }
     }
 
-    public ngOnDestroy(): void {
+    public override ngOnDestroy(): void {
         this.clearLinkLoader();
         if (this.checkLoader) {
             this.checkLoader.unsubscribe();
             this.checkLoader = null;
         }
-        this.subscriptions.forEach(s => s.unsubscribe());
+        super.ngOnDestroy();
     }
 
     public toggleActive(): void {
@@ -312,7 +310,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
     public focusLink(link: ExternalLink, event?: MouseEvent): void {
         cancelEvent(event);
 
-        if (!this.aloha || !this.alohaDom) {
+        if (this.disabled || !this.aloha || !this.alohaDom) {
             return;
         }
 

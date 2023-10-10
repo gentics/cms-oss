@@ -82,7 +82,7 @@
                 class="format-button construct"
                 [attr.data-keyword]="construct.keyword"
                 [attr.data-id]="construct.id"
-                [disabled]="!active"
+                [disabled]="disabled || !active"
                 (click)="insertConstructIntoPage(construct)"
             >
                 <div class="construct-icon">

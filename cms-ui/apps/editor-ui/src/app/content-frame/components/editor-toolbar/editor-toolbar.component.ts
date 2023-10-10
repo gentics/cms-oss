@@ -239,7 +239,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
 
     setFocusMode(enabled: boolean): void {
         this.appState.dispatch(new SetFocusModeAction(enabled));
-        this.userSettings.setFocusMode(enabled);
     }
 
     approve(): void {

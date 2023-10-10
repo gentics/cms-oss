@@ -14,7 +14,7 @@
                 class="format-button off-icon"
                 [class.active]="active"
                 [title]="(active ? 'editor.format_table_delete' : 'editor.format_table_insert') | i18n"
-                [disabled]="!active && !allowed"
+                [disabled]="disabled || (!active && !allowed)"
                 (click)="toggleActive()"
             >
                 <icon data-icon-on="table"></icon>
@@ -37,6 +37,7 @@
             class="format-button table-action-button off-icon"
             [class.active]="captionElement != null"
             [title]="(captionElement != null ? 'editor.format_table_caption_delete' : 'editor.format_table_caption_insert') | i18n"
+            [disabled]="disabled"
             (click)="toggleCaption()"
         >
             <icon data-icon-on="title"></icon>
@@ -55,6 +56,7 @@
                         class="format-input"
                         [label]="'editor.format_table_summary' | i18n"
                         [value]="summaryValue"
+                        [disabled]="disabled"
                         (change)="updateSummary($event)"
                     ></gtx-input>
                 </div>
@@ -67,7 +69,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_merge_cell' | i18n"
-                [disabled]="!canMergeCells"
+                [disabled]="disabled || !canMergeCells"
                 (click)="mergeCells()"
             >
                 <icon>cell_merge</icon>
@@ -76,7 +78,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_split_cell' | i18n"
-                [disabled]="!canSplitCells"
+                [disabled]="disabled || !canSplitCells"
                 (click)="splitCells()"
             >
                 <icon>arrows_outward</icon>
@@ -89,6 +91,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_column_left' | i18n"
+                [disabled]="disabled"
                 (click)="addColumnLeft()"
             >
                 <icon class="hollow">splitscreen_left</icon>
@@ -97,6 +100,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_column_right' | i18n"
+                [disabled]="disabled"
                 (click)="addColumnRight()"
             >
                 <icon class="hollow">splitscreen_right</icon>
@@ -106,6 +110,7 @@
                 class="format-button table-action-button off-icon"
                 [class.active]="isHeader"
                 [title]="(isHeader ? 'editor.format_table_format_remove_header' : 'editor.format_table_format_as_header') | i18n"
+                [disabled]="disabled"
                 (click)="toggleSelectionAsHeader('col')"
             >
                 <icon data-icon-on="leaderboard"></icon>
@@ -114,6 +119,7 @@
             <button
                 class="format-button table-action-button delete-button"
                 [title]="'editor.format_table_remove_column' | i18n"
+                [disabled]="disabled"
                 (click)="deleteCurrentColumns()"
             >
                 <icon>delete</icon>
@@ -126,6 +132,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_row_above' | i18n"
+                [disabled]="disabled"
                 (click)="addRowAbove()"
             >
                 <icon class="hollow">splitscreen_top</icon>
@@ -134,6 +141,7 @@
             <button
                 class="format-button table-action-button"
                 [title]="'editor.format_table_add_row_below' | i18n"
+                [disabled]="disabled"
                 (click)="addRowBelow()"
             >
                 <icon class="hollow">splitscreen_bottom</icon>
@@ -143,6 +151,7 @@
                 class="format-button table-action-button off-icon"
                 [class.active]="isHeader"
                 [title]="(isHeader ? 'editor.format_table_format_remove_header' : 'editor.format_table_format_as_header') | i18n"
+                [disabled]="disabled"
                 (click)="toggleSelectionAsHeader('row')"
             >
                 <icon data-icon-on="leaderboard"></icon>
@@ -151,6 +160,7 @@
             <button
                 class="format-button table-action-button delete-button"
                 [title]="'editor.format_table_remove_row' | i18n"
+                [disabled]="disabled"
                 (click)="deleteCurrentRows()"
             >
                 <icon>delete</icon>

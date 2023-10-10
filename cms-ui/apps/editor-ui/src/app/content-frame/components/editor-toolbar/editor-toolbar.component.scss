@@ -22,7 +22,20 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-        margin-bottom: 1rem;
+
+        &.regular {
+            padding: 1rem;
+        }
+    }
+
+    .page-editor-tabs {
+        flex: 1 1 auto;
+        align-self: center;
+    }
+
+    .page-editor-controls {
+        height: 7rem;
+        border-top: 1px solid $gtx-color-very-light-gray;
     }
 
     .breadcrumb-info {

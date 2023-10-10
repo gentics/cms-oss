@@ -4,7 +4,7 @@
         class="format-button off-icon"
         [title]="('editor.format_' + command + (active ? (command === activeCommand ? '_remove' : '_convert_to') : '_insert')) | i18n"
         [class.active]="command === activeCommand"
-        [disabled]="command !== activeCommand && !(availableCommands | gtxIncludes:command)"
+        [disabled]="disabled || (command !== activeCommand && !(availableCommands | gtxIncludes:command))"
         (click)="toggleFormat(command)"
     >
         <icon [attr.data-icon-on]="command | gtxCommandToPipe" [attr.data-icon-off]="command | gtxCommandToPipe:'off':true"></icon>

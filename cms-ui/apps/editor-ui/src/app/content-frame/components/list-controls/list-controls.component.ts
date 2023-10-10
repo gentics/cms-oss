@@ -31,7 +31,7 @@ export class ListControlsComponent extends BaseControlsComponent implements OnCh
     /** Instance of the list plugin. */
     public listPlugin: AlohaListPlugin;
 
-    ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
 
         if (changes.aloha) {

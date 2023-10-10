@@ -1,9 +1,10 @@
 import { ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaContentRules, AlohaPubSub, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { BaseComponent } from '@gentics/ui-core';
 import { AlohaGlobal } from '../../models/content-frame';
 
 @Component({ template: '' })
-export abstract class BaseControlsComponent implements OnChanges {
+export abstract class BaseControlsComponent extends BaseComponent implements OnChanges {
 
     @Input()
     public aloha: AlohaGlobal;
@@ -18,10 +19,14 @@ export abstract class BaseControlsComponent implements OnChanges {
     protected contentRules: AlohaContentRules;
 
     constructor(
-        protected changeDetector: ChangeDetectorRef,
-    ) {}
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
 
-    public ngOnChanges(changes: SimpleChanges): void {
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
         if (changes.aloha) {
             this.contentRules = this.safeRequire('aloha/content-rules');
             this.pubSub = this.safeRequire('PubSub');

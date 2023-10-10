@@ -3,7 +3,7 @@ import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { ApplicationStateService, FolderActionsService } from '@editor-ui/app/state';
 import { EditMode, Node, Page, Raw } from '@gentics/cms-models';
 import { defer, iif, of } from 'rxjs';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { catchError, mergeMap, take, tap } from 'rxjs/operators';
 import { ErrorHandler } from '../error-handler/error-handler.service';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';

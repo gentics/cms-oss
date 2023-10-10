@@ -150,7 +150,7 @@ export class EditorStateModule {
      */
     @ActionDefinition(EditItemAction)
     handleEditItemAction(ctx: StateContext<EditorState>, action: EditItemAction): void {
-        ctx.patchState({
+        ctx.setState(patch({
             // Static changes
             contentModified: false,
             editorIsOpen: true,
@@ -167,7 +167,9 @@ export class EditorStateModule {
             nodeId: action.settings.nodeId,
             openTab: action.settings.openTab,
             openPropertiesTab: action.settings.openPropertiesTab,
-        });
+            // Only set the focus-mode, if provided.
+            focusMode: iif(typeof action.settings.focusMode === 'boolean', action.settings.focusMode),
+        }));
     }
 
     @ActionDefinition(FocusEditorAction)

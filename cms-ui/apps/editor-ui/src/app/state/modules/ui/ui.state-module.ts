@@ -6,6 +6,9 @@ import { Alert, Alerts, UIMode, UIState } from '../../../common/models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
 import {
     BreadcrumbLocation,
+    DecreaseOverlayCountAction,
+    IncreaseOverlayCountAction,
+    ResetOverlayCountAction,
     SetAvailableUILanguageAction,
     SetBackendLanguageAction,
     SetBreadcrumbExpandedAction,
@@ -37,6 +40,7 @@ const INITIAL_UI_STATE: UIState = {
         key: undefined,
     },
     hideExtras: false,
+    overlayCount: 0,
 };
 
 @AppStateBranch<UIState>({
@@ -141,6 +145,27 @@ export class UIStateModule {
     handleSetUIModeAction(ctx: StateContext<UIState>, action: SetUIModeAction): void {
         ctx.patchState({
             mode: action.mode,
+        });
+    }
+
+    @ActionDefinition(IncreaseOverlayCountAction)
+    handleIncreaseOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: ctx.getState().overlayCount + 1,
+        });
+    }
+
+    @ActionDefinition(DecreaseOverlayCountAction)
+    handleDecreaseOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: Math.max(0, ctx.getState().overlayCount - 1),
+        });
+    }
+
+    @ActionDefinition(ResetOverlayCountAction)
+    handleResetOverlayCountAction(ctx: StateContext<UIState>): void {
+        ctx.patchState({
+            overlayCount: 0,
         });
     }
 }

@@ -7,7 +7,7 @@
                     class="format-button"
                     [title]="'editor.format_style_' + command | i18n"
                     [class.active]="activeFormats | gtxIncludes:command"
-                    [disabled]="!(activeFormats | gtxIncludes:command) && !(allowedFormats | gtxIncludes:command)"
+                    [disabled]="disabled || !(activeFormats | gtxIncludes:command) && !(allowedFormats | gtxIncludes:command)"
                     (click)="toggleFormat(command)"
                 >
                     <icon>{{ command | gtxCommandToPipe }}</icon>
@@ -19,7 +19,7 @@
                     *ngFor="let command of SPECIAL_STYLE_COMMANDS"
                     class="format-button"
                     [title]="'editor.format_style_' + command | i18n"
-                    [disabled]="!(allowedFormats | gtxIncludes:command)"
+                    [disabled]="disabled || !(allowedFormats | gtxIncludes:command)"
                     (click)="toggleFormat(command)"
                 >
                     <icon>{{ command | gtxCommandToPipe }}</icon>
@@ -30,14 +30,16 @@
                 [aloha]="aloha"
                 [range]="range"
                 [settings]="settings"
+                [disabled]="disabled"
             ></gtx-list-controls>
         </div>
 
-        <div class="format-row">
+        <div class="format-row second-row">
             <gtx-link-controls
                 [aloha]="aloha"
                 [range]="range"
                 [settings]="settings"
+                [disabled]="disabled"
                 (activeChange)="setLinkActive($event)"
             ></gtx-link-controls>
 
@@ -45,6 +47,7 @@
                 [aloha]="aloha"
                 [range]="range"
                 [settings]="settings"
+                [disabled]="disabled"
             ></gtx-table-controls>
         </div>
     </div>
@@ -56,7 +59,7 @@
                     class="typography-button"
                     [title]="'editor.format_typography_' + command | i18n"
                     [class.active]="activeFormats | gtxIncludes:command"
-                    [disabled]="!(activeFormats | gtxIncludes:command) && !(allowedFormats | gtxIncludes:command)"
+                    [disabled]="disabled || !(activeFormats | gtxIncludes:command) && !(allowedFormats | gtxIncludes:command)"
                     (click)="toggleFormat(command)"
                 >
                     <div class="typography-icon">

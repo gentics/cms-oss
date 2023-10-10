@@ -88,3 +88,12 @@ export class SetUIModeAction {
         public mode: UIMode,
     ) {}
 }
+
+@ActionDeclaration(UI_STATE_KEY)
+export class IncreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class DecreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class ResetOverlayCountAction {}

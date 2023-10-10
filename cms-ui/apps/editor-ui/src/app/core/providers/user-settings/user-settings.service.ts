@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { RecentItem } from '@editor-ui/app/common/models';
 import { Favourite, GcmsUiLanguage, ItemType, SortField } from '@gentics/cms-models';
 import { cloneDeep, flatten, isEqual, merge } from 'lodash-es';
-import { Observable, forkJoin, combineLatest } from 'rxjs';
+import { Observable, combineLatest, forkJoin } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { environment } from '../../../development/development-tools';
@@ -15,7 +15,6 @@ import {
     RecentItemsFetchingSuccessAction,
     SetActiveFolderAction,
     SetActiveNodeAction,
-    SetFocusModeAction,
     SetOpenObjectPropertyGroupsAction,
     SetUILanguageAction,
     UIActionsService,
@@ -330,10 +329,6 @@ export class UserSettingsService {
         this.set('lastNodeId', nodeId);
     }
 
-    setFocusMode(focusMode: boolean): void {
-        this.set('focusMode', focusMode);
-    }
-
     saveFavourites(favourites: Favourite[]): void {
         this.set('favourites', favourites);
     }
@@ -409,10 +404,6 @@ export class UserSettingsService {
                 });
                 break;
             }
-
-            case 'focusMode':
-                this.appState.dispatch(new SetFocusModeAction(!!value));
-                break;
 
             case 'fileDisplayFields':
             case 'folderDisplayFields':

@@ -13,6 +13,7 @@ export * from './link-controls/link-controls.component';
 export * from './list-controls/list-controls.component';
 export * from './node-properties-form/node-properties-form.component';
 export * from './page-editor-controls/page-editor-controls.component';
+export * from './page-editor-tabs/page-editor-tabs.component';
 export * from './properties-editor/properties-editor.component';
 export * from './simple-delete-modal/simple-delete-modal.component';
 export * from './table-controls/table-controls.component';

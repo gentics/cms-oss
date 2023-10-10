@@ -23,7 +23,7 @@ const UNCATEGORIZED_CONSTRUCTS_ID = -1;
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructControlsComponent extends BaseControlsComponent implements OnInit, OnChanges, OnDestroy {
+export class ConstructControlsComponent extends BaseControlsComponent implements OnInit, OnChanges {
 
     public readonly UNCATEGORIZED_CONSTRUCTS_ID = UNCATEGORIZED_CONSTRUCTS_ID;
 
@@ -59,8 +59,6 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     public gcnPlugin: GCNAlohaPlugin;
     public gcnTags: GCNTags;
 
-    protected subscriptions: Subscription[] = [];
-
     constructor(
         changeDetector: ChangeDetectorRef,
         protected integration: AlohaIntegrationService,
@@ -87,10 +85,6 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         if (changes.constructs || changes.categories) {
             this.updateAvailableConstructs();
         }
-    }
-
-    public ngOnDestroy(): void {
-        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     public updateFilterText(text: string): void {

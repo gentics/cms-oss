@@ -249,6 +249,26 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected boolean http2;
 
+		@DataField("nofoldersindex")
+		@Updateable
+		protected boolean noFoldersIndex;
+
+		@DataField("nofilesindex")
+		@Updateable
+		protected boolean noFilesIndex;
+
+		@DataField("noimagesindex")
+		@Updateable
+		protected boolean noImagesIndex;
+
+		@DataField("nopagesindex")
+		@Updateable
+		protected boolean noPagesIndex;
+
+		@DataField("noformsindex")
+		@Updateable
+		protected boolean noFormsIndex;
+
 		@DataField("version")
 		@Updateable
 		protected String version;
@@ -403,6 +423,31 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public boolean isHttp2() {
 			return http2;
+		}
+
+		@Override
+		public boolean isNoFoldersIndex() {
+			return noFoldersIndex;
+		}
+
+		@Override
+		public boolean isNoFilesIndex() {
+			return noFilesIndex;
+		}
+
+		@Override
+		public boolean isNoImagesIndex() {
+			return noImagesIndex;
+		}
+
+		@Override
+		public boolean isNoPagesIndex() {
+			return noPagesIndex;
+		}
+
+		@Override
+		public boolean isNoFormsIndex() {
+			return noFormsIndex;
 		}
 
 		@Override
@@ -1040,6 +1085,46 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setNoFoldersIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFoldersIndex != noIndex) {
+				this.noFoldersIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoFilesIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFilesIndex != noIndex) {
+				this.noFilesIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoImagesIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noImagesIndex != noIndex) {
+				this.noImagesIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoPagesIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noPagesIndex != noIndex) {
+				this.noPagesIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setNoFormsIndex(boolean noIndex) throws ReadOnlyException {
+			if (this.noFormsIndex != noIndex) {
+				this.noFormsIndex = noIndex;
+				this.modified = true;
+			}
+		}
+
+		@Override
 		public void setProjectPerNode(boolean projectPerNode) throws ReadOnlyException {
 			if (this.projectPerNode != projectPerNode) {
 				this.projectPerNode = projectPerNode;
@@ -1216,7 +1301,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat,
-				boolean segmentfield, boolean displayfield, boolean urlfield) throws NodeException {
+				boolean segmentfield, boolean displayfield, boolean urlfield, boolean noindex) throws NodeException {
 			if (!type.validFor(crType)) {
 				throw new NodeException(String.format("Attribute type %s is not valid for ContentRepository %s of type %s", type, name, crType));
 			}
@@ -1232,6 +1317,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			entry.setSegmentfield(segmentfield);
 			entry.setDisplayfield(displayfield);
 			entry.setUrlfield(urlfield);
+			entry.setNoIndex(noindex);
 			getEntries().add(entry);
 		}
 	}
@@ -1727,6 +1813,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			setDisplayfield(oEntry.isDisplayfield());
 			setSegmentfield(oEntry.isSegmentfield());
 			setUrlfield(oEntry.isUrlfield());
+			setNoIndex(oEntry.isNoIndex());
 			setElasticsearch(oEntry.getElasticsearch());
 		}
 	}
@@ -2013,7 +2100,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "elasticsearch", "micronode_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "noindex", "elasticsearch", "micronode_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;
@@ -2378,6 +2465,14 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setNoIndex(boolean noIndex) throws ReadOnlyException ,NodeException {
+			if (isNoIndex() != noIndex) {
+				model.setNoIndex(noIndex);
+				this.modified = true;
+			}
+		};
+
+		@Override
 		public boolean save() throws InsufficientPrivilegesException, NodeException {
 			assertEditable();
 			boolean isModified = this.modified;
@@ -2397,6 +2492,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 				model.setOptimized(isOptimized());
 				model.setSegmentfield(isSegmentfield());
 				model.setUrlfield(isUrlfield());
+				model.setNoIndex(isNoIndex());
 				setMapname(ObjectTransformer.getString(getMapname(), ""));
 				setTagname(ObjectTransformer.getString(getTagname(), ""));
 				setCategory(ObjectTransformer.getString(getCategory(), ""));

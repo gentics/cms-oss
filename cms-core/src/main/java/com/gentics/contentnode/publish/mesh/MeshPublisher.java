@@ -1269,6 +1269,22 @@ public class MeshPublisher implements AutoCloseable {
 		if (!schemaNames.containsKey(type)) {
 			throw new NodeException(String.format("Cannot create schema for type %d", type));
 		}
+		switch(type) {
+		case Folder.TYPE_FOLDER:
+			schema.setNoIndex(cr.isNoFoldersIndex());
+			break;
+		case File.TYPE_FILE:
+			schema.setNoIndex(cr.isNoFilesIndex());
+			break;
+		case Form.TYPE_FORM:
+			schema.setNoIndex(cr.isNoFormsIndex());
+			break;
+		case Page.TYPE_PAGE:
+			schema.setNoIndex(cr.isNoPagesIndex());
+			break;
+		case ImageFile.TYPE_IMAGE:
+			schema.setNoIndex(cr.isNoImagesIndex());
+		}
 		schema.setName(getSchemaName(type));
 		schema.setContainer(containerTypes.contains(type));
 

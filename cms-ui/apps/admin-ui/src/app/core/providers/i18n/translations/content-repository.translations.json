@@ -95,6 +95,26 @@
         "en": "Use HTTP/2",
         "de": "HTTP/2 verwenden"
     },
+    "noFoldersIndex": {
+        "en": "Exclude folders from indexing",
+        "de": "Keine Indexierung der Ordner"
+    },
+    "noFilesIndex": {
+        "en": "Exclude files from indexing",
+        "de": "Keine Indexierung der Dateien"
+    },
+    "noImagesIndex": {
+        "en": "Exclude images from indexing",
+        "de": "Keine Indexierung der Bilder"
+    },
+    "noPagesIndex": {
+        "en": "Exclude pages from indexing",
+        "de": "Keine Indexierung der Seiten"
+    },
+    "noFormsIndex": {
+        "en": "Exclude forms from indexing",
+        "de": "Keine Indexierung der Forms"
+    },
     "version": {
         "en": "Implementation version",
         "de": "Implementierungsversion"

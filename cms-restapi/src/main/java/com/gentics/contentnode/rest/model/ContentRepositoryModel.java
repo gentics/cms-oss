@@ -64,6 +64,16 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected String dataCheckResult;
 
+	protected Boolean noFoldersIndex;
+
+	protected Boolean noFilesIndex;
+
+	protected Boolean noImagesIndex;
+
+	protected Boolean noPagesIndex;
+
+	protected Boolean noFormsIndex;
+
 	/**
 	 * Create empty instance
 	 */
@@ -468,6 +478,85 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 */
 	public void setDataCheckResult(String dataCheckResult) {
 		this.dataCheckResult = dataCheckResult;
+	}
+
+	/**
+	 * Get 'exclude folders from indexing' flag.
+	 */
+	public Boolean getNoFoldersIndex() {
+		return noFoldersIndex;
+	}
+
+	/**
+	 * Set 'exclude folders from indexing' flag.
+	 * @param noFolderIndex
+	 */
+	public void setNoFoldersIndex(Boolean noFolderIndex) {
+		this.noFoldersIndex = noFolderIndex;
+	}
+
+	/**
+	 * Get 'exclude files from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoFilesIndex() {
+		return noFilesIndex;
+	}
+
+	/**
+	 * Set 'exclude files from indexing' flag.
+	 * @param noFilesIndex
+	 */
+	public void setNoFilesIndex(Boolean noFilesIndex) {
+		this.noFilesIndex = noFilesIndex;
+	}
+
+	/**
+	 * Get 'exclude images from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoImagesIndex() {
+		return noImagesIndex;
+	}
+
+	/**
+	 * Set 'exclude images from indexing' flag.
+	 * @param noImagesIndex
+	 */
+	public void setNoImagesIndex(Boolean noImagesIndex) {
+		this.noImagesIndex = noImagesIndex;
+	}
+
+	/**
+	 * Get 'exclude pages from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoPagesIndex() {
+		return noPagesIndex;
+	}
+
+	/**
+	 * Set 'exclude pages from indexing' flag.
+	 * @param noPagesIndex
+	 */
+	public void setNoPagesIndex(Boolean noPagesIndex) {
+		this.noPagesIndex = noPagesIndex;
+	}
+
+	/**
+	 * Get 'exclude forms from indexing' flag.
+	 * @return
+	 */
+	public Boolean getNoFormsIndex() {
+		return noFormsIndex;
+	}
+
+	/**
+	 * Set 'exclude forms from indexing' flag.
+	 * @param noFormsIndex
+	 */
+	public void setNoFormsIndex(Boolean noFormsIndex) {
+		this.noFormsIndex = noFormsIndex;
 	}
 
 	/**

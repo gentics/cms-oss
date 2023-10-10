@@ -43,6 +43,11 @@ describe('ContentRepositoryApi', () => {
             diffDelete: true,
             projectPerNode: false,
             http2: false,
+            noFoldersIndex: false,
+            noFilesIndex: false,
+            noImagesIndex: false,
+            noPagesIndex: false,
+            noFormsIndex: false,
         };
         contentRepositoryApi.createContentRepository(payload);
 

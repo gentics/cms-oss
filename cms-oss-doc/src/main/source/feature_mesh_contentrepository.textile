@@ -332,6 +332,10 @@ Restrictions:
 WARNING: It is not possible to publish nodes into the same Mesh ContentRepository, if some do have the "Publish Directory Segment" setting while others don't have it. Doing so will let the publish process fail.
 It is - however - possible to publish those nodes into different Mesh ContentRepositories that write into the same Mesh instance, because each Mesh ContentRepository will create its own set of schemas in Mesh.
 
+h4. Exclude from indexing
+
+With setting the arbitrary field's "Exclude from indexing" flag one can make the published data of a field to be omitted during the search indexing process, to prevent sensitive data leak.
+
 h3. Multichannelling
 
 For publishing a node and all its channels into the same Mesh ContentRepository, the option "Project per Node":#project-per-node must be activated for the ContentRepository.

@@ -1619,6 +1619,16 @@ export interface ContentRepositoryCreateRequest {
     projectPerNode: boolean;
     /** Flag for HTTP/2 support */
     http2: boolean;
+    /** Exclude folders from indexing */
+    noFoldersIndex: boolean;
+    /** Exclude files from indexing */
+    noFilesIndex: boolean;
+    /** Exclude images from indexing */
+    noImagesIndex: boolean;
+    /** Exclude pages from indexing */
+    noPagesIndex: boolean;
+    /** Exclude forms from indexing */
+    noFormsIndex: boolean;
 }
 
 export type ContentRepositoryUpdateRequest = Partial<ContentRepositoryCreateRequest>;
@@ -1716,6 +1726,8 @@ export interface TagmapEntryCreateRequest {
     displayfield?: boolean;
     /** True when the entry is a urlfield (of a Mesh ContentRepository) */
     urlfield?: boolean;
+    /** True when the data of this field should be excluded from the indexing (in a Mesh ContentRepository) */
+    noindex?: boolean;
     /** Get the elasticsearch specific configuration of a Mesh CR */
     elasticsearch?: object;
     /** Get the micronode filter (for entries of type "micronode") */

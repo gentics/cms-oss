@@ -50,12 +50,12 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		entry.setForeignlinkAttribute(nodeEntry.getForeignlinkAttribute());
 		entry.setForeignlinkAttributeRule(nodeEntry.getForeignlinkAttributeRule());
 		entry.setCategory(nodeEntry.getCategory());
-		entry.setNoIndex(nodeEntry.isNoIndex());
 		ContentRepository cr = nodeEntry.getContentRepository();
 		if (cr != null && cr.getCrType() == Type.mesh) {
 			entry.setSegmentfield(nodeEntry.isSegmentfield());
 			entry.setDisplayfield(nodeEntry.isDisplayfield());
 			entry.setUrlfield(nodeEntry.isUrlfield());
+			entry.setNoIndex(nodeEntry.isNoIndex());
 			if (!StringUtils.isEmpty(nodeEntry.getElasticsearch())) {
 				ObjectMapper mapper = new ObjectMapper();
 				try {

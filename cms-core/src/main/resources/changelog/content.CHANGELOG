@@ -788,3 +788,6 @@
 2023-03-30  CH-1696 NOP SQL DROP TABLE IF EXISTS template_processes;
 2023-07-10  CH-1698 OG SQL ALTER TABLE type ADD COLUMN deprecated BOOLEAN NOT NULL DEFAULT 0;
 2023-07-31	CH-1699	SP	SQL ALTER TABLE contentrepository ADD COLUMN http2 TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of http usage per cr
+2023-10-10	CH-1700	SP	SQL ALTER TABLE contentrepository ADD COLUMN nofoldersindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN nofilesindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN noimagesindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN nopagesindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN noformsindex TINYINT NOT NULL DEFAULT 0; ## add columns for boolean flags of index exclusions for the various content types
+2023-10-10	CH-1701	SP	SQL ALTER TABLE tagmap ADD COLUMN noindex TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of omitting the entry from being indexed
+2023-10-10	CH-1701	SP	SQL ALTER TABLE cr_fragment_entry ADD COLUMN noindex TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of omitting the entry from being indexed

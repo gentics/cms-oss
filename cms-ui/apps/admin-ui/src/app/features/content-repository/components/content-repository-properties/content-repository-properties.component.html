@@ -87,7 +87,36 @@
                 {{ 'shared.passwords_dont_match_error' | i18n }}
             </span>
         </div>
-
+		
+        <gtx-checkbox
+            *ngIf="form.get('noFoldersIndex').enabled"
+            formControlName="noFoldersIndex"
+            [label]="'contentRepository.noFoldersIndex' | i18n"
+        ></gtx-checkbox>
+        
+        <gtx-checkbox
+            *ngIf="form.get('noFilesIndex').enabled"
+            formControlName="noFilesIndex"
+            [label]="'contentRepository.noFilesIndex' | i18n"
+        ></gtx-checkbox>
+        
+        <gtx-checkbox
+            *ngIf="form.get('noImagesIndex').enabled"
+            formControlName="noImagesIndex"
+            [label]="'contentRepository.noImagesIndex' | i18n"
+        ></gtx-checkbox>
+        
+        <gtx-checkbox
+            *ngIf="form.get('noPagesIndex').enabled"
+            formControlName="noPagesIndex"
+            [label]="'contentRepository.noPagesIndex' | i18n"
+        ></gtx-checkbox>
+        
+        <gtx-checkbox
+            *ngIf="form.get('noFormsIndex').enabled"
+            formControlName="noFormsIndex"
+            [label]="'contentRepository.noFormsIndex' | i18n"
+        ></gtx-checkbox>
     </div>
 
     <div class="input-container small-12 medium-6 columns">

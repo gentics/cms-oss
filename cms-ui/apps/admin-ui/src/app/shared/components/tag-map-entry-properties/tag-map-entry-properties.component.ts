@@ -116,6 +116,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
             displayfield: new UntypedFormControl(null),
             // Mesh CR
             urlfield: new UntypedFormControl(false),
+            noindex: new UntypedFormControl(false),
             elasticsearch: new UntypedFormControl('', GtxJsonValidator),
             micronodeFilter: new UntypedFormControl(null),
             // SQL CR
@@ -130,6 +131,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
         const options = { emitEvent: !!loud };
         const dynamicControls = [
             'urlfield',
+            'noindex',
             'elasticsearch',
             'micronodeFilter',
             'filesystem',
@@ -151,7 +153,7 @@ export class TagMapEntryPropertiesComponent extends BasePropertiesComponent<Tagm
 
 
             // fields of CrTypeMesh
-            enableControls.push('urlfield', 'elasticsearch');
+            enableControls.push('urlfield', 'noindex', 'elasticsearch');
 
             switch (value?.attributeType) {
                 case MeshTagmapEntryAttributeTypes.BINARY:

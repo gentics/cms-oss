@@ -1,0 +1,1 @@
+Devtools: Assigned nodes are now synced with object properties. Syncing an object property to the CMS will automatically assign it to the respective nodes.

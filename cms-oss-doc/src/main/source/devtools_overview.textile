@@ -218,7 +218,7 @@ h4. Object properties
 
 |_>. Root directory                       | @/cms/packages/[package]/objectproperties/@         |
 |_>. Object directory name                | Composed of _type_ and _keyword_ (e.g. @folder.object.navhidden@) |
-|_>. Contents of @gentics_structure.json@ | globalId, type, name, description and constructId                 |
+|_>. Contents of @gentics_structure.json@ | globalId, type, name, keyword, description, constructId, required flag, inheritable flag and  list of linked nodes |
 |_>. Additional files/directories         | none                                                              |
 
 Example @gentics_structure.json@:
@@ -236,7 +236,10 @@ Example @gentics_structure.json@:
     "de" : "Deutscher Name des Ordners in der Navigation",
     "en" : "German name of navigation entry"
   },
-  "constructId" : "A547.69478"
+  "constructId" : "A547.69478",
+  "required" : false,
+  "inheritable" : false,
+  "nodeIds" : [ "3fc1.5cfe8f3e-669b-11ee-b345-0242ac190002" ]
 }
 </shell>
 

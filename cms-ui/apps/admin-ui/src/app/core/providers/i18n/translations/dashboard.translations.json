@@ -27,6 +27,10 @@
         "en": "Contentrepositories",
         "de": "Contentrepositories"
     },
+    "mesh_browser": {
+        "en": "Mesh browser",
+        "de": "Mesh Browser"
+    },
     "data_sources": {
         "en": "DataSources",
         "de": "Datenquellen"

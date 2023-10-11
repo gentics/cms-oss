@@ -169,7 +169,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
 
     itemLanguage: Language | undefined = undefined;
     pageComparisonLanguage: Language | undefined = undefined;
-    previewLink: any[] = [];
 
     saveAsCopyButtonIsDisabled = false;
     saveButtonVisible = true;
@@ -642,17 +641,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.changeDetector.detectChanges();
             });
         }
-    }
-
-    /**
-     * Switch the state to preview mode.
-     */
-    createPreviewLink(): any[] | undefined {
-        return this.currentItem
-            ? this.navigationService
-                .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
-                .commands()
-            : undefined;
     }
 
     /**
@@ -1218,7 +1206,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }
         }
 
-        this.previewLink = this.createPreviewLink();
         this.changeDetector.markForCheck();
     }
 

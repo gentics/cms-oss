@@ -5,4 +5,5 @@ export * from './range/range.pipe';
 export * from './sort/sort.pipe';
 export * from './table-action-enabled/table-action-enabled.pipe';
 export * from './table-cell-mapper/table-cell-mapper.pipe';
+export * from './transform/transform.pipe';
 export * from './value-path/value-path.pipe';

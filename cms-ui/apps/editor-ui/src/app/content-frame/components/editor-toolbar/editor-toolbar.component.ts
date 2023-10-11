@@ -107,6 +107,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public isSaving: boolean;
     public inQueue: boolean;
     public focusMode: boolean;
+    public previewLink: any[] = [];
 
     /** Subscriptions to cleanup */
     protected subscriptions: Subscription[] = [];
@@ -160,17 +161,23 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.isSaving = isSaving;
             this.changeDetector.markForCheck();
         }));
+
+        this.setupPreviewLink();
+        this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
+        this.checkIfInQueue();
+        this.buttons = this.determineVisibleButtons();
+
+        this.changeDetector.markForCheck();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.editorState) {
-            this.buttons = this.determineVisibleButtons();
-        }
-        if (changes.currentItem) {
-            this.checkIfInQueue();
-        }
         if (changes.currentItem || changes.currentNode) {
+            this.checkIfInQueue();
+            this.setupPreviewLink();
             this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
+        }
+        if (changes.editorState || changes.currentItem || changes.currentNode) {
+            this.buttons = this.determineVisibleButtons();
         }
     }
 
@@ -211,6 +218,17 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.breadcrumbs = breadcrumbs as any;
             this.changeDetector.markForCheck();
         }));
+    }
+
+    setupPreviewLink(): void {
+        if (!this.currentItem || !this.currentNode) {
+            this.previewLink = null;
+            return;
+        }
+
+        this.previewLink = this.navigationService
+            .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .commands();
     }
 
     checkIfInQueue(): void {
@@ -356,16 +374,16 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
      * Shifts the logic for determining which buttons to display out of the template.
      */
     public determineVisibleButtons(): AvailableButtons {
-        const type = this.currentItem && this.currentItem.type;
+        const type = this.currentItem?.type;
         const isPage = type === 'page';
         const isForm = type === 'form';
         const editMode = this.editorState?.editMode;
         const previewing = editMode === 'preview';
         const editing = editMode === 'edit';
         const propertiesTab = editMode === 'editProperties' && this.editorState.openTab;
-        const isInherited = this.currentItem && (this.currentItem as InheritableItem).inherited;
+        const isInherited = (this.currentItem as InheritableItem)?.inherited;
         const userCan = this.itemPermissions || { edit: false, view: false };
-        const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions).publish));
+        const canPublish = !!(isPage || (isForm && (this.itemPermissions as FormPermissions)?.publish));
 
         return {
             compareContents: (isPage || isForm) && editMode === 'compareVersionSources',

@@ -18,6 +18,7 @@
         <div class="toolbar-actions">
             <div class="item-status">
                 <item-status-label
+                    class="full-size"
                     [item]="currentItem"
                     [nodeLanguages]="activeNodeLanguages"
                     [activeNodeId]="currentNode?.id"
@@ -39,7 +40,7 @@
 
             <gtx-button
                 *ngIf="buttons.previewPage"
-                class="primary-action"
+                class="primary-action preview-button with-shadow"
                 flat
                 size="small"
                 [routerLink]="previewLink"
@@ -81,7 +82,7 @@
 
             <gtx-split-button
                 *ngIf="showSave"
-                class="primary-action"
+                class="primary-action save-button"
                 size="small"
                 [disabled]="saveDisabled || isSaving"
                 [title]="'editor.content_frame_save_changes_tooltip' | i18n"

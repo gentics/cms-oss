@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/aloha-models';
 import { ConstructCategory, TagPartType, TagType } from '@gentics/cms-models';
-import { DropdownListComponent } from '@gentics/ui-core';
+import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { Subscription } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseControlsComponent } from '../base-controls/base-controls.component';
@@ -15,6 +14,7 @@ interface GroupedConstructs {
     constructs: TagType[];
 }
 
+const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
 const UNCATEGORIZED_CONSTRUCTS_ID = -1;
 
 @Component({
@@ -47,7 +47,7 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
     /** Constructs which are available to be inseted. */
     public availableConstructs: TagType[] = [];
     /** Constructs without a category set. */
-    public noCategroyConstructs: TagType[] = [];
+    public favouriteConstructs: string[] = [];
     /** `availableConstructs`, but grouped by the category. */
     public groups: GroupedConstructs[] = [];
 
@@ -129,6 +129,26 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         this.dropdown.openDropdown(true);
     }
 
+    public toggleFavourite(construct: TagType, event?: MouseEvent): void {
+        cancelEvent(event);
+
+        const idx = this.favouriteConstructs.findIndex(fav => fav === construct.keyword);
+        if (idx > -1) {
+            this.favouriteConstructs.splice(idx, 1);
+            // Create a copy, so angular properly detects the change
+            this.favouriteConstructs = this.favouriteConstructs.slice();
+        } else {
+            this.favouriteConstructs = [
+                ...this.favouriteConstructs,
+                construct.keyword,
+            ];
+        }
+    }
+
+    public isFavourite(favourites: string[]): (construct: TagType) => boolean {
+        return (construct) => favourites.findIndex(fav => fav === construct.keyword) > -1;
+    }
+
     protected selectionOrEditableChanged(): void {
         this.updateAvailableConstructs();
         this.active = this.range && this.aloha.activeEditable?.obj != null;
@@ -157,10 +177,6 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
             .filter(construct => whitelist == null || (whitelist.length !== 0 && whitelist.includes(construct.keyword)))
             // Sort them by name to be nicely displayed
             .sort((a, b) => a.name.localeCompare(b.name));
-
-
-        this.noCategroyConstructs = this.availableConstructs
-            .filter(con => con.categoryId == null);
 
         this.updateGroups();
     }
@@ -215,6 +231,7 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         if (uncategorized.length > 0) {
             groups.unshift({
                 id: UNCATEGORIZED_CONSTRUCTS_ID,
+                label: UNCATEGORIZED_CONSTRUCTS_LABEL,
                 order: -1,
                 constructs: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
             });

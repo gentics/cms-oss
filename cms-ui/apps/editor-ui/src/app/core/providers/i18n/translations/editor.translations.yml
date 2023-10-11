@@ -1132,6 +1132,6 @@ construct_no_category:
 constructs_loading:
     en: Loading ...
     de: Lade daten ...
-constructs_no_uncategorized:
-    en: No Constructs without Category available
-    de: Keine TagTypen ohne Kategorie verfügbar
+constructs_no_favourites:
+    en: No Constructs have been favourited yet
+    de: Keine TagTypen wurden favoritisiert

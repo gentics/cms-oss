@@ -12,7 +12,7 @@
             [inlineExpansion]="true"
             [inlineSelection]="true"
             [selectable]="true"
-            [selected]="selectedIds | values"
+            [selected]="selectedIds | gtxValues"
             (select)="handleRowSelect($event)"
             (selectedChange)="selectionChanges($event)"
         ></gtx-content-item-trable>

@@ -16,6 +16,10 @@
     }
 
     .primary-button {
+        &::ng-deep button {
+            box-shadow: none;
+        }
+
         icon[left],
         i.left {
             margin-right: 5px;

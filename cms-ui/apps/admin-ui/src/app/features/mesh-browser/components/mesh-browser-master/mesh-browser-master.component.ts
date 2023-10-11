@@ -16,6 +16,7 @@ const MESH_ID_PARAM = 'meshId';
 @Component({
     selector: 'gtx-mesh-browser-master',
     templateUrl: './mesh-browser-master.component.html',
+    styleUrls: ['./mesh-browser-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit {
@@ -23,7 +24,7 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY; // todo: check me
     protected detailPath = AdminUIEntityDetailRoutes.MESH_BROWSER;
 
-    public repository: ContentRepository;
+    public selectedRepository: ContentRepository;
     public me: User;
     public meName: string;
     public loggedIn = false;
@@ -48,14 +49,13 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         super.ngOnInit();
     }
 
-    public async handleRowClick(row: TableRow<ContentRepositoryBO>): Promise<void> {
-        const response = await this.handler.get(row.item.id).toPromise()
-        this.repository = response.contentRepository;
+    public handleRowClick(row: TableRow<ContentRepositoryBO>): void {
+        this.selectedRepository = row.item;
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, { [MESH_ID_PARAM]: row.item.id }], { relativeTo: this.route });
     }
 
     public navigateBack(): void {
-        this.repository = null;
+        this.selectedRepository = null;
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], { relativeTo: this.route });
     }
 

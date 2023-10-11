@@ -1,0 +1,15 @@
+
+
+.overview-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .back-button {
+        margin-right: 1.5rem;
+    }
+
+    .overview-title {
+        font-size: 1.1rem;
+    }
+}

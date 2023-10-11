@@ -1,11 +1,10 @@
 import { AdminUIEntityDetailRoutes, ContentRepositoryBO, ContentRepositoryDetailTabs } from '@admin-ui/common';
 import {
     ContentRepositoryHandlerService,
-    ContentRepositoryTableLoaderOptions,
     I18nService,
     PermissionsService,
 } from '@admin-ui/core';
-import { MeshBrowserContentRepositoryTableLoaderService } from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
+import { MeshBrowserContentRepositoryTableLoaderService, MeshContentRepositoryTableLoaderOptions } from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
@@ -21,7 +20,7 @@ import { ModalService, TableColumn } from '@gentics/ui-core';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContentRepositoryTableComponent
-    extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, ContentRepositoryTableLoaderOptions>
+    extends BaseEntityTableComponent<ContentRepository, ContentRepositoryBO, MeshContentRepositoryTableLoaderOptions>
     implements OnChanges {
 
     public readonly ContentRepositoryDetailTabs = ContentRepositoryDetailTabs;
@@ -35,12 +34,6 @@ export class ContentRepositoryTableComponent
             id: 'name',
             label: 'contentRepository.name',
             fieldPath: 'name',
-            sortable: true,
-        },
-        {
-            id: 'crType',
-            label: 'contentRepository.crType',
-            fieldPath: 'crType',
             sortable: true,
         },
         {

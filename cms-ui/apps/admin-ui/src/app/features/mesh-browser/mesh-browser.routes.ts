@@ -1,4 +1,4 @@
-import { ROUTE_DETAIL_OUTLET, TemplateDetailTabs } from '@admin-ui/common';
+import { ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
 import { AdminUIEntityDetailRoutes, GcmsAdminUiRoute } from '@admin-ui/common/models/routing';
 import { BreadcrumbResolver, DiscardChangesGuard, EDITOR_TAB } from '@admin-ui/core';
 import { inject } from '@angular/core';
@@ -22,7 +22,7 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: `:nodeId/:id/:${EDITOR_TAB}`,
+                path: `:repository/:id/:${EDITOR_TAB}`,
                 component: MeshBrowserEditorComponent,
                 data: {
                     typePermissions: [

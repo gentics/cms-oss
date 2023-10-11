@@ -1,9 +1,9 @@
 import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, ContentRepositoryBO, EditableEntity } from '@admin-ui/common';
-import { ContentRepositoryHandlerService, ContentRepositoryTableLoaderService } from '@admin-ui/core';
+import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { User } from '@gentics/mesh-models';
@@ -21,7 +21,7 @@ const MESH_ID_PARAM = 'meshId';
 })
 export class MeshBrowserMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit {
 
-    protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY; // todo: check me
+    protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
     protected detailPath = AdminUIEntityDetailRoutes.MESH_BROWSER;
 
     public selectedRepository: ContentRepository;

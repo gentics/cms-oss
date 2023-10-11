@@ -484,6 +484,10 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconPrimary: 'dns',
         matIconSecondary: null,
     },
+    mesh: {
+        matIconPrimary: 'hub',
+        matIconSecondary: null,
+    },
 
     [PERM_PREFIX + GcmsPermission.READ]: {
         matIconPrimary: 'remove_red_eye',

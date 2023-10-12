@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import { MeshBrowserLoaderService, Schema } from '../../providers';
+import { MeshBrowserLoaderService, Schema, SchemaElement } from '../../providers';
 
 
 
@@ -16,8 +16,6 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public schemas: Array<Schema> = [];
 
-    public rootNodeUuid: string;
-
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
@@ -29,23 +27,26 @@ export class MeshBrowserSchemaListComponent implements OnInit {
         const response = await this.loader.listSchemasWithRootNode(this.project)
         this.schemas = response.schemas
         this.schemas.map(schema => schema.name.toUpperCase())
-        this.rootNodeUuid = response.rootNodeUuid;
 
-        this.loadNodesChildrenForSchemas();
-
+        await this.loadNodesChildrenForSchemas(response.rootNodeUuid);
+        this.changeDetector.markForCheck();
     }
 
 
-    protected async loadNodesChildrenForSchemas(): Promise<void> {
+    protected async loadNodesChildrenForSchemas(nodeUuid: string): Promise<void> {
         for (const schema of this.schemas) {
             const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
                 schemaName: schema.name,
-                nodeUuid: this.rootNodeUuid,
+                nodeUuid: nodeUuid,
             })
 
             schema.elements = schemaElements;
         }
+    }
 
+
+    public async loadNodeContent(element: SchemaElement): Promise<void>{
+        await this.loadNodesChildrenForSchemas(element.uuid)
         this.changeDetector.markForCheck();
     }
 

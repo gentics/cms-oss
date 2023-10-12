@@ -32,7 +32,12 @@
             [loggedIn]="loggedIn"
             (loggedInChange)="handleMeshLogin($event)"
         >
-            <h1>Mesh Browser for "{{ selectedRepository.name }}</h1>
+            <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
+
+            <gtx-mesh-browser-schema-list
+                [project]="'Manual'" 
+            >
+            </gtx-mesh-browser-schema-list>
 
         </gtx-mesh-login-gate>
 

@@ -1,0 +1,21 @@
+
+
+<div class="schema-list-wrapper">
+    <div class="schema-container" *ngFor="let schema of schemas">
+
+        <div class="schema-item">{{ schema.name }}</div>
+
+        <div *ngFor="let element of schema.elements">
+            <div class="schema-element">
+                <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
+
+                <div>{{ element.displayName }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<ng-template #iconRenderer let-value="value" let-row="row">
+    <icon left>description</icon> 
+</ng-template>

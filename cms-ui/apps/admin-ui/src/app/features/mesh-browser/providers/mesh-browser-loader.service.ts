@@ -24,6 +24,10 @@ export interface SchemaElement {
     displayName: string;
     uuid: string;
     isContainer: boolean;
+    languages: Array<ElementLanguage>;
+}
+
+export interface ElementLanguage {
     language: string;
 }
 
@@ -70,7 +74,9 @@ export class MeshBrowserLoaderService {
                                 uuid
                                 displayName
                                 isContainer
-                                language
+                                languages {
+                                    language
+                                }
                             }
                         }
                     }

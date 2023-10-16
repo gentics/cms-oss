@@ -14,7 +14,8 @@
                     <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
 
                     <div>{{ element.displayName }}</div>
-                    <div class="language">{{ element.language }}</div>
+
+                    <span *ngFor="let language of element.languages" class="language">{{ language.language }}</span>
                 </div>
             </div>
         </div>    

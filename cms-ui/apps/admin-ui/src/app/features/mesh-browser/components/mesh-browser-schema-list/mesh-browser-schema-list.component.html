@@ -1,13 +1,16 @@
 
-
 <div class="schema-list-wrapper">
-    <div class="schema-container" *ngFor="let schema of schemas">
-        <div *ngIf="!!schema.elements.length">
-
+    <ng-container *ngFor="let schema of schemas">
+        <div *ngIf="!!schema.elements.length" class="schema-content">
             <div class="schema-item">{{ schema.name }}</div>
 
-            <div *ngFor="let element of schema.elements">
-                <div class="schema-element"  (click)="loadNodeContent(element)">
+            <div *ngFor="let element of schema.elements | paginate : {
+                id: UNIQUE_ID,
+                itemsPerPage: perPage,
+                currentPage: page,
+                totalItems: schema.elements.length
+            }">
+                <div class="schema-element" (click)="loadNodeContent(element)">
                     <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
 
                     <div>{{ element.displayName }}</div>
@@ -15,7 +18,13 @@
                 </div>
             </div>
         </div>    
-    </div>    
+    
+        <gtx-paging
+            *ngIf="schema.elements.length > perPage"
+            [id]="UNIQUE_ID"
+            (pageChange)="changePage($event)"
+        ></gtx-paging>
+    </ng-container>
 </div>
 
 

@@ -1,4 +1,4 @@
-<div class="gtx-entity-master">
+<div id="mesh-browser-container" class="gtx-entity-master">
 
     <ng-container *ngIf="!selectedRepository; else displayMeshContent">
         <gtx-mesh-browser-repository-table
@@ -31,6 +31,7 @@
             [repository]="selectedRepository"
             [loggedIn]="loggedIn"
             (loggedInChange)="handleMeshLogin($event)"
+            class="login-gate-wrapper"
         >
             <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
 

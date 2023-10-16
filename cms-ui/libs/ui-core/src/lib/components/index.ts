@@ -44,4 +44,4 @@ export * from './tooltip-content-wrapper/tooltip-content-wrapper.component';
 export * from './tooltip/tooltip.component';
 export * from './top-bar/top-bar.component';
 export * from './trable/trable.component';
-
+export * from './paging/paging.component'

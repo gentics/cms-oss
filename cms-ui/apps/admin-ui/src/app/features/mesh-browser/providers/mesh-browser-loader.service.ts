@@ -5,7 +5,7 @@ import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 
 
 export interface MeshSchemaListParams extends PagingOptions  {
-    schemaName: string,
+    schemaName?: string,
     nodeUuid: string,
 }
 

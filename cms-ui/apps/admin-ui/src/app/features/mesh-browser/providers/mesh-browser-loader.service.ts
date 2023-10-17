@@ -1,36 +1,6 @@
 import { Injectable } from '@angular/core';
-import { PagingOptions } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-
-
-
-export interface MeshSchemaListParams extends PagingOptions  {
-    schemaName?: string,
-    nodeUuid: string,
-}
-
-export interface MeshSchemaListResponse {
-    rootNodeUuid: string,
-    schemas: Array<Schema>
-}
-
-
-export interface Schema {
-    name: string;
-    elements: Array<SchemaElement>;
-}
-
-export interface SchemaElement {
-    displayName: string;
-    uuid: string;
-    isContainer: boolean;
-    languages: Array<ElementLanguage>;
-}
-
-export interface ElementLanguage {
-    language: string;
-}
-
+import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from './mesh-browser-models';
 
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { PaginationService } from 'ngx-pagination';
 import { MeshBrowserLoaderService, Schema, SchemaElement } from '../../providers';
 
@@ -35,9 +35,7 @@ export class MeshBrowserSchemaItemsComponent  {
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
-    ) {
-
-    }
+    ) { }
 
 
     public async loadNodeContent(element: SchemaElement): Promise<void> {
@@ -47,7 +45,6 @@ export class MeshBrowserSchemaItemsComponent  {
 
         this.schema.elements = schemaElements;
         this.currentNodeUuid = element.uuid;
-
         this.changeDetector.markForCheck();
     }
 

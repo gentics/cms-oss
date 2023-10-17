@@ -17,6 +17,7 @@ import {
     MeshBrowserLoaderService,
 } from './providers';
 
+
 @NgModule({
     declarations: [
         MeshBrowserMasterComponent,

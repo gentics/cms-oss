@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { PaginationService } from 'ngx-pagination';
-import { MeshBrowserLoaderService, Schema, SchemaElement } from '../../providers';
+import { MeshBrowserLoaderService, Schema } from '../../providers';
 
 
 @Component({

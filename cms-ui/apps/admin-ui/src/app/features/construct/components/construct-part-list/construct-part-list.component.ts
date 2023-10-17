@@ -104,11 +104,19 @@ export class ConstructPartListComponent implements OnInit, OnDestroy, ControlVal
     ) { }
 
     ngOnInit(): void {
-        this.form = new UntypedFormArray([], (ctl) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            if ((ctl.value || []).find(value => value === CONTROL_INVALID_VALUE)) {
-                return { invalid: true };
-            }
+        this.form = new UntypedFormArray([], () => {
+            const err = {};
+            let hasErr = false;
+            const toCheck = this.form?.controls ?? [];
+
+            toCheck.forEach((ctl, idx) => {
+                if (ctl.errors != null) {
+                    err[idx] = ctl.errors;
+                    hasErr = true;
+                }
+            });
+
+            return hasErr ? err : null;
         });
 
         if (this.disabled) {

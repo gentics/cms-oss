@@ -193,6 +193,10 @@ export class ConstructDetailComponent
             autoEnable: this.fgProperties.value.autoEnable,
         };
 
+        if (payload.categoryId == null) {
+            payload.categoryId = -1;
+        }
+
         return this.operations.update(this.currentEntity.id, payload).pipe(
             detailLoading(this.appState),
             tap((updatedEntity: TagTypeBO<Raw>) => {

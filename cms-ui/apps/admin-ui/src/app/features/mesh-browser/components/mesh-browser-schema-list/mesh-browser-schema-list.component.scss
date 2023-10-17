@@ -1,32 +1,4 @@
 
 .schema-list-wrapper{
     margin: 2rem 0;
-
-    .schema-content {
-        margin: 1.5rem 0;
-    
-        .schema-item {
-            text-transform: uppercase;
-            font-weight: 300;
-    
-            border-bottom: 1px solid #f5f5f5;
-        }
-        
-        .schema-element {
-            color: #0096DC;
-            padding: 1rem 0;
-
-
-            .language {
-                font-size: 12px;
-                margin-right: 5px;
-                border-radius: 2px;
-                padding: 0 3px;
-                background: #bcbcbe;
-                color: black;
-                width: 20px;
-            }
-        }
-    }
-
 }    

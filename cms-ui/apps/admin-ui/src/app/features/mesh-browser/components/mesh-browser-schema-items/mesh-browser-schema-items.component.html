@@ -1,0 +1,41 @@
+
+<div class="schema-items">
+
+    <div class="schema-header">
+        <div class="schema-title">{{ schema.name }}</div>
+        <icon [ngClass]="{'collapsed': collapsed}" (click)="toggleSection()" right>
+            keyboard_arrow_down
+        </icon>
+    </div>
+
+    <div class="schema-content" [ngClass]="{'collapsed': collapsed}">
+        <div *ngFor="let element of schema.elements | paginate : {
+            id: UNIQUE_ID,
+            itemsPerPage: perPage,
+            currentPage: page,
+            totalItems: schema.elements.length
+        }">
+            <div class="schema-element" (click)="loadNodeContent(element)">
+                <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
+
+                <div>{{ element.displayName }}</div>
+
+                <span *ngFor="let language of element.languages" class="language">
+                    {{ language.language }}
+                </span>
+            </div>
+        </div>
+
+        <gtx-paging
+            *ngIf="schema.elements.length > perPage"
+            [id]="UNIQUE_ID"
+            (pageChange)="changePage($event)"
+        ></gtx-paging>
+    </div>
+
+</div>
+
+
+<ng-template #iconRenderer>
+    <icon left>description</icon> 
+</ng-template>

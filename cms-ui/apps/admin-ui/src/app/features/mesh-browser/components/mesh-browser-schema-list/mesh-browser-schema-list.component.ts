@@ -3,8 +3,6 @@ import { PaginationService } from 'ngx-pagination';
 import { MeshBrowserLoaderService, Schema, SchemaElement } from '../../providers';
 
 
-let uniqueComponentId = 0;
-
 @Component({
     selector: 'gtx-mesh-browser-schema-list',
     templateUrl: './mesh-browser-schema-list.component.html',
@@ -14,18 +12,10 @@ let uniqueComponentId = 0;
 })
 export class MeshBrowserSchemaListComponent implements OnInit {
 
-    public readonly UNIQUE_ID = `gtx-paging-${uniqueComponentId++}`;
-
     @Input()
     public project: string;
 
     public schemas: Array<Schema> = [];
-
-    public page = 1;
-
-    public perPage = 10;
-
-    private currentNodeUuid: string;
 
 
     constructor(
@@ -54,25 +44,6 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
             schema.elements = schemaElements;
         }
-    }
-
-
-    public async loadNodeContent(element: SchemaElement): Promise<void> {
-        await this.loadNodesChildrenForSchemas(element.uuid)
-        this.currentNodeUuid = element.uuid;
-
-        this.changeDetector.markForCheck();
-    }
-
-
-    public changePage($event: Event): void {
-        this.page = parseInt($event as unknown as string, 10);
-
-        this.loader.listNodeChildrenForSchema(this.project, {
-            nodeUuid: this.currentNodeUuid,
-            page: this.page,
-        })
-
     }
 
 }

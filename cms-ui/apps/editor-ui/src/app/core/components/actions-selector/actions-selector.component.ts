@@ -4,7 +4,7 @@ import { EmbeddedToolsService } from '@editor-ui/app/embedded-tools/providers/em
 import { ApplicationStateService, ContentStagingActionsService } from '@editor-ui/app/state';
 import { AccessControlledType, EmbeddedTool, GcmsPermission } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
 import {

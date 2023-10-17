@@ -19,17 +19,32 @@
 
                 <div *ngFor="let btnGroup of group.buttons" class="action-button-group-content">
                     <ng-container *ngFor="let btn of btnGroup">
-                        <a
-                            *ngIf="btn.type === ActionButtonType.TOOL && btn.newTab; else regularButton"
-                            class="action-button"
-                            [href]="btn.toolLink | safe"
-                            [target]="btn.newTab ? '_blank' : '_top'"
-                            [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
-                            [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
-                            (click)="triggerClick(btn, $event)"
-                        >
-                            <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
-                        </a>
+                        <ng-container *ngIf="btn.type === ActionButtonType.TOOL; else regularButton">
+                            <ng-container *ngIf="!btn.newTab; else newTabTool">
+                                <a
+                                    class="action-button"
+                                    [routerLink]="['/tools', btn.toolKey]"
+                                    [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
+                                    [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                                    (click)="triggerClick(btn, $event)"
+                                >
+                                    <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
+                                </a>
+                            </ng-container>
+                        </ng-container>
+
+                        <ng-template #newTabTool>
+                            <a
+                                class="action-button"
+                                [href]="btn.toolLink | safe"
+                                [target]="'_blank'"
+                                [ngClass]="[btn.type + '-' + btn.id, 'action-button-' + btn.type]"
+                                [title]="btn.i18nLabel ? (btn.i18nLabel | i18n) : btn.label"
+                                (click)="triggerClick(btn, $event)"
+                            >
+                                <ng-container [ngTemplateOutlet]="buttonContent"></ng-container>
+                            </a>
+                        </ng-template>
 
                         <ng-template #regularButton>
                             <div

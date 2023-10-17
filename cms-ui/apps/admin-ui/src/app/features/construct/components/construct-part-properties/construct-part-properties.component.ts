@@ -140,7 +140,7 @@ export class ConstructPartPropertiesComponent
     // tslint:disable-next-line: variable-name
     public readonly TagPartTypePropertyType = TagPartTypePropertyType;
     // tslint:disable-next-line: variable-name
-    public readonly ConstructPartPropertiesComponentMode = ConstructPartPropertiesMode;
+    public readonly ConstructPartPropertiesMode = ConstructPartPropertiesMode;
     // tslint:disable-next-line: variable-name
     public readonly TagPartValidatorConfigs = TagPartValidatorConfigs;
 
@@ -214,6 +214,10 @@ export class ConstructPartPropertiesComponent
 
     protected createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
+            // Noop controls
+            globalId: new UntypedFormControl(this.value?.globalId),
+            id: new UntypedFormControl(this.value?.id),
+
             // text
             keyword: new UntypedFormControl(this.value?.keyword ?? null, [
                 Validators.required,
@@ -361,11 +365,9 @@ export class ConstructPartPropertiesComponent
         const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
-            output.globalId = this.value?.globalId;
-            output.id = this.value?.id;
-            output.keyword = this.value?.keyword;
-            output.name = this.value?.name;
-            output.type = this.value?.type;
+            output.globalId = this.value?.globalId ?? formData.globalId;
+            output.id = this.value?.id ?? formData.id;
+            output.keyword = this.value?.keyword ?? this.form.get('keyword').value;
         } else {
             output.keyword = formData.keyword;
         }
@@ -375,23 +377,7 @@ export class ConstructPartPropertiesComponent
 
     protected onValueChange(): void {
         if (this.form && this.value && (this.value as any) !== CONTROL_INVALID_VALUE) {
-            this.form.setValue({
-                keyword: this.value?.keyword ?? null,
-                nameI18n: this.value?.nameI18n ?? null,
-                partOrder: this.value?.partOrder ?? null,
-                typeId: this.value?.typeId ?? null,
-                editable: this.value?.editable ?? null,
-                mandatory: this.value?.mandatory ?? null,
-                hidden: this.value?.hidden ?? null,
-                liveEditable: this.value?.liveEditable ?? null,
-                hideInEditor: this.value?.hideInEditor ?? null,
-                externalEditorUrl: this.value?.externalEditorUrl ?? null,
-                defaultProperty: this.value?.defaultProperty ?? null,
-                markupLanguageId: this.value?.markupLanguageId ?? null,
-                regex: this.value?.regex ?? null,
-                selectSettings: this.value?.selectSettings ?? null,
-                overviewSettings: this.value?.overviewSettings ?? null,
-            });
+            this.form.patchValue(this.value);
         }
     }
 }

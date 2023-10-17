@@ -46,6 +46,7 @@
                     <span
                         class="item-name-only"
                         [innerHTML]="item?.name | highlight:filterTerm"
+                        (click)="itemClicked($event, item)"
                     ></span>
                 </ng-container>
 

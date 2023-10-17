@@ -520,4 +520,33 @@ public class MeshPublishChannelTest {
 			assertObject("Check " + o + " in channel branch", mesh.client(), projectName, branchName, o, true);
 		}
 	}
+
+	/**
+	 * Test moving a local folder into a new inherited parent folder within the same publish process
+	 * without instant publishing
+	 * @throws Exception
+	 */
+	@Test
+	public void testMoveLocalFolderIntoNewInheritedParent() throws Exception {
+		// create inherited folder and local subfolder
+		Folder folder1 = supply(() -> createFolder(node.getFolder(), "Folder #1"));
+		Folder subFolder = supply(() -> createFolder(folder1, "Subfolder", channel));
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// create new inherited folder
+		Folder folder2 = supply(() -> createFolder(node.getFolder(), "Folder #2"));
+		// move local subfolder into new inherited folder
+		subFolder = update(subFolder, f -> f.move(folder2, channel.getId()));
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
 }

@@ -11,7 +11,6 @@ export interface MeshSchemaListResponse {
     schemas: Array<Schema>
 }
 
-
 export interface Schema {
     name: string;
     elements: Array<SchemaElement>;

@@ -33,12 +33,15 @@
             (loggedInChange)="handleMeshLogin($event)"
             class="login-gate-wrapper"
         >
-            <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
 
-            <gtx-mesh-browser-schema-list
-                [project]="'Manual'" 
-            >
-            </gtx-mesh-browser-schema-list>
+            <ng-container *ngIf="loggedIn">
+                <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
+    
+                <gtx-mesh-browser-schema-list
+                    [project]="'Manual'" 
+                >
+                </gtx-mesh-browser-schema-list>
+            </ng-container>
 
         </gtx-mesh-login-gate>
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from './mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from '../models/mesh-browser-models';
 
 
 @Injectable()

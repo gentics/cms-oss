@@ -68,8 +68,6 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected Boolean noFilesIndex;
 
-	protected Boolean noImagesIndex;
-
 	protected Boolean noPagesIndex;
 
 	protected Boolean noFormsIndex;
@@ -509,22 +507,6 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 */
 	public void setNoFilesIndex(Boolean noFilesIndex) {
 		this.noFilesIndex = noFilesIndex;
-	}
-
-	/**
-	 * Get 'exclude images from indexing' flag.
-	 * @return
-	 */
-	public Boolean getNoImagesIndex() {
-		return noImagesIndex;
-	}
-
-	/**
-	 * Set 'exclude images from indexing' flag.
-	 * @param noImagesIndex
-	 */
-	public void setNoImagesIndex(Boolean noImagesIndex) {
-		this.noImagesIndex = noImagesIndex;
 	}
 
 	/**

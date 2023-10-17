@@ -103,10 +103,6 @@
         "en": "Exclude files from indexing",
         "de": "Keine Indexierung der Dateien"
     },
-    "noImagesIndex": {
-        "en": "Exclude images from indexing",
-        "de": "Keine Indexierung der Bilder"
-    },
     "noPagesIndex": {
         "en": "Exclude pages from indexing",
         "de": "Keine Indexierung der Seiten"

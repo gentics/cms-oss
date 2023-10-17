@@ -738,7 +738,6 @@
 			<property id="http2">0</property>
 			<property id="nofoldersindex">0</property>
 			<property id="nofilesindex">0</property>
-			<property id="noimagesindex">0</property>
 			<property id="nopagesindex">0</property>
 			<property id="noformsindex">0</property>
 			<property id="permission_information_default">0</property>

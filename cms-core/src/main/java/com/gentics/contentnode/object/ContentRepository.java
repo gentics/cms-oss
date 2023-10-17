@@ -108,7 +108,6 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		cr.setHttp2(nodeCR.isHttp2());
 		cr.setNoFoldersIndex(nodeCR.isNoFoldersIndex());
 		cr.setNoFilesIndex(nodeCR.isNoFilesIndex());
-		cr.setNoImagesIndex(nodeCR.isNoImagesIndex());
 		cr.setNoPagesIndex(nodeCR.isNoPagesIndex());
 		cr.setNoFormsIndex(nodeCR.isNoFormsIndex());
 		cr.setBasepath(nodeCR.getBasepath());
@@ -174,9 +173,6 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		}
 		if (cr.getNoFilesIndex() != null) {
 			nodeCR.setNoFilesIndex(cr.getNoFilesIndex());
-		}
-		if (cr.getNoImagesIndex() != null) {
-			nodeCR.setNoImagesIndex(cr.getNoImagesIndex());
 		}
 		if (cr.getNoPagesIndex() != null) {
 			nodeCR.setNoPagesIndex(cr.getNoPagesIndex());
@@ -249,7 +245,6 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		resolvableProperties.put("http2", new NodeObjectProperty<>((o, key) -> o.isHttp2()));
 		resolvableProperties.put("noFoldersIndex", new NodeObjectProperty<>((o, key) -> o.isNoFoldersIndex()));
 		resolvableProperties.put("noFilesIndex", new NodeObjectProperty<>((o, key) -> o.isNoFilesIndex()));
-		resolvableProperties.put("noImagesIndex", new NodeObjectProperty<>((o, key) -> o.isNoImagesIndex()));
 		resolvableProperties.put("noPagesIndex", new NodeObjectProperty<>((o, key) -> o.isNoPagesIndex()));
 		resolvableProperties.put("noFormsIndex", new NodeObjectProperty<>((o, key) -> o.isNoFormsIndex()));
 		resolvableProperties.put("instantPublishing", new NodeObjectProperty<>((o, key) -> o.isInstantPublishing()));
@@ -420,23 +415,6 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("nofilesindex")
 	public void setNoFilesIndex(boolean noFilesIndex) throws ReadOnlyException {
-		failReadOnly();
-	}
-
-	/**
-	 * Get the 'exclude images from indexing' flag.
-	 * @return flag
-	 */
-	@FieldGetter("noimagesindex")
-	public abstract boolean isNoImagesIndex();
-
-	/**
-	 * Set the 'exclude images from indexing' flag.
-	 * @param noIndex flag
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("noimagesindex")
-	public void setNoImagesIndex(boolean noIndex) throws ReadOnlyException {
 		failReadOnly();
 	}
 

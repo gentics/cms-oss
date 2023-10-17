@@ -195,10 +195,6 @@
         "en": "Exclude files from indexing",
         "de": "Keine Indexierung der Dateien"
     },
-    "property_noImagesIndex": {
-        "en": "Exclude images from indexing",
-        "de": "Keine Indexierung der Bilder"
-    },
     "property_noPagesIndex": {
         "en": "Exclude pages from indexing",
         "de": "Keine Indexierung der Seiten"

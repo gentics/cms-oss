@@ -45,7 +45,6 @@ describe('ContentRepositoryApi', () => {
             http2: false,
             noFoldersIndex: false,
             noFilesIndex: false,
-            noImagesIndex: false,
             noPagesIndex: false,
             noFormsIndex: false,
         };

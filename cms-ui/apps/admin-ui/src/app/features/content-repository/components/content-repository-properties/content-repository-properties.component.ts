@@ -151,7 +151,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             http2: new UntypedFormControl(this.value?.http2 ?? false),
             noFoldersIndex: new UntypedFormControl(this.value?.noFoldersIndex ?? false),
             noFilesIndex: new UntypedFormControl(this.value?.noFilesIndex ?? false),
-            noImagesIndex: new UntypedFormControl(this.value?.noImagesIndex ?? false),
             noPagesIndex: new UntypedFormControl(this.value?.noPagesIndex ?? false),
             noFormsIndex: new UntypedFormControl(this.value?.noFormsIndex ?? false),
         });
@@ -177,7 +176,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             'http2',
             'noFoldersIndex',
             'noFilesIndex',
-            'noImagesIndex',
             'noPagesIndex',
             'noFormsIndex',
             'version',

@@ -257,10 +257,6 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected boolean noFilesIndex;
 
-		@DataField("noimagesindex")
-		@Updateable
-		protected boolean noImagesIndex;
-
 		@DataField("nopagesindex")
 		@Updateable
 		protected boolean noPagesIndex;
@@ -433,11 +429,6 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Override
 		public boolean isNoFilesIndex() {
 			return noFilesIndex;
-		}
-
-		@Override
-		public boolean isNoImagesIndex() {
-			return noImagesIndex;
 		}
 
 		@Override
@@ -1096,14 +1087,6 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		public void setNoFilesIndex(boolean noIndex) throws ReadOnlyException {
 			if (this.noFilesIndex != noIndex) {
 				this.noFilesIndex = noIndex;
-				this.modified = true;
-			}
-		}
-
-		@Override
-		public void setNoImagesIndex(boolean noIndex) throws ReadOnlyException {
-			if (this.noImagesIndex != noIndex) {
-				this.noImagesIndex = noIndex;
 				this.modified = true;
 			}
 		}

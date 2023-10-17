@@ -114,8 +114,6 @@ export interface ContentRepositoryBase<T extends ModelType> {
     noFoldersIndex: boolean;
     /** Exclude files from indexing */
     noFilesIndex: boolean;
-    /** Exclude images from indexing */
-    noImagesIndex: boolean;
     /** Exclude pages from indexing */
     noPagesIndex: boolean;
     /** Exclude forms from indexing */

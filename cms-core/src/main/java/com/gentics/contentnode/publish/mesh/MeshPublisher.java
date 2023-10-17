@@ -1273,6 +1273,7 @@ public class MeshPublisher implements AutoCloseable {
 		case Folder.TYPE_FOLDER:
 			schema.setNoIndex(cr.isNoFoldersIndex());
 			break;
+		case ImageFile.TYPE_IMAGE:
 		case File.TYPE_FILE:
 			schema.setNoIndex(cr.isNoFilesIndex());
 			break;
@@ -1282,8 +1283,6 @@ public class MeshPublisher implements AutoCloseable {
 		case Page.TYPE_PAGE:
 			schema.setNoIndex(cr.isNoPagesIndex());
 			break;
-		case ImageFile.TYPE_IMAGE:
-			schema.setNoIndex(cr.isNoImagesIndex());
 		}
 		schema.setName(getSchemaName(type));
 		schema.setContainer(containerTypes.contains(type));

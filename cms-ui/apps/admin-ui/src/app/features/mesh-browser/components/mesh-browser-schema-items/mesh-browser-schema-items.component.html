@@ -14,7 +14,7 @@
             currentPage: page,
             totalItems: schema.elements.length
         }">
-            <div class="schema-element" (click)="loadNodeContent(element)">
+            <div class="schema-element" (click)="loadNodeContent(element.uuid)">
                 <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
 
                 <div>{{ element.displayName }}</div>

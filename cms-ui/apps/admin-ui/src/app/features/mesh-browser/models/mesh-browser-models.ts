@@ -17,8 +17,8 @@ export interface Schema {
 }
 
 export interface SchemaElement {
-    displayName: string;
     uuid: string;
+    displayName: string;
     isContainer: boolean;
     languages: Array<ElementLanguage>;
 }

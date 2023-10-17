@@ -13,6 +13,8 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     @Input()
     public project: string;
 
+    public currentNodeUuid: string;
+
     public schemas: Array<Schema> = [];
 
 
@@ -26,7 +28,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         const response = await this.loader.listSchemasWithRootNode(this.project)
         this.schemas = response.schemas
-        this.schemas.map(schema => schema.name.toUpperCase())
+        this.currentNodeUuid= response.rootNodeUuid;
 
         await this.loadNodesChildrenForSchemas(response.rootNodeUuid);
         this.changeDetector.markForCheck();
@@ -42,6 +44,10 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
             schema.elements = schemaElements;
         }
+    }
+
+    public nodeChanged(nodeUuid: string): void {
+        this.currentNodeUuid = nodeUuid;
     }
 
 }

@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { PaginationService } from 'ngx-pagination';
-import { MeshBrowserLoaderService, Schema, SchemaElement } from '../../providers';
+import { MeshBrowserLoaderService, Schema } from '../../providers';
 
 
 let uniqueComponentId = 0;
@@ -13,7 +13,7 @@ let uniqueComponentId = 0;
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [PaginationService],
 })
-export class MeshBrowserSchemaItemsComponent  {
+export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public readonly UNIQUE_ID = `gtx-mesh-browser-schema-items-${uniqueComponentId++}`;
 
@@ -23,11 +23,15 @@ export class MeshBrowserSchemaItemsComponent  {
     @Input()
     public schema: Schema;
 
+    @Input()
+    public currentNodeUuid: string;
+
+    @Output()
+    public nodeChanged = new EventEmitter<string>();
+
     public page = 1;
 
     public perPage = 10;
-
-    private currentNodeUuid: string;
 
     public collapsed = false;
 
@@ -38,14 +42,22 @@ export class MeshBrowserSchemaItemsComponent  {
     ) { }
 
 
-    public async loadNodeContent(element: SchemaElement): Promise<void> {
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes?.currentNodeUuid) {
+            this.loadNodeContent(changes.currentNodeUuid.currentValue)
+        }
+    }
+
+
+    public async loadNodeContent(nodeUuid: string): Promise<void> {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
-            nodeUuid: element.uuid,
+            schemaName: this.schema.name,
+            nodeUuid: nodeUuid,
         });
 
-        this.schema.elements = schemaElements.sort((a,b) => a.isContainer ? -1 : 1);
-        this.currentNodeUuid = element.uuid;
+        this.schema.elements = schemaElements.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
+        this.nodeChanged.emit(nodeUuid)
     }
 
 
@@ -53,6 +65,7 @@ export class MeshBrowserSchemaItemsComponent  {
         this.page = parseInt($event as unknown as string, 10);
 
         this.loader.listNodeChildrenForSchema(this.project, {
+            schemaName: this.schema.name,
             nodeUuid: this.currentNodeUuid,
             page: this.page,
         })

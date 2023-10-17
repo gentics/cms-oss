@@ -43,7 +43,7 @@ export class MeshBrowserSchemaItemsComponent  {
             nodeUuid: element.uuid,
         });
 
-        this.schema.elements = schemaElements;
+        this.schema.elements = schemaElements.sort((a,b) => a.isContainer ? -1 : 1);
         this.currentNodeUuid = element.uuid;
         this.changeDetector.markForCheck();
     }

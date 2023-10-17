@@ -15,7 +15,7 @@ let uniqueComponentId = 0;
 })
 export class MeshBrowserSchemaItemsComponent  {
 
-    public readonly UNIQUE_ID = `gtx-item-paging-${uniqueComponentId++}`;
+    public readonly UNIQUE_ID = `gtx-mesh-browser-schema-items-${uniqueComponentId++}`;
 
     @Input()
     public project: string;

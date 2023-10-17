@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import { PaginationService } from 'ngx-pagination';
 import { MeshBrowserLoaderService, Schema } from '../../providers';
 
 
@@ -8,7 +7,6 @@ import { MeshBrowserLoaderService, Schema } from '../../providers';
     templateUrl: './mesh-browser-schema-list.component.html',
     styleUrls: ['./mesh-browser-schema-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [PaginationService],
 })
 export class MeshBrowserSchemaListComponent implements OnInit {
 

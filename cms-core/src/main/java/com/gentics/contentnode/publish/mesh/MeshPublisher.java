@@ -3586,7 +3586,7 @@ public class MeshPublisher implements AutoCloseable {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
 
-							if (!cr.mustContain(languageVariant)) {
+							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
 								// remove language variant
 								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
 								// repeat task
@@ -3598,10 +3598,10 @@ public class MeshPublisher implements AutoCloseable {
 							Optional<Pair<Integer, NodeObject>> optNodeObject = getNodeObject(task.project, task.nodeId, conflictingUuid, conflictingLanguage);
 							if (optNodeObject.isPresent()) {
 								Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
-								
+
 								int objType = optNodeObject.get().getLeft();
 								NodeObject conflictingNodeObject = optNodeObject.get().getRight();
-								if (conflictingNodeObject == null || !cr.mustContain(conflictingNodeObject)) {
+								if (conflictingNodeObject == null || !Trx.supply(() -> cr.mustContain(conflictingNodeObject))) {
 									// remove the object from Mesh
 									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
 									// repeat task

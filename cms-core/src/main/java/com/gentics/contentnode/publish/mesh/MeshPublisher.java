@@ -3488,9 +3488,12 @@ public class MeshPublisher implements AutoCloseable {
 			completable.blockingAwait();
 		} catch (Throwable t) {
 			if (task.postponable && isRecoverable(t)) {
-				if (MeshPublishUtils.isNotFound(t)) {
+				if (MeshPublishUtils.isNotFound(t) || MeshPublishUtils.isBadRequestAfterMove(t)) {
 					// get parent folder
 					Folder parentFolder = Trx.supply(tx -> tx.getObject(Folder.class, task.folderId));
+					if (parentFolder == null) {
+						throw t;
+					}
 					Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 
 					// generate the write task for the parent folder

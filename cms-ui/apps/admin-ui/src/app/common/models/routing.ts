@@ -40,6 +40,7 @@ export enum AdminUIModuleRoutes {
     SEARCH_INDEX_MAINTENANCE = 'search-index-maintenance',
     TEMPLATES = 'templates',
     USERS = 'users',
+    MESH_BROWSER =  'mesh-browser',
 }
 
 export enum AdminUIEntityDetailRoutes {
@@ -61,6 +62,7 @@ export enum AdminUIEntityDetailRoutes {
     SCHEDULE_TASK = 'task',
     TEMPLATE = 'template',
     USER = 'user',
+    MESH_BROWSER = 'mesh-browser',
 }
 
 /**

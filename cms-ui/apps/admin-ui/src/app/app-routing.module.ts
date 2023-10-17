@@ -444,6 +444,27 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
             },
+
+            // Mesh-Browser Module
+            {
+                path: AdminUIModuleRoutes.MESH_BROWSER,
+                component: SplitViewRouterOutletComponent,
+                loadChildren: () => import('./features/mesh-browser/mesh-browser.module').then(m => m.MeshBrowserModule),
+                data: {
+                    [ROUTE_BREADCRUMB_KEY]: {
+                        title: 'dashboard.mesh_browser',
+                    },
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
+                        {
+                            type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+                            permissions: [
+                                GcmsPermission.READ,
+                            ],
+                        },
+                    ],
+                },
+            },
         ],
     },
     {

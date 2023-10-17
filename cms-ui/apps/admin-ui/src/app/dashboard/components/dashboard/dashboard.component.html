@@ -65,6 +65,14 @@
                 [class.disabled]="!(contentRepositoriesModuleEnabled$ | async)"
                 [disabled]="!(contentRepositoriesModuleEnabled$ | async)"
             ></gtx-dashboard-item>
+
+            <gtx-dashboard-item
+                [routerLink]="'/' + AdminUIModuleRoutes.MESH_BROWSER"
+                icon="mesh"
+                [title]="'dashboard.mesh_browser' | i18n"
+                [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
+                [disabled]="!(meshBrowserModuleEnabled$ | async)"
+        ></gtx-dashboard-item>
         </gtx-dashboard-item-group>
 
         <gtx-dashboard-item-group [title]="'dashboard.group_operations' | i18n">

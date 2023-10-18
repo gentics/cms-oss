@@ -26,6 +26,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     @Input()
     public currentNodeUuid: string;
 
+    @Input()
+    public languages: Array<string>;
+
     @Output()
     public nodeChanged = new EventEmitter<string>();
 
@@ -43,8 +46,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes?.currentNodeUuid) {
-            this.loadNodeContent(changes.currentNodeUuid.currentValue)
+        if (changes?.currentNodeUuid || changes?.project) {
+            this.loadNodeContent(this.currentNodeUuid)
             this.page = 1;
         }
     }
@@ -54,6 +57,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
+            lang: this.languages,
         });
 
         this.schema.elements = schemaElements.sort((a,b) => a.displayName.localeCompare(b.displayName));

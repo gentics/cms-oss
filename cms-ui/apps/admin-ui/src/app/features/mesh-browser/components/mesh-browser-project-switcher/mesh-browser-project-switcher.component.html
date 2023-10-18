@@ -1,0 +1,21 @@
+
+<ng-container>
+
+    <gtx-dropdown-list class="project-dropdown">
+        <gtx-dropdown-trigger>
+            <a>
+                <icon class="collapse">keyboard_arrow_down</icon> 
+                <span>{{ currentProject }}</span>
+            </a>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <gtx-dropdown-item *ngFor="let project of projects" (click)="projectChanged(project)">
+                {{ project }}
+            </gtx-dropdown-item>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+
+
+
+</ng-container>

@@ -4,6 +4,7 @@ import { PagingOptions } from '@gentics/mesh-models';
 export interface MeshSchemaListParams extends PagingOptions  {
     schemaName?: string,
     nodeUuid: string,
+    lang?: Array<string>
 }
 
 export interface MeshSchemaListResponse {

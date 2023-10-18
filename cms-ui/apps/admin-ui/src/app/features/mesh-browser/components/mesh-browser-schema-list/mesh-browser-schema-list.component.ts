@@ -15,6 +15,8 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public currentNodeUuid: string;
 
+    public languages: Array<string> = ['de', 'en']; // todo: fetch languages
+
     public schemas: Array<Schema> = [];
 
 
@@ -40,6 +42,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
             const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
                 schemaName: schema.name,
                 nodeUuid: nodeUuid,
+                lang: this.languages,
             });
 
             schema.elements = schemaElements;

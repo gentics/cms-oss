@@ -8,6 +8,7 @@ import {
     ContentRepositoryTableComponent,
     MeshBrowserEditorComponent,
     MeshBrowserMasterComponent,
+    MeshBrowserProjectSwitcherComponent,
     MeshBrowserSchemaItemsComponent,
     MeshBrowserSchemaListComponent,
 } from './components';
@@ -25,6 +26,7 @@ import {
         ContentRepositoryTableComponent,
         MeshBrowserSchemaListComponent,
         MeshBrowserSchemaItemsComponent,
+        MeshBrowserProjectSwitcherComponent,
     ],
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,

@@ -36,14 +36,31 @@
 
             <ng-container *ngIf="loggedIn">
                 <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
-    
-                <gtx-mesh-browser-schema-list
-                    [project]="'Manual'" 
-                >
-                </gtx-mesh-browser-schema-list>
+
+                <ng-container *ngIf="!!currentProject else noProjectRenderer">
+                    <gtx-mesh-browser-project-switcher
+                        [currentProject]="currentProject"
+                        [projects]="projects"
+                        [branches]="branches"
+                        (projectChangedEvent)="projectChanged($event)"
+                    >
+                    </gtx-mesh-browser-project-switcher>
+                        
+                    <gtx-mesh-browser-schema-list
+                        [project]="currentProject" 
+                    >
+                    </gtx-mesh-browser-schema-list>
+                </ng-container>
+
             </ng-container>
 
         </gtx-mesh-login-gate>
 
     </ng-template>
 </div>
+
+<ng-template #noProjectRenderer>
+    <div class="no-project">
+        <h4>No Project available</h4>
+    </div>
+</ng-template>

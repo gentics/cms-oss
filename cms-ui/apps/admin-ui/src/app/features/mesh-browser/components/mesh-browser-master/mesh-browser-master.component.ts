@@ -99,8 +99,9 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         }
     }
 
-    public projectChanged(project: string): void {
+    public async projectChanged(project: string): Promise<void> {
         this.currentProject = project;
+        this.branches = await this.loader.getBranches(this.currentProject);
     }
 
     public branchChanged(branch: string): void {

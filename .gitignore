@@ -55,3 +55,6 @@ conf/*
 ui-conf/*
 keys/*
 cache/*
+data/
+logs/
+packages/

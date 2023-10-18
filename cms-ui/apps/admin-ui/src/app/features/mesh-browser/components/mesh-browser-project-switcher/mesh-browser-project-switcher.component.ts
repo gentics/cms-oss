@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { MeshBrowserLoaderService } from '../../providers';
 
 
@@ -8,7 +8,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     styleUrls: ['./mesh-browser-project-switcher.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserProjectSwitcherComponent implements OnInit {
+export class MeshBrowserProjectSwitcherComponent {
 
     @Input()
     public projects: Array<string> = [];
@@ -25,20 +25,21 @@ export class MeshBrowserProjectSwitcherComponent implements OnInit {
     @Output()
     public projectChangedEvent = new EventEmitter<string>();
 
+    @Output()
+    public branchChangedEvent = new EventEmitter<string>();
+
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
-    ) {
-
-    }
-
-    ngOnInit(): void { }
-
+    ) { }
 
     public projectChanged(project: string): void {
-        console.log('project has changed', project);
         this.projectChangedEvent.emit(project);
+    }
+
+    public branchChanged(branch: string): void {
+        this.branchChangedEvent.emit(branch);
     }
 
 }

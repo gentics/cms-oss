@@ -39,6 +39,8 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public currentProject: string;
 
+    public currentBranch: string;
+
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -91,6 +93,7 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         if (this.projects.length > 0) {
             this.currentProject = this.projects[0];
             this.branches = await this.loader.getBranches(this.currentProject);
+            this.currentBranch = this.branches[0];
 
             this.changeDetector.markForCheck();
         }
@@ -98,6 +101,11 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public projectChanged(project: string): void {
         this.currentProject = project;
+    }
+
+    public branchChanged(branch: string): void {
+        console.log(branch);
+        this.currentBranch = branch;
     }
 
 }

@@ -46,6 +46,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges): void {
+        console.log('changes', changes);
+
         if (changes?.currentNodeUuid || changes?.project) {
             this.loadNodeContent(this.currentNodeUuid)
             this.page = 1;
@@ -60,7 +62,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             lang: this.languages,
         });
 
-        this.schema.elements = schemaElements.sort((a,b) => a.displayName.localeCompare(b.displayName));
+        this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
     }

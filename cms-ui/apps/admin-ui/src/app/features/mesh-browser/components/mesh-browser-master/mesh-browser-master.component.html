@@ -40,9 +40,11 @@
                 <ng-container *ngIf="!!currentProject else noProjectRenderer">
                     <gtx-mesh-browser-project-switcher
                         [currentProject]="currentProject"
+                        [currentBranch]="currentBranch"
                         [projects]="projects"
                         [branches]="branches"
                         (projectChangedEvent)="projectChanged($event)"
+                        (branchChangedEvent)="branchChanged($event)"
                     >
                     </gtx-mesh-browser-project-switcher>
                         

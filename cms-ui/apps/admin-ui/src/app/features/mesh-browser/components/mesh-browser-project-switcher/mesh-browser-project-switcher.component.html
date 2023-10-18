@@ -17,5 +17,19 @@
     </gtx-dropdown-list>
 
 
+    <gtx-dropdown-list *ngIf="branches?.length > 1" class="project-dropdown branch-dropdown">
+        <gtx-dropdown-trigger>
+            <a>
+                <icon class="collapse">keyboard_arrow_down</icon> 
+                <span>{{ currentBranch }}</span>
+            </a>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <gtx-dropdown-item *ngFor="let branch of branches" (click)="branchChanged(branch)">
+                {{ branch }}
+            </gtx-dropdown-item>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
 
 </ng-container>

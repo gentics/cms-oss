@@ -70,7 +70,7 @@ export class MeshBrowserLoaderService {
             variables: params,
         });
 
-        return response.data.node.children.elements
+        return response.data.node?.children?.elements
     }
 
 }

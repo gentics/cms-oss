@@ -7,12 +7,13 @@
         </icon>
     </div>
 
-    <div class="schema-content" [ngClass]="{'collapsed': collapsed}">
+
+    <div *ngIf="!!schema.elements?.length"  [ngClass]="{'collapsed': collapsed}" class="schema-content">
         <div *ngFor="let element of schema.elements | paginate : {
             id: UNIQUE_ID,
             itemsPerPage: perPage,
             currentPage: page,
-            totalItems: schema.elements.length
+            totalItems: schema.elements?.length
         }">
             <div *ngIf="!!element" class="schema-element" (click)="loadNodeContent(element.uuid)">
                 <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
@@ -26,7 +27,7 @@
         </div>
 
         <gtx-paging
-            *ngIf="schema.elements.length > perPage"
+            *ngIf="schema.elements?.length > perPage"
             [id]="UNIQUE_ID"
             (pageChange)="changePage($event)"
         ></gtx-paging>

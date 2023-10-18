@@ -104,7 +104,6 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
     }
 
     public branchChanged(branch: string): void {
-        console.log(branch);
         this.currentBranch = branch;
     }
 

@@ -46,8 +46,6 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges): void {
-        console.log('changes', changes);
-
         if (changes?.currentNodeUuid || changes?.project) {
             this.loadNodeContent(this.currentNodeUuid)
             this.page = 1;

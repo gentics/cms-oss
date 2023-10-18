@@ -2,10 +2,20 @@ import { MeshModule } from '@admin-ui/mesh';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { NgxPaginationModule } from 'ngx-pagination';
 import { SharedModule } from '../../shared/shared.module';
-import { ContentRepositoryTableComponent, MeshBrowserEditorComponent, MeshBrowserMasterComponent } from './components';
+import {
+    ContentRepositoryTableComponent,
+    MeshBrowserEditorComponent,
+    MeshBrowserMasterComponent,
+    MeshBrowserSchemaItemsComponent,
+    MeshBrowserSchemaListComponent,
+} from './components';
 import { MESH_BROWSER_ROUTES } from './mesh-browser.routes';
-import { MeshBrowserContentRepositoryTableLoaderService } from './providers/mesh-browser-repository-table-loader.service';
+import {
+    MeshBrowserContentRepositoryTableLoaderService,
+    MeshBrowserLoaderService,
+} from './providers';
 
 
 @NgModule({
@@ -13,13 +23,17 @@ import { MeshBrowserContentRepositoryTableLoaderService } from './providers/mesh
         MeshBrowserMasterComponent,
         MeshBrowserEditorComponent,
         ContentRepositoryTableComponent,
+        MeshBrowserSchemaListComponent,
+        MeshBrowserSchemaItemsComponent,
     ],
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,
+        MeshBrowserLoaderService,
     ],
     imports: [
         SharedModule,
         CommonModule,
+        NgxPaginationModule,
         RouterModule.forChild(MESH_BROWSER_ROUTES),
         MeshModule,
     ],

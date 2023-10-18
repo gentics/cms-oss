@@ -1,13 +1,21 @@
-.overview-header {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+.mesh-browser-container {
+    overflow-y: auto;
 
-    .back-button {
-        margin-right: 1.5rem;
+    .login-gate-wrapper {
+        height: 80%;
     }
-
-    .overview-title {
-        font-size: 1.1rem;
+    
+    .overview-header {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+    
+        .back-button {
+            margin-right: 1.5rem;
+        }
+    
+        .overview-title {
+            font-size: 1.1rem;
+        }
     }
 }

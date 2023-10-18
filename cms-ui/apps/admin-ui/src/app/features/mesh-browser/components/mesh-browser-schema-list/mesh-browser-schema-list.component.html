@@ -1,0 +1,14 @@
+<div class="schema-list-wrapper">
+    <ng-container *ngFor="let schema of schemas">
+
+        <div>
+            <gtx-mesh-browser-schema-items
+                [project]="project"
+                [schema]="schema"
+                [currentNodeUuid]="currentNodeUuid"
+                (nodeChanged)="nodeChanged($event)"
+            ></gtx-mesh-browser-schema-items>
+        </div>  
+
+    </ng-container>
+</div>

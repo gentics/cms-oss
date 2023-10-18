@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ModalService } from '@gentics/ui-core';
 import { fileSchema, folderSchema, imageSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
 import {
@@ -113,6 +114,7 @@ import {
     switchMap,
     take,
 } from 'rxjs/operators';
+import { ImagePropertiesModalComponent } from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
 import {
     DisplayFields,
     GtxChipSearchProperties,
@@ -219,6 +221,7 @@ export class FolderActionsService {
         private navigationService: NavigationService,
         private queryAssemblerElasticSearch: QueryAssemblerElasticSearchService,
         private queryAssemblerGCMSSearchService: QueryAssemblerGCMSSearchService,
+        private modalService: ModalService,
     ) { }
 
     /**
@@ -2629,10 +2632,35 @@ export class FolderActionsService {
                         },
                         type: 'success',
                     });
+
+                    const showFileProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_FILE_PROPERTIES];
+                    // TODO: Remove once feature can be activated in admin-ui.
+                    // const showImageProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_IMAGE_PROPERTIES];
+                    const showImageProperties = true;
+                    if (showFileProperties || showImageProperties) {
+                        this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
+                    }
                 }
             });
 
         return observable;
+    }
+
+    async openUploadModals(successfulUploads: UploadResponse[], nodeId: number, showFileProperties: boolean, showImageProperties: boolean): Promise<void> {
+
+        for (const upload of successfulUploads) {
+            try {
+                const showModal = upload.response.file.fileType.startsWith('image/')
+                    ? showImageProperties
+                    : showFileProperties;
+
+                if (showModal) {
+                    await this.openImageModal(upload.response.file, nodeId)
+                }
+            } catch (err) {
+                console.log('Modal already closed')
+            }
+        }
     }
 
     /**
@@ -3501,5 +3529,50 @@ export class FolderActionsService {
         }
 
         return itemsPerPage * (pageNumber - 1);
+    }
+
+    private openImageModal(file: File, nodeId: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let timer: number;
+            let hasResolved = false;
+
+            console.log('Opening image modal');
+
+            this.modalService.fromComponent(ImagePropertiesModalComponent, {
+                onClose: () => {
+                    console.log('onClose() called on image modal');
+
+                    timer = setTimeout(() => {
+                        if (!hasResolved) {
+                            reject(new Error('User has canceled the modal'));
+                        }
+                    }, 10);
+                },
+            }, {
+                nodeId: nodeId,
+                file: file,
+            })
+                .then(modal => modal.open())
+                .then(result => {
+                    console.log('Image modal result:', result);
+
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+
+                    resolve(result);
+                    hasResolved = true;
+                })
+                .catch(err => {
+                    console.log('Error:', err);
+
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+
+                    reject(err);
+                    hasResolved = true;
+                });
+        });
     }
 }

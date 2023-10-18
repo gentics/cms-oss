@@ -39,3 +39,5 @@ processlogger.lock
 dependency-reduced-pom.xml
 cache
 .run
+conf
+keys

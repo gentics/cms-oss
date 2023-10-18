@@ -45,6 +45,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes?.currentNodeUuid) {
             this.loadNodeContent(changes.currentNodeUuid.currentValue)
+            this.page = 1;
         }
     }
 
@@ -61,8 +62,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     }
 
 
-    public changePage($event: Event): void {
-        this.page = parseInt($event as unknown as string, 10);
+    public changePage(page: number): void {
+        this.page = page;
 
         this.loader.listNodeChildrenForSchema(this.project, {
             schemaName: this.schema.name,

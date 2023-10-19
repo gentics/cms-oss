@@ -6,9 +6,9 @@ import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
-import { User } from '@gentics/mesh-models';
+import { BranchReference, User } from '@gentics/mesh-models';
 import { TableRow } from '@gentics/ui-core';
-import { Branch, MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserLoaderService } from '../../providers';
 
 
 const MESH_ID_PARAM = 'meshId';
@@ -37,9 +37,9 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public currentProject: string;
 
-    public branches: Array<Branch> = [];
+    public branches: Array<BranchReference> = [];
 
-    public currentBranch: Branch;
+    public currentBranch: BranchReference;
 
     public languages: Array<string> = ['de', 'en'];
 
@@ -62,7 +62,7 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         );
     }
 
-    public handleRowClick(row: TableRow<ContentRepositoryBO>): void {
+    public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {
         this.selectedRepository = row.item;
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, { [MESH_ID_PARAM]: row.item.id }], { relativeTo: this.route });
     }
@@ -72,7 +72,7 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], { relativeTo: this.route });
     }
 
-    public handleMeshLogin(event: { loggedIn: boolean, user?: User }): void {
+    public meshLoginHandler(event: { loggedIn: boolean, user?: User }): void {
         this.loggedIn = event.loggedIn;
 
         if (event.loggedIn) {
@@ -103,17 +103,17 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         }
     }
 
-    public async projectChanged(project: string): Promise<void> {
+    public async projectChangeHandler(project: string): Promise<void> {
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
     }
 
-    public branchChanged(branch: Branch): void {
+    public branchChangeHandler(branch: BranchReference): void {
         this.currentBranch = branch;
     }
 
 
-    public languageChanged(language: string): void {
+    public languageChangeHandler(language: string): void {
         this.currentLanguage = language;
         this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
     }

@@ -17,7 +17,7 @@ export class MeshBrowserLanguageSwitcherComponent {
     public currentLanguage: string;
 
     @Output()
-    public languageChangedEvent = new EventEmitter<string>();
+    public languageChange = new EventEmitter<string>();
 
 
     constructor(
@@ -25,8 +25,8 @@ export class MeshBrowserLanguageSwitcherComponent {
         protected loader: MeshBrowserLoaderService,
     ) { }
 
-    public languageChanged(language: string): void {
-        this.languageChangedEvent.emit(language);
+    public languageChangeHandler(language: string): void {
+        this.languageChange.emit(language);
     }
 
 }

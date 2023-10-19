@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import { MeshBrowserLoaderService, Schema } from '../../providers';
+import { MeshBrowserLoaderService } from '../../providers';
+import { SchemaContainer } from '../../models/mesh-browser-models';
 
 
 @Component({
@@ -24,7 +25,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public currentNodeUuid: string;
 
-    public schemas: Array<Schema> = [];
+    public schemas: Array<SchemaContainer> = [];
 
 
     constructor(

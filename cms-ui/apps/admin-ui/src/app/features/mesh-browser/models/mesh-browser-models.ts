@@ -9,10 +9,10 @@ export interface MeshSchemaListParams extends PagingOptions  {
 
 export interface MeshSchemaListResponse {
     rootNodeUuid: string,
-    schemas: Array<Schema>
+    schemas: Array<SchemaContainer>
 }
 
-export interface Schema {
+export interface SchemaContainer {
     name: string;
     elements: Array<SchemaElement>;
 }
@@ -27,9 +27,4 @@ export interface SchemaElement {
 
 export interface ElementLanguage {
     language: string;
-}
-
-export interface Branch {
-    name: string;
-    uuid: string;
 }

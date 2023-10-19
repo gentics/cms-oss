@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { BranchReference } from '@gentics/mesh-models';
 import { PaginationService } from 'ngx-pagination';
-import { Branch, MeshBrowserLoaderService, Schema } from '../../providers';
+import { MeshBrowserLoaderService } from '../../providers';
+import { SchemaContainer } from '../../models/mesh-browser-models';
 
 
 let uniqueComponentId = 0;
@@ -21,13 +23,13 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public project: string;
 
     @Input()
-    public schema: Schema;
+    public schema: SchemaContainer;
 
     @Input()
     public currentNodeUuid: string;
 
     @Input()
-    public currentBranch: Branch;
+    public currentBranch: BranchReference;
 
     @Input()
     public languages: Array<string>;

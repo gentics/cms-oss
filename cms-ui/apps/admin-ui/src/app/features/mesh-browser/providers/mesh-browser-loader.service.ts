@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { UserResponse } from '@gentics/mesh-models';
+import { BranchReference, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { Branch, MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from '../models/mesh-browser-models';
 
 
 @Injectable()
@@ -19,7 +19,7 @@ export class MeshBrowserLoaderService {
         return projectList.data.map(project => project.name );
     }
 
-    public async getBranches(project: string): Promise<Array<Branch>> {
+    public async getBranches(project: string): Promise<Array<BranchReference>> {
         const branchList = await this.meshClient.branches.list(project);
         return branchList.data;
     }

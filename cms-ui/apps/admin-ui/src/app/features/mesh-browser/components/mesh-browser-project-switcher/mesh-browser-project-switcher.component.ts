@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
-import { Branch, MeshBrowserLoaderService } from '../../providers';
+import { BranchReference } from '@gentics/mesh-models';
+import { MeshBrowserLoaderService } from '../../providers';
 
 
 @Component({
@@ -20,13 +21,13 @@ export class MeshBrowserProjectSwitcherComponent {
     public currentProject: string;
 
     @Input()
-    public currentBranch: Branch;
+    public currentBranch: BranchReference;
 
     @Output()
-    public projectChangedEvent = new EventEmitter<string>();
+    public projectChange = new EventEmitter<string>();
 
     @Output()
-    public branchChangedEvent = new EventEmitter<Branch>();
+    public branchChange = new EventEmitter<BranchReference>();
 
 
     constructor(
@@ -34,12 +35,12 @@ export class MeshBrowserProjectSwitcherComponent {
         protected loader: MeshBrowserLoaderService,
     ) { }
 
-    public projectChanged(project: string): void {
-        this.projectChangedEvent.emit(project);
+    public projectChangeHandler(project: string): void {
+        this.projectChange.emit(project);
     }
 
-    public branchChanged(branch: Branch): void {
-        this.branchChangedEvent.emit(branch);
+    public branchChangeHandler(branch: BranchReference): void {
+        this.branchChange.emit(branch);
     }
 
 }

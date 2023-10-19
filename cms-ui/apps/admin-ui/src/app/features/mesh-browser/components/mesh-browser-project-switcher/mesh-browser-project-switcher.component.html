@@ -10,7 +10,7 @@
         </gtx-dropdown-trigger>
 
         <gtx-dropdown-content>
-            <gtx-dropdown-item *ngFor="let project of projects" (click)="projectChanged(project)">
+            <gtx-dropdown-item *ngFor="let project of projects" (click)="projectChangeHandler(project)">
                 {{ project }}
             </gtx-dropdown-item>
         </gtx-dropdown-content>
@@ -26,7 +26,7 @@
         </gtx-dropdown-trigger>
 
         <gtx-dropdown-content>
-            <gtx-dropdown-item *ngFor="let branch of branches" (click)="branchChanged(branch)">
+            <gtx-dropdown-item *ngFor="let branch of branches" (click)="branchChangeHandler(branch)">
                 {{ branch.name }}
             </gtx-dropdown-item>
         </gtx-dropdown-content>

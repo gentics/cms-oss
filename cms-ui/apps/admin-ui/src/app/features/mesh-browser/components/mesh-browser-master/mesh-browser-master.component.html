@@ -8,7 +8,7 @@
             [selectable]="false"
             [hideActions]=""
             [activeEntity]="activeEntity"
-            (rowClick)="handleRowClick($event)"
+            (rowClick)="rowClickHandler($event)"
         ></gtx-mesh-browser-repository-table>
     </ng-container>
     
@@ -30,7 +30,7 @@
         <gtx-mesh-login-gate
             [repository]="selectedRepository"
             [loggedIn]="loggedIn"
-            (loggedInChange)="handleMeshLogin($event)"
+            (loggedInChange)="meshLoginHandler($event)"
             class="login-gate-wrapper"
         >
 
@@ -44,15 +44,15 @@
                         [currentBranch]="currentBranch"
                         [projects]="projects"
                         [branches]="branches"
-                        (projectChangedEvent)="projectChanged($event)"
-                        (branchChangedEvent)="branchChanged($event)"
+                        (projectChange)="projectChangeHandler($event)"
+                        (branchChange)="branchChangeHandler($event)"
                     >
                     </gtx-mesh-browser-project-switcher>
 
                     <gtx-mesh-browser-language-switcher
                         [currentLanguage]="currentLanguage"
                         [languages]="languages"
-                        (languageChangedEvent)="languageChanged($event)"
+                        (languageChange)="languageChangeHandler($event)"
                     >
                     </gtx-mesh-browser-language-switcher>
 

@@ -10,7 +10,7 @@
         </gtx-dropdown-trigger>
 
         <gtx-dropdown-content>
-            <gtx-dropdown-item *ngFor="let language of languages" (click)="languageChanged(language)">
+            <gtx-dropdown-item *ngFor="let language of languages" (click)="languageChangeHandler(language)">
                 {{ language }}
             </gtx-dropdown-item>
         </gtx-dropdown-content>

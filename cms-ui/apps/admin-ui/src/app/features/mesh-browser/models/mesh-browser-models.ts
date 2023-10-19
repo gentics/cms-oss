@@ -21,6 +21,7 @@ export interface SchemaElement {
     uuid: string;
     displayName: string;
     isContainer: boolean;
+    language: string;
     languages: Array<ElementLanguage>;
 }
 

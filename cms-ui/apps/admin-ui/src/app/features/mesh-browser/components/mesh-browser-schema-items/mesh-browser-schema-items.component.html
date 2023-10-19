@@ -20,7 +20,7 @@
 
                 <div>{{ element.displayName }}</div>
 
-                <span *ngFor="let language of element.languages" class="language">
+                <span *ngFor="let language of element.languages"  [ngClass]="{'active': language.language === currentLanguage}"  class="language">
                     {{ language.language }}
                 </span>
             </div>

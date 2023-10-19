@@ -3,7 +3,7 @@ import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { User } from '@gentics/mesh-models';
@@ -40,6 +40,10 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
     public currentProject: string;
 
     public currentBranch: string;
+
+    public languages: Array<string> = ['de', 'en'];
+
+    public currentLanguage = 'de';
 
 
     constructor(
@@ -106,6 +110,12 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public branchChanged(branch: string): void {
         this.currentBranch = branch;
+    }
+
+
+    public languageChanged(language: string): void {
+        this.currentLanguage = language;
+        this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
     }
 
 }

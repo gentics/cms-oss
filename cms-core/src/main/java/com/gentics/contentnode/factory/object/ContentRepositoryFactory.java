@@ -1371,7 +1371,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		@Updateable
 		protected boolean segmentfield;
 
-		@DataField("noindex")
+		@DataField("no_index")
 		@Updateable
 		protected boolean noIndex;
 
@@ -2083,7 +2083,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "noIndex", "elasticsearch", "micronode_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "no_index", "elasticsearch", "micronode_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;

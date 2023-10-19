@@ -500,7 +500,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 * Check whether the tagmap entry should be excluded from indexing
 	 * @return
 	 */
-	@FieldGetter("noindex")
+	@FieldGetter("no_index")
 	public abstract boolean isNoIndex();
 
 	/**
@@ -509,7 +509,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 * @throws ReadOnlyException
 	 * @throws NodeException
 	 */
-	@FieldSetter("noindex")
+	@FieldSetter("no_index")
 	public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
 		failReadOnly();
 	}

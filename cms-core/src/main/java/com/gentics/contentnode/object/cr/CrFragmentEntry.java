@@ -287,7 +287,7 @@ public interface CrFragmentEntry extends NodeObjectWithModel<ContentRepositoryFr
 	 * Check whether the tagmap entry should be excluded from indexing
 	 * @return
 	 */
-	@FieldGetter("noindex")
+	@FieldGetter("no_index")
 	boolean isNoIndex();
 
 	/**
@@ -296,7 +296,7 @@ public interface CrFragmentEntry extends NodeObjectWithModel<ContentRepositoryFr
 	 * @throws ReadOnlyException
 	 * @throws NodeException
 	 */
-	@FieldSetter("noindex")
+	@FieldSetter("no_index")
 	default void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
 		throw new ObjectReadOnlyException(this);
 	}

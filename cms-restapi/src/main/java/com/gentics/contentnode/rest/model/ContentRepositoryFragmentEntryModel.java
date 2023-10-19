@@ -56,7 +56,7 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 
 	private Boolean urlfield;
 
-	private Boolean noindex;
+	private Boolean noIndex;
 
 	private JsonNode elasticsearch;
 
@@ -323,7 +323,7 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 * @return true for no indexing
 	 */
 	public Boolean getNoIndex() {
-		return noindex;
+		return noIndex;
 	}
 
 	/**
@@ -331,7 +331,7 @@ public class ContentRepositoryFragmentEntryModel implements Serializable {
 	 * @param noIndex flag
 	 */
 	public void setNoIndex(Boolean noIndex) {
-		this.noindex = noIndex;
+		this.noIndex = noIndex;
 	}
 
 	/**

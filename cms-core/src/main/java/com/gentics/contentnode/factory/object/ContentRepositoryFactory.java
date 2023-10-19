@@ -1284,7 +1284,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat,
-				boolean segmentfield, boolean displayfield, boolean urlfield, boolean noindex) throws NodeException {
+				boolean segmentfield, boolean displayfield, boolean urlfield, boolean noIndex) throws NodeException {
 			if (!type.validFor(crType)) {
 				throw new NodeException(String.format("Attribute type %s is not valid for ContentRepository %s of type %s", type, name, crType));
 			}
@@ -1300,7 +1300,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			entry.setSegmentfield(segmentfield);
 			entry.setDisplayfield(displayfield);
 			entry.setUrlfield(urlfield);
-			entry.setNoIndex(noindex);
+			entry.setNoIndex(noIndex);
 			getEntries().add(entry);
 		}
 	}
@@ -1373,7 +1373,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@DataField("noindex")
 		@Updateable
-		protected boolean noindex;
+		protected boolean noIndex;
 
 		@DataField("displayfield")
 		@Updateable
@@ -1524,7 +1524,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public boolean isNoIndex() {
-			return noindex;
+			return noIndex;
 		};
 
 		@Override
@@ -1700,8 +1700,8 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 		@Override
 		public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
-			if (this.noindex != noIndex) {
-				this.noindex = noIndex;
+			if (this.noIndex != noIndex) {
+				this.noIndex = noIndex;
 				this.modified = true;
 			}
 		}
@@ -2083,7 +2083,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 		protected int crFragmentId;
 
 		@RestModel(update = { "tagname", "mapname", "obj_type", "attribute_type", "multivalue", "optimized", "filesystem", "target_type",
-				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "noindex", "elasticsearch", "micronode_filter" })
+				"foreignlink_attribute", "foreignlink_attribute_rule", "category", "displayfield", "segmentfield", "urlfield", "noIndex", "elasticsearch", "micronode_filter" })
 		protected ContentRepositoryFragmentEntryModel model;
 
 		protected AttributeType attributeType;

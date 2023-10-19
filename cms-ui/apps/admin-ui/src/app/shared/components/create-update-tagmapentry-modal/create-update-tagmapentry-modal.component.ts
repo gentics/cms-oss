@@ -68,7 +68,7 @@ export class CreateUpdateTagmapEntryModalComponent extends BaseModal<TagmapEntry
             segmentfield: this.value?.segmentfield ?? null,
             displayfield: this.value?.displayfield ?? null,
             urlfield: this.value?.urlfield ?? null,
-            noindex: this.value?.noindex ?? null,
+            noIndex: this.value?.noIndex ?? null,
             elasticsearch: this.value?.elasticsearch ?? null,
             micronodeFilter: this.value?.micronodeFilter ?? '',
             fragmentName: this.value?.fragmentName ?? '',

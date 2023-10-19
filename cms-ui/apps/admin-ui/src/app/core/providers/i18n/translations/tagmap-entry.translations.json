@@ -87,7 +87,7 @@
         "en": "url field",
         "de": "URL-Feld"
     },
-    "noindex": {
+    "noIndex": {
         "en": "No indexing",
         "de": "Keine Indexierung"
     },

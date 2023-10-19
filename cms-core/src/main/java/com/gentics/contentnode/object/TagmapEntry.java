@@ -167,7 +167,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		resolvableProperties.put("fragmentName", new NodeObjectProperty<>((o, key) -> o.getContentRepositoryFragmentName()));
 		resolvableProperties.put("micronodeFilter", new NodeObjectProperty<>((o, key) -> o.getMicronodeFilter()));
 		resolvableProperties.put("elasticsearch", new NodeObjectProperty<>((o, key) -> o.getElasticsearch()));
-		resolvableProperties.put("noindex", new NodeObjectProperty<>((o, key) -> o.isNoIndex()));
+		resolvableProperties.put("noIndex", new NodeObjectProperty<>((o, key) -> o.isNoIndex()));
 	}
 
 	/**

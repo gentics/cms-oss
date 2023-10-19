@@ -223,7 +223,7 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			return ListBuilder.from(fragments ? cr.getAllEntries() : cr.getEntries(), TagmapEntry.TRANSFORM2REST)
 					.filter(ResolvableFilter.get(filter, "id", "globalId", "tagname", "mapname", "foreignlinkAttribute", "foreignlinkAttributeRule", "category", "fragmentName"))
 					.sort(ResolvableComparator.get(sorting, "id", "globalId", "tagname", "mapname", "object", "attributeType", "targetType", "multivalue", "optimized",
-							"reserved", "filesystem", "foreignlinkAttribute", "foreignlinkAttributeRule", "category", "segmentfield", "displayfield", "urlfield", "noindex", "fragmentName"))
+							"reserved", "filesystem", "foreignlinkAttribute", "foreignlinkAttributeRule", "category", "segmentfield", "displayfield", "urlfield", "noIndex", "fragmentName"))
 					.page(paging).to(new TagmapEntryListResponse());
 		}
 	}

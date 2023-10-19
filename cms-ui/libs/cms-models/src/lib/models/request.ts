@@ -1725,7 +1725,7 @@ export interface TagmapEntryCreateRequest {
     /** True when the entry is a urlfield (of a Mesh ContentRepository) */
     urlfield?: boolean;
     /** True when the data of this field should be excluded from the indexing (in a Mesh ContentRepository) */
-    noindex?: boolean;
+    noIndex?: boolean;
     /** Get the elasticsearch specific configuration of a Mesh CR */
     elasticsearch?: object;
     /** Get the micronode filter (for entries of type "micronode") */

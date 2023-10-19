@@ -47,7 +47,7 @@ public class TagmapEntryModel implements Serializable {
 
 	protected Boolean urlfield;
 
-	protected Boolean noindex;
+	protected Boolean noIndex;
 
 	protected JsonNode elasticsearch;
 
@@ -338,7 +338,7 @@ public class TagmapEntryModel implements Serializable {
 	 * @return true for no indexing
 	 */
 	public Boolean getNoIndex() {
-		return noindex;
+		return noIndex;
 	}
 
 	/**
@@ -346,7 +346,7 @@ public class TagmapEntryModel implements Serializable {
 	 * @param noIndex flag
 	 */
 	public void setNoIndex(Boolean noIndex) {
-		this.noindex = noIndex;
+		this.noIndex = noIndex;
 	}
 
 	/**

@@ -934,7 +934,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "noindex", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -946,7 +946,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem", "targetType" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "noindex", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -992,7 +992,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
-	 * Add a tagmap entry (for Mesh CRs), defaulting 'noindex' value to false.
+	 * Add a tagmap entry (for Mesh CRs), defaulting 'noIndex' value to false.
 	 * @param tagName tagname
 	 * @param mapName mapname
 	 * @param object object type
@@ -1022,11 +1022,11 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 * @param segmentfield true for segmentfield
 	 * @param displayfield true for displayfield
 	 * @param urlfield true for urlfield
-	 * @param noindex true for noindex
+	 * @param noIndex true for noIndex
 	 * @throws NodeException
 	 */
 	public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat, boolean segmentfield,
-			boolean displayfield, boolean urlfield, boolean noindex) throws NodeException {
+			boolean displayfield, boolean urlfield, boolean noIndex) throws NodeException {
 		failReadOnly();
 	}
 

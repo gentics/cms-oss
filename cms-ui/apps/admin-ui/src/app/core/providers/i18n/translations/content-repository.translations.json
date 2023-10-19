@@ -97,19 +97,19 @@
     },
     "noFoldersIndex": {
         "en": "Exclude folders from indexing",
-        "de": "Keine Indexierung der Ordner"
+        "de": "Ordner nicht indexieren"
     },
     "noFilesIndex": {
         "en": "Exclude files from indexing",
-        "de": "Keine Indexierung der Dateien"
+        "de": "Dateien/Bilder nicht indexieren"
     },
     "noPagesIndex": {
         "en": "Exclude pages from indexing",
-        "de": "Keine Indexierung der Seiten"
+        "de": "Seiten nicht indexieren"
     },
     "noFormsIndex": {
         "en": "Exclude forms from indexing",
-        "de": "Keine Indexierung der Forms"
+        "de": "Formulare nicht indexieren"
     },
     "version": {
         "en": "Implementation version",

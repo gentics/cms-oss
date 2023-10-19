@@ -189,19 +189,19 @@
     },
     "property_noFoldersIndex": {
         "en": "Exclude folders from indexing",
-        "de": "Keine Indexierung der Ordner"
+        "de": "Ordner nicht indexieren"
     },
     "property_noFilesIndex": {
         "en": "Exclude files from indexing",
-        "de": "Keine Indexierung der Dateien"
+        "de": "Dateien/Bilder nicht indexieren"
     },
     "property_noPagesIndex": {
         "en": "Exclude pages from indexing",
-        "de": "Keine Indexierung der Seiten"
+        "de": "Seiten nicht indexieren"
     },
     "property_noFormsIndex": {
         "en": "Exclude forms from indexing",
-        "de": "Keine Indexierung der Forms"
+        "de": "Formulare nicht indexieren"
     },
     "property_statusDate": {
         "en": "Statusdate",

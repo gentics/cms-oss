@@ -14,11 +14,15 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     public project: string;
 
     @Input()
+    public languages: Array<string> = [];
+
+    @Input()
+    public currentLanguage: string;
+
+    @Input()
     public currentBranch: string;
 
     public currentNodeUuid: string;
-
-    public languages: Array<string> = ['de', 'en']; // todo: fetch languages
 
     public schemas: Array<Schema> = [];
 

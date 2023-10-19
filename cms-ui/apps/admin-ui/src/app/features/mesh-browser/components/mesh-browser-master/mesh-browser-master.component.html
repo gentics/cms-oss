@@ -38,6 +38,7 @@
                 <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
 
                 <ng-container *ngIf="!!currentProject else noProjectRenderer">
+
                     <gtx-mesh-browser-project-switcher
                         [currentProject]="currentProject"
                         [currentBranch]="currentBranch"
@@ -47,8 +48,19 @@
                         (branchChangedEvent)="branchChanged($event)"
                     >
                     </gtx-mesh-browser-project-switcher>
+
+                    <gtx-mesh-browser-language-switcher
+                        [currentLanguage]="currentLanguage"
+                        [languages]="languages"
+                        (languageChangedEvent)="languageChanged($event)"
+                    >
+                    </gtx-mesh-browser-language-switcher>
+
                         
                     <gtx-mesh-browser-schema-list
+                        [project]="currentProject"
+                        [currentLanguage]="currentLanguage"
+                        [languages]="languages"
                         [project]="currentProject" 
                         [currentBranch]="currentBranch"
                     >

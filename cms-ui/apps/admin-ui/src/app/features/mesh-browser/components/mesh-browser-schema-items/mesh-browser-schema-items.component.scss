@@ -38,6 +38,11 @@
             background: #d7d7d7;
             color: black;
             width: 20px;
+
+            &.active {
+                border-bottom: 1px solid #0096DC;
+                background-color: #33c7f7;
+            }
         }
     }
 }

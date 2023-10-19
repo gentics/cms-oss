@@ -88,6 +88,20 @@
 				<include>**</include>
 			</includes>
 		</fileSet>
+		<fileSet>
+			<directory>${basedir}/target/restapi</directory>
+			<outputDirectory>/restapi</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/target/gcnjsapi</directory>
+			<outputDirectory>/gcnjsapi</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 
 	<includeBaseDirectory>false</includeBaseDirectory>

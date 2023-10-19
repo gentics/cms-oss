@@ -201,7 +201,7 @@
 							<goal>docs</goal>
 						</goals>
 						<configuration>
-							<docsDir>${project.build.directory}/output/restapi</docsDir>
+							<docsDir>${project.build.directory}/restapi</docsDir>
 							<docsSubdir>.</docsSubdir>
 							<configFile>src/conf/enunciate.xml</configFile>
 						</configuration>
@@ -272,6 +272,27 @@
 								</artifactItem>
 							</artifactItems>
 							<includes>**/*</includes>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+						</configuration>
+					</execution>
+					<execution>
+						<id>unpack-oss-doc</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>com.gentics.cms-oss</groupId>
+									<artifactId>cms-oss-doc</artifactId>
+									<type>zip</type>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.basedir}/target</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+							<includes>gcnjsapi/**</includes>
 							<overWriteReleases>false</overWriteReleases>
 							<overWriteSnapshots>true</overWriteSnapshots>
 						</configuration>

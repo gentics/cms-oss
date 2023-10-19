@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { PaginationService } from 'ngx-pagination';
-import { MeshBrowserLoaderService, Schema } from '../../providers';
+import { Branch, MeshBrowserLoaderService, Schema } from '../../providers';
 
 
 let uniqueComponentId = 0;
@@ -27,6 +27,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public currentNodeUuid: string;
 
     @Input()
+    public currentBranch: Branch;
+
+    @Input()
     public languages: Array<string>;
 
     @Output()
@@ -46,7 +49,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes?.currentNodeUuid || changes?.project) {
+        if (changes?.currentNodeUuid || changes?.project  || changes?.currentBranch) {
             this.loadNodeContent(this.currentNodeUuid)
             this.page = 1;
         }
@@ -58,7 +61,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
             lang: this.languages,
-        });
+        },this.currentBranch.uuid);
 
         this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
@@ -73,7 +76,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             schemaName: this.schema.name,
             nodeUuid: this.currentNodeUuid,
             page: this.page,
-        })
+            lang: this.languages,
+        }, this.currentBranch.uuid)
     }
 
     public toggleSection(): void {

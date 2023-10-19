@@ -8,7 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { User } from '@gentics/mesh-models';
 import { TableRow } from '@gentics/ui-core';
-import { MeshBrowserLoaderService } from '../../providers';
+import { Branch, MeshBrowserLoaderService } from '../../providers';
 
 
 const MESH_ID_PARAM = 'meshId';
@@ -35,11 +35,11 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public projects: Array<string> = [];
 
-    public branches: Array<string> = [];
-
     public currentProject: string;
 
-    public currentBranch: string;
+    public branches: Array<Branch> = [];
+
+    public currentBranch: Branch;
 
 
     constructor(
@@ -104,7 +104,7 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         this.branches = await this.loader.getBranches(this.currentProject);
     }
 
-    public branchChanged(branch: string): void {
+    public branchChanged(branch: Branch): void {
         this.currentBranch = branch;
     }
 

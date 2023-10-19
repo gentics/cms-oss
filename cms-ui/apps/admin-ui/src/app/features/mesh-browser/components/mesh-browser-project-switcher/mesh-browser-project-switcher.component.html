@@ -21,13 +21,13 @@
         <gtx-dropdown-trigger>
             <a>
                 <icon class="collapse">keyboard_arrow_down</icon> 
-                <span>{{ currentBranch }}</span>
+                <span>{{ currentBranch.name }}</span>
             </a>
         </gtx-dropdown-trigger>
 
         <gtx-dropdown-content>
             <gtx-dropdown-item *ngFor="let branch of branches" (click)="branchChanged(branch)">
-                {{ branch }}
+                {{ branch.name }}
             </gtx-dropdown-item>
         </gtx-dropdown-content>
     </gtx-dropdown-list>

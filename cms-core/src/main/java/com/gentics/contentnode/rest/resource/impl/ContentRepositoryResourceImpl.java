@@ -604,50 +604,50 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 			break;
 		case mesh:
 			// folders
-			cr.addEntry("folder.id", "cms_id", Folder.TYPE_FOLDER, 0, AttributeType.integer, false, true, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.name", "name", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, false, true, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.description", "description", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.pub_dir", "pub_dir", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, true, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("object.startpage.parts.url.target", "startpage", Folder.TYPE_FOLDER, Page.TYPE_PAGE, AttributeType.link, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("object.navhidden", "navhidden", Folder.TYPE_FOLDER, 0, AttributeType.bool, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("object.navsortorder", "navsortorder", Folder.TYPE_FOLDER, 0, AttributeType.integer, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.creator", "creator", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.creationtimestamp", "createdate", Folder.TYPE_FOLDER, 0, AttributeType.date, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.creator.email", "creatoremail", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.editor", "editor", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.edittimestamp", "editdate", Folder.TYPE_FOLDER, 0, AttributeType.date, false, false, false, false, false, cr.isNoFoldersIndex());
-			cr.addEntry("folder.editor.email", "editoremail", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, cr.isNoFoldersIndex());
+			cr.addEntry("folder.id", "cms_id", Folder.TYPE_FOLDER, 0, AttributeType.integer, false, true, false, false, false, false);
+			cr.addEntry("folder.name", "name", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, false, true, false, false);
+			cr.addEntry("folder.description", "description", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, false, false, false, false);
+			cr.addEntry("folder.pub_dir", "pub_dir", Folder.TYPE_FOLDER, 0, AttributeType.text, false, true, true, false, false, false);
+			cr.addEntry("object.startpage.parts.url.target", "startpage", Folder.TYPE_FOLDER, Page.TYPE_PAGE, AttributeType.link, false, false, false, false, false, false);
+			cr.addEntry("object.navhidden", "navhidden", Folder.TYPE_FOLDER, 0, AttributeType.bool, false, false, false, false, false, false);
+			cr.addEntry("object.navsortorder", "navsortorder", Folder.TYPE_FOLDER, 0, AttributeType.integer, false, false, false, false, false, false);
+			cr.addEntry("folder.creator", "creator", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("folder.creationtimestamp", "createdate", Folder.TYPE_FOLDER, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("folder.creator.email", "creatoremail", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("folder.editor", "editor", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("folder.edittimestamp", "editdate", Folder.TYPE_FOLDER, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("folder.editor.email", "editoremail", Folder.TYPE_FOLDER, 0, AttributeType.text, false, false, false, false, false, false);
 
 			// pages
-			cr.addEntry("page.id", "cms_id", Page.TYPE_PAGE, 0, AttributeType.integer, false, true, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.name", "name", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, true, false, cr.isNoPagesIndex());
-			cr.addEntry("page.description", "description", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("", "content", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.filename", "filename", Page.TYPE_PAGE, 0, AttributeType.text, false, true, true, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.template.ml.contenttype", "contenttype", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.creator", "creator", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.creationtimestamp", "createdate", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.creator.email", "creatoremail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.editor", "editor", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.edittimestamp", "editdate", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.editor.email", "editoremail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.publisher", "publisher", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.publishtimestamp", "publishtimestamp", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("page.publisher.email", "publishermail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
-			cr.addEntry("object.templateName", "templateName", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, cr.isNoPagesIndex());
+			cr.addEntry("page.id", "cms_id", Page.TYPE_PAGE, 0, AttributeType.integer, false, true, false, false, false, false);
+			cr.addEntry("page.name", "name", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, true, false, false);
+			cr.addEntry("page.description", "description", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, false, false, false);
+			cr.addEntry("", "content", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.filename", "filename", Page.TYPE_PAGE, 0, AttributeType.text, false, true, true, false, false, false);
+			cr.addEntry("page.template.ml.contenttype", "contenttype", Page.TYPE_PAGE, 0, AttributeType.text, false, true, false, false, false, false);
+			cr.addEntry("page.creator", "creator", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.creationtimestamp", "createdate", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("page.creator.email", "creatoremail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.editor", "editor", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.edittimestamp", "editdate", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("page.editor.email", "editoremail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.publisher", "publisher", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("page.publishtimestamp", "publishtimestamp", Page.TYPE_PAGE, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("page.publisher.email", "publishermail", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("object.templateName", "templateName", Page.TYPE_PAGE, 0, AttributeType.text, false, false, false, false, false, false);
 
 			// files
-			cr.addEntry("file.id", "cms_id", File.TYPE_FILE, 0, AttributeType.integer, false, true, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.name", "name", File.TYPE_FILE, 0, AttributeType.text, false, true, false, true, false, cr.isNoFilesIndex());
-			cr.addEntry("file.type", "mimetype", File.TYPE_FILE, 0, AttributeType.text, false, true, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.description", "description", File.TYPE_FILE, 0, AttributeType.text, false, true, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("binarycontent", "binarycontent", File.TYPE_FILE, 0, AttributeType.binary, false, true, true, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.creator", "creator", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.createtimestamp", "createdate", File.TYPE_FILE, 0, AttributeType.date, false, false, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.creator.email", "creatoremail", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.editor", "editor", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.edittimestamp", "editdate", File.TYPE_FILE, 0, AttributeType.date, false, false, false, false, false, cr.isNoFilesIndex());
-			cr.addEntry("file.editor.email", "editoremail", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, cr.isNoFilesIndex());
+			cr.addEntry("file.id", "cms_id", File.TYPE_FILE, 0, AttributeType.integer, false, true, false, false, false, false);
+			cr.addEntry("file.name", "name", File.TYPE_FILE, 0, AttributeType.text, false, true, false, true, false, false);
+			cr.addEntry("file.type", "mimetype", File.TYPE_FILE, 0, AttributeType.text, false, true, false, false, false, false);
+			cr.addEntry("file.description", "description", File.TYPE_FILE, 0, AttributeType.text, false, true, false, false, false, false);
+			cr.addEntry("binarycontent", "binarycontent", File.TYPE_FILE, 0, AttributeType.binary, false, true, true, false, false, false);
+			cr.addEntry("file.creator", "creator", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("file.createtimestamp", "createdate", File.TYPE_FILE, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("file.creator.email", "creatoremail", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("file.editor", "editor", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, false);
+			cr.addEntry("file.edittimestamp", "editdate", File.TYPE_FILE, 0, AttributeType.date, false, false, false, false, false, false);
+			cr.addEntry("file.editor.email", "editoremail", File.TYPE_FILE, 0, AttributeType.text, false, false, false, false, false, false);
 
 			break;
 		}

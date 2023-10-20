@@ -81,7 +81,7 @@
 
             <properties-editor
                 *ngIf="(itemProperties$ | async) as itemProps"
-                [item]="itemProps.item"
+                [item]="item"
                 [nodeId]="currentNode?.id"
                 [templates]="itemProps.templates"
                 [languages]="itemProps.languages">

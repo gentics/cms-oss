@@ -52,6 +52,10 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
     saveAndClose(): void {
         console.log(`Saving changes to file ${this.file.id}`);
 
+        this.combinedPropertiesEditor.saveItemProperties()
+            .then(() => console.log('Saved properties'))
+            .catch(err => console.log('Could not save properties', err))
+
         this.combinedPropertiesEditor.saveChanges()
             .catch(err => {
                 console.log('Saving failed:', err);

@@ -15,7 +15,21 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
         },
     },
     {
-        path: AdminUIEntityDetailRoutes.TEMPLATE,
+        path: ':repository',
+        component: MeshBrowserMasterComponent,
+        data: {
+            typePermissions: [],
+        },
+    },
+    {
+        path: ':repository/:project/:branch/:parent/:language',
+        component: MeshBrowserMasterComponent,
+        data: {
+            typePermissions: [],
+        },
+    },
+    {
+        path: AdminUIEntityDetailRoutes.MESH_BROWSER,
         outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],

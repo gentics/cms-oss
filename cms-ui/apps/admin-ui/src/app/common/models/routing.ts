@@ -19,6 +19,15 @@ export const ROUTE_MANAGEMENT_OUTLET = 'management';
 export const ROUTE_PARAM_MESH_TAB = 'activeTab';
 export const ROUTE_PATH_MESH = 'mesh';
 
+
+// MESH_BROWSER
+export const ROUTE_MESH_REPOSITORY_ID = 'repository';
+export const ROUTE_MESH_PROJECT_ID = 'project';
+export const ROUTE_MESH_BRANCH_ID = 'branch';
+export const ROUTE_MESH_PARENT_ID = 'parent';
+export const ROUTE_MESH_LANGUAGE = 'language';
+
+
 export enum AdminUIModuleRoutes {
     CONSTRUCTS = 'constructs',
     CONTENT_MAINTENANCE = 'content-maintenance',

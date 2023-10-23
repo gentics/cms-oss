@@ -12,7 +12,7 @@ import { SchemaContainer } from '../../models/mesh-browser-models';
 export class MeshBrowserSchemaListComponent implements OnInit {
 
     @Input()
-    public project: string;
+    public currentProject: string;
 
     @Input()
     public languages: Array<string> = [];
@@ -36,7 +36,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     }
 
     async ngOnInit(): Promise<void> {
-        const response = await this.loader.listSchemasWithRootNode(this.project)
+        const response = await this.loader.listSchemasWithRootNode(this.currentProject)
         this.schemas = response.schemas
         this.currentNodeUuid= response.rootNodeUuid;
 
@@ -47,7 +47,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     protected async loadNodesChildrenForSchemas(nodeUuid: string): Promise<void> {
         for (const schema of this.schemas) {
-            const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
+            const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
                 schemaName: schema.name,
                 nodeUuid: nodeUuid,
                 lang: this.languages,

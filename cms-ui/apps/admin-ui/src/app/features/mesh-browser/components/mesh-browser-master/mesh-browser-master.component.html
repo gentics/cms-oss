@@ -46,25 +46,20 @@
                         [branches]="branches"
                         (projectChange)="projectChangeHandler($event)"
                         (branchChange)="branchChangeHandler($event)"
-                    >
-                    </gtx-mesh-browser-project-switcher>
+                    />
 
                     <gtx-mesh-browser-language-switcher
                         [currentLanguage]="currentLanguage"
                         [languages]="languages"
                         (languageChange)="languageChangeHandler($event)"
-                    >
-                    </gtx-mesh-browser-language-switcher>
-
+                    />
                         
                     <gtx-mesh-browser-schema-list
-                        [project]="currentProject"
+                        [currentProject]="currentProject"
                         [currentLanguage]="currentLanguage"
                         [languages]="languages"
-                        [project]="currentProject" 
                         [currentBranch]="currentBranch"
-                    >
-                    </gtx-mesh-browser-schema-list>
+                    />
                 </ng-container>
 
             </ng-container>

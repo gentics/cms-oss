@@ -1,17 +1,29 @@
-import { AdminUIEntityDetailRoutes, AdminUIModuleRoutes, ContentRepositoryBO, EditableEntity } from '@admin-ui/common';
+import {
+    AdminUIEntityDetailRoutes,
+    AdminUIModuleRoutes,
+    ContentRepositoryBO,
+    EditableEntity,
+    ROUTE_MESH_BRANCH_ID,
+    ROUTE_MESH_LANGUAGE,
+    ROUTE_MESH_PROJECT_ID,
+    ROUTE_MESH_REPOSITORY_ID,
+} from '@admin-ui/common';
 import { ContentRepositoryHandlerService } from '@admin-ui/core';
 import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    Input,
+    OnInit,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { BranchReference, User } from '@gentics/mesh-models';
-import { TableRow } from '@gentics/ui-core';
+import { TableRow, toValidNumber } from '@gentics/ui-core';
 import { MeshBrowserLoaderService } from '../../providers';
-
-
-const MESH_ID_PARAM = 'meshId';
 
 @Component({
     selector: 'gtx-mesh-browser-master',
@@ -19,13 +31,18 @@ const MESH_ID_PARAM = 'meshId';
     styleUrls: ['./mesh-browser-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserMasterComponent extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> {
-
+export class MeshBrowserMasterComponent
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO>
+    implements OnInit
+{
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
     protected detailPath = AdminUIEntityDetailRoutes.MESH_BROWSER;
 
     public selectedRepository: ContentRepository;
+
+    @Input({ alias: ROUTE_MESH_REPOSITORY_ID, transform: toValidNumber })
+    public currentRepositoryId: number;
 
     public me: User;
 
@@ -35,14 +52,19 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
 
     public projects: Array<string> = [];
 
+    @Input({ alias: ROUTE_MESH_PROJECT_ID })
     public currentProject: string;
 
     public branches: Array<BranchReference> = [];
+
+    @Input({ alias: ROUTE_MESH_BRANCH_ID})
+    public currentBranchId: string;
 
     public currentBranch: BranchReference;
 
     public languages: Array<string> = ['de', 'en'];
 
+    @Input({ alias: ROUTE_MESH_LANGUAGE })
     public currentLanguage = 'de';
 
 
@@ -54,25 +76,62 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
         protected handler: ContentRepositoryHandlerService,
         protected loader: MeshBrowserLoaderService,
     ) {
-        super(
-            changeDetector,
-            router,
-            route,
-            appState,
-        );
+        super(changeDetector, router, route, appState);
+    }
+
+    ngOnInit(): void {
+        super.ngOnInit();
+        this.route.params.subscribe((params) => {
+            if (params.language) {
+                this.currentLanguage = params.language;
+            }
+            if (params.project) {
+                this.currentProject = params.project;
+            }
+            if (params.branch) {
+                this.currentBranchId = params.branch;
+            }
+            if (params.language) {
+                this.currentLanguage = params.language;
+            }
+            if (params.repository) {
+                this.currentRepositoryId = params.repository;
+                this.handler
+                    .get(this.currentRepositoryId)
+                    .toPromise()
+                    .then((repository) => {
+                        this.selectedRepository = repository.contentRepository;
+                        this.loadProjectDetails().then(()=>{
+                            this.handleNavigation()
+                        })
+                    });
+            }
+        });
     }
 
     public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {
         this.selectedRepository = row.item;
-        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, { [MESH_ID_PARAM]: row.item.id }], { relativeTo: this.route });
+        this.currentRepositoryId = this.selectedRepository.id;
+        this.handleNavigation()
+    }
+
+    private handleNavigation(): void {
+        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, {
+            [ROUTE_MESH_REPOSITORY_ID]: this.currentRepositoryId,
+            [ROUTE_MESH_PROJECT_ID]: this.currentProject,
+            [ROUTE_MESH_BRANCH_ID]: this.currentBranchId,
+            [ROUTE_MESH_LANGUAGE]: this.currentLanguage},
+        ], { relativeTo: this.route });
     }
 
     public navigateBack(): void {
         this.selectedRepository = null;
-        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], { relativeTo: this.route });
+        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
+            relativeTo: this.route,
+        });
     }
 
-    public meshLoginHandler(event: { loggedIn: boolean, user?: User }): void {
+    public meshLoginHandler(event: { loggedIn: boolean; user?: User }): void {
         this.loggedIn = event.loggedIn;
 
         if (event.loggedIn) {
@@ -80,42 +139,57 @@ export class MeshBrowserMasterComponent extends BaseTableMasterComponent<Content
                 this.me = event.user;
                 this.meName = getUserDisplayName(this.me);
             } else {
-                this.loader.authMe().then(res => {
+                this.loader.authMe().then((res) => {
                     this.me = res;
                     this.meName = getUserDisplayName(this.me);
                     this.changeDetector.markForCheck();
                 });
             }
 
-            this.loadProjects()
+            this.loadProjectDetails();
         }
     }
 
-    protected async loadProjects(): Promise<void> {
+    protected async loadProjectDetails(): Promise<void> {
         this.projects = await this.loader.getProjects();
 
         if (this.projects.length > 0) {
-            this.currentProject = this.projects[0];
+            this.setCurrentProject()
             this.branches = await this.loader.getBranches(this.currentProject);
-            this.currentBranch = this.branches[0];
+            this.setCurrentBranch()
 
             this.changeDetector.markForCheck();
         }
     }
 
+    private setCurrentProject(): void {
+        const currentProject = this.projects.find(project => project === this.currentProject);
+        this.currentProject = currentProject ?? this.projects[0];
+    }
+
+    private setCurrentBranch(): void {
+        const currentBranch = this.branches.find(branch => branch.uuid === this.currentBranchId);
+        this.currentBranch = currentBranch ?? this.branches[0];
+        this.currentBranchId = this.currentBranch.uuid
+    }
+
     public async projectChangeHandler(project: string): Promise<void> {
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
+        this.handleNavigation()
     }
 
     public branchChangeHandler(branch: BranchReference): void {
         this.currentBranch = branch;
+        this.currentBranchId = this.currentBranch.uuid;
+        this.handleNavigation()
     }
-
 
     public languageChangeHandler(language: string): void {
         this.currentLanguage = language;
-        this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
+        this.languages = this.languages.sort((a, _b) =>
+            a === this.currentLanguage ? -1 : 1,
+        );
+        this.handleNavigation()
     }
-
 }

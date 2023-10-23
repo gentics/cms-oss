@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { BranchReference } from '@gentics/mesh-models';
-import { PaginationService } from 'ngx-pagination';
-import { MeshBrowserLoaderService } from '../../providers';
 import { SchemaContainer } from '../../models/mesh-browser-models';
+import { MeshBrowserLoaderService } from '../../providers';
 
 
 let uniqueComponentId = 0;
@@ -13,14 +12,13 @@ let uniqueComponentId = 0;
     templateUrl: './mesh-browser-schema-items.component.html',
     styleUrls: ['./mesh-browser-schema-items.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [PaginationService],
 })
 export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public readonly UNIQUE_ID = `gtx-mesh-browser-schema-items-${uniqueComponentId++}`;
 
     @Input()
-    public project: string;
+    public currentProject: string;
 
     @Input()
     public schema: SchemaContainer;
@@ -64,13 +62,13 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
 
     public async loadNodeContent(nodeUuid: string): Promise<void> {
-        const schemaElements = await this.loader.listNodeChildrenForSchema(this.project, {
+        const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
             lang: this.languages,
         },this.currentBranch.uuid);
         schemaElements?.forEach((schemaElement) =>
-            schemaElement.languages = schemaElement.languages.sort( (a,_b) => a.language === this.currentLanguage ? -1 :1),
+            schemaElement.languages = schemaElement?.languages.sort( (a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
         this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
@@ -81,7 +79,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public changePage(page: number): void {
         this.page = page;
 
-        this.loader.listNodeChildrenForSchema(this.project, {
+        this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schema.name,
             nodeUuid: this.currentNodeUuid,
             page: this.page,

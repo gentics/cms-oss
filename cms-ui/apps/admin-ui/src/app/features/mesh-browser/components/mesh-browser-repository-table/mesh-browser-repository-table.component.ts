@@ -4,7 +4,10 @@ import {
     I18nService,
     PermissionsService,
 } from '@admin-ui/core';
-import { MeshBrowserContentRepositoryTableLoaderService, MeshContentRepositoryTableLoaderOptions } from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
+import {
+    MeshBrowserContentRepositoryTableLoaderService,
+    MeshContentRepositoryTableLoaderOptions,
+} from '@admin-ui/features/mesh-browser/providers/mesh-browser-repository-table-loader.service';
 import { BaseEntityTableComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';

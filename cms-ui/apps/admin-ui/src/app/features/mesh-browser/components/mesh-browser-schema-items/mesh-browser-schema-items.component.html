@@ -15,12 +15,12 @@
             currentPage: page,
             totalItems: schema.elements?.length
         }">
-            <div *ngIf="!!element" class="schema-element" (click)="loadNodeContent(element.uuid)">
+            <div *ngIf="!!element" class="schema-element" (click)="loadContent(element)">
                 <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
 
                 <div>{{ element.displayName }}</div>
 
-                <span *ngFor="let language of element.languages"  [class.active]="language.language === currentLanguage"  class="language">
+                <span *ngFor="let language of element.languages"  [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}
                 </span>
             </div>
@@ -30,7 +30,7 @@
             *ngIf="schema.elements?.length > perPage"
             [id]="UNIQUE_ID"
             (pageChange)="changePage($event)"
-        ></gtx-paging>
+        />
     </div>
 
 </div>

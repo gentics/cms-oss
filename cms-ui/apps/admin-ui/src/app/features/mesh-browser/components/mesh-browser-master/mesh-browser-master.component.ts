@@ -1,10 +1,10 @@
 import {
-    AdminUIEntityDetailRoutes,
     AdminUIModuleRoutes,
     ContentRepositoryBO,
     EditableEntity,
     ROUTE_MESH_BRANCH_ID,
     ROUTE_MESH_LANGUAGE,
+    ROUTE_MESH_PARENT_NODE_ID,
     ROUTE_MESH_PROJECT_ID,
     ROUTE_MESH_REPOSITORY_ID,
 } from '@admin-ui/common';
@@ -32,12 +32,8 @@ import { MeshBrowserLoaderService } from '../../providers';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO>
-    implements OnInit
-{
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
-
-    protected detailPath = AdminUIEntityDetailRoutes.MESH_BROWSER;
 
     public selectedRepository: ContentRepository;
 
@@ -62,6 +58,9 @@ export class MeshBrowserMasterComponent
 
     public currentBranch: BranchReference;
 
+    @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
+    public currentNodeId: string;
+
     public languages: Array<string> = ['de', 'en'];
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
@@ -80,7 +79,8 @@ export class MeshBrowserMasterComponent
     }
 
     ngOnInit(): void {
-        super.ngOnInit();
+        super.ngOnInit()
+
         this.route.params.subscribe((params) => {
             if (params.language) {
                 this.currentLanguage = params.language;
@@ -90,6 +90,9 @@ export class MeshBrowserMasterComponent
             }
             if (params.branch) {
                 this.currentBranchId = params.branch;
+            }
+            if (params.parent) {
+                this.currentNodeId = params.parent;
             }
             if (params.language) {
                 this.currentLanguage = params.language;
@@ -101,9 +104,9 @@ export class MeshBrowserMasterComponent
                     .toPromise()
                     .then((repository) => {
                         this.selectedRepository = repository.contentRepository;
-                        this.loadProjectDetails().then(()=>{
-                            this.handleNavigation()
-                        })
+                        this.loadProjectDetails().then(() =>
+                            this.handleNavigation(),
+                        )
                     });
             }
         });
@@ -112,7 +115,9 @@ export class MeshBrowserMasterComponent
     public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {
         this.selectedRepository = row.item;
         this.currentRepositoryId = this.selectedRepository.id;
-        this.handleNavigation()
+        this.loadProjectDetails().then(() =>
+            this.handleNavigation(),
+        )
     }
 
     private handleNavigation(): void {
@@ -120,6 +125,7 @@ export class MeshBrowserMasterComponent
             [ROUTE_MESH_REPOSITORY_ID]: this.currentRepositoryId,
             [ROUTE_MESH_PROJECT_ID]: this.currentProject,
             [ROUTE_MESH_BRANCH_ID]: this.currentBranchId,
+            [ROUTE_MESH_PARENT_NODE_ID]: this.currentNodeId,
             [ROUTE_MESH_LANGUAGE]: this.currentLanguage},
         ], { relativeTo: this.route });
     }
@@ -183,6 +189,13 @@ export class MeshBrowserMasterComponent
         this.currentBranch = branch;
         this.currentBranchId = this.currentBranch.uuid;
         this.handleNavigation()
+    }
+
+    public nodeChangeHandler(nodeId: string): void {
+        if (this.currentNodeId !== nodeId) {
+            this.currentNodeId = nodeId;
+            this.handleNavigation()
+        }
     }
 
     public languageChangeHandler(language: string): void {

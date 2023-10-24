@@ -1,6 +1,8 @@
+import { AdminUIEntityDetailRoutes, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
-import { SchemaContainer } from '../../models/mesh-browser-models';
+import { SchemaContainer, SchemaElement } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
 
@@ -48,6 +50,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
+        protected router: Router,
+        protected route: ActivatedRoute,
     ) { }
 
 
@@ -61,15 +65,46 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     }
 
 
+    public loadContent(element: SchemaElement): void {
+        if (element.isContainer) {
+            this.loadNodeContent(element.uuid)
+        }
+        else {
+            this.navigateToDetails(element.uuid);
+            // todo: GPU-1116
+        }
+    }
+
+    public async navigateToDetails(nodeId: string): Promise<void> {
+        const fullUrl = this.router.url
+        const url = `${fullUrl}/(${ROUTE_DETAIL_OUTLET}:${AdminUIEntityDetailRoutes.MESH_BROWSER}/${nodeId}/)`;
+        await this.router.navigateByUrl(url)
+
+        // todo fix: cannot match any route
+        // const fullUrl = getFullPrimaryPath(this.route);
+        // const commands: any[] = [
+        //     fullUrl,
+        //     { outlets: { detail: [AdminUIEntityDetailRoutes.MESH_BROWSER, nodeId] } },
+        // ];
+        // const extras: NavigationExtras = { relativeTo: this.route };
+
+
+        // await this.router.navigate(commands, extras);
+        // this.appState.dispatch(new FocusEditor());
+    }
+
+
     public async loadNodeContent(nodeUuid: string): Promise<void> {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
             lang: this.languages,
-        },this.currentBranch.uuid);
+        }, this.currentBranch.uuid);
+
         schemaElements?.forEach((schemaElement) =>
             schemaElement.languages = schemaElement?.languages.sort( (a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
+
         this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)

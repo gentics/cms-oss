@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
-import { MeshBrowserLoaderService } from '../../providers';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { SchemaContainer } from '../../models/mesh-browser-models';
+import { MeshBrowserLoaderService } from '../../providers';
 
 
 @Component({
@@ -23,6 +24,10 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     @Input()
     public currentBranch: string;
 
+    @Output()
+    public nodeChange = new EventEmitter<string>();
+
+    @Input()
     public currentNodeUuid: string;
 
     public schemas: Array<SchemaContainer> = [];
@@ -31,16 +36,30 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
+        protected route: ActivatedRoute,
     ) {
 
     }
 
-    async ngOnInit(): Promise<void> {
-        const response = await this.loader.listSchemasWithRootNode(this.currentProject)
-        this.schemas = response.schemas
-        this.currentNodeUuid= response.rootNodeUuid;
+    ngOnInit(): void{
+        this.route.params.subscribe((params) => {
+            if (params.parent) {
+                this.currentNodeUuid = params.parent
+            }
+        })
+        this.init()
+    }
 
-        await this.loadNodesChildrenForSchemas(response.rootNodeUuid);
+
+    protected async init(): Promise<void> {
+        const response = await this.loader.listSchemasWithRootNode(this.currentProject)
+        this.schemas = response.schemas;
+
+        if (this.currentNodeUuid === 'undefined' || !this.currentNodeUuid) {
+            this.currentNodeUuid = response.rootNodeUuid;
+        }
+
+        await this.loadNodesChildrenForSchemas(this.currentNodeUuid);
         this.changeDetector.markForCheck();
     }
 
@@ -59,6 +78,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public nodeChanged(nodeUuid: string): void {
         this.currentNodeUuid = nodeUuid;
+        this.nodeChange.emit(nodeUuid);
     }
 
 }

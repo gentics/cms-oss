@@ -110,3 +110,7 @@ export enum MeshMangementTabs {
     SCHEMAS = 'schemas',
     MICROSCHEMAS = 'microschemas',
 }
+
+export enum MeshBrowserTabs {
+    DETAIL = 'detail'
+}

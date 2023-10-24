@@ -24,7 +24,8 @@ export const ROUTE_PATH_MESH = 'mesh';
 export const ROUTE_MESH_REPOSITORY_ID = 'repository';
 export const ROUTE_MESH_PROJECT_ID = 'project';
 export const ROUTE_MESH_BRANCH_ID = 'branch';
-export const ROUTE_MESH_PARENT_ID = 'parent';
+export const ROUTE_MESH_PARENT_NODE_ID = 'parent';
+export const ROUTE_MESH_CURRENT_NODE_ID = 'node';
 export const ROUTE_MESH_LANGUAGE = 'language';
 
 

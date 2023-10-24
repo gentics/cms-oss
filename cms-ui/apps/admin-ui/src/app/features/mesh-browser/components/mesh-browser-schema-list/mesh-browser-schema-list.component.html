@@ -3,14 +3,14 @@
 
         <div>
             <gtx-mesh-browser-schema-items
-                [currentProject]="project"
+                [currentProject]="currentProject"
                 [schema]="schema"
                 [currentNodeUuid]="currentNodeUuid"
                 [currentBranch]="currentBranch"
                 [languages]="languages"
                 [currentLanguage]="currentLanguage"
                 (nodeChanged)="nodeChanged($event)"
-            ></gtx-mesh-browser-schema-items>
+            />
         </div>  
 
     </ng-container>

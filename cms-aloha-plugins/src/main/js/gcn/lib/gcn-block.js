@@ -112,7 +112,7 @@ define([
 				.tag(block.$element.attr('data-gcn-tagname'))
 				.remove();
 		}
-
+		
 		block.unblock();
 		block.$element.remove();
 	}
@@ -280,7 +280,7 @@ define([
 		init: function ($element, postProcessFn) {
 			var block = this;
 			if (!isCopy(block)) {
-				Aloha.on('aloha-editable-delete', function (_, event) {
+				Aloha.bind('aloha-editable-delete', function (_, event) {
 					var $el = $(event.element)
 					if (!$el.is(block.$element)) {
 						return;
@@ -345,7 +345,7 @@ define([
 					(!canBeDeleted ? 'aloha-editicons-small ' : '') +
 					'aloha-editicons gcn-tagicons"' + spanTitle + '></span>');
 
-
+			
 			var $editbutton = $('<button class="gcn-tagicon-edit"' + editTitle + '>' +
 					'<img class="aloha-ui" src="' +
 						$block.attr('data-gcn-editicon') + '"/>' +
@@ -426,7 +426,7 @@ define([
 
 		/**
 		 * Function which is executed when a user tries to delete a block with the keyboard
-		 *
+		 * 
 		 * @param {Function} destroyFn function, that is executed, if the block shall be destroyed
 		 * @param {String} name Name of the tag
 		 */

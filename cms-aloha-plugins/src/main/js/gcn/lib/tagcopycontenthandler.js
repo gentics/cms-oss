@@ -20,7 +20,7 @@ define([
 ) {
 	'use strict';
 
-	Aloha.on('gcn-block-handled', function (event, data) {
+	Aloha.bind('gcn-block-handled', function (event, data) {
 		Util.finishedCopyingBlock(Aloha.getEditableHost($(data)));
 	});
 

@@ -67,7 +67,7 @@ define([
 		 */
 		init: function () {
 			var plugin = this;
-			Aloha.on('aloha-editable-created', function (event, editable) {
+			Aloha.bind('aloha-editable-created', function (event, editable) {
 				if (!editable.obj[0]) {
 					return;
 				}

@@ -358,14 +358,14 @@ export class PostLoadScript {
      * fires immediately after loading the page in some cases. Therefore, we ignore the first event.
      */
     listenToAlohaEvents(): void {
-        if (!this.document || !this.document.body || !this.window.Aloha || typeof this.window.Aloha.on !== 'function') {
+        if (!this.document || !this.document.body || !this.window.Aloha || typeof this.window.Aloha.bind !== 'function') {
             return;
         }
 
         const initialTime = new Date().getTime();
         let isFirstChangeEvent = true;
 
-        this.window.Aloha.on('aloha-smart-content-changed', (event: Event) => {
+        this.window.Aloha.bind('aloha-smart-content-changed', (event: Event) => {
             const delay = event.timeStamp - initialTime;
 
             // Ignore the `smart-content-changed` fired when opening the page

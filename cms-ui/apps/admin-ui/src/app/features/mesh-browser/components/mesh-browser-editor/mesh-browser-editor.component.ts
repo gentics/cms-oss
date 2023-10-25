@@ -15,6 +15,8 @@ import { MeshBrowserLoaderService } from '../../providers';
 })
 export class MeshBrowserEditorComponent implements OnInit {
 
+    private sid: number;
+
     private currentNodeId: string;
 
     private project: string;
@@ -45,9 +47,9 @@ export class MeshBrowserEditorComponent implements OnInit {
             console.log(params);
         });
 
-
+        this.sid = this.appState.now.auth.sid
         this.project = 'Manual'; // fix me
-        this.language = 'en';
+        this.language = 'de';
         this.currentNodeId = this.route.snapshot.params.id;
         this.init()
     }
@@ -61,9 +63,7 @@ export class MeshBrowserEditorComponent implements OnInit {
     }
 
     private async mapResponseToSchemaFields(): Promise<void> {
-        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeId)
-
-        console.log(response)
+        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeId, {lang: this.language})
 
         if (!response.fields) {
             return;
@@ -80,7 +80,7 @@ export class MeshBrowserEditorComponent implements OnInit {
             if (typeof value === 'object') {
                 this.fields.push({
                     label: key,
-                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeId}/binary/binarycontent?lang=${this.language}`,
+                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeId}/binary/binarycontent?lang=${this.language}&sid=${this.sid}`,
                     type: FieldType.BINARY,
                 })
             }

@@ -80,6 +80,9 @@ export class MeshBrowserSchemaListComponent implements OnInit {
         if (nodeUuid === 'undefined' || !nodeUuid) {
             this.loadSchemasAndElements();
         }
+        if (nodeUuid === this.currentNodeUuid) {
+            return;
+        }
         this.currentNodeUuid = nodeUuid;
         this.nodeChange.emit(nodeUuid);
     }

@@ -1,7 +1,7 @@
-
-
 .mesh-browser-detail{
     margin-left: 2rem;
+    overflow: auto;
+    max-height: 100%;
 }
 
 .field {
@@ -17,10 +17,23 @@
         text-transform: uppercase;
     }
 
-    .field-value {
+    .field-value {      
         flex: 0.3;
         border: 1px dotted #0096DC;
         border-radius: 4px;
         padding: 0.4rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: 200px;
+        word-wrap: break-word;
+    }
+
+    .field-binary {
+        flex: 0.3;
+        
+        img {
+            max-width: 100%;
+            max-height: 100%;
+        }
     }
 }

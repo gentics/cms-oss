@@ -135,6 +135,9 @@ export class MeshBrowserMasterComponent
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
             relativeTo: this.route,
         });
+
+        this.currentNodeId = undefined;
+        this.currentProject = undefined;
     }
 
     public meshLoginHandler(event: { loggedIn: boolean; user?: User }): void {

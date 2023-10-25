@@ -1,4 +1,4 @@
-import { PagingOptions } from '@gentics/mesh-models';
+import { FieldType, PagingOptions } from '@gentics/mesh-models';
 
 
 export interface MeshSchemaListParams extends PagingOptions  {
@@ -27,4 +27,10 @@ export interface SchemaElement {
 
 export interface ElementLanguage {
     language: string;
+}
+
+export interface MeshField {
+    label: string;
+    value: string;
+    type: FieldType;
 }

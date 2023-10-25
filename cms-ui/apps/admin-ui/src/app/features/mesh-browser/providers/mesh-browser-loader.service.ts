@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BranchReference, UserResponse } from '@gentics/mesh-models';
+import { BranchReference, NodeResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from '../models/mesh-browser-models';
+
 
 
 @Injectable()
@@ -12,6 +13,10 @@ export class MeshBrowserLoaderService {
 
     public authMe(): Promise<UserResponse>  {
         return this.meshClient.auth.me();
+    }
+
+    public getMeshUrl(): string {
+        return this.meshClient.getConfig().connection.basePath;
     }
 
     public async getProjects(): Promise<Array<string>> {
@@ -74,6 +79,11 @@ export class MeshBrowserLoaderService {
         });
 
         return response.data.node?.children?.elements
+    }
+
+    public async getNodeByUuid(project: string, uuid: string): Promise<NodeResponse> {
+        const response = await this.meshClient.nodes.get(project, uuid)
+        return response;
     }
 
 }

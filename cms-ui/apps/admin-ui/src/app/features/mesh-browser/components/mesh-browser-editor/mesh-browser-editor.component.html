@@ -6,6 +6,16 @@
         (cancelClick)="detailsClose()"
     />
 
-    Show some details
+    <ng-container *ngFor="let field of fields">
+        <div class="field">
+            <label class="field-label">{{ field.label }}</label>
+            <span *ngIf="field.type === 'string' else binaryFieldRenderer" class="field-value">{{ field.value }}</span>
+        </div>
+
+        <ng-template #binaryFieldRenderer>
+            <img src="{{ field.value }}" />
+        </ng-template>
+    </ng-container>
+
 </div>
 

@@ -71,7 +71,6 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         }
         else {
             this.navigateToDetails(element.uuid);
-            // todo: GPU-1116
         }
     }
 
@@ -79,18 +78,6 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         const fullUrl = this.router.url
         const url = `${fullUrl}/(${ROUTE_DETAIL_OUTLET}:${AdminUIEntityDetailRoutes.MESH_BROWSER}/${nodeId}/)`;
         await this.router.navigateByUrl(url)
-
-        // todo fix: cannot match any route
-        // const fullUrl = getFullPrimaryPath(this.route);
-        // const commands: any[] = [
-        //     fullUrl,
-        //     { outlets: { detail: [AdminUIEntityDetailRoutes.MESH_BROWSER, nodeId] } },
-        // ];
-        // const extras: NavigationExtras = { relativeTo: this.route };
-
-
-        // await this.router.navigate(commands, extras);
-        // this.appState.dispatch(new FocusEditor());
     }
 
 

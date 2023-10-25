@@ -180,6 +180,7 @@ export class MeshBrowserMasterComponent
     }
 
     public async projectChangeHandler(project: string): Promise<void> {
+        this.currentNodeId = undefined;
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
         this.handleNavigation()

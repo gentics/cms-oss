@@ -1,0 +1,26 @@
+
+
+.mesh-browser-detail{
+    margin-left: 2rem;
+}
+
+.field {
+    display: flex;
+    flex-direction: row;
+    font-size: 18px;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+
+    .field-label {
+        color: #888;
+        flex: 0.2;
+        text-transform: uppercase;
+    }
+
+    .field-value {
+        flex: 0.3;
+        border: 1px dotted #0096DC;
+        border-radius: 4px;
+        padding: 0.4rem;
+    }
+}

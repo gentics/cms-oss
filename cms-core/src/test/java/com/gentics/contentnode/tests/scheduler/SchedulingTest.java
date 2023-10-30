@@ -629,7 +629,7 @@ public class SchedulingTest {
 	 * @param startedLatch Latch to wait on for the task to start. The latches
 	 * 		{@link CountDownLatch#countDown() countDown()} method will be called
 	 * 		at the start of the mocked
-	 * 		{@link SchedulerTask#execute(List) execute()}.
+	 * 		{@link SchedulerTask#execute(int, List) execute()}.
 	 * @param finishedLatch Latch to signal when the task should finish. The
 	 * 		mocked {@code execute()} will wait for this latch before
 	 * 		termination.
@@ -644,10 +644,10 @@ public class SchedulingTest {
 			when(task.isInternal()).thenReturn(original.isInternal());
 		}
 
-		when(task.execute(Mockito.anyList())).thenAnswer(invocation -> {
+		when(task.execute(Mockito.anyInt(), Mockito.anyList())).thenAnswer(invocation -> {
 			startedLatch.countDown();
 
-			List<String> output = invocation.getArgument(0);
+			List<String> output = invocation.getArgument(1);
 
 			output.add(String.format("Started task at {}", OffsetDateTime.now()));
 			output.add("Waiting on countdown finishedLatch");

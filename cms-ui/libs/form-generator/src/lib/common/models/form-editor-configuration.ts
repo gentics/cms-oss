@@ -48,6 +48,7 @@ export interface FormElementPropertyConfigurationSelect extends FormElementPrope
     type: FormElementPropertyTypeConfiguration.SELECT;
     options: FormElementPropertyOptionConfiguration[];
     default_value_i18n?: FormElementPropertyDefaultI18nValue<string>;
+    multiple?: boolean;
 }
 
 export interface FormElementPropertyConfigurationSelectableOptions extends FormElementPropertyConfigurationBase {

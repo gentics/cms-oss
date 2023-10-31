@@ -75,7 +75,7 @@ folder-context-menu {
 }
 
 // On small screen widths or in focus mode, expand edit mode to the full screensize
-gtx-split-view-container.split-view-container::ng-deep {
+.split-view-container {
     --gtx-view-top: 0;
     background-color: white;
     position: absolute;
@@ -89,27 +89,47 @@ gtx-split-view-container.split-view-container::ng-deep {
     z-index: 0;
     height: 100% !important;
 
-    .left-panel,
-    .right-panel {
-        transition-duration: $gtx-animation-duration;
-        transition-delay: $gtx-animation-duration;
-    }
+    &::ng-deep {
+        .left-panel,
+        .right-panel {
+            transition-duration: $gtx-animation-duration;
+            transition-delay: $gtx-animation-duration;
+        }
 
-    &.advanced-search-visible {
-        top: $header-area-height + $advanced-search-height;
-        transition: top $gtx-animation-duration;
-    }
+        &.advanced-search-visible {
+            top: $header-area-height + $advanced-search-height;
+            transition: top $gtx-animation-duration;
+        }
 
-    @media screen and (max-width: $small-screen) {
-        &.rightPanelFocused {
-            @include focusModeAnimation;
+        @media screen and (max-width: $small-screen) {
+            &.rightPanelFocused {
+                @include focusModeAnimation;
+            }
+        }
+
+        > .slideable {
+            box-shadow: none !important;
+            border-top: none !important;
+
+            // Add some custom behaviour to the SplitViewContainer for not-quite-large screen widths
+            @media screen and (min-width: 1401px) and (max-width: $large-screen) {
+                width: 70%;
+
+                &.hasRightPanel {
+                    width: 100%;
+                }
+            }
+
+            .left-panel {
+                position: relative;
+            }
         }
     }
 
     &.focusMode.rightPanelFocused {
         @include focusModeAnimation;
 
-        > .slideable {
+        &::ng-deep > .slideable {
             width: 100%;
 
             > .resizer {
@@ -118,24 +138,6 @@ gtx-split-view-container.split-view-container::ng-deep {
                 min-width: 0;
                 max-width: 0;
             }
-        }
-    }
-
-    > .slideable {
-        box-shadow: none !important;
-        border-top: none !important;
-
-        // Add some custom behaviour to the SplitViewContainer for not-quite-large screen widths
-        @media screen and (min-width: 1401px) and (max-width: $large-screen) {
-            width: 70%;
-
-            &.hasRightPanel {
-                width: 100%;
-            }
-        }
-
-        .left-panel {
-            position: relative;
         }
     }
 }

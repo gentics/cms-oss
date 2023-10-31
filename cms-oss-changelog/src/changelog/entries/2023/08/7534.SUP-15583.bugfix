@@ -1,0 +1,1 @@
+ 	Editor User Interface: The permission check for creating Folders has been fixed, and will now properly hide the create button if the user isn't permitted to create new Folders.

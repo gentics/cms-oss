@@ -6,7 +6,8 @@ import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParameterContainsAttribute;
 
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,6 +34,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -47,6 +49,8 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SchedulerFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -81,6 +85,7 @@ import com.gentics.contentnode.rest.model.scheduler.ScheduleStatus;
 import com.gentics.contentnode.rest.model.scheduler.TaskListResponse;
 import com.gentics.contentnode.rest.model.scheduler.TaskModel;
 import com.gentics.contentnode.rest.model.scheduler.TaskResponse;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.ExecutionFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
@@ -578,6 +583,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				throw new EntityNotFoundException("Execution not found", "scheduler_execution.notfound");
 			}
 
+			setDataForRunningExecution(execution);
+
 			ExecutionResponse response = new ExecutionResponse(execution, new ResponseInfo(ResponseCode.OK, "Execution loaded"));
 
 			trx.success();
@@ -692,6 +699,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				? ExecutionModel.fromDbResult("e.id", rs)
 				: null;
 
+			setDataForRunningExecution(execution);
+
 			ScheduleModel schedule = new ScheduleModel()
 				.setRuns(rs.getInt("runs"))
 				.setAverageTime(rs.getInt("average_time"))
@@ -701,6 +710,32 @@ public class SchedulerResourceImpl implements SchedulerResource {
 		}
 
 		return models;
+	}
+
+	/**
+	 * If the given execution is still running (does not have an end time), we probably can find the current log output
+	 * in a file. It that's the case, the current contents of the file will be read and set as "log" to the given model
+	 * @param execution execution
+	 * @return the execution
+	 */
+	protected static ExecutionModel setDataForRunningExecution(ExecutionModel execution) {
+		if (execution != null && execution.isRunning()) {
+			if (StringUtils.isEmpty(execution.getLog())) {
+				File out = SchedulerFactory.getExecutionStdout(execution.getId(), false);
+				if (out != null) {
+					try {
+						execution.setLog(FileUtils.readFileToString(out));
+					} catch (IOException e) {
+					}
+				}
+			}
+			try {
+				int current = TransactionManager.getCurrentTransaction().getUnixTimestamp();
+				execution.setDuration(current - execution.getStartTime());
+			} catch (TransactionException e) {
+			}
+		}
+		return execution;
 	}
 
 	/**
@@ -763,7 +798,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				List<ExecutionModel> executions = new ArrayList<>();
 
 				while (rs.next()) {
-						executions.add(ExecutionModel.fromDbResult(rs));
+					executions.add(setDataForRunningExecution(ExecutionModel.fromDbResult(rs)));
 				}
 
 				return executions;

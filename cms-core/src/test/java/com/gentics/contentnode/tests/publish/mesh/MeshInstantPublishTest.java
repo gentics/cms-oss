@@ -60,7 +60,7 @@ import com.gentics.mesh.core.rest.node.NodeResponse;
 /**
  * Test cases for instant publishing into Mesh CR
  */
-@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.INSTANT_CR_PUBLISHING })
+@GCNFeature(set = { Feature.MESH_CONTENTREPOSITORY, Feature.INSTANT_CR_PUBLISHING, Feature.DISABLE_INSTANT_DELETE, Feature.WASTEBIN  })
 @RunWith(value = Parameterized.class)
 @Category(MeshTest.class)
 public class MeshInstantPublishTest {
@@ -201,6 +201,10 @@ public class MeshInstantPublishTest {
 				assertThat(contentRepository.checkStructure(true)).as("Structure valid").isTrue();
 			}
 		});
+
+		node = update(node, n -> {
+			n.deactivateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
 	}
 
 	/**
@@ -210,24 +214,7 @@ public class MeshInstantPublishTest {
 	 */
 	@Test
 	public void testCreate() throws NodeException {
-		NodeObject object = null;
-		switch (objType) {
-		case Folder.TYPE_FOLDER:
-			object = Trx.supply(() -> createFolder(folder, "Testfolder"));
-			break;
-		case Page.TYPE_PAGE:
-			object = Trx.supply(() -> {
-				Page page = createPage(folder, template, "Testpage");
-				update(page, p -> p.publish());
-				return page;
-			});
-			break;
-		case File.TYPE_FILE:
-			object = Trx.supply(() -> createFile(folder, "testfile.txt", "Testfile contents".getBytes()));
-			break;
-		default:
-			fail(String.format("Cannot test unexpected type %d", objType));
-		}
+		NodeObject object = createTestObject();
 
 		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
 	}
@@ -285,5 +272,162 @@ public class MeshInstantPublishTest {
 				trx.success();
 			}
 		}
+	}
+
+	/**
+	 * Test that creating, deleting and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteCreate() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (for good)
+		Trx.consume(o -> o.delete(true), object);
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test that creating, deleting and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node.
+	 * This time, the "DELETE" events will be removed before the publish run
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteCreateWithRemovedEvents() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (for good)
+		Trx.consume(o -> o.delete(true), object);
+
+		// wait for the dirt queue worker
+		try (Trx trx = new Trx()) {
+			context.waitForDirtqueueWorker();
+			trx.success();
+		}
+		// remove all "DELETE" entries from the publishqueue
+		Trx.operate(() -> {
+			DBUtils.deleteWithPK("publishqueue", "id", "action = ?", new String[] {"DELETE"});
+		});
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test that creating, deleting (into the wastebin) and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteIntoWastebinCreate() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (into wastebin)
+		Trx.consume(o -> o.delete(), object);
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test that creating, deleting (into the wastebin) and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node.
+	 * This time, the "DELETE" events will be removed before the publish run
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteIntoWastebinCreateWithRemovedEvents() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (into wastebin)
+		Trx.consume(o -> o.delete(), object);
+
+		// wait for the dirt queue worker
+		try (Trx trx = new Trx()) {
+			context.waitForDirtqueueWorker();
+			trx.success();
+		}
+		// remove all "DELETE" entries from the publishqueue
+		Trx.operate(() -> {
+			DBUtils.deleteWithPK("publishqueue", "id", "action = ?", new String[] {"DELETE"});
+		});
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Create the test object
+	 * @return test object
+	 * @throws NodeException
+	 */
+	protected NodeObject createTestObject() throws NodeException {
+		NodeObject object = null;
+		switch (objType) {
+		case Folder.TYPE_FOLDER:
+			object = Trx.supply(() -> createFolder(folder, "Testfolder"));
+			break;
+		case Page.TYPE_PAGE:
+			object = Trx.supply(() -> {
+				Page page = createPage(folder, template, "Testpage");
+				update(page, p -> p.publish());
+				return page;
+			});
+			break;
+		case File.TYPE_FILE:
+			object = Trx.supply(() -> createFile(folder, "testfile.txt", "Testfile contents".getBytes()));
+			break;
+		default:
+			fail(String.format("Cannot test unexpected type %d", objType));
+		}
+		return object;
 	}
 }

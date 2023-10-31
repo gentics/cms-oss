@@ -1,0 +1,6 @@
+Execution of external tasks in the scheduler has been improved: stdout and stderr of the executed command (script)
+will now not be buffered, but will be redirected to log files. This fixes problems with commands that create lots of output (e.g. curl, if the request runs for a long time),
+which could cause some executions to hang forever.
+Additionally, the display of scheduler executions has been improved:
+* Running scheduler tasks will now be shown as "Running" (instead of "Failed")
+* Running scheduler tasks will now show the current duration instead of 0

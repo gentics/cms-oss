@@ -2,6 +2,7 @@ package com.gentics.contentnode.publish.wrapper;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -376,8 +377,12 @@ public class PublishableTemplate extends AbstractTemplate {
 
 	@Override
 	public List<Folder> getFolders() throws NodeException {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Set<Integer> getFolderIds() throws NodeException {
+		return Collections.emptySet();
 	}
 
 	@Override

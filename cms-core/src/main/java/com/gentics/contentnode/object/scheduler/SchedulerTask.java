@@ -1,10 +1,13 @@
 package com.gentics.contentnode.object.scheduler;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.StringTokenizer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -19,6 +22,7 @@ import com.gentics.contentnode.factory.ObjectReadOnlyException;
 import com.gentics.contentnode.factory.TType;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.object.AbstractFactory;
 import com.gentics.contentnode.factory.object.SchedulerFactory;
 import com.gentics.contentnode.object.NamedNodeObject;
 import com.gentics.contentnode.object.SystemUser;
@@ -28,6 +32,7 @@ import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.scheduler.TaskModel;
 import com.gentics.contentnode.rest.util.ModelBuilder;
 import com.gentics.contentnode.scheduler.InternalSchedulerTask;
+import com.gentics.lib.log.NodeLogger;
 
 /**
  * Interface for scheduler tasks
@@ -202,13 +207,14 @@ public interface SchedulerTask extends NamedNodeObject, Resolvable {
 	/**
 	 * Execute this task.
 	 *
+	 * @param executionId execution ID
 	 * @param output List to gather the output of the task execution.
 	 * @return The result status of the task. On success. For internal tasks
 	 * 		this is 0 for successful execution and 255 for failed executions.
 	 * 		For external tasks it is the exit code of the executed shell
 	 * 		command.
 	 */
-	default int execute(List<String> output) throws NodeException, InterruptedException, IOException {
+	default int execute(int executionId, List<String> output) throws NodeException, InterruptedException, IOException {
 		int resultStatus;
 
 		if (isInternal()) {
@@ -223,18 +229,58 @@ public interface SchedulerTask extends NamedNodeObject, Resolvable {
 			return resultStatus;
 		}
 
-		Process p = Runtime.getRuntime().exec(getSanitizedCommand());
+		File out = SchedulerFactory.getExecutionStdout(executionId, true);
+		File err = SchedulerFactory.getExecutionStderr(executionId, true);
 
-		resultStatus = p.waitFor();
-
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-			String line;
-
-			while ((line = reader.readLine()) != null) {
-				output.add(line);
-			}
+		// tokenize command
+		StringTokenizer st = new StringTokenizer(getSanitizedCommand());
+		String[] cmdarray = new String[st.countTokens()];
+		for (int i = 0; st.hasMoreTokens(); i++) {
+			cmdarray[i] = st.nextToken();
 		}
 
-		return resultStatus;
+		try {
+			ProcessBuilder builder = new ProcessBuilder(cmdarray);
+			if (out != null) {
+				builder = builder.redirectOutput(out);
+			} else {
+				NodeLogger.getNodeLogger(AbstractFactory.class)
+						.warn(String.format(
+								"Can not redirect stdout of task '%s' to file. Execution might not work as expected",
+								getName()));
+			}
+			if (err != null) {
+				builder = builder.redirectError(err);
+			} else {
+				NodeLogger.getNodeLogger(AbstractFactory.class)
+						.warn(String.format(
+								"Can not redirect stderr of task '%s' to file. Execution might not work as expected",
+								getName()));
+			}
+			Process p = builder.start();
+
+			resultStatus = p.waitFor();
+
+			if (out != null) {
+				output.addAll(FileUtils.readLines(out));
+			} else {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+					String line;
+
+					while ((line = reader.readLine()) != null) {
+						output.add(line);
+					}
+				}
+			}
+
+			return resultStatus;
+		} finally {
+			if (out != null) {
+				FileUtils.deleteQuietly(out);
+			}
+			if (err != null) {
+				FileUtils.deleteQuietly(err);
+			}
+		}
 	}
 }

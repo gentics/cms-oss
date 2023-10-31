@@ -136,7 +136,7 @@ export class RepositoryBrowser implements IModalDialog, OnInit, OnDestroy {
             this.changeParent(item as Template);
         } else if (this.dataService.isSelected(item)) {
             this.dataService.deselectItem(item);
-        } else {
+        } else if (this.allowed[item.type.toLowerCase()]) {
             this.dataService.selectItem(item);
         }
     }

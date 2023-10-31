@@ -215,8 +215,10 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 			MBeanRegistry.registerMBean(this, "Publish", "MeshPublishController");
 		}
 
-		rendererThreadPool = Executors.newFixedThreadPool(rendererThreadPoolSize, new PrefixedThreadFactory("Mesh Renderer"));
-		writerThreadPool = Executors.newCachedThreadPool(new PrefixedThreadFactory("Mesh Writer"));
+		String currentThreadName = Thread.currentThread().getName();
+
+		rendererThreadPool = Executors.newFixedThreadPool(rendererThreadPoolSize, new PrefixedThreadFactory(String.format("Mesh Renderer for '%s'", currentThreadName)));
+		writerThreadPool = Executors.newCachedThreadPool(new PrefixedThreadFactory(String.format("Mesh Writer for '%s'", currentThreadName)));
 		taskCounterFuture = writerThreadPool.submit(() -> {
 			int taskCounter = 0;
 			boolean proceed = true;
@@ -435,6 +437,9 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * @throws NodeException
 	 */
 	public void waitForRenderAndWrite() throws NodeException, InterruptedException {
+		for (MeshPublisher meshPublisher : publishers) {
+			meshPublisher.checkForErrors();
+		}
 		renderTasks.awaitEmpty();
 		writeTasks.awaitEmpty();
 	}

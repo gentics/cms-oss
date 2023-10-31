@@ -3,6 +3,7 @@ package com.gentics.contentnode.publish.mesh;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.mesh.core.rest.common.GenericMessageResponse;
@@ -44,7 +45,7 @@ public final class MeshPublishUtils {
 	 * @return true for recoverable error
 	 */
 	public static boolean isRecoverable(Throwable t) {
-		return isConflict(t) || isNotFound(t);
+		return isConflict(t) || isNotFound(t) || isBadRequestAfterMove(t);
 	}
 
 	/**
@@ -53,14 +54,22 @@ public final class MeshPublishUtils {
 	 * @return true for conflict errors, false otherwise
 	 */
 	public static boolean isConflict(Throwable t) {
+		return isResponseStatus(t, HttpResponseStatus.CONFLICT);
+	}
+
+	/**
+	 * Get the optional {@link MeshRestClientMessageException} instance wrapped in the given {@link Throwable}.
+	 * @param t throwable
+	 * @return optional MeshRestClientMessageException
+	 */
+	public static Optional<MeshRestClientMessageException> getMeshRestClientMessageException(Throwable t) {
 		if (t instanceof MeshRestClientMessageException) {
 			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
-			return meshException.getStatusCode() == HttpResponseStatus.CONFLICT.code();
+			return Optional.of(meshException);
 		} else if (t.getCause() != null && t.getCause() != t) {
-			// check the cause
-			return isConflict(t.getCause());
+			return getMeshRestClientMessageException(t.getCause());
 		} else {
-			return false;
+			return Optional.empty();
 		}
 	}
 
@@ -70,14 +79,7 @@ public final class MeshPublishUtils {
 	 * @return optional message response
 	 */
 	public static Optional<GenericMessageResponse> getResponse(Throwable t) {
-		if (t instanceof MeshRestClientMessageException) {
-			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
-			return Optional.of(meshException.getResponseMessage());
-		} else if (t.getCause() != null && t.getCause() != t) {
-			return getResponse(t.getCause());
-		} else {
-			return Optional.empty();
-		}
+		return getMeshRestClientMessageException(t).map(MeshRestClientMessageException::getResponseMessage);
 	}
 
 	/**
@@ -107,14 +109,28 @@ public final class MeshPublishUtils {
 	 * @return true for not_found errors, false otherwise
 	 */
 	public static boolean isNotFound(Throwable t) {
-		if (t instanceof MeshRestClientMessageException) {
-			MeshRestClientMessageException meshException = ((MeshRestClientMessageException) t);
-			return meshException.getStatusCode() == HttpResponseStatus.NOT_FOUND.code();
-		} else if (t.getCause() != null && t.getCause() != t) {
-			// check the cause
-			return isNotFound(t.getCause());
-		} else {
-			return false;
-		}
+		return isResponseStatus(t, HttpResponseStatus.NOT_FOUND);
+	}
+
+	/**
+	 * Check whether the throwable is a {@link MeshRestClientMessageException} with {@link MeshRestClientMessageException#getStatusCode()} {@link HttpResponseStatus#BAD_REQUEST}
+	 * and the request was a "moveTo" request
+	 * @param t throwable
+	 * @return true for "bad request" errors, false otherwise
+	 */
+	public static boolean isBadRequestAfterMove(Throwable t) {
+		return getMeshRestClientMessageException(t).map(meshException -> {
+			return meshException.getStatusCode() == HttpResponseStatus.BAD_REQUEST.code() && StringUtils.contains(meshException.getUri(), "/moveTo/");
+		}).orElse(false);
+	}
+
+	/**
+	 * Check whether the throwable is a {@link MeshRestClientMessageException} with the given {@link MeshRestClientMessageException#getStatusCode()}.
+	 * @param t throwable
+	 * @param status status code in question
+	 * @return true, iff the status code matches
+	 */
+	public static boolean isResponseStatus(Throwable t, HttpResponseStatus status) {
+		return getMeshRestClientMessageException(t).map(meshException -> meshException.getStatusCode() == status.code()).orElse(false);
 	}
 }

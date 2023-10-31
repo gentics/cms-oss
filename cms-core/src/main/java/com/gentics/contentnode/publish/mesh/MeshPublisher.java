@@ -195,9 +195,11 @@ import com.gentics.mesh.core.rest.tag.TagListUpdateRequest;
 import com.gentics.mesh.core.rest.tag.TagReference;
 import com.gentics.mesh.core.rest.tag.TagResponse;
 import com.gentics.mesh.parameter.GenericParameters;
+import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
 import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
+import com.gentics.mesh.parameter.client.NodeParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
 import com.gentics.mesh.rest.client.MeshRequest;
@@ -260,6 +262,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Postfix of the name of the schema for files
 	 */
 	public final static String FILE_SCHEMA = "binary_content";
+
+	/**
+	 * Name of the schema for forms
+	 */
+	public final static String FORM_SCHEMA = "form";
 
 	/**
 	 * Name of the tag family used for the implementation version tags
@@ -1024,7 +1031,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param objType object type
 	 * @return normalized
 	 */
-	protected static int normalizeObjType(int objType) {
+	public static int normalizeObjType(int objType) {
 		if (objType == ImageFile.TYPE_IMAGE) {
 			return File.TYPE_FILE;
 		}
@@ -1487,6 +1494,19 @@ public class MeshPublisher implements AutoCloseable {
 
 		// check which alternative projects exist
 		alternativeProjects.removeIf(project -> !project.exists());
+
+		// Since Mesh-SQL is case-insensitive when loading projects by name,
+		// alternative projects with the same name apart from case which are
+		// already in the project map must also be ignored.
+		if (meshSql) {
+			Set<String> projectNames = projectMap.values().stream()
+				.map(p -> p.name)
+				.filter(Objects::nonNull)
+				.map(String::toLowerCase)
+				.collect(Collectors.toSet());
+
+			alternativeProjects.removeIf(p -> p.name == null || projectNames.contains(p.name.toLowerCase()));
+		}
 
 		for (MeshProject project : alternativeProjects) {
 			project.validate(Collections.emptyMap(), false, new AtomicBoolean());
@@ -2243,8 +2263,8 @@ public class MeshPublisher implements AutoCloseable {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
-		logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 		try {
+			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 			if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
@@ -2298,9 +2318,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void offline(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		semaphoreMap.acquire(lockKey);
-		logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
+		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		try {
+			logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
 			if (objectType == Page.TYPE_PAGE && meshLanguage != null) {
 				// for pages, we take offline the language version
 				if (branch != null) {
@@ -2874,9 +2894,34 @@ public class MeshPublisher implements AutoCloseable {
 	public String getSchemaName(int objectType) {
 		switch (objectType) {
 		case Form.TYPE_FORM:
-			return "form";
+			return FORM_SCHEMA;
 		default:
 			return String.format("%s_%s", schemaPrefix, schemaNames.get(normalizeObjType(objectType)));
+		}
+	}
+
+	/**
+	 * Get the object type for the given schema name
+	 * @param schemaName schema name
+	 * @return optional object type, empty if the schema does not belong to a CMS object
+	 */
+	public Optional<Integer> getObjectType(String schemaName) {
+		if (org.apache.commons.lang3.StringUtils.equals(schemaName, FORM_SCHEMA)) {
+			return Optional.of(Form.TYPE_FORM);
+		}
+		if (!org.apache.commons.lang3.StringUtils.startsWith(schemaName, schemaPrefix + "_")) {
+			return Optional.empty();
+		}
+		String typeName = org.apache.commons.lang3.StringUtils.removeStart(schemaName, schemaPrefix + "_");
+		switch (typeName) {
+		case FOLDER_SCHEMA:
+			return Optional.of(Folder.TYPE_FOLDER);
+		case PAGE_SCHEMA:
+			return Optional.of(Page.TYPE_PAGE);
+		case FILE_SCHEMA:
+			return Optional.of(File.TYPE_FILE);
+		default:
+			return Optional.empty();
 		}
 	}
 
@@ -3352,6 +3397,46 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Do some reverse engineering to get the CMS object which was published to Mesh with the given UUID and language
+	 * @param project mesh project
+	 * @param nodeId node ID
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh language
+	 * @return optional pair of object type and NodeObject. The optional is empty, if the object in Mesh could not be found or was not published from
+	 * the CMS. Otherwise the pair will always contain the object type and also the NodeObject, if it could be found in the CMS
+	 * @throws NodeException
+	 */
+	public Optional<Pair<Integer, NodeObject>> getNodeObject(MeshProject project, int nodeId, String meshUuid, String meshLanguage) throws NodeException {
+		GenericParameters genParams = new GenericParametersImpl().setETag(false).setFields("uuid", "fields", "schema");
+		NodeParameters langParam = new NodeParametersImpl().setLanguages(meshLanguage);
+		NodeResponse conflict = client
+				.findNodeByUuid(project.name, meshUuid, project.enforceBranch(nodeId), genParams, langParam).toMaybe()
+				.onErrorComplete().blockingGet();
+		if (conflict != null) {
+			String schemaName = conflict.getSchema().getName();
+			Optional<Integer> optCmsId = Optional.ofNullable(conflict.getFields().getNumberField("cms_id"))
+					.flatMap(f -> Optional.ofNullable(f.getNumber())).map(Number::intValue);
+			Optional<Integer> optType = getObjectType(schemaName);
+			if (optType.isPresent() && optCmsId.isPresent()) {
+				int objType = optType.get();
+				int cmsId = optCmsId.get();
+
+				NodeObject object = null;
+				try (Trx trx = new Trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+					Transaction t = trx.getTransaction();
+					object = t.getObject(t.getClass(objType), cmsId);
+				}
+
+				return Optional.of(Pair.of(objType, object));
+			} else {
+				return Optional.empty();
+			}
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
 	 * Get the parent object of the given object.
 	 * Do not return the root folder, if the CR publishes into project per node
 	 * @param object object
@@ -3466,18 +3551,21 @@ public class MeshPublisher implements AutoCloseable {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
-		logger.debug(String.format("Start saving %d.%d", task.objType, task.objId));
-		Completable completable = prepare(task);
-		if (doAfter != null) {
-			completable = completable.andThen(doAfter);
-		}
 		try {
+			logger.debug(String.format("Start saving %d.%d", task.objType, task.objId));
+			Completable completable = prepare(task);
+			if (doAfter != null) {
+				completable = completable.andThen(doAfter);
+			}
 			completable.blockingAwait();
 		} catch (Throwable t) {
 			if (task.postponable && isRecoverable(t)) {
-				if (MeshPublishUtils.isNotFound(t)) {
+				if (MeshPublishUtils.isNotFound(t) || MeshPublishUtils.isBadRequestAfterMove(t)) {
 					// get parent folder
 					Folder parentFolder = Trx.supply(tx -> tx.getObject(Folder.class, task.folderId));
+					if (parentFolder == null) {
+						throw t;
+					}
 					Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 
 					// generate the write task for the parent folder
@@ -3501,12 +3589,28 @@ public class MeshPublisher implements AutoCloseable {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
 
-							if (!cr.mustContain(languageVariant)) {
+							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
 								// remove language variant
 								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
 								// repeat task
 								task.perform(false);
 								postpone = false;
+							}
+						} else {
+							// check whether the conflicting node should be removed
+							Optional<Pair<Integer, NodeObject>> optNodeObject = getNodeObject(task.project, task.nodeId, conflictingUuid, conflictingLanguage);
+							if (optNodeObject.isPresent()) {
+								Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
+
+								int objType = optNodeObject.get().getLeft();
+								NodeObject conflictingNodeObject = optNodeObject.get().getRight();
+								if (conflictingNodeObject == null || !Trx.supply(() -> cr.mustContain(conflictingNodeObject))) {
+									// remove the object from Mesh
+									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
+									// repeat task
+									task.perform(false);
+									postpone = false;
+								}
 							}
 						}
 					}

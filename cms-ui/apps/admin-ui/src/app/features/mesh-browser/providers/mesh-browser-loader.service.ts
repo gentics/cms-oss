@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BranchReference, NodeLoadOptions, NodeResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
 
@@ -47,6 +47,22 @@ export class MeshBrowserLoaderService {
             rootNodeUuid: response.data.project.rootNode.uuid,
             schemas: response.data.schemas.elements,
         }
+    }
+
+    public async listProjectSchemas(project: string): Promise<Array<SchemaContainer>> {
+        const response = await this.meshClient.projects.listSchemas(project);
+
+        return response.data.map(schemaItem => {
+            return {
+                name: schemaItem.name,
+            } as SchemaContainer
+        });
+    }
+
+    public async getRootNodeUuid(project: string): Promise<string> {
+        const response = await this.meshClient.projects.list();
+
+        return response.data.find(schemaItem => schemaItem.name === project).rootNode.uuid;
     }
 
     public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<Array<SchemaElement>>  {

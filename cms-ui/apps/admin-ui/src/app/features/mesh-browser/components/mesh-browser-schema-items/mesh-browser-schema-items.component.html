@@ -7,7 +7,6 @@
         </icon>
     </div>
 
-
     <div *ngIf="!!schema.elements?.length"  [ngClass]="{'collapsed': collapsed}" class="schema-content">
         <div *ngFor="let element of schema.elements | paginate : {
             id: UNIQUE_ID,
@@ -20,7 +19,7 @@
 
                 <div>{{ element.displayName }}</div>
 
-                <span *ngFor="let language of element.languages"  [class.active]="language.language === currentLanguage" class="language">
+                <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}
                 </span>
             </div>

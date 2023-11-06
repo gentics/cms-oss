@@ -82,6 +82,11 @@ export class MeshBrowserMasterComponent
         super.ngOnInit()
 
         this.route.params.subscribe((params) => {
+            if (!this.loggedIn) {
+                this.navigateBack();
+                return;
+            }
+
             if (params.language) {
                 this.currentLanguage = params.language;
             }

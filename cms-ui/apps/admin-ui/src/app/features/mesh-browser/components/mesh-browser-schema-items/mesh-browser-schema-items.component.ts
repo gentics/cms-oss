@@ -111,6 +111,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public toggleSection(): void {
         this.collapsed = !this.collapsed;
+        this.changeDetector.markForCheck();
     }
 
 }

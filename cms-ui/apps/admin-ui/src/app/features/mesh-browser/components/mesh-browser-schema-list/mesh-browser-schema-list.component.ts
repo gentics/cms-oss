@@ -52,11 +52,10 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
 
     protected async loadSchemasAndElements(): Promise<void> {
-        const response = await this.loader.listSchemasWithRootNode(this.currentProject)
-        this.schemas = response.schemas;
+        this.schemas = await this.loader.listProjectSchemas(this.currentProject)
 
         if (this.currentNodeUuid === 'undefined' || !this.currentNodeUuid) {
-            this.currentNodeUuid = response.rootNodeUuid;
+            this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);
         }
 
         await this.loadNodesChildrenForSchemas(this.currentNodeUuid);

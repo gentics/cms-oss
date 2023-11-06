@@ -398,3 +398,7 @@ all *two-letter* codes defined in "ISO-639-1":https://en.wikipedia.org/wiki/List
 
 To support languages in the CMS with codes not defined in ISO-639-1, they need to be configured in Mesh according to this
 "documentation":https://getmesh.io/docs/administration-guide/#_general_settings.
+
+h3. GIS image variants publication
+
+Starting from CMP 8.1, Mesh has an ability to generate all the Gentics Image Store image variants, referenced from the content, during the publish run only, disabling the ability to trigger a service denial on random GIS resized image requests in the runtime. This feature can be enabled per Node with the @Publish GIS image variants to Mesh@ checkbox.

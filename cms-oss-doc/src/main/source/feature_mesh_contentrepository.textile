@@ -69,6 +69,10 @@ Examples of valid Connection Urls:
 * _https://my.mesh.cr/project_
 * _https://my.mesh.cr:8080/project_
 
+h5. Use HTTP/2 for Mesh client connection
+
+The @Use HTTP/2@ checkbox can be used to force all the Mesh connections passing over HTTP/2 protocol, bypassing the protocol version negotiation for the performance reasons. 
+
 h4. Authentication with Username/Password
 
 WARNING: It is recommended to use authentication with ApiToken instead, to prevent session timeouts in long publish runs.

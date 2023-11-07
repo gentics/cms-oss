@@ -138,7 +138,7 @@ public class ContentRepositoryFragmentResourceImpl implements ContentRepositoryF
 			return ListBuilder.from(cr.getEntries(), CrFragmentEntry::getModel)
 					.filter(ResolvableFilter.get(filter, "id", "globalId", "tagname", "mapname", "foreignlinkAttribute", "foreignlinkAttributeRule", "category"))
 					.sort(ResolvableComparator.get(sorting, "id", "globalId", "tagname", "mapname", "objType", "attributeType", "targetType", "multivalue", "optimized",
-							"filesystem", "foreignlinkAttribute", "foreignlinkAttributeRule", "category", "segmentfield", "displayfield", "urlfield"))
+							"filesystem", "foreignlinkAttribute", "foreignlinkAttributeRule", "category", "segmentfield", "displayfield", "urlfield", "noIndex"))
 					.page(paging).to(new ContentRepositoryFragmentEntryListResponse());
 		}
 	}

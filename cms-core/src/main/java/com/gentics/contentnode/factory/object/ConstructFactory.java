@@ -808,6 +808,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setAutoEnable(boolean autoEnable) throws ReadOnlyException {
 			if (this.autoEnable != autoEnable) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': autoEnable changed from '%b' to '%b'", this,
+							this.autoEnable, autoEnable));
+				}
 				this.autoEnable = autoEnable;
 				this.modified = true;
 			}
@@ -816,6 +820,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.hopeditHook, hopeditHook)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': hopeditHook changed from '%s' to '%s'", this,
+							this.hopeditHook, hopeditHook));
+				}
 				this.hopeditHook = hopeditHook;
 				this.modified = true;
 			}
@@ -824,6 +832,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setIconName(String iconName) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.iconName, iconName)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': iconName changed from '%s' to '%s'", this,
+							this.iconName, iconName));
+				}
 				this.iconName = iconName;
 				this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
 				this.modified = true;
@@ -833,6 +845,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setKeyword(String keyword) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.keyword, keyword)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': keyword changed from '%s' to '%s'", this,
+							this.keyword, keyword));
+				}
 				this.keyword = keyword;
 				this.modified = true;
 			}
@@ -841,6 +857,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setLiveEditorTagName(String liveEditorTagName) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.liveEditorTagName, liveEditorTagName)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': liveEditorTagName changed from '%s' to '%s'", this,
+							this.liveEditorTagName, liveEditorTagName));
+				}
 				this.liveEditorTagName = liveEditorTagName;
 				this.modified = true;
 			}
@@ -849,6 +869,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setNewEditor(boolean newEditor) throws ReadOnlyException {
 			if (this.newEditor != newEditor) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': newEditor changed from '%b' to '%b'", this,
+							this.newEditor, newEditor));
+				}
 				this.newEditor = newEditor;
 				this.modified = true;
 			}
@@ -858,6 +882,10 @@ public class ConstructFactory extends AbstractFactory {
 		public void setExternalEditorUrl(String externalEditorUrl) throws ReadOnlyException {
 			externalEditorUrl = ObjectTransformer.getString(externalEditorUrl, "");
 			if (!StringUtils.isEqual(this.externalEditorUrl, externalEditorUrl)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': externalEditorUrl changed from '%s' to '%s'", this,
+							this.externalEditorUrl, externalEditorUrl));
+				}
 				this.externalEditorUrl = externalEditorUrl;
 				this.modified = true;
 			}
@@ -866,6 +894,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setMayBeSubtag(boolean mayBeSubtag) throws ReadOnlyException {
 			if (this.mayBeSubtag != mayBeSubtag) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': mayBeSubtag changed from '%b' to '%b'", this,
+							this.mayBeSubtag, mayBeSubtag));
+				}
 				this.mayBeSubtag = mayBeSubtag;
 				this.modified = true;
 			}
@@ -874,6 +906,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setMayContainSubtags(boolean mayContainSubtags) throws ReadOnlyException {
 			if (this.mayContainSubtags != mayContainSubtags) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': mayContainSubtags changed from '%b' to '%b'", this,
+							this.mayContainSubtags, mayContainSubtags));
+				}
 				this.mayContainSubtags = mayContainSubtags;
 				this.modified = true;
 			}
@@ -926,6 +962,10 @@ public class ConstructFactory extends AbstractFactory {
 			for (UserLanguage lang : languages) {
 				int id = lang.getId();
 				dicEntriesChanged |= CNDictionary.saveDicUserEntry(descriptionId, id, ObjectTransformer.getString(editableDescription.get(id), ""));
+			}
+
+			if (dicEntriesChanged && logger.isDebugEnabled()) {
+				logger.debug(String.format("Change in '%s': dictionary entry changed", this));
 			}
 
 			// make the keyword unique

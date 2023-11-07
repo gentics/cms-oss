@@ -498,7 +498,8 @@ public class MeshPublishTest {
 
 		// create 100 schemas and assign to project
 		for (int i = 0; i < 100; i++) {
-			SchemaResponse schemaResponse = mesh.client().createSchema(new SchemaCreateRequest().setName(String.format("DummySchema_%d", i))).blockingGet();
+			SchemaResponse schemaResponse = mesh.client().createSchema(
+					new SchemaCreateRequest().setNoIndex((i % 2) == 0).setName(String.format("DummySchema_%d", i))).blockingGet();
 			mesh.client().assignSchemaToProject(MESH_PROJECT_NAME, schemaResponse.getUuid()).blockingGet();
 		}
 

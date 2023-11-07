@@ -303,6 +303,10 @@ Example configuration:
 }
 </shell>
 
+h5. Exclude from indexing
+
+Last, but not least, each content type (page/file/image/folder), as well as each distinct tagmap entry may be forcefully excluded from indexing. This may come in hand, for example if the content of the entry suggests a sensitive information, that should not be transferred to the 3rd party indexing engine. For that the general checkboxes @Exclude {pages|folders|files} from indexing@, and per-tagmap entry @No Indexing@ checkbox exists for every tagmap entry.
+
 h3. URLs (Mesh webroot paths)
 
 There are different options to define the URLs of pages, images and files which are published to a Mesh ContentRepository.

@@ -123,6 +123,14 @@ export interface ContentRepositoryBase<T extends ModelType> {
     dataCheckResult: string;
     /** HTTP/2 usage flag */
     http2: boolean;
+    /** Exclude folders from indexing */
+    noFoldersIndex: boolean;
+    /** Exclude files from indexing */
+    noFilesIndex: boolean;
+    /** Exclude pages from indexing */
+    noPagesIndex: boolean;
+    /** Exclude forms from indexing */
+    noFormsIndex: boolean;
 }
 
 /** Data model as defined by backend. */

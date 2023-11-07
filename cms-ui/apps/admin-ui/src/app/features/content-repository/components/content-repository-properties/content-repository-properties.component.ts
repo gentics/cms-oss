@@ -171,6 +171,10 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             url: new UntypedFormControl(this.value?.url || '', Validators.required),
             username: new UntypedFormControl(this.value?.username || '', Validators.required),
             http2: new UntypedFormControl(this.value?.http2 ?? false),
+            noFoldersIndex: new UntypedFormControl(this.value?.noFoldersIndex ?? false),
+            noFilesIndex: new UntypedFormControl(this.value?.noFilesIndex ?? false),
+            noPagesIndex: new UntypedFormControl(this.value?.noPagesIndex ?? false),
+            noFormsIndex: new UntypedFormControl(this.value?.noFormsIndex ?? false),
         });
     }
 
@@ -198,6 +202,10 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             'permissionProperty',
             'projectPerNode',
             'http2',
+            'noFoldersIndex',
+            'noFilesIndex',
+            'noPagesIndex',
+            'noFormsIndex',
             'version',
         ];
 

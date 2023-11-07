@@ -650,7 +650,7 @@ public class InstantPublisher {
 					channel = node;
 				}
 
-				if (!checked.contains(file)) {
+				if (file != null && !checked.contains(file)) {
 					if (channel != null) {
 						if (!FileOnlineStatus.isOnline(file, channel)) {
 							FileOnlineStatus.setOnline(file, channel, true);

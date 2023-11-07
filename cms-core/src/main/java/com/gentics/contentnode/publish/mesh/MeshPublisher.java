@@ -1292,6 +1292,21 @@ public class MeshPublisher implements AutoCloseable {
 		if (!schemaNames.containsKey(type)) {
 			throw new NodeException(String.format("Cannot create schema for type %d", type));
 		}
+		switch(type) {
+		case Folder.TYPE_FOLDER:
+			schema.setNoIndex(cr.isNoFoldersIndex());
+			break;
+		case ImageFile.TYPE_IMAGE:
+		case File.TYPE_FILE:
+			schema.setNoIndex(cr.isNoFilesIndex());
+			break;
+		case Form.TYPE_FORM:
+			schema.setNoIndex(cr.isNoFormsIndex());
+			break;
+		case Page.TYPE_PAGE:
+			schema.setNoIndex(cr.isNoPagesIndex());
+			break;
+		}
 		schema.setName(getSchemaName(type));
 		schema.setContainer(containerTypes.contains(type));
 
@@ -2387,8 +2402,8 @@ public class MeshPublisher implements AutoCloseable {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
-		logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 		try {
+			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
 			if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
@@ -2442,9 +2457,9 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public void offline(MeshProject project, VersioningParameters branch, int objectType, String meshUuid, String meshLanguage) throws NodeException {
-		semaphoreMap.acquire(lockKey);
-		logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
+		semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		try {
+			logger.debug(String.format("Start taking %d.%s offline", objectType, meshUuid));
 			if (objectType == Page.TYPE_PAGE && meshLanguage != null) {
 				// for pages, we take offline the language version
 				if (branch != null) {
@@ -2986,6 +3001,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		if (fieldSchema != null) {
 			fieldSchema.setName(entry.getMapname());
+			fieldSchema.setNoIndex(entry.isNoIndex());
 			String elasticsearch = entry.getElasticsearch();
 			if ("null".equals(elasticsearch)) {
 				elasticsearch = null;
@@ -3653,12 +3669,12 @@ public class MeshPublisher implements AutoCloseable {
 		if (withSemaphore) {
 			semaphoreMap.acquire(lockKey, callTimeout, TimeUnit.SECONDS);
 		}
-		logger.debug(String.format("Start saving %d.%d", task.objType, task.objId));
-		Completable completable = prepare(task);
-		if (doAfter != null) {
-			completable = completable.andThen(doAfter);
-		}
 		try {
+			logger.debug(String.format("Start saving %d.%d", task.objType, task.objId));
+			Completable completable = prepare(task);
+			if (doAfter != null) {
+				completable = completable.andThen(doAfter);
+			}
 			completable.blockingAwait();
 		} catch (Throwable t) {
 			if (task.postponable && isRecoverable(t)) {

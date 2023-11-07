@@ -492,3 +492,12 @@ feature:
 </shell>
 
 Enables the "wastebin functionality":feature_wastebin.html.
+
+h3. Insecure Scheduler Command
+
+<shell filename="conf/features.yml">
+feature:
+	insecure_scheduler_command: true
+</shell>
+
+Whether to allow custom scheduler tasks to execute commands outside of @/cms/scheduler-commands@. This is disabled by default, and it is highly recommended not to activate this feature on production environments. Instead create shell scripts in @/cms/scheduler-commands@ which execute the desired commands. See the "scheduler documentation":https://www.gentics.com/Content.Node/cmp8/guides/scheduler_api.html#custom-tasks for more information.

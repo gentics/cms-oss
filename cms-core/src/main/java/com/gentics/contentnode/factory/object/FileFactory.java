@@ -484,10 +484,7 @@ public class FileFactory extends AbstractFactory {
 					f = f.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(f,
-						new String[] { ObjectTransformer.getString(getFolder().getNode().getId(), ""),
-								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
-						Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(TransactionalTriggerEvent.deleteIntoWastebin(getFolder().getNode(), f));
 			}
 
 			// if the file is a localized copy, it was hiding other files (which are now "created")

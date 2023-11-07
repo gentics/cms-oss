@@ -47,6 +47,8 @@ public class TagmapEntryModel implements Serializable {
 
 	protected Boolean urlfield;
 
+	protected Boolean noIndex;
+
 	protected JsonNode elasticsearch;
 
 	protected String micronodeFilter;
@@ -329,6 +331,22 @@ public class TagmapEntryModel implements Serializable {
 	 */
 	public void setUrlfield(Boolean urlfield) {
 		this.urlfield = urlfield;
+	}
+
+	/**
+	 * True when the entry should be excluded from the indexing
+	 * @return true for no indexing
+	 */
+	public Boolean getNoIndex() {
+		return noIndex;
+	}
+
+	/**
+	 * Set the 'exclude from indexing' flag
+	 * @param noIndex flag
+	 */
+	public void setNoIndex(Boolean noIndex) {
+		this.noIndex = noIndex;
 	}
 
 	/**

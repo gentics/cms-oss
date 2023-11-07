@@ -55,6 +55,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 			entry.setSegmentfield(nodeEntry.isSegmentfield());
 			entry.setDisplayfield(nodeEntry.isDisplayfield());
 			entry.setUrlfield(nodeEntry.isUrlfield());
+			entry.setNoIndex(nodeEntry.isNoIndex());
 			if (!StringUtils.isEmpty(nodeEntry.getElasticsearch())) {
 				ObjectMapper mapper = new ObjectMapper();
 				try {
@@ -127,6 +128,9 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		if (entry.getMicronodeFilter() != null) {
 			nodeEntry.setMicronodeFilter(entry.getMicronodeFilter());
 		}
+		if (entry.getNoIndex() != null) {
+			nodeEntry.setNoIndex(entry.getNoIndex());
+		}
 		return nodeEntry;
 	};
 
@@ -163,6 +167,7 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 		resolvableProperties.put("fragmentName", new NodeObjectProperty<>((o, key) -> o.getContentRepositoryFragmentName()));
 		resolvableProperties.put("micronodeFilter", new NodeObjectProperty<>((o, key) -> o.getMicronodeFilter()));
 		resolvableProperties.put("elasticsearch", new NodeObjectProperty<>((o, key) -> o.getElasticsearch()));
+		resolvableProperties.put("noIndex", new NodeObjectProperty<>((o, key) -> o.isNoIndex()));
 	}
 
 	/**
@@ -488,6 +493,24 @@ public abstract class TagmapEntry extends AbstractContentObject implements Named
 	 */
 	@FieldSetter("urlfield")
 	public void setUrlfield(boolean urlfield) throws ReadOnlyException, NodeException {
+		failReadOnly();
+	}
+
+	/**
+	 * Check whether the tagmap entry should be excluded from indexing
+	 * @return
+	 */
+	@FieldGetter("no_index")
+	public abstract boolean isNoIndex();
+
+	/**
+	 * Set 'exclude from index' flag
+	 * @param noIndex true for no indexing
+	 * @throws ReadOnlyException
+	 * @throws NodeException
+	 */
+	@FieldSetter("no_index")
+	public void setNoIndex(boolean noIndex) throws ReadOnlyException, NodeException {
 		failReadOnly();
 	}
 

@@ -128,5 +128,12 @@
             formControlName="displayfield"
             [label]="'tagmapEntry.displayfield' | i18n"
         ></gtx-checkbox>
+
+        <!-- noIndex - boolean -->
+        <gtx-checkbox
+            *ngIf="form.get('noIndex').enabled"
+            formControlName="noIndex"
+            [label]="'tagmapEntry.noIndex' | i18n"
+        ></gtx-checkbox>
     </div>
 </form>

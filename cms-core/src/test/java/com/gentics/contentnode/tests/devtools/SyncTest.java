@@ -428,6 +428,7 @@ public class SyncTest {
 				} else if (o instanceof ContentRepository) {
 					ContentRepository cr = (ContentRepository) o;
 					assertThat(cr).as("contentrepository").hasFieldOrPropertyWithValue("instantPublishing", false);
+					assertThat(cr).as("contentrepository").hasFieldOrPropertyWithValue("noPagesIndex", false);
 				} else {
 					fail(String.format("Unexpected object %s", o));
 				}
@@ -532,6 +533,7 @@ public class SyncTest {
 						} else if (o instanceof ContentRepository) {
 							ContentRepository cr = (ContentRepository) o;
 							cr.setInstantPublishing(!cr.isInstantPublishing());
+							cr.setNoPagesIndex(!cr.isNoPagesIndex());
 						} else {
 							fail(String.format("Unexpected object %s", o));
 						}

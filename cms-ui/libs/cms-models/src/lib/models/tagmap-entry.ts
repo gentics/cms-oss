@@ -39,6 +39,8 @@ export interface TagmapEntryBase<T extends ModelType> {
     displayfield: boolean;
     /** True when the entry is a urlfield (of a Mesh ContentRepository) */
     urlfield: boolean;
+    /** True when the data of an entry should be excluded from the indexing (in a Mesh ContentRepository) */
+    noIndex: boolean;
     /** Get the elasticsearch specific configuration of a Mesh CR */
     elasticsearch: object;
     /** Get the micronode filter (for entries of type "micronode") */

@@ -53,9 +53,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     async updateComponent(): Promise<void> {
-        const delay = ms => new Promise(res => setTimeout(res, ms));
-        await delay(100); // todo: remove me after fixing the init issue of mesh client
-
         await this.mapResponseToSchemaFields()
         this.changeDetector.markForCheck();
     }

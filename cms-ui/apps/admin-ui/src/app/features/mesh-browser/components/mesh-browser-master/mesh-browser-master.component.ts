@@ -98,7 +98,7 @@ export class MeshBrowserMasterComponent
             if (params.language) {
                 this.currentLanguage = params.language;
             }
-            if (params.repository) { // todo: fix login issue
+            if (params.repository) {
                 this.currentRepositoryId = params.repository;
                 this.handler
                     .get(this.currentRepositoryId)
@@ -166,15 +166,19 @@ export class MeshBrowserMasterComponent
     }
 
     protected async loadProjectDetails(): Promise<void> {
-        this.projects = await this.loader.getProjects();
+        if (this.loggedIn) {
+            this.projects = await this.loader.getProjects();
 
-        if (this.projects.length > 0) {
-            this.setCurrentProject()
-            this.branches = await this.loader.getBranches(this.currentProject);
-            this.setCurrentBranch()
+            if (this.projects.length > 0) {
+                this.setCurrentProject()
+                this.branches = await this.loader.getBranches(this.currentProject);
+                this.setCurrentBranch()
 
-            this.changeDetector.markForCheck();
+                this.changeDetector.markForCheck();
+                return Promise.resolve();
+            }
         }
+        return Promise.reject();
     }
 
     private setCurrentProject(): void {

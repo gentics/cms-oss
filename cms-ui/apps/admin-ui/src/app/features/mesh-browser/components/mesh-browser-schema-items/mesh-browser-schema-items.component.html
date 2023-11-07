@@ -7,17 +7,17 @@
         </icon>
     </div>
 
-    <div *ngIf="!!schema.elements?.length"  [ngClass]="{'collapsed': collapsed}" class="schema-content">
+    <div *ngIf="!!schema.elements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
         <div *ngFor="let element of schema.elements | paginate : {
             id: UNIQUE_ID,
             itemsPerPage: perPage,
             currentPage: page,
             totalItems: schema.elements?.length
         }">
-            <div *ngIf="!!element" class="schema-element" (click)="loadContent(element)">
-                <icon *ngIf="element.isContainer; else iconRenderer" left>folder</icon> 
+            <div *ngIf="!!element" class="schema-element">
+                <icon *ngIf="element.isContainer; else iconRenderer" (click)="showDetails(element)" left>folder</icon> 
 
-                <div>{{ element.displayName }}</div>
+                <div (click)="loadContent(element)">{{ element.displayName }}</div>
 
                 <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}

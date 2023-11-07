@@ -86,6 +86,14 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
                     type: fieldType,
                 })
             }
+            else if (fieldType === FieldType.NODE) {
+                const fieldObject = value as unknown as object;
+                this.fields.push({
+                    label: key,
+                    value: fieldObject['uuid'],
+                    type: FieldType.STRING,
+                })
+            }
             else if (fieldType === FieldType.BINARY) {
                 this.fields.push({
                     label: key,
@@ -102,7 +110,13 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
                 return FieldType.LIST
             }
             else {
-                return FieldType.BINARY;
+                const fieldObject = field as unknown as object;
+                if(fieldObject['binaryUuid']) {
+                    return FieldType.BINARY;
+                }
+                else if(fieldObject['uuid']) {
+                    return FieldType.NODE;
+                }
             }
         }
         else if (typeof field === 'string') {

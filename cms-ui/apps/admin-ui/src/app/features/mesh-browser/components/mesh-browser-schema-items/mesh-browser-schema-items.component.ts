@@ -71,13 +71,17 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public loadContent(element: SchemaElement): void {
         if (element.isContainer) {
             this.loadNodeContent(element.uuid)
+            return;
         }
-        else {
-            this.navigateToDetails(element.uuid);
-        }
+
+        this.showDetails(element);
     }
 
-    public async navigateToDetails(nodeUuid: string): Promise<void> {
+    public showDetails(element: SchemaElement): void {
+        this.navigateToDetails(element.uuid, element.language);
+    }
+
+    public async navigateToDetails(nodeUuid: string, elementLanguage: string): Promise<void> {
         const fullUrl = getFullPrimaryPath(this.route);
         const commands: any[] = [
             fullUrl,
@@ -88,7 +92,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
                         this.currentProject,
                         this.currentBranch.name,
                         nodeUuid,
-                        this.currentLanguage,
+                        elementLanguage,
                     ],
                 },
             },

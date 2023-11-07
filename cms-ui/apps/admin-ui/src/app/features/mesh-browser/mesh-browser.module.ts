@@ -1,7 +1,7 @@
 import { MeshModule } from '@admin-ui/mesh';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { SharedModule } from '../../shared/shared.module';
 import {
@@ -33,6 +33,7 @@ import {
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,
         MeshBrowserLoaderService,
+        provideRouter(MESH_BROWSER_ROUTES, withComponentInputBinding()),
     ],
     imports: [
         SharedModule,

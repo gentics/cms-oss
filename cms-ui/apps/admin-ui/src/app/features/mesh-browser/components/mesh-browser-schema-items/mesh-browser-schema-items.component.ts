@@ -1,7 +1,9 @@
 import { AdminUIEntityDetailRoutes, ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
+import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
+import { getFullPrimaryPath } from '@gentics/ui-core';
 import { SchemaContainer, SchemaElement } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
@@ -52,6 +54,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         protected loader: MeshBrowserLoaderService,
         protected router: Router,
         protected route: ActivatedRoute,
+        protected appState: AppStateService,
     ) { }
 
 
@@ -74,10 +77,26 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         }
     }
 
-    public async navigateToDetails(nodeId: string): Promise<void> {
-        const fullUrl = this.router.url
-        const url = `${fullUrl}/(${ROUTE_DETAIL_OUTLET}:${AdminUIEntityDetailRoutes.MESH_BROWSER}/${nodeId}/)`;
-        await this.router.navigateByUrl(url)
+    public async navigateToDetails(nodeUuid: string): Promise<void> {
+        const fullUrl = getFullPrimaryPath(this.route);
+        const commands: any[] = [
+            fullUrl,
+            {
+                outlets: {
+                    [ROUTE_DETAIL_OUTLET]:  [
+                        AdminUIEntityDetailRoutes.MESH_BROWSER,
+                        this.currentProject,
+                        this.currentBranch.name,
+                        nodeUuid,
+                        this.currentLanguage,
+                    ],
+                },
+            },
+        ] ;
+        const extras: NavigationExtras = { relativeTo: this.route };
+
+        await this.router.navigate(commands, extras);
+        this.appState.dispatch(new FocusEditor());
     }
 
 

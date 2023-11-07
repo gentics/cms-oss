@@ -9,14 +9,24 @@
     <ng-container *ngFor="let field of fields">
         <div class="field">
             <label class="field-label">{{ field.label }}</label>
-            <span *ngIf="field.type === 'string' else binaryFieldRenderer" class="field-value">{{ field.value }}</span>
-        </div>
 
-        <ng-template #binaryFieldRenderer>
-            <div class="field-binary">
+
+            <span *ngIf="field.type === 'string'" class="field-value">
+                {{ field.value }}
+            </span>
+
+            <ng-container *ngIf="field.type === 'list'">
+                <div *ngFor="let field of field.value" class="field-value">
+                    {{ field }}
+                </div>
+            </ng-container>
+            
+            <div *ngIf="field.type === 'binary'" class="field-binary">
                 <img src="{{ field.value }}" />
             </div>    
-        </ng-template>
+
+        </div>
+
     </ng-container>
 
 </div>

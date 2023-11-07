@@ -3,6 +3,7 @@ import {
     ContentRepositoryBO,
     EditableEntity,
     ROUTE_MESH_BRANCH_ID,
+    ROUTE_MESH_CURRENT_NODE_ID,
     ROUTE_MESH_LANGUAGE,
     ROUTE_MESH_PARENT_NODE_ID,
     ROUTE_MESH_PROJECT_ID,
@@ -58,13 +59,13 @@ export class MeshBrowserMasterComponent
 
     public currentBranch: BranchReference;
 
-    @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
+    @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID })
     public currentNodeId: string;
 
-    public languages: Array<string> = ['de', 'en'];
+    public languages: Array<string> = ['de', 'en']; // todo: take from api: GPU-1249
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
-    public currentLanguage = 'de';
+    public currentLanguage = 'de'; // todo: take from api: GPU-1249
 
 
     constructor(
@@ -82,11 +83,6 @@ export class MeshBrowserMasterComponent
         super.ngOnInit()
 
         this.route.params.subscribe((params) => {
-            if (!this.loggedIn) {
-                this.navigateBack();
-                return;
-            }
-
             if (params.language) {
                 this.currentLanguage = params.language;
             }
@@ -102,7 +98,7 @@ export class MeshBrowserMasterComponent
             if (params.language) {
                 this.currentLanguage = params.language;
             }
-            if (params.repository) {
+            if (params.repository) { // todo: fix login issue
                 this.currentRepositoryId = params.repository;
                 this.handler
                     .get(this.currentRepositoryId)
@@ -112,8 +108,13 @@ export class MeshBrowserMasterComponent
                         this.loadProjectDetails().then(() =>
                             this.handleNavigation(),
                         )
-                    });
+                    })
             }
+            // todo: fix login
+            // else if (!this.loggedIn) {
+            //     this.navigateBack();
+            //     return;
+            // }
         });
     }
 

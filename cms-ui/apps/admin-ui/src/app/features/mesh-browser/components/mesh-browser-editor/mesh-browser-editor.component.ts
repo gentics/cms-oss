@@ -1,8 +1,9 @@
+import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '@admin-ui/common';
 import { BREADCRUMB_RESOLVER, ResolveBreadcrumbFn } from '@admin-ui/core';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, Type } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges, Type } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FieldType } from '@gentics/mesh-models';
+import { FieldType, SchemaField } from '@gentics/mesh-models';
 import { of } from 'rxjs';
 import { MeshField } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
@@ -13,19 +14,26 @@ import { MeshBrowserLoaderService } from '../../providers';
     styleUrls: ['./mesh-browser-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserEditorComponent implements OnInit {
+export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
     private sid: number;
 
-    private currentNodeId: string;
+    @Input({ alias: ROUTE_MESH_PROJECT_ID})
+    public project: string;
 
-    private project: string;
+    @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID})
+    public currentNodeId: string;
 
+    @Input({ alias: ROUTE_MESH_BRANCH_ID})
+    public currentBranch: string;
+
+    @Input({ alias: ROUTE_MESH_LANGUAGE})
     private language: string;
 
     public fields: Array<MeshField> = [];
 
 
+    // todo: replace with breadcrumb.service(?): GPU-1105
     static [BREADCRUMB_RESOLVER]: ResolveBreadcrumbFn = (route, injector) => {
         const appState = injector.get<AppStateService>(AppStateService as Type<AppStateService>);
         return of({ title: 'Node Content', doNotTranslate: true });
@@ -40,21 +48,11 @@ export class MeshBrowserEditorComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        console.log('init');
-        console.log('r: ',this.route.snapshot);
-
-        this.route.parent.params.subscribe((params) => {
-            console.log(params);
-        });
-
         this.sid = this.appState.now.auth.sid
-        this.project = 'Manual'; // fix me
-        this.language = 'de';
-        this.currentNodeId = this.route.snapshot.params.id;
-        this.init()
+        this.updateComponent()
     }
 
-    async init(): Promise<void> {
+    async updateComponent(): Promise<void> {
         const delay = ms => new Promise(res => setTimeout(res, ms));
         await delay(100); // todo: remove me after fixing the init issue of mesh client
 
@@ -62,28 +60,56 @@ export class MeshBrowserEditorComponent implements OnInit {
         this.changeDetector.markForCheck();
     }
 
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.currentNodeId || this.currentBranch || changes.currentLanguage) {
+            this.updateComponent();
+        }
+    }
+
     private async mapResponseToSchemaFields(): Promise<void> {
-        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeId, {lang: this.language})
+        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeId, {
+            lang: this.language,
+            branch: this.currentBranch,
+        })
 
         if (!response.fields) {
             return;
         }
 
+        this.fields = [];
+
         for (const [key, value] of Object.entries(response.fields)) {
-            if (typeof value === 'string') {
+            // type should be from api response
+            const fieldType = this.getFieldType(value);
+
+            if (fieldType === FieldType.STRING || fieldType === FieldType.LIST) {
                 this.fields.push({
                     label: key,
-                    value: value,
-                    type: FieldType.STRING,
+                    value: value as unknown as string,
+                    type: fieldType,
                 })
             }
-            if (typeof value === 'object') {
+            else if (fieldType === FieldType.BINARY) {
                 this.fields.push({
                     label: key,
                     value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeId}/binary/binarycontent?lang=${this.language}&sid=${this.sid}`,
                     type: FieldType.BINARY,
                 })
             }
+        }
+    }
+
+    private getFieldType(field: SchemaField): FieldType {
+        if (typeof field === 'object') {
+            if (field.constructor === Array) {
+                return FieldType.LIST
+            }
+            else {
+                return FieldType.BINARY;
+            }
+        }
+        else if (typeof field === 'string') {
+            return FieldType.STRING;
         }
     }
 

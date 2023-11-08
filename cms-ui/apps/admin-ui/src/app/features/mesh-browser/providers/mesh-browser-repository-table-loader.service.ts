@@ -53,7 +53,8 @@ MeshContentRepositoryTableLoaderOptions
 
         return this.handler.listMapped(null as never, loadOptions)
             .pipe(
-                map(response => response.items.filter(response => response[BO_DISPLAY_NAME] === filter || !filter)),
+                map(response => response.items.filter(response =>
+                    !filter || response[BO_DISPLAY_NAME].toLowerCase().includes(filter.toLowerCase()))),
                 map(response => {
                     return {
                         entities: response,

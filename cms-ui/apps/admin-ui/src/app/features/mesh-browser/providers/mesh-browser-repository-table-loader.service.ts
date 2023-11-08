@@ -1,7 +1,8 @@
 import {
+    BO_DISPLAY_NAME,
     ContentRepositoryBO,
     EntityPageResponse,
-    TableLoadOptions
+    TableLoadOptions,
 } from '@admin-ui/common';
 import {
     BaseTableLoaderService,
@@ -21,9 +22,9 @@ export interface MeshContentRepositoryTableLoaderOptions {
 
 @Injectable()
 export class MeshBrowserContentRepositoryTableLoaderService extends BaseTableLoaderService<
-    ContentRepository,
-    ContentRepositoryBO,
-    MeshContentRepositoryTableLoaderOptions
+ContentRepository,
+ContentRepositoryBO,
+MeshContentRepositoryTableLoaderOptions
 > {
     constructor(
         entityManager: EntityManagerService,
@@ -47,14 +48,16 @@ export class MeshBrowserContentRepositoryTableLoaderService extends BaseTableLoa
         additionalOptions: MeshContentRepositoryTableLoaderOptions,
     ): Observable<EntityPageResponse<ContentRepositoryBO>> {
         const loadOptions = this.createDefaultOptions(options);
+        const filter = loadOptions.q;
         loadOptions.q = ContentRepositoryType.MESH;
 
         return this.handler.listMapped(null as never, loadOptions)
             .pipe(
+                map(response => response.items.filter(response => response[BO_DISPLAY_NAME] === filter || !filter)),
                 map(response => {
                     return {
-                        entities: response.items,
-                        totalCount: response.totalItems,
+                        entities: response,
+                        totalCount: response.length,
                     };
                 }),
             )

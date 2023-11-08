@@ -110,11 +110,6 @@ export class MeshBrowserMasterComponent
                         )
                     })
             }
-            // todo: fix login
-            // else if (!this.loggedIn) {
-            //     this.navigateBack();
-            //     return;
-            // }
         });
     }
 

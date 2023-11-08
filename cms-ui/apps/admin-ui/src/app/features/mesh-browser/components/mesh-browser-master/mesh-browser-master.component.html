@@ -24,7 +24,7 @@
                 <icon left>arrow_back</icon> Back
             </gtx-button>
 
-            <div class="overview-title">Mesh Repositories</div>
+            <div class="overview-title">Mesh {{ 'common.repository_plural' | i18n }}</div>
         </div>
 
         <gtx-mesh-login-gate
@@ -35,7 +35,7 @@
         >
 
             <ng-container *ngIf="loggedIn">
-                <h1>Mesh Browser for "{{ selectedRepository.name }}"</h1>
+                <h1>{{ 'mesh.browser_title'  | i18n }} "{{ selectedRepository.name }}"</h1>
 
                 <ng-container *ngIf="!!currentProject else noProjectRenderer">
 

@@ -8,6 +8,7 @@ import { of } from 'rxjs';
 import { MeshField } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
+
 @Component({
     selector: 'gtx-mesh-browser-editor',
     templateUrl: './mesh-browser-editor.component.html',
@@ -31,6 +32,8 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     private language: string;
 
     public fields: Array<MeshField> = [];
+
+    public title: string;
 
 
     // todo: replace with breadcrumb.service(?): GPU-1105
@@ -73,6 +76,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             return;
         }
 
+        this.title = response.fields.name as unknown as string;
         this.fields = [];
 
         for (const [key, value] of Object.entries(response.fields)) {
@@ -123,7 +127,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             return FieldType.STRING;
         }
     }
-
 
     async detailsClose(): Promise<void> {
         const relativeToRoute = this.route.parent.parent || this.route.parent;

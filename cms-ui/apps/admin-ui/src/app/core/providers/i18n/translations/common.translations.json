@@ -343,6 +343,10 @@
         "en": "Template Tag",
         "de": "Vorlagen-Tag"
     },
+    "repository_plural": {
+        "en": "Repositories",
+        "de": "Repositories"
+    },
     "contentRepository_singular": {
         "en": "ContentRepository",
         "de": "ContentRepository"

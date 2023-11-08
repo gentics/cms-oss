@@ -773,5 +773,9 @@
     "plugin_status_FAILED_RETRY": {
         "de": "Fehlgeschlagen (Neustart)",
         "en": "Failed (retry)"
+    },
+    "browser_title": {
+        "en": "Mesh Browser for",
+        "de": "Mesh Browser für"
     }
 }

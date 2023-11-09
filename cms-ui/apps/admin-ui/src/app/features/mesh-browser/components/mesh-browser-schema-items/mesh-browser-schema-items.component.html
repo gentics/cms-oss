@@ -15,9 +15,11 @@
             totalItems: schema.elements?.length
         }">
             <div *ngIf="!!element" class="schema-element">
-                <icon *ngIf="element.isContainer; else iconRenderer" (click)="showDetails(element)" left>folder</icon> 
+                <icon (click)="showDetails(element)" left>
+                    {{  element.isContainer ? 'folder' :  'description' }}
+                </icon> 
 
-                <div (click)="loadContent(element)">{{ element.displayName }}</div>
+                <div (click)="loadContent(element)">{{ element.displayName ?? element?.uuid }}</div>
 
                 <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}
@@ -35,6 +37,3 @@
 </div>
 
 
-<ng-template #iconRenderer>
-    <icon left>description</icon> 
-</ng-template>

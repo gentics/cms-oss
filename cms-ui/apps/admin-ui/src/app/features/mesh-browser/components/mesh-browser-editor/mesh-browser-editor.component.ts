@@ -1,10 +1,8 @@
 import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '@admin-ui/common';
-import { BREADCRUMB_RESOLVER, ResolveBreadcrumbFn } from '@admin-ui/core';
 import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges, Type } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType, SchemaField } from '@gentics/mesh-models';
-import { of } from 'rxjs';
 import { MeshField } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
@@ -23,7 +21,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     public project: string;
 
     @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID})
-    public currentNodeId: string;
+    public currentNodeUuid: string;
 
     @Input({ alias: ROUTE_MESH_BRANCH_ID})
     public currentBranch: string;
@@ -35,12 +33,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
     public title: string;
 
-
-    // todo: replace with breadcrumb.service(?): GPU-1105
-    static [BREADCRUMB_RESOLVER]: ResolveBreadcrumbFn = (route, injector) => {
-        const appState = injector.get<AppStateService>(AppStateService as Type<AppStateService>);
-        return of({ title: 'Node Content', doNotTranslate: true });
-    }
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -67,7 +59,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     private async mapResponseToSchemaFields(): Promise<void> {
-        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeId, {
+        const response = await this.loader.getNodeByUuid(this.project, this.currentNodeUuid, {
             lang: this.language,
             branch: this.currentBranch,
         })
@@ -101,7 +93,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             else if (fieldType === FieldType.BINARY) {
                 this.fields.push({
                     label: key,
-                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeId}/binary/binarycontent?lang=${this.language}&sid=${this.sid}`,
+                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeUuid}/binary/binarycontent?lang=${this.language}&sid=${this.sid}`,
                     type: FieldType.BINARY,
                 })
             }

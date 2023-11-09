@@ -58,7 +58,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes?.currentNodeUuid || changes?.project  || changes?.currentBranch || changes?.currentLanguage) {
+        if (changes?.currentNodeUuid || changes?.currentProject  || changes?.currentBranch || changes?.currentLanguage) {
             // make sure current language is the first element
             this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
             this.loadNodeContent(this.currentNodeUuid)

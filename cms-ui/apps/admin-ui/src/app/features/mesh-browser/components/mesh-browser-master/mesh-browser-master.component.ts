@@ -60,7 +60,7 @@ export class MeshBrowserMasterComponent
     public currentBranch: BranchReference;
 
     @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
-    public currentNodeId: string;
+    public parentNodeUuid: string;
 
     public languages: Array<string> = ['de', 'en']; // todo: take from api: GPU-1249
 
@@ -106,7 +106,7 @@ export class MeshBrowserMasterComponent
             relativeTo: this.route,
         });
 
-        this.currentNodeId = undefined;
+        this.parentNodeUuid = undefined;
         this.currentProject = undefined;
     }
 
@@ -159,7 +159,6 @@ export class MeshBrowserMasterComponent
         else {
             this.currentProject = projects[0].name;
         }
-        this.currentNodeId = 'undefined';
     }
 
     private setCurrentBranch(branches: BranchReference[]): void {
@@ -176,7 +175,7 @@ export class MeshBrowserMasterComponent
     }
 
     public async projectChangeHandler(project: string): Promise<void> {
-        this.currentNodeId = undefined;
+        this.parentNodeUuid = undefined;
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
         this.handleNavigation()
@@ -189,8 +188,8 @@ export class MeshBrowserMasterComponent
     }
 
     public nodeChangeHandler(nodeId: string): void {
-        if (this.currentNodeId !== nodeId) {
-            this.currentNodeId = nodeId;
+        if (this.parentNodeUuid !== nodeId) {
+            this.parentNodeUuid = nodeId;
             this.handleNavigation()
         }
     }

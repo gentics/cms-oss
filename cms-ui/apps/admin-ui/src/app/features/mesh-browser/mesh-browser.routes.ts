@@ -37,34 +37,6 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
         data: {
             typePermissions: [],
         },
-        children: [
-            {
-                path: AdminUIEntityDetailRoutes.MESH_BROWSER,
-                outlet: ROUTE_DETAIL_OUTLET,
-                data: {
-                    typePermissions: [],
-                },
-                children: [
-                    {
-                        path: `:${ROUTE_MESH_PROJECT_ID}/:${ROUTE_MESH_BRANCH_ID}/:${ROUTE_MESH_CURRENT_NODE_ID}/:${ROUTE_MESH_LANGUAGE}`,
-                        component: MeshBrowserEditorComponent,
-                        data: {
-                            typePermissions: [],
-                        },
-                        canActivate: [],
-                        canDeactivate: [
-                            (routeComponent) =>
-                                inject(DiscardChangesGuard).canDeactivate(
-                                    routeComponent,
-                                ),
-                        ],
-                        resolve: {
-                            breadcrumb: BreadcrumbResolver,
-                        },
-                    },
-                ],
-            },
-        ],
     },
     {
         path: AdminUIEntityDetailRoutes.MESH_BROWSER,

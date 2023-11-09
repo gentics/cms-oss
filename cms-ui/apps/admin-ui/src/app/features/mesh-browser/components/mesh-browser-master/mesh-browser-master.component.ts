@@ -17,7 +17,8 @@ import {
     ChangeDetectorRef,
     Component,
     Input,
-    OnInit,
+    OnChanges,
+    SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
@@ -32,7 +33,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit {
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges{
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
     public selectedRepository: ContentRepository;
@@ -78,35 +79,8 @@ export class MeshBrowserMasterComponent
         super(changeDetector, router, route, appState);
     }
 
-    ngOnInit(): void {
-        super.ngOnInit()
-
-        // this.route.params.subscribe((params) => {
-        //     if (params.language) {
-        //         this.currentLanguage = params.language;
-        //     }
-        //     if (params.project) {
-        //         this.currentProject = params.project;
-        //     }
-        //     if (params.branch) {
-        //         this.currentBranchId = params.branch;
-        //     }
-        //     if (params.parent) {
-        //         this.currentNodeId = params.parent;
-        //     }
-        //     if (params.language) {
-        //         this.currentLanguage = params.language;
-        //     }
-        //     if (params.repository) {
-        //         this.currentRepositoryId = params.repository;
-        //         this.handler
-        //             .get(this.currentRepositoryId)
-        //             .toPromise()
-        //             .then((repository) => {
-        //                 this.selectedRepository = repository.contentRepository;
-        //             })
-        //     }
-        // });
+    ngOnChanges(changes: SimpleChanges): void {
+        this.handleNavigation();
     }
 
     public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {

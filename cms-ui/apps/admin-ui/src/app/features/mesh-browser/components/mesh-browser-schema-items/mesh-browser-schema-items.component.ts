@@ -58,8 +58,6 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
-        console.log(this.currentBranch);
-
         if (changes?.currentNodeUuid || changes?.project  || changes?.currentBranch || changes?.currentLanguage) {
             // make sure current language is the first element
             this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
@@ -115,7 +113,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             schemaElement.languages = schemaElement?.languages.sort((a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
 
-        this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
+        this.schema.elements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
     }

@@ -3,7 +3,6 @@ import {
     ContentRepositoryBO,
     EditableEntity,
     ROUTE_MESH_BRANCH_ID,
-    ROUTE_MESH_CURRENT_NODE_ID,
     ROUTE_MESH_LANGUAGE,
     ROUTE_MESH_PARENT_NODE_ID,
     ROUTE_MESH_PROJECT_ID,
@@ -22,7 +21,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
-import { BranchReference, User } from '@gentics/mesh-models';
+import { BranchReference, ProjectResponse, User } from '@gentics/mesh-models';
 import { TableRow, toValidNumber } from '@gentics/ui-core';
 import { MeshBrowserLoaderService } from '../../providers';
 
@@ -59,7 +58,7 @@ export class MeshBrowserMasterComponent
 
     public currentBranch: BranchReference;
 
-    @Input({ alias: ROUTE_MESH_CURRENT_NODE_ID })
+    @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
     public currentNodeId: string;
 
     public languages: Array<string> = ['de', 'en']; // todo: take from api: GPU-1249
@@ -82,53 +81,49 @@ export class MeshBrowserMasterComponent
     ngOnInit(): void {
         super.ngOnInit()
 
-        this.route.params.subscribe((params) => {
-            if (params.language) {
-                this.currentLanguage = params.language;
-            }
-            if (params.project) {
-                this.currentProject = params.project;
-            }
-            if (params.branch) {
-                this.currentBranchId = params.branch;
-            }
-            if (params.parent) {
-                this.currentNodeId = params.parent;
-            }
-            if (params.language) {
-                this.currentLanguage = params.language;
-            }
-            if (params.repository) {
-                this.currentRepositoryId = params.repository;
-                this.handler
-                    .get(this.currentRepositoryId)
-                    .toPromise()
-                    .then((repository) => {
-                        this.selectedRepository = repository.contentRepository;
-                        this.loadProjectDetails().then(() =>
-                            this.handleNavigation(),
-                        )
-                    })
-            }
-        });
+        // this.route.params.subscribe((params) => {
+        //     if (params.language) {
+        //         this.currentLanguage = params.language;
+        //     }
+        //     if (params.project) {
+        //         this.currentProject = params.project;
+        //     }
+        //     if (params.branch) {
+        //         this.currentBranchId = params.branch;
+        //     }
+        //     if (params.parent) {
+        //         this.currentNodeId = params.parent;
+        //     }
+        //     if (params.language) {
+        //         this.currentLanguage = params.language;
+        //     }
+        //     if (params.repository) {
+        //         this.currentRepositoryId = params.repository;
+        //         this.handler
+        //             .get(this.currentRepositoryId)
+        //             .toPromise()
+        //             .then((repository) => {
+        //                 this.selectedRepository = repository.contentRepository;
+        //             })
+        //     }
+        // });
     }
 
     public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {
         this.selectedRepository = row.item;
         this.currentRepositoryId = this.selectedRepository.id;
-        this.loadProjectDetails().then(() =>
-            this.handleNavigation(),
-        )
     }
 
     private handleNavigation(): void {
-        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`, {
-            [ROUTE_MESH_REPOSITORY_ID]: this.currentRepositoryId,
-            [ROUTE_MESH_PROJECT_ID]: this.currentProject,
-            [ROUTE_MESH_BRANCH_ID]: this.currentBranchId,
-            [ROUTE_MESH_PARENT_NODE_ID]: this.currentNodeId,
-            [ROUTE_MESH_LANGUAGE]: this.currentLanguage},
-        ], { relativeTo: this.route });
+        // this.router.navigate([
+        //     '/'+AdminUIModuleRoutes.MESH_BROWSER,
+        //     this.currentRepositoryId,
+        //     this.currentProject,
+        //     this.currentBranchId,
+        //     this.currentNodeId,
+        //     this.currentLanguage,
+        // ],
+        // { relativeTo: this.route });
     }
 
     public navigateBack(): void {
@@ -156,35 +151,54 @@ export class MeshBrowserMasterComponent
                 });
             }
 
-            this.loadProjectDetails();
+            if (!this.currentProject) {
+                this.loadProjectDetails().then(() => {
+                    this.handleNavigation()
+                });
+            }
         }
     }
 
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
-            this.projects = await this.loader.getProjects();
+            const projects = await this.loader.getProjects()
 
-            if (this.projects.length > 0) {
-                this.setCurrentProject()
-                this.branches = await this.loader.getBranches(this.currentProject);
-                this.setCurrentBranch()
+            if (projects.length > 0) {
+                this.projects = projects.map(project => project.name);
+                this.setCurrentProject(projects)
+                const branches = await this.loader.getBranches(this.currentProject);
+                this.setCurrentBranch(branches)
 
                 this.changeDetector.markForCheck();
                 return Promise.resolve();
             }
         }
-        return Promise.reject();
+        return Promise.reject('Mesh client is unauthenticated');
     }
 
-    private setCurrentProject(): void {
-        const currentProject = this.projects.find(project => project === this.currentProject);
-        this.currentProject = currentProject ?? this.projects[0];
+    private setCurrentProject(projects: ProjectResponse[]): void {
+        const currentProject = projects.find(project => project.name === this.currentProject);
+
+        if (currentProject) {
+            this.currentProject = currentProject.name;
+        }
+        else {
+            this.currentProject = projects[0].name;
+        }
+        this.currentNodeId = 'undefined';
     }
 
-    private setCurrentBranch(): void {
-        const currentBranch = this.branches.find(branch => branch.uuid === this.currentBranchId);
-        this.currentBranch = currentBranch ?? this.branches[0];
-        this.currentBranchId = this.currentBranch.uuid
+    private setCurrentBranch(branches: BranchReference[]): void {
+        this.branches = branches;
+        const currentBranch = branches.find(branch => branch.uuid === this.currentBranchId);
+
+        if (currentBranch) {
+            this.currentBranch = currentBranch;
+        }
+        else {
+            this.currentBranch = this.branches[0];
+            this.currentBranchId = this.branches[0].uuid;
+        }
     }
 
     public async projectChangeHandler(project: string): Promise<void> {

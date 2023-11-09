@@ -57,8 +57,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         protected appState: AppStateService,
     ) { }
 
-
     ngOnChanges(changes: SimpleChanges): void {
+        console.log(this.currentBranch);
+
         if (changes?.currentNodeUuid || changes?.project  || changes?.currentBranch || changes?.currentLanguage) {
             // make sure current language is the first element
             this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
@@ -66,7 +67,6 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             this.page = 1;
         }
     }
-
 
     public loadContent(element: SchemaElement): void {
         if (element.isContainer) {
@@ -83,6 +83,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public async navigateToDetails(nodeUuid: string, elementLanguage: string): Promise<void> {
         const fullUrl = getFullPrimaryPath(this.route);
+
         const commands: any[] = [
             fullUrl,
             {
@@ -103,23 +104,21 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.appState.dispatch(new FocusEditor());
     }
 
-
     public async loadNodeContent(nodeUuid: string): Promise<void> {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
             lang: this.languages,
-        }, this.currentBranch.uuid);
+        }, this.currentBranch?.uuid);
 
         schemaElements?.forEach((schemaElement) =>
-            schemaElement.languages = schemaElement?.languages.sort( (a,_b) => a.language === this.currentLanguage ? -1 :1),
+            schemaElement.languages = schemaElement?.languages.sort((a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
 
         this.schema.elements = schemaElements?.sort((a,b) => a.displayName.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
     }
-
 
     public changePage(page: number): void {
         this.page = page;

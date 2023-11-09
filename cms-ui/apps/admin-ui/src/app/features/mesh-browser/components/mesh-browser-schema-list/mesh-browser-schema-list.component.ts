@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { BranchReference } from '@gentics/mesh-models';
 import { SchemaContainer } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
@@ -22,7 +23,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     public currentLanguage: string;
 
     @Input()
-    public currentBranch: string;
+    public currentBranch: BranchReference;
 
     @Output()
     public nodeChange = new EventEmitter<string>();
@@ -37,9 +38,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
         protected route: ActivatedRoute,
-    ) {
-
-    }
+    ) { }
 
     ngOnInit(): void{
         this.route.params.subscribe((params) => {
@@ -47,37 +46,23 @@ export class MeshBrowserSchemaListComponent implements OnInit {
                 this.currentNodeUuid = params.parent
             }
         })
-        this.loadSchemasAndElements()
+        this.loadSchemas()
     }
 
 
-    protected async loadSchemasAndElements(): Promise<void> {
+    protected async loadSchemas(): Promise<void> {
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
 
         if (this.currentNodeUuid === 'undefined' || !this.currentNodeUuid) {
             this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);
         }
 
-        await this.loadNodesChildrenForSchemas(this.currentNodeUuid);
         this.changeDetector.markForCheck();
-    }
-
-
-    protected async loadNodesChildrenForSchemas(nodeUuid: string): Promise<void> {
-        for (const schema of this.schemas) {
-            const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
-                schemaName: schema.name,
-                nodeUuid: nodeUuid,
-                lang: this.languages,
-            }, this.currentBranch);
-
-            schema.elements = schemaElements;
-        }
     }
 
     public nodeChanged(nodeUuid: string): void {
         if (nodeUuid === 'undefined' || !nodeUuid) {
-            this.loadSchemasAndElements();
+            this.loadSchemas();
         }
         if (nodeUuid === this.currentNodeUuid) {
             return;

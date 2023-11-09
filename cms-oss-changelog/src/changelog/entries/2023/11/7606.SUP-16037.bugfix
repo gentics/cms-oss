@@ -1,0 +1,1 @@
+Editor User Interface: Changing list settings with a checkbox had inconsistent behaviour which sometimes didn't save the setting correctly.

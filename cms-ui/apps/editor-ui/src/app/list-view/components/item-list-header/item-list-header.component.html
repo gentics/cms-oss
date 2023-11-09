@@ -98,7 +98,7 @@
                 <gtx-dropdown-item
                     *ngIf="(itemType === 'page' || itemType === 'form') && 1 < nodeLanguages.length"
                     class="page-language-toggle"
-                    (click)="toggleDisplayAllLanguages()"
+                    (click)="toggleDisplayAllLanguages($event)"
                 >
                     <gtx-checkbox
                         [checked]="showAllLanguages"
@@ -110,7 +110,7 @@
                 <ng-container *ngIf="uiMode === UIMode.EDIT">
                     <gtx-dropdown-item
                         *ngIf="(itemType === 'page' || itemType === 'form')"
-                        (click)="toggleDisplayStatusIcons()"
+                        (click)="toggleDisplayStatusIcons($event)"
                         class="page-language-toggle"
                     >
                         <gtx-checkbox
@@ -123,7 +123,7 @@
                     <gtx-dropdown-item
                         *ngIf="wastebinEnabled"
                         class="show-deleted-toggle"
-                        (click)="toggleDisplayDeleted()"
+                        (click)="toggleDisplayDeleted($event)"
                     >
                         <gtx-checkbox
                             [checked]="showDeleted"

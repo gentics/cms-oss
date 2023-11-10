@@ -99,6 +99,12 @@ public class ScheduleIntervalTest {
 		data.add(new Object[] {"2023-10-28 02:30:00 CEST", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2023-10-29 02:30:00 CEST", "2023-10-29 02:30:00 CET", false});
 		data.add(new Object[] {"2023-10-28 02:30:00 CEST", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2023-10-29 02:30:00 CEST", "2023-10-30 02:30:00 CET", true});
 
+		data.add(new Object[] {"2024-03-30 02:30:00 CET", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2024-03-30 02:30:00 CET", "2024-03-31 03:00:00 CEST", false});
+		data.add(new Object[] {"2024-03-30 02:30:00 CET", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2024-03-30 02:30:00 CET", "2024-03-31 03:29:00 CEST", false});
+		data.add(new Object[] {"2024-03-30 02:30:00 CET", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2024-03-30 02:30:00 CET", "2024-03-31 03:30:00 CEST", true});
+		data.add(new Object[] {"2024-03-30 02:30:00 CET", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2024-03-31 03:30:00 CEST", "2024-04-01 02:29:00 CEST", false});
+		data.add(new Object[] {"2024-03-30 02:30:00 CET", new ScheduleInterval().setValue(1).setUnit(IntervalUnit.day), "2024-03-31 03:30:00 CEST", "2024-04-01 02:30:00 CEST", true});
+
 		// every 2 days
 		data.add(new Object[] {"2023-10-27 06:00:00 CEST", new ScheduleInterval().setValue(2).setUnit(IntervalUnit.day), "2023-10-28 06:00:00 CEST", "2023-10-29 05:00:00 CET", false});
 		data.add(new Object[] {"2023-10-27 06:00:00 CEST", new ScheduleInterval().setValue(2).setUnit(IntervalUnit.day), "2023-10-28 06:00:00 CEST", "2023-10-29 06:00:00 CET", true});

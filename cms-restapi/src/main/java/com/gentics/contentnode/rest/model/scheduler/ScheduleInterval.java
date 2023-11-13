@@ -82,11 +82,12 @@ public class ScheduleInterval {
 	 * @param startTimestamp start timestamp of the schedule
 	 * @param lastTimestamp The timestamp of the last execution.
 	 * @param timestamp The current timestamp.
+	 * @param zone time-zone
 	 * @return Whether the associated schedule should is due for execution based
 	 * 		on this interval.
 	 */
 	@JsonIgnore
-	public boolean isDue(int startTimestamp, int lastTimestamp, int timestamp) {
+	public boolean isDue(int startTimestamp, int lastTimestamp, int timestamp, ZoneId zone) {
 		if (unit == null || value <= 0) {
 			return false;
 		}
@@ -95,9 +96,9 @@ public class ScheduleInterval {
 			return true;
 		}
 
-		ZonedDateTime start = ZonedDateTime.ofInstant(Instant.ofEpochSecond(startTimestamp), ZoneId.systemDefault());
-		ZonedDateTime last = ZonedDateTime.ofInstant(Instant.ofEpochSecond(lastTimestamp), ZoneId.systemDefault());
-		ZonedDateTime now = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+		ZonedDateTime start = ZonedDateTime.ofInstant(Instant.ofEpochSecond(startTimestamp), zone);
+		ZonedDateTime last = ZonedDateTime.ofInstant(Instant.ofEpochSecond(lastTimestamp), zone);
+		ZonedDateTime now = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), zone);
 
 		TemporalUnit temporalUnit = null;
 		switch(unit) {

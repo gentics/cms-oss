@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -160,7 +161,7 @@ public class ScheduleIntervalTest {
 	 */
 	@Test
 	public void testDue() throws ParseException {
-		assertThat(interval.isDue(getTimestamp(start), getTimestamp(lastExecution), getTimestamp(now)))
+		assertThat(interval.isDue(getTimestamp(start), getTimestamp(lastExecution), getTimestamp(now), ZoneId.of("CET")))
 				.as(String.format("start: %s, last: %s, int: %s %s at %s", getCalendar(start).getTime(),
 						getCalendar(lastExecution).getTime(), interval, expectDue ? "is due" : "is not due",
 						getCalendar(now).getTime()))

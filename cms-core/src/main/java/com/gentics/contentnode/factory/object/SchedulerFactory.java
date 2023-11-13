@@ -1484,7 +1484,7 @@ public class SchedulerFactory extends AbstractFactory {
 					return false;
 				}
 
-				return interval.isDue(execution.getStartTime(), timestamp);
+				return interval.isDue(scheduleData.getStartTimestamp(), execution.getStartTime(), timestamp, ZoneId.systemDefault());
 			case manual:
 				// schedule is only executed manually
 				return false;

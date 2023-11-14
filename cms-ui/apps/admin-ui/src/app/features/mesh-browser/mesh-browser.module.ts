@@ -1,7 +1,11 @@
 import { MeshModule } from '@admin-ui/mesh';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
+import {
+    RouterModule,
+    provideRouter,
+    withComponentInputBinding,
+} from '@angular/router';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { SharedModule } from '../../shared/shared.module';
 import {
@@ -9,6 +13,7 @@ import {
     MeshBrowserEditorComponent,
     MeshBrowserLanguageSwitcherComponent,
     MeshBrowserMasterComponent,
+    MeshBrowserModuleMasterComponent,
     MeshBrowserProjectSwitcherComponent,
     MeshBrowserSchemaItemsComponent,
     MeshBrowserSchemaListComponent,
@@ -19,9 +24,9 @@ import {
     MeshBrowserLoaderService,
 } from './providers';
 
-
 @NgModule({
     declarations: [
+        MeshBrowserModuleMasterComponent,
         MeshBrowserMasterComponent,
         MeshBrowserEditorComponent,
         ContentRepositoryTableComponent,

@@ -59,10 +59,10 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes?.currentNodeUuid || changes?.currentProject  || changes?.currentBranch || changes?.currentLanguage) {
+            this.page = 1;
             // make sure current language is the first element
             this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
             this.loadNodeContent(this.currentNodeUuid)
-            this.page = 1;
         }
     }
 
@@ -89,7 +89,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
                     [ROUTE_DETAIL_OUTLET]:  [
                         AdminUIEntityDetailRoutes.MESH_BROWSER,
                         this.currentProject,
-                        this.currentBranch.name,
+                        this.currentBranch.uuid,
                         nodeUuid,
                         elementLanguage,
                     ],
@@ -107,6 +107,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             schemaName: this.schema.name,
             nodeUuid: nodeUuid,
             lang: this.languages,
+            page: this.page,
         }, this.currentBranch?.uuid);
 
         schemaElements?.forEach((schemaElement) =>

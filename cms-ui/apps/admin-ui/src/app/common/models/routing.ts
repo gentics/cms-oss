@@ -27,7 +27,8 @@ export const ROUTE_MESH_BRANCH_ID = 'branch';
 export const ROUTE_MESH_PARENT_NODE_ID = 'parent';
 export const ROUTE_MESH_CURRENT_NODE_ID = 'node';
 export const ROUTE_MESH_LANGUAGE = 'language';
-
+export const ROUTE_DATA_MESH_REPO_ID = 'repoId';
+export const ROUTE_DATA_MESH_REPO_ITEM = 'repoItem';
 
 export enum AdminUIModuleRoutes {
     CONSTRUCTS = 'constructs',
@@ -72,7 +73,7 @@ export enum AdminUIEntityDetailRoutes {
     SCHEDULE_TASK = 'task',
     TEMPLATE = 'template',
     USER = 'user',
-    MESH_BROWSER = 'mesh-browser',
+    MESH_BROWSER = 'mesh-node',
 }
 
 /**

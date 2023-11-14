@@ -3,11 +3,12 @@ import { NgModule, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { AccessControlledType, GcmsPermission } from '@gentics/cms-models';
 import { ROUTE_DETAIL_OUTLET } from './common';
-import { AdminUIModuleRoutes, GcmsAdminUiRoute, ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_PERMISSIONS_KEY } from './common/models/routing';
+import { AdminUIModuleRoutes, GcmsAdminUiRoute, ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_MESH_REPOSITORY_ID, ROUTE_PERMISSIONS_KEY } from './common/models/routing';
 import { ViewUnauthorizedComponent } from './core/components/view-unauthorized/view-unauthorized.component';
 import { AuthGuard } from './core/guards/auth/auth.guard';
 import { GenericRouterOutletComponent } from './shared/components/generic-router-outlet/generic-router-outlet.component';
 import { SplitViewRouterOutletComponent } from './shared/components/split-view-router-outlet/split-view-router-outlet.component';
+import { MeshBrowserEditorComponent } from './features/mesh-browser/components';
 
 const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -465,6 +466,25 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     ],
                 },
             },
+            {
+                path: `${AdminUIModuleRoutes.MESH_BROWSER}/:${ROUTE_MESH_REPOSITORY_ID}`,
+                component: SplitViewRouterOutletComponent,
+                loadChildren: () => import('./features/mesh-browser/mesh-browser.module').then(m => m.MeshBrowserModule),
+                data: {
+                    [ROUTE_BREADCRUMB_KEY]: {
+                        title: 'dashboard.mesh_browser',
+                    },
+                    [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
+                    [ROUTE_PERMISSIONS_KEY]: [
+                        {
+                            type: AccessControlledType.CONTENT_REPOSITORY_ADMIN,
+                            permissions: [
+                                GcmsPermission.READ,
+                            ],
+                        },
+                    ],
+                },
+            },
         ],
     },
     {
@@ -479,6 +499,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
     imports: [
         RouterModule.forRoot(ADMIN_UI_ROUTES, {
             enableTracing: false,
+            bindToComponentInputs: true,
         }),
     ],
     exports: [RouterModule],

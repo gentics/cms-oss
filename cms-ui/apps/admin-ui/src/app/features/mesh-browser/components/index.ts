@@ -5,3 +5,4 @@ export * from './mesh-browser-schema-list/mesh-browser-schema-list.component';
 export * from './mesh-browser-schema-items/mesh-browser-schema-items.component';
 export * from './mesh-browser-project-switcher/mesh-browser-project-switcher.component';
 export * from './mesh-browser-language-switcher/mesh-browser-language-switcher.component';
+export * from './mesh-browser-module-master/mesh-browser-module-master.component';

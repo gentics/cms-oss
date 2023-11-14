@@ -73,6 +73,12 @@ export class BreadcrumbsService extends InitializableServiceBase {
         breadcrumbChanges$.subscribe(breadcrumbs => this.currBreadcrumbs$.next(breadcrumbs));
     }
 
+    public setBreadcrumbs(breadcrumbs: IBreadcrumbRouterLink[]): void {
+        this.currBreadcrumbs$.next([
+            ...breadcrumbs,
+        ])
+    }
+
     private collectBreadcrumbsFromRoute(activatedRoute: ActivatedRoute): Observable<RouteSegment[]> {
         const routeSegments: Observable<RouteSegment>[] = [];
         const parentUrl: UrlSegment[] = [];

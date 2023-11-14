@@ -34,3 +34,13 @@ export interface MeshField {
     value: string;
     type: FieldType;
 }
+
+export interface BreadcrumbNode {
+    uuid: string;
+    displayName?: string;
+}
+
+export interface NavigationEntry {
+    parent: NavigationEntry;
+    node: BreadcrumbNode;
+}

@@ -1,73 +1,57 @@
 <div class="mesh-browser-container">
 
-    <ng-container *ngIf="!selectedRepository; else displayMeshContent">
-        <gtx-mesh-browser-repository-table
-            class="entity-table"
-            [showSearch]="true"
-            [linkDetails]="true"
-            [selectable]="false"
-            [hideActions]=""
-            [activeEntity]="activeEntity"
-            (rowClick)="rowClickHandler($event)"
-        />
-    </ng-container>
-    
-    <ng-template #displayMeshContent>
-
-        <div class="overview-header">
-            <gtx-button
-                class="back-button"
-                flat
-                size="small"
-                (click)="navigateBack()"
-            >
-                <icon left>arrow_back</icon> Back
-            </gtx-button>
-
-            <div class="overview-title">Mesh {{ 'common.repository_plural' | i18n }}</div>
-        </div>
-
-        <gtx-mesh-login-gate
-            [repository]="selectedRepository"
-            [loggedIn]="loggedIn"
-            (loggedInChange)="meshLoginHandler($event)"
-            class="login-gate-wrapper"
+    <div class="overview-header">
+        <gtx-button
+            class="back-button"
+            flat
+            size="small"
+            (click)="navigateBack()"
         >
+            <icon left>arrow_back</icon> Back
+        </gtx-button>
 
-            <ng-container *ngIf="loggedIn">
-                <h1>{{ 'mesh.browser_title'  | i18n }} "{{ selectedRepository.name }}"</h1>
+        <div class="overview-title">Mesh {{ 'common.repository_plural' | i18n }}</div>
+    </div>
 
-                <ng-container *ngIf="!!currentProject else noProjectRenderer">
+    <gtx-mesh-login-gate
+        [repository]="selectedRepository"
+        [loggedIn]="loggedIn"
+        (loggedInChange)="meshLoginHandler($event)"
+        class="login-gate-wrapper"
+    >
 
-                    <gtx-mesh-browser-project-switcher
-                        [currentProject]="currentProject"
-                        [currentBranch]="currentBranch"
-                        [projects]="projects"
-                        [branches]="branches"
-                        (projectChange)="projectChangeHandler($event)"
-                        (branchChange)="branchChangeHandler($event)"
-                    />
+        <ng-container *ngIf="loggedIn">
+            <h1>{{ 'mesh.browser_title'  | i18n }} "{{ selectedRepository?.name }}"</h1>
 
-                    <gtx-mesh-browser-language-switcher
-                        [currentLanguage]="currentLanguage"
-                        [languages]="languages"
-                        (languageChange)="languageChangeHandler($event)"
-                    />
-                        
-                    <gtx-mesh-browser-schema-list
-                        [currentProject]="currentProject"
-                        [currentLanguage]="currentLanguage"
-                        [languages]="languages"
-                        [currentBranch]="currentBranch"
-                        (nodeChange)="nodeChangeHandler($event)"
-                    />
-                </ng-container>
+            <ng-container *ngIf="!!currentProject else noProjectRenderer">
 
+                <gtx-mesh-browser-project-switcher
+                    [currentProject]="currentProject"
+                    [currentBranch]="currentBranch"
+                    [projects]="projects"
+                    [branches]="branches"
+                    (projectChange)="projectChangeHandler($event)"
+                    (branchChange)="branchChangeHandler($event)"
+                />
+
+                <gtx-mesh-browser-language-switcher
+                    [currentLanguage]="currentLanguage"
+                    [languages]="languages"
+                    (languageChange)="languageChangeHandler($event)"
+                />
+                    
+                <gtx-mesh-browser-schema-list
+                    [currentProject]="currentProject"
+                    [currentLanguage]="currentLanguage"
+                    [languages]="languages"
+                    [currentBranch]="currentBranch"
+                    (nodeChange)="nodeChangeHandler($event)"
+                />
             </ng-container>
 
-        </gtx-mesh-login-gate>
+        </ng-container>
 
-    </ng-template>
+    </gtx-mesh-login-gate>
 </div>
 
 <ng-template #noProjectRenderer>

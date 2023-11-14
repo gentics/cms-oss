@@ -206,6 +206,7 @@ export const ROUTE_PARAM_NODE_ID = 'nodeId';
 export const ROUTE_IS_EDITOR_ROUTE = Symbol('is-editor');
 export const ROUTE_ENTITY_LOADED = Symbol('route-entity-loaded');
 export const ROUTE_DETAIL_OUTLET = 'detail';
+export const ROUTE_MESH_BROWSER_OUTLET = 'mesh-browser-list';
 
 export enum EntityModelType {
     CREATE_REQUEST_MODEL = 'create-request',

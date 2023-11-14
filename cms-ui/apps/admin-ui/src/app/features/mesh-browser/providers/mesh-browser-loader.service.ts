@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BranchReference, NodeLoadOptions, NodeResponse, ProjectListResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
+import { BranchReference, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, NavigationEntry, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
 
@@ -101,6 +101,34 @@ export class MeshBrowserLoaderService {
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
         const response = await this.meshClient.nodes.get(project, uuid, params);
         return response;
+    }
+
+    public async getBreadcrumbNavigation(project: string, params: MeshSchemaListParams, branchUuid: string): Promise<NavigationEntry[]> {
+        const response = await this.meshClient.graphql(project, {
+            query: `
+                query($nodeUuid: String) {
+                    node(uuid: $nodeUuid) { 
+                        breadcrumb {
+                            parent { 
+                                displayName
+                                node {uuid}
+                            }
+                            node {
+                                displayName
+                                uuid
+                                isContainer
+                            }
+                        }
+                    }
+                }      
+            `,
+            variables: params,
+        }, {
+            branch: branchUuid,
+            version: 'draft',
+        });
+
+        return response.data.node.breadcrumb;
     }
 
 }

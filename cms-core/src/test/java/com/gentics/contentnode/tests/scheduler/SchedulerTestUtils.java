@@ -47,7 +47,7 @@ public class SchedulerTestUtils {
 			boolean status) throws NodeException {
 		Trx.operate(() -> DBUtils.update(
 				"UPDATE scheduler_execution SET endtime = ?, duration = ?, result = ? WHERE id = ?",
-				new Object[]{endTime.toEpochSecond(), duration, status ? 0 : 1, executionId}));
+				new Object[]{endTime.toEpochSecond(), duration, status ? 0 : 255, executionId}));
 	}
 
 }

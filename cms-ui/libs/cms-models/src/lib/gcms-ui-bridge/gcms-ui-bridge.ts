@@ -1,4 +1,4 @@
-import { File, Folder, Form, Image, Language, Node, Normalized, Page, Raw, Tag, TagType } from '../models';
+import { File, FileOrImage, Folder, Form, Image, Language, Node, Normalized, Page, Raw, Tag, TagType } from '../models';
 import { ItemInNode, RepositoryBrowserOptions, TagInContainer } from '../repository-browser';
 import { EditMode, GcmsUiLanguage } from './ui-state';
 
@@ -67,6 +67,12 @@ export interface GcmsUiBridge {
      */
     restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
     /**
+     * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+     * the documentation, e.g. `/folder/create`.
+     */
+    restRequestDELETE: (endpoint: string, params?: object) => Promise<object | void>;
+    /**
      * Tells the editor whether the page content has been modified. When set to `true`, the
      * "save" button will be enabled.
      */
@@ -90,4 +96,14 @@ export interface GcmsUiBridge {
      * and when the user clicks Cancel, rejects.
      */
     openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>) => Promise<Tag>;
+
+    /**
+     * Opens an the upload modal to allow the user to upload files/images to a specified folder.
+     *
+     * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
+     * @param destinationFolder The folder to where the file/image should be uploaded to.
+     * @param allowFolderSelection If the user should be allowed to change the destination folder.
+     * @returns A Promise for the uploaded file/image.
+     */
+    openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
 }

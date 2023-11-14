@@ -45,6 +45,7 @@ export class MicroschemaPropertiesComponent extends BasePropertiesComponent<Edit
                 Validators.pattern(/^[a-zA-Z0-9_]+$/),
                 createBlacklistValidator(() => this.microschemaNames.filter(name => name !== this.form?.value?.name)),
             ]),
+            noIndex: new FormControl(this.value?.noIndex ?? false),
             description: new FormControl(this.value?.description || ''),
             elasticsearch: new FormControl(this.value?.elasticsearch, createJsonValidator()),
             fields: new FormControl(this.value?.fields || []),

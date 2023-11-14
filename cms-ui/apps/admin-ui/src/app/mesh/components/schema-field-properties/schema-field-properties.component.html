@@ -50,6 +50,12 @@
             formControlName="required"
         ></gtx-checkbox>
 
+        <gtx-checkbox
+            class="columns small-4"
+            [label]="'mesh.field_noIndex' | i18n"
+            formControlName="noIndex"
+        ></gtx-checkbox>
+
         <ng-container *ngIf="form.get('extract').enabled" formGroupName="extract">
             <gtx-checkbox
                 class="columns small-4"

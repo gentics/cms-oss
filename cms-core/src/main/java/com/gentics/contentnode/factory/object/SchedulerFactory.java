@@ -1461,7 +1461,7 @@ public class SchedulerFactory extends AbstractFactory {
 						Boolean result = null;
 
 						while (rs.next() && (result == null || !result)) {
-							result = rs.getByte("result") == 0;
+							result = rs.getInt("result") == 0;
 						}
 
 						return result;

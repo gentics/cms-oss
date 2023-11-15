@@ -13,13 +13,17 @@ import {
     ROUTE_MESH_PROJECT_ID,
     ROUTE_PERMISSIONS_KEY,
 } from '@admin-ui/common/models/routing';
-import { DiscardChangesGuard, RouteEntityResolverService } from '@admin-ui/core';
+import {
+    DiscardChangesGuard,
+    RouteEntityResolverService,
+} from '@admin-ui/core';
 import { inject } from '@angular/core';
 import {
     MeshBrowserEditorComponent,
     MeshBrowserMasterComponent,
     MeshBrowserModuleMasterComponent,
 } from './components';
+
 
 export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
     {
@@ -56,7 +60,6 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
                             [ROUTE_PERMISSIONS_KEY]: [],
                         },
                     },
-
                 ],
             },
         ],

@@ -1,18 +1,12 @@
 import {
-    AdminUIModuleRoutes,
     ContentRepositoryBO,
     EditableEntity,
     ROUTE_DATA_MESH_REPO_ITEM,
     ROUTE_MESH_BRANCH_ID,
-    ROUTE_MESH_BROWSER_OUTLET,
     ROUTE_MESH_LANGUAGE,
     ROUTE_MESH_PARENT_NODE_ID,
     ROUTE_MESH_PROJECT_ID,
 } from '@admin-ui/common';
-import {
-    BreadcrumbsService,
-    ContentRepositoryHandlerService,
-} from '@admin-ui/core';
 import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
@@ -27,8 +21,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { BranchReference, ProjectResponse, User } from '@gentics/mesh-models';
-import { IBreadcrumbRouterLink } from '@gentics/ui-core';
-import { MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
 const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
 
@@ -39,8 +32,7 @@ const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges
-{
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
     public selectedRepository: ContentRepository;
@@ -59,7 +51,7 @@ export class MeshBrowserMasterComponent
     public branches: Array<BranchReference> = [];
 
     @Input({ alias: ROUTE_MESH_BRANCH_ID })
-    public currentBranchId: string;
+    public currentBranchUuid: string;
 
     public currentBranch: BranchReference;
 
@@ -77,10 +69,8 @@ export class MeshBrowserMasterComponent
         router: Router,
         route: ActivatedRoute,
         appState: AppStateService,
-        protected handler: ContentRepositoryHandlerService,
         protected loader: MeshBrowserLoaderService,
-        protected breadcrumbService: BreadcrumbsService,
-        protected contentRepository: ContentRepositoryHandlerService,
+        protected navigatorService: MeshBrowserNavigatorService,
     ) {
         super(changeDetector, router, route, appState);
     }
@@ -92,40 +82,43 @@ export class MeshBrowserMasterComponent
             this.selectedRepository = loadedRepository;
         }
 
-        if (this.parentNodeUuid) {
-            this.handleBreadcrumbNavigation(this.parentNodeUuid);
+        if (this.parentNodeUuid && this.loggedIn) {
+            this.navigatorService.handleBreadcrumbNavigation(
+                this.selectedRepository?.id,
+                this.currentProject,
+                this.currentBranchUuid,
+                this.parentNodeUuid,
+                this.currentLanguage,
+            );
         }
     }
 
     private handleNavigation(): void {
-        this.router.navigate(
-            [
-                '/' + AdminUIModuleRoutes.MESH_BROWSER,
-                this.selectedRepository.id,
-                {
-                    outlets: {
-                        [ROUTE_MESH_BROWSER_OUTLET]: [
-                            'list',
-                            this.currentProject,
-                            this.currentBranchId,
-                            this.parentNodeUuid ?? 'undefined',
-                            this.currentLanguage ?? DEFAULT_LANGUAGE,
-                        ],
-                    },
-                },
-            ],
-            { relativeTo: this.route },
+        this.navigatorService.handleNavigation(
+            this.route,
+            this.selectedRepository.id,
+            this.currentProject,
+            this.currentBranchUuid,
+            this.parentNodeUuid,
+            this.currentLanguage ?? DEFAULT_LANGUAGE,
+        )
+    }
+
+    private handleBreadcrumbNavigation(currentNodeUuid: string) {
+        this.navigatorService.handleBreadcrumbNavigation(
+            this.selectedRepository?.id,
+            this.currentProject,
+            this.currentBranchUuid,
+            currentNodeUuid,
+            this.currentLanguage,
         );
     }
 
     public navigateBack(): void {
         this.selectedRepository = null;
-        this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
-            relativeTo: this.route,
-        });
-
         this.parentNodeUuid = undefined;
         this.currentProject = undefined;
+        this.navigatorService.navigateBack(this.route);
     }
 
     public meshLoginHandler(event: { loggedIn: boolean; user?: User }): void {
@@ -145,7 +138,6 @@ export class MeshBrowserMasterComponent
 
             if (!this.currentProject || this.projects?.length === 0) {
                 this.loadProjectDetails().then(() => {
-                    // this.handleNavigation();
                     this.handleBreadcrumbNavigation(this.parentNodeUuid);
                 });
             }
@@ -182,13 +174,13 @@ export class MeshBrowserMasterComponent
 
     private setCurrentBranch(branches: BranchReference[]): void {
         this.branches = branches;
-        const currentBranch = branches.find((branch) => branch.uuid === this.currentBranchId);
+        const currentBranch = branches.find((branch) => branch.uuid === this.currentBranchUuid);
 
         if (currentBranch) {
             this.currentBranch = currentBranch;
         } else {
             this.currentBranch = this.branches[0];
-            this.currentBranchId = this.branches[0].uuid;
+            this.currentBranchUuid = this.branches[0].uuid;
         }
     }
 
@@ -201,58 +193,8 @@ export class MeshBrowserMasterComponent
 
     public branchChangeHandler(branch: BranchReference): void {
         this.currentBranch = branch;
-        this.currentBranchId = this.currentBranch.uuid;
+        this.currentBranchUuid = this.currentBranch.uuid;
         this.handleNavigation();
-    }
-
-    private async handleBreadcrumbNavigation(nodeUuid: string): Promise<void> {
-        const breadcrumbEntries = await this.loader.getBreadcrumbNavigation(
-            this.currentProject,
-            { nodeUuid },
-            this.currentBranchId,
-        );
-
-        const breadcrumbPath: IBreadcrumbRouterLink[] = [
-            {
-                route: ['/'],
-                text: 'Dashboard',
-            },
-            {
-                route: ['/' + AdminUIModuleRoutes.MESH_BROWSER],
-                text: 'Mesh Browser',
-            },
-        ];
-
-        for (const breadcrumbEntry of breadcrumbEntries) {
-            if (!breadcrumbEntry.parent) {
-                continue;
-            }
-
-            const navigationEntry: IBreadcrumbRouterLink = {
-                route: [
-                    '/' + AdminUIModuleRoutes.MESH_BROWSER,
-                    this.selectedRepository.id,
-                    {
-                        outlets: {
-                            [ROUTE_MESH_BROWSER_OUTLET]: [
-                                'list',
-                                this.currentProject,
-                                this.currentBranchId,
-                                breadcrumbEntry.parent.node.uuid,
-                                this.currentLanguage ?? DEFAULT_LANGUAGE,
-                            ],
-                        },
-                    },
-                ],
-                text:
-                    breadcrumbEntry.node.displayName ??
-                    breadcrumbEntry.node.uuid,
-            };
-
-            breadcrumbPath.push(navigationEntry);
-        }
-
-        this.breadcrumbService.setBreadcrumbs(breadcrumbPath);
     }
 
     public nodeChangeHandler(nodeId: string): void {

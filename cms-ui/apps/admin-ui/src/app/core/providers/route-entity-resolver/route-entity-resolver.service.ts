@@ -106,7 +106,6 @@ export class RouteEntityResolverService {
         }
 
         const repositoryId = this.extractRepositoryId(route)
-
         const res = await this.contentRepository.get(repositoryId).toPromise();
 
         return res.contentRepository;
@@ -119,7 +118,6 @@ export class RouteEntityResolverService {
             route.params?.[ROUTE_MESH_REPOSITORY_ID];
 
         if (!repositoryId) {
-            // extract repository id from parent
             let parent = route.parent;
 
             while(parent && !repositoryId) {

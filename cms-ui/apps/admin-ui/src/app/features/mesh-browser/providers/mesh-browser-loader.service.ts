@@ -103,32 +103,4 @@ export class MeshBrowserLoaderService {
         return response;
     }
 
-    public async getBreadcrumbNavigation(project: string, params: MeshSchemaListParams, branchUuid: string): Promise<NavigationEntry[]> {
-        const response = await this.meshClient.graphql(project, {
-            query: `
-                query($nodeUuid: String) {
-                    node(uuid: $nodeUuid) { 
-                        breadcrumb {
-                            parent { 
-                                displayName
-                                node {uuid}
-                            }
-                            node {
-                                displayName
-                                uuid
-                                isContainer
-                            }
-                        }
-                    }
-                }      
-            `,
-            variables: params,
-        }, {
-            branch: branchUuid,
-            version: 'draft',
-        });
-
-        return response.data.node.breadcrumb;
-    }
-
 }

@@ -22,6 +22,7 @@ import { MESH_BROWSER_ROUTES } from './mesh-browser.routes';
 import {
     MeshBrowserContentRepositoryTableLoaderService,
     MeshBrowserLoaderService,
+    MeshBrowserNavigatorService,
 } from './providers';
 
 @NgModule({
@@ -38,6 +39,7 @@ import {
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,
         MeshBrowserLoaderService,
+        MeshBrowserNavigatorService,
         provideRouter(MESH_BROWSER_ROUTES, withComponentInputBinding()),
     ],
     imports: [

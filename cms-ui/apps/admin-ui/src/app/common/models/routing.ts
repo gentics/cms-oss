@@ -18,7 +18,7 @@ export const ROUTE_CHILD_BREADCRUMB_OUTLET_KEY = 'childOutletsForBreadcrumbs';
 export const ROUTE_MANAGEMENT_OUTLET = 'management';
 export const ROUTE_PARAM_MESH_TAB = 'activeTab';
 export const ROUTE_PATH_MESH = 'mesh';
-
+export const ROUTE_SKIP_BREADCRUMB = 'skipBreadcrumb';
 
 // MESH_BROWSER
 export const ROUTE_MESH_REPOSITORY_ID = 'repository';

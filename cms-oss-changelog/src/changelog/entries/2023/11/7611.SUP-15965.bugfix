@@ -1,0 +1,1 @@
+Adds check if the publish dir is empty for a folder create or save request when "publish dir segments":https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html#segmentation-behaviour is active. An empty publish dir segment is only valid for the root folder of a node.

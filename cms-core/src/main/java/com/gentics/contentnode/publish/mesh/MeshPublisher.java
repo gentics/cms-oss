@@ -2105,6 +2105,20 @@ public class MeshPublisher implements AutoCloseable {
 			checkedNode = project.node;
 		}
 
+		// when the checked node is null, the Mesh CR does not have "project per node" activated, so we need to check for all nodes, which are currently assigned to the Mesh CR
+		if (checkedNode == null && !cr.isProjectPerNode()) {
+			List<Node> nodes = cr.getNodes();
+			if (!CollectionUtils.isEmpty(nodes)) {
+				boolean consistent = true;
+				for (Node n : nodes) {
+					consistent &= checkObjectConsistency(project, branch, n, repair, publishProcess, meshUuidMap);
+				}
+				return consistent;
+			} else {
+				return true;
+			}
+		}
+
 		Set<Integer> types = new HashSet<>(schemaNames.keySet());
 		// also check forms, if the node is no channel and has the feature activated
 		if (checkedNode != null && !checkedNode.isChannel() && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, checkedNode)) {

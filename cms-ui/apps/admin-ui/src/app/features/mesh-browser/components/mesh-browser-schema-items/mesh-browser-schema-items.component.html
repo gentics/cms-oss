@@ -1,18 +1,18 @@
 <div class="schema-items">
 
     <div class="schema-header">
-        <div class="schema-title">{{ schema.name }}</div>
+        <div class="schema-title">{{ schemaName }}</div>
         <icon [ngClass]="{'collapsed': collapsed}" (click)="toggleSection()" right>
             keyboard_arrow_down
         </icon>
     </div>
 
-    <div *ngIf="!!schema.elements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
-        <div *ngFor="let element of schema.elements | paginate : {
+    <div *ngIf="!!schemaElements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
+        <div *ngFor="let element of schemaElements | paginate : {
             id: UNIQUE_ID,
             itemsPerPage: perPage,
             currentPage: page,
-            totalItems: schema.elements?.length
+            totalItems: schemaElements?.length
         }">
             <div *ngIf="!!element" class="schema-element">
                 <icon (click)="showDetails(element)" left>
@@ -28,7 +28,7 @@
         </div>
 
         <gtx-paging
-            *ngIf="schema.elements?.length > perPage"
+            *ngIf="schemaElements?.length > perPage"
             [id]="UNIQUE_ID"
             (pageChange)="changePage($event)"
         />

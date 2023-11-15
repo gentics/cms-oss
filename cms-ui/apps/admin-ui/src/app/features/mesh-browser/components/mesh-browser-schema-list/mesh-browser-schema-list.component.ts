@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
 import { SchemaContainer } from '../../models/mesh-browser-models';
@@ -11,7 +11,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     styleUrls: ['./mesh-browser-schema-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
+export class MeshBrowserSchemaListComponent implements OnInit {
 
     @Input()
     public currentProject: string;
@@ -48,11 +48,6 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
         })
         this.loadSchemas()
     }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        console.log(changes);
-    }
-
 
     protected async loadSchemas(): Promise<void> {
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)

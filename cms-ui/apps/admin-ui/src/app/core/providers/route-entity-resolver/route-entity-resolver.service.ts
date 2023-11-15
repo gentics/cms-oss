@@ -13,16 +13,16 @@ import {
     ROUTE_PARAM_NODE_ID,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
 import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
+import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
 import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
+import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
-import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
-import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 
 export function runEntityResolver(
     from: ActivatedRouteSnapshot,
@@ -105,6 +105,16 @@ export class RouteEntityResolverService {
             return state[ROUTE_DATA_MESH_REPO_ITEM];
         }
 
+        const repositoryId = this.extractRepositoryId(route)
+
+        const res = await this.contentRepository.get(repositoryId).toPromise();
+
+        return res.contentRepository;
+    }
+
+    private extractRepositoryId(route: ActivatedRouteSnapshot): number {
+        const nav = this.router.getCurrentNavigation();
+
         let repositoryId = nav.extras?.state?.[ROUTE_DATA_MESH_REPO_ID] ??
             route.params?.[ROUTE_MESH_REPOSITORY_ID];
 
@@ -121,9 +131,7 @@ export class RouteEntityResolverService {
             }
         }
 
-        const res = await this.contentRepository.get(repositoryId).toPromise();
-
-        return res.contentRepository;
+        return repositoryId;
     }
 
     public getHandler<K extends EditableEntity>(

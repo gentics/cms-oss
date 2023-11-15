@@ -22,7 +22,6 @@ import {
     Component,
     Input,
     OnChanges,
-    OnInit,
     SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -40,8 +39,7 @@ const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO>
-    implements OnChanges, OnInit
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges
 {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
@@ -87,9 +85,6 @@ export class MeshBrowserMasterComponent
         super(changeDetector, router, route, appState);
     }
 
-    ngOnInit(): void {
-        console.log('init', this);
-    }
 
     ngOnChanges(changes: SimpleChanges): void {
         const loadedRepository = this.route.snapshot.data[ROUTE_DATA_MESH_REPO_ITEM];

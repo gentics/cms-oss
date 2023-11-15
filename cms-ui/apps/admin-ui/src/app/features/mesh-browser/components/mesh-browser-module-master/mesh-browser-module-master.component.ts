@@ -11,7 +11,6 @@ import {
     ChangeDetectorRef,
     Component,
     Input,
-    OnInit,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TableRow, toValidNumber } from '@gentics/ui-core';
@@ -22,7 +21,7 @@ import { TableRow, toValidNumber } from '@gentics/ui-core';
     styleUrls: ['./mesh-browser-module-master.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserModuleMasterComponent implements OnInit {
+export class MeshBrowserModuleMasterComponent {
 
     public readonly ROUTE_MESH_BROWSER_OUTLET = ROUTE_MESH_BROWSER_OUTLET;
 
@@ -34,10 +33,6 @@ export class MeshBrowserModuleMasterComponent implements OnInit {
         protected router: Router,
         protected route: ActivatedRoute,
     ) {}
-
-    ngOnInit(): void {
-        console.log(this);
-    }
 
     public rowClickHandler(row: TableRow<ContentRepositoryBO>): void {
         this.currentRepositoryId = row.item.id;

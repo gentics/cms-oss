@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
 import { getFullPrimaryPath } from '@gentics/ui-core';
-import { SchemaContainer, SchemaElement } from '../../models/mesh-browser-models';
+import { SchemaElement } from '../../models/mesh-browser-models';
 import { MeshBrowserLoaderService } from '../../providers';
 
 
@@ -25,7 +25,10 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     public currentProject: string;
 
     @Input()
-    public schema: SchemaContainer;
+    public schemaName: string;
+
+    @Input()
+    public schemaElements: Array<SchemaElement>;
 
     @Input()
     public currentNodeUuid: string;
@@ -104,7 +107,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public async loadNodeContent(nodeUuid: string): Promise<void> {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
-            schemaName: this.schema.name,
+            schemaName: this.schemaName,
             nodeUuid: nodeUuid,
             lang: this.languages,
             page: this.page,
@@ -114,7 +117,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             schemaElement.languages = schemaElement?.languages.sort((a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
 
-        this.schema.elements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
+        this.schemaElements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
     }
@@ -123,7 +126,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.page = page;
 
         this.loader.listNodeChildrenForSchema(this.currentProject, {
-            schemaName: this.schema.name,
+            schemaName: this.schemaName,
             nodeUuid: this.currentNodeUuid,
             page: this.page,
             lang: this.languages,

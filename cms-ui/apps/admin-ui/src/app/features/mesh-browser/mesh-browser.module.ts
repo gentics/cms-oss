@@ -10,6 +10,7 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { SharedModule } from '../../shared/shared.module';
 import {
     ContentRepositoryTableComponent,
+    MeshBrowserBreadcrumbComponent,
     MeshBrowserEditorComponent,
     MeshBrowserLanguageSwitcherComponent,
     MeshBrowserMasterComponent,
@@ -35,6 +36,7 @@ import {
         MeshBrowserSchemaItemsComponent,
         MeshBrowserProjectSwitcherComponent,
         MeshBrowserLanguageSwitcherComponent,
+        MeshBrowserBreadcrumbComponent,
     ],
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,

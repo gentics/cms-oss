@@ -1,5 +1,13 @@
 <div class="mesh-browser-detail">
 
+    <gtx-mesh-browser-breadcrumbs
+        [currentProject]="project"
+        [currentBranchUuid]="currentBranchUuid"
+        [currentNodeUuid]="currentNodeUuid"
+        [currentLanguage]="language"
+    />
+
+
     <gtx-entity-detail-header 
         [title]="title"
         [saveDisabled]="true"

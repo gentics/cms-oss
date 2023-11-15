@@ -24,10 +24,10 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     public currentNodeUuid: string;
 
     @Input({ alias: ROUTE_MESH_BRANCH_ID})
-    public currentBranch: string;
+    public currentBranchUuid: string;
 
     @Input({ alias: ROUTE_MESH_LANGUAGE})
-    private language: string;
+    public language: string;
 
     public fields: Array<MeshField> = [];
 
@@ -53,7 +53,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.currentNodeId || this.currentBranch || changes.currentLanguage) {
+        if (changes.currentNodeId || this.currentBranchUuid || changes.currentLanguage) {
             this.updateComponent();
         }
     }
@@ -61,7 +61,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     private async mapResponseToSchemaFields(): Promise<void> {
         const response = await this.loader.getNodeByUuid(this.project, this.currentNodeUuid, {
             lang: this.language,
-            branch: this.currentBranch,
+            branch: this.currentBranchUuid,
         })
 
         if (!response.fields) {

@@ -52,7 +52,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     protected async loadSchemas(): Promise<void> {
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
 
-        if (this.currentNodeUuid === 'undefined' || !this.currentNodeUuid) {
+        if (!this.currentNodeUuid) {
             this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);
         }
 
@@ -60,7 +60,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     }
 
     public nodeChanged(nodeUuid: string): void {
-        if (nodeUuid === 'undefined' || !nodeUuid) {
+        if (!nodeUuid) {
             this.loadSchemas();
         }
         if (nodeUuid === this.currentNodeUuid) {

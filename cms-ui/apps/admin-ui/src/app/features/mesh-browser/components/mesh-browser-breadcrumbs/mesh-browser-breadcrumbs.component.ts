@@ -92,20 +92,4 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
         this.changeDetector.markForCheck();
     }
 
-    public navigate(nodeUuid: string):void {
-        const selectedRepositoryId = this.resolver.extractRepositoryId(this.route.snapshot)
-        if (!selectedRepositoryId) {
-            return;
-        }
-
-        this.navigationService.handleNavigation(
-            this.route,
-            selectedRepositoryId,
-            this.currentProject,
-            this.currentBranchUuid,
-            nodeUuid,
-            this.currentLanguage,
-        );
-    }
-
 }

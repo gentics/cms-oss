@@ -10,6 +10,7 @@ import {
 import { getUserDisplayName } from '@admin-ui/mesh';
 import { BaseTableMasterComponent } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
+import { Location } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
@@ -72,6 +73,7 @@ export class MeshBrowserMasterComponent
         appState: AppStateService,
         protected loader: MeshBrowserLoaderService,
         protected navigatorService: MeshBrowserNavigatorService,
+        protected location: Location,
     ) {
         super(changeDetector, router, route, appState);
     }
@@ -208,7 +210,18 @@ export class MeshBrowserMasterComponent
         if (this.parentNodeUuid !== nodeId) {
             this.parentNodeUuid = nodeId;
             this.handleBreadcrumbNavigation(nodeId);
-            this.handleNavigation();
+
+            const routeCommand = this.navigatorService.getRouteCommand(
+                this.route,
+                this.selectedRepository.id,
+                this.currentProject,
+                this.currentBranchUuid,
+                this.parentNodeUuid,
+                this.currentLanguage,
+            );
+            // merely update path without performing a reload
+            const url = this.router.createUrlTree(routeCommand, {relativeTo: this.route}).toString()
+            this.location.go(url);
         }
     }
 

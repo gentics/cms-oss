@@ -51,6 +51,34 @@ export class MeshBrowserNavigatorService {
     }
 
 
+    public getRouteCommand(
+        route: ActivatedRoute,
+        selectedRepositoryId: number,
+        currentProject: string,
+        currentBranchUuid: string,
+        parentNodeUuid: string,
+        currentLanguage: string,
+    ): any[] {
+        const command =
+            [
+                '/' + AdminUIModuleRoutes.MESH_BROWSER,
+                selectedRepositoryId,
+                {
+                    outlets: {
+                        [ROUTE_MESH_BROWSER_OUTLET]: [
+                            'list',
+                            currentProject,
+                            currentBranchUuid,
+                            parentNodeUuid ?? 'undefined',
+                            currentLanguage,
+                        ],
+                    },
+                },
+            ];
+
+        return command;
+    }
+
     public navigateBack(route: ActivatedRoute): void {
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
             relativeTo: route,
@@ -70,6 +98,10 @@ export class MeshBrowserNavigatorService {
             { nodeUuid: currentNodeUuid },
             currentBranchUuid,
         );
+
+        if (!breadcrumbEntries) {
+            return;
+        }
 
         const breadcrumbPath: IBreadcrumbRouterLink[] = [
             {
@@ -147,6 +179,6 @@ export class MeshBrowserNavigatorService {
             },
         );
 
-        return response.data.node.breadcrumb;
+        return response.data.node?.breadcrumb;
     }
 }

@@ -110,14 +110,13 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             if (field.constructor === Array) {
                 return FieldType.LIST
             }
-            else {
-                const fieldObject = field as unknown as object;
-                if(fieldObject['binaryUuid']) {
-                    return FieldType.BINARY;
-                }
-                else if(fieldObject['uuid']) {
-                    return FieldType.NODE;
-                }
+
+            const fieldObject = field as unknown as object;
+            if(fieldObject['binaryUuid']) {
+                return FieldType.BINARY;
+            }
+            else if(fieldObject['uuid']) {
+                return FieldType.NODE;
             }
         }
         else if (typeof field === 'string') {

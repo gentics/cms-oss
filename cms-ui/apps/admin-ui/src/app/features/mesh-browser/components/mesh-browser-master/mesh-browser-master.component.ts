@@ -127,7 +127,7 @@ export class MeshBrowserMasterComponent
         this.selectedRepository = null;
         this.parentNodeUuid = undefined;
         this.currentProject = undefined;
-        this.navigatorService.navigateBack(this.route);
+        this.navigatorService.navigateToModuleRoot(this.route);
     }
 
     public meshLoginHandler(event: { loggedIn: boolean; user?: User }): void {

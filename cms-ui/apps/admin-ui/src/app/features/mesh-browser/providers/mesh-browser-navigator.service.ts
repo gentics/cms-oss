@@ -78,7 +78,7 @@ export class MeshBrowserNavigatorService {
         return command;
     }
 
-    public navigateBack(route: ActivatedRoute): void {
+    public navigateToModuleRoot(route: ActivatedRoute): void {
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
             relativeTo: route,
         });

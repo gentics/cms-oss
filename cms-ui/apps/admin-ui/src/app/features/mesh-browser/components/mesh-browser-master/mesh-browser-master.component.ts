@@ -109,7 +109,7 @@ export class MeshBrowserMasterComponent
             this.currentProject,
             this.currentBranchUuid,
             this.parentNodeUuid,
-            this.currentLanguage ?? DEFAULT_LANGUAGE,
+            this.currentLanguage,
         )
     }
 
@@ -194,7 +194,6 @@ export class MeshBrowserMasterComponent
     }
 
     public async projectChangeHandler(project: string): Promise<void> {
-        this.parentNodeUuid = undefined;
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
         this.handleNavigation();
@@ -212,7 +211,6 @@ export class MeshBrowserMasterComponent
             this.handleBreadcrumbNavigation(nodeId);
 
             const routeCommand = this.navigatorService.getRouteCommand(
-                this.route,
                 this.selectedRepository.id,
                 this.currentProject,
                 this.currentBranchUuid,

@@ -1,6 +1,8 @@
 
-<ng-container *ngFor="let item of breadcrumbLinks; last as isLast">
-    <a [routerLink]="item.route" title="{{ item.text }}" class="breadcrumb-item">
-        {{ item.text}}
-    </a> 
-</ng-container>
+<div class="breadcrumb-container">
+    <ng-container *ngFor="let item of breadcrumbLinks; last as isLast">
+        <a [routerLink]="item.route" title="{{ item.text }}" class="breadcrumb-item">
+            {{ item.text}}
+        </a> 
+    </ng-container>
+</div>

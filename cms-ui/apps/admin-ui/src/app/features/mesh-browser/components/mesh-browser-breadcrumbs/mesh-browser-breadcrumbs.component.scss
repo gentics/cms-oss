@@ -1,16 +1,18 @@
+.breadcrumb-container {
+    margin-bottom: -0.7rem;
+}
+
 .breadcrumb-item {
     font-size: 14px;
     color: rgb(128, 128, 128); 
     
     &:not(:first-child):before{
-        position: relative;
-        top: -6px;
         content: "\e5cc ";
         display: inline-block;
         font-family: "Material Icons";
         font-weight: normal;
         font-style: normal;
-        font-size: 25px;
+        font-size: 17px;
         vertical-align: top;
         -webkit-font-smoothing: antialiased;
     }

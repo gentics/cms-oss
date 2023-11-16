@@ -27,7 +27,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     public currentBranchUuid: string;
 
     @Input({ alias: ROUTE_MESH_LANGUAGE})
-    public language: string;
+    public currentLanguage: string;
 
     public fields: Array<MeshField> = [];
 
@@ -60,7 +60,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
     private async mapResponseToSchemaFields(): Promise<void> {
         const response = await this.loader.getNodeByUuid(this.project, this.currentNodeUuid, {
-            lang: this.language,
+            lang: this.currentLanguage,
             branch: this.currentBranchUuid,
         })
 
@@ -69,6 +69,11 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         }
 
         this.title = response.fields.name as unknown as string;
+
+        if (!this.title) {
+            this.title = this.currentNodeUuid;
+        }
+
         this.fields = [];
 
         for (const [key, value] of Object.entries(response.fields)) {
@@ -93,7 +98,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             else if (fieldType === FieldType.BINARY) {
                 this.fields.push({
                     label: key,
-                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeUuid}/binary/binarycontent?lang=${this.language}&sid=${this.sid}`,
+                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeUuid}/binary/binarycontent?lang=${this.currentLanguage}&sid=${this.sid}`,
                     type: FieldType.BINARY,
                 })
             }

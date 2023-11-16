@@ -47,18 +47,6 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
     }
 
     async updateComponent(): Promise<void> {
-        const baseBreadcrumbPath: IBreadcrumbRouterLink[] = [
-            {
-                route: ['/'],
-                text: 'Dashboard',
-            },
-            {
-                route: ['/' + AdminUIModuleRoutes.MESH_BROWSER],
-                text: 'Mesh Browser',
-            },
-        ];
-        this.breadcrumbLinks = baseBreadcrumbPath;
-
         const breadcrumbs = await this.navigationService.getBreadcrumbNavigation(
             this.currentProject,
             { nodeUuid: this.currentNodeUuid },
@@ -67,6 +55,7 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
         breadcrumbs.splice(0,1);
 
         const selectedRepositoryId = this.resolver.extractRepositoryId(this.route.snapshot)
+        this.breadcrumbLinks = [];
 
         for(const entry of breadcrumbs) {
             this.breadcrumbLinks.push({
@@ -89,6 +78,7 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
             })
         }
 
+        this.breadcrumbLinks = this.breadcrumbLinks.slice();
         this.changeDetector.markForCheck();
     }
 

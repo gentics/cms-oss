@@ -40,7 +40,7 @@ export class MeshBrowserNavigatorService {
                             'list',
                             currentProject,
                             currentBranchUuid,
-                            parentNodeUuid ?? 'undefined',
+                            parentNodeUuid,
                             currentLanguage,
                         ],
                     },
@@ -52,7 +52,6 @@ export class MeshBrowserNavigatorService {
 
 
     public getRouteCommand(
-        route: ActivatedRoute,
         selectedRepositoryId: number,
         currentProject: string,
         currentBranchUuid: string,

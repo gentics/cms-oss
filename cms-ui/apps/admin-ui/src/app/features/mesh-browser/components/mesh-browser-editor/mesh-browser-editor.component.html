@@ -4,11 +4,11 @@
         [currentProject]="project"
         [currentBranchUuid]="currentBranchUuid"
         [currentNodeUuid]="currentNodeUuid"
-        [currentLanguage]="language"
+        [currentLanguage]="currentLanguage"
     />
 
     <gtx-entity-detail-header 
-        [title]="title"
+        [title]="title + ', '+  currentLanguage.toLocaleUpperCase() "
         [saveDisabled]="true"
         (cancelClick)="detailsClose()"
     />

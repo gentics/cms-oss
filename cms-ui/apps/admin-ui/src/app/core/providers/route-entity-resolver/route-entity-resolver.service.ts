@@ -111,10 +111,10 @@ export class RouteEntityResolverService {
         return res.contentRepository;
     }
 
-    private extractRepositoryId(route: ActivatedRouteSnapshot): number {
+    public extractRepositoryId(route: ActivatedRouteSnapshot): number {
         const nav = this.router.getCurrentNavigation();
 
-        let repositoryId = nav.extras?.state?.[ROUTE_DATA_MESH_REPO_ID] ??
+        let repositoryId = nav?.extras?.state?.[ROUTE_DATA_MESH_REPO_ID] ??
             route.params?.[ROUTE_MESH_REPOSITORY_ID];
 
         if (!repositoryId) {

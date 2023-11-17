@@ -118,7 +118,7 @@ export class ScheduleDetailComponent extends BaseDetailComponent<'schedule', Sch
             this.currentEntity = newEntity;
             this.fgPropertiesUpdate(newEntity);
             this.tableLoader.reload();
-            this.changeDetectorRef.markForCheck();
+            this.fgProperties.markAsPristine();
         });
     }
 

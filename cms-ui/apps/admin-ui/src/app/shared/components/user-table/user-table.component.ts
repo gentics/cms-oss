@@ -157,6 +157,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                         if (event.selection) {
                             this.selectedChange.emit([]);
                         }
+                        this.loader.reload();
                     });
                 return;
 
@@ -166,6 +167,7 @@ export class UserTableComponent extends BaseEntityTableComponent<User<Raw>, User
                         if (event.selection) {
                             this.selectedChange.emit([]);
                         }
+                        this.loader.reload();
                     });
                 return;
         }

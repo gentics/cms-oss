@@ -1,0 +1,1 @@
+Administration User Interface: Several modules failed to refresh entity lists when entities were created, modified or deleted and have been fixed.

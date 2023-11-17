@@ -1,0 +1,3 @@
+Publishing into a Mesh Content.Repository with "project per node" disabled might fail with a NullPointerException, if e.g.
+pages were taken offline and re-published between two publish runs.
+This has been fixed.

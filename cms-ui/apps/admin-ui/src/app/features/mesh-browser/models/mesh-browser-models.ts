@@ -44,3 +44,10 @@ export interface NavigationEntry {
     parent: NavigationEntry;
     node: BreadcrumbNode;
 }
+
+
+export enum RESIZE_MODE {
+    PROP = 'prop',
+    SMART = 'smart',
+    FORCE = 'force'
+}

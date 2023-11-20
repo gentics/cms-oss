@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType, SchemaField } from '@gentics/mesh-models';
 import { MeshField } from '../../models/mesh-browser-models';
-import { MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
 
 
 @Component({
@@ -14,8 +14,6 @@ import { MeshBrowserLoaderService } from '../../providers';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
-
-    private sid: number;
 
     @Input({ alias: ROUTE_MESH_PROJECT_ID})
     public project: string;
@@ -40,10 +38,10 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         protected router: Router,
         protected appState: AppStateService,
         protected loader: MeshBrowserLoaderService,
+        protected imageService: MeshBrowserImageService,
     ) { }
 
     ngOnInit(): void {
-        this.sid = this.appState.now.auth.sid
         this.updateComponent()
     }
 
@@ -98,11 +96,21 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             else if (fieldType === FieldType.BINARY) {
                 this.fields.push({
                     label: key,
-                    value: `${this.loader.getMeshUrl()}/${this.project}/nodes/${this.currentNodeUuid}/binary/binarycontent?lang=${this.currentLanguage}&sid=${this.sid}`,
+                    value: this.getImagePath(key),
                     type: FieldType.BINARY,
                 })
             }
         }
+    }
+
+    private getImagePath(fieldName: string) {
+        return this.imageService.getOrCreateImagePathForBinaryField(
+            this.project,
+            this.currentNodeUuid,
+            this.currentBranchUuid,
+            this.currentLanguage,
+            fieldName,
+        );
     }
 
     private getFieldType(field: SchemaField): FieldType {

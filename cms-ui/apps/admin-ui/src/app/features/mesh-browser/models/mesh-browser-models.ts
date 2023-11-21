@@ -45,7 +45,7 @@ export interface NavigationEntry {
     node: BreadcrumbNode;
 }
 
-export enum RESIZE_MODE {
+export enum ResizeMode {
     PROP = 'prop',
     SMART = 'smart',
     FORCE = 'force'

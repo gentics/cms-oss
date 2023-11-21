@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { RequestMethod } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { RESIZE_MODE } from '../models/mesh-browser-models';
+import { ResizeMode } from '../models/mesh-browser-models';
 
 
-const MODE = RESIZE_MODE.PROP;
+const MODE = ResizeMode.PROP;
 const WIDTH = 1200;
 const HEIGHT = 500;
 

@@ -22,6 +22,7 @@ import {
 import { MESH_BROWSER_ROUTES } from './mesh-browser.routes';
 import {
     MeshBrowserContentRepositoryTableLoaderService,
+    MeshBrowserImageService,
     MeshBrowserLoaderService,
     MeshBrowserNavigatorService,
 } from './providers';
@@ -42,6 +43,7 @@ import {
         MeshBrowserContentRepositoryTableLoaderService,
         MeshBrowserLoaderService,
         MeshBrowserNavigatorService,
+        MeshBrowserImageService,
         provideRouter(MESH_BROWSER_ROUTES, withComponentInputBinding()),
     ],
     imports: [

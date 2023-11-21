@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BranchReference, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, NavigationEntry, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
 
@@ -13,10 +13,6 @@ export class MeshBrowserLoaderService {
 
     public authMe(): Promise<UserResponse> {
         return this.meshClient.auth.me();
-    }
-
-    public getMeshUrl(): string {
-        return this.meshClient.getConfig().connection.basePath;
     }
 
     public async getProjects(): Promise<ProjectResponse[]> {

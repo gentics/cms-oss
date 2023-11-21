@@ -1,4 +1,3 @@
-import { AppStateService } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
 import { RequestMethod } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
@@ -12,14 +11,8 @@ const HEIGHT = 500;
 
 @Injectable()
 export class MeshBrowserImageService {
-    private sid: number;
 
-    constructor(
-        protected meshClient: MeshRestClientService,
-        protected appState: AppStateService,
-    ) {
-        this.sid = this.appState.now.auth.sid;
-    }
+    constructor(protected meshClient: MeshRestClientService) {}
 
     public getImageUrlForBinaryField(
         project: string,
@@ -29,7 +22,7 @@ export class MeshBrowserImageService {
         binaryFieldName: string,
     ): string {
         const basePath = `${project}/nodes/${nodeUuid}/binary/${binaryFieldName}`;
-        const request = this.meshClient.prepareRequest(RequestMethod.GET, basePath, {}, {})
+        const request = this.meshClient.prepareRequest(RequestMethod.GET, basePath, {}, {});
 
         const queryParams = {
             lang: language,

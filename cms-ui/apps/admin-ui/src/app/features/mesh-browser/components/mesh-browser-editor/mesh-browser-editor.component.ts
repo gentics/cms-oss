@@ -104,7 +104,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     private getImagePath(fieldName: string) {
-        return this.imageService.getOrCreateImagePathForBinaryField(
+        return this.imageService.getImageUrlForBinaryField(
             this.project,
             this.currentNodeUuid,
             this.currentBranchUuid,

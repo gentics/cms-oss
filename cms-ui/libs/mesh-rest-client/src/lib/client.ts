@@ -34,7 +34,7 @@ export class MeshRestClient {
         public apiKey?: string,
     ) { }
 
-    protected prepareRequest(
+    public prepareRequest(
         requestMethod: RequestMethod,
         path: string,
         queryParams: Record<string, any>,

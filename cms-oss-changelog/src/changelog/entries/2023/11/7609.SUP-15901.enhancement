@@ -1,0 +1,2 @@
+The "GCMSUI Page API":https://www.gentics.com/Content.Node/cmp8/guides/feature_gcmsui_object.html and the Custom Tag/TagProperty Editor API have been extended to open a file upload modal.
+Additionally, the Custom Tag/TagProperty Editor API now also has dedicated functions for calls to the REST API.

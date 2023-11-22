@@ -12,7 +12,7 @@ import {
     TagPropertyType,
     TagType,
     ValidationResult,
-    VariableTagEditorContext
+    VariableTagEditorContext,
 } from '@gentics/cms-models';
 import { BehaviorSubject } from 'rxjs';
 import { TagEditorContextImpl } from '../app/tag-editor/common/impl/tag-editor-context-impl';
@@ -66,7 +66,7 @@ export interface MockObjectTagInfo {
  * it after it is first used inside a function, which means that it would be part of
  * the temporal dead zone - that is why we need to declare it with `var`.
  */
-// tslint:disable-next-line: no-var-keyword
+// eslint-disable-next-line no-var
 var excludedProperties: Set<string>;
 
 /** Gets the set of MockTagPropertyInfo properties that should not be copied to a TagProperty. */
@@ -98,7 +98,7 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         keyword: tagTypeInfo.keyword || 'test_tagtype',
         name: tagTypeInfo.name || 'Test Tag',
         icon: tagTypeInfo.icon || 'tag.gif',
-        parts: []
+        parts: [],
     };
 
     for (let i = 0; i < mockedProperties.length; ++i) {
@@ -115,7 +115,7 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
             name: keywords[i],
             nameI18n: {},
             type: src.type,
-            typeId: src.typeId
+            typeId: src.typeId,
         });
     }
 
@@ -127,7 +127,7 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         name: 'test0',
         type: 'CONTENTTAG',
         properties: tagPropertyMap,
-        tagType: tagType
+        tagType: tagType,
     };
 
     return tag;
@@ -137,7 +137,10 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
  * Creates a mocked `EditableObjectTag` using the specified tag property infos. The information in each tagPropInfo will
  * be used to set up a TagPart and TagProperty. If no keyword is specified for a tag property, `property${index}` is used.
  */
-export function mockEditableObjectTag<T extends TagPartProperty>(tagPropInfos: MockTagPropertyInfo<T>[], objTagInfo: MockObjectTagInfo = { }): EditableObjectTag {
+export function mockEditableObjectTag<T extends TagPartProperty>(
+    tagPropInfos: MockTagPropertyInfo<T>[],
+    objTagInfo: MockObjectTagInfo = { },
+): EditableObjectTag {
     const tag = mockEditableTag(tagPropInfos, objTagInfo.tagType);
     let tagName = objTagInfo.name || tag.name;
     if (!tagName.startsWith('object.')) {
@@ -154,7 +157,7 @@ export function mockEditableObjectTag<T extends TagPartProperty>(tagPropInfos: M
         inheritable: typeof objTagInfo.inheritable === 'boolean' ? objTagInfo.inheritable : false,
         sortOrder: typeof objTagInfo.sortOrder === 'number' ? objTagInfo.sortOrder : 0,
         required: typeof objTagInfo.required === 'boolean' ? objTagInfo.required : false,
-        readOnly: false
+        readOnly: false,
     };
     return objectTag;
 }
@@ -166,7 +169,7 @@ function createTagProperty<T extends TagPartProperty>(src: MockTagPropertyInfo<T
     const prop: any = {
         id: id,
         partId: partId,
-        type: src.type
+        type: src.type,
     };
     const excludedProps = getExludedProperties();
     for (const key of Object.keys(src)) {
@@ -183,37 +186,37 @@ export function getExampleEditableTag(): EditableTag {
         {
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
+            typeId: TagPartType.Text,
         },
         {
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
+            typeId: TagPartType.Text,
         },
         {
             mandatory: true,
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
+            typeId: TagPartType.Text,
         },
         {
             editable: false,
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
+            typeId: TagPartType.Text,
         },
         {
             hideInEditor: true,
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
+            typeId: TagPartType.Text,
         },
         {
             hidden: true,
             stringValue: '',
             type: TagPropertyType.STRING,
-            typeId: TagPartType.Text
-        }
+            typeId: TagPartType.Text,
+        },
     ];
     return mockEditableTag(tagPropInfos);
 }
@@ -225,7 +228,7 @@ export function getExampleEditableTag(): EditableTag {
  */
 export function getMockedTagEditorContext(
     tag: EditableTag,
-    contextInfo: Partial<TagEditorContext> = { }
+    contextInfo: Partial<TagEditorContext> = { },
 ): TagEditorContext {
     if (!contextInfo.page) {
         contextInfo.page = getExamplePageData();
@@ -248,7 +251,11 @@ export function getMockedTagEditorContext(
     if (!contextInfo.gcmsUiServices) {
         contextInfo.gcmsUiServices = {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
-            openImageEditor: jasmine.createSpy('openImageEditor')
+            openImageEditor: jasmine.createSpy('openImageEditor'),
+            openUploadModal: jasmine.createSpy('openUploadModal'),
+            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
+            restRequestGET: jasmine.createSpy('restRequestGET'),
+            restRequestPOST: jasmine.createSpy('restRequestPOST'),
         };
     }
 
@@ -260,7 +267,7 @@ export function getMockedTagEditorContext(
         4711,
         contextInfo.translator,
         contextInfo.variableContext,
-        contextInfo.gcmsUiServices
+        contextInfo.gcmsUiServices,
     );
 }
 
@@ -269,10 +276,10 @@ export function getMockedTagEditorContext(
  */
 export function getExampleNaturalNumberValidationInfo(): RegexValidationInfo {
     return {
-        id: 0,
+        id: 0 as any,
         name: 'Natural Number',
         description: 'The string must be a natural number',
-        expression: '^[0-9]+$'
+        expression: '^[0-9]+$',
     };
 }
 

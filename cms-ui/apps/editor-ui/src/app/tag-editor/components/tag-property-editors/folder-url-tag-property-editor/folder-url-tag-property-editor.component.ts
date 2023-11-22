@@ -8,6 +8,7 @@ import { FolderActionsService } from '@editor-ui/app/state';
 import {
     EditableTag,
     FileOrImage,
+    FileUpload,
     Folder,
     FolderTagPartProperty,
     ItemInNode,
@@ -20,12 +21,11 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { merge, Observable, of } from 'rxjs';
+import { Observable, merge, of } from 'rxjs';
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
-import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
 
 /**
  * Used to edit the UrlFolder and FolderUpload TagParts.
@@ -234,19 +234,19 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                 nodeId: parentFolder.nodeId,
                 failOnDuplicate: true,
             })
-            .then(subfolder => {
-                if (subfolder) {
-                    this.expandCreateSubfolderButton.collapse();
-                    this.subfolderName = '';
-                    this.changeSelectedItem(subfolder);
-                }
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            })
-            .catch(() => {
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            });
+                .then(subfolder => {
+                    if (subfolder) {
+                        this.expandCreateSubfolderButton.collapse();
+                        this.subfolderName = '';
+                        this.changeSelectedItem(subfolder);
+                    }
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                })
+                .catch(() => {
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                });
         });
     }
 
@@ -257,7 +257,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
         if (newValue.type !== TagPropertyType.FOLDER) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FolderUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as FolderTagPartProperty;
+        this.tagProperty = newValue ;
 
         this.selectedFolder.setSelectedItem(this.tagProperty.folderId, this.tagProperty.nodeId);
         this.changeDetector.markForCheck();

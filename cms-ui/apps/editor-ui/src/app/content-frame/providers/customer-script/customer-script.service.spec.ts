@@ -16,6 +16,7 @@ import { CNParentWindow, CNWindow } from '../../components/content-frame/common'
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CustomerScriptService } from './customer-script.service';
+import { ModalService } from '@gentics/ui-core';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -67,6 +68,7 @@ describe('CustomerScriptService', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
+                { provide: ModalService, useClass: MockModalService },
             ],
         });
 
@@ -386,4 +388,10 @@ class MockWindow {
 
 class MockErrorHandler {
     catch(): void { }
+}
+
+class MockModalService {
+    fromComponent(): Promise<void> {
+        return Promise.resolve();
+    }
 }

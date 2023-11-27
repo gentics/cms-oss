@@ -49,10 +49,10 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
     ngOnDestroy(): void {
     }
 
-    saveAndClose(): void {
+    async saveAndClose(): Promise<void> {
         console.log(`Saving changes to file ${this.file.id}`);
 
-        this.combinedPropertiesEditor.saveItemProperties()
+        await this.combinedPropertiesEditor.saveItemProperties()
             .then(() => console.log('Saved properties'))
             .catch(err => console.log('Could not save properties', err))
 

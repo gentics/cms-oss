@@ -1,11 +1,13 @@
 package com.gentics.contentnode.tests.multichannelling;
 
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,8 +49,10 @@ public class NiceURLMultichannellingTest {
 	 */
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
+		testContext.getContext().getTransaction().commit();
+
 		node = Trx.supply(() -> createNode());
-		channel = Trx.supply(() -> createChannel(node, "Channel", "channel", "/"));
+		channel = Trx.supply(() -> createChannel(node, "Channel", "channel", "/channel"));
 
 		template = Trx.supply(() -> createTemplate(node.getFolder(), "Template"));
 	}
@@ -95,5 +99,61 @@ public class NiceURLMultichannellingTest {
 			ContentNodeRESTUtils.assertResponseOK(response);
 			trx.success();
 		}
+	}
+
+	/**
+	 * Test that the uniqueness check between the URL of a local page and an inherited nice URL correctly considers the node/channel pubDir
+	 * @throws Exception
+	 */
+	@Test
+	public void testUniquenessLocalURLWithInheritedNiceURL() throws Exception {
+		// create a local page with URL /channel/page
+		create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolder(channel, channel.getFolder());
+			p.setChannelInfo(channel.getId(), null);
+			p.setName("Local Page");
+			p.setFilename("page");
+		}).save().build();
+
+		// try to create an inherited page with nice URL /page (would be /channel/page in the Channel)
+		Page masterPage = create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolder(node, node.getFolder());
+			p.setName("Master Page");
+			p.setFilename("masterpage");
+			p.setNiceUrl("/page");
+		}).save().build();
+
+		// nice URL should have been made unique
+		assertThat(masterPage).as("Master Page").hasFieldOrPropertyWithValue("niceUrl", "/page1");
+	}
+
+	/**
+	 * Test that the uniqueness check between a local nice URL and an inherited URL correctly considers the node/channel pubDir
+	 * @throws Exception
+	 */
+	@Test
+	public void testUniquenessLocalNiceURLWithInheritedURL() throws Exception {
+		// create a local page with nice URL /page (full URL will be /channel/page)
+		create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolder(channel, channel.getFolder());
+			p.setChannelInfo(channel.getId(), null);
+			p.setName("Local Page");
+			p.setFilename("localpage");
+			p.setNiceUrl("/page");
+		}).save().build();
+
+		// create an inherited page with filename "page" (URL in the channel would be /channel/page)
+		Page masterPage = create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolder(node, node.getFolder());
+			p.setName("Master Page");
+			p.setFilename("page");
+		}).save().build();
+
+		// filename should have been made unique
+		assertThat(masterPage).as("Master Page").hasFieldOrPropertyWithValue("filename", "page1");
 	}
 }

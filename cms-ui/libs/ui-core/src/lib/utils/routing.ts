@@ -1,5 +1,4 @@
 import { ActivatedRoute, PRIMARY_OUTLET } from '@angular/router';
-import { ROUTE_DETAIL_OUTLET } from '@admin-ui/common';
 
 export function getFullPrimaryPath(route: ActivatedRoute): string {
     const fullPath = [];

@@ -76,8 +76,9 @@ public class PublishtableUpdateJob implements AsynchronousJob {
 	public static void updateAlternateUrls(Page page, Node node) throws NodeException {
 		// get all alternate URLs of the page, prefixed with the node's hostname
 		String hostname = node.getHostname();
+		String nodePubDir = node.getPublishDir();
 		Set<String> alternateUrls = new HashSet<>(page.getAlternateUrls().stream()
-			.map(url -> FilePublisher.getPath(false, false, hostname, url))
+			.map(url -> FilePublisher.getPath(false, false, hostname, nodePubDir, url))
 			.collect(Collectors.toSet()));
 		int publishId = DBUtils.select(
 			"SELECT id FROM publish WHERE page_id = ? AND node_id = ?",
@@ -167,7 +168,7 @@ public class PublishtableUpdateJob implements AsynchronousJob {
 			data.put("updateimagestore", node.doPublishFilesystem() ? 1 : 0);
 
 			if (niceUrlsFeature && !ObjectTransformer.isEmpty(page.getNiceUrl())) {
-				data.put("nice_url", new StringBuffer(node.getHostname()).append(page.getNiceUrl()).toString());
+				data.put("nice_url", FilePublisher.getPath(false, false, node.getHostname(), node.getPublishDir(), page.getNiceUrl()));
 			}
 
 			// also remove all entries for other channelset IDs of this page from the node (only one channelset variant of the page may be published into a node/channel)

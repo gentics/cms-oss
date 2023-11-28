@@ -750,7 +750,7 @@ public abstract class AbstractNiceURLUniquenessTest extends AbstractNiceURLTest 
 	 * @return conflicting nice URL
 	 */
 	protected String getConflictingNiceURL() {
-		return String.format("%s%s", FolderFactory.getPath(nodePubDir, folderPubDir, true), name); 
+		return String.format("%s%s", FolderFactory.getPath("/", folderPubDir, true), name); 
 	}
 
 	/**
@@ -760,9 +760,9 @@ public abstract class AbstractNiceURLUniquenessTest extends AbstractNiceURLTest 
 	protected String getExpectedNiceURL() {
 		int dotIndex = name.lastIndexOf('.');
 		if (dotIndex < 0) {
-			return String.format("%s%s1", FolderFactory.getPath(nodePubDir, folderPubDir, true), name);
+			return String.format("%s%s1", FolderFactory.getPath("/", folderPubDir, true), name);
 		} else {
-			return String.format("%s%s1%s", FolderFactory.getPath(nodePubDir, folderPubDir, true), name.substring(0, dotIndex), name.substring(dotIndex));
+			return String.format("%s%s1%s", FolderFactory.getPath("/", folderPubDir, true), name.substring(0, dotIndex), name.substring(dotIndex));
 		}
 	}
 

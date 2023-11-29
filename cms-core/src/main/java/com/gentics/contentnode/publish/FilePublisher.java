@@ -429,12 +429,13 @@ public class FilePublisher {
 
 							Set<String> niceAndAlternateURLs = null;
 							if (niceUrls) {
+								String binaryPublishDir = node.getBinaryPublishDir();
 								niceAndAlternateURLs = new HashSet<>();
 								if (!ObjectTransformer.isEmpty(file.getNiceUrl())) {
-									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), file.getNiceUrl()));
+									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), binaryPublishDir, file.getNiceUrl()));
 								}
 								for (String altUrl : file.getAlternateUrls()) {
-									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), altUrl));
+									niceAndAlternateURLs.add(FilePublisher.getPath(false, false, node.getHostname(), binaryPublishDir, altUrl));
 								}
 							}
 							// write the file

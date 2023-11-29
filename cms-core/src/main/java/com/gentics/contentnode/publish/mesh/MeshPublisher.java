@@ -2471,7 +2471,7 @@ public class MeshPublisher implements AutoCloseable {
 							Trx.operate(trx -> {
 								try (LangTrx lTrx = new LangTrx("en");
 										RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, form, controller.publishProcess,
-												controller.publishProcess)) {
+												controller.publishProcess, controller.publishProcess)) {
 
 									ObjectNode data = (ObjectNode) form.getData();
 									JsonNode downloadUrl = data == null ? null : data.get("downloadBaseUrl");
@@ -2569,7 +2569,7 @@ public class MeshPublisher implements AutoCloseable {
 				PublishCacheTrx pTrx = new PublishCacheTrx(controller.publishProcess);
 				PublishedNodeTrx pnTrx = TransactionManager.getCurrentTransaction().initPublishedNode(node);
 				RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, o.getObject(), handleDependencies,
-						storeDependencies)) {
+						storeDependencies, controller.publishProcess)) {
 			WriteTask task = new WriteTask();
 			// task.project is the current project of the node, not necessarily the desired project
 			task.project = meshObject != null ? meshObject.project : project;

@@ -1,0 +1,1 @@
+Makes sure information about whether a page is online is accurate during instant publishing. This issue caused overviews to skip pages which where itself instant published during a long running publish process.

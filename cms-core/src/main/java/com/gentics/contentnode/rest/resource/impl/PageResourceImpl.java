@@ -917,7 +917,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			@QueryParam("versioninfo") @DefaultValue("false") boolean versionInfo,
 			@QueryParam("disinherited") @DefaultValue("false") boolean disinherited,
 			@QueryParam("construct") @DefaultValue("false") boolean construct,
-			@QueryParam("nodeId") Integer nodeId, 
+			@QueryParam("nodeId") Integer nodeId,
 			@QueryParam("package") String stagingPackageName) {
 
 		Transaction t = getTransaction();
@@ -1773,7 +1773,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 				}
 			}
 
-			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false)) {
+			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false, false)) {
 				String content = page.render(new RenderResult());
 				return Response.status(Status.OK).type(page.getTemplate().getMarkupLanguage().getContentType()).encoding("UTF-8").entity(content).build();
 			}
@@ -1865,7 +1865,7 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		Page firstPage = firstPageSupplier.supply();
 		Page secondPage = secondPageSupplier.supply();
 
-		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false)) {
+		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PREVIEW, null, false, false, false)) {
 			String firstContent = firstPage.render(new RenderResult());
 			String secondContent = secondPage.render(new RenderResult());
 

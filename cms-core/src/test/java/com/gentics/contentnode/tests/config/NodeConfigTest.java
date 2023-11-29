@@ -164,7 +164,7 @@ public class NodeConfigTest {
 	@Test
 	public void testAlohaPlugins() throws NodeException {
 		String renderedScripts = Trx.supply(systemUser, () -> {
-			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, testPage, false, false)) {
+			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, testPage, false, false, false)) {
 				AlohaRenderer alohaRenderer = new AlohaRenderer();
 				rTTrx.get().setParameter(AlohaRenderer.ADD_SCRIPT_INCLUDES, false);
 				RenderResult result = new RenderResult();
@@ -187,7 +187,7 @@ public class NodeConfigTest {
 	@Test
 	public void testAlohaSettings() throws NodeException {
 		JsonNode settings = Trx.supply(systemUser, () -> {
-			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, testPage, false, false)) {
+			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, testPage, false, false, false)) {
 				AlohaRenderer alohaRenderer = new AlohaRenderer();
 				RenderResult result = new RenderResult();
 				return alohaRenderer.getAlohaSettings(testPage.getOwningNode(), result, rTTrx.get(), new ObjectMapper());

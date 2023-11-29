@@ -256,7 +256,7 @@ public class ModelBuilder {
 		urlFactory.setAllowAutoDetection(false);
 		urlFactory.setLinkManagement(LinkManagement.OFF);
 
-		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, object, false, false)) {
+		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, object, false, false, false)) {
 			return urlFactory.createRenderUrl(object.getObjectInfo().getObjectClass(), object.getId()).toString();
 		}
 	}

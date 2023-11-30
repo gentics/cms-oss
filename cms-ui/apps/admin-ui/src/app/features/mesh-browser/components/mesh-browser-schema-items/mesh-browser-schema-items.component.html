@@ -1,4 +1,4 @@
-<div class="schema-items">
+<div class="schema-items" *ngIf="schemaElements?.length > 0">
 
     <div class="schema-header">
         <div class="schema-title">{{ schemaName }}</div>
@@ -8,15 +8,15 @@
     </div>
 
     <div *ngIf="!!schemaElements?.length" [ngClass]="{'collapsed': collapsed}" class="schema-content">
-        <div *ngFor="let element of schemaElements | paginate : {
+        <div *ngFor="let element of schemaElements  | paginate : {
             id: UNIQUE_ID,
             itemsPerPage: perPage,
             currentPage: page,
             totalItems: schemaElements?.length
-        }">
-            <div *ngIf="!!element" class="schema-element">
+        } index as index">
+            <div *ngIf="!!element" [ngClass]="{'striped': index % 2 === 0}" class="schema-element">
                 <icon (click)="showDetails(element)" left>
-                    {{  element.isContainer ? 'folder' :  'description' }}
+                    {{  element.isContainer ? 'folder' : 'description' }}
                 </icon> 
 
                 <div (click)="loadContent(element)">{{ element.displayName ?? element?.uuid }}</div>

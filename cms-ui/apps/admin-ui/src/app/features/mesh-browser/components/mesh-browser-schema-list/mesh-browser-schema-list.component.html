@@ -1,6 +1,5 @@
 <div class="schema-list-wrapper">
-    <ng-container *ngFor="let schema of schemas index as index">
-        <div [ngClass]="{'striped': index % 2 === 0}">
+    <ng-container *ngFor="let schema of schemas">
             <gtx-mesh-browser-schema-items
                 [currentProject]="currentProject"
                 [schemaName]="schema.name"
@@ -10,6 +9,5 @@
                 [currentLanguage]="currentLanguage"
                 (nodeChanged)="nodeChanged($event)"
             />
-        </div>  
     </ng-container>
 </div>

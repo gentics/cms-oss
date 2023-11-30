@@ -33,7 +33,6 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public schemas: Array<SchemaContainer> = [];
 
-
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
@@ -51,6 +50,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     protected async loadSchemas(): Promise<void> {
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
+        this.schemas = this.schemas.sort((a,b) => a.name === b.name ? -1 :1)
 
         if (!this.currentNodeUuid) {
             this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);

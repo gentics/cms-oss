@@ -1,16 +1,6 @@
 .schema-list-wrapper {
-    & > div {
-        padding: 0.2rem;
-    }
-    
     margin: 1rem 0;
     padding-right: 1rem;
     overflow-y: auto;
     max-height: 75vh;
 }    
-
-
-.striped {
-    background-color: #c8e1e9;
-    border-radius: 2px;
-}

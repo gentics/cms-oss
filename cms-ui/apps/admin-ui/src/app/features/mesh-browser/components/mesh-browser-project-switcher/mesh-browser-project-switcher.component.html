@@ -1,10 +1,9 @@
 
 <ng-container>
-
     <gtx-dropdown-list>
         <gtx-dropdown-trigger>
             <a>
-                <icon *ngIf="projects?.length > 1" class="collapse">keyboard_arrow_down</icon> 
+                <icon class="collapse">keyboard_arrow_down</icon> 
                 <span>{{ currentProject }}</span>
             </a>
         </gtx-dropdown-trigger>
@@ -15,7 +14,6 @@
             </gtx-dropdown-item>
         </gtx-dropdown-content>
     </gtx-dropdown-list>
-
 
     <gtx-dropdown-list *ngIf="branches?.length > 1" class="branch-dropdown">
         <gtx-dropdown-trigger>

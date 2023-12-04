@@ -19,7 +19,7 @@
                     {{  element.isContainer ? 'folder' :  'description' }}
                 </icon> 
 
-                <div (click)="loadContent(element)">{{ element.displayName ?? element?.uuid }}</div>
+                <div (click)="loadContent(element)" [attr.data-is-container]="element.isContainer">{{ element.displayName ?? element?.uuid }}</div>
 
                 <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}

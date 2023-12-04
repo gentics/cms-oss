@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -325,6 +326,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Default timeouts in seconds
 	 */
 	public final static int DEFAULT_TIMEOUT = 60;
+
+	/**
+	 * Threshold in ms for logging the wait time when putting an item to a queue
+	 */
+	public final static int QUEUE_WAIT_LOG_THRESHOLD_MS = 1000;
 
 	/**
 	 * Retry handler
@@ -3676,10 +3682,14 @@ public class MeshPublisher implements AutoCloseable {
 		response = client.upsertNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
 				params);
 
+		AtomicLong start = new AtomicLong();
 		return ensureRoles(task.roles)
 			.andThen(
 				response.toSingle()
-					.doOnSubscribe(disp -> saveNodeCounter.incrementAndGet())
+					.doOnSubscribe(disp -> {
+						start.set(System.currentTimeMillis());
+						saveNodeCounter.incrementAndGet();
+					})
 					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
@@ -3692,8 +3702,9 @@ public class MeshPublisher implements AutoCloseable {
 					.doOnSuccess(node -> {
 						if (renderResult != null) {
 							try {
+								long duration = System.currentTimeMillis() - start.get();
 								renderResult.info(MeshPublisher.class,
-										String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
+										String.format("written %d.%d into {%s} for node %d in %d ms", task.objType, task.objId, cr.getName(), task.nodeId, duration));
 							} catch (NodeException e) {
 							}
 						}

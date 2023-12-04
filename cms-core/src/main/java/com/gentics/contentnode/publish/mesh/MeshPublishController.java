@@ -19,6 +19,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.PrefixedThreadFactory;
 import com.gentics.contentnode.etc.TaskQueueSize;
+import com.gentics.contentnode.etc.Timing;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.jmx.MBeanRegistry;
@@ -27,8 +28,10 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.publish.CNWorkPhase;
 import com.gentics.contentnode.publish.PublishController;
 import com.gentics.contentnode.publish.PublishWorkPhaseConstants;
+import com.gentics.contentnode.publish.Publisher;
 import com.gentics.contentnode.publish.SimplePublishInfo;
 import com.gentics.contentnode.publish.WorkPhaseHandler;
+import com.gentics.contentnode.render.RenderResult;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Type;
 import com.gentics.lib.etc.IWorkPhase;
 import com.gentics.mesh.MeshStatus;
@@ -128,13 +131,19 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	protected TaskQueueSize writeTasks = new TaskQueueSize();
 
 	/**
+	 * Optional render result (if controller is used by the publish process)
+	 */
+	protected RenderResult renderResult = null;
+
+	/**
 	 * Get an instance of the Mesh Publish Controller containing MeshPublishers for all Mesh CRs that are assigned to Nodes that do not have publishing disabled
 	 * @param publishInfo publish info
+	 * @param renderResult render result
 	 * @return MeshPublishController instance
 	 * @throws NodeException
 	 */
 	@SuppressWarnings("resource")
-	public static MeshPublishController get(SimplePublishInfo publishInfo) throws NodeException {
+	public static MeshPublishController get(SimplePublishInfo publishInfo, RenderResult renderResult) throws NodeException {
 		MeshPublishController controller;
 		try {
 			controller = new MeshPublishController();
@@ -168,7 +177,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 
 		int rendererThreadPoolSize = ObjectTransformer.getInt(t.getRenderType().getPreferences().getProperty("contentnode.config.loadbalancing.threadlimit"),
 				MeshPublisher.RENDERERPOOL_SIZE);
-		controller.init(rendererThreadPoolSize, true);
+		controller.init(rendererThreadPoolSize, true, renderResult);
 
 		return controller;
 	}
@@ -190,7 +199,7 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 		MeshPublisher mp = new MeshPublisher(cr);
 		mp.controller = controller;
 		controller.publishers.add(mp);
-		controller.init(1, false);
+		controller.init(1, false, null);
 
 		return controller;
 	}
@@ -208,9 +217,11 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * This will submit a callable to the {@link #writerThreadPool} that handles all write tasks
 	 * @param rendererThreadPoolSize size of the renderer thread pool
 	 * @param publishProcess true when the controller is used for the publish process
+	 * @param renderResult optional render result
 	 */
-	protected void init(int rendererThreadPoolSize, boolean publishProcess) {
+	protected void init(int rendererThreadPoolSize, boolean publishProcess, RenderResult renderResult) {
 		this.publishProcess = publishProcess;
+		this.renderResult = renderResult;
 		if (publishProcess) {
 			MBeanRegistry.registerMBean(this, "Publish", "MeshPublishController");
 		}
@@ -257,13 +268,17 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 */
 	protected void runRenderTask(Runnable renderTask) throws NodeException {
 		if (publishProcess) {
-			try {
+			try (Timing t = Timing.get(MeshPublisher.QUEUE_WAIT_LOG_THRESHOLD_MS, duration -> {
+				if (renderResult != null && renderTask != null) {
+					renderResult.info(Publisher.class, String.format("Waited %d ms to put rendertask into queue", duration));
+				}
+			})) {
 				renderTasks.awaitNotFull();
+				renderTasks.schedule();
+				rendererThreadPool.submit(renderTask);
 			} catch (InterruptedException e) {
 				throw new NodeException("Error while waiting for a place in the render task queue", e);
 			}
-			renderTasks.schedule();
-			rendererThreadPool.submit(renderTask);
 		} else {
 			renderTask.run();
 		}
@@ -461,9 +476,13 @@ public class MeshPublishController extends StandardMBean implements AutoCloseabl
 	 * @throws NodeException
 	 */
 	public void putWriteTask(AbstractWriteTask task) throws NodeException {
-		try {
-			writeTasks.schedule();
+		try (Timing t = Timing.get(MeshPublisher.QUEUE_WAIT_LOG_THRESHOLD_MS, duration -> {
+			if (renderResult != null && task != null) {
+				renderResult.info(Publisher.class, String.format("Waited %d ms to put task {%s} into queue", duration, task.toString()));
+			}
+		})) {
 			taskQueue.put(task);
+			writeTasks.schedule();
 		} catch (InterruptedException e) {
 			throw new NodeException(e);
 		}

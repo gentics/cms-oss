@@ -9,6 +9,9 @@
         text-transform: uppercase;  
         font-weight: 300;
     }
+    & > icon {
+        cursor: pointer;
+    }
     .collapsed {
         transform: rotate(-90deg);
     }
@@ -33,6 +36,7 @@
         padding: 0.3rem 0;
         padding-left: 0.4rem;
         margin: 0rem 0;
+        cursor: pointer;
 
         .language {
             font-size: 12px;

@@ -69,6 +69,7 @@
             <gtx-dashboard-item
                 [routerLink]="'/' + AdminUIModuleRoutes.MESH_BROWSER"
                 icon="mesh"
+                [attr.data-id]="AdminUIModuleRoutes.MESH_BROWSER"
                 [title]="'dashboard.mesh_browser' | i18n"
                 [class.disabled]="!(meshBrowserModuleEnabled$ | async)"
                 [disabled]="!(meshBrowserModuleEnabled$ | async)"

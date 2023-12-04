@@ -7,6 +7,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { CreateContentRepositoryModalComponent } from '../create-content-repository-modal/create-content-repository-modal.component';
+import { ManageContentRepositoryRolesModal } from '../manage-content-repository-roles-modal/manage-content-repository-roles-modal.component';
 
 @Component({
     selector: 'gtx-content-repository-master',
@@ -46,5 +47,14 @@ export class ContentRepositoryMasterComponent extends BaseTableMasterComponent<C
         }
 
         this.tableLoader.reload();
+    }
+
+    async openRoleSync(contentRepository: ContentRepositoryBO): Promise<void> {
+        const dialog = await this.modalService.fromComponent(
+            ManageContentRepositoryRolesModal,
+            { closeOnOverlayClick: false, width: '50%' },
+            { contentRepository },
+        );
+        await dialog.open();
     }
 }

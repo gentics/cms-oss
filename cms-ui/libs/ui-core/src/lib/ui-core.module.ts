@@ -40,8 +40,8 @@ import {
     SplitViewContainerComponent,
     TabComponent,
     TabGroupComponent,
-    TableComponent,
     TabPaneComponent,
+    TableComponent,
     TabsComponent,
     TextareaComponent,
     ToastComponent,
@@ -66,7 +66,7 @@ import {
     TooltipContentDirective,
     TooltipTriggerDirective,
 } from './directives';
-import { configFactory, ConfigService, CustomConfig, defaultConfig, optionsConfig, PredefinedConfig } from './module.config';
+import { ConfigService, CustomConfig, PredefinedConfig, configFactory, defaultConfig, optionsConfig } from './module.config';
 import { IncludesPipe, MatchesMimeTypePipe, TableActionEnabledPipe, TableCellMapperPipe, ValuePathPipe } from './pipes';
 import {
     DateTimePickerFormatProvider,

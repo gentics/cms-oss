@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor } from '@angular/forms';
 import { KeyCode } from '../../common';
-import { generateFormProvider } from '../../utils';
+import { cancelEvent, coerceToBoolean, generateFormProvider } from '../../utils';
 
 /**
  * The SearchBar component should be the primary search input for the app. It should be
@@ -48,76 +48,83 @@ import { generateFormProvider } from '../../utils';
     styleUrls: ['./search-bar.component.scss'],
     providers: [generateFormProvider(SearchBarComponent)],
 })
-export class SearchBarComponent implements ControlValueAccessor {
+export class SearchBarComponent implements ControlValueAccessor, OnChanges {
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly cancelEvent = cancelEvent;
 
     /**
      * Sets the input field to be auto-focused. Handled by `AutofocusDirective`.
      */
     @Input()
-    autofocus = false;
+    public autofocus = false;
 
     /**
      * Value that pre-fills the search input with a string value.
      */
     @Input()
-    query = '';
+    public query = '';
 
     /**
      * Sets the icon displayed for the submit button
      */
     @Input()
-    submitIcon = 'search';
+    public submitIcon = 'search';
 
     /**
      * Sets the icon displayed for the clear button
      */
     @Input()
-    clearIcon = 'close';
+    public clearIcon = 'close';
 
     /**
      * Placeholder text which is shown when no text is entered.
      */
     @Input()
-    placeholder = 'Search';
+    public placeholder = 'Search';
 
     /**
      * Setting this attribute will prevent the "clear" button from being displayed
      * when the query is non-empty.
      */
     @Input()
-    get hideClearButton(): boolean {
-        return this._hideClearButton === true;
-    }
-    set hideClearButton(val: boolean) {
-        this._hideClearButton = val != null && val !== false;
-    }
+    public hideClearButton: boolean;
 
     /**
      * Fired when either the search button is clicked, or
      * the "enter" key is pressed while the input has focus.
      */
     @Output()
-    search = new EventEmitter<string>();
+    public search = new EventEmitter<string>();
 
     /**
      * Fired whenever the value of the input changes.
      */
     @Output()
-    change = new EventEmitter<string>();
+    public change = new EventEmitter<string>();
 
     /**
      * Fired when the clear button is clicked.
      */
     @Output()
-    clear = new EventEmitter<boolean>();
+    public clear = new EventEmitter<boolean>();
 
-    private _hideClearButton = false;
+    private cvaChange: (value: string) => void = () => {
+        // noop
+    };
+    private cvaTouch: () => void = () => {
+        // noop
+    };
 
-    // ValueAccessor members
-    onChange: any = (_: any) => { };
-    onTouched: any = () => { };
+    constructor(
+        private changeDetector: ChangeDetectorRef,
+    ) { }
 
-    constructor(private changeDetector: ChangeDetectorRef) { }
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.hideClearButton) {
+            this.hideClearButton = coerceToBoolean(this.hideClearButton);
+        }
+    }
 
     doSearch(): void {
         this.search.emit(this.query);
@@ -135,22 +142,28 @@ export class SearchBarComponent implements ControlValueAccessor {
     onInputChange(event: string): void {
         this.query = event;
         if (typeof event === 'string') {
-            this.onChange(event);
+            this.cvaChange(event);
             this.change.emit(event);
         }
     }
 
     onInputBlur(event: string): void {
         if (typeof event === 'string') {
-            this.onTouched(event);
+            this.cvaTouch();
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     writeValue(value: any): void {
         this.query = value;
         this.changeDetector.markForCheck();
     }
 
-    registerOnChange(fn: Function): void { this.onChange = fn; }
-    registerOnTouched(fn: Function): void { this.onTouched = fn; }
+    registerOnChange(fn: (value: string) => void): void {
+        this.cvaChange = fn;
+    }
+
+    registerOnTouched(fn: () => void): void {
+        this.cvaTouch = fn;
+    }
 }

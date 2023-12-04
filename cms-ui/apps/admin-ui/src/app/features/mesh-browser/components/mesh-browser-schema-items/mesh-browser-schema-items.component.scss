@@ -1,3 +1,5 @@
+@import "variables";
+
 .schema-header {
     margin: 0.5rem 0;
     margin-top: 0.5rem;
@@ -22,7 +24,7 @@
     padding: 0.2rem;
 
     .striped {
-        background-color: #E7E9EB;
+        background-color: $gtx-color-very-light-gray;
         border-radius: 2px;
     }
 
@@ -32,7 +34,7 @@
     }
 
     .schema-element {
-        color: #0096DC;
+        color: $gtx-color-primary;
         padding: 0.3rem 0;
         padding-left: 0.4rem;
         margin: 0rem 0;
@@ -44,13 +46,13 @@
             margin-left: 0.2rem;
             border-radius: 2px;
             padding: 0 3px;
-            background: #d7d7d7;
+            background: $gtx-color-light-gray;
             color: black;
             width: 20px;
 
             &.active {
-                border-bottom: 1px solid #313e44;
-                background-color: #0096DC;
+                border-bottom: 1px solid $gtx-color-off-black;
+                background-color: $gtx-color-primary;
             }
         }
     }

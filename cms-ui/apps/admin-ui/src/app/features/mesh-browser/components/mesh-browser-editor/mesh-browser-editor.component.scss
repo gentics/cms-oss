@@ -1,3 +1,5 @@
+@import "variables";
+
 .mesh-browser-detail{
     margin-left: 2rem;
     overflow: auto;
@@ -13,7 +15,7 @@
     margin: 0.5rem 0;
 
     .field-label {
-        color: #888;
+        color: $gtx-color-dark-gray;
         flex: 0 0 auto;
         width: 350px;
         text-transform: uppercase;
@@ -31,9 +33,9 @@
 
     .field-value {      
         flex: 1 1 auto;
-        background-color: #f5f5f5;
-        color: #6a6262;
-        border: 2px solid #d6d6d6;
+        background-color: $gtx-color-off-white;
+        color: $gtx-color-dark-gray;
+        border: 2px solid $gtx-color-light-gray;
         border-radius: 4px;
         padding: 0.4rem;
         width: 100%;

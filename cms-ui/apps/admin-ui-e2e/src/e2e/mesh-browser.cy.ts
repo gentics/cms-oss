@@ -25,11 +25,11 @@ describe('Content Repository', () => {
 
     describe('Mesh Browser', () => {
         beforeEach(() => {
-                cy.get('gtx-table')
-                    .find('.grid-row').contains(CR_NAME)
-                    .click();
+            cy.get('gtx-table')
+                .find('.grid-row').contains(CR_NAME)
+                .click();
 
-                cy.fixture('auth.json').then(auth => {
+            cy.fixture('auth.json').then(auth => {
                 cy.get('.login-form input[type="text"]').type(auth.mesh.username);
                 cy.get('.login-form input[type="password"]').type(auth.mesh.password);
                 cy.get('.login-form button[type="submit"]').click();
@@ -40,13 +40,12 @@ describe('Content Repository', () => {
 
         });
 
-        it('should list content', () => { 
+        it('should list content', () => {
             cy.get('.schema-items')
                 .should('have.length.gte', 1);
         });
 
-        it('should be able to navigate to node content', () => { 
-            cy.wait(1000);
+        it('should be able to navigate to node content', () => {
             cy.intercept('POST', '**graphql**').as('graphqlRequest');
 
             cy.get('.schema-items')
@@ -61,8 +60,7 @@ describe('Content Repository', () => {
             });
         });
 
-        it('should be able to open detail view', () => { 
-            cy.wait(1000);
+        it('should be able to open detail view', () => {
             cy.get('.schema-items')
                 .find('.schema-element')
                 .find('[data-is-container="false"]')

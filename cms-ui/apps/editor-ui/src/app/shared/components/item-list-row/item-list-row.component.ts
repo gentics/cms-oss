@@ -49,7 +49,7 @@ type AllowedItemType =
     templateUrl: './item-list-row.component.html',
     styleUrls: ['./item-list-row.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class ItemListRowComponent implements OnInit {
 
     readonly UIMode = UIMode;
@@ -250,7 +250,7 @@ export class ItemListRowComponent implements OnInit {
                     description: item.description || '',
                     language: language.code,
                     priority: item.priority,
-                    templateId: item.template ,
+                    templateId: item.templateId,
                 },
                 languageName: language.name,
                 pageId: item.id,

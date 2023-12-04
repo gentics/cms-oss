@@ -48,6 +48,7 @@ export class ContentRepositoryOperations
     getAll(options?: ContentRepositoryListOptions): Observable<ContentRepositoryBO<Raw>[]> {
         return this.api.contentrepositories.getContentrepositories(options).pipe(
             map(res => res.items.map(item => this.mapToBusinessObject(item, !!(options?.[LOAD_FOR_PACKAGE_LIST])))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(items => this.entityManager.addEntities(this.entityIdentifier, items)),
             this.catchAndRethrowError(),
         );
@@ -56,7 +57,7 @@ export class ContentRepositoryOperations
     /**
      * Loads a single content repository from the CMS and adds it to the EntityState.
      */
-    get(contentRepositoryId: string): Observable<ContentRepositoryBO<Raw>> {
+    get(contentRepositoryId: EntityIdType): Observable<ContentRepositoryBO<Raw>> {
         return this.api.contentrepositories.getContentRepository(contentRepositoryId).pipe(
             map(res => this.mapToBusinessObject(res.contentRepository)),
             tap(contentRepository => this.entityManager.addEntity(this.entityIdentifier, contentRepository)),
@@ -302,12 +303,11 @@ export class ContentRepositoryOperations
             // assign desired groups and unassign unwanted groups
             switchMap(([allNodes, nodesCurrentlyLinked]) => {
                 // calculate minimal amount of requests required
-                const _nodesShallBeLinked = nodeIdsSelected;
-                const _nodesShallNotBeLinked = allNodes.filter((node: Node<Normalized>) => !_nodesShallBeLinked.includes(node.id));
-                const _nodesCurrentlyNotLinked = allNodes.filter((node: Node<Normalized>) => !nodesCurrentlyLinked.includes(node));
+                const nodesShallNotBeLinked = allNodes.filter((node: Node<Normalized>) => !nodeIdsSelected.includes(node.id));
+                const nodesCurrentlyNotLinked = allNodes.filter((node: Node<Normalized>) => !nodesCurrentlyLinked.includes(node));
 
-                const nodesToLink = _nodesShallBeLinked.filter(id => !nodesCurrentlyLinked.map(fcl => fcl.id).includes(id));
-                const nodesToUnlink = _nodesShallNotBeLinked.filter(id => !_nodesCurrentlyNotLinked.includes(id));
+                const nodesToLink = nodeIdsSelected.filter(id => !nodesCurrentlyLinked.map(fcl => fcl.id).includes(id));
+                const nodesToUnlink = nodesShallNotBeLinked.filter(id => !nodesCurrentlyNotLinked.includes(id));
 
                 const assignRequests: Observable<any>[] = nodesToLink.map(nodeId => {
                     return this.addContentRepositoryToNode(contentRepositoryId, nodeId);
@@ -353,6 +353,7 @@ export class ContentRepositoryOperations
     ): Observable<ContentRepositoryFragmentBO<Raw>[]> {
         return this.api.contentrepositories.getContentRepositoryFragments(contentRepositoryId, options).pipe(
             map(res => res.items.map(item => this.mapFragmentToBusinessObject(item))),
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
             tap(items => this.entityManager.addEntities('contentRepositoryFragment', items)),
             this.catchAndRethrowError(),
         );
@@ -385,10 +386,10 @@ export class ContentRepositoryOperations
     /**
      * Change the groups assigned to a user
      * @param contentRepositoryId of user whose groups shall be changed
-     * @param crfragmentIds of groups to be assigned to the user
+     * @param crFragmentIds of groups to be assigned to the user
      * @returns user with updated group assignments
      */
-    changeFragmentsOfContentRepository(contentRepositoryId: string, crfragmentIds: string[]): Observable<void> {
+    changeFragmentsOfContentRepository(contentRepositoryId: string, crFragmentIds: string[]): Observable<void> {
         return forkJoin([
             this.crFragments.getEntitiesFromApi(),
             this.getAssignedFragments(contentRepositoryId).pipe(first()),
@@ -396,16 +397,15 @@ export class ContentRepositoryOperations
             // assign desired groups and unassign unwanted groups
             switchMap(([allFragments, fragmentsCurrentlyLinked]) => {
                 // calculate minimal amount of requests required
-                const _fragmentsShallBeLinked = crfragmentIds;
-                const _fragmentsShallNotBeLinked = allFragments
-                    .filter((fragment: ContentRepositoryFragmentBO<Raw>) => !_fragmentsShallBeLinked.includes(fragment.id))
+                const fragmentsShallNotBeLinked = allFragments
+                    .filter((fragment: ContentRepositoryFragmentBO<Raw>) => !crFragmentIds.includes(fragment.id))
                     .map(e => e.id);
-                const _fragmentsCurrentlyNotLinked = allFragments
+                const fragmentsCurrentlyNotLinked = allFragments
                     .filter((fragment: ContentRepositoryFragmentBO<Raw>) => !fragmentsCurrentlyLinked.map(e => e.id).includes(fragment.id))
                     .map(e => e.id);
 
-                const fragmentsToLink = _fragmentsShallBeLinked.filter(id => !fragmentsCurrentlyLinked.map(fcl => fcl.id).includes(id));
-                const fragmentsToUnlink = _fragmentsShallNotBeLinked.filter(id => !_fragmentsCurrentlyNotLinked.includes(id));
+                const fragmentsToLink = crFragmentIds.filter(id => !fragmentsCurrentlyLinked.map(fcl => fcl.id).includes(id));
+                const fragmentsToUnlink = fragmentsShallNotBeLinked.filter(id => !fragmentsCurrentlyNotLinked.includes(id));
 
                 const assignRequests: Observable<void>[] = fragmentsToLink.map(fragmentId => {
                     return this.addContentRepositoryToFragment(contentRepositoryId, fragmentId);
@@ -438,6 +438,35 @@ export class ContentRepositoryOperations
             })),
         );
     }
+
+    // MESH ROLES //////////////////////////////////////////////////////////////////////////////////////////////////#
+
+    public getAvailableMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
+        return this.api.contentrepositories.getAvailableContentRepositoryRoles(contentRepositoryId).pipe(
+            map(res => res.roles || []),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    public getAssignedMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
+        return this.api.contentrepositories.getAssignedContentRepositoryRoles(contentRepositoryId).pipe(
+            map(res => res.roles || []),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    public assignMeshRoles(contentRepositoryId: EntityIdType, roles: string[]): Observable<string[]> {
+        return this.api.contentrepositories.updateAssignedContentRepositoryRoles(contentRepositoryId, roles).pipe(
+            map(res => res.roles || []),
+            tap(() => this.notification.show({
+                type: 'success',
+                message: 'contentRepository.assign_mesh_roles_success',
+            })),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    // MAPPERS //////////////////////////////////////////////////////////////////////////////////////////////////#
 
     public mapToBusinessObject<T extends ModelType>(cr: ContentRepository<T>, forPackage: boolean = false): ContentRepositoryBO<T> {
         return {

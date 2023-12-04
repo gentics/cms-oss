@@ -5,6 +5,7 @@ import {
     ContentRepositoryFragmentListResponse,
     ContentRepositoryListOptions,
     ContentRepositoryListResponse,
+    ContentRepositoryListRolesResponse,
     ContentRepositoryResponse,
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
@@ -220,4 +221,22 @@ export class ContentrespositoryApi {
         return this.apiBase.delete(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`);
     }
 
+    /** MESH ROLES ************************************************************************************ */
+
+    getAvailableContentRepositoryRoles(contentRepositoryId: EntityIdType): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.get(`contentrepositories/${contentRepositoryId}/availableroles`);
+    }
+
+    getAssignedContentRepositoryRoles(contentRepositoryId: EntityIdType): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.get(`contentrepositories/${contentRepositoryId}/roles`);
+    }
+
+    updateAssignedContentRepositoryRoles(
+        contentRepositoryId: EntityIdType,
+        roles: string[],
+    ): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/roles`, {
+            roles,
+        });
+    }
 }

@@ -16,7 +16,8 @@ import {
 } from '@angular/core';
 import {
     UntypedFormControl,
-    UntypedFormGroup, Validators,
+    UntypedFormGroup,
+    Validators,
 } from '@angular/forms';
 import { BasePropertiesComponent, CONTROL_INVALID_VALUE, createNestedControlValidator } from '@gentics/cms-components';
 import {

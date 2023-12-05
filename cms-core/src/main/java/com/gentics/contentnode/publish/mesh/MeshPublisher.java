@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -325,6 +326,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Default timeouts in seconds
 	 */
 	public final static int DEFAULT_TIMEOUT = 60;
+
+	/**
+	 * Threshold in ms for logging the wait time when putting an item to a queue
+	 */
+	public final static int QUEUE_WAIT_LOG_THRESHOLD_MS = 1000;
 
 	/**
 	 * Retry handler
@@ -2732,7 +2738,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = new HashMap<>(roleMapSingle.blockingGet());
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
 		}
 		return roleMap;
 	}
@@ -3676,10 +3682,14 @@ public class MeshPublisher implements AutoCloseable {
 		response = client.upsertNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
 				params);
 
+		AtomicLong start = new AtomicLong();
 		return ensureRoles(task.roles)
 			.andThen(
 				response.toSingle()
-					.doOnSubscribe(disp -> saveNodeCounter.incrementAndGet())
+					.doOnSubscribe(disp -> {
+						start.set(System.currentTimeMillis());
+						saveNodeCounter.incrementAndGet();
+					})
 					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
@@ -3692,8 +3702,9 @@ public class MeshPublisher implements AutoCloseable {
 					.doOnSuccess(node -> {
 						if (renderResult != null) {
 							try {
+								long duration = System.currentTimeMillis() - start.get();
 								renderResult.info(MeshPublisher.class,
-										String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
+										String.format("written %d.%d into {%s} for node %d in %d ms", task.objType, task.objId, cr.getName(), task.nodeId, duration));
 							} catch (NodeException e) {
 							}
 						}
@@ -3847,14 +3858,12 @@ public class MeshPublisher implements AutoCloseable {
 			.filter(role -> !currentRolesMap.containsKey(role))
 			.doOnNext(role -> logger.debug("Creating missing role in Mesh: " + role))
 			.map(role -> new RoleCreateRequest().setName(role))
-			.flatMapCompletable(request -> client.createRole(request).toCompletable())
-			// Refresh the roles map.
-			.andThen(client.findRoles().toSingle())
-			.flatMapObservable(response -> Observable.fromIterable(response.getData()))
-			.filter(role -> !"admin".equals(role.getName()))
-			.toMap(RoleResponse::getName, RoleResponse::getUuid)
-			.doOnSuccess(loadedRolesMap -> roleMap = loadedRolesMap)
-			.ignoreElement();
+			.flatMapSingle(request -> client.createRole(request).toSingle())
+			.flatMapCompletable(role -> {
+				// put the created map into the roles map
+				currentRolesMap.put(role.getName(), role.getUuid());
+				return Completable.complete();
+			});
 	}
 
 	/**
@@ -4387,6 +4396,10 @@ public class MeshPublisher implements AutoCloseable {
 			if (projectResult != null && projectResult.isPresent()) {
 				ProjectResponse project = projectResult.get();
 
+				// read roles with read permission
+				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
+						.map(RoleReference::getName).collect(Collectors.toSet()));
+
 				String currentProjectName = project.getName();
 				rootNodeUuid = project.getRootNode().getUuid();
 				if (node != null) {
@@ -4888,6 +4901,13 @@ public class MeshPublisher implements AutoCloseable {
 			}
 
 			BranchResponse branch = client.createBranch(currentProjectName, create).blockingGet();
+
+			// set the permissions on the branch
+			if (!rolesWithPermissions.isEmpty()) {
+				List<RoleReference> roleReferences = rolesWithPermissions.stream()
+						.map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
+				client.grantBranchRolePermissions(currentProjectName, branch.getUuid(), new ObjectPermissionGrantRequest().setRead(roleReferences)).blockingAwait();
+			}
 
 			if (tagAsLatest) {
 				branch = client.addTagToBranch(currentProjectName, branch.getUuid(), latestTagUuid).blockingGet();

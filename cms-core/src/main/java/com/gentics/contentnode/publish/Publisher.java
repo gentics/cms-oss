@@ -413,7 +413,7 @@ public class Publisher implements Runnable {
 				}
 
 				// initialize MeshPublisher instances
-				try (MeshPublishController meshPublishController = MeshPublishController.get(myPublishInfo)) {
+				try (MeshPublishController meshPublishController = MeshPublishController.get(myPublishInfo, renderResult)) {
 					objectsToPublishCount = initializeWorkPhases(nodes, meshPublishController);
 
 					// start dependencymap cleanup

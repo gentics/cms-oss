@@ -1,0 +1,3 @@
+The logging for publish runs has been improved to include the durations for writing
+objects into a Mesh Content.Repository and also the waiting time for putting items into
+the internal queue.

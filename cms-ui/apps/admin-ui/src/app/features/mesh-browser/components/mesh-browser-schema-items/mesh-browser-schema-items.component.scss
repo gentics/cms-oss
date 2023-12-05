@@ -24,7 +24,7 @@
     padding: 0.2rem;
 
     .striped {
-        background-color: $gtx-color-very-light-gray;
+        background-color: $gtx-color-off-white;
         border-radius: 2px;
     }
 
@@ -41,18 +41,20 @@
         cursor: pointer;
 
         .language {
-            font-size: 12px;
+            font-size: 11px;
             margin-right: 5px;
             margin-left: 0.2rem;
-            border-radius: 2px;
-            padding: 0 3px;
+            border-radius: 3px;
+            padding: 1px 4px;
+            text-transform: uppercase;
             background: $gtx-color-light-gray;
             color: black;
-            width: 20px;
+            font-weight: 500;
 
             &.active {
                 border-bottom: 1px solid $gtx-color-off-black;
                 background-color: $gtx-color-primary;
+                color: white;
             }
         }
     }

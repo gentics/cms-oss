@@ -2738,7 +2738,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = new HashMap<>(roleMapSingle.blockingGet());
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
 		}
 		return roleMap;
 	}
@@ -3858,14 +3858,12 @@ public class MeshPublisher implements AutoCloseable {
 			.filter(role -> !currentRolesMap.containsKey(role))
 			.doOnNext(role -> logger.debug("Creating missing role in Mesh: " + role))
 			.map(role -> new RoleCreateRequest().setName(role))
-			.flatMapCompletable(request -> client.createRole(request).toCompletable())
-			// Refresh the roles map.
-			.andThen(client.findRoles().toSingle())
-			.flatMapObservable(response -> Observable.fromIterable(response.getData()))
-			.filter(role -> !"admin".equals(role.getName()))
-			.toMap(RoleResponse::getName, RoleResponse::getUuid)
-			.doOnSuccess(loadedRolesMap -> roleMap = loadedRolesMap)
-			.ignoreElement();
+			.flatMapSingle(request -> client.createRole(request).toSingle())
+			.flatMapCompletable(role -> {
+				// put the created map into the roles map
+				currentRolesMap.put(role.getName(), role.getUuid());
+				return Completable.complete();
+			});
 	}
 
 	/**
@@ -4398,6 +4396,10 @@ public class MeshPublisher implements AutoCloseable {
 			if (projectResult != null && projectResult.isPresent()) {
 				ProjectResponse project = projectResult.get();
 
+				// read roles with read permission
+				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
+						.map(RoleReference::getName).collect(Collectors.toSet()));
+
 				String currentProjectName = project.getName();
 				rootNodeUuid = project.getRootNode().getUuid();
 				if (node != null) {
@@ -4899,6 +4901,13 @@ public class MeshPublisher implements AutoCloseable {
 			}
 
 			BranchResponse branch = client.createBranch(currentProjectName, create).blockingGet();
+
+			// set the permissions on the branch
+			if (!rolesWithPermissions.isEmpty()) {
+				List<RoleReference> roleReferences = rolesWithPermissions.stream()
+						.map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
+				client.grantBranchRolePermissions(currentProjectName, branch.getUuid(), new ObjectPermissionGrantRequest().setRead(roleReferences)).blockingAwait();
+			}
 
 			if (tagAsLatest) {
 				branch = client.addTagToBranch(currentProjectName, branch.getUuid(), latestTagUuid).blockingGet();

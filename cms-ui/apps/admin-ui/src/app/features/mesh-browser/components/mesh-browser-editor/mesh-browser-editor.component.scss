@@ -56,3 +56,16 @@
         }
     }
 }
+
+
+.language-indicator {
+    font-size: 19px;
+    margin-right: 5px;
+    margin-left: 0.2rem;
+    border-radius: 3px;
+    padding: 1px 4px;
+    text-transform: uppercase;
+    color: black;
+    font-weight: 400;
+    border: 1px solid $gtx-color-primary;
+}

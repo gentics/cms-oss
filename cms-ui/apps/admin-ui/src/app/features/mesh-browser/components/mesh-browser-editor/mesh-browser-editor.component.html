@@ -8,10 +8,15 @@
     />
 
     <gtx-entity-detail-header 
-        [title]="title + ', '+  currentLanguage.toLocaleUpperCase() "
         [saveDisabled]="true"
         (cancelClick)="detailsClose()"
-    />
+    >   
+        <h2>
+            {{ title   }}
+            <span class="language-indicator">{{ currentLanguage.toLocaleUpperCase() }}</span>
+        </h2>
+
+    </gtx-entity-detail-header>
 
     <ng-container *ngFor="let field of fields">
         <div class="field">

@@ -23,7 +23,6 @@ import {
     MeshBrowserMasterComponent,
     MeshBrowserModuleMasterComponent,
 } from './components';
-import { MeshBrowserCanActivateGuard } from './providers';
 
 
 export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
@@ -79,7 +78,6 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
                     [ROUTE_PERMISSIONS_KEY]: [],
                 },
                 canActivate: [
-                    (routeComponent) => inject(MeshBrowserCanActivateGuard).canActivate(routeComponent),
                 ],
                 canDeactivate: [
                     (routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent),

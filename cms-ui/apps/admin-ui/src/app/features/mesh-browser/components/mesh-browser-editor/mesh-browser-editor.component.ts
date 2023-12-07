@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType, SchemaField } from '@gentics/mesh-models';
 import { MeshField } from '../../models/mesh-browser-models';
-import { MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
 
 
 @Component({
@@ -39,9 +39,16 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         protected appState: AppStateService,
         protected loader: MeshBrowserLoaderService,
         protected imageService: MeshBrowserImageService,
+        protected activationGuard: MeshBrowserCanActivateGuard,
     ) { }
 
-    ngOnInit(): void {
+    async ngOnInit(): Promise<void> {
+        const canActivate = await this.activationGuard.canActivate(this.route.snapshot)
+        if (!canActivate) {
+            this.detailsClose();
+            return;
+        }
+
         this.updateComponent()
     }
 

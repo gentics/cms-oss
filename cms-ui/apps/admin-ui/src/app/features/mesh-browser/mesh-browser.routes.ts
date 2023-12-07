@@ -77,7 +77,8 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
                 data: {
                     [ROUTE_PERMISSIONS_KEY]: [],
                 },
-                canActivate: [],
+                canActivate: [
+                ],
                 canDeactivate: [
                     (routeComponent) => inject(DiscardChangesGuard).canDeactivate(routeComponent),
                 ],

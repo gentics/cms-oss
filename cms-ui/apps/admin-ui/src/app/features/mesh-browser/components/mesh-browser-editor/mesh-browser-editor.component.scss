@@ -1,3 +1,5 @@
+@import "variables";
+
 .mesh-browser-detail{
     margin-left: 2rem;
     overflow: auto;
@@ -13,7 +15,7 @@
     margin: 0.5rem 0;
 
     .field-label {
-        color: #888;
+        color: $gtx-color-dark-gray;
         flex: 0 0 auto;
         width: 350px;
         text-transform: uppercase;
@@ -31,7 +33,9 @@
 
     .field-value {      
         flex: 1 1 auto;
-        border: 1px dotted #0096DC;
+        background-color: $gtx-color-off-white;
+        color: $gtx-color-dark-gray;
+        border: 2px solid $gtx-color-light-gray;
         border-radius: 4px;
         padding: 0.4rem;
         width: 100%;
@@ -51,4 +55,17 @@
             max-height: 100%;
         }
     }
+}
+
+
+.language-indicator {
+    font-size: 19px;
+    margin-right: 5px;
+    margin-left: 0.2rem;
+    border-radius: 3px;
+    padding: 1px 4px;
+    text-transform: uppercase;
+    color: black;
+    font-weight: 400;
+    border: 1px solid $gtx-color-primary;
 }

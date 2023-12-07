@@ -1,4 +1,4 @@
-<div class="mesh-browser-container">
+<div [class.logged-out]="loggedIn !== true" class="mesh-browser-container">
 
     <div class="overview-header">
         <gtx-button
@@ -7,7 +7,7 @@
             size="small"
             (click)="navigateBack()"
         >
-            <icon left>arrow_back</icon> Back
+            <icon left>arrow_back</icon> {{ 'common.back_button' | i18n }}
         </gtx-button>
 
         <div class="overview-title">Mesh {{ 'common.repository_plural' | i18n }}</div>
@@ -21,7 +21,7 @@
     >
 
         <ng-container *ngIf="loggedIn">
-            <h1>{{ 'mesh.browser_title'  | i18n }} "{{ selectedRepository?.name }}"</h1>
+            <h1>{{ 'mesh.browser_title'  | i18n }} „{{ selectedRepository?.name }}“</h1>
 
             <ng-container *ngIf="!!currentProject else noProjectRenderer">
 
@@ -57,6 +57,6 @@
 
 <ng-template #noProjectRenderer>
     <div class="no-project">
-        <h4>No Project available</h4>
+        <h4>{{ 'browser_no_projects' | i18n }}</h4>
     </div>
 </ng-template>

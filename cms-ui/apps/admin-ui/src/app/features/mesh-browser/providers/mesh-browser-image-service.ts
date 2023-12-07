@@ -28,7 +28,6 @@ export class MeshBrowserImageService {
             lang: language,
             branch: branchUuid,
             ...request.params,
-            ...this.createAdditionalImageParams(),
         };
 
         let fullUrl = request.url;

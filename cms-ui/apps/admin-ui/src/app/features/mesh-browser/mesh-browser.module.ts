@@ -11,6 +11,7 @@ import { SharedModule } from '../../shared/shared.module';
 import {
     ContentRepositoryTableComponent,
     MeshBrowserBreadcrumbComponent,
+    MeshBrowserContentVersionComponent,
     MeshBrowserEditorComponent,
     MeshBrowserLanguageSwitcherComponent,
     MeshBrowserMasterComponent,
@@ -21,6 +22,7 @@ import {
 } from './components';
 import { MESH_BROWSER_ROUTES } from './mesh-browser.routes';
 import {
+    MeshBrowserCanActivateGuard,
     MeshBrowserContentRepositoryTableLoaderService,
     MeshBrowserImageService,
     MeshBrowserLoaderService,
@@ -38,12 +40,14 @@ import {
         MeshBrowserProjectSwitcherComponent,
         MeshBrowserLanguageSwitcherComponent,
         MeshBrowserBreadcrumbComponent,
+        MeshBrowserContentVersionComponent,
     ],
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,
         MeshBrowserLoaderService,
         MeshBrowserNavigatorService,
         MeshBrowserImageService,
+        MeshBrowserCanActivateGuard,
         provideRouter(MESH_BROWSER_ROUTES, withComponentInputBinding()),
     ],
     imports: [

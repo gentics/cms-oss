@@ -1,10 +1,13 @@
+@import "variables";
+
+
 .breadcrumb-container {
     margin-bottom: -0.7rem;
 }
 
 .breadcrumb-item {
     font-size: 14px;
-    color: rgb(128, 128, 128); 
+    color: $gtx-breadcrumbs-inactive-color; 
     
     &:not(:first-child):before{
         content: "\e5cc ";

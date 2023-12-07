@@ -76,6 +76,15 @@ export class MeshBrowserLoaderService {
                                 uuid
                                 displayName
                                 isContainer
+                                isPublished
+                                isDraft
+                                version
+                                versions {
+                                    version, 
+                                    published
+                                    draft 
+                                    created
+                                }
                                 language
                                 languages {
                                     language

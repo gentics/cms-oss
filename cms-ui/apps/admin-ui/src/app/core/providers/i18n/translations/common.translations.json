@@ -279,6 +279,10 @@
         "en": "Okay",
         "de": "OK"
     },
+    "back_button": {
+        "en": "Back",
+        "de": "Zurück"
+    },
     "create_button": {
         "en": "Create",
         "de": "Erstellen"

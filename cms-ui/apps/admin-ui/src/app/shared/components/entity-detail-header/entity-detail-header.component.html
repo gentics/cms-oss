@@ -1,7 +1,12 @@
 <div class="gtx-entity-details-tab-content-header flex-container">
-    <h2 class="gtx-entity-details-tab-content-header-title flex-item">
+
+
+    <h2 *ngIf="title" class="gtx-entity-details-tab-content-header-title flex-item">
         {{ title }}
     </h2>
+
+    <ng-content></ng-content>
+
     <div class="gtx-entity-details-tab-content-header-buttons flex-item">
         <gtx-button
             *ngIf="saveClick.observers.length > 0"

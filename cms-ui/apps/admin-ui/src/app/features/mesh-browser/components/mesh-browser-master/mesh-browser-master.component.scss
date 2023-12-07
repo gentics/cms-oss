@@ -1,4 +1,13 @@
 .mesh-browser-container {
+
+    &.logged-out {
+        margin-top:1rem;
+
+        .login-gate-wrapper {
+            margin-top: 1rem;
+        }
+    }
+
     overflow-y: auto;
 
     .login-gate-wrapper {

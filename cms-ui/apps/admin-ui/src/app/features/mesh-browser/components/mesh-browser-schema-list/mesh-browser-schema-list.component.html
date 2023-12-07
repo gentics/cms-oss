@@ -1,17 +1,13 @@
 <div class="schema-list-wrapper">
     <ng-container *ngFor="let schema of schemas">
-        <div>
             <gtx-mesh-browser-schema-items
                 [currentProject]="currentProject"
                 [schemaName]="schema.name"
-                [schemaElements]="schema.elements"
                 [currentNodeUuid]="currentNodeUuid"
                 [currentBranch]="currentBranch"
                 [languages]="languages"
                 [currentLanguage]="currentLanguage"
                 (nodeChanged)="nodeChanged($event)"
             />
-        </div>  
-
     </ng-container>
 </div>

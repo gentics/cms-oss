@@ -1,10 +1,12 @@
 
 <div [class]="publishedState.toLocaleLowerCase()"  class="content-state-wrapper" [title]="title">
     <div class="state-icon">
-        <icon *ngIf="publishedState === 'PUBLISHED'" class="published">cloud_on</icon>
-        <icon *ngIf="publishedState === 'ARCHIVED'" class="archived">cloud_on</icon>
-        <icon *ngIf="publishedState === 'DRAFT'" class="draft">cloud_off</icon>
-        <icon *ngIf="publishedState === 'UPDATED'" class="updated">cloud_upload</icon>
+        <container-element [ngSwitch]="publishedState">
+            <icon *ngSwitchCase="PublishedState.PUBLISHED" class="published">cloud_on</icon>
+            <icon *ngSwitchCase="PublishedState.ARCHIVED" class="archived">cloud_on</icon>
+            <icon *ngSwitchCase="PublishedState.DRAFT" class="draft">cloud_off</icon>
+            <icon *ngSwitchCase="PublishedState.UPDATED" class="updated">cloud_upload</icon>
+        </container-element>
     </div>
     <span class="state-text">{{ publishedState }}</span>
 </div>

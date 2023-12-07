@@ -12,6 +12,8 @@ export class MeshBrowserContentVersionComponent implements OnInit {
     @Input()
     public schemaElement: SchemaElement;
 
+    public readonly PublishedState = PublishedState;
+
     public publishedState: PublishedState;
 
     public title = '';
@@ -31,7 +33,7 @@ export class MeshBrowserContentVersionComponent implements OnInit {
     }
 
 
-    getPublishedState(): PublishedState {
+    private getPublishedState(): PublishedState {
         if (this.schemaElement.isPublished) {
             return PublishedState.PUBLISHED;
         }
@@ -41,7 +43,7 @@ export class MeshBrowserContentVersionComponent implements OnInit {
             const isDraft = version.draft
 
             if (isDraft) {
-                if (this.getPublishedVersion()) {
+                if (this.hasPublishedVersion()) {
                     return PublishedState.UPDATED;
                 }
                 if (this.schemaElement.isDraft) {
@@ -61,14 +63,14 @@ export class MeshBrowserContentVersionComponent implements OnInit {
     }
 
 
-    private getPublishedVersion(): SchemaElementVersion {
+    private hasPublishedVersion(): boolean {
         for (const version of this.schemaElement.versions) {
             if (version.published) {
-                return version;
+                return true;
             }
         }
 
-        return null;
+        return false;
     }
 
 

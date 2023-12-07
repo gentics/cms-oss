@@ -40,6 +40,10 @@
         margin: 0rem 0;
         cursor: pointer;
 
+        .title {
+            display: flex;
+        }
+
         .language {
             font-size: 11px;
             margin-right: 5px;

@@ -7,3 +7,4 @@ export * from './mesh-browser-project-switcher/mesh-browser-project-switcher.com
 export * from './mesh-browser-language-switcher/mesh-browser-language-switcher.component';
 export * from './mesh-browser-module-master/mesh-browser-module-master.component';
 export * from './mesh-browser-breadcrumbs/mesh-browser-breadcrumbs.component';
+export * from './mesh-browser-content-version/mesh-browser-content-version.component';

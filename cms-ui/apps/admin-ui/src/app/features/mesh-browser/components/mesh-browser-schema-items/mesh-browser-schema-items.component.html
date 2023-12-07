@@ -19,7 +19,13 @@
                     {{  element.isContainer ? 'folder' : 'description' }}
                 </icon> 
 
-                <div (click)="loadContent(element)">{{ element.displayName ?? element?.uuid }}</div>
+                <div class="title" (click)="loadContent(element)">
+                   <span> {{ element.displayName ?? element?.uuid }}  </span>
+                
+                    <gtx-mesh-browser-content-version 
+                        [schemaElement]="element"
+                    />
+                </div>
 
                 <span *ngFor="let language of element.languages" [class.active]="language.language === currentLanguage" class="language">
                     {{ language.language }}

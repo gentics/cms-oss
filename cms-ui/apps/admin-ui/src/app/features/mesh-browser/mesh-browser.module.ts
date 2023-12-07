@@ -11,6 +11,7 @@ import { SharedModule } from '../../shared/shared.module';
 import {
     ContentRepositoryTableComponent,
     MeshBrowserBreadcrumbComponent,
+    MeshBrowserContentVersionComponent,
     MeshBrowserEditorComponent,
     MeshBrowserLanguageSwitcherComponent,
     MeshBrowserMasterComponent,
@@ -39,6 +40,7 @@ import {
         MeshBrowserProjectSwitcherComponent,
         MeshBrowserLanguageSwitcherComponent,
         MeshBrowserBreadcrumbComponent,
+        MeshBrowserContentVersionComponent,
     ],
     providers: [
         MeshBrowserContentRepositoryTableLoaderService,

@@ -44,6 +44,10 @@ export class MeshBrowserContentVersionComponent implements OnInit {
                 if (this.getPublishedVersion()) {
                     return PublishedState.UPDATED;
                 }
+                if (this.schemaElement.isDraft) {
+                    // no published version and draft => ARCHIVED
+                    return PublishedState.ARCHIVED
+                }
 
                 return PublishedState.DRAFT;
             }
@@ -53,7 +57,7 @@ export class MeshBrowserContentVersionComponent implements OnInit {
             }
         }
 
-        return PublishedState.ARCHIVED;
+        return PublishedState.DRAFT;
     }
 
 

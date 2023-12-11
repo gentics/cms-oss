@@ -1,10 +1,10 @@
 import { TemplateBO } from '@admin-ui/common';
-import { I18nNotificationService, NodeOperations, NodeTableLoaderService } from '@admin-ui/core';
+import { I18nNotificationService, NodeOperations, NodeTableLoaderService, TemplateOperations } from '@admin-ui/core';
 import { NodeDataService } from '@admin-ui/shared';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { EntityIdType, IndexById, Node, Raw, Template } from '@gentics/cms-models';
+import { EntityIdType, IndexById, Node, Raw } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
-import { Subscription, forkJoin } from 'rxjs';
+import { combineLatest, Subscription, forkJoin } from 'rxjs';
 import { first, map, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -19,11 +19,11 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
     public templates: TemplateBO[] = [];
 
     public loading = false;
-    public selectedIds: number[] = [];
+    public selectedIds: string[] = [];
 
     protected nodes: IndexById<Node<Raw>> = {};
     protected selectedPerTemplate: { [templateId: EntityIdType]: number[] } = {};
-    protected subscription = new Subscription();
+    protected subscriptions: Subscription[] = [];
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -31,6 +31,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         protected nodeOperations: NodeOperations,
         protected nodeTableLoader: NodeTableLoaderService,
         protected notification: I18nNotificationService,
+        protected templateOperations: TemplateOperations,
     ) {
         super();
     }
@@ -39,39 +40,47 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
         this.loading = true;
         this.changeDetector.markForCheck();
 
-        this.subscription.add(this.nodeData.watchAllEntities().pipe(
-            first(),
-            switchMap(nodes => {
-                this.nodes = {};
-                nodes.forEach(node => this.nodes[node.id] = node);
-
-                return forkJoin(nodes
-                    .map(node => this.nodeOperations.getTemplates(node.id).pipe(
-                        map(templateRes => ([node, templateRes.items])),
-                    )),
+        this.subscriptions.push(combineLatest([this.nodeData.watchAllEntities(), forkJoin(this.templates.map(template => {
+                // for every template, get the list of nodes to which the template is assigned
+                return this.templateOperations.getLinkedNodes(template.id).pipe(
+                    map(linkedNodes => [template, linkedNodes]),
                 );
-            }),
-        ).subscribe((arr: [node: Node, templates: Template[]][]) => {
-            const newSelection = new Set<number>();
+            }))],
+        ).subscribe(([nodes, templateData]: [Node[], [template: TemplateBO, linkedNodes: Node[]][]]) => {
+            let nodeIds: number[] = [];
+            this.nodes = {};
+            nodes.forEach(node => {
+                this.nodes[node.id] = node;
+                nodeIds.push(node.id);
+            });
+
+            const newSelection = new Set<string>();
             const templateIds = this.templates.map(t => Number(t.id));
+
+            // for every template, collect the node IDs to which the template is assigned
             this.selectedPerTemplate = {};
+            templateData.forEach(([template, linkedNodes]) => {
+                linkedNodes.forEach(node => {
+                    let templateId = Number(template.id);
+                    let nodeId = Number(node.id);
+                    this.selectedPerTemplate[templateId] = this.selectedPerTemplate[templateId] ?? [];
+                    this.selectedPerTemplate[templateId].push(nodeId);
+                });
+            });
 
-            arr.forEach(([node, nodeTemplates]) => {
-                const nodeTemplateIds = nodeTemplates.map(t => Number(t.id));
+            // for every node, check whether all given templates are assigned
+            nodeIds.forEach(nodeId => {
                 let nodeHasAllTemplates = true;
-
                 for (const id of templateIds) {
-                    if (!nodeTemplateIds.includes(id)) {
+                    if (!this.selectedPerTemplate[id] || !this.selectedPerTemplate[id].includes(nodeId)) {
                         nodeHasAllTemplates = false;
-                    } else {
-                        this.selectedPerTemplate[id] = this.selectedPerTemplate[id] ?? [];
-                        this.selectedPerTemplate[id].push(node.id);
+                        break;
                     }
                 }
 
                 // If a node contains all templates, then it should be marked as selected in the list
                 if (nodeHasAllTemplates) {
-                    newSelection.add(node.id);
+                    newSelection.add(nodeId.toString());
                 }
             });
 
@@ -82,24 +91,25 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    selectionChange(newSelection: number[]): void {
+    selectionChange(newSelection: string[]): void {
         this.selectedIds = newSelection;
     }
 
     async okButtonClicked(): Promise<void> {
         this.loading = true;
         this.changeDetector.markForCheck();
-        const addSuccess = new Set<number>();
-        const removeSucess = new Set<number>();
+        const addSuccess = new Set<string>();
+        const removeSucess = new Set<string>();
 
         for (const template of this.templates) {
-            const toAdd = new Set<number>(this.selectedIds);
-            const toRemove = new Set<number>(this.selectedPerTemplate[template.id]);
+            const toAdd = new Set<string>(this.selectedIds);
+            const nodeIds = this.selectedPerTemplate[template.id].map(id => id.toString())
+            const toRemove = new Set<string>(nodeIds);
 
-            for (const alreadAssigned of this.selectedPerTemplate[template.id]) {
+            for (const alreadAssigned of nodeIds) {
                 toAdd.delete(alreadAssigned);
             }
             for (const stillAssigned of this.selectedIds) {
@@ -113,9 +123,10 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
-                        message: 'construct.assign_to_node_error',
+                        message: 'template.assign_to_node_error',
                         delay: 10_000,
                         translationParams: {
+                            templateName: template.name,
                             nodeName: this.nodes[nodeToAdd].name,
                             errorMessage: err.message,
                         },
@@ -130,9 +141,10 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
                 } catch (err) {
                     this.notification.show({
                         type: 'alert',
-                        message: 'construct.unassign_from_node_error',
+                        message: 'template.unassign_from_node_error',
                         delay: 10_000,
                         translationParams: {
+                            templateName: template.name,
                             nodeName: this.nodes[nodeToRemove].name,
                             errorMessage: err.message,
                         },
@@ -168,7 +180,7 @@ export class AssignTemplatesToNodesModalComponent extends BaseModal<void> implem
                     type: 'success',
                     message: 'template.unassign_from_node_success',
                     translationParams: {
-                        constructName: this.templates[0].name,
+                        templateName: this.templates[0].name,
                         nodeName: this.nodes[nodeId].name,
                     },
                 });

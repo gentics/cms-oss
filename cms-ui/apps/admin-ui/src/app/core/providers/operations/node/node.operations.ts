@@ -25,8 +25,8 @@ import {
     TemplateListRequest,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { forkJoin, Observable } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { forkJoin, Observable, of } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { ActivityManagerService, GtxActivityManagerActivityConfig } from '../../activity-manager';
 import { EntityManagerService } from '../../entity-manager';
 import { I18nNotificationService } from '../../i18n-notification/i18n-notification.service';
@@ -262,11 +262,18 @@ export class NodeOperations extends ExtendedEntityOperationsBase<'node'> {
         return this.api.node.getNodeTemplates(nodeId, options);
     }
 
-    linkTemplate(nodeId: number, templateId: EntityIdType): Observable<TemplateLinkResponse> {
+    hasTemplateLinked(nodeId: number, templateId: EntityIdType): Observable<boolean> {
+        return this.api.node.hasNodeTemplate(nodeId, templateId).pipe(
+            map(() => true),
+            catchError(() => of(false)),
+        );
+    }
+
+    linkTemplate(nodeId: number | string, templateId: EntityIdType): Observable<TemplateLinkResponse> {
         return this.api.node.addNodeTemplate(nodeId, templateId);
     }
 
-    unlinkTemplate(nodeId: number, templateId: EntityIdType): Observable<ItemDeleteResponse> {
+    unlinkTemplate(nodeId: number | string, templateId: EntityIdType): Observable<ItemDeleteResponse> {
         return this.api.node.removeNodeTemplate(nodeId, templateId);
     }
 }

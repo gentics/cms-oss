@@ -215,6 +215,13 @@ public class PermHandler {
 	protected int groupId = -1;
 
 	/**
+	 * Optional map of assignment info for templates to folders.
+	 * This map can be filled with {@link #prepareFolderTemplateMap()} and cleared with {@link #resetFolderTemplateMap()}.
+	 * It will be used in {@link #checkTemplatePermission(Template, Integer...)}, if filled
+	 */
+	protected Map<Integer, Set<Integer>> folderIdsPerTemplateId;
+
+	/**
 	 * Resolve the rest permission enum for the given type.
 	 *
 	 * @param restPerm
@@ -2029,6 +2036,41 @@ public class PermHandler {
 	}
 
 	/**
+	 * Prepare permission checks on templates in the given node by filling {@link #folderIdsPerTemplateId}.
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public void prepareFolderTemplateMap(int nodeId) throws NodeException {
+		String query;
+		if (nodeId > 0) {
+			query = "SELECT template_id, folder_id FROM template_folder JOIN folder ON template_folder.folder_id = folder.id WHERE node_id = ?";
+		} else {
+			query = "SELECT template_id, folder_id FROM template_folder JOIN folder ON template_folder.folder_id = folder.id";
+		}
+		folderIdsPerTemplateId = DBUtils.select(query, pst -> {
+			if (nodeId > 0) {
+				pst.setInt(1, nodeId);
+			}
+		}, rs -> {
+			Map<Integer, Set<Integer>> map = new HashMap<>();
+			while (rs.next()) {
+				int templateId = rs.getInt("template_id");
+				int folderId = rs.getInt("folder_id");
+				map.computeIfAbsent(templateId, key -> new HashSet<>()).add(folderId);
+			}
+			return map;
+		});
+	}
+
+	/**
+	 * Reset {@link #folderIdsPerTemplateId}
+	 * @throws NodeException
+	 */
+	public void resetFolderTemplateMap() throws NodeException {
+		folderIdsPerTemplateId = null;
+	}
+
+	/**
 	 * Change the current transaction channel to the channel of the given object, if the object is a channel object, or the owning node for master objects in non-channel nodes.
 	 * For templates, the current channel is set to null
 	 * @param object object
@@ -2076,20 +2118,32 @@ public class PermHandler {
 	 * @throws NodeException
 	 */
 	protected boolean checkTemplatePermission(Template template, Integer...permBits) throws NodeException {
-		Set<Folder> rootFolders = getRootFoldersToCheck(template);
-		for (Folder folder : rootFolders) {
-			// check for the root folders
-			if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), permBits)) {
+		Set<Integer> folderIds = null;
+		Map<Integer, Set<Integer>> checkMap = folderIdsPerTemplateId;
+
+		if (checkMap == null) {
+			Set<Folder> rootFolders = getRootFoldersToCheck(template);
+			for (Folder folder : rootFolders) {
+				// check for the root folders
+				if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), permBits)) {
+					return true;
+				}
+			}
+
+			folderIds = template.getFolderIds();
+
+			// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
+			if (folderIds.isEmpty() && rootFolders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
+				return true;
+			}
+		} else {
+			folderIds = checkMap.getOrDefault(template.getMaster().getId(), Collections.emptySet());
+
+			if (folderIds.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
 				return true;
 			}
 		}
 
-		Set<Integer> folderIds = template.getFolderIds();
-
-		// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
-		if (folderIds.isEmpty() && rootFolders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
-			return true;
-		}
 		for (int folderId : folderIds) {
 			// check for all other folders
 			if (checkPermissionBits(Folder.TYPE_FOLDER, folderId, permBits)) {

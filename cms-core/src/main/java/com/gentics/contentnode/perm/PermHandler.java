@@ -2045,7 +2045,7 @@ public class PermHandler {
 		if (nodeId > 0) {
 			query = "SELECT template_id, folder_id FROM template_folder JOIN folder ON template_folder.folder_id = folder.id WHERE node_id = ?";
 		} else {
-			query = "SELECT template_id, folder_id FROM template_folder JOIN folder ON template_folder.folder_id = folder.id";
+			query = "SELECT template_id, folder_id FROM template_folder";
 		}
 		folderIdsPerTemplateId = DBUtils.select(query, pst -> {
 			if (nodeId > 0) {

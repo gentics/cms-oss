@@ -60,7 +60,7 @@ h3. Configuration of the plugin
 The plugin must be loaded, and the construct to be used must be defined
 
 <javascript filename="conf/*.yml">
-custom_aloha_plugins:
+aloha_plugins_global:
   - "gcn/gcnfilelink"
 
 aloha_settings:

@@ -571,10 +571,7 @@ public class FolderFactory extends AbstractFactory {
 					f = f.reload();
 				}
 
-				t.addTransactional(new TransactionalTriggerEvent(f,
-						new String[] { ObjectTransformer.getString(getNode().getId(), ""),
-								MeshPublisher.getMeshUuid(this), MeshPublisher.getMeshLanguage(this) },
-						Events.DELETE | Events.WASTEBIN));
+				t.addTransactional(TransactionalTriggerEvent.deleteIntoWastebin(getNode(), f));
 			}
 
 			// if the folder is a localized copy, it was hiding other folders (which are now "created")
@@ -3560,8 +3557,8 @@ public class FolderFactory extends AbstractFactory {
 				boolean modified = false;
 
 				// find differences in the linked templates and save them
-				List<Object> templateIdsToAdd = new Vector<Object>();
-				List<Object> templateIdsToRemove = new Vector<Object>();
+				List<Integer> templateIdsToAdd = new ArrayList<>();
+				List<Integer> templateIdsToRemove = new ArrayList<>();
 
 				// new list of templates
 				List<Template> templates = folder.getTemplates();
@@ -3583,6 +3580,8 @@ public class FolderFactory extends AbstractFactory {
 				}
 				templateIdsToRemove.addAll(templateIds);
 
+				Collection<Integer> templateIdsToDirt = new HashSet<>();
+
 				// find templates, which shall be added or removed
 				for (Iterator<Template> iter = templates.iterator(); iter.hasNext();) {
 					Template tmpl = iter.next();
@@ -3591,8 +3590,10 @@ public class FolderFactory extends AbstractFactory {
 					if (!templateIds.contains(tmpl.getId())) {
 						templateIdsToAdd.add(folder.getId());
 						templateIdsToAdd.add(tmpl.getId());
+						templateIdsToDirt.add(tmpl.getId());
 					}
 				}
+				templateIdsToDirt.addAll(templateIdsToRemove);
 
 				// now add the missing templates
 				if (templateIdsToAdd.size() > 0) {
@@ -3610,6 +3611,11 @@ public class FolderFactory extends AbstractFactory {
 							+ ")",
 							(Object[]) templateIdsToRemove.toArray(new Object[templateIdsToRemove.size()]));
 					modified = true;
+				}
+
+				Transaction t = TransactionManager.getCurrentTransaction();
+				for (int tmplId : templateIdsToDirt) {
+					t.dirtObjectCache(Template.class, tmplId);
 				}
 
 				return modified;

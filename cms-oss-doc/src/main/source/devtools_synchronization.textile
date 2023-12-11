@@ -62,3 +62,15 @@ Some objects have attributes, which are partially or completely excepted from sy
 | contentrepository.username | The _username_ of a contentrepository will not be synchronized, unless it is set via a property (e.g. @${env:CR_USERNAME}@). |
 | contentrepository.password | The _password_ will never be synchronized, but the _passwordProperty_ will be synchronized. |
 | contentrepository.url      | The _url_ of a contentreporitory will not be synchronized, unless it is set via a property (e.g. @${env:CR_URL}@).   |
+
+h3. Referenced objects
+
+References to other objects (e.g. default value for a "URL (image)" tagpart) will be stored as the global ID of the referenced objects. When syncing from the filesystem to the CMS the references will work immediatelly if the object already exists in the CMS. Otherwise the reference will be set as soon as the target object becomes available via "Content Staging":https://www.gentics.com/Content.Node/cmp8/guides/feature_content_staging.html.
+
+h3. Object property node assignments
+
+The nodes to which an object property is assigned is also synchronized via the nodes global IDs. When syncing an object property from the filesystem to the CMS, it will be assigned to the same nodes.
+
+NOTE: Assignment of object properties to nodes requires edit permissions on the respective node, so the sync will fail if an object property cannot be assigned to one of its nodes.
+
+Assignment to nodes is only done during the sync itself. When a node to which an object property was assigned becomes available only after the sync, it will _not_ be assigned to the node.

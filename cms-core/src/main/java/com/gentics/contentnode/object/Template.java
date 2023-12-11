@@ -340,6 +340,13 @@ public interface Template extends TagContainer, GCNRenderable, ObjectTagContaine
 	List<Folder> getFolders() throws NodeException;
 
 	/**
+	 * Get the folder IDs, the template is linked to
+	 * @return set of folder IDs
+	 * @throws NodeException
+	 */
+	Set<Integer> getFolderIds() throws NodeException;
+
+	/**
 	 * Set the folder id of the template
 	 * @param folderId new folder id of the template
 	 * @return previous folder id of the template

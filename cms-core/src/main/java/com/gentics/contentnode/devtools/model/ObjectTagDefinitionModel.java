@@ -1,5 +1,6 @@
 package com.gentics.contentnode.devtools.model;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,6 +32,8 @@ public class ObjectTagDefinitionModel extends AbstractModel {
 	private Boolean syncVariants;
 
 	private ObjectTagDefinitionCategoryModel category;
+
+	private List<String> nodeIds;
 
 	public ObjectTagDefinitionTypeModel getType() {
 		return type;
@@ -118,5 +121,13 @@ public class ObjectTagDefinitionModel extends AbstractModel {
 
 	public void setCategory(ObjectTagDefinitionCategoryModel category) {
 		this.category = category;
+	}
+
+	public List<String> getNodeIds() {
+		return nodeIds;
+	}
+
+	public void setNodeIds(List<String> nodeIds) {
+		this.nodeIds = nodeIds;
 	}
 }

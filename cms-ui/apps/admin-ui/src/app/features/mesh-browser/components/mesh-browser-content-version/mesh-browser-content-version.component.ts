@@ -1,6 +1,6 @@
 
 import { Component, Input, OnInit } from '@angular/core';
-import { PublishedState, SchemaElement, SchemaElementVersion } from '../../models/mesh-browser-models';
+import { PublishedState, SchemaElement } from '../../models/mesh-browser-models';
 
 @Component({
     selector: 'gtx-mesh-browser-content-version',
@@ -46,8 +46,8 @@ export class MeshBrowserContentVersionComponent implements OnInit {
                 if (this.hasPublishedVersion()) {
                     return PublishedState.UPDATED;
                 }
-                if (this.schemaElement.isDraft) {
-                    // no published version and draft => ARCHIVED
+                if (RegExp('.0$').exec(version.version)) {
+                    // no published but major version => ARCHIVED
                     return PublishedState.ARCHIVED
                 }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BranchReference, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
+import { BranchReference, Language, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
@@ -106,6 +106,12 @@ export class MeshBrowserLoaderService {
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
         const response = await this.meshClient.nodes.get(project, uuid, params);
         return response;
+    }
+
+    public async getAllLanguages(): Promise<Language[]>{
+        const response = await this.meshClient.language.list();
+
+        return response.data;
     }
 
 }

@@ -34,7 +34,7 @@ const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit, OnChanges {
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
     public selectedRepository: ContentRepository;
@@ -78,10 +78,8 @@ export class MeshBrowserMasterComponent
         super(changeDetector, router, route, appState);
     }
 
-    ngOnInit(): void { }
 
-
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(): void {
         const loadedRepository = this.route.snapshot.data[ROUTE_DATA_MESH_REPO_ITEM];
         if (loadedRepository != null) {
             this.selectedRepository = loadedRepository;
@@ -156,6 +154,9 @@ export class MeshBrowserMasterComponent
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
             const projects = await this.loader.getProjects();
+
+            const languages = await this.loader.getAllLanguages();
+            this.languages = languages.map(language => language.languageTag);
 
             if (projects.length > 0) {
                 this.projects = projects.map(project => project.name);

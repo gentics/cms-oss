@@ -22,18 +22,18 @@
         <div class="field">
             <label class="field-label">{{ field.label }}</label>
 
-            <div class="field-value-wrapper">
-                <span *ngIf="field.type === 'string'" class="field-value">
+            <div [ngSwitch]="field.type" class="field-value-wrapper">
+                <span *ngSwitchCase="'string'" class="field-value">
                     {{ field.value }}
                 </span>
 
-                <ng-container *ngIf="field.type === 'list'">
+                <ng-container *ngSwitchCase="'list'">
                     <div *ngFor="let field of field.value" class="field-value">
                         {{ field }}
                     </div>
                 </ng-container>
                 
-                <div *ngIf="field.type === 'binary'" class="field-binary">
+                <div *ngSwitchCase="'binary'" class="field-binary">
                     <img src="{{ field.value }}" />
                 </div>    
             </div>

@@ -4,7 +4,6 @@ import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
 import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
-
 @Injectable()
 export class MeshBrowserLoaderService {
 
@@ -20,7 +19,7 @@ export class MeshBrowserLoaderService {
         return projectList.data;
     }
 
-    public async getBranches(project: string): Promise<Array<BranchReference>> {
+    public async getBranches(project: string): Promise<BranchReference[]> {
         const branchList = await this.meshClient.branches.list(project);
         return branchList.data;
     }
@@ -45,7 +44,7 @@ export class MeshBrowserLoaderService {
         }
     }
 
-    public async listProjectSchemas(project: string): Promise<Array<SchemaContainer>> {
+    public async listProjectSchemas(project: string): Promise<SchemaContainer[]> {
         const response = await this.meshClient.projects.listSchemas(project);
 
         return response.data.map(schemaItem => {
@@ -61,7 +60,7 @@ export class MeshBrowserLoaderService {
         return response.data.find(schemaItem => schemaItem.name === project).rootNode.uuid;
     }
 
-    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<Array<SchemaElement>>  {
+    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<SchemaElement[]>  {
         const response = await this.meshClient.graphql(project, {
             query: `
                 query ($page: Long, $perPage: Long, $schemaName: String, $nodeUuid: String, $lang: [String]) {

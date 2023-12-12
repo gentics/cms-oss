@@ -113,4 +113,17 @@ export class MeshBrowserLoaderService {
         return response.data;
     }
 
+    public async getDefaultLanguage(): Promise<Language>{
+        // const response = await this.meshClient.language.getDefault();
+        // return response;
+
+        //todo: replace with real call
+        return {
+            uuid: 'b104a4da343a4a888818a410611b09e5',
+            name: 'English',
+            nativeName: 'English',
+            languageTag: 'en',
+        }
+    }
+
 }

@@ -17,8 +17,6 @@ import {
     Component,
     Input,
     OnChanges,
-    OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
@@ -60,10 +58,10 @@ export class MeshBrowserMasterComponent
     @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
     public parentNodeUuid: string;
 
-    public languages: Array<string> = ['de', 'en']; // todo: take from api: GPU-1249
+    public languages: Array<string> = [];
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
-    public currentLanguage = DEFAULT_LANGUAGE; // todo: take from api: GPU-1249
+    public currentLanguage = DEFAULT_LANGUAGE;
 
 
     constructor(
@@ -153,10 +151,13 @@ export class MeshBrowserMasterComponent
 
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
-            const projects = await this.loader.getProjects();
-
             const languages = await this.loader.getAllLanguages();
             this.languages = languages.map(language => language.languageTag);
+
+            const defaultLanguage = await this.loader.getDefaultLanguage();
+            this.currentLanguage = defaultLanguage.languageTag;
+
+            const projects = await this.loader.getProjects();
 
             if (projects.length > 0) {
                 this.projects = projects.map(project => project.name);

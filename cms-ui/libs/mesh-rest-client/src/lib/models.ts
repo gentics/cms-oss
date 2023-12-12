@@ -239,7 +239,6 @@ export interface MeshNodeAPI {
     get(project: string, uuid: string, prams?: NodeLoadOptions): Promise<NodeResponse>;
     update(project: string, uuid: string, body: NodeUpdateRequest): Promise<NodeResponse>;
     delete(project: string, uuid: string, params?: NodeDeleteOptions): Promise<GenericMessageResponse>;
-    // todo: check this (has been moved?)
     deleteLanguage(project: string, uuid: string, language: string): Promise<GenericMessageResponse>;
     children(project: string, uuid: string, params?: NodeListOptions): Promise<NodeListResponse>;
     versions(project: string, uuid: string): Promise<NodeVersionsResponse>;

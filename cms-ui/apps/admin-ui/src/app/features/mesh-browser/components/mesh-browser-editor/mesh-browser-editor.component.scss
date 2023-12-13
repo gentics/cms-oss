@@ -55,8 +55,14 @@
             max-height: 100%;
         }
     }
-}
 
+    .boolean-false {
+        color: #c9302c;
+    }
+    .boolean-true {
+        color: #449d44;
+    }
+}
 
 .language-indicator {
     font-size: 19px;

@@ -82,30 +82,38 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         this.fields = [];
 
         for (const [key, value] of Object.entries(response.fields)) {
-            // type should be from api response
             const fieldType = this.getFieldType(value);
 
-            if (fieldType === FieldType.STRING || fieldType === FieldType.LIST) {
-                this.fields.push({
-                    label: key,
-                    value: value as unknown as string,
-                    type: fieldType,
-                })
-            }
-            else if (fieldType === FieldType.NODE) {
-                const fieldObject = value as unknown as object;
-                this.fields.push({
-                    label: key,
-                    value: fieldObject['uuid'],
-                    type: FieldType.STRING,
-                })
-            }
-            else if (fieldType === FieldType.BINARY) {
-                this.fields.push({
-                    label: key,
-                    value: this.getImagePath(key),
-                    type: FieldType.BINARY,
-                })
+            switch(fieldType) {
+                case FieldType.STRING || FieldType.LIST:
+                    this.fields.push({
+                        label: key,
+                        value: value as unknown as string,
+                        type: fieldType,
+                    })
+                    break;
+                case FieldType.NODE:
+                    const fieldObject = value as unknown as object;
+                    this.fields.push({
+                        label: key,
+                        value: fieldObject['displayName'] ?? fieldObject['uuid'],
+                        type: FieldType.STRING,
+                    })
+                    break;
+                case FieldType.BINARY:
+                    this.fields.push({
+                        label: key,
+                        value: this.getImagePath(key),
+                        type: FieldType.BINARY,
+                    })
+                    break;
+                case FieldType.BOOLEAN:
+                    this.fields.push({
+                        label: key,
+                        value: value as unknown as string,
+                        type: FieldType.BOOLEAN,
+                    })
+                    break;
             }
         }
     }
@@ -121,6 +129,8 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     private getFieldType(field: SchemaField): FieldType {
+        console.log("t", field, );
+
         if (typeof field === 'object') {
             if (field.constructor === Array) {
                 return FieldType.LIST
@@ -134,9 +144,16 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
                 return FieldType.NODE;
             }
         }
-        else if (typeof field === 'string') {
+        else if (typeof field === 'boolean') {
+            return FieldType.BOOLEAN;
+        }
+        else if (typeof field === 'number') {
             return FieldType.STRING;
         }
+
+        console.warn('type not resolveable', typeof field);
+
+        return FieldType.STRING;
     }
 
     async detailsClose(): Promise<void> {

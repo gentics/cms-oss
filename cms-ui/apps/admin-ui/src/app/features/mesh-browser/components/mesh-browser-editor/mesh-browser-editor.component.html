@@ -36,6 +36,16 @@
                 <div *ngSwitchCase="'binary'" class="field-binary">
                     <img src="{{ field.value }}" />
                 </div>    
+
+                <ng-container *ngSwitchCase="'boolean'" >
+                    <icon *ngIf="field.value === true; else booleanRenderer" left class="boolean-true">check</icon>
+                
+                    <ng-template #booleanRenderer>
+                        <icon left class="boolean-false">close</icon>
+                    </ng-template>
+                </ng-container>    
+
+
             </div>
         </div>
 

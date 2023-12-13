@@ -44,6 +44,19 @@ export class MeshBrowserLoaderService {
         }
     }
 
+    public async getProjectRootNodeUuid(project: string): Promise<string> {
+        const response = await this.meshClient.graphql(project, {
+            query: `
+                {
+                    project{ rootNode {uuid}}
+                }
+            `,
+        });
+
+        return response.data.project.rootNode.uuid;
+    }
+
+
     public async listProjectSchemas(project: string): Promise<SchemaContainer[]> {
         const response = await this.meshClient.projects.listSchemas(project);
 

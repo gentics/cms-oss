@@ -18,6 +18,7 @@ import {
     Component,
     Input,
     OnChanges,
+    SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
@@ -82,6 +83,9 @@ export class MeshBrowserMasterComponent
         if (loadedRepository != null) {
             this.selectedRepository = loadedRepository;
         }
+
+        console.log("changes");
+        
 
         if (this.parentNodeUuid && this.loggedIn) {
             this.navigatorService.handleBreadcrumbNavigation(
@@ -194,6 +198,10 @@ export class MeshBrowserMasterComponent
     public async projectChangeHandler(project: string): Promise<void> {
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
+        this.parentNodeUuid = await this.loader.getProjectRootNodeUuid(this.currentProject);
+        this.setCurrentBranch(this.branches);
+
+        this.changeDetector.markForCheck();
         this.handleNavigation();
     }
 

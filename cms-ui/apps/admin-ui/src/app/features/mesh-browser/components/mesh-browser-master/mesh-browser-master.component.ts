@@ -84,9 +84,6 @@ export class MeshBrowserMasterComponent
             this.selectedRepository = loadedRepository;
         }
 
-        console.log("changes");
-        
-
         if (this.parentNodeUuid && this.loggedIn) {
             this.navigatorService.handleBreadcrumbNavigation(
                 this.selectedRepository?.id,

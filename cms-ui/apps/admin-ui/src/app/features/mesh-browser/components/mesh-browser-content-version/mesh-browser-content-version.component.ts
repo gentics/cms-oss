@@ -31,7 +31,6 @@ export class MeshBrowserContentVersionComponent implements OnInit {
 
     ngOnInit(): void {
         this.publishedState = this.getPublishedState();
-
         this.title = `Version: ${this.schemaElement?.version}\n`;
 
         if (this.schemaElement?.versions?.length > 0) {

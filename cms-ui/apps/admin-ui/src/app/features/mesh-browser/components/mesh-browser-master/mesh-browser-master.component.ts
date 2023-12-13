@@ -1,6 +1,7 @@
 import {
     ContentRepositoryBO,
     EditableEntity,
+    FALLBACK_LANGUAGE,
     ROUTE_DATA_MESH_REPO_ITEM,
     ROUTE_MESH_BRANCH_ID,
     ROUTE_MESH_LANGUAGE,
@@ -23,7 +24,6 @@ import { ContentRepository } from '@gentics/cms-models';
 import { BranchReference, ProjectResponse, User } from '@gentics/mesh-models';
 import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
-const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
 
 @Component({
     selector: 'gtx-mesh-browser-master',
@@ -61,7 +61,7 @@ export class MeshBrowserMasterComponent
     public languages: Array<string> = [];
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
-    public currentLanguage = DEFAULT_LANGUAGE;
+    public currentLanguage = FALLBACK_LANGUAGE;
 
 
     constructor(
@@ -81,10 +81,6 @@ export class MeshBrowserMasterComponent
         const loadedRepository = this.route.snapshot.data[ROUTE_DATA_MESH_REPO_ITEM];
         if (loadedRepository != null) {
             this.selectedRepository = loadedRepository;
-        }
-
-        if (!this.currentLanguage) {
-            this.currentLanguage = DEFAULT_LANGUAGE;
         }
 
         if (this.parentNodeUuid && this.loggedIn) {
@@ -152,7 +148,7 @@ export class MeshBrowserMasterComponent
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
             const languages = await this.loader.getAllLanguages();
-            this.languages = languages.map(language => language.languageTag);
+            this.languages = languages.map(language => language.languageTag).sort((a, b) => a.localeCompare(b));
 
             const defaultLanguage = await this.loader.getDefaultLanguage();
             this.currentLanguage = defaultLanguage.languageTag;

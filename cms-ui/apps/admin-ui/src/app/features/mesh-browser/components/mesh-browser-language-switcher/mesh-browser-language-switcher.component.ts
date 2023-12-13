@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { I18nService } from '@admin-ui/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { MeshBrowserLoaderService } from '../../providers';
 
 
@@ -21,11 +22,12 @@ export class MeshBrowserLanguageSwitcherComponent {
 
 
     constructor(
-        protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
+        protected i18n: I18nService,
     ) { }
 
     public languageChangeHandler(language: string): void {
+        this.i18n.setLanguage(language);
         this.languageChange.emit(language);
     }
 

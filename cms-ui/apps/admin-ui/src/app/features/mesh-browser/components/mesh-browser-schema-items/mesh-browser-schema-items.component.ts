@@ -45,6 +45,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     @Output()
     public nodeChanged = new EventEmitter<string>();
 
+    @Output()
+    public elementsLoaded = new EventEmitter<number>();
+
     public page = 1;
 
     public perPage = 10;
@@ -120,6 +123,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.schemaElements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
+        this.elementsLoaded.emit(this.schemaElements?.length ?? 0);
     }
 
     public changePage(page: number): void {

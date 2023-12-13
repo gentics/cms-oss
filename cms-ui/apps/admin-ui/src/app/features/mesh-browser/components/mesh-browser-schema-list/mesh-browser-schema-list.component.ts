@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
 import { SchemaContainer } from '../../models/mesh-browser-models';
@@ -11,7 +11,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     styleUrls: ['./mesh-browser-schema-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserSchemaListComponent implements OnInit {
+export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
 
     @Input()
     public currentProject: string;
@@ -33,13 +33,20 @@ export class MeshBrowserSchemaListComponent implements OnInit {
 
     public schemas: Array<SchemaContainer> = [];
 
+    public noSchemaElements = true;
+
+
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
         protected route: ActivatedRoute,
     ) { }
 
-    ngOnInit(): void{
+    ngOnChanges(): void {
+        this.noSchemaElements = true;
+    }
+
+    ngOnInit(): void {
         this.route.params.subscribe((params) => {
             if (params.parent) {
                 this.currentNodeUuid = params.parent
@@ -49,6 +56,7 @@ export class MeshBrowserSchemaListComponent implements OnInit {
     }
 
     protected async loadSchemas(): Promise<void> {
+        this.noSchemaElements = true;
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
         this.schemas = this.schemas.sort((a,b) => a.name === b.name ? -1 :1)
 
@@ -68,6 +76,12 @@ export class MeshBrowserSchemaListComponent implements OnInit {
         }
         this.currentNodeUuid = nodeUuid;
         this.nodeChange.emit(nodeUuid);
+    }
+
+    public elementsLoaded(numberOfElements: number): void {
+        if (numberOfElements > 0) {
+            this.noSchemaElements = false;
+        }
     }
 
 }

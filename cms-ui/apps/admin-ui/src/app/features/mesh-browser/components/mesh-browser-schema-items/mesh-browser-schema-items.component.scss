@@ -54,6 +54,7 @@
             background: $gtx-color-light-gray;
             color: black;
             font-weight: 500;
+            cursor: default;
 
             &.active {
                 border-bottom: 1px solid $gtx-color-off-black;

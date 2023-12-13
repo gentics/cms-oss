@@ -782,6 +782,10 @@
         "en": "No Project available",
         "de": "Keine Projekte verfügbar"
     },
+    "browser_no_schema_elements": {
+        "en": "This node has no schema elements",
+        "de": "Dieser Node hat keine Schema-Elemente"
+    },
 
     "published_state_published": {
         "en": "Published",

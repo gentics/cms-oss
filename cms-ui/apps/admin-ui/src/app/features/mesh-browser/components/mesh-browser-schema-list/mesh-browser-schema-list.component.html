@@ -8,6 +8,12 @@
                 [languages]="languages"
                 [currentLanguage]="currentLanguage"
                 (nodeChanged)="nodeChanged($event)"
+                (elementsLoaded)="elementsLoaded($event)"
             />
     </ng-container>
+
+    <div *ngIf="noSchemaElements" class="no-schema-elements">
+        {{ 'mesh.browser_no_schema_elements' | i18n}}
+    </div>
+
 </div>

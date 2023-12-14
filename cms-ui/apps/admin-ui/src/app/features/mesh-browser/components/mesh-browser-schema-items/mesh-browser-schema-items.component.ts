@@ -114,6 +114,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             nodeUuid: nodeUuid,
             lang: this.languages,
             page: this.page,
+            perPage: this.perPage,
         }, this.currentBranch?.uuid);
 
         schemaElements?.forEach((schemaElement) =>
@@ -134,6 +135,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             nodeUuid: this.currentNodeUuid,
             page: this.page,
             lang: this.languages,
+            perPage: this.perPage,
         }, this.currentBranch.uuid)
     }
 

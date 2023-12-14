@@ -63,6 +63,7 @@ export class MeshBrowserLoaderService {
         return response.data.map(schemaItem => {
             return {
                 name: schemaItem.name,
+                fields: schemaItem.fields,
             } as SchemaContainer
         });
     }
@@ -115,10 +116,30 @@ export class MeshBrowserLoaderService {
         return response.data.node?.children?.elements
     }
 
+    public async getSchemaNameForNode(project: string, params: MeshSchemaListParams): Promise<string>  {
+        const response = await this.meshClient.graphql(project, {
+            query: `
+                query($nodeUuid: String) {
+                    node(uuid: $nodeUuid) { 
+                        uuid
+                        schema {
+                            name
+                        }
+                    }
+                }
+            `,
+            variables: params,
+        });
+
+        return response.data?.node?.schema?.name;
+    }
+
+
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
         const response = await this.meshClient.nodes.get(project, uuid, params);
         return response;
     }
+
 
     public async getAllLanguages(): Promise<Language[]>{
         const response = await this.meshClient.language.list();

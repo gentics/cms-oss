@@ -64,6 +64,28 @@
     }
 }
 
+
+.copy-uuid {
+    color: $gtx-color-primary;
+    font-size: 12px;
+    height: 60px;
+    display: flex;
+    padding: 0;
+
+    ::ng-deep .copy-button {
+        padding: 0.5rem 1rem !important;
+        font-size: 1rem !important;
+        width: 1.25rem !important;
+    }
+
+    ::ng-deep .label {
+        margin-left: 0.5rem;
+        margin-top: 0.5rem;
+        font-size: 18px;
+        margin-right: 1rem;
+    }
+}
+
 .language-indicator {
     font-size: 19px;
     margin-right: 5px;

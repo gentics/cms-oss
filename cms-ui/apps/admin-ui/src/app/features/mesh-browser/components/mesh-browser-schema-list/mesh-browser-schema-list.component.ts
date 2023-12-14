@@ -1,3 +1,4 @@
+import { AppStateService, SchemasLoaded } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
@@ -40,6 +41,7 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
         protected changeDetector: ChangeDetectorRef,
         protected loader: MeshBrowserLoaderService,
         protected route: ActivatedRoute,
+        protected appState: AppStateService,
     ) { }
 
     ngOnChanges(): void {
@@ -59,6 +61,7 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
         this.noSchemaElements = true;
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
         this.schemas = this.schemas.sort((a,b) => a.name === b.name ? -1 :1)
+        this.appState.dispatch(new SchemasLoaded(this.schemas));
 
         if (!this.currentNodeUuid) {
             this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);

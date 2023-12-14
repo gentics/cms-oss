@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 
 @Component({
@@ -11,6 +11,8 @@ export class CopyValueComponent extends BaseComponent {
 
     public readonly cancelEvent = cancelEvent;
 
+    public icon = 'content_copy';
+
     @Input()
     public label: string;
 
@@ -20,10 +22,16 @@ export class CopyValueComponent extends BaseComponent {
     @Output()
     public copy = new EventEmitter<void | Error>();
 
+    constructor(protected changeDetector: ChangeDetectorRef) {
+        super(changeDetector);
+    }
+
     async copyToClipboard(): Promise<void> {
         try {
             await navigator.clipboard.writeText(this.value);
             this.copy.emit();
+            this.icon = 'checked';
+            this.changeDetector.markForCheck()
         } catch (err) {
             this.copy.emit(err);
         }

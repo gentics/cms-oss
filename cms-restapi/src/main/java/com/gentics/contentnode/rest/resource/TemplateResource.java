@@ -1,7 +1,5 @@
 package com.gentics.contentnode.rest.resource;
 
-import com.gentics.contentnode.rest.model.response.TagList;
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -22,11 +20,14 @@ import com.gentics.contentnode.rest.model.request.TemplateCopyRequest;
 import com.gentics.contentnode.rest.model.request.TemplateCreateRequest;
 import com.gentics.contentnode.rest.model.request.TemplateSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PagedFolderListResponse;
+import com.gentics.contentnode.rest.model.response.TagList;
 import com.gentics.contentnode.rest.model.response.TagListResponse;
 import com.gentics.contentnode.rest.model.response.TagStatusResponse;
 import com.gentics.contentnode.rest.model.response.TemplateInNodeResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
@@ -127,6 +128,20 @@ public interface TemplateResource {
 	@GET
 	@Path("/{id}/folders")
 	PagedFolderListResponse folders(@PathParam("id") String id, @BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter,
+			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Get the nodes to which the template is assigned
+	 * @param id template ID
+	 * @param sort sort parameters
+	 * @param filter filter parameters
+	 * @param paging paging parameters
+	 * @return response containing a list of nodes
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/{id}/nodes")
+	NodeList nodes(@PathParam("id") String id, @BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**

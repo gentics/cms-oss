@@ -194,7 +194,8 @@ public interface ConstructResource {
 	@Path("/{id}")
 	@StatusCodes({
 		@ResponseCode(code = 200, condition = "Construct {id} was deleted."),
-		@ResponseCode(code = 404, condition = "Construct {id} does not exist.")
+		@ResponseCode(code = 404, condition = "Construct {id} does not exist."),
+		@ResponseCode(code = 409, condition = "Construct {id} could not be deleted due to a conflict.")
 	})
 	GenericResponse delete(@PathParam("id") String id) throws Exception;
 

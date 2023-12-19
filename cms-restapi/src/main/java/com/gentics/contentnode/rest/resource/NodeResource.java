@@ -29,6 +29,7 @@ import com.gentics.contentnode.rest.model.response.NodeSettingsResponse;
 import com.gentics.contentnode.rest.model.response.PagedConstructListResponse;
 import com.gentics.contentnode.rest.model.response.PagedObjectPropertyListResponse;
 import com.gentics.contentnode.rest.model.response.PagedTemplateListResponse;
+import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
@@ -456,6 +457,21 @@ public interface NodeResource {
 	})
 	PagedTemplateListResponse getTemplates(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
 			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception;
+
+	/**
+	 * Get the template, if it is assigned to the node
+	 * @param nodeId Node ID (local or global)
+	 * @param templateId Template ID (local or global)
+	 * @return template load response
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/{nodeId}/templates/{templateId}")
+	@StatusCodes({
+		@ResponseCode(code = 200, condition = "Template was found in the node."),
+		@ResponseCode(code = 404, condition = "Either the node was not found, or the template is not assigned to the node.")
+	})
+	TemplateLoadResponse getTemplate(@PathParam("nodeId") String nodeId, @PathParam("templateId") String templateId) throws Exception;
 
 	/**
 	 * Add a template to a node. This will just assign the template to the node, but not link it to any folders.

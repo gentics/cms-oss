@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 
 @Component({
@@ -7,7 +7,7 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
     styleUrls: ['./copy-value.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CopyValueComponent extends BaseComponent {
+export class CopyValueComponent extends BaseComponent  {
 
     public readonly cancelEvent = cancelEvent;
 

@@ -27,8 +27,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     @Input({ alias: ROUTE_MESH_LANGUAGE})
     public currentLanguage: string;
 
-    private currentNodeSchemaName: string;
-
     public fields: Array<MeshField> = [];
 
     public title: string;
@@ -53,7 +51,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     async updateComponent(): Promise<void> {
-        this.currentNodeSchemaName = await this.loader.getSchemaNameForNode(this.project, {nodeUuid: this.currentNodeUuid})
         await this.mapResponseToSchemaFields()
         this.changeDetector.markForCheck();
     }
@@ -88,7 +85,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             }
 
             if (fieldDefinition.type === FieldType.NODE) {
-                console.log(fieldDefinition);
                 const node = response.fields[fieldDefinition.name] as unknown as object;
                 fieldValue = node['displayName'] ?? node['uuid'];
             }
@@ -102,10 +98,12 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
     }
 
     private async getCurrentSchema(): Promise<SchemaContainer> {
-        let currentSchema = this.appState.now.mesh.schemas.find(schema => schema.name === this.currentNodeSchemaName)
-        if( !currentSchema ){
+        const currentNodeSchemaName = await this.loader.getSchemaNameForNode(this.project, this.currentNodeUuid)
+
+        let currentSchema = this.appState.now.mesh.schemas.find(schema => schema.name === currentNodeSchemaName)
+        if (!currentSchema) {
             const schemas =  await this.loader.listProjectSchemas(this.project);
-            currentSchema = schemas.find(schema => schema.name === this.currentNodeSchemaName)
+            currentSchema = schemas.find(schema => schema.name === currentNodeSchemaName)
             this.appState.dispatch(new SchemasLoaded(schemas));
         }
 

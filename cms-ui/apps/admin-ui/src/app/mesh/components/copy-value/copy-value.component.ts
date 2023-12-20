@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    Input,
+    Output,
+} from '@angular/core';
 import { BaseComponent, cancelEvent } from '@gentics/ui-core';
 
 @Component({
@@ -7,9 +14,11 @@ import { BaseComponent, cancelEvent } from '@gentics/ui-core';
     styleUrls: ['./copy-value.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CopyValueComponent extends BaseComponent  {
-
+export class CopyValueComponent extends BaseComponent {
     public readonly cancelEvent = cancelEvent;
+
+    @Input()
+    public animate: false;
 
     public icon = 'content_copy';
 
@@ -30,10 +39,21 @@ export class CopyValueComponent extends BaseComponent  {
         try {
             await navigator.clipboard.writeText(this.value);
             this.copy.emit();
-            this.icon = 'checked';
-            this.changeDetector.markForCheck()
+            if (this.animate) {
+                this.animateCopy(1)
+            }
         } catch (err) {
             this.copy.emit(err);
         }
+    }
+
+    private animateCopy(seconds: number): void {
+        this.icon = 'checked';
+        this.changeDetector.markForCheck();
+
+        setTimeout(() => {
+            this.icon = 'content_copy';
+            this.changeDetector.markForCheck();
+        }, 1000 * seconds);
     }
 }

@@ -27,11 +27,11 @@
 
             <div [ngSwitch]="field.type" class="field-value-wrapper">
 
-                <ng-container *ngSwitchCase="'list'">
+                <div class="list" *ngSwitchCase="'list'">
                     <div *ngFor="let field of field.value" class="field-value">
                         {{ field }}
                     </div>
-                </ng-container>
+                </div>
                 
                 <div *ngSwitchCase="'binary'" class="field-binary">
                     <img src="{{ field.value }}" />

@@ -366,11 +366,4 @@ spec:
             }
         }
     }
-
-    post {
-        always {
-            updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
-            notifyMattermostUsers()
-        }
-    }
 }

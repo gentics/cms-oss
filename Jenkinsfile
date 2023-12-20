@@ -374,10 +374,11 @@ spec:
         }
     }
 
+    /* TODO: Re-enable when HTTPS access to gitlab is restored. Due to infrastructure issues this is disabled temporarily.
     post {
         always {
-            // TODO: Re-enable when HTTPS access to gitlab is restored. Due to infrastructure issues this is disabled temporarily.
-            // updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
+            updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
         }
     }
+    */
 }

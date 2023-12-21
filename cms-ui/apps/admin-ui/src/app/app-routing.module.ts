@@ -507,7 +507,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
 @NgModule({
     imports: [
         RouterModule.forRoot(ADMIN_UI_ROUTES, {
-            enableTracing: false,
+            enableTracing: true,
             bindToComponentInputs: true,
         }),
     ],

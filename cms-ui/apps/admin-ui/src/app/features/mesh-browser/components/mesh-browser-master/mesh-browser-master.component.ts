@@ -212,17 +212,7 @@ export class MeshBrowserMasterComponent
         if (this.parentNodeUuid !== nodeId) {
             this.parentNodeUuid = nodeId;
             this.handleBreadcrumbNavigation(nodeId);
-
-            const routeCommand = this.navigatorService.getRouteCommand(
-                this.selectedRepository.id,
-                this.currentProject,
-                this.currentBranchUuid,
-                this.parentNodeUuid,
-                this.currentLanguage,
-            );
-            // merely update path without performing a reload
-            const url = this.router.createUrlTree(routeCommand, {relativeTo: this.route}).toString()
-            this.location.go(url);
+            this.handleNavigation();
         }
     }
 

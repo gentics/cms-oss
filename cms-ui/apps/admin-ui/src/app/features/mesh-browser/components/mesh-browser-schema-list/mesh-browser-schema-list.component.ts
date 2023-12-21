@@ -60,7 +60,7 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
     protected async loadSchemas(): Promise<void> {
         this.noSchemaElements = true;
         this.schemas = await this.loader.listProjectSchemas(this.currentProject)
-        this.schemas = this.schemas.sort((a,b) => a.name === b.name ? -1 :1)
+        this.schemas = this.schemas.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
         this.appState.dispatch(new SchemasLoaded(this.schemas));
 
         if (!this.currentNodeUuid) {

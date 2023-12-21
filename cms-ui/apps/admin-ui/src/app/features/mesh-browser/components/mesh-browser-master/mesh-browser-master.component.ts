@@ -18,7 +18,6 @@ import {
     Component,
     Input,
     OnChanges,
-    SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
@@ -148,13 +147,14 @@ export class MeshBrowserMasterComponent
 
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
-            const languages = await this.loader.getAllLanguages();
+            const [languages, defaultLanguage, projects] = await Promise.all([
+                this.loader.getAllLanguages(),
+                this.loader.getDefaultLanguage(),
+                this.loader.getProjects(),
+            ]);
+
             this.languages = languages.map(language => language.languageTag).sort((a, b) => a.localeCompare(b));
-
-            const defaultLanguage = await this.loader.getDefaultLanguage();
             this.currentLanguage = defaultLanguage.languageTag;
-
-            const projects = await this.loader.getProjects();
 
             if (projects.length > 0) {
                 this.projects = projects.map(project => project.name);

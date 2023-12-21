@@ -45,6 +45,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     @Output()
     public nodeChanged = new EventEmitter<string>();
 
+    @Output()
+    public elementsLoaded = new EventEmitter<number>();
+
     public page = 1;
 
     public perPage = 10;
@@ -61,11 +64,11 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
     ) { }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes?.currentNodeUuid || changes?.currentProject  || changes?.currentBranch || changes?.currentLanguage) {
+        if (changes?.currentNodeUuid || changes?.currentProject || changes?.currentBranch || changes?.currentLanguage) {
             this.page = 1;
             // make sure current language is the first element
-            this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1)
-            this.loadNodeContent(this.currentNodeUuid)
+            this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1);
+            this.loadNodeContent(this.currentNodeUuid);
         }
     }
 
@@ -111,6 +114,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             nodeUuid: nodeUuid,
             lang: this.languages,
             page: this.page,
+            perPage: this.perPage,
         }, this.currentBranch?.uuid);
 
         schemaElements?.forEach((schemaElement) =>
@@ -120,6 +124,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         this.schemaElements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
         this.nodeChanged.emit(nodeUuid)
+        this.elementsLoaded.emit(this.schemaElements?.length ?? 0);
     }
 
     public changePage(page: number): void {
@@ -130,6 +135,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             nodeUuid: this.currentNodeUuid,
             page: this.page,
             lang: this.languages,
+            perPage: this.perPage,
         }, this.currentBranch.uuid)
     }
 

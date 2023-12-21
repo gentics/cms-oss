@@ -7,6 +7,7 @@ import {
     MeshCoordinatorAPI,
     MeshGraphQLAPI,
     MeshGroupAPI,
+    MeshLanguageAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
     MeshPermissionAPI,
@@ -126,5 +127,9 @@ export class MeshRestClientService {
 
     get graphql(): MeshGraphQLAPI {
         return this.client.graphql;
+    }
+
+    get language(): MeshLanguageAPI {
+        return this.client.language;
     }
 }

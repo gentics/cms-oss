@@ -82,6 +82,8 @@ import {
     TagNodeListOptions,
     NodeLoadOptions,
     LoginRequest,
+    Language,
+    ListResponse,
 } from '@gentics/mesh-models';
 
 export interface MeshClientDriver {
@@ -237,7 +239,6 @@ export interface MeshNodeAPI {
     get(project: string, uuid: string, prams?: NodeLoadOptions): Promise<NodeResponse>;
     update(project: string, uuid: string, body: NodeUpdateRequest): Promise<NodeResponse>;
     delete(project: string, uuid: string, params?: NodeDeleteOptions): Promise<GenericMessageResponse>;
-
     deleteLanguage(project: string, uuid: string, language: string): Promise<GenericMessageResponse>;
     children(project: string, uuid: string, params?: NodeListOptions): Promise<NodeListResponse>;
     versions(project: string, uuid: string): Promise<NodeVersionsResponse>;
@@ -299,3 +300,8 @@ export interface MeshPluginAPI {
 }
 
 export type MeshGraphQLAPI = (project: string, body: GraphQLRequest, params?: GraphQLOptions) => Promise<GraphQLResponse>;
+
+export interface MeshLanguageAPI {
+    getDefault(): Promise<Language>;
+    list(): Promise<ListResponse<Language>>;
+}

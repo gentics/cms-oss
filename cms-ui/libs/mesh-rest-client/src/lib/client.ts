@@ -8,6 +8,7 @@ import {
     MeshCoordinatorAPI,
     MeshGraphQLAPI,
     MeshGroupAPI,
+    MeshLanguageAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
     MeshPermissionAPI,
@@ -287,4 +288,10 @@ export class MeshRestClient {
     } as const;
 
     public graphql: MeshGraphQLAPI = (project, body, params) => this.executeJsonRequest(POST, `/${project}/graphql`, body, params);
+
+    public language: MeshLanguageAPI = {
+        list: () => this.executeJsonRequest(GET, '/languages'),
+        getDefault: () => this.executeJsonRequest(GET, '/languages'),
+    } as const;
+
 }

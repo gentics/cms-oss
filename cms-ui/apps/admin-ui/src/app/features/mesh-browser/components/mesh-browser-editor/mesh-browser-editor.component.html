@@ -15,27 +15,39 @@
             {{ title   }}
             <span class="language-indicator">{{ currentLanguage.toLocaleUpperCase() }}</span>
         </h2>
-
     </gtx-entity-detail-header>
+
+    
+    <gtx-mesh-copy-value [value]="currentNodeUuid" [label]="'UUID'" [animate]="true" class="copy-uuid" />
+
 
     <ng-container *ngFor="let field of fields">
         <div class="field">
             <label class="field-label">{{ field.label }}</label>
 
-            <div class="field-value-wrapper">
-                <span *ngIf="field.type === 'string'" class="field-value">
-                    {{ field.value }}
-                </span>
+            <div [ngSwitch]="field.type" class="field-value-wrapper">
 
-                <ng-container *ngIf="field.type === 'list'">
+                <div class="list" *ngSwitchCase="'list'">
                     <div *ngFor="let field of field.value" class="field-value">
                         {{ field }}
                     </div>
-                </ng-container>
+                </div>
                 
-                <div *ngIf="field.type === 'binary'" class="field-binary">
+                <div *ngSwitchCase="'binary'" class="field-binary">
                     <img src="{{ field.value }}" />
                 </div>    
+
+                <ng-container *ngSwitchCase="'boolean'" >
+                    <icon *ngIf="field.value === true; else booleanRenderer" left class="boolean-true">check</icon>
+                
+                    <ng-template #booleanRenderer>
+                        <icon left class="boolean-false">close</icon>
+                    </ng-template>
+                </ng-container>    
+
+                <span *ngSwitchDefault class="field-value">
+                    {{ field.value }}
+                </span>
             </div>
         </div>
 

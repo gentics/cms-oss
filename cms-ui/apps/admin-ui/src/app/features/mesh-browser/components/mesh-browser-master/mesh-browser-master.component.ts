@@ -1,6 +1,7 @@
 import {
     ContentRepositoryBO,
     EditableEntity,
+    FALLBACK_LANGUAGE,
     ROUTE_DATA_MESH_REPO_ITEM,
     ROUTE_MESH_BRANCH_ID,
     ROUTE_MESH_LANGUAGE,
@@ -17,15 +18,12 @@ import {
     Component,
     Input,
     OnChanges,
-    OnInit,
-    SimpleChanges,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ContentRepository } from '@gentics/cms-models';
 import { BranchReference, ProjectResponse, User } from '@gentics/mesh-models';
 import { MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
-const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
 
 @Component({
     selector: 'gtx-mesh-browser-master',
@@ -34,7 +32,7 @@ const DEFAULT_LANGUAGE = 'de';  // todo: take from api: GPU-1249
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeshBrowserMasterComponent
-    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnInit, OnChanges {
+    extends BaseTableMasterComponent<ContentRepository, ContentRepositoryBO> implements OnChanges {
     protected entityIdentifier = EditableEntity.CONTENT_REPOSITORY;
 
     public selectedRepository: ContentRepository;
@@ -60,10 +58,10 @@ export class MeshBrowserMasterComponent
     @Input({ alias: ROUTE_MESH_PARENT_NODE_ID })
     public parentNodeUuid: string;
 
-    public languages: Array<string> = ['de', 'en']; // todo: take from api: GPU-1249
+    public languages: Array<string> = [];
 
     @Input({ alias: ROUTE_MESH_LANGUAGE })
-    public currentLanguage = DEFAULT_LANGUAGE; // todo: take from api: GPU-1249
+    public currentLanguage = FALLBACK_LANGUAGE;
 
 
     constructor(
@@ -78,17 +76,11 @@ export class MeshBrowserMasterComponent
         super(changeDetector, router, route, appState);
     }
 
-    ngOnInit(): void { }
 
-
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(): void {
         const loadedRepository = this.route.snapshot.data[ROUTE_DATA_MESH_REPO_ITEM];
         if (loadedRepository != null) {
             this.selectedRepository = loadedRepository;
-        }
-
-        if (!this.currentLanguage) {
-            this.currentLanguage = DEFAULT_LANGUAGE;
         }
 
         if (this.parentNodeUuid && this.loggedIn) {
@@ -155,7 +147,14 @@ export class MeshBrowserMasterComponent
 
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
-            const projects = await this.loader.getProjects();
+            const [languages, defaultLanguage, projects] = await Promise.all([
+                this.loader.getAllLanguages(),
+                this.loader.getDefaultLanguage(),
+                this.loader.getProjects(),
+            ]);
+
+            this.languages = languages.map(language => language.languageTag).sort((a, b) => a.localeCompare(b));
+            this.currentLanguage = defaultLanguage.languageTag;
 
             if (projects.length > 0) {
                 this.projects = projects.map(project => project.name);
@@ -196,6 +195,10 @@ export class MeshBrowserMasterComponent
     public async projectChangeHandler(project: string): Promise<void> {
         this.currentProject = project;
         this.branches = await this.loader.getBranches(this.currentProject);
+        this.parentNodeUuid = await this.loader.getProjectRootNodeUuid(this.currentProject);
+        this.setCurrentBranch(this.branches);
+
+        this.changeDetector.markForCheck();
         this.handleNavigation();
     }
 
@@ -209,17 +212,7 @@ export class MeshBrowserMasterComponent
         if (this.parentNodeUuid !== nodeId) {
             this.parentNodeUuid = nodeId;
             this.handleBreadcrumbNavigation(nodeId);
-
-            const routeCommand = this.navigatorService.getRouteCommand(
-                this.selectedRepository.id,
-                this.currentProject,
-                this.currentBranchUuid,
-                this.parentNodeUuid,
-                this.currentLanguage,
-            );
-            // merely update path without performing a reload
-            const url = this.router.createUrlTree(routeCommand, {relativeTo: this.route}).toString()
-            this.location.go(url);
+            this.handleNavigation();
         }
     }
 

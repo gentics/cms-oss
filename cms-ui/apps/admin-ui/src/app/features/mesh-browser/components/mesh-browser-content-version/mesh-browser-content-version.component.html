@@ -8,5 +8,5 @@
             <icon *ngSwitchCase="PublishedState.UPDATED" class="updated">cloud_upload</icon>
         </container-element>
     </div>
-    <span class="state-text">{{ publishedState }}</span>
+    <span class="state-text">{{ PublishedStateTranslations.get(publishedState) | i18n  }}</span>
 </div>

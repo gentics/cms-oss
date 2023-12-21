@@ -18,3 +18,4 @@ export * from './schemas';
 export * from './server';
 export * from './tags';
 export * from './users';
+export * from './language';

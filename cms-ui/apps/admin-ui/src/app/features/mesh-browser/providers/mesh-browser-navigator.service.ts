@@ -12,7 +12,6 @@ import {
     NavigationEntry,
 } from '../models/mesh-browser-models';
 
-
 @Injectable()
 export class MeshBrowserNavigatorService {
     constructor(
@@ -20,7 +19,6 @@ export class MeshBrowserNavigatorService {
         protected breadcrumbService: BreadcrumbsService,
         protected router: Router,
     ) {}
-
 
     public handleNavigation(
         route: ActivatedRoute,
@@ -31,49 +29,39 @@ export class MeshBrowserNavigatorService {
         currentLanguage: string,
     ): void {
         this.router.navigate(
-            [
-                '/' + AdminUIModuleRoutes.MESH_BROWSER,
+            this.getRouteCommand(
                 selectedRepositoryId,
-                {
-                    outlets: {
-                        [ROUTE_MESH_BROWSER_OUTLET]: [
-                            'list',
-                            currentProject,
-                            currentBranchUuid,
-                            parentNodeUuid,
-                            currentLanguage,
-                        ],
-                    },
-                },
-            ],
+                currentProject,
+                currentBranchUuid,
+                parentNodeUuid,
+                currentLanguage,
+            ),
             { relativeTo: route },
         );
     }
 
-
-    public getRouteCommand(
+    private getRouteCommand(
         selectedRepositoryId: number,
         currentProject: string,
         currentBranchUuid: string,
         parentNodeUuid: string,
         currentLanguage: string,
     ): any[] {
-        const command =
-            [
-                '/' + AdminUIModuleRoutes.MESH_BROWSER,
-                selectedRepositoryId,
-                {
-                    outlets: {
-                        [ROUTE_MESH_BROWSER_OUTLET]: [
-                            'list',
-                            currentProject,
-                            currentBranchUuid,
-                            parentNodeUuid ?? 'undefined',
-                            currentLanguage,
-                        ],
-                    },
+        const command = [
+            '/' + AdminUIModuleRoutes.MESH_BROWSER,
+            selectedRepositoryId,
+            {
+                outlets: {
+                    [ROUTE_MESH_BROWSER_OUTLET]: [
+                        'list',
+                        currentProject,
+                        currentBranchUuid,
+                        parentNodeUuid ?? 'undefined',
+                        currentLanguage,
+                    ],
                 },
-            ];
+            },
+        ];
 
         return command;
     }
@@ -83,7 +71,6 @@ export class MeshBrowserNavigatorService {
             relativeTo: route,
         });
     }
-
 
     public async handleBreadcrumbNavigation(
         selectedRepositoryId: number,

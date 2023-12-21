@@ -35,7 +35,7 @@
 
     .schema-element {
         color: $gtx-color-primary;
-        padding: 0.3rem 0;
+        padding: 0.4rem 0;
         padding-left: 0.4rem;
         margin: 0rem 0;
         cursor: pointer;
@@ -54,6 +54,7 @@
             background: $gtx-color-light-gray;
             color: black;
             font-weight: 500;
+            cursor: default;
 
             &.active {
                 border-bottom: 1px solid $gtx-color-off-black;

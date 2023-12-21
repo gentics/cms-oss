@@ -1,9 +1,9 @@
 import { ROUTE_MESH_BRANCH_ID, ROUTE_MESH_CURRENT_NODE_ID, ROUTE_MESH_LANGUAGE, ROUTE_MESH_PROJECT_ID } from '@admin-ui/common';
-import { AppStateService, SetUIFocusEntity } from '@admin-ui/state';
+import { AppStateService, SchemasLoaded, SetUIFocusEntity } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FieldType, SchemaField } from '@gentics/mesh-models';
-import { MeshField } from '../../models/mesh-browser-models';
+import { FieldType } from '@gentics/mesh-models';
+import { MeshField, SchemaContainer } from '../../models/mesh-browser-models';
 import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
 
 
@@ -48,8 +48,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             this.detailsClose();
             return;
         }
-
-        this.updateComponent()
     }
 
     async updateComponent(): Promise<void> {
@@ -69,9 +67,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             branch: this.currentBranchUuid,
         })
 
-        if (!response.fields) {
-            return;
-        }
+        const currentSchema = await this.getCurrentSchema();
 
         this.title = response.fields.name as unknown as string;
 
@@ -81,36 +77,40 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
         this.fields = [];
 
-        for (const [key, value] of Object.entries(response.fields)) {
-            // type should be from api response
-            const fieldType = this.getFieldType(value);
+        for (const fieldDefinition of currentSchema.fields) {
+            let fieldValue = response.fields[fieldDefinition.name] as unknown as string;
 
-            if (fieldType === FieldType.STRING || fieldType === FieldType.LIST) {
-                this.fields.push({
-                    label: key,
-                    value: value as unknown as string,
-                    type: fieldType,
-                })
+            if (fieldDefinition.type === FieldType.BINARY) {
+                fieldValue = this.getImagePath(fieldDefinition.name);
             }
-            else if (fieldType === FieldType.NODE) {
-                const fieldObject = value as unknown as object;
-                this.fields.push({
-                    label: key,
-                    value: fieldObject['uuid'],
-                    type: FieldType.STRING,
-                })
+
+            if (fieldDefinition.type === FieldType.NODE) {
+                const node = response.fields[fieldDefinition.name] as unknown as object;
+                fieldValue = node['displayName'] ?? node['uuid'];
             }
-            else if (fieldType === FieldType.BINARY) {
-                this.fields.push({
-                    label: key,
-                    value: this.getImagePath(key),
-                    type: FieldType.BINARY,
-                })
-            }
+
+            this.fields.push({
+                label: fieldDefinition.name,
+                value: fieldValue,
+                type: fieldDefinition.type,
+            });
         }
     }
 
-    private getImagePath(fieldName: string) {
+    private async getCurrentSchema(): Promise<SchemaContainer> {
+        const currentNodeSchemaName = await this.loader.getSchemaNameForNode(this.project, this.currentNodeUuid)
+
+        let currentSchema = this.appState.now.mesh.schemas.find(schema => schema.name === currentNodeSchemaName)
+        if (!currentSchema) {
+            const schemas =  await this.loader.listProjectSchemas(this.project);
+            currentSchema = schemas.find(schema => schema.name === currentNodeSchemaName)
+            this.appState.dispatch(new SchemasLoaded(schemas));
+        }
+
+        return currentSchema;
+    }
+
+    private getImagePath(fieldName: string): string {
         return this.imageService.getImageUrlForBinaryField(
             this.project,
             this.currentNodeUuid,
@@ -118,25 +118,6 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
             this.currentLanguage,
             fieldName,
         );
-    }
-
-    private getFieldType(field: SchemaField): FieldType {
-        if (typeof field === 'object') {
-            if (field.constructor === Array) {
-                return FieldType.LIST
-            }
-
-            const fieldObject = field as unknown as object;
-            if(fieldObject['binaryUuid']) {
-                return FieldType.BINARY;
-            }
-            else if(fieldObject['uuid']) {
-                return FieldType.NODE;
-            }
-        }
-        else if (typeof field === 'string') {
-            return FieldType.STRING;
-        }
     }
 
     async detailsClose(): Promise<void> {

@@ -87,13 +87,21 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         for (const fieldDefinition of currentSchema.fields) {
             let fieldValue = response.fields[fieldDefinition.name] as unknown as string;
 
-            if (fieldDefinition.type === FieldType.BINARY) {
-                fieldValue = this.getImagePath(fieldDefinition.name);
-            }
-
-            if (fieldDefinition.type === FieldType.NODE) {
-                const node = response.fields[fieldDefinition.name] as unknown as object;
-                fieldValue = node['displayName'] ?? node['uuid'];
+            switch(fieldDefinition.type) {
+                case FieldType.BINARY: {
+                    fieldValue = this.getImagePath(fieldDefinition.name);
+                    break;
+                }
+                case FieldType.NODE: {
+                    const node = response.fields[fieldDefinition.name] as unknown as object;
+                    fieldValue = node['displayName'] ?? node['uuid'];
+                    break;
+                }
+                case FieldType.MICRONODE: {
+                    const microNode = response.fields[fieldDefinition.name] as unknown as object;
+                    fieldValue = microNode['fields'];
+                    break;
+                }
             }
 
             this.fields.push({

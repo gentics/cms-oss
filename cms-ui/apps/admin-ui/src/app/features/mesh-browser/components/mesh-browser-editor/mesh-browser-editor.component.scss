@@ -63,12 +63,6 @@
         color: #449d44;
     }
 
-    .list {
-        padding: 0.5rem;
-        border: 2px solid lightgrey;
-        border-radius: 4px;
-    }
-
     .field-node {
         color: $gtx-color-primary;
         cursor: pointer;
@@ -77,8 +71,36 @@
             width: 20px;
         }
     }
+    
+    .micronode-container{
+        display: flex;
+        width: 100%;
+        flex-wrap: wrap;
+
+        & .micronode-field {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            margin-bottom: 0.6rem;
+        }
+
+        & .field-label {
+            width: 150px;
+        }
+
+        & .field-node icon {
+            font-size: 18px;
+        }
+
+    }
 }
 
+.value-container {
+    padding: 0.5rem;
+    border: 2px solid lightgrey;
+    border-radius: 4px;
+    min-height: 35px;
+}
 
 .copy-uuid {
     color: $gtx-color-primary;

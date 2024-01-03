@@ -27,7 +27,7 @@
 
             <div [ngSwitch]="field.type" class="field-value-wrapper">
 
-                <div class="list" *ngSwitchCase="'list'">
+                <div class="value-container" *ngSwitchCase="'list'">
                     <div *ngFor="let field of field.value" class="field-value">
                         {{ field }}
                     </div>
@@ -46,8 +46,26 @@
                 </ng-container>    
 
                 <div *ngSwitchCase="'node'" (click)="loadNode(field.value)" class="field-node">
-                    <icon left>share</icon>
+                    <icon left>share</icon> 
                     {{ field.value }}
+                </div>  
+
+                <div *ngSwitchCase="'micronode'" class="micronode-container value-container">
+
+                    <div *ngFor="let field of field.value | keyvalue" class="micronode-field">
+                        <label class="field-label">{{ field.key }}</label>
+
+                        <span *ngIf="!field.value['uuid'] else nodeReferenceRenderer" class="field-value" >
+                              {{ field.value }}<br>
+                        </span>
+
+                        <ng-template #nodeReferenceRenderer>
+                            <div (click)="loadNode(field.value['uuid'])" class="field-node">
+                                <icon>share</icon> 
+                                {{ field.value['uuid'] }}
+                            </div>    
+                        </ng-template>
+                    </div>
                 </div>  
 
                 <span *ngSwitchDefault class="field-value">

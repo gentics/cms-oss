@@ -1,12 +1,15 @@
 import {
+    AdminUIEntityDetailRoutes,
     AdminUIModuleRoutes,
+    ROUTE_DETAIL_OUTLET,
     ROUTE_MESH_BROWSER_OUTLET,
 } from '@admin-ui/common';
 import { BreadcrumbsService } from '@admin-ui/core';
+import { AppStateService, FocusEditor } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { IBreadcrumbRouterLink } from '@gentics/ui-core';
+import { IBreadcrumbRouterLink, getFullPrimaryPath } from '@gentics/ui-core';
 import {
     MeshSchemaListParams,
     NavigationEntry,
@@ -18,6 +21,7 @@ export class MeshBrowserNavigatorService {
         protected meshClient: MeshRestClientService,
         protected breadcrumbService: BreadcrumbsService,
         protected router: Router,
+        protected appState: AppStateService,
     ) {}
 
     public handleNavigation(
@@ -70,6 +74,35 @@ export class MeshBrowserNavigatorService {
         this.router.navigate([`/${AdminUIModuleRoutes.MESH_BROWSER}`], {
             relativeTo: route,
         });
+    }
+
+    public async navigateToDetails(
+        route: ActivatedRoute,
+        currentNodeUuid: string,
+        currentProject: string,
+        currentBranchUuid: string,
+        currentLanguage: string,
+    ): Promise<void> {
+        const fullUrl = getFullPrimaryPath(route);
+
+        const commands: any[] = [
+            fullUrl,
+            {
+                outlets: {
+                    [ROUTE_DETAIL_OUTLET]:  [
+                        AdminUIEntityDetailRoutes.MESH_BROWSER,
+                        currentProject,
+                        currentBranchUuid,
+                        currentNodeUuid,
+                        currentLanguage,
+                    ],
+                },
+            },
+        ] ;
+        const extras: NavigationExtras = { relativeTo: route };
+
+        await this.router.navigate(commands, extras);
+        this.appState.dispatch(new FocusEditor());
     }
 
     public async handleBreadcrumbNavigation(

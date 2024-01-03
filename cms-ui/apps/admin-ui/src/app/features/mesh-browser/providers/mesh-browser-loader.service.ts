@@ -124,23 +124,6 @@ export class MeshBrowserLoaderService {
 
 
     public async getSchemaNameForNode(project: string, nodeUuid: string): Promise<string>  {
-        // todo: report graphql bug: schema is null for some nodes
-        // const response = await this.meshClient.graphql(project, {
-        //     query: `
-        //         query($nodeUuid: String) {
-        //             node(uuid: $nodeUuid) {
-        //                 uuid
-        //                 schema {
-        //                     name
-        //                 }
-        //             }
-        //         }
-        //     `,
-        //     variables: params,
-        // });
-
-        // return response.data?.node?.schema?.name;
-
         const schemaFieldsFilter: NodeLoadOptions = {
             fields: ['schema'],
         }
@@ -151,12 +134,20 @@ export class MeshBrowserLoaderService {
 
 
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
+        // request for all project languages
+        if (params?.lang) {
+            const projectLanguages = await this.getAllLanguages();
+            params.lang += ',' + projectLanguages
+                .filter(lang => lang.languageTag !== params.lang)
+                .map(lang => lang.languageTag)
+                .reduce((result, lang) => result += ','+lang);
+        }
+
         const response = await this.meshClient.nodes.get(project, uuid, params);
         return response;
     }
 
-
-    public async getAllLanguages(): Promise<Language[]>{
+    public async getAllLanguages(): Promise<Language[]> {
         // const response = await this.meshClient.language.list();
         // return response.data;
 

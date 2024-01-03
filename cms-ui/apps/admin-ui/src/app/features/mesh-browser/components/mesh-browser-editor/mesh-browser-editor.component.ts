@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType } from '@gentics/mesh-models';
 import { MeshField, SchemaContainer } from '../../models/mesh-browser-models';
-import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
 
 @Component({
@@ -40,6 +40,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         protected loader: MeshBrowserLoaderService,
         protected imageService: MeshBrowserImageService,
         protected activationGuard: MeshBrowserCanActivateGuard,
+        protected navigator: MeshBrowserNavigatorService,
     ) { }
 
     async ngOnInit(): Promise<void> {
@@ -59,6 +60,12 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         if (changes.currentNodeId || this.currentBranchUuid || changes.currentLanguage) {
             this.updateComponent();
         }
+    }
+
+    public loadNode(nodeUuid: string): void {
+        this.currentNodeUuid = nodeUuid;
+        this.updateComponent();
+        this.navigator.navigateToDetails(this.route, nodeUuid, this.project, this.currentBranchUuid, this.currentLanguage);
     }
 
     private async mapResponseToSchemaFields(): Promise<void> {

@@ -45,6 +45,11 @@
                     </ng-template>
                 </ng-container>    
 
+                <div *ngSwitchCase="'node'" (click)="loadNode(field.value)" class="field-node">
+                    <icon left>share</icon>
+                    {{ field.value }}
+                </div>  
+
                 <span *ngSwitchDefault class="field-value">
                     {{ field.value }}
                 </span>

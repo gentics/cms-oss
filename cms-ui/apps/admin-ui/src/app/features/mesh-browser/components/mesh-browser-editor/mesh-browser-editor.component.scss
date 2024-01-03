@@ -68,6 +68,15 @@
         border: 2px solid lightgrey;
         border-radius: 4px;
     }
+
+    .field-node {
+        color: $gtx-color-primary;
+        cursor: pointer;
+
+        icon {
+            width: 20px;
+        }
+    }
 }
 
 

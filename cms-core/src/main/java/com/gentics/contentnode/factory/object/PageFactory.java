@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,6 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import org.apache.commons.collections.CollectionUtils;
 
 import com.gentics.api.lib.datasource.VersioningDatasource.Version;
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -4532,8 +4535,26 @@ public class PageFactory extends AbstractFactory {
 				pageIds.add(page.getId());
 				deletedPages.put(page.getId(), page);
 				ActionLogger.logCmd(ActionLogger.DEL, Page.TYPE_PAGE, page.getId(), null, "Page.delete()");
+
+				String meshLanguage = "en";
+				try {
+					meshLanguage = MeshPublisher.getMeshLanguage(page);
+				} catch (NodeException e) {
+					// this might happen, when the language is also deleted in the same transaction
+					Integer languageId = page.getLanguageId();
+					if (languageId != null) {
+						// so if the page had a language, we try to find it in the deletelist for languages
+						AbstractFactory languageFactory = (AbstractFactory) t.getObjectFactory(ContentLanguage.class);
+						Collection<ContentLanguage> deletedLanguanges = languageFactory.getDeleteList(ContentLanguage.class);
+						if (CollectionUtils.isNotEmpty(deletedLanguanges)) {
+							meshLanguage = deletedLanguanges.stream().filter(lang -> Objects.equals(lang.getId(), languageId))
+									.findFirst().map(ContentLanguage::getCode).orElse(meshLanguage);
+						}
+					}
+				}
+
 				Events.trigger(page, new String[] { ObjectTransformer.getString(page.getFolder().getNode().getId(), ""),
-						MeshPublisher.getMeshUuid(page), MeshPublisher.getMeshLanguage(page) }, Events.DELETE);
+						MeshPublisher.getMeshUuid(page), meshLanguage }, Events.DELETE);
 
 				// if the folder is a localized copy, it was hiding other folders (which are now "created")
 				if (!page.isMaster()) {

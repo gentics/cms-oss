@@ -48,6 +48,9 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 	 * Function to convert the object to the devtools model
 	 */
 	public final static BiFunction<Value, DefaultValueModel, DefaultValueModel> NODE2DEVTOOL = (from, to) -> {
+		if (from == null || from.getPartType() == null) {
+			return to;
+		}
 		Transaction t = TransactionManager.getCurrentTransaction();
 
 		Property property = from.getPartType().toProperty();

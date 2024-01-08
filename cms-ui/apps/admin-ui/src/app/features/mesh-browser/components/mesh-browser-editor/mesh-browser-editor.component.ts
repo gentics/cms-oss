@@ -31,6 +31,8 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
     public title: string;
 
+    public version: string;
+
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -83,6 +85,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         }
 
         this.fields = [];
+        this.version = response.version;
 
         for (const fieldDefinition of currentSchema.fields) {
             let fieldValue = response.fields[fieldDefinition.name] as unknown as string;

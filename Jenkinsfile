@@ -139,7 +139,7 @@ spec:
                             mvnArguments += "-Dsurefire.baselib.excludedGroups=com.gentics.contentnode.tests.category.BaseLibTest"
                         }
 
-                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DfailIfNoTests=false -Dtest=" + params.singleTest : "")
+                        mvnArguments += (params.singleTest ? " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Dtest=" + params.singleTest : "")
 
                         // Check if triggered by a Gitlab merge request
                         if (env.gitlabTargetBranch) {

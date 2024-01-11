@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
@@ -59,6 +60,13 @@ public class DeleteConstructTest {
 			node = ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.BOTH);
 			constructId = ContentNodeTestDataUtils.createConstruct(
 					node, ShortTextPartType.class, "shorttext", "text");
+		}
+	}
+
+	@Test(expected = InconsistentDataException.class)
+	public void constructWithMissingPartTypeTest() throws NodeException {
+		try (Trx trx = new Trx()) {
+			ContentNodeTestDataUtils.createConstruct(node, 1234567890, "broken", "bogus", null);
 		}
 	}
 

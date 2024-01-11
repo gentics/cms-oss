@@ -120,7 +120,6 @@ import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ImageResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.rest.util.MiscUtils;
-import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlet.queue.NodeCopyQueueEntry;
 import com.gentics.lib.content.GenticsContentAttribute;
 import com.gentics.lib.db.SQLExecutor;
@@ -154,6 +153,46 @@ public class ContentNodeTestDataUtils {
 	 */
 	public final static int NODE_GROUP_ID = 2;
 
+	/**
+	 * Create a construct with a single visible editable part
+	 * @param node node
+	 * @param clazz parttype class
+	 * @param constructKeyword keyword of the construct
+	 * @param partKeyword keyword of the part
+	 * @return id of the construct
+	 * @throws NodeException
+	 */
+	public static <T extends PartType> int createConstruct(Node node, int partTypeId, String constructKeyword, String partKeyword, com.gentics.contentnode.object.Datasource ds) throws NodeException {
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		Construct construct = t.createObject(Construct.class);
+		construct.setAutoEnable(true);
+		construct.setIconName("icon");
+		construct.setKeyword(constructKeyword);
+		construct.setName(constructKeyword, 1);
+		if (node != null) {
+			construct.getNodes().add(node);
+		}
+
+		Part part = t.createObject(Part.class);
+		part.setEditable(1);
+		part.setHidden(false);
+		part.setKeyname(partKeyword);
+		part.setName(partKeyword, 1);
+		part.setPartTypeId(partTypeId);
+		part.setDefaultValue(t.createObject(Value.class));
+
+		if (ds != null) {
+			part.setInfoInt(ObjectTransformer.getInt(ds.getId(), 0));
+		}
+
+		construct.getParts().add(part);
+
+		construct.save();
+		t.commit(false);
+
+		return ObjectTransformer.getInt(construct.getId(), 0);
+	}
 
 	/**
 	 * Create a construct with a single visible editable part
@@ -190,33 +229,7 @@ public class ContentNodeTestDataUtils {
 			t.commit(false);
 		}
 
-		Construct construct = t.createObject(Construct.class);
-		construct.setAutoEnable(true);
-		construct.setIconName("icon");
-		construct.setKeyword(constructKeyword);
-		construct.setName(constructKeyword, 1);
-		if (node != null) {
-			construct.getNodes().add(node);
-		}
-
-		Part part = t.createObject(Part.class);
-		part.setEditable(1);
-		part.setHidden(false);
-		part.setKeyname(partKeyword);
-		part.setName(partKeyword, 1);
-		part.setPartTypeId(getPartTypeId(clazz));
-		part.setDefaultValue(t.createObject(Value.class));
-
-		if (ds != null) {
-			part.setInfoInt(ObjectTransformer.getInt(ds.getId(), 0));
-		}
-
-		construct.getParts().add(part);
-
-		construct.save();
-		t.commit(false);
-
-		return ObjectTransformer.getInt(construct.getId(), 0);
+		return createConstruct(node, getPartTypeId(clazz), constructKeyword, partKeyword, ds);
 	}
 
 	/**

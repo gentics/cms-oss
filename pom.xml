@@ -9,7 +9,7 @@
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
-	<url>http://www.gentics.com/</url>
+	<url>https://www.gentics.com/</url>
 
 	<licenses>
 		<license>
@@ -19,9 +19,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
-		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
-		<url>http://git.gentics.com/psc/contentnode</url>
+		<connection>scm:git:git@github.com:gentics/cms-oss.git</connection>
+		<developerConnection>scm:git:git@github.com:gentics/cms-oss.git</developerConnection>
+		<url>https://github.com/gentics/cms-oss</url>
 	</scm>
 
 	<modules>
@@ -281,7 +281,7 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>${surefire.version}</version>
 					<configuration>
-						<argLine>@{argLine} ${surefireArgLine} -Xms64m -Xmx256m --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
+						<argLine>@{argLine} ${surefireArgLine} -Xms128m -Xmx512m --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
 						<jvm>${test.jvm.home}/bin/java</jvm>
 						<skip>${skip.unit.tests}</skip>
 						<forkCount>${surefire.forkcount}</forkCount>

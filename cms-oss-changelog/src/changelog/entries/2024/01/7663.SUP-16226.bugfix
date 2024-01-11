@@ -1,1 +1,1 @@
-Randon actions on a construct with a part with missing PartType were throwing NullPointerException with no meaningful description. This has been fixed.
+Random actions on a construct with a part with missing PartType were throwing NullPointerException with no meaningful description. This has been fixed.

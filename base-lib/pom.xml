@@ -12,17 +12,18 @@
 
 	<organization>
 		<name>Gentics Software GmbH</name>
-		<url>http://www.gentics.com/</url>
+		<url>https://www.gentics.com/</url>
 	</organization>
 	<description>Basic implementations</description>
 	<name>Gentics CMS - Basic Library</name>
-	<url>http://www.gentics.com</url>
+	<url>https://www.gentics.com</url>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<surefire.baselib.excludedGroups></surefire.baselib.excludedGroups>
 		<javax.activation.version>1.2.0</javax.activation.version>
+		<test.forkcount>8</test.forkcount>
 	</properties>
 
 	<build>
@@ -33,7 +34,7 @@
 				<configuration>
 					<argLine>${surefireArgLine}</argLine>
 					<skip>${skip.unit.tests}</skip>
-					<forkCount>${surefire.forkcount}</forkCount>
+					<forkCount>${test.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
 					<forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>
 					<includes>

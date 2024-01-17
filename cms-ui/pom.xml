@@ -33,6 +33,9 @@
         <ui.skip.assembly>true</ui.skip.assembly>
         <!-- If the UI module should skip testing -->
         <ui.skip.test>true</ui.skip.test>
+        <!-- If the UI module should skip reporting -->
+        <ui.skip.report>false</ui.skip.report>
+		<ui.report.assemply.phase>package</ui.report.assemply.phase>
 
         <!-- The browsers to use when executing the tests -->
         <ui.test.browsers>ChromeDocker</ui.test.browsers>
@@ -122,11 +125,64 @@
                             <workingDirectory>${npm.workingDirectory}</workingDirectory>
 						</configuration>
 					</execution>
+
+					<execution>
+						<?m2e ignore?>
+						<id>npm report list</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+
+						<phase>generate-resources</phase>
+
+						<configuration>
+							<skip>${ui.skip.report}</skip>
+							<arguments>run-script report:list</arguments>
+							<workingDirectory>${npm.workingDirectory}</workingDirectory>
+						</configuration>
+					</execution>
+
+					<execution>
+						<?m2e ignore?>
+						<id>npm report outdated</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+
+						<phase>generate-resources</phase>
+
+						<configuration>
+							<skip>${ui.skip.report}</skip>
+							<arguments>run-script report:outdated</arguments>
+							<workingDirectory>${npm.workingDirectory}</workingDirectory>
+						</configuration>
+					</execution>
 				</executions>
 
 				<configuration>
 					<nodeVersion>${nodejs.version}</nodeVersion>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>com.gentics</groupId>
+				<artifactId>dependency-reporting-plugin</artifactId>
+
+				<executions>
+					<execution>
+						<id>npm-transform</id>
+						<goals>
+							<goal>npm-transform</goal>
+						</goals>
+						<configuration>
+							<skip>${ui.skip.report}</skip>
+							<dependenciesFile>dist/dependencies.json</dependenciesFile>
+							<outdatedFile>dist/outdated.json</outdatedFile>
+							<componentName>CMS OSS</componentName>
+							<moduleName>User Interface</moduleName>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>
@@ -141,15 +197,28 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+					<execution>
+						<?m2e ignore?>
+						<id>make-report-assembly</id>
+						<phase>${ui.report.assemply.phase}</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>report-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
 					</execution>
 				</executions>
-
-				<configuration>
-					<appendAssemblyId>false</appendAssemblyId>
-					<descriptors>
-						<descriptor>assembly.xml</descriptor>
-					</descriptors>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

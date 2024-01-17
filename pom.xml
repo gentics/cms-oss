@@ -9,20 +9,19 @@
 	<name>Gentics CMS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
-	<url>http://www.gentics.com/</url>
+	<url>https://www.gentics.com/</url>
 
 	<licenses>
 		<license>
 			<name>Gentics Software GmbH - Commercial License</name>
-			<url>http://www.gentics.com/licenses/LICENSE.txt</url>
+			<url>https://www.gentics.com/licenses/LICENSE.txt</url>
 		</license>
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
-		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
-		<url>http://git.gentics.com/psc/contentnode</url>
-		<tag>contentnode-5.25.0</tag>
+		<connection>scm:git:git@git.gentics.com:psc/cms.git</connection>
+		<developerConnection>scm:git:git@git.gentics.com:psc/cms.git</developerConnection>
+		<url>https://git.gentics.com/psc/cms.git</url>
 	</scm>
 
 	<modules>

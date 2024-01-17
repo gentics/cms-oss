@@ -91,7 +91,7 @@
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
-		<surefireArgLine><!-- make sure this prop exists--></surefireArgLine>
+		<surefireArgLine>-Xms128m -Xmx512m --add-opens=java.base/java.lang=ALL-UNNAMED</surefireArgLine>
 	</properties>
 
 	<build>
@@ -281,7 +281,7 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>${surefire.version}</version>
 					<configuration>
-						<argLine>@{argLine} ${surefireArgLine} -Xms128m -Xmx512m --add-opens=java.base/java.lang=ALL-UNNAMED</argLine>
+						<argLine>@{argLine} ${surefireArgLine}</argLine>
 						<jvm>${test.jvm.home}/bin/java</jvm>
 						<skip>${skip.unit.tests}</skip>
 						<forkCount>${surefire.forkcount}</forkCount>

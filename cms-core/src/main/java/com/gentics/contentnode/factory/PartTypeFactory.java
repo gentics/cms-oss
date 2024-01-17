@@ -114,7 +114,7 @@ public class PartTypeFactory {
 				partTypeInfoCache.put(partTypeId, partTypeInfo);
 				return partTypeInfo;
 			} else {
-				return null;
+				throw new NodeException("No entry found in the database for partType " + partTypeId);
 			}
 		} catch (SQLException e) {
 			throw new NodeException("SQLException while loading javaclass for id " + partTypeId, e);

@@ -5,7 +5,6 @@
  */
 package com.gentics.contentnode.factory.object;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +18,6 @@ import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.i18n.I18nString;
-import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.C;
 import com.gentics.contentnode.factory.DBTable;
 import com.gentics.contentnode.factory.DBTables;
@@ -212,22 +210,6 @@ public class ValueFactory extends AbstractFactory {
 				if (checkForNull) {
 					// check for data consistency
 					assertNodeObjectNotNull(part, partId, "Part");
-					int partTypeId = part.getPartTypeId();
-					PartType ptype = DBUtils.select("SELECT javaclass FROM type WHERE id = ? LIMIT 1", 
-						ps -> ps.setInt(1, partTypeId),
-						rs -> {
-							if (rs.next()) {
-								try {
-									String javaclass = rs.getString("javaclass");
-									Class<? extends PartType> cls = (Class<? extends PartType>) Class.forName(javaclass);
-									return cls.getDeclaredConstructor(Value.class).newInstance((Value) null);
-								} catch (Throwable e) {
-									throw new NodeException(e);
-								}
-							}
-							return null;
-						});
-					assertNodeObjectNotNull(ptype, partTypeId, "PartType", false);
 				}
 				t.putIntoLevel2Cache(this, PART, part);
 			}

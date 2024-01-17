@@ -8,10 +8,10 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.gentics.api.lib.exception.InconsistentDataException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.Trx;
@@ -40,6 +40,7 @@ import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -47,8 +48,11 @@ import com.gentics.contentnode.testutils.DBTestContext;
  */
 public class DeleteConstructTest {
 
+	@ClassRule
+	public static DBTestContext testContext = new DBTestContext();
+
 	@Rule
-	public DBTestContext testContext = new DBTestContext();
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	protected Node node = null;
 	protected int constructId = 0;
@@ -60,11 +64,17 @@ public class DeleteConstructTest {
 			node = ContentNodeTestDataUtils.createNode("node", "Node", PublishTarget.BOTH);
 			constructId = ContentNodeTestDataUtils.createConstruct(
 					node, ShortTextPartType.class, "shorttext", "text");
+			trx.success();
 		}
 	}
 
-	@Test(expected = InconsistentDataException.class)
+	/**
+	 * Test creating a construct with non-existent part type Id
+	 * @throws NodeException
+	 */
+	@Test
 	public void constructWithMissingPartTypeTest() throws NodeException {
+		exceptionChecker.expect(NodeException.class, "No entry found in the database for partType 1234567890");
 		try (Trx trx = new Trx()) {
 			ContentNodeTestDataUtils.createConstruct(node, 1234567890, "broken", "bogus", null);
 		}

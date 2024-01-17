@@ -23,7 +23,7 @@
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
 		<surefire.baselib.excludedGroups></surefire.baselib.excludedGroups>
 		<javax.activation.version>1.2.0</javax.activation.version>
-		<test.forkcount>5</test.forkcount>
+		<test.forkcount>8</test.forkcount>
 	</properties>
 
 	<build>
@@ -32,7 +32,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>${surefireArgLine} -Xms128m -Xmx1024m</argLine>
+					<argLine>${surefireArgLine} -Xms256m -Xmx1024m</argLine>
 					<skip>${skip.unit.tests}</skip>
 					<forkCount>${test.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>

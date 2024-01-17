@@ -54,31 +54,27 @@ This repository using the Nx library together with Angular CLI. Therefore applic
 
 Custom TypeScript types are placed in the `typings` folder and can be included as other types with `tsconfig.json` files on package level or globally.
 
-```
-contentnode/contentnode-ui
-+-- apps
-+--- admin-ui
-+--- admin-ui-e2e
-+--- editor-ui
-+--- editor-ui-e2e
-+--- ct-link-checker
-+--- ct-link-checker-e2e
-+--- image-editor-demo
-+--- ui-core-docs
-+-- ci
-+-- libs
-+--- cms-components
-+--- cms-models
-+--- cms-rest-clients-angular
-+--- form-generator
-+--- image-editor
-+--- ui-core
-+-- typings
-+-- nx.json
-+-- angular.json
-+-- package.json
-+-- tsconfig.json
-+-- README.md
+```txt
++- apps
+|  +- admin-ui
+|  +- editor-ui
+|  +- ct-link-checker
+|  +- image-editor-demo
+|  +- ui-core-docs
++- ci
++- libs
+|  +- cms-components
+|  +- cms-models
+|  +- cms-rest-clients-angular
+|  +- form-generator
+|  +- image-editor
+|  +- ui-core
++- typings
++- nx.json
++- angular.json
++- package.json
++- tsconfig.json
++- README.md
 ```
 
 ### Manage dependencies
@@ -95,7 +91,7 @@ These commands can be used to create new applications in the monorepo. It will g
 
 **Adds a new Angular application with Karma tests and Protractor e2e, using SCSS and Angular routing:**
 ```bash
-nx g @nrwl/angular:app <app-name> --routing --unit-test-runner=karma --e2e-test-runner=protractor --style=scss
+nx g @nrwl/angular:app <app-name> --routing --unit-test-runner=karma --style=scss
 ```
 
 ### Add new library
@@ -147,13 +143,13 @@ To maintain compatibility with legacy code, the default `ModelType` for [normali
 
 **Readme**: [libs/cms-rest-clients-angular/README.md](libs/cms-rest-clients-angular/README.md)
 
-### CMS Admin Rest Clients
+### Gentics UI Core
 
-**Name:** cms-admin-rest-clients-angular
+**Name:** ui-core
 
 **Type:** Library
 
-**Readme**: [libs/cms-admin-rest-clients-angular/README.md](libs/cms-admin-rest-clients-angular/README.md)
+**Readme**: [libs/ui-core/README.md](libs/ui-core/README.md)
 
 ### Custom Tool: Link Checker
 
@@ -165,8 +161,47 @@ To maintain compatibility with legacy code, the default `ModelType` for [normali
 
 ## Coding Style
 
-* Make sure that your code editor adheres to the [.editorconfig](./.editorconfig) file. For many editors there are extensions for automatically importing that file (for Visual Studio Code use [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)).
-* Always use relative paths for TypeScript import statements (in Visual Studio Code you can use the setting `"typescript.preferences.importModuleSpecifier": "relative"`).
+The Coding style for TypeScript and JavaScript are enforced/linted via eslint.
+
+### Template Styling
+
+1. All Components, Directives, and Pipes are to be prefixed with a project depended prefix (currently `gtx-` in most cases).
+2. Attributes of a Component/Directive are only allowed to be 3 per line and have to close on the same line.
+If there's more attributes or it becomes unreadable, you may put each attribute on a new line and indent it by one.
+When multiple lines are used for attributes, put the `>` of the opening tag on it's own line and don't indent it.
+3. Attributes are always to be in double quotes `value="hello world"`.
+4. Dynamic values are always to be set via proper binding `[value]="someValue"` instead of interpreting them like `value="{{ someValue }}"`.
+5. Sort your attributes based on it's type (names should not be relevant):
+   1. Reference/Naming (`#myReference`)
+   2. Self-Bound Template operators such as `*ngIf`, `*ngFor`, `[ngSwitch]`, ...
+   3. Directives
+   4. Regular static attributes, such as `class="hello world"`, `id="xyz"`, `title="Foo bar!"`
+   5. Angular attribute bindings, such as `[class.<class-name>]`, `[ngClass]`, `[attr.<attr-name>]`, ...
+   6. Component input bindings
+   7. Component two-way bindings
+   8. Component output bindings
+
+Here are example of how they should look like:
+
+```html
+<gtx-foo-bar value="short element">{{ someValue }}</gtx-foo-bar>
+
+<gtx-foo-bar *ngIf="!loading" [value]="someValue" (change)="updateValue($event)">Click me!</gtx-foo-bar>
+
+<gtx-foo-bar
+    *ngFor="let child of children"
+    gtxAppendService
+    class="row"
+    [attr.title]="child.name"
+    [value]="child.id"
+    [(selected)]="child.selected"
+    (highlight)="highlightChild(child)"
+></gtx-foo-bar>
+
+<ng-template #myRenderer>
+    Hello World!
+</ng-template>
+```
 
 ## Package repository settings
 

@@ -4,12 +4,32 @@
         "secure": false,
         "changeOrigin": true
     },
-    "/alohaeditor": {
+	"/static": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/customplugins": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/ui-conf": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     },
     "/alohapage": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/alohaeditor": {
+        "target": "http://localhost:8080",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/GenticsImageStore": {
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
@@ -24,33 +44,8 @@
         "secure": false,
         "changeOrigin": true
     },
-    "/GenticsImageStore": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
-    "/static": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
-    "/customer-config": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
-    "/ct-link-checker": {
-        "target": "http://localhost:8080",
-        "secure": false,
-        "changeOrigin": true
-    },
-    "/images": {
-        "target": "http://cms.localhost.gentics.com",
-        "secure": false,
-        "changeOrigin": true
-    },
     "/internal": {
-        "target": "http://cms.localhost.gentics.com",
+        "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
     }

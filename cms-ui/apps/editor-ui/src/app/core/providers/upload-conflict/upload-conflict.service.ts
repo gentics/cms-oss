@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
+import { UploadResponse } from '@editor-ui/app/common/models';
 import { File as FileModel } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
-import { from, Observable } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { FolderActionsService } from '../../../state';
 import { FileNameConflictModal } from '../../components/file-name-conflict-modal/file-name-conflict-modal.component';
-import { UploadResponse } from '../api';
-import { Api } from '../api/api.service';
 
 export type FileToReplace = {
     id: number;
@@ -26,9 +26,9 @@ export type SortedFiles = {
 export class UploadConflictService {
 
     constructor(
-        private api: Api,
         private modalService: ModalService,
         private folderActions: FolderActionsService,
+        private client: GCMSRestClientService,
     ) { }
 
     /**
@@ -39,24 +39,26 @@ export class UploadConflictService {
      * @param nodeId the ID of the destination node
      * @param folderId the ID of the destination folder
      */
-    uploadFilesWithConflictsCheck(filesToUpload: File[], nodeId: number, folderId: number): Observable<UploadResponse[][]> {
-        return from(this.checkForConflicts(filesToUpload, nodeId, folderId)
-            .then<any>(conflictingFiles => {
-                if (0 < conflictingFiles.length) {
-                    // File name conflicts - prompt user how to proceed.
-                    return this.modalService.fromComponent(FileNameConflictModal, {}, {
-                        conflictingFiles,
-                        totalFileCount: filesToUpload.length,
-                    }).then(modal => modal.open());
+    uploadFilesWithConflictsCheck(filesToUpload: File[], nodeId: number, folderId: number): Observable<UploadResponse[]> {
+        const toReplace: Observable<FileModel[]> = this.checkForConflicts(filesToUpload, nodeId, folderId).pipe(
+            switchMap(conflictingFiles => {
+                if (conflictingFiles.length < 1) {
+                    return of([]);
                 }
-                return [];
-            })
-            .then((itemsToReplace: FileModel[]) => {
+
+                // File name conflicts - prompt user how to proceed.
+                return from(this.modalService.fromComponent(FileNameConflictModal, {}, {
+                    conflictingFiles,
+                    totalFileCount: filesToUpload.length,
+                }).then(modal => modal.open()));
+            }),
+        );
+
+        return toReplace.pipe(
+            switchMap((itemsToReplace: FileModel[]) => {
                 const sortedFiles = this.sortFilesForUpload(filesToUpload, itemsToReplace);
                 return this.folderActions.uploadAndReplace(sortedFiles, folderId, nodeId);
             }),
-        ).pipe(
-            switchMap((uploadResponses: Observable<UploadResponse[][]>) => uploadResponses),
         );
     }
 
@@ -67,7 +69,7 @@ export class UploadConflictService {
      * a) create a new file object or
      * b) replace the binary associated with the existing file object.
      */
-    checkForConflicts(filesToUpload: File[], nodeId: number, folderId: number): Promise<FileModel[]> {
+    checkForConflicts(filesToUpload: File[], nodeId: number, folderId: number): Observable<FileModel[]> {
         const isImage = (file: File) => file.type.startsWith('image/');
         const files = filesToUpload.map(rawFile => {
             return {
@@ -76,12 +78,12 @@ export class UploadConflictService {
             };
         });
 
-        return this.api.folders.getItems(folderId, ['file', 'image'], { nodeId, maxItems: -1 }).pipe(
+        return this.client.folder.items(folderId, { type: 'file,image', nodeId, maxItems: -1 }).pipe(
             map(response => {
-                let fileObjects = response.items as FileModel[];
+                const fileObjects = response.items as FileModel[];
                 return fileObjects.filter(file => this.matchesNameAndType(files, file));
             }),
-        ).toPromise();
+        );
     }
 
     /**
@@ -90,21 +92,21 @@ export class UploadConflictService {
      * existing file binaries.
      */
     sortFilesForUpload(filesToUpload: File[], itemsToReplace: FileModel[] = []): SortedFiles {
-        let sortedFiles: SortedFiles = {
+        const sortedFiles: SortedFiles = {
             create: { files: [], images: [] },
             replace: { files: [], images: [] },
         };
 
         const getReplacementItem = (file: File): FileModel => {
-            let matches = itemsToReplace.filter(item => {
+            const matches = itemsToReplace.filter(item => {
                 return this.matchesName(file, item) && this.getType(file) === item.type;
             });
             return 0 < matches.length ? matches[0] : null;
         };
 
         filesToUpload.forEach(file => {
-            let type = this.getType(file);
-            let replacementItem = getReplacementItem(file);
+            const type = this.getType(file);
+            const replacementItem = getReplacementItem(file);
             if (type === 'image') {
                 if (replacementItem) {
                     sortedFiles.replace.images.push({ id: replacementItem.id, file });
@@ -128,7 +130,7 @@ export class UploadConflictService {
      */
     private matchesNameAndType(files: { name: string, type: string }[], fileOrItem: File | FileModel): boolean {
         const targetType = this.getType(fileOrItem);
-        let filtered = files.filter(file => this.matchesName(file, fileOrItem) && file.type === targetType);
+        const filtered = files.filter(file => this.matchesName(file, fileOrItem) && file.type === targetType);
         return 0 < filtered.length;
     }
 

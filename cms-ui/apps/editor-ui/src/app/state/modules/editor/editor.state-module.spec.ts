@@ -38,6 +38,7 @@ describe('EditorStateModule', () => {
 
     it('sets the correct initial state', () => {
         expect(appState.now.editor).toEqual({
+            compareWithId: undefined,
             editorIsFocused: false,
             editorIsOpen: false,
             focusMode: false,

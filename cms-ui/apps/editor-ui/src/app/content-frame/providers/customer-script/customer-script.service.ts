@@ -1,34 +1,35 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy } from '@angular/core';
 import { CUSTOMER_CONFIG_PATH } from '@editor-ui/app/common/config/config';
+import { AppState } from '@editor-ui/app/common/models/app-state';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@editor-ui/app/common/utils/base-urls';
 import { deepEqual } from '@editor-ui/app/common/utils/deep-equal';
 import { ApiBase } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
+import { DynamicFormModal } from '@editor-ui/app/shared/components/dynamic-form-modal/dynamic-form-modal.component';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
-import { AppState } from '@editor-ui/app/common/models/app-state';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
+import { ExposedPartialState, GcmsUiBridge, StateChangedHandler } from '@gentics/cms-integration-api-models';
 import {
-    ExposedPartialState,
-    GcmsUiBridge,
     ItemInNode,
     Page,
     Raw,
     RepositoryBrowserOptions,
-    StateChangedHandler,
     Tag,
     TagType,
 } from '@gentics/cms-models';
-import { of as observableOf, Subscription } from 'rxjs';
+import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
+import { Subscription, of as observableOf } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
-import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
-import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
+import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
+import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
@@ -37,7 +38,7 @@ type ZoneType = any;
 declare const Zone: ZoneType;
 
 // Why?
-export { ExposedPartialState, GcmsUiBridge as GCMSUI, StateChangedHandler } from '@gentics/cms-models';
+export { ExposedPartialState, GcmsUiBridge as GCMSUI, StateChangedHandler } from '@gentics/cms-integration-api-models';
 
 const gcmsui_debugTool = (window as any).gcmsui_debugTool;
 
@@ -61,12 +62,14 @@ export class CustomerScriptService implements OnDestroy {
         private http: HttpClient,
         private state: ApplicationStateService,
         private apiBase: ApiBase,
+        private client: GCMSRestClientService,
         private entityResolver: EntityResolver,
         private tagEditorService: TagEditorService,
         private editorOverlayService: EditorOverlayService,
         private errorHandlerService: ErrorHandler,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private aloha: AlohaIntegrationService,
+        private modals: ModalService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -146,7 +149,6 @@ export class CustomerScriptService implements OnDestroy {
         }
     }
 
-
     /**
      * Create an instance of the GCMSUI object for use by customer scripts.
      */
@@ -219,6 +221,8 @@ export class CustomerScriptService implements OnDestroy {
             },
             restRequestGET,
             restRequestPOST,
+            restClient: this.client.getClient(),
+
             setContentModified(modified: any): void {
                 if (typeof modified !== 'boolean') {
                     console.warn('setContentModified expects a boolean value as its argument');
@@ -231,6 +235,40 @@ export class CustomerScriptService implements OnDestroy {
             },
             callDebugTool: gcmsui_debugTool,
             openTagEditor,
+            openDynamicDropdown: (configuration) => {
+                let open = true;
+                return Promise.resolve({
+                    close: () => {
+                        open = false;
+                    },
+                    isOpen: () => open,
+                    value: Promise.resolve(null),
+                });
+            },
+            openDynamicModal: (configuration) => {
+                let open = true;
+
+                return this.modals.fromComponent(DynamicFormModal, {
+                    closeOnEscape: configuration.closeOnEscape,
+                    closeOnOverlayClick: configuration.closeOnOverlayClick,
+                    onClose: () => {
+                        open = false;
+                    },
+                }, {
+                    configuration,
+                } as any).then(ref => {
+                    return {
+                        close: () => {
+                            if (open && ref?.instance) {
+                                ref.instance.cancelFn(null, ModalClosingReason.API);
+                            }
+                        },
+                        isOpen: () => open,
+                        value: ref.open(),
+                    }
+                });
+            },
+            closeErrorClass: ModalCloseError,
         };
 
         window.GCMSUI = gcmsUi;

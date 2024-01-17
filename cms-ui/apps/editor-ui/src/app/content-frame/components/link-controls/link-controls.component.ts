@@ -26,8 +26,9 @@ import {
     LinkCheckerCheckResponse,
     NodeFeature,
     Page,
+    ResponseCode,
 } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { InputComponent, cancelEvent, waitTake } from '@gentics/ui-core';
 import { BehaviorSubject, Observable, Subscription, combineLatest, of } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
@@ -137,7 +138,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
 
     constructor(
         changeDetector: ChangeDetectorRef,
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
         protected i18n: I18nService,
         protected repositoryBrowser: RepositoryBrowserClient,
         protected appState: ApplicationStateService,
@@ -160,7 +161,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
             filter(enabled => enabled),
             mergeMap(() => this.appState.select(state => state.editor).pipe(
                 filter(editor => editor.editMode === EditMode.EDIT && editor.itemType === 'page'),
-                switchMap(editor => this.api.linkChecker.getPage(editor.itemId)),
+                switchMap(editor => this.client.linkChecker.pageLinks(editor.itemId)),
             )),
         ).subscribe(status => {
             this.linkChecker.links = status.items
@@ -186,12 +187,12 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
                         messages: [],
                         reason: '',
                         responseInfo: {
-                            responseCode: 'OK',
+                            responseCode: ResponseCode.OK,
                         },
                         valid: true,
                     });
                 }
-                return this.api.linkChecker.checkLink(link);
+                return this.client.linkChecker.checkLink(link);
             }),
         ).subscribe(status => {
             this.linkChecker.status = status.valid ? LinkCheckerStatus.VALID : LinkCheckerStatus.INVALID;
@@ -527,7 +528,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
 
         switch (itemTypeName) {
             case 'page':
-                this.internalRefLoader = this.api.pages.getPage(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.client.page.get(itemId, options).subscribe(res => {
                     this.targetObject = res.page;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();
@@ -535,7 +536,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
                 break;
 
             case 'file':
-                this.internalRefLoader = this.api.files.getFile(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.client.file.get(itemId, options).subscribe(res => {
                     this.targetObject = res.file;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();
@@ -543,7 +544,7 @@ export class LinkControlsComponent extends BaseControlsComponent implements OnIn
                 break;
 
             case 'image':
-                this.internalRefLoader = this.api.images.getImage(itemId, options).subscribe(res => {
+                this.internalRefLoader = this.client.image.get(itemId, options).subscribe(res => {
                     this.targetObject = res.image;
                     this.loadingObject = false;
                     this.changeDetector.markForCheck();

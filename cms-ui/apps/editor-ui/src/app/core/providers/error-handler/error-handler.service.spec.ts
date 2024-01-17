@@ -8,6 +8,7 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { ApiError } from '../api';
 import { I18nNotification } from '../i18n-notification/i18n-notification.service';
 import { ErrorHandler } from './error-handler.service';
+import { ResponseCode } from '@gentics/cms-models';
 
 describe('ErrorHandler', () => {
 
@@ -38,8 +39,7 @@ describe('ErrorHandler', () => {
         modalService = new MockModalService();
         notification = new MockNotificationService();
         router = new MockRouter();
-        let translate = new MockTranslateService();
-
+        const translate = new MockTranslateService();
 
         errorHandler = new ErrorHandler(
             appState as ApplicationStateService,
@@ -83,7 +83,7 @@ describe('ErrorHandler', () => {
                 },
                 response: {
                     responseInfo: {
-                        responseCode: 'NOTFOUND',
+                        responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'Did not find a user with given credentials',
                     },
                 },
@@ -106,7 +106,7 @@ describe('ErrorHandler', () => {
                 },
                 response: {
                     responseInfo: {
-                        responseCode: 'AUTHREQUIRED',
+                        responseCode: ResponseCode.AUTH_REQUIRED,
                         responseMessage: 'Invalid SID',
                     },
                 },

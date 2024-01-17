@@ -1,4 +1,6 @@
 import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normalizer/schemas';
+import { RequestFailedError } from '@gentics/cms-rest-client';
+import { FileCreateRequest, FileUploadResponse, Image, File as CMSFile } from '@gentics/cms-models';
 
 /**
  * In order not to rewrite all imports, we export all model types here as well.
@@ -53,3 +55,15 @@ export const nodeSchema = schemas.node;
 export const pageSchema = schemas.page;
 export const templateSchema = schemas.template;
 export const userSchema = schemas.user;
+
+export interface UploadResponse {
+    /** The file/blob that was attempted to be uploaded. May be optimized away. */
+    file?: File | Blob;
+    /** The request for creating a file/image. */
+    request?: FileCreateRequest;
+    /** If it was successfull. */
+    successfull: boolean;
+    error?: RequestFailedError;
+    response?: FileUploadResponse;
+    item?: CMSFile | Image;
+}

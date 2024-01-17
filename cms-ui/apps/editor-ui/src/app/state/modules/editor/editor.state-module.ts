@@ -27,6 +27,7 @@ import {
 } from './editor.actions';
 
 const INITIAL_EDITOR_STATE: EditorState = {
+    compareWithId: undefined,
     editorIsOpen: false,
     editorIsFocused: false,
     fetching: false,

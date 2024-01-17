@@ -1,5 +1,4 @@
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -9,13 +8,11 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    SimpleChange,
+    SimpleChange
 } from '@angular/core';
 import { AbstractControl, UntypedFormControl, UntypedFormGroup, ValidationErrors, Validators } from '@angular/forms';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { ApplicationStateService } from '@editor-ui/app/state';
-import { MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
+import { ApplicationStateService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import {
     CmsFormElementI18nValue,
     CmsFormType,
@@ -27,7 +24,7 @@ import {
     Page,
     Raw,
 } from '@gentics/cms-models';
-import { FolderApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import {
     FormEditorConfiguration,
     FormEditorConfigurationService,
@@ -36,7 +33,7 @@ import {
     FormPropertiesConfiguration,
 } from '@gentics/form-generator';
 import { UILanguage } from '@gentics/image-editor';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, Subscription, merge } from 'rxjs';
 import { distinctUntilChanged, filter, map, mergeMap, take, tap } from 'rxjs/operators';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
@@ -125,7 +122,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     );
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private appState: ApplicationStateService,
         private formEditorService: FormEditorService,
         private formEditorConfigurationService: FormEditorConfigurationService,
@@ -198,7 +195,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
             this.properties.mailtemp_i18n,
         );
 
-        this.selectedInternalPageHelper = new SelectedItemHelper('page', -1, this.api.folders);
+        this.selectedInternalPageHelper = new SelectedItemHelper('page', -1, this.client);
         if (typeof this.properties.successPageId === 'number' && this.properties.successPageId !== 0) {
             /**
              * successNodeId is not checked to display an honest representation of the data currently stored in the CMS.
@@ -214,7 +211,7 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
             this.selectedInternalPageHelper.setSelectedItem(null);
         }
 
-        this.selectedEmailTemplatePageHelper = this.initSelectedItemHelper('page', -1, this.api.folders);
+        this.selectedEmailTemplatePageHelper = this.initSelectedItemHelper('page', -1);
         if (typeof this.properties.mailsource_pageid === 'number' && this.properties.mailsource_pageid !== 0) {
             /**
              * mailsource_pageid is not checked to display an honest representation of the data currently stored in the CMS.
@@ -334,9 +331,8 @@ export class FormPropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     initSelectedItemHelper(
         itemType: 'page' | 'folder' | 'file' | 'image' | 'form',
         defaultNodeId: number,
-        folderApi: FolderApi,
     ): SelectedItemHelper<ItemInNode<Page<Raw>>> {
-        return new SelectedItemHelper(itemType, defaultNodeId, folderApi);
+        return new SelectedItemHelper(itemType, defaultNodeId, this.client);
     }
 
     setRadioState(input: string, value: boolean): void {

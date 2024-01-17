@@ -8,6 +8,9 @@ import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { ItemInNode, Language, Page, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import {
     FormEditorConfiguration,
     FormEditorConfigurationService,
@@ -16,7 +19,6 @@ import {
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { RepositoryBrowserClient } from '../../providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../util/selected-item-helper/selected-item-helper';
 import { FormPropertiesFormComponent } from '../form-properties-form/form-properties-form.component';
@@ -35,6 +37,7 @@ describe('FormPropertiesForm', () => {
                 { provide: FormEditorService, useClass: MockFormEditorService },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClient },
                 { provide: I18nService, useClass: TestI18nService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
             declarations: [
                 TestComponent,

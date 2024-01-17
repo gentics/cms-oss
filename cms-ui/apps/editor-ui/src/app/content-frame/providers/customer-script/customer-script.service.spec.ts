@@ -10,6 +10,8 @@ import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
@@ -17,6 +19,7 @@ import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre
 import { CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomerScriptService } from './customer-script.service';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -56,7 +59,10 @@ describe('CustomerScriptService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                GenticsUICoreModule.forRoot(),
+            ],
             providers: [
                 CustomerScriptService,
                 EntityResolver,
@@ -69,6 +75,7 @@ describe('CustomerScriptService', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
             ],
         });
 

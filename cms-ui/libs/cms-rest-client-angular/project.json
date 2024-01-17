@@ -1,0 +1,31 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "cms-rest-client-angular",
+    "projectType": "library",
+    "prefix": "gtx",
+    "sourceRoot": "apps/cms-rest-client-angular/src",
+    "implicitDependencies": [
+        "mesh-models",
+        "cms-rest-client"
+    ],
+    "tags": ["lib", "angular"],
+    "targets": {
+        "build": {
+            "executor": "@nx/angular:ng-packagr-lite",
+            "options": {
+                "tsConfig": "libs/cms-rest-client-angular/tsconfig.lib.json",
+                "project": "libs/cms-rest-client-angular/ng-package.json"
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/cms-rest-client-angular/**/*.ts",
+                    "libs/cms-rest-client-angular/**/*.html"
+                ]
+            }
+        }
+    }
+}

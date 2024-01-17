@@ -1,6 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { MaintenanceModeResponse } from '@gentics/cms-models';
+import { MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Subject, Subscription, throwError } from 'rxjs';
 import { take } from 'rxjs/operators';
@@ -86,7 +86,7 @@ describe('MaintenanceModeService', () => {
                 message: 'Stop working, the building is on fire!',
                 messages: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
 

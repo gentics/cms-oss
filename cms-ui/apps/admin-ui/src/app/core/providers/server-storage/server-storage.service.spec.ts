@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { UserDataResponse } from '@gentics/cms-models';
+import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { ApiBase, FileUploaderFactory, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { expectOneRequest, MockResponseInfo, respondTo } from '@gentics/cms-rest-clients-angular/testing';
 import { NEVER, of } from 'rxjs';
@@ -168,7 +168,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
             serverStorage.set('testData', testData);
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'POST');
-            respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
+            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
             tick();
             expect(serverStorage.supported).toBe(true);
         }));
@@ -233,7 +233,7 @@ function createApiNotImplementedResponse(): MockResponseInfo<UserDataResponse> {
                 type: 'CRITICAL',
             }],
             responseInfo: {
-                responseCode: 'FAILURE',
+                responseCode: ResponseCode.FAILURE,
             },
         },
     };

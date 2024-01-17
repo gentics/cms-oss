@@ -1,27 +1,27 @@
 import { fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { File as FileModel } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { FolderActionsService } from '../../../state';
-import { Api } from '../api/api.service';
 import { SortedFiles, UploadConflictService } from './upload-conflict.service';
 
 describe('UploadConflictService', () => {
 
     let uploadConflictService: UploadConflictService;
-    let api: MockApi;
+    let client: MockClient;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
                 UploadConflictService,
-                { provide: Api, useClass: MockApi },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: ModalService, useClass: MockModalService },
+                { provide: GCMSRestClientService, useClass: MockClient },
             ],
         });
-        uploadConflictService = TestBed.get(UploadConflictService);
-        api = TestBed.get(Api);
+        uploadConflictService = TestBed.inject(UploadConflictService);
+        client = TestBed.inject(GCMSRestClientService) as any;
     });
 
     describe('uploadFilesWithConflictsCheck()', () => {
@@ -38,16 +38,16 @@ describe('UploadConflictService', () => {
         ];
 
         beforeEach(() => {
-            folderActions = TestBed.get(FolderActionsService);
+            folderActions = TestBed.inject(FolderActionsService);
         });
 
         it('should call checkForConflicts(), sortFilesForUpload(), and folderActions.uploadAndReplace() for one file', fakeAsync(() => {
-            spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+            spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of([]));
             spyOn(uploadConflictService, 'sortFilesForUpload').and.callThrough();
-            spyOn(folderActions, 'uploadAndReplace');
+            spyOn(folderActions, 'uploadAndReplace').and.callThrough();
             const filesToUpload = [ allFilesToUpload[0] ];
 
-            uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId);
+            uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId).subscribe();
             tick();
 
             expect(uploadConflictService.checkForConflicts).toHaveBeenCalledWith(filesToUpload, nodeId, folderId);
@@ -61,12 +61,12 @@ describe('UploadConflictService', () => {
 
         it('should call checkForConflicts(), sortFilesForUpload(), and folderActions.uploadAndReplace() for multiple files',
             fakeAsync(() => {
-                spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+                spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of([]));
                 spyOn(uploadConflictService, 'sortFilesForUpload').and.callThrough();
-                spyOn(folderActions, 'uploadAndReplace');
+                spyOn(folderActions, 'uploadAndReplace').and.callThrough();
                 const filesToUpload: any[] = allFilesToUpload;
 
-                uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId);
+                uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId).subscribe();
                 tick();
 
                 expect(uploadConflictService.checkForConflicts).toHaveBeenCalledWith(filesToUpload, nodeId, folderId);
@@ -87,9 +87,9 @@ describe('UploadConflictService', () => {
             ];
 
             const modalService: ModalService = TestBed.get(ModalService);
-            spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve(conflictingFiles));
+            spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of(conflictingFiles));
             const sortFilesSpy = spyOn(uploadConflictService, 'sortFilesForUpload').and.callThrough();
-            spyOn(folderActions, 'uploadAndReplace');
+            spyOn(folderActions, 'uploadAndReplace').and.callThrough();
 
             // Mock a conflict resolution by selecting the first and the last file for replacement
             spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
@@ -99,7 +99,7 @@ describe('UploadConflictService', () => {
                 });
             }) as any);
 
-            uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId);
+            uploadConflictService.uploadFilesWithConflictsCheck(filesToUpload, nodeId, folderId).subscribe();
             tick();
 
             expect(uploadConflictService.checkForConflicts).toHaveBeenCalledWith(filesToUpload, nodeId, folderId);
@@ -125,11 +125,12 @@ describe('UploadConflictService', () => {
     describe('checkForConflicts()', () => {
 
         it('should make an api request for all items in the folder', waitForAsync(() => {
-            const spy = spyOn(api.folders, 'getItems').and.callThrough();
-            uploadConflictService.checkForConflicts([mockFile('test')], 1, 1)
+            const spy = spyOn(client.folder, 'items').and.callThrough();
+            uploadConflictService.checkForConflicts([mockFile('test')], 1, 1).toPromise()
                 .then(() => {
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-                    expect((spy.calls.argsFor(0) as any[])[2]).toEqual({
+                    expect((spy.calls.argsFor(0) as any[])[1]).toEqual({
+                        type: 'file,image',
                         nodeId: 1,
                         maxItems: -1,
                     });
@@ -137,14 +138,14 @@ describe('UploadConflictService', () => {
         }));
 
         it('should return empty array when no matches', waitForAsync(() => {
-            uploadConflictService.checkForConflicts([mockFile('noMatch1'), mockFile('noMatch2')], 1, 1)
+            uploadConflictService.checkForConflicts([mockFile('noMatch1'), mockFile('noMatch2')], 1, 1).toPromise()
                 .then(result => {
                     expect(result).toEqual([]);
                 });
         }));
 
         it('should return matching file names', waitForAsync(() => {
-            uploadConflictService.checkForConflicts([mockFile('file1.ext'), mockFile('noMatch'), mockFile('file3.ext')], 1, 1)
+            uploadConflictService.checkForConflicts([mockFile('file1.ext'), mockFile('noMatch'), mockFile('file3.ext')], 1, 1).toPromise()
                 .then(result => {
                     expect(result).toEqual([
                         { id: 1, type: 'file', name: 'file1.ext' } as FileModel,
@@ -154,21 +155,21 @@ describe('UploadConflictService', () => {
         }));
 
         it('should take into account file type when matching', waitForAsync(() => {
-            uploadConflictService.checkForConflicts([mockFile('file2.ext', 'image')], 1, 1)
+            uploadConflictService.checkForConflicts([mockFile('file2.ext', 'image')], 1, 1).toPromise()
                 .then(result => {
                     expect(result).toEqual([]);
                 });
         }));
 
         it('should replace spaces with underscores when checking file name', waitForAsync(() => {
-            uploadConflictService.checkForConflicts([mockFile('_some image with spaces.ext', 'image')], 1, 1)
+            uploadConflictService.checkForConflicts([mockFile('_some image with spaces.ext', 'image')], 1, 1).toPromise()
                 .then(result => {
                     expect(result).toEqual([{ id: 2, type: 'image', name: '_some_image_with_spaces.ext' } as any]);
                 });
         }));
 
         it('should replace spaces with dashes when checking file name', waitForAsync(() => {
-            uploadConflictService.checkForConflicts([mockFile('some image with dashes.ext', 'image')], 1, 1)
+            uploadConflictService.checkForConflicts([mockFile('some image with dashes.ext', 'image')], 1, 1).toPromise()
                 .then(result => {
                     expect(result).toEqual([{ id: 3, type: 'image', name: 'some-image-with-dashes.ext' } as any]);
                 });
@@ -247,9 +248,9 @@ function mockFile(name: string, type: 'file' | 'image' = 'file'): File {
     }
 }
 
-class MockApi {
-    folders = {
-        getItems: (): Observable<any> => of({
+class MockClient {
+    folder = {
+        items: (): Observable<any> => of({
             items: [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 2, type: 'file', name: 'file2.ext' },
@@ -263,9 +264,15 @@ class MockApi {
 }
 
 class MockFolderActions {
-    uploadAndReplace(): void { }
+    uploadAndReplace(): Observable<any[]> {
+        return of([]);
+    }
 }
 
 class MockModalService {
-    fromComponent(): void { }
+    fromComponent(): Promise<any> {
+        return Promise.resolve({
+            open: () => Promise.resolve(null),
+        });
+    }
 }

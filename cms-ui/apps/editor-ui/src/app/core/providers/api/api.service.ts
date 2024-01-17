@@ -43,7 +43,9 @@ type IGcmsApi = { [K in keyof GcmsApi]: GcmsApi[K] };
 /**
  * This is the Api service that should be used throughout the app.
  * Due to compatibility reasons with existing code, it provides access to all properties
- * of the GcmsApi service from the @gentics/cms-rest-clients-angular library.
+ * of the GcmsApi service from the \@gentics/cms-rest-clients-angular library.
+ *
+ * @deprecated Use the new GCMSRestClientService from \@gentics/cms-rest-client-angular instead.
  */
 @Injectable()
 export class Api implements IGcmsApi {

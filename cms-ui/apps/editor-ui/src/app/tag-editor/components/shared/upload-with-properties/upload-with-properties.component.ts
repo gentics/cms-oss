@@ -10,10 +10,10 @@ import {
     Output,
     SimpleChange,
 } from '@angular/core';
+import { UploadResponse } from '@editor-ui/app/common/models';
 import { EditableFileProps, FileCreateRequest, FileOrImage, Folder, Raw } from '@gentics/cms-models';
-import { UploadResponse } from '@gentics/cms-rest-clients-angular';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
-import { from, Observable, of, Subscription } from 'rxjs';
+import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -266,7 +266,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
     uploadFileOrImage(file: File, destFolder: Folder, properties: EditableFileProps): Observable<FileOrImage<Raw> | void> {
         this.uploadInProgress = true;
         return this.uploadConflictService.uploadFilesWithConflictsCheck([file], destFolder.nodeId, destFolder.id).pipe(
-            switchMap((uploadResponses: UploadResponse[][]) => {
+            switchMap((uploadResponses: UploadResponse[]) => {
                 const uploadResponse = [].concat(...uploadResponses)[0]; // Since only one file was uploaded, there can only be one response.
                 const uploadedItem = uploadResponse.response.file;
                 if (!uploadedItem) {

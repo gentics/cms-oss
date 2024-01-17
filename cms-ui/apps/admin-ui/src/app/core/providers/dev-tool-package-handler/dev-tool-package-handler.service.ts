@@ -23,7 +23,7 @@ import {
     discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse } from '@gentics/cms-models';
+import { PackageListOptions, PackageListResponse, PackageSyncOptions, PackageSyncResponse, ResponseCode } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -70,7 +70,7 @@ export class DevToolPackageHandlerService extends BaseEntityHandlerService
             // "Mocked" response, as the backend only returns an empty body
             map(() => ({
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
                 package: {
                     id: data.name,

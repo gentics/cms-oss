@@ -10,11 +10,12 @@ import {
     FolderResponse,
     GcmsTestData,
     Raw,
+    ResponseCode,
 } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { emptyItemInfo } from '../../../common/models';
 import { EditableProperties } from '../../../content-frame/components/properties-editor/properties-editor.component';
 import { Api } from '../../../core/providers/api/api.service';
@@ -150,7 +151,7 @@ const SANITIZATION_RESULT = 'sanitizationResult';
         >
         </folder-properties-form>
     `,
-    })
+})
 class TestComponent {
     nodeId: number;
     folderId: number;
@@ -170,7 +171,7 @@ class MockApiService {
         messages: [],
         numItems: 3,
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
     };
@@ -179,7 +180,7 @@ class MockApiService {
         folder: GcmsTestData.getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
         messages: [],
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
     }
@@ -187,7 +188,7 @@ class MockApiService {
     private folderPublishDirSanitize: FolderPublishDirSanitizeResponse = {
         messages: [],
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: 'Successfully loaded subfolders',
         },
         publishDir: SANITIZATION_RESULT,

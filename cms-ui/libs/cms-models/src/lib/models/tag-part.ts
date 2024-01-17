@@ -245,3 +245,12 @@ export interface TagPart<T extends ModelType = DefaultModelType> {
     /** Selection settings (if type is SELECT or MULTISELECT) */
     selectSettings?: SelectSetting;
 }
+
+export interface PartType {
+    id: number;
+    name: string;
+    description: string;
+    auto: boolean;
+    javaClass: string;
+    deprecated: boolean;
+}

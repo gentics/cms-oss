@@ -9,7 +9,7 @@ import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-
 import { NavigationService } from '@editor-ui/app/core/providers/navigation/navigation.service';
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { BaseListResponse, Normalized, Page, PageRequestOptions } from '@gentics/cms-models';
+import { BaseListResponse, Normalized, Page, PageRequestOptions, ResponseCode } from '@gentics/cms-models';
 import { getExamplePageData, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
 import { of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
@@ -26,7 +26,7 @@ describe('PublishQueueModal is created ok', () => {
         template: `
           <publish-queue>
           </publish-queue>`,
-        })
+    })
     class TestComponent {
         @ViewChild(PublishQueueModal, {static: true}) publishQueueModal: PublishQueueModal;
 
@@ -119,7 +119,7 @@ describe('PublishQueueModal test pageClicked method', () => {
     class MockApi {
         defaultResponse: BaseListResponse = {
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
                 responseMessage: '',
             },
             messages: [],
@@ -212,5 +212,5 @@ class MockPublishQueueActions {
 function generateTestData(): void {
     // prepare test data
     entityAmount = 5;
-    testPages = new Array(entityAmount).map(id => ({...getExamplePageDataNormalized({id}), name: `test-page-${id}`}));
+    testPages = new Array(entityAmount).map((id: number) => ({...getExamplePageDataNormalized({id}), name: `test-page-${id}`}));
 }

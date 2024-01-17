@@ -29,3 +29,5 @@ export interface ContentPackage<T extends ModelType = DefaultModelType> extends 
 export interface ContentPackageBO<T extends ModelType = DefaultModelType> extends ContentPackage<T> {
     id: string;
 }
+
+export type StagableEntityType = 'file' | 'folder' | 'form' | 'image' | 'page';

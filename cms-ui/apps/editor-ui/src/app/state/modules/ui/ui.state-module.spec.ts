@@ -61,6 +61,7 @@ describe('UIStateModule', () => {
             usersnap: { key: undefined },
             hideExtras: false,
             mode: UIMode.EDIT,
+            overlayCount: 0,
         } as UIState);
     });
 

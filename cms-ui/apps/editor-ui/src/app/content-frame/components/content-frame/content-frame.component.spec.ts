@@ -22,8 +22,10 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { NEVER, Observable, of as observableOf, of } from 'rxjs';
+import { NEVER, Observable, of as observableOf } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
@@ -481,6 +483,7 @@ describe('ContentFrame', () => {
                 { provide: CustomerScriptService, useClass: MockCustomerScriptService },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 MockCanSaveService,
                 ResourceUrlBuilder,
             ],

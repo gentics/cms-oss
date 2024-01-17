@@ -192,6 +192,10 @@ export interface TagTypeBO<T extends ModelType = DefaultModelType> extends TagTy
     id: string;
 }
 
+export type Construct = TagType;
+/** @deprecated */
+export type ConstructBO = TagTypeBO;
+
 /**
  * @returns The TagPart that corresponds to the specified TagProperty
  * or null if no matching TagPart can be found in the TagType.

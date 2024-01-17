@@ -26,14 +26,15 @@ import {
     PermissionsSet,
     Raw,
     RecursivePartial,
+    ResponseCode,
     User,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
-import { cloneDeep as _cloneDeep } from'lodash-es'
+import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { LoggerTestingModule } from 'ngx-logger/testing';
 import { Observable, of as observableOf } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService, NodeOperations } from '../..';
+import { ActivityManagerService, EntityManagerService, ErrorHandler, I18nNotificationService } from '../..';
 import { MockEntityManagerService } from '../../entity-manager/entity-manager.service.mock';
 import { MockErrorHandler } from '../../error-handler/error-handler.mock';
 import { TranslatedNotificationOptions } from '../../i18n-notification';
@@ -445,7 +446,7 @@ describe('GroupOperations', () => {
                 .reduce((result, current) => ({ ...result, [current]: groupsFromStateRaw[1][current] }), {}) as Group<Raw>;
             mockUserRaw.groups = [ creatingUserGroup ];
             const mockResponse: GroupUserCreateResponse = {
-                responseInfo: { responseCode: 'OK' },
+                responseInfo: { responseCode: ResponseCode.OK },
                 user: mockUserRaw,
                 messages: [],
             };

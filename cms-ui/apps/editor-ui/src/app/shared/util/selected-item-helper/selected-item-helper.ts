@@ -1,7 +1,7 @@
 import { FileOrImage, Folder, Form, ItemInNode, Page, Raw } from '@gentics/cms-models';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
-import { FolderApi } from '../../../core/providers/api';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 /**
  * Helper class for managing a selected item in a TagPropertyEditor or FormPropertiesForm,
@@ -31,12 +31,12 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
     /**
      * @param itemType The type of items that should be managed by this instance.
      * @param defaultNodeId The fallback nodeId to be used when an ItemInfo has no nodeId set.
-     * @param folderApi The FolderApi used for loading items.
+     * @param client The rest client to use for loading.
      */
     constructor(
         private itemType: 'page' | 'folder' | 'file' | 'image' | 'form',
         private defaultNodeId: number,
-        private folderApi: FolderApi,
+        private client: GCMSRestClientService,
     ) {
         this.selectedItem$ = this.selectedItemSubj$.asObservable();
     }
@@ -73,14 +73,41 @@ export class SelectedItemHelper<T extends ItemInNode<Page<Raw> | Folder<Raw> | F
      */
     private loadItem(itemId: number, nodeId?: number): Observable<T> {
         nodeId = nodeId || this.defaultNodeId;
-        return this.folderApi.getItem(itemId, this.itemType, { nodeId }).pipe(
-            map(response => {
-                let item: T;
-                if (this.itemType === 'form') {
-                    item = (response as any).item;
-                } else {
-                    item = (response as any)[this.itemType];
-                }
+
+        let obv$: Observable<any>;
+        switch (this.itemType) {
+            case 'file':
+                obv$ = this.client.file.get(itemId, { nodeId }).pipe(
+                    map(res => res.file),
+                );
+                break;
+            case 'folder':
+                obv$ = this.client.folder.get(itemId, { nodeId }).pipe(
+                    map(res => res.folder),
+                );
+                break;
+            case 'form':
+                obv$ = this.client.form.get(itemId).pipe(
+                    map(res => res.item),
+                );
+                break;
+            case 'image':
+                obv$ = this.client.image.get(itemId, { nodeId }).pipe(
+                    map(res => res.image),
+                );
+                break;
+            case 'page':
+                obv$ = this.client.page.get(itemId, { nodeId }).pipe(
+                    map(res => res.page),
+                );
+                break;
+            default:
+                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                obv$ = throwError(new Error(`Unknown item type "${this.itemType}"!`));
+        }
+
+        return obv$.pipe(
+            map((item: T) => {
                 if (!item.nodeId) {
                     item.nodeId = nodeId;
                 }

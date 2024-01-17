@@ -48,6 +48,7 @@ export * from './tagmap-entry';
 export * from './tag-part';
 export * from './template';
 export * from './type-util';
+export * from './ui-state';
 export * from './user';
 export * from './usersnap';
 export * from './version';

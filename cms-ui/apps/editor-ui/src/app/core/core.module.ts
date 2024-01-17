@@ -1,9 +1,10 @@
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule, GCMS_COMMON_LANGUAGE, GCMS_UI_SERVICES_PROVIDER } from '@gentics/cms-components';
 import { GcmsUiLanguage } from '@gentics/cms-models';
+import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { DateTimePickerFormatProvider, GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -25,6 +26,7 @@ import { SharedModule } from '../shared/shared.module';
 import { ApplicationStateService } from '../state';
 import { StateModule } from '../state/state.module';
 import { TagEditorModule } from '../tag-editor';
+import { KeycloakService } from '../login/providers/keycloak/keycloak.service';
 import {
     ActionsSelectorComponent,
     AlertCenterComponent,
@@ -82,6 +84,23 @@ export const getSidFromAppState = (appState: ApplicationStateService): Observabl
 
 export const createLanguageObservable = (appState: ApplicationStateService): Observable<GcmsUiLanguage> =>
     appState.select(state => state.ui.language);
+
+export function initializeApp(appState: ApplicationStateService, client: GCMSRestClientService): () => Promise<any> {
+    return () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        client.init({
+            connection: {
+                absolute: false,
+                basePath: '/rest',
+            },
+        });
+        appState.select(state => state.auth.sid).subscribe(sid => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            client.setSessionId(sid);
+        });
+        return KeycloakService.checkKeycloakAuth();
+    };
+}
 
 const COMPONENTS = [
     ActionsSelectorComponent,
@@ -161,6 +180,12 @@ const PROVIDERS = [
         useFactory: createLanguageObservable,
         deps: [ ApplicationStateService ],
     },
+    {
+        provide: APP_INITIALIZER,
+        useFactory: initializeApp,
+        deps: [ ApplicationStateService, GCMSRestClientService ],
+        multi: true,
+    },
 ];
 
 @NgModule({
@@ -170,6 +195,7 @@ const PROVIDERS = [
         EmbeddedToolsModule,
         StateModule,
         SharedModule,
+        GCMSRestClientModule,
         GcmsRestClientsAngularModule,
         GenticsUICoreModule.forRoot({
             dropDownPageMargin: 20,

@@ -23,6 +23,7 @@ import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
 import { EditMode, Folder, FolderListResponse, Form, FormPermissions, Node, Page, PagePermissions } from '@gentics/cms-models';
 import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NEVER, Observable, of } from 'rxjs';
 import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
@@ -43,8 +44,9 @@ describe('EditorToolbarComponent', () => {
                 BreadcrumbsService,
                 EntityResolver,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: Api, useClass: MockApi },
-                { provide: GcmsApi, useClass: MockApi },
+                { provide: Api, useClass: MockClient },
+                { provide: GcmsApi, useClass: MockClient },
+                { provide: GCMSRestClientService, useClass: MockClient },
                 { provide: ActivatedRoute, useClass: MockActivatedRoute },
                 { provide: NavigationService, useClass: MockNavigationService },
                 { provide: ModalService, useClass: MockModalService },
@@ -95,6 +97,9 @@ describe('EditorToolbarComponent', () => {
                     unlocalize: true,
                     view: true,
                 } as PagePermissions;
+                instance.currentNode = {
+                    id: 1,
+                } as any;
                 fixture.detectChanges();
 
                 const visible = contextMenuIsVisible(fixture);
@@ -408,9 +413,9 @@ function contextMenuIsVisible(fixture: ComponentFixture<any>): boolean {
     return !!fixture.debugElement.query(By.css('.content-frame-context-menu'));
 }
 
-class MockApi {
-    folders = {
-        getBreadcrumbs: (): Observable<Partial<FolderListResponse>> => of<Partial<FolderListResponse>>({
+class MockClient {
+    folder = {
+        breadcrumbs: (): Observable<Partial<FolderListResponse>> => of<Partial<FolderListResponse>>({
             folders: [],
         }),
     };

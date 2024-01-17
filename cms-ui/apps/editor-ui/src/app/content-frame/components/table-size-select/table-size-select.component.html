@@ -4,9 +4,9 @@
     [style.--gtx-grid-rows]="maxRows"
     (mouseleave)="setActivePosition(-1, -1)"
 >
-    <div class="grid-row" *ngFor="let col of (maxRows | gtxRange)">
+    <div class="grid-row" *ngFor="let row of (maxRows | gtxRange)">
         <div
-            *ngFor="let row of (maxColumns | gtxRange)"
+            *ngFor="let col of (maxColumns | gtxRange)"
             class="cell"
             [class.active]="col <= activeColumn && row <= activeRow"
             (mouseenter)="setActivePosition(col, row)"

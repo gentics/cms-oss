@@ -53,15 +53,6 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<compilerVersion>1.8</compilerVersion>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<excludePomFiles>true</excludePomFiles>
@@ -276,60 +267,10 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.3</version>
-				<executions>
-					<execution>
-						<id>pre-unit-test</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-						<configuration>
-							<destFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</destFile>
-							<propertyName>surefireArgLine</propertyName>
-						</configuration>
-					</execution>
-					<execution>
-						<id>post-unit-test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/coverage-reports/jacoco-ut.exec</dataFile>
-							<outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<jvm>${test.jvm.home}/bin/java</jvm>
-					<skipTests>${skip.unit.tests}</skipTests>
-					<forkCount>${surefire.forkcount}</forkCount>
-					<reuseForks>false</reuseForks>
-					<argLine>-Xms64m -Xmx256m ${surefireArgLine}</argLine>
-					<trimStackTrace>false</trimStackTrace>
-					<testFailureIgnore>true</testFailureIgnore>
-					<runOrder>random</runOrder>
-					<rerunFailingTestsCount>${surefire.rerunFailingTestsCount}</rerunFailingTestsCount>
-					<!-- 45min -->
-					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
-					<excludes>
-						<!-- Exclude integration tests within (unit) test phase. -->
-						<exclude>**/*AbstractTest.java</exclude>
-						<exclude>**/AbstractMetaDataCompareTest</exclude>
-						<exclude>**/AbstractMetaDataCompareTest*</exclude>
-						<exclude>**/*Abstract*Test.java</exclude>
-						<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
-						<exclude>**/MeshPortalPreviewSslTest.java</exclude>
-					</excludes>
-				</configuration>
 				<executions>
 					<execution>
 						<?m2e ignore?>
@@ -516,7 +457,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-inline</artifactId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

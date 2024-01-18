@@ -140,6 +140,7 @@
 						</goals>
 						<configuration>
 							<minimize>true</minimize>
+							<wroManagerFactory>ro.isdc.wro.maven.plugin.manager.factory.ConfigurableWroManagerFactory</wroManagerFactory>
 							<destinationFolder>${project.build.directory}/bin/</destinationFolder>
 							<jsDestinationFolder>${project.build.directory}/bin/</jsDestinationFolder>
 						</configuration>

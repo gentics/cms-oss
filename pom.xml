@@ -9,21 +9,19 @@
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
-	<url>http://www.gentics.com/</url>
+	<url>https://www.gentics.com/</url>
 
 	<licenses>
 		<license>
 			<name>Gentics Software GmbH - Commercial License</name>
-			<!-- TODO license -->
-			<url>http://www.gentics.com/licenses/LICENSE.txt</url>
+			<url>https://www.gentics.com/licenses/LICENSE.txt</url>
 		</license>
 	</licenses>
 
-	<!-- TODO: do we need this?-->
 	<scm>
-		<connection>scm:git:git@git.gentics.com:psc/contentnode.git</connection>
-		<developerConnection>scm:git:git@git.gentics.com:psc/contentnode.git</developerConnection>
-		<url>http://git.gentics.com/psc/contentnode</url>
+		<connection>scm:git:git@github.com:gentics/cms-oss.git</connection>
+		<developerConnection>scm:git:git@github.com:gentics/cms-oss.git</developerConnection>
+		<url>https://github.com/gentics/cms-oss</url>
 	</scm>
 
 	<modules>
@@ -41,15 +39,6 @@
 		<module>cms-oss-server</module>
 		<module>cms-oss-changelog</module>
 		<module>cms-oss-doc</module>
-
-		<!--
-		<module>static</module>
-		-->
-
-		<!--module>contentnode-manual</module>
-		<module>contentnode-doc</module>
-		<module>contentnode-changelog</module -->
-
 	</modules>
 
 	<properties>
@@ -67,10 +56,10 @@
 		<jetty.version>9.4.49.v20220914</jetty.version>
 		<jackson.version>2.14.1</jackson.version>
 
-		<enunciate.version>2.14.0</enunciate.version>
+		<enunciate.version>2.15.1</enunciate.version>
 		<jjwt.version>0.11.0</jjwt.version>
 		<nimbus-jose-jwt.version>8.3</nimbus-jose-jwt.version>
-		<mockito.version>3.7.7</mockito.version>
+		<mockito.version>5.0.0</mockito.version>
 		<powermock.version>2.0.9</powermock.version>
 		<testcontainers.version>1.17.6</testcontainers.version>
 		<jsonpath.version>2.6.0</jsonpath.version>
@@ -97,10 +86,12 @@
 		<assertj.version>3.4.1</assertj.version>
 		<hsqldb.version>2.7.2</hsqldb.version>
 
+		<surefire.version>3.1.2</surefire.version>
 		<surefire.forkcount>16</surefire.forkcount>
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
+		<surefireArgLine>-Xms128m -Xmx512m --add-opens=java.base/java.lang=ALL-UNNAMED</surefireArgLine>
 	</properties>
 
 	<build>
@@ -226,14 +217,12 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>2.5.1</version>
+					<version>3.11.0</version>
 					<configuration>
 						<executable>${env.JAVA_HOME}/bin/javac</executable>
 						<verbose>true</verbose>
 						<fork>true</fork>
-						<compilerVersion>1.8</compilerVersion>
-						<source>11</source>
-						<target>11</target>
+						<release>17</release>
 						<maxmem>1024m</maxmem>
 					</configuration>
 				</plugin>
@@ -280,7 +269,7 @@
 				<plugin>
 					<groupId>ro.isdc.wro4j</groupId>
 					<artifactId>wro4j-maven-plugin</artifactId>
-					<version>1.4.1</version>
+					<version>1.9.0</version>
 				</plugin>
 				<plugin>
 					<groupId>nl.windgazer</groupId>
@@ -290,7 +279,28 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.22.0</version>
+					<version>${surefire.version}</version>
+					<configuration>
+						<argLine>@{argLine} ${surefireArgLine}</argLine>
+						<jvm>${test.jvm.home}/bin/java</jvm>
+						<skip>${skip.unit.tests}</skip>
+						<forkCount>${surefire.forkcount}</forkCount>
+						<reuseForks>false</reuseForks>
+						<!-- Don't execute more than one test per jvm fork! -->
+						<testFailureIgnore>true</testFailureIgnore>
+						<runOrder>random</runOrder>
+						<trimStackTrace>false</trimStackTrace>
+						<rerunFailingTestsCount>${surefire.rerunFailingTestsCount}</rerunFailingTestsCount>
+						<excludes>
+							<!-- Exclude integration tests within (unit) test phase. -->
+							<exclude>**/*AbstractTest.java</exclude>
+							<exclude>**/*Abstract*.java</exclude>
+							<exclude>**/Abstract*.java</exclude>
+							<exclude>**/*Abstract*Test.java</exclude>
+							<!-- The test MeshPortalPreviewSslTest is excluded, because for some (unknown) reason it always fails on Jenkins (due to timeouts) -->
+							<exclude>**/MeshPortalPreviewSslTest.java</exclude>
+						</excludes>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>

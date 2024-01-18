@@ -131,11 +131,6 @@
 				<type>zip</type>
 			</dependency>
 			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.11</version>
-			</dependency>
-			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>
 				<artifactId>base-lib</artifactId>
 				<version>${project.version}</version>
@@ -145,12 +140,7 @@
 				<artifactId>base-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>com.gentics</groupId>
-				<artifactId>generic-testutils</artifactId>
-				<version>${generic-testutils.version}</version>
-				<scope>test</scope>
-			</dependency>
+
 			<dependency>
 				<groupId>org.mariadb.jdbc</groupId>
 				<artifactId>mariadb-java-client</artifactId>
@@ -346,6 +336,19 @@
 				<version>${tika.version}</version>
 			</dependency>
 
+			<!--Test dependencies -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.13.2</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.gentics</groupId>
+				<artifactId>generic-testutils</artifactId>
+				<version>${generic-testutils.version}</version>
+				<scope>test</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>

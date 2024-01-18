@@ -105,7 +105,7 @@ public class SSOUserSyncTest {
 		restricted.put(5, asSet(1));
 		restricted.put(9, asSet(2, 3));
 
-        runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/GCN");
+		runner = new ServletRunner(new File(getClass().getResource("WEB-INF/web.xml").toURI()), "/GCN");
 	}
 
 	/**

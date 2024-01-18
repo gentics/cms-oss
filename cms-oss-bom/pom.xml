@@ -134,6 +134,7 @@
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
 				<version>4.11</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.gentics.cms-oss</groupId>
@@ -234,6 +235,7 @@
 				<groupId>com.gentics.mesh</groupId>
 				<artifactId>mesh-test-common</artifactId>
 				<version>${mesh.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>com.webcohesion.enunciate</groupId>
@@ -350,11 +352,13 @@
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>
 				<version>${mockito.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-inline</artifactId>
 				<version>${mockito.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.powermock</groupId>
@@ -372,11 +376,13 @@
 				<groupId>org.testcontainers</groupId>
 				<artifactId>testcontainers</artifactId>
 				<version>${testcontainers.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.assertj</groupId>
 				<artifactId>assertj-core</artifactId>
 				<version>${assertj.version}</version>
+				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>org.hsqldb</groupId>

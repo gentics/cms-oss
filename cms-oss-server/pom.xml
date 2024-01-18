@@ -185,8 +185,8 @@
 							<componentName>CMS OSS</componentName>
 							<moduleName>Java Backend</moduleName>
 							<ignoredNames>
-								<ignoredName>com\.gentics\.cms-oss\..*</ignoredName>
-								<ignoredName>org.alohaeditor.alohaeditor</ignoredName>
+								<ignoredName>com\.gentics\.cms-oss:.*</ignoredName>
+								<ignoredName>org\.alohaeditor:alohaeditor</ignoredName>
 							</ignoredNames>
 						</configuration>
 					</execution>

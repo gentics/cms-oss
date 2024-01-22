@@ -12,8 +12,10 @@
 <ng-template #buttonTemplate>
     <div
         gtx-tooltip-trigger
-        class="gtx-editor-split-button"
+        class="gtx-editor-toggle-split-button"
         [class.hidden]="!settings.visible"
+        [class.active]="settings.active"
+        [class.always-secondary]="settings.alwaysSecondary"
     >
         <button
             class="split-button-secondary"
@@ -43,5 +45,3 @@
         </button>
     </div>
 </ng-template>
-
-

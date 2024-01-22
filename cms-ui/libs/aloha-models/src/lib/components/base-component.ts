@@ -39,4 +39,5 @@ export enum AlohaCoreComponentNames {
     BUTTON = 'button',
     SPLIT_BUTTON = 'split-button',
     TOGGLE_BUTTON = 'toggle-button',
+    TOGGLE_SPLIT_BUTTON = 'toggle-split-button',
 }

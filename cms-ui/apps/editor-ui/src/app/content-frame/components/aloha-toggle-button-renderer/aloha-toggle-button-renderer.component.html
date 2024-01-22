@@ -1,20 +1,34 @@
-<button
-    class="gtx-editor-toggle-button"
-    [class.icon-only]="hasIcon && !hasText"
-    [class.hidden]="!settings.visible"
-    [class.active]="settings.active"
-    [disabled]="disabled"
-    (click)="handleClick()"
+<gtx-tooltip
+    *ngIf="settings.tooltip; else buttonTemplate"
+    [position]="'top'"
+    [align]="'center'"
+    [type]="'light'"
 >
-    <icon
-        *ngIf="hasIcon"
-        class="button-icon"
-        [class.icon-left]="hasText"
-    >{{ settings.icon }}</icon>
+    <ng-container [ngTemplateOutlet]="buttonTemplate"></ng-container>
 
-    <span
-        *ngIf="hasText"
-        class="button-label"
-        [innerHTML]="settings.html || settings.text"
-    ></span>
-</button>
+    <div gtx-tooltip-content class="button-tooltip">{{ settings.tooltip }}</div>
+</gtx-tooltip>
+
+<ng-template #buttonTemplate>
+    <button
+        gtx-tooltip-trigger
+        class="gtx-editor-toggle-button"
+        [class.icon-only]="hasIcon && !hasText"
+        [class.hidden]="!settings.visible"
+        [class.active]="settings.active"
+        [disabled]="disabled"
+        (click)="handleClick()"
+    >
+        <icon
+            *ngIf="hasIcon"
+            class="button-icon"
+            [class.icon-left]="hasText"
+        >{{ settings.icon }}</icon>
+
+        <span
+            *ngIf="hasText"
+            class="button-label"
+            [innerHTML]="settings.html || settings.text"
+        ></span>
+    </button>
+</ng-template>

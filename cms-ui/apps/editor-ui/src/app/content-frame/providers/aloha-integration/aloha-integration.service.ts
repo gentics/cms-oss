@@ -34,7 +34,7 @@ const MOCK_TOOLBAR_SIZE_SETTINGS: AlohaToolbarSizeSettings = {
             icon: 'border_color',
             showOn: { scope: 'Aloha.continuoustext' },
             components: [
-                ['bold', 'italic'], [ { slot: 'strike' }],
+                ['bold', 'italic'], ['underline'], [ { slot: 'strike' }],
             ],
         },
     ],
@@ -89,10 +89,16 @@ const makeAlohaButton: (type: string, label: string, icon: string) => AlohaCompo
 }
 
 const MOCK_COMPONENTS: Record<string, AlohaComponent> = {
-    bold: makeAlohaButton(AlohaCoreComponentNames.BUTTON, 'bold!', 'format_bold'),
+    bold: makeAlohaButton(AlohaCoreComponentNames.BUTTON, null, 'format_bold'),
     italic: makeAlohaButton(AlohaCoreComponentNames.TOGGLE_BUTTON, 'italiccccc!', 'format_italic'),
+    underline: {
+        ...makeAlohaButton(AlohaCoreComponentNames.SPLIT_BUTTON, 'underline', 'format_underlined'),
+        secondaryClick() {
+            console.log('SECONDARY CLICK YEEEE', this);
+        },
+    } as any,
     strike: {
-        ...makeAlohaButton(AlohaCoreComponentNames.SPLIT_BUTTON, 'strikethrough', 'format_strikethrough'),
+        ...makeAlohaButton(AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON, 'strikethrough', 'format_strikethrough'),
         secondaryClick() {
             console.log('SECONDARY CLICK YEEEE', this);
         },

@@ -40,9 +40,9 @@ const MOCK_TOOLBAR_SIZE_SETTINGS: AlohaToolbarSizeSettings = {
     ],
 };
 
-const makeAlohaButton: (label: string, icon: string) => AlohaButtonComponent = (label, icon) => {
+const makeAlohaButton: (type: string, label: string, icon: string) => AlohaComponent = (type, label, icon) => {
     return {
-        type: AlohaCoreComponentNames.BUTTON,
+        type,
         id: 0,
         disabled: false,
         isInstance: true,
@@ -89,9 +89,9 @@ const makeAlohaButton: (label: string, icon: string) => AlohaButtonComponent = (
 }
 
 const MOCK_COMPONENTS: Record<string, AlohaComponent> = {
-    bold: makeAlohaButton('bold!', 'format_bold'),
-    italic: makeAlohaButton('italiccccc!', 'format_italic'),
-    strike: makeAlohaButton('strikethrough', 'format_strikethrough'),
+    bold: makeAlohaButton(AlohaCoreComponentNames.BUTTON, 'bold!', 'format_bold'),
+    italic: makeAlohaButton(AlohaCoreComponentNames.TOGGLE_BUTTON, 'italiccccc!', 'format_italic'),
+    strike: makeAlohaButton(AlohaCoreComponentNames.BUTTON, 'strikethrough', 'format_strikethrough'),
 }
 
 const MOCK_TOOLBAR_SETTINGS: AlohaToolbarSettings = {

@@ -35,6 +35,7 @@ export interface AlohaComponent {
 }
 
 export enum AlohaCoreComponentNames {
-    BUTTON = 'button',
     ATTRIBUTE_BUTTON = 'attribute-button',
+    BUTTON = 'button',
+    TOGGLE_BUTTON = 'toggle-button',
 }

@@ -66,3 +66,29 @@
         }
     }
 }
+
+@mixin gtxActiveToggleButton {
+    border-color: $gtx-color-primary;
+    background: #FAFDFF;
+    color: $gtx-color-off-black;
+
+    .button-icon {
+        color: #0b6ea0;
+    }
+
+    &:hover,
+    &:focus {
+        border-color: darken($gtx-color-primary, 10%);
+        background: #E6F7FF;
+    }
+
+    &:disabled,
+    &[disabled] {
+        background: #88a3b5;
+        border-color: #0b3345;
+
+        .button-icon {
+            color: inherit;
+        }
+    }
+}

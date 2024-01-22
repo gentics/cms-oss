@@ -1,5 +1,6 @@
 export * from './aloha-button-renderer/aloha-button-renderer.component';
 export * from './aloha-component-renderer/aloha-component-renderer.component';
+export * from './aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
 export * from './combined-properties-editor/combined-properties-editor.component';
 export * from './confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 export * from './confirm-navigation-modal/confirm-navigation-modal.component';

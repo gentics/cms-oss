@@ -6,6 +6,7 @@ import { TagEditorModule } from '../tag-editor';
 import {
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
+    AlohaToggleButtonRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,
@@ -33,6 +34,7 @@ import {
 const COMPONENTS = [
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
+    AlohaToggleButtonRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,

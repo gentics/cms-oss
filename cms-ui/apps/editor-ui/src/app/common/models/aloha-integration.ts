@@ -56,6 +56,15 @@ export const TABLE_ROW_NODE_NAME = 'TR';
 export const TABLE_CAPTION_NODE_NAME = 'CAPTION';
 export const TABLE_SUMMARY_ATTRIBUTE = 'summary';
 
+export const SCOPE_TEXT = 'Aloha.continuoustext';
+export const SCOPE_LINK = 'link';
+export const SCOPE_CITATION = 'cite';
+export const SCOPE_IMAGE = 'image';
+export const SCOPE_ABBRIVIATION = 'abbr';
+export const SCOPE_TABLE_CELL = 'table.cell';
+export const SCOPE_TABLE_COLUMN = 'table.column';
+export const SCOPE_TABLE_ROW = 'table.row';
+
 export const NODE_NAME_TO_COMMAND: Record<string, string> = {
     /* eslint-disable @typescript-eslint/naming-convention */
     B: COMMAND_STYLE_BOLD,

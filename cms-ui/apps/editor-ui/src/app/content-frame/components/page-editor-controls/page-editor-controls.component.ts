@@ -53,7 +53,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.client.constructCategory.getConstructCategoryCategories({ recursive: false }).subscribe(res => {
+        this.subscriptions.push(this.client.constructCategory.list({ recursive: false }).subscribe(res => {
             this.constructCategories = res.items;
             this.changeDetector.markForCheck();
         }));

@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { DefaultEditorControlTabs, GCMSUI_EDITOR_TABS_NAMESPACE, INVERSE_DEFAULT_EDITOR_TABS_MAPPING, PageEditorTab } from '@editor-ui/app/common/models';
-import { AlohaRangeObject, AlohaSettings, GCNAlohaPlugin } from '@gentics/aloha-models';
-import { BehaviorSubject } from 'rxjs';
+import { AlohaRangeObject, AlohaSettings, AlohaToolbarSizeSettings, GCNAlohaPlugin, ScreenSize } from '@gentics/aloha-models';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 
 @Injectable()
@@ -15,9 +16,11 @@ export class AlohaIntegrationService {
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
     public contextChange$ = new BehaviorSubject<AlohaRangeObject>(null);
     public gcnPlugin$ = new BehaviorSubject<GCNAlohaPlugin>(null);
+    public activeToolbarSettings$: Observable<AlohaToolbarSizeSettings>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
     protected editorChangeSub = new BehaviorSubject<void>(null);
+    protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
 
     /**
      * The currently selected/active editor in the page-controls.
@@ -30,8 +33,44 @@ export class AlohaIntegrationService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly editorsChange$ = this.editorChangeSub.asObservable();
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly size$ = this.activeSizeSub.asObservable();
+
     public activeEditor: string;
     public editors: Record<string, PageEditorTab> = {};
+
+    constructor(zone: NgZone) {
+        zone.runOutsideAngular(() => {
+            // TODO: Define the breakpoints somewhere static
+            this.handleMedia('(max-width: 400px)', ScreenSize.MOBILE);
+            this.handleMedia('(min-width: 401px) and (max-width: 1024px)', ScreenSize.TABLET);
+            this.handleMedia('(min-width: 1025px)', ScreenSize.DESKTOP);
+        });
+
+        this.activeToolbarSettings$ = combineLatest([
+            this.settings$.asObservable(),
+            this.size$,
+        ]).pipe(
+            filter(([settings, size]) => settings?.toolbar != null && size != null && settings.toolbar[size] != null),
+            map(([settings, size]) => settings.toolbar[size]),
+        );
+    }
+
+    private handleMedia(query: string, target: ScreenSize): void {
+        const media = window.matchMedia(query);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const ref = this;
+
+        media.onchange = function(change) {
+            if (change.matches) {
+                ref.activeSizeSub.next(target);
+            }
+        };
+
+        if (media.matches) {
+            this.activeSizeSub.next(target);
+        }
+    }
 
     public registerPageEditorTab(tab: PageEditorTab): boolean {
         return this.doWithCustomTab(tab.id, (() => {

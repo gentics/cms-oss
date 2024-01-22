@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { StateContext } from '@ngxs/store';
-import { patch } from '@ngxs/store/operators';
+import { iif, patch } from '@ngxs/store/operators';
 import { FALLBACK_LANGUAGE } from '../../../common/config/config';
 import { Alert, Alerts, UIMode, UIState } from '../../../common/models';
 import { ActionDefinition, AppStateBranch } from '../../state-utils';
@@ -118,9 +118,12 @@ export class UIStateModule {
 
     @ActionDefinition(SetBrokenLinksCountAction)
     handleSetBrokenLinksCountAction(ctx: StateContext<UIState>, action: SetBrokenLinksCountAction): void {
+        const state = ctx.getState();
         ctx.setState(patch<UIState>({
             alerts: patch<Alerts>({
-                linkChecker: patch<Alert>({
+                linkChecker: iif(state.alerts.linkChecker != null, patch<Alert>({
+                    brokenLinksCount: action.count,
+                }), {
                     brokenLinksCount: action.count,
                 }),
             }),

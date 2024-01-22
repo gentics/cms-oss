@@ -1,3 +1,60 @@
-:host > gtx-tabs::ng-deep .tab-links {
-    border-bottom: none;
+@import 'variables';
+
+.gtx-editor-tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: visible;
+
+    .editor-tab {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        padding: 0.25rem 0.75rem;
+        border-bottom: 2px solid transparent;
+        align-items: center;
+        cursor: pointer;
+        transition: 200ms;
+        overflow: visible;
+
+        &.active {
+            border-bottom-color: $gtx-color-primary;
+        }
+
+        .tab-icon {
+            height: 24px;
+            position: relative;
+            user-select: none;
+
+            .icon-badge {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background: $gtx-color-alert;
+                color: #fff;
+                font-size: 0.6rem;
+                padding: 2px 4px;
+                border-radius: 3px;
+                margin-top: -25%;
+                margin-right: -25%;
+                text-align: center;
+            }
+        }
+
+        .tab-label {
+            margin-left: 0.5rem;
+            user-select: none;
+        }
+    }
+
+    &.stable.overflowing {
+        // Make the tabs visible even if overflowing
+        .editor-tab.is-overflowing-element {
+            display: flex;
+        }
+        .editor-tab .tab-label {
+            display: none;
+        }
+    }
 }

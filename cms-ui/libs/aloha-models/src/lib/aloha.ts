@@ -1,5 +1,11 @@
 import { Item } from '@gentics/cms-models';
 
+export enum ScreenSize {
+    DESKTOP = 'desktop',
+    TABLET = 'tablet',
+    MOBILE = 'mobile',
+}
+
 export interface AlohaSettings {
     base: string;
     baseUrl: string;
@@ -23,6 +29,34 @@ export interface AlohaSettings {
     sanitizeCharacters?: Record<string, string>;
     toolbar?: any;
 }
+
+export type  AlohaToolbarSettings = {
+    [size in ScreenSize]: AlohaToolbarSizeSettings;
+}
+
+export interface AlohaToolbarSizeSettings {
+    tabs: AlohaToolbarTabsSettings[];
+}
+
+export interface AlohaToolbarTabsSettings {
+    id: string;
+    label: string;
+
+    icon?: string;
+
+    showOn?: AlohaScopeSettings;
+    components: AlohaFullComponentSetting[] | AlohaFullComponentSetting[][];
+}
+
+export interface AlohaScopeSettings {
+    scope: string | string[];
+}
+
+export interface AlohaFullComponentSetting extends Partial<AlohaScopeSettings> {
+    slot: string;
+}
+
+export type AlohaComponentSetting = string | AlohaFullComponentSetting;
 
 export declare class AlohaRangeObject {
     constructor();

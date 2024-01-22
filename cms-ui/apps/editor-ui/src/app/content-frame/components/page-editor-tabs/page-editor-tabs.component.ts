@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ElementRef, NgZone } from '@angular/core';
+import { AlohaToolbarTabsSettings } from '@gentics/aloha-models';
 import { Subscription } from 'rxjs';
+import { DefaultEditorControlTabs } from '../../../common/models';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
-import { DefaultEditorControlTabs, PageEditorTab } from '../../../common/models';
+import { OverflowManager } from '../../utils';
 
 @Component({
     selector: 'gtx-page-editor-tabs',
@@ -11,35 +13,39 @@ import { DefaultEditorControlTabs, PageEditorTab } from '../../../common/models'
 })
 export class PageEditorTabsComponent implements OnInit, OnDestroy {
 
-    public readonly DefaultEditorControlTabs = DefaultEditorControlTabs;
-
     public activeTab: string;
-    public editors: Record<string, PageEditorTab> = {};
+    public tabs: AlohaToolbarTabsSettings[] = [];
 
     protected subscriptions: Subscription[] = [];
+    protected overflow: OverflowManager;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected zone: NgZone,
+        protected element: ElementRef<HTMLDivElement>,
         protected aloha: AlohaIntegrationService,
     ) {}
 
     ngOnInit(): void {
-        this.editors = this.aloha.editors;
         this.activeTab = this.aloha.activeEditor;
 
-        this.subscriptions.push(this.aloha.activeEditor$.subscribe(active => {
-            if (active == null) {
-                this.aloha.changeActivePageEditorTab(DefaultEditorControlTabs.FORMATTING);
-                return;
+        this.zone.runOutsideAngular(() => {
+            this.overflow = new OverflowManager(this.element.nativeElement);
+            this.overflow.init();
+        });
+
+        this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(toolbar => {
+            this.tabs = (toolbar.tabs || []);
+            if (!this.tabs.some(tab => tab.id === this.activeTab)) {
+                this.setActiveTab(DefaultEditorControlTabs.FORMATTING);
             }
-            this.activeTab = active;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.editorsChange$.subscribe(() => {
-            this.editors = this.aloha.editors;
+        this.subscriptions.push(this.aloha.activeEditor$.subscribe(activeEditor => {
+            this.activeTab = activeEditor;
             this.changeDetector.markForCheck();
-        }));
+        }))
     }
 
     ngOnDestroy(): void {

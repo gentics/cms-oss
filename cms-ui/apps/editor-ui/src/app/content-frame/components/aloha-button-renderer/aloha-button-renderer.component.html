@@ -1,0 +1,19 @@
+<button
+    class="gtx-editor-button"
+    [class.icon-only]="hasIcon && !hasText"
+    [class.hidden]="!settings.visible"
+    [disabled]="disabled"
+    (click)="handleClick()"
+>
+    <icon
+        *ngIf="hasIcon"
+        class="button-icon"
+        [class.icon-left]="hasText"
+    >{{ settings.icon }}</icon>
+
+    <span
+        *ngIf="hasText"
+        class="button-label"
+        [innerHTML]="settings.html || settings.text"
+    ></span>
+</button>

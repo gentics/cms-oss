@@ -4,25 +4,21 @@ import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
 import {
+    AlohaButtonRendererComponent,
+    AlohaComponentRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,
-    ConstructControlsComponent,
     ContentFrameComponent,
-    CustomEditorControlComponent,
     DescriptionTooltipComponent,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
-    FormattingControlsComponent,
-    LinkControlsComponent,
-    ListControlsComponent,
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
-    TableControlsComponent,
     TableSizeSelectComponent,
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
@@ -35,25 +31,21 @@ import {
 } from './providers';
 
 const COMPONENTS = [
+    AlohaButtonRendererComponent,
+    AlohaComponentRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,
-    ConstructControlsComponent,
     ContentFrameComponent,
-    CustomEditorControlComponent,
     DescriptionTooltipComponent,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
-    FormattingControlsComponent,
-    LinkControlsComponent,
-    ListControlsComponent,
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
-    TableControlsComponent,
     TableSizeSelectComponent,
 ];
 

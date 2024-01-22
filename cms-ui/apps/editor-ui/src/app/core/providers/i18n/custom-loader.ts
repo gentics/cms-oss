@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 
 // Parse the yaml files into a JS object.
 const CORE_TRANSLATIONS: any = {
+    aloha: require('./translations/aloha.translations.yml'),
     common: require('./translations/common.translations.yml'),
     date: require('./translations/date.translations.yml'),
     editor: require('./translations/editor.translations.yml'),

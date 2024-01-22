@@ -45,7 +45,7 @@ export interface AlohaToolbarTabsSettings {
     icon?: string;
 
     showOn?: AlohaScopeSettings;
-    components: AlohaFullComponentSetting[] | AlohaFullComponentSetting[][];
+    components: AlohaComponentSetting[] | AlohaComponentSetting[][];
 }
 
 export interface AlohaScopeSettings {

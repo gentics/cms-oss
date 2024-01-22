@@ -1,0 +1,68 @@
+@mixin gtxCommonButtonShadow {
+    box-shadow: 0 2px 2px #00000024,
+        0 3px 1px -2px #0000001f,
+        0 1px 5px #0003;
+}
+
+@mixin gtxCommonHeader {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    border-radius: 2px;
+
+    background: #fafafa; // $gtx-color-very-light-gray;
+    border-bottom: 1px solid $gtx-color-warning;
+
+    .header-back-button {
+        border: none;
+        outline: none;
+        background: transparent;
+        border-right: 1px solid transparent;
+        height: 100%;
+        width: 40px;
+        padding: 0.25rem 0.5rem;
+        text-align: center;
+        margin: auto 0;
+        cursor: pointer;
+        transition: 200ms;
+
+        &:hover {
+            background: darken($gtx-color-very-light-gray, 5%);
+            border-right-color: $gtx-color-light-gray;
+        }
+    }
+
+    .header-label {
+        flex: 1 1 auto;
+        padding: 0.25rem 0.75rem;
+        font-weight: bold;
+    }
+
+    .header-confirm-button {
+        display: none;
+
+        background: $gtx-color-primary;
+        color: #fff;
+        border: 1px solid transparent;
+        outline: none;
+        padding: 0.125rem 0.5rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        margin-right: 0.5rem;
+        transition: 200ms;
+        text-transform: uppercase;
+        white-space: nowrap;
+        @include gtxCommonButtonShadow();
+
+        &:hover {
+            background: #00a7f6;
+        }
+
+        &:focus {
+            border-color: #c1c4ad;
+        }
+    }
+}

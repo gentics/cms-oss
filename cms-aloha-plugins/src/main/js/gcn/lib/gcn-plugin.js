@@ -17,6 +17,7 @@ define([
 	'aloha/plugin',
 	'i18n!gcn/nls/i18n',
 	'i18n!aloha/nls/i18n',
+	'ui/ui-plugin',
 	'ui/dialog',
 	'ui/ui',
 	'ui/button',
@@ -37,6 +38,7 @@ define([
 	'util/misc',
 	'gcn/gcn-links',
 	'gcn/gcn-repository',
+	'gcn/gcmsui-surface',
 	'css!gcn/css/aloha-gcn.css',
 	'css!gcn/css/gui.css'
 ], function (
@@ -47,6 +49,7 @@ define([
 	Plugin,
 	i18n,
 	i18nCore,
+	UiPlugin,
 	Dialog,
 	Ui,
 	Button,
@@ -64,7 +67,10 @@ define([
 	noty,
 	Tags,
 	Util,
-	Misc
+	Misc,
+	gcnLinks,
+	gcnRepo,
+	GCMSUISurface,
 ) {
 	'use strict';
 
@@ -829,6 +835,11 @@ define([
 		 */
 		init: function () {
 			var that = this;
+
+			// Create the GCMSUI Surface and set it as active.
+			// This forces the UI to be rendered in the GCMS UI instead of the Aloha Page/context.
+			var gcmsuiSurface = new GCMSUISurface(UiPlugin.getContext(), UiPlugin.getToolbarSettings());
+			UiPlugin.setActiveSurface(gcmsuiSurface, true, true);
 
 			// make some classes ephemeral. Those classes may be added to tags while initializing them
 			// if they are not ephemeral, the modification check of the editables would always detect them

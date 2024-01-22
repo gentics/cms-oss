@@ -1,12 +1,10 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { DefaultEditorControlTabs, PageEditorTab } from '@editor-ui/app/common/models';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { AlohaComponent } from '@gentics/aloha-models';
 import { ConstructCategory, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Subscription } from 'rxjs';
-import { AlohaGlobal } from '../../models/content-frame';
-import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
+import { Subscription, combineLatest } from 'rxjs';
+import { AlohaIntegrationService, NormalizedTabsSettings } from '../../providers/aloha-integration/aloha-integration.service';
 
 @Component({
     selector: 'gtx-page-editor-controls',
@@ -16,10 +14,9 @@ import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha
 })
 export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
-    public readonly DefaultEditorControlTabs = DefaultEditorControlTabs;
-
     public activeTab: string;
-    public editors: Record<string, PageEditorTab> = {};
+    public settings: NormalizedTabsSettings;
+    public components: Record<string, AlohaComponent> = {};
 
     /*
      * Editor Elements which are handled/loaded in this component
@@ -27,13 +24,6 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public constructs: TagType[] = [];
     public constructCategories: ConstructCategory[] = [];
     public overlayActive = false;
-
-    /*
-     * Aloha data for the individual tabs
-     */
-    public alohaRef: AlohaGlobal;
-    public alohaSettings: AlohaSettings;
-    public alohaRange: AlohaRangeObject;
 
     protected subscriptions: Subscription[] = [];
 
@@ -45,7 +35,6 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.editors = this.aloha.editors;
         this.activeTab = this.aloha.activeEditor;
 
         this.subscriptions.push(this.client.construct.list().subscribe(res => {
@@ -58,33 +47,22 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.reference$.asObservable().subscribe(ref => {
-            this.alohaRef = ref;
-            this.changeDetector.markForCheck();
-        }));
-
-        this.subscriptions.push(this.aloha.contextChange$.asObservable().subscribe(range => {
-            this.alohaRange = range;
-            this.changeDetector.markForCheck();
-        }));
-
-        this.subscriptions.push(this.aloha.settings$.asObservable().subscribe(settings => {
-            this.alohaSettings = settings;
-            this.changeDetector.markForCheck();
-        }));
-
-        this.subscriptions.push(this.aloha.activeEditor$.subscribe(active => {
-            this.activeTab = active;
-            this.changeDetector.markForCheck();
-        }));
-
-        this.subscriptions.push(this.aloha.editorsChange$.subscribe(() => {
-            this.editors = this.aloha.editors;
-            this.changeDetector.markForCheck();
-        }));
-
         this.subscriptions.push(this.appState.select(state => state.ui.overlayCount).subscribe(count => {
             this.overlayActive = count > 0;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
+            this.aloha.activeEditor$,
+            this.aloha.activeToolbarSettings$,
+        ]).subscribe(([editor, settings]) => {
+            this.activeTab = editor;
+            this.settings = settings.tabs.find(tab => tab.id === editor);
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.aloha.components$.subscribe(components => {
+            this.components = components;
             this.changeDetector.markForCheck();
         }));
     }

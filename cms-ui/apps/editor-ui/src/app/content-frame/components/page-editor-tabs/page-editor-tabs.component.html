@@ -7,8 +7,8 @@
         (click)="setActiveTab(tab.id)"
     >
         <div class="tab-icon">
-            <icon>flag</icon>
+            <icon>{{ tab.icon }}</icon>
         </div>
-        <div class="tab-label">{{ 'aloha.' + tab.label | i18n }}</div>
+        <div class="tab-label">{{ tab.label | i18n }}</div>
     </div>
 </div>

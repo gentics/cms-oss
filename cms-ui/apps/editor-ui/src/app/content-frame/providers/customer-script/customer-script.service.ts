@@ -21,6 +21,7 @@ import {
     Tag,
     TagType,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
 import { Subscription, of as observableOf } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
@@ -29,7 +30,6 @@ import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre
 import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 
 const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
@@ -269,6 +269,12 @@ export class CustomerScriptService implements OnDestroy {
                 });
             },
             closeErrorClass: ModalCloseError,
+            registerComponent: (slot, component) => {
+                this.aloha.registerComponent(slot, component);
+            },
+            unregisterComponent: (slot) => {
+                this.aloha.unregisterComponent(slot);
+            },
         };
 
         window.GCMSUI = gcmsUi;

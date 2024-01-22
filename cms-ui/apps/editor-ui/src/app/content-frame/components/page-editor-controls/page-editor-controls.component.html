@@ -1,26 +1,14 @@
-<ng-container [ngSwitch]="activeTab">
-    <gtx-formatting-controls
-        *ngSwitchCase="DefaultEditorControlTabs.FORMATTING"
-        [aloha]="alohaRef"
-        [settings]="alohaSettings"
-        [range]="alohaRange"
-        [disabled]="overlayActive"
-    ></gtx-formatting-controls>
-
-    <gtx-construct-controls
-        *ngSwitchCase="DefaultEditorControlTabs.CONSTRUCTS"
-        [aloha]="alohaRef"
-        [settings]="alohaSettings"
-        [range]="alohaRange"
-        [constructs]="constructs"
-        [categories]="constructCategories"
-        [disabled]="overlayActive"
-    ></gtx-construct-controls>
-
-    <ng-container *ngSwitchDefault>
-        <gtx-custom-editor-control
-            [editorUrl]="editors[activeTab]?.editorUrl"
-            [disabled]="overlayActive"
-        ></gtx-custom-editor-control>
-    </ng-container>
+<ng-container *ngFor="let componentGroup of settings.components; let last = last">
+    <div class="component-group">
+        <ng-container *ngFor="let tabComponentDefinition of componentGroup">
+            <ng-container *ngIf="components[tabComponentDefinition.slot] as alohaComp">
+                <gtx-aloha-component-renderer
+                    class="dynamic-component"
+                    [slot]="tabComponentDefinition.slot"
+                    [component]="alohaComp"
+                ></gtx-aloha-component-renderer>
+            </ng-container>
+        </ng-container>
+    </div>
+    <div *ngIf="!last" class="group-separator"></div>
 </ng-container>

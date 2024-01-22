@@ -1,0 +1,6 @@
+<ng-container [ngSwitch]="type || component?.type">
+    <gtx-aloha-button-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.BUTTON"
+        [settings]="component || settings"
+    ></gtx-aloha-button-renderer>
+</ng-container>

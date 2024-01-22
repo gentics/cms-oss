@@ -1,0 +1,40 @@
+export interface AlohaComponent {
+    id: number;
+    isInstance: boolean;
+    type: string;
+    visible: boolean;
+    disabled: boolean;
+    touched: boolean;
+    validationErrors: Record<string, any> | null;
+    changeNotify?: (value: any) => void;
+    touchNotify?: () => void;
+
+    adoptParent: (container: HTMLElement) => void;
+
+    init: () => void;
+    destroy: () => void;
+
+    show: () => void;
+    hide: () => void;
+    enable: () => void;
+    disable: () => void;
+    touch: () => void;
+    untouched: () => void;
+
+    focus: () => void;
+    foreground: () => void;
+
+    isVisible: () => boolean;
+    isValid: () => boolean;
+
+    getValue: () => any;
+    setValue: (value: any) => void;
+
+    triggerTouchNotification: () => void;
+    triggerChangeNotification: () => void;
+}
+
+export enum AlohaCoreComponentNames {
+    BUTTON = 'button',
+    ATTRIBUTE_BUTTON = 'attribute-button',
+}

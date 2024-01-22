@@ -16,6 +16,7 @@ import {
     TagInContainer,
     TagType,
 } from '@gentics/cms-models';
+import { AlohaComponent } from '@gentics/aloha-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
 
 /**
@@ -291,4 +292,7 @@ export interface GcmsUiBridge {
      * Class of the error which is thrown when a overlay element has been closed.
      */
     closeErrorClass: any;
+
+    registerComponent: (slot: string, component: AlohaComponent) => void;
+    unregisterComponent: (slot: string) => void;
 }

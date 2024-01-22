@@ -83,6 +83,14 @@
 
                     .inner-wrapper {
                         line-height: inherit;
+
+                        .other-content {
+                            margin-right: 0.5rem;
+                        }
+
+                        .lastPart {
+                            margin: auto 0;
+                        }
                     }
 
                     .breadcrumb {
@@ -241,5 +249,11 @@
 
     .item-status {
         display: inline-block;
+    }
+}
+
+@media (max-width: $tiny-screen) {
+    .toolbar-actions .item-status {
+        display: none;
     }
 }

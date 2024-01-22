@@ -107,7 +107,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public isSaving: boolean;
     public inQueue: boolean;
     public focusMode: boolean;
-    public previewLink: any[] = [];
 
     /** Subscriptions to cleanup */
     protected subscriptions: Subscription[] = [];
@@ -162,7 +161,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.changeDetector.markForCheck();
         }));
 
-        this.setupPreviewLink();
         this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         this.checkIfInQueue();
         this.buttons = this.determineVisibleButtons();
@@ -173,7 +171,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.currentItem || changes.currentNode) {
             this.checkIfInQueue();
-            this.setupPreviewLink();
             this.setUpBreadcrumbs(this.currentItem, this.currentNode?.id);
         }
         if (changes.editorState || changes.currentItem || changes.currentNode) {
@@ -218,17 +215,6 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             this.breadcrumbs = breadcrumbs ;
             this.changeDetector.markForCheck();
         }));
-    }
-
-    setupPreviewLink(): void {
-        if (!this.currentItem || !this.currentNode) {
-            this.previewLink = null;
-            return;
-        }
-
-        this.previewLink = this.navigationService
-            .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
-            .commands();
     }
 
     checkIfInQueue(): void {
@@ -335,6 +321,12 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
             default:
                 throw new Error('Incompatible item to edit.');
         }
+    }
+
+    previewPage(): void {
+        this.navigationService
+            .detailOrModal(this.currentNode && this.currentNode.id, this.currentItem.type, this.currentItem.id, EditMode.PREVIEW)
+            .navigate();
     }
 
     /**

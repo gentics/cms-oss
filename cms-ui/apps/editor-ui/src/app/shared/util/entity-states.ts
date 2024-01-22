@@ -138,7 +138,7 @@ export class PublishableStateUtil extends InheritableEntityStateUtil {
         if (!item) {
             throw new Error('Page object is invalid');
         }
-        return item.timeManagement.at > 0;
+        return item.timeManagement?.at > 0;
     }
 
     /**
@@ -149,7 +149,7 @@ export class PublishableStateUtil extends InheritableEntityStateUtil {
         if (!item) {
             throw new Error('Page object is invalid');
         }
-        return item.timeManagement.offlineAt > 0;
+        return item.timeManagement?.offlineAt > 0;
     }
 
 }

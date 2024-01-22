@@ -104,3 +104,51 @@
     }
 }
 
+.status-label {
+    position: relative;
+
+    .icon-bottom-left,
+    .icon-bottom-right,
+    .icon-top-left,
+    .icon-top-right {
+        position: absolute;
+        background: $gtx-color-very-light-gray;
+        border-radius: 50%;
+        height: 14px;
+        width: 14px;
+
+        .secondary-icon {
+            font-size: 14px;
+            text-align: center;
+            color: $gtx-color-very-dark-gray;
+
+            &.icon-modified {
+                font-size: 20px;
+                height: 14px;
+                width: 14px;
+                display: block;
+                margin-top: 4px;
+            }
+        }
+    }
+
+    .icon-bottom-left,
+    .icon-bottom-right {
+        bottom: -7px;
+    }
+
+    .icon-top-left,
+    .icon-top-right {
+        top: -7px;
+    }
+
+    .icon-bottom-left,
+    .icon-top-left {
+        left: -7px;
+    }
+
+    .icon-bottom-right,
+    .icon-top-right {
+        right: -7px;
+    }
+}

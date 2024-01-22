@@ -1,0 +1,29 @@
+<div class="gtx-editor-split-button" [class.hidden]="!settings.visible">
+    <button
+        class="split-button-secondary"
+        [disabled]="disabled"
+        (click)="handleSecondaryClick()"
+    >
+        <icon class="button-icon secondary-icon">arrow_drop_down</icon>
+    </button>
+
+    <button
+        class="split-button-main"
+        [class.icon-only]="hasIcon && !hasText"
+        [disabled]="disabled"
+        (click)="handleClick()"
+    >
+        <icon
+            *ngIf="hasIcon"
+            class="button-icon"
+            [class.icon-left]="hasText"
+        >{{ settings.icon }}</icon>
+
+        <span
+            *ngIf="hasText"
+            class="button-label"
+            [innerHTML]="settings.html || settings.text"
+        ></span>
+    </button>
+</div>
+

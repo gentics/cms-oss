@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 
@@ -7,6 +7,12 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
 
     @Input()
     public settings?: C | Partial<C> | Record<string, any>;
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
 
     public ngOnInit(): void {
         this.setupAlohaHooks();
@@ -37,6 +43,9 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
         this.settings.hide = () => {
             this.settings.visible = false;
             this.changeDetector.markForCheck();
+        };
+        this.settings.touch = () => {
+            this.triggerTouch();
         };
     }
 

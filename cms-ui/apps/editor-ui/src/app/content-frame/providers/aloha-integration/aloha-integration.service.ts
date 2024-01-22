@@ -91,7 +91,12 @@ const makeAlohaButton: (type: string, label: string, icon: string) => AlohaCompo
 const MOCK_COMPONENTS: Record<string, AlohaComponent> = {
     bold: makeAlohaButton(AlohaCoreComponentNames.BUTTON, 'bold!', 'format_bold'),
     italic: makeAlohaButton(AlohaCoreComponentNames.TOGGLE_BUTTON, 'italiccccc!', 'format_italic'),
-    strike: makeAlohaButton(AlohaCoreComponentNames.BUTTON, 'strikethrough', 'format_strikethrough'),
+    strike: {
+        ...makeAlohaButton(AlohaCoreComponentNames.SPLIT_BUTTON, 'strikethrough', 'format_strikethrough'),
+        secondaryClick() {
+            console.log('SECONDARY CLICK YEEEE', this);
+        },
+    } as any,
 }
 
 const MOCK_TOOLBAR_SETTINGS: AlohaToolbarSettings = {

@@ -11,6 +11,7 @@ import {
     InstancePermissionsImpl,
     PermissionResponse,
     PermissionsMapCollection,
+    ResponseCode,
     TypePermissions,
     TypePermissionsImpl,
     UniformInstancePermissions,
@@ -46,7 +47,7 @@ deepFreeze(MOCK_PERM_MAP2);
 
 function mockPermissionsResponse(permissionsCollection: PermissionsMapCollection): Observable<PermissionResponse> {
     const response: PermissionResponse = {
-        responseInfo: { responseCode: 'OK' },
+        responseInfo: { responseCode: ResponseCode.OK },
         perm: '1001',
         permissionsMap: permissionsCollection,
     };

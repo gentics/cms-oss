@@ -1,4 +1,4 @@
-import { Item, TagType } from '@gentics/cms-models';
+import { Item } from '@gentics/cms-models';
 
 export interface AlohaSettings {
     base: string;

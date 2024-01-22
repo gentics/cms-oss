@@ -7,12 +7,14 @@ import {
     LocalTranslateLoader,
     LoggingHelperService,
 } from '@admin-ui/core';
+import { KeycloakService } from '@admin-ui/login/providers/keycloak/keycloak.service';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
-import { ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
+import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule } from '@gentics/cms-components';
+import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -103,6 +105,24 @@ import { TraceErrorHandler } from './providers/trace-error-handler/trace-error-h
 import { UserSettingsService } from './providers/user-settings/user-settings.service';
 
 export const createSidObservable = (appState: AppStateService): Observable<number> => appState.select(state => state.auth.sid);
+
+export function initializeApp(appState: AppStateService, client: GCMSRestClientService): () => Promise<void> {
+    return () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        client.init({
+            connection: {
+                absolute: false,
+                basePath: '/rest',
+            },
+        });
+        appState.select(state => state.auth.sid).subscribe(sid => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            client.setSessionId(sid);
+        });
+
+        return KeycloakService.checkKeycloakAuth();
+    };
+}
 
 const COMPONENTS: any[] = [
     ActivityManagerComponent,
@@ -208,6 +228,12 @@ const PROVIDERS: any[] = [
         deps: [AppStateService],
     },
     { provide: NgErrorHandler, useClass: TraceErrorHandler },
+    {
+        provide: APP_INITIALIZER,
+        useFactory: initializeApp,
+        deps: [ AppStateService, GCMSRestClientService ],
+        multi: true,
+    },
 ];
 
 @NgModule({
@@ -216,6 +242,7 @@ const PROVIDERS: any[] = [
         BrowserModule,
         BrowserAnimationsModule,
         GcmsRestClientsAngularModule,
+        GCMSRestClientModule,
         GenticsUICoreModule,
         CmsComponentsModule,
         HotkeyModule.forRoot(),

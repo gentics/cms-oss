@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Api } from '@editor-ui/app/core/providers/api';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { GtxVersion, GtxVersionCompatibility, UsersnapSettings, UsersnapSettingsResponse, VersionResponse } from '@gentics/cms-models';
+import { GtxVersion, GtxVersionCompatibility, ResponseCode, UsersnapSettings, UsersnapSettingsResponse, VersionResponse } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { ApplicationStateService } from '..';
@@ -48,13 +48,13 @@ class MockApi extends MockApiBase {
         getVersion: jasmine.createSpy('getVersion').and.callFake(() => of<VersionResponse>({
             ...CMP_VERSION,
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
             },
         })),
 
         getUsersnapSettings: jasmine.createSpy('getUsersnapSettings').and.callFake(() => of<UsersnapSettingsResponse>({
             responseInfo: {
-                responseCode: 'OK',
+                responseCode: ResponseCode.OK,
             },
             settings: usersnapSettings,
         })),

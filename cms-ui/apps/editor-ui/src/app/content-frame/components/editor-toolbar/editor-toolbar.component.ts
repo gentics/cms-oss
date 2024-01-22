@@ -25,7 +25,7 @@ import {
     Normalized,
     Page,
 } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { IBreadcrumbLink, IBreadcrumbRouterLink, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, combineLatest } from 'rxjs';
 import { map, publishReplay, refCount } from 'rxjs/operators';
@@ -120,7 +120,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         protected navigationService: NavigationService,
         protected modalService: ModalService,
         protected decisionModals: DecisionModalsService,
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
         protected breadcrumbsService: BreadcrumbsService,
         protected folderActions: FolderActionsService,
         protected permissions: PermissionService,
@@ -205,7 +205,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
         if (folderId == null || !nodeId) {
             return;
         }
-        this.subscriptions.push(this.api.folders.getBreadcrumbs(folderId, { nodeId }).pipe(
+        this.subscriptions.push(this.client.folder.breadcrumbs(folderId, { nodeId }).pipe(
             map(response => response.folders.map((folder) => ({
                 text: folder.name,
                 route: ['/editor', { outlets: { list: ['node', nodeId, 'folder', folder.id] }} ],
@@ -215,7 +215,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
                 : breadcrumbs,
             ),
         ).subscribe(breadcrumbs => {
-            this.breadcrumbs = breadcrumbs as any;
+            this.breadcrumbs = breadcrumbs ;
             this.changeDetector.markForCheck();
         }));
     }

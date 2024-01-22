@@ -66,6 +66,7 @@ import {
     QueuedActionRequestTakeOfflineAt,
     Raw,
     Response,
+    ResponseCode,
     RotateParameters,
     SearchPagesOptions,
     StagedItemsMap,
@@ -277,7 +278,7 @@ export class FolderApi {
                     hasMoreItems,
                     messages: [],
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                     },
                     stagingStatus: stagingMap,
                 };

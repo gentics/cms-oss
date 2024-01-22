@@ -27,6 +27,7 @@ import {
     RepoItem,
     RepositoryBrowserOptions,
     RepositoryBrowserSorting,
+    ResponseCode,
     Template,
 } from '@gentics/cms-models';
 import {
@@ -184,7 +185,7 @@ class TestComponent { }
 class MockApi {
     defaultResponse: BaseListResponse = {
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
             responseMessage: '',
         },
         messages: [],

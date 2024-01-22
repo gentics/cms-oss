@@ -5,7 +5,6 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ItemsInfo } from '@editor-ui/app/common/models';
-import { Api } from '@editor-ui/app/core/providers/api';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { DecisionModalsService } from '@editor-ui/app/core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -75,10 +74,11 @@ import {
     getExampleNodeDataNormalized,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService, SplitViewContainerComponent } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { NgxPaginationModule } from 'ngx-pagination';
-import { Observable, Subject, of } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { AnyItemDeletedPipe } from '../../pipes/any-item-deleted/any-item-deleted.pipe';
 import { AnyItemInheritedPipe } from '../../pipes/any-item-inherited/any-item-inherited.pipe';
@@ -276,13 +276,26 @@ class MockSplitViewContainer {
     }
 }
 
-class MockApi {
+class MockClient {
+    page = {
+        get: () => throwError('not mocked'),
+    };
 
-    folders = {
-        getItem(id: number, type: string, options: { nodeId: number }): Observable<any> {
-            throw new Error('getItem called but not mocked');
-        },
-        getFolders: jasmine.createSpy('Api.folders.getFolders').and.returnValue(of({
+    file = {
+        get: () => throwError('not mocked'),
+    };
+
+    image = {
+        get: () => throwError('not mocked'),
+    };
+
+    form = {
+        get: () => throwError('not mocked'),
+    };
+
+    folder = {
+        get: () => throwError('not mocked'),
+        folders: jasmine.createSpy('folder.folders').and.returnValue(of({
             hasMoreItems: true,
             messages: [],
             numItems: 26,
@@ -319,7 +332,7 @@ class MockApi {
                 { ...getExampleFolderData({ id: 26 }) },
             ],
         })),
-        getTemplates: () => of({
+        templates: () => of({
             templates: [],
             hasMoreItems: false,
             messages: [],
@@ -329,7 +342,7 @@ class MockApi {
                 responseMessage: 'Successfully loaded templates',
             },
         }),
-        getBreadcrumbs: () => of({
+        breadcrumbs: () => of({
             folders: [],
             hasMoreItems: false,
             messages: [],
@@ -340,158 +353,12 @@ class MockApi {
             },
         }),
     };
-
-    permissions = {
-        default: {
-            perm: null,
-            privilegeMap: {
-                privileges: {
-                    viewfolder: true,
-                    createfolder: true,
-                    updatefolder: true,
-                    deletefolder: true,
-                    assignpermissions: true,
-                    viewpage: true,
-                    createpage: true,
-                    updatepage: true,
-                    deletepage: true,
-                    publishpage: true,
-                    viewfile: true,
-                    createfile: true,
-                    updatefile: true,
-                    deletefile: true,
-                    viewtemplate: true,
-                    createtemplate: true,
-                    linktemplate: true,
-                    updatetemplate: true,
-                    deletetemplate: true,
-                    updatetagtypes: true,
-                    inheritance: true,
-                    importpage: true,
-                    linkworkflow: true,
-                    synchronizechannel: true,
-                    wastebin: true,
-                    translatepage: true,
-                    viewform: true,
-                    createform: true,
-                    updateform: true,
-                    deleteform: true,
-                    publishform: true,
-                },
-                languages: [
-                    {
-                        language: {
-                            code: 'DE',
-                            id: 1,
-                            name: 'DE',
-                        },
-                        privileges: {
-                            viewpage: true,
-                            createpage: true,
-                            updatepage: true,
-                            deletepage: true,
-                            publishpage: true,
-                            translatepage: true,
-                            viewfile: true,
-                            createfile: true,
-                            updatefile: true,
-                            deletefile: true,
-                        },
-                    },
-                    {
-                        language: {
-                            code: 'EN',
-                            id: 2,
-                            name: 'EN',
-                        },
-                        privileges: {
-                            viewpage: true,
-                            createpage: true,
-                            updatepage: true,
-                            deletepage: true,
-                            publishpage: true,
-                            translatepage: true,
-                            viewfile: true,
-                            createfile: true,
-                            updatefile: true,
-                            deletefile: true,
-                        },
-                    },
-                ],
-            },
-            permissionsMap: {
-                permissions: {
-                    create: true,
-                    createform: true,
-                    createitems: true,
-                    createtemplates: true,
-                    deletefolder: true,
-                    deleteform: true,
-                    deleteitems: true,
-                    deletetemplates: true,
-                    importitems: true,
-                    linktemplates: true,
-                    publishform: true,
-                    publishpages: true,
-                    read: true,
-                    readitems: true,
-                    readtemplates: true,
-                    setperm: true,
-                    updatefolder: true,
-                    updateform: true,
-                    updateitems: true,
-                    updatetemplates: true,
-                    viewform: true,
-                },
-                rolePermissions: {
-                    file: {
-                        createitems: true,
-                        deleteitems: true,
-                        readitems: true,
-                        updateitems: true,
-                    },
-                    page: {
-                        createitems: true,
-                        deleteitems: true,
-                        publishpages: true,
-                        readitems: true,
-                        translatepages: true,
-                        updateitems: true,
-                    },
-                    pageLanguages: {
-                        ['DE']: {
-                            createitems: true,
-                            deleteitems: true,
-                            publishpages: true,
-                            readitems: true,
-                            translatepages: true,
-                            updateitems: true,
-                        },
-                        ['EN']: {
-                            createitems: true,
-                            deleteitems: true,
-                            publishpages: true,
-                            readitems: true,
-                            translatepages: true,
-                            updateitems: true,
-                        },
-                    },
-                },
-            },
-            responseInfo: null,
-        },
-
-        getFolderPermissions(folderId: number, nodeId: number): Observable<PermissionResponse> {
-            return of(this.default).pipe(first());
-        },
-    };
 }
 
 describe('FolderContentsComponent', () => {
 
     let state: TestApplicationState;
     let folderActions: FolderActionsService;
-    let apiService: Api;
 
     /** Updates the folder.folders portion of the AppState with the specified changes. */
     const updateItemsInfoState = (changes: Partial<ItemsInfo>) => {
@@ -530,7 +397,7 @@ describe('FolderContentsComponent', () => {
                         snapshot: {},
                     },
                 },
-                { provide: Api, useClass: MockApi },
+                { provide: GCMSRestClientService, useClass: MockClient },
                 {
                     provide: ApplicationStateService,
                     useClass: TestApplicationState,
@@ -629,7 +496,6 @@ describe('FolderContentsComponent', () => {
 
         state = TestBed.inject(ApplicationStateService) as TestApplicationState;
         folderActions = TestBed.inject(FolderActionsService);
-        apiService = TestBed.inject(Api);
 
         expect(state instanceof ApplicationStateService).toBeTruthy();
         state.mockState({

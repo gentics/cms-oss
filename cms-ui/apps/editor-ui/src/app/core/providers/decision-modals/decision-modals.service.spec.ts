@@ -15,6 +15,7 @@ import {
     Page,
     PageListOptions,
     Raw,
+    ResponseCode,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -518,7 +519,7 @@ describe('DecisionModalsService', () => {
 
             // Return data as if the page was localized in a channel
             api.folders.getLocalizations = jasmine.createSpy('FolderApi.getLocalizations')
-                .and.returnValue(of(<LocalizationsResponse> {
+                .and.returnValue(of({
                     masterId: MASTERNODE,
                     masterNodeId: MASTERNODE,
                     nodeIds: {
@@ -526,10 +527,10 @@ describe('DecisionModalsService', () => {
                         [OTHERPAGE]: OTHERNODE,
                     },
                     responseInfo: {
-                        responseCode: 'OK',
+                        responseCode: ResponseCode.OK,
                         responseMessage: '',
                     },
-                }));
+                } as any as LocalizationsResponse));
 
             modalService.mockResult(<MultiDeleteResult> {
                 delete: [],

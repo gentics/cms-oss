@@ -21,7 +21,7 @@ import {
 } from '@gentics/cms-models';
 import { ProgressBarComponent } from '@gentics/ui-core';
 import { Observable, Subscription, of } from 'rxjs';
-import { filter, map, publishReplay, refCount, switchMap, take } from 'rxjs/operators';
+import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -162,23 +162,24 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             return;
         }
 
-        const folderId = this.file.folderId;
         const nodeId = this.appState.now.editor.nodeId;
         const fileNameToReplace = this.keepFileName ? this.file.name : undefined;
 
-        const progress$ = this.folderActions.replaceFile(
+        const upload = this.folderActions.replaceFile(
             this.file.type,
             this.file.id,
             files[0],
-            folderId,
-            nodeId,
             fileNameToReplace,
-        ).progress$.pipe(
+            { nodeId },
+        ).pipe(
             publishReplay(1),
             refCount(),
         );
 
-        uploadProgress.start(progress$);
+        uploadProgress.start(upload.pipe(
+            startWith(0),
+            map(() => 1),
+        ));
 
         if (this.keepFileName && (this.file.fileType !== files[0].type) ) {
             this.notification.show({
@@ -192,10 +193,7 @@ export class FilePreviewComponent implements OnChanges, OnDestroy {
             });
         }
 
-        progress$.pipe(
-            filter(progress => progress === 1),
-            take(1),
-        ).subscribe(() => {
+        upload.subscribe(() => {
             if (!this.keepFileName) {
                 this.notification.show({
                     message: 'message.file_replaced_with_success',

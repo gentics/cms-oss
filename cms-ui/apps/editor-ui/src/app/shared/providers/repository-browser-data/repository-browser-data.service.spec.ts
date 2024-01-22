@@ -9,6 +9,7 @@ import {
     PageListResponse,
     Raw,
     RepoItem,
+    ResponseCode,
 } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { forkJoin, Observable, of } from 'rxjs';
@@ -434,7 +435,7 @@ class MockApi {
         messages: [],
         numItems: 3,
         responseInfo: {
-            responseCode: 'OK',
+            responseCode: ResponseCode.OK,
         },
     };
     folders = {

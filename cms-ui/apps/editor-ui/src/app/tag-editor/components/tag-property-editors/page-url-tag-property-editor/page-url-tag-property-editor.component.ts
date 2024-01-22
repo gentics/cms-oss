@@ -20,6 +20,7 @@ import {
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { isEqual } from 'lodash-es';
 import { Observable, Subject, Subscription, merge, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
@@ -81,7 +82,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     private stopper = new ObservableStopper();
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private i18n: I18nService,
@@ -103,7 +104,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.selectedInternalPage = new SelectedItemHelper('page', context.node.id, this.api.folders);
+        this.selectedInternalPage = new SelectedItemHelper('page', context.node.id, this.client);
 
         this.internalPageDisplayValue$ = merge(
             this.selectedInternalPage.selectedItem$.pipe(
@@ -151,7 +152,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.selectedInternalPage.selectedItem$.pipe(
             switchMap((selectedInternalPage) => {
                 if (selectedInternalPage) {
-                    return this.api.folders.getItem(selectedInternalPage.folderId, 'folder')
+                    return this.client.folder.get(selectedInternalPage.folderId)
                         .pipe(
                             map(response => response.folder),
                             catchError(err => of(err)),
@@ -169,7 +170,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                     return of(context.folder);
                 }
 
-                return this.api.folders.getItem(this.page.folderId, 'folder')
+                return this.client.folder.get(this.page.folderId)
                     .pipe(
                         map(response => response.folder),
                         catchError(err => of(err)),

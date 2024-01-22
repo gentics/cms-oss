@@ -16,13 +16,13 @@ type PageWithNodeId = ItemInNode<Page<Raw>>;
 describe('SelectedItemHelper', () => {
 
     let selectedItemHelper: SelectedItemHelper<PageWithNodeId>;
-    let mockFolderActionsService: MockFolderActions;
+    let mockClient: MockClient;
     let getItemSpy: jasmine.Spy;
 
     beforeEach(() => {
-        mockFolderActionsService = new MockFolderActions();
-        selectedItemHelper = new SelectedItemHelper('page', DEFAULT_NODE_ID, mockFolderActionsService as any);
-        getItemSpy = spyOn(mockFolderActionsService, 'getItem').and.callThrough();
+        mockClient = new MockClient();
+        selectedItemHelper = new SelectedItemHelper('page', DEFAULT_NODE_ID, mockClient as any);
+        getItemSpy = spyOn(mockClient.page, 'get').and.callThrough();
     });
 
     it('setSelectedItem(item) works and emits a value from selectedItem$', fakeAsync(() => {
@@ -60,7 +60,7 @@ describe('SelectedItemHelper', () => {
         tick();
         sub.unsubscribe();
         expect(emittedItem).toEqual(expectedPage);
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: DEFAULT_NODE_ID })
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: DEFAULT_NODE_ID })
         expect(selectedItemHelper.selectedItem).toBe(emittedItem);
     }));
 
@@ -74,7 +74,7 @@ describe('SelectedItemHelper', () => {
         tick();
         sub.unsubscribe();
         expect(emittedItem).toEqual(expectedPage);
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: STICKY_NODE_ID });
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: STICKY_NODE_ID });
         expect(selectedItemHelper.selectedItem).toBe(emittedItem);
     }));
 
@@ -88,7 +88,7 @@ describe('SelectedItemHelper', () => {
         selectedItemHelper.setSelectedItem(PAGE_ID, STICKY_NODE_ID);
         tick();
         expect(emittedItem).toEqual(expectedPage);
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: STICKY_NODE_ID });
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: STICKY_NODE_ID });
         expect(selectedItemHelper.selectedItem).toBe(emittedItem);
 
         // Set an item object.
@@ -108,7 +108,7 @@ describe('SelectedItemHelper', () => {
         selectedItemHelper.setSelectedItem(PAGE_ID);
         tick();
         expect(emittedItem).toEqual(expectedPage);
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: DEFAULT_NODE_ID });
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: DEFAULT_NODE_ID });
         expect(selectedItemHelper.selectedItem).toBe(emittedItem);
 
         sub.unsubscribe();
@@ -125,7 +125,7 @@ describe('SelectedItemHelper', () => {
         const expectedError = new Error('Simulated error');
         getItemSpy.and.returnValue(throwError(expectedError));
         selectedItemHelper.setSelectedItem(PAGE_ID);
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: DEFAULT_NODE_ID });
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: DEFAULT_NODE_ID });
         expect(emittedItem).toBeFalsy();
         expect(emittedError).toBe(expectedError);
 
@@ -136,7 +136,7 @@ describe('SelectedItemHelper', () => {
         getItemSpy.and.returnValue(mockResponseObservable(expectedPage));
         selectedItemHelper.setSelectedItem(PAGE_ID);
         tick();
-        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, 'page', { nodeId: DEFAULT_NODE_ID });
+        expect(getItemSpy).toHaveBeenCalledWith(PAGE_ID, { nodeId: DEFAULT_NODE_ID });
         expect(emittedItem).toEqual(expectedPage);
         expect(emittedError).toBeFalsy();
 
@@ -166,6 +166,8 @@ function mockResponseObservable(page: Page<Raw>): Observable<PageResponse> {
     return of(response as any).pipe(delay(0));
 }
 
-class MockFolderActions {
-    getItem(): any { }
+class MockClient {
+    page = {
+        get: () => of(null),
+    };
 }

@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { IModalDialog } from '../../common';
+import { IModalDialog, ModalClosingReason } from '../../common';
 
 @Component({ template: '' })
 export abstract class BaseModal<T> implements IModalDialog {
 
-    closeFn: (value: T) => void = () => {};
-    cancelFn: (value?: T) => void = () => {};
+    closeFn: (value: T, reason?: ModalClosingReason) => void = () => {};
+    cancelFn: (value?: T, reason?: ModalClosingReason) => void = () => {};
     errorFn: (error: Error) => void = () => {};
 
     registerCloseFn(fn: (value: T) => void): void {

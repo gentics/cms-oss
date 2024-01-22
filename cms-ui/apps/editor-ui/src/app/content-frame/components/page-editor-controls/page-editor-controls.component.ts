@@ -3,7 +3,7 @@ import { DefaultEditorControlTabs, PageEditorTab } from '@editor-ui/app/common/m
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { ConstructCategory, TagType } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription } from 'rxjs';
 import { AlohaGlobal } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
@@ -40,7 +40,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected appState: ApplicationStateService,
-        protected api: GcmsApi,
+        protected client: GCMSRestClientService,
         protected aloha: AlohaIntegrationService,
     ) {}
 
@@ -48,12 +48,12 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         this.editors = this.aloha.editors;
         this.activeTab = this.aloha.activeEditor;
 
-        this.subscriptions.push(this.api.tagType.getTagTypes().subscribe(res => {
+        this.subscriptions.push(this.client.construct.list().subscribe(res => {
             this.constructs = res.items;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.api.constructCategory.getConstructCategoryCategories({ recursive: false }).subscribe(res => {
+        this.subscriptions.push(this.client.constructCategory.getConstructCategoryCategories({ recursive: false }).subscribe(res => {
             this.constructCategories = res.items;
             this.changeDetector.markForCheck();
         }));

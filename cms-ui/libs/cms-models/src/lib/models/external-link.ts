@@ -6,25 +6,6 @@
 export type ExternalLinkStatus = 'valid' | 'invalid' | 'unchecked';
 
 /**
- * Scope of link replacement
- *
- * https://www.gentics.com/Content.Node/guides/restapi/json_ReplaceScope.html
- */
-export enum ReplaceScope {
-    /** Replace the link only */
-    Link = 'link',
-
-    /** Replace all occurrences in the page */
-    Page = 'page',
-
-    /** Replace all occurrences in the node */
-    Node = 'node',
-
-    /** Replace all occurrences in the system */
-    Global = 'global',
-}
-
-/**
  * Item in the history of validity checks for an external link
  *
  * https://www.gentics.com/Content.Node/guides/restapi/json_ExternalLinkCheckHistoryEntry.html
@@ -81,15 +62,4 @@ export interface ExternalLink {
 
     /** History of last 5 validity checks */
     history: ExternalLinkCheckHistoryEntry[];
-}
-
-/**
- * Request to replace an external Link with another URL
- * POST body for `linkChecker/pages/{pageId}/links/{id}`
- *
- * https://www.gentics.com/Content.Node/guides/restapi/json_ReplaceExternalLinkRequest.html
- */
-export interface ReplaceExternalLinkRequest {
-    url: string;
-    scope: ReplaceScope;
 }

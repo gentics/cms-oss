@@ -92,7 +92,7 @@ describe('TagEditorService', () => {
         expect(actualContext).toEqual(expectedVarContext);
     }
 
-    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and resolves the result promise correctly', fakeAsync(() => {
+    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and resolves the result promise correctly', fakeAsync(async () => {
         const data = getTagEditorContextInitData();
         const expectedData = cloneDeep(data);
         expectedData.tagOwnerFromIFrame = true;
@@ -108,7 +108,7 @@ describe('TagEditorService', () => {
             tagType: expectedData.tagType,
         };
 
-        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner);
+        const finalTag = await tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner);
 
         expect(createTagEditorContextSpy).toHaveBeenCalledWith(expectedData);
         expect(openTagEditorSpy).toHaveBeenCalled();
@@ -121,32 +121,22 @@ describe('TagEditorService', () => {
             ...expectedData.tag,
         };
         (expectedFinalTag.properties['property0'] as StringTagPartProperty).stringValue = 'modified value';
-        let finalTag: Tag = null;
-        tagEditorPromise.then(result => finalTag = result);
-        tick();
+
         expect(finalTag).toEqual(expectedFinalTag);
     }));
 
-    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and relays a promise rejection correctly', fakeAsync(() => {
+    it('openTagEditor() uses the tagEditorOverlayHost to open the tag editor and relays a promise rejection correctly', fakeAsync(async () => {
         const data = getTagEditorInitData();
         const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor').and.returnValue(Promise.reject(undefined));
 
-        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
+        try {
+            await tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
+            expect(false).toBe(true); // Should always fail
+        } catch (error) {
+            expect(error).toBeUndefined();
+        }
 
         expect(openTagEditorSpy).toHaveBeenCalled();
-        let resolved = false;
-        let rejected = false;
-        let error: any;
-        tagEditorPromise
-            .then(() => resolved = true)
-            .catch(reason => {
-                rejected = true;
-                error = reason;
-            });
-        tick();
-        expect(resolved).toBe(false);
-        expect(rejected).toBe(true);
-        expect(error).toBeUndefined();
     }));
 
     it('openRepositoryBrowser() works fine with right parameters', fakeAsync(() => {
@@ -221,19 +211,15 @@ describe('TagEditorService', () => {
         expect(data.tagOwner.languageVariants).toEqual(languageVariants);
     }));
 
-    it('unregisterTagEditorOverlayHost() works', fakeAsync(() => {
+    it('unregisterTagEditorOverlayHost() works', fakeAsync(async () => {
         const data = getTagEditorInitData();
         const openTagEditorSpy = spyOn(tagEditorOverlayHost, 'openTagEditor')
             .and.callFake((editableTag: EditableTag, context: TagEditorContext) => {
                 return Promise.resolve(createEditedTag(editableTag));
             });
 
-        const tagEditorPromise = tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
+        const finalTag = await tagEditorService.openTagEditor(data.tag, data.tagType, data.page);
         expect(openTagEditorSpy).toHaveBeenCalled();
-
-        let finalTag: Tag = null;
-        tagEditorPromise.then(result => finalTag = result);
-        tick();
         expect(finalTag).toBeTruthy();
 
         expect(() => tagEditorService.unregisterTagEditorOverlayHost(tagEditorOverlayHost)).not.toThrow();

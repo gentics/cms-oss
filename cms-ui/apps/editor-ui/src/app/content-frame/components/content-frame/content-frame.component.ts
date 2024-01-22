@@ -492,7 +492,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             if (item.type === 'folder') {
                 return currentPath.slice(0, -1);
             } else {
-                return currentPath + this.currentItem.name;
+                return currentPath + item.name;
             }
         }
         return '';

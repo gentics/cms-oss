@@ -32,6 +32,7 @@ import { TagmapEntry } from './tagmap-entry';
 import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
+import { ExternalLink } from './external-link';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -57,6 +58,28 @@ export interface NodeRequestOptions {
     /** true when the item should be fetched for updating  */
     update?: boolean;
 
+}
+
+export interface WastebinRestoreOptions {
+    wait?: number;
+}
+
+export interface WastebinDeleteOptions {
+    wait?: number;
+}
+
+/**
+ * Login Request containing the user credentials.
+ */
+export interface LoginRequest {
+    /** The username */
+    login: string;
+    /** The password */
+    password: string;
+}
+
+export interface LoginOptions {
+    sid?: string | number;
 }
 
 /**
@@ -86,6 +109,24 @@ export interface FolderRequestOptions extends ItemRequestOptions {
     /** true if the privileges shall be added to the items as map, false if not */
     privilegeMap?: boolean;
 
+}
+
+export interface FolderDeleteOptions {
+    nodeId?: number;
+}
+
+export interface FolderExternalLinksOptions {
+    recursive?: boolean;
+}
+
+export interface FolderBreadcrumbOptions {
+    nodeId?: number;
+    tags?: boolean;
+    wastebin?: boolean;
+}
+
+export interface FolderStartpageRequest {
+    pageId: number;
 }
 
 /**
@@ -172,9 +213,12 @@ export interface PagedConstructListRequestOptions extends BaseListOptionsWithPag
  */
 export interface NodeFeatureListRequestOptions extends BaseListOptionsWithPaging<NodeFeatureModel> { }
 
-export interface TemplateMultiLinkRequest {
+export interface TemplateMultiLinkRequest extends TemplateLinkRequest {
     /** Ids of the templates that should be (un-)linked from the folders. */
     templateIds: (string | number)[];
+}
+
+export interface TemplateLinkRequest {
     /** Ids of the folders that the templates should be (un-)linked from. */
     folderIds: (string | number)[];
     /** The node id. */
@@ -183,6 +227,11 @@ export interface TemplateMultiLinkRequest {
     recursive?: boolean;
     /** If templates should be deleted if it has been unlinked from the last folder. */
     delete?: boolean;
+}
+
+export interface TemplateCopyRequest {
+    folderId: number;
+    nodeId: number;
 }
 
 /**
@@ -255,7 +304,14 @@ export interface EmbedListOptions<T> {
 }
 
 export interface IdSetRequest {
-    ids: string[];
+    ids: (number | string)[];
+}
+
+export interface MultiObjectLoadRequest {
+    package?: string;
+    ids: number[];
+    forUpdate?: boolean;
+    nodeId?: number;
 }
 
 /**
@@ -286,6 +342,12 @@ export interface LogsListRequest {
 
     /** Search string for filtering by user. The string may be contained in the firstname, lastname or login of the user */
     user?: string;
+}
+
+export interface ErrorLogsListRequest {
+    page?: number;
+    pageSize?: number;
+    q?: string;
 }
 
 /**
@@ -375,6 +437,10 @@ export interface FolderListOptions extends BaseListOptionsWithSkipCount {
      */
     wastebin?: 'exclude' | 'include' | 'only';
 
+}
+
+export interface ItemListOptions extends FolderListOptions {
+    type: string | string[];
 }
 
 export interface FileListOptions extends FolderListOptions {
@@ -553,6 +619,23 @@ export interface PageListOptions extends FolderListOptions {
 
 }
 
+export interface MarkupLanguageListOptions {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    sort?: CommonSortFields | string;
+}
+
+export interface MessageListOptions {
+    unread?: boolean;
+}
+
+export interface MessageReadRequest {
+    messages: number[];
+}
+
+export type NodeLanguageOrderRequest = Language[];
+
 /**
  * Query parameters for listing the forms in a folder
  */
@@ -592,12 +675,53 @@ export interface FormListOptions extends BaseListOptionsWithPaging<Form> {
 
 }
 
+export interface FormLoadOptions {
+    package?: string;
+    nodeId?: number;
+}
+
+export interface FormPublishRequest {
+    at?: number;
+    keepVersion?: boolean;
+}
+
+export interface FormUnpublishRequest {
+    at?: number;
+}
+
+export interface FormDataListOptions {
+    page?: number;
+    pageSize?: number;
+    publishedOnly?: boolean;
+    q?: string;
+}
+
 export interface LinkCheckerOptions extends BaseListOptionsWithPaging<Page> {
     editable?: boolean;
     iscreator?: boolean;
     iseditor?: boolean;
     nodeId?: number;
     status?: string;
+}
+
+export interface LinkCheckerCheckRequest {
+    url: string;
+}
+
+export interface LinkCheckerPageStatusRequest {
+    items: ExternalLink[];
+}
+
+export enum ReplaceScope {
+    LINK = 'link',
+    PAGE = 'page',
+    NODE = 'node',
+    GLOBAL = 'global',
+}
+
+export interface LinkCheckerReplaceRequest {
+    url: string;
+    scope?: ReplaceScope;
 }
 
 export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueueItem> {
@@ -610,6 +734,27 @@ export interface DirtQueueListOptions extends BaseListOptionsWithPaging<DirtQueu
 }
 
 export interface ElasticSearchIndexListOptions extends BaseListOptionsWithPaging<ElasticSearchIndex> {}
+
+export interface ElasticSearchIndexRebuildOptions {
+    drop?: boolean;
+}
+
+export interface ElasticSearchTypeSearchOptions {
+    contenttags?: boolean;
+    folder?: boolean;
+    folderId?: number | number[] | string;
+    language?: string | string[];
+    langvars?: boolean;
+    nodeId?: number;
+    objecttags?: boolean;
+    package?: string;
+    privilegeMap?: boolean;
+    privileges?: boolean;
+    recursive?: boolean;
+    template?: boolean;
+    translationstatus?: boolean;
+    wastebin?: 'exclude' | 'include' | 'only';
+}
 
 export interface JobListRequestOptions extends BaseListOptionsWithPaging<Jobs> {
     /**
@@ -707,6 +852,22 @@ export interface TemplateListRequest extends BaseListOptionsWithPaging<Template>
 export interface NodeMultiLinkRequest {
     nodeIds: number[];
     ids: string[];
+}
+
+export interface ObjectMoveRequest {
+    folderId: number;
+    nodeId?: number;
+    allLanguages?: boolean;
+}
+
+export interface MultiObjectMoveRequest extends ObjectMoveRequest {
+    ids: (number | string)[];
+}
+
+export interface TemplateLoadOptions {
+    construct?: boolean;
+    nodeId?: number;
+    update?: boolean;
 }
 
 // LOGS /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -820,6 +981,11 @@ export interface I18nLanguageSetRequest {
     code: string;
 }
 
+export interface I18nTranslationOptions {
+    k: string;
+    p?: string;
+}
+
 /**
  * Request object used to configure the behaviour of the
  * `page/create` endpoint.
@@ -833,6 +999,20 @@ export interface PageCreateRequest {
     language: string;
     priority: number;
     templateId: number;
+}
+
+export interface PageVariantCreateRequest {
+    nodeId: number;
+    folderId: number;
+    variantId: number;
+    variantChannelId: number;
+
+    pageName?: string;
+    fileName?: string;
+    description?: string;
+    language?: string;
+    priority?: number;
+    templateId?: number;
 }
 
 /**
@@ -863,6 +1043,15 @@ export interface FileCreateRequest {
     niceURL?: string;
     alternateURLs?: string[];
     properties?: { [key: string]: any };
+}
+
+export interface FileUploadOptions {
+    folderId: number;
+    nodeId?: number;
+}
+
+export interface FileReplaceOptions {
+    nodeId?: number;
 }
 
 /**
@@ -912,11 +1101,112 @@ export interface PageCopyRequest {
     targetFolders: { id: number, channelId: number }[];
 }
 
+export interface PagePreviewRequest {
+    page: Page<Raw>;
+    nodeId?: number;
+}
+
+export interface PageRenderOptions {
+    edit?: boolean;
+    inherited?: boolean;
+    links?: 'backend' | 'frontend';
+    nodeId?: number;
+    proxprefix?: string;
+    publish?: boolean;
+    tagmap?: boolean;
+    template?: number;
+}
+
+export interface PageTagListOptions extends BaseUsageOptions {}
+
+export interface TagCreateRequest {
+    magicValue?: string;
+    constructId: number;
+    keyword: string;
+}
+
+export interface ContentTagCreateRequest extends TagCreateRequest {
+    copyPageId?: string;
+    copyTagName?: string;
+}
+
+export interface MultiTagCreateRequest {
+    create: Record<string, TagCreateRequest>;
+}
+
+export interface PageTagRenderOptions {
+    links?: 'backend' | 'frontend';
+    nodeId?: number;
+    proxprefix?: string;
+}
+
+export interface CancelPageEditOptions {
+    nodeId?: number;
+}
+
+export interface PageAssignRequest {
+    message: string;
+    pageIds: number[];
+    userIds: number[]
+}
+
+export interface PagePublishRequest {
+    message?: string;
+    alllang: boolean;
+    at: number;
+    keepVersion: boolean;
+}
+
+export interface PagePublishOptions {
+    nodeId?: number;
+}
+
+export interface PageOfflineOptions {
+    nodeId?: number;
+}
+
+export interface MultiPagePublishRequest extends PagePublishRequest {
+    ids: (number | string)[];
+    foregroundTime?: number;
+    keepPublishAt: boolean;
+}
+
+export interface PageOfflineRequest {
+    alllang: boolean;
+    at: number;
+}
+
+export interface PageTranslateOptions {
+    channelId?: number;
+    language: string;
+    locked?: boolean;
+}
+
+export interface PageRestoreOptions {
+    version: number;
+}
+
+export interface TagRestoreOptions {
+    version: number;
+}
+
+export interface PartTypeListOptions {
+    q?: string;
+}
+
 /**
  * Request object used to configure the behaviour of the
  * `form/copy` endpoint.
  */
 export type FormCopyRequest = PageCopyRequest;
+
+export interface InheritanceStatusOptions {
+    nodeId?: number;
+}
+
+export interface MultiInheritanceStatusOptions extends InheritanceStatusOptions {
+    id: number[];
+}
 
 /**
  * Object which is expected by an `<item>/disinherit/<id>` endpoint to change
@@ -928,6 +1218,37 @@ export interface InheritanceRequest {
     exclude?: boolean;
     disinheritDefault?: boolean;
     recursive?: boolean;
+}
+
+export interface MultiInheritanceOptions {
+    id: number[];
+    nodeId?: number;
+    wait?: number;
+}
+
+export interface PushToMasterRequest {
+    masterId: number;
+    channelId: number;
+    recursive?: boolean;
+    foregroundTime?: number;
+    types?: ('folder' | 'page' | 'image' | 'file' | 'template')[];
+}
+
+export interface MultiPushToMasterRequest extends PushToMasterRequest {
+    ids: number[];
+}
+
+export interface LocalizeRequest {
+    channelId: number;
+    foregroundTime?: number;
+}
+
+export interface LocalizationInfoOptions {
+    nodeId?: number;
+}
+
+export interface MultiLocalizationInfoOptions extends LocalizationInfoOptions {
+    id: number[];
 }
 
 /**
@@ -958,7 +1279,7 @@ export interface UnlocalizeRequest {
     channelId: number;
 
     /** True if unlocalizing should be done recursively, false if not */
-    recursive: boolean;
+    recursive?: boolean;
 
     /** Number of seconds the job may run in the foreground */
     foregroundTime?: number;
@@ -1130,6 +1451,11 @@ export interface ImageSaveRequest extends ImageSaveRequestOptions {
 
 }
 
+export interface NodeListOptions extends BaseListOptionsWithPaging<Node<Raw>> {
+    package?: string;
+    perms?: boolean;
+}
+
 /**
  * Options for saving a `Node`.
  */
@@ -1235,6 +1561,17 @@ export interface PageSaveRequestOptions {
      */
     deriveFileName?: boolean;
 
+}
+
+export interface MultiPageLoadRequest extends MultiObjectLoadRequest {
+    template?: boolean;
+    folder?: boolean;
+    languageVariants?: boolean;
+    pageVariants?: boolean;
+    workflow?: boolean;
+    translationStatus?: boolean;
+    versionInfo?: boolean;
+    disinherited?: boolean;
 }
 
 /**
@@ -1352,7 +1689,9 @@ export interface UserGroupsRequestOptions extends BaseListOptionsWithPaging<Grou
 /**
  * Request used for saving/updating a `User`.
  */
-export type UserUpdateRequest = User<Raw>;
+export type UserUpdateRequest = Partial<User<Raw>> & {
+    password?: string;
+}
 
 /**
  * Request object used to create a new group using the `group/{id}/groups` endpoint.
@@ -1622,6 +1961,10 @@ export interface ContentRepositoryCreateRequest {
 }
 
 export type ContentRepositoryUpdateRequest = Partial<ContentRepositoryCreateRequest>;
+
+export interface ContentRepositoryRolesUpdateRequest {
+    roles: string[];
+}
 
 // CR_FRAGMENT //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1920,4 +2263,94 @@ export type ContentPackageSaveRequest = Partial<Pick<ContentPackage, 'name'> & P
 
 export interface AssignEntityToContentPackageOptions {
     recursive?: boolean;
+}
+
+// USAGE /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface BaseUsageOptions {
+    id: (string | number)[];
+    maxItems?: number;
+    nodeId?: number;
+    skipCount?: number;
+    sortby?: string;
+    sortorder?: string;
+}
+
+export interface UsageInFilesOptions extends BaseUsageOptions {
+    files?: boolean;
+}
+
+export type UsageInImagesOptions = UsageInFilesOptions;
+
+export interface UsageInFoldersOptions extends BaseUsageOptions {
+    folders?: boolean;
+}
+
+export interface UsageInPagesOptions extends BaseUsageOptions {
+    contenttags?: boolean;
+    folder?: boolean;
+    langvars?: boolean;
+    ojbecttags?: boolean;
+    pages?: boolean;
+    template?: boolean;
+    translationstatus?: boolean;
+}
+
+export interface UsageInSyncableObjectsOptions {
+    srcNodeId: number;
+    ids: (number | string)[];
+    dstNodeId: number;
+}
+
+export interface UsageInTemplatesOptions extends BaseUsageOptions {
+    templates?: boolean;
+}
+
+export interface UsageInTotalOptions {
+    id: (string | number)[];
+    nodeId?: number;
+}
+
+
+// FILE UPLOAD MANIPULATOR (FUM) /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export enum FUMResultStatus {
+    ACCEPTED = 'ACCEPTED',
+    DENIED = 'DENIED',
+    POSTPONED = 'POSTPONED',
+}
+
+export interface FUMResult {
+    status: FUMResultStatus;
+    msg: string;
+    filename?: string;
+    mimetype?: string;
+    url?: string;
+}
+
+// PERMISISONS /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export interface PermissionsOptions {
+    map?: boolean;
+}
+
+export interface SetPermissionsRequest {
+    perm: string;
+    groupId: number;
+    subGroups: boolean;
+    subObjects: boolean;
+    roleIds: number[]
+}
+
+export interface SetPermissionsOptions {
+    wait?: number;
+}
+
+export interface InstancePermissionsOptions {
+    nodeId?: number;
+    map?: boolean;
+}
+
+export interface PolicyMapOptions {
+    url: string;
 }

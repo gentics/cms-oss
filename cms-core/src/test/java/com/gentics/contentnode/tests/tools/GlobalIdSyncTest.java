@@ -10,11 +10,15 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Construct;
@@ -40,6 +44,20 @@ import com.gentics.contentnode.tools.GlobalIdSync.ObjectType;
 public class GlobalIdSyncTest {
 	@Rule
 	public DBTestContext testContext = new DBTestContext();
+
+	@Before
+	public void setup() throws NodeException {
+		Set<Integer> constructIds = DBUtils.select("SELECT DISTINCT construct_id id FROM part LEFT JOIN type ON part.type_id = type.id WHERE type.id IS NULL", DBUtils.IDS);
+		Transaction t = TransactionManager.getCurrentTransaction();
+
+		for (int id : constructIds) {
+			Construct construct = t.getObject(Construct.class, id);
+			if (construct != null) {
+				construct.delete();
+			}
+			t.commit(false);
+		}
+	}
 
 	/**
 	 * Test synchronization of identically generated constructs

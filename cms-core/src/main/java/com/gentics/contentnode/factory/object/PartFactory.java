@@ -363,7 +363,7 @@ public class PartFactory extends AbstractFactory {
 		public void delete(boolean force) throws InsufficientPrivilegesException,
 					NodeException {
 			// delete the default value
-			if (!isValueless()) {
+			if (!isValueless(false)) {
 				Value defaultValue = getDefaultValue();
 				if (defaultValue != null) {
 					defaultValue.delete();

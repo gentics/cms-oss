@@ -51,6 +51,9 @@ export class PostLoadScript {
         let innerGcnPlugin = this.window.Aloha.GCN as any;
         this.aloha.gcnPlugin$.next(innerGcnPlugin);
 
+        const innerUiPlugin = this.window.Aloha.require('ui/ui-plugin');
+        this.aloha.uiPlugin$.next(innerUiPlugin);
+
         Object.defineProperty(this.window.Aloha, 'settings', {
             configurable: true,
             enumerable: true,

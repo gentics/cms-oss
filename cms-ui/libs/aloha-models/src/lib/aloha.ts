@@ -1,4 +1,5 @@
 import { Item } from '@gentics/cms-models';
+import { AlohaComponent } from './components';
 
 export enum ScreenSize {
     DESKTOP = 'desktop',
@@ -386,6 +387,12 @@ export declare class AlohaTableSelection {
     cellsAreMergeable(): boolean;
     cellsAreSplitable(): boolean;
     isHeader(): boolean;
+}
+
+export interface AlohaUiPlugin extends AlohaPlugin {
+    adoptInto: (slot: string, component: AlohaComponent) => void;
+    unadopt: (slot: string) => void;
+    getToolbarSettings: () => AlohaToolbarSettings;
 }
 
 export interface GCNAlohaPlugin extends AlohaPlugin {

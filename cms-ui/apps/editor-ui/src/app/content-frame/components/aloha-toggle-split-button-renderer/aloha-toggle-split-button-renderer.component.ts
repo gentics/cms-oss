@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaToggleSplitButtonComponent } from '@gentics/aloha-models';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -15,12 +15,6 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
 
     public hasText = false;
     public hasIcon = false;
-
-    constructor(
-        changeDetector: ChangeDetectorRef,
-    ) {
-        super(changeDetector);
-    }
 
     public ngOnChanges(changes: SimpleChanges): void {
         this.hasText = !!this.settings?.text || !!this.settings?.html;

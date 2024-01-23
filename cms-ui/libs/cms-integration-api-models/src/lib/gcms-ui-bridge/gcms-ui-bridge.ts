@@ -283,10 +283,11 @@ export interface GcmsUiBridge {
     /**
      * Opens a dropdown with a dynamic component.
      * @param configuration The configuration to create the dropdown.
+     * @param componentSlot The slot where the dropdown should be opened to.
      * @returns A Promise which resolves once the Dropdown has been successfully closed.
      * A rejection (`ModalCloseError`) is being thrown when the user cancels the modal.
      */
-    openDynamicDropdown: <T>(configuration: DynamicDropdownConfiguration<T>) => Promise<OverlayElementControl<T>>;
+    openDynamicDropdown: <T>(configuration: DynamicDropdownConfiguration<T>, componentSlot?: string) => Promise<OverlayElementControl<T>>;
 
     /**
      * Class of the error which is thrown when a overlay element has been closed.

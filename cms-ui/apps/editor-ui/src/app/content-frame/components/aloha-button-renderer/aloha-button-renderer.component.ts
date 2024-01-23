@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaButtonComponent } from '@gentics/aloha-models';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -15,12 +15,6 @@ export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<Alo
 
     public hasText = false;
     public hasIcon = false;
-
-    constructor(
-        changeDetector: ChangeDetectorRef,
-    ) {
-        super(changeDetector);
-    }
 
     public ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);

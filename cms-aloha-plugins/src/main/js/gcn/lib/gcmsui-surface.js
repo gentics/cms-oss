@@ -27,6 +27,26 @@ define([
             }
             window.GCMSUI.unregisterComponent(slot);
         },
+
+        openDynamicDropdown: function(componentName, config) {
+			if (!window.GCMSUI) {
+                return Promise.reject(new Error('GCMSUI is not defined!'));
+            }
+            return window.GCMSUI.openDynamicDropdown(config, componentName);
+		},
+		openDynamicModal: function(config) {
+            if (!window.GCMSUI) {
+                return Promise.reject(new Error('GCMSUI is not defined!'));
+            }
+			return window.GCMSUI.openDynamicModal(config);
+		},
+
+        show: function() {
+            // No op
+        },
+        hide: function() {
+            // No op
+        }
     });
 
     return GCMSUISurface;

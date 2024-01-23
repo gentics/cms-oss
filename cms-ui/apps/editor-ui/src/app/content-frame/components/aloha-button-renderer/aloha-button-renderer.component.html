@@ -22,7 +22,7 @@
             *ngIf="hasIcon"
             class="button-icon"
             [class.icon-left]="hasText"
-        >{{ settings.icon }}</icon>
+        >{{ settings.icon | gtxAlohaCompatIcon }}</icon>
 
         <span
             *ngIf="hasText"

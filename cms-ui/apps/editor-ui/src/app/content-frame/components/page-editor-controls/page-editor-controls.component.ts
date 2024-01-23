@@ -35,7 +35,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.activeTab = this.aloha.activeEditor;
+        this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(this.client.construct.list().subscribe(res => {
             this.constructs = res.items;

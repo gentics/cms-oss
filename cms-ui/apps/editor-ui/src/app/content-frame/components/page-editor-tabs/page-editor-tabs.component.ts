@@ -26,8 +26,8 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
         protected aloha: AlohaIntegrationService,
     ) {}
 
-    ngOnInit(): void {
-        this.activeTab = this.aloha.activeEditor;
+    public ngOnInit(): void {
+        this.activeTab = this.aloha.activeTab;
 
         this.zone.runOutsideAngular(() => {
             this.overflow = new OverflowManager(this.element.nativeElement);
@@ -48,16 +48,11 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
         }))
     }
 
-    ngOnDestroy(): void {
+    public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
     }
 
-    public setActiveTab(tab: DefaultEditorControlTabs | string | Event): void {
-        // This handles the "select" event, which is also triggered by the browser events when ... selecting things.
-        // Preventing these browser events from actually changing/breaking the tabs is important here.
-        if (tab == null || tab instanceof Event) {
-            return;
-        }
+    public setActiveTab(tab: string): void {
         this.aloha.changeActivePageEditorTab(tab);
     }
 }

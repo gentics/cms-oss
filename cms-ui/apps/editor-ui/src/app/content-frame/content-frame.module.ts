@@ -14,6 +14,7 @@ import {
     ConfirmNavigationModal,
     ContentFrameComponent,
     DescriptionTooltipComponent,
+    DynamicDropdownComponent,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
@@ -26,10 +27,11 @@ import {
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
-import { CommandToIconPipe, TagTypeIconPipe } from './pipes';
+import { AlohaCompatIconPipe, CommandToIconPipe, TagTypeIconPipe } from './pipes';
 import {
     AlohaIntegrationService,
     CustomerScriptService,
+    DynamicOverlayService,
     IFrameCollectionService,
 } from './providers';
 
@@ -44,6 +46,7 @@ const COMPONENTS = [
     ConfirmNavigationModal,
     ContentFrameComponent,
     DescriptionTooltipComponent,
+    DynamicDropdownComponent,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
@@ -56,14 +59,16 @@ const COMPONENTS = [
 ];
 
 const PIPES = [
+    AlohaCompatIconPipe,
     CommandToIconPipe,
     TagTypeIconPipe,
 ];
 
 const PROVIDERS = [
     AlohaIntegrationService,
-    IFrameCollectionService,
     CustomerScriptService,
+    DynamicOverlayService,
+    IFrameCollectionService,
 ];
 
 const GUARDS = [

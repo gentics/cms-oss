@@ -1,21 +1,25 @@
 <ng-container [ngSwitch]="type || component?.type">
     <gtx-aloha-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.BUTTON"
+        [slot]="slot"
         [settings]="component || settings"
     ></gtx-aloha-button-renderer>
 
     <gtx-aloha-toggle-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.TOGGLE_BUTTON"
+        [slot]="slot"
         [settings]="component || settings"
     ></gtx-aloha-toggle-button-renderer>
 
     <gtx-aloha-split-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.SPLIT_BUTTON"
+        [slot]="slot"
         [settings]="component || settings"
     ></gtx-aloha-split-button-renderer>
 
     <gtx-aloha-toggle-split-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON"
+        [slot]="slot"
         [settings]="component || settings"
     ></gtx-aloha-toggle-split-button-renderer>
 </ng-container>

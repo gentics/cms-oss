@@ -1,22 +1,20 @@
 import { Injectable, NgZone } from '@angular/core';
-import { DefaultEditorControlTabs, INVERSE_DEFAULT_EDITOR_TABS_MAPPING, PageEditorTab } from '@editor-ui/app/common/models';
 import {
-    AlohaButtonComponent,
     AlohaComponent,
     AlohaComponentSetting,
-    AlohaCoreComponentNames,
     AlohaFullComponentSetting,
     AlohaRangeObject,
     AlohaSettings,
-    AlohaToolbarSettings,
     AlohaToolbarSizeSettings,
     AlohaToolbarTabsSettings,
+    AlohaUiPlugin,
     GCNAlohaPlugin,
     ScreenSize,
 } from '@gentics/aloha-models';
-import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
+import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 
 export interface NormalizedTabsSettings extends Omit<AlohaToolbarTabsSettings, 'components'> {
     components: AlohaFullComponentSetting[][];
@@ -26,98 +24,13 @@ export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings 
     tabs: NormalizedTabsSettings[];
 }
 
-const MOCK_TOOLBAR_SIZE_SETTINGS: AlohaToolbarSizeSettings = {
-    tabs: [
-        {
-            id: 'formatting',
-            label: 'tab.format.label',
-            icon: 'border_color',
-            showOn: { scope: 'Aloha.continuoustext' },
-            components: [
-                ['bold', 'italic'], ['underline'], [ { slot: 'strike' }],
-            ],
-        },
-    ],
-};
-
-const makeAlohaButton: (type: string, label: string, icon: string) => AlohaComponent = (type, label, icon) => {
-    return {
-        type,
-        id: 0,
-        disabled: false,
-        isInstance: true,
-        text: null,
-        icon: icon,
-        tooltip: label,
-        touched: false,
-        visible: true,
-        validationErrors: null,
-
-        adoptParent: () => {},
-        click() {
-            console.log('button has been clicked!', this);
-        },
-        closeTooltip: () => {},
-        destroy: () => {},
-        disable: () => {},
-        enable: () => {},
-        focus: () => {},
-        foreground: () => {},
-        getValue: () => {},
-        hide: () => {},
-        init: () => {},
-        isValid: () => true,
-        isVisible: () => true,
-        setIcon(newIcon) {
-            this.icon = newIcon;
-        },
-        setText(newText) {
-            this.text = newText;
-        },
-        setTooltip(newTooltip) {
-            this.tooltip = newTooltip;
-        },
-        setValue: () => {},
-        show: () => {},
-        touch: () => {},
-        untouched: () => {},
-        triggerChangeNotification: () => {},
-        triggerTouchNotification: () => {},
-        changeNotify: () => {},
-        touchNotify: () => {},
-    };
-}
-
-const MOCK_COMPONENTS: Record<string, AlohaComponent> = {
-    bold: makeAlohaButton(AlohaCoreComponentNames.BUTTON, null, 'format_bold'),
-    italic: makeAlohaButton(AlohaCoreComponentNames.TOGGLE_BUTTON, 'italiccccc!', 'format_italic'),
-    underline: {
-        ...makeAlohaButton(AlohaCoreComponentNames.SPLIT_BUTTON, 'underline', 'format_underlined'),
-        secondaryClick() {
-            console.log('SECONDARY CLICK YEEEE', this);
-        },
-    } as any,
-    strike: {
-        ...makeAlohaButton(AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON, 'strikethrough', 'format_strikethrough'),
-        secondaryClick() {
-            console.log('SECONDARY CLICK YEEEE', this);
-        },
-    } as any,
-}
-
-const MOCK_TOOLBAR_SETTINGS: AlohaToolbarSettings = {
-    desktop: MOCK_TOOLBAR_SIZE_SETTINGS,
-    mobile: MOCK_TOOLBAR_SIZE_SETTINGS,
-    tablet: MOCK_TOOLBAR_SIZE_SETTINGS,
-};
-
 function normalizeToolbarSizeSettings(settings: AlohaToolbarSizeSettings): NormalizedToolbarSizeSettings {
     if (settings == null) {
         return null;
     }
     return {
         ...settings,
-        tabs: settings.tabs.map(normalizeToolbarTab),
+        tabs: (settings.tabs || []).map(normalizeToolbarTab),
     };
 }
 
@@ -157,12 +70,13 @@ export class AlohaIntegrationService {
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
     public contextChange$ = new BehaviorSubject<AlohaRangeObject>(null);
     public gcnPlugin$ = new BehaviorSubject<GCNAlohaPlugin>(null);
+    public uiPlugin$ = new BehaviorSubject<AlohaUiPlugin>(null);
     public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
     protected editorChangeSub = new BehaviorSubject<void>(null);
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
-    protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>(MOCK_COMPONENTS);
+    protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
 
     /**
      * The currently selected/active editor in the page-controls.
@@ -181,9 +95,9 @@ export class AlohaIntegrationService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly components$ = this.componentsSub.asObservable();
 
-    public activeEditor: string;
-    public registeredComponents: Record<string, AlohaComponent> = MOCK_COMPONENTS;
-    public editors: Record<string, PageEditorTab> = {};
+    public activeTab: string;
+    public registeredComponents: Record<string, AlohaComponent> = {};
+    public renderedComponents: Record<string, BaseAlohaRendererComponent<any, any>> = {};
 
     constructor(zone: NgZone) {
         zone.runOutsideAngular(() => {
@@ -193,20 +107,17 @@ export class AlohaIntegrationService {
             this.handleMedia('(min-width: 1025px)', ScreenSize.DESKTOP);
         });
 
-        if (true) {
-            this.activeToolbarSettings$ = of(MOCK_TOOLBAR_SIZE_SETTINGS).pipe(
-                map(normalizeToolbarSizeSettings),
-            );
-        } else {
-            this.activeToolbarSettings$ = combineLatest([
-                this.settings$.asObservable(),
-                this.size$,
-            ]).pipe(
-                filter(([settings, size]) => settings?.toolbar != null && size != null && settings.toolbar[size] != null),
-                map(([settings, size]) => settings.toolbar[size]),
-                map(normalizeToolbarSizeSettings),
-            );
-        }
+        this.activeToolbarSettings$ = combineLatest([
+            this.uiPlugin$.asObservable().pipe(
+                map(plugin => plugin?.getToolbarSettings?.()),
+            ),
+            this.size$,
+            this.settings$.asObservable(), // Also needs a reload when global settings change
+        ]).pipe(
+            filter(([settings, size]) => settings != null && size != null && settings[size] != null),
+            map(([settings, size]) => settings[size]),
+            map(normalizeToolbarSizeSettings),
+        );
     }
 
     private handleMedia(query: string, target: ScreenSize): void {
@@ -230,18 +141,7 @@ export class AlohaIntegrationService {
             return false;
         }
 
-        const tab = this.editors[id];
-        // ID has to be either a gcmsui-tab or a custom tab to be able to activate.
-        if (!DefaultEditorControlTabs[id] && !INVERSE_DEFAULT_EDITOR_TABS_MAPPING[id] && !tab) {
-            return false;
-        }
-
-        // Cannot focus a disabled/hidden tab
-        if (tab && (tab.disabled || tab.hidden)) {
-            return false;
-        }
-
-        this.activeEditor = id;
+        this.activeTab = id;
         this.activeEditorSub.next(id);
 
         return true;

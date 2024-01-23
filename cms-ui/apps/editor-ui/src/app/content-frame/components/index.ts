@@ -8,6 +8,7 @@ export * from './confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal
 export * from './confirm-navigation-modal/confirm-navigation-modal.component';
 export * from './content-frame/content-frame.component';
 export * from './description-tooltip/description-tooltip.component';
+export * from './dynamic-dropdown/dynamic-dropdown.component';
 export * from './editor-toolbar/editor-toolbar.component';
 export * from './file-preview/file-preview.component';
 export * from './form-reports-list/form-reports-list.component';

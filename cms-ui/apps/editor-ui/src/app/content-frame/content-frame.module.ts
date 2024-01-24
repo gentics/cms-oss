@@ -6,7 +6,9 @@ import { TagEditorModule } from '../tag-editor';
 import {
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
+    AlohaContextButtonRendererComponent,
     AlohaSplitButtonRendererComponent,
+    AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
     AlohaToggleSplitButtonRendererComponent,
     CombinedPropertiesEditorComponent,
@@ -23,6 +25,7 @@ import {
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
+    TableSizeInputComponent,
     TableSizeSelectComponent,
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
@@ -38,7 +41,9 @@ import {
 const COMPONENTS = [
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
+    AlohaContextButtonRendererComponent,
     AlohaSplitButtonRendererComponent,
+    AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
     AlohaToggleSplitButtonRendererComponent,
     CombinedPropertiesEditorComponent,
@@ -55,6 +60,7 @@ const COMPONENTS = [
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
+    TableSizeInputComponent,
     TableSizeSelectComponent,
 ];
 

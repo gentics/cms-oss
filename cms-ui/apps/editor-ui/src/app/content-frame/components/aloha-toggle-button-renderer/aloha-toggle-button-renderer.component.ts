@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaToggleButtonComponent } from '@gentics/aloha-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -7,11 +8,9 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     templateUrl: './aloha-toggle-button-renderer.component.html',
     styleUrls: ['./aloha-toggle-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaToggleButtonRendererComponent)],
 })
 export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleButtonComponent, boolean> implements OnChanges {
-
-    @Input()
-    public settings?: AlohaToggleButtonComponent | Partial<AlohaToggleButtonComponent> | Record<string, any>;
 
     public hasText = false;
     public hasIcon = false;

@@ -1,0 +1,33 @@
+<gtx-tooltip
+    *ngIf="settings.tooltip; else buttonTemplate"
+    [position]="'top'"
+    [align]="'center'"
+    [type]="'light'"
+>
+    <ng-container [ngTemplateOutlet]="buttonTemplate"></ng-container>
+
+    <div gtx-tooltip-content class="button-tooltip">{{ settings.tooltip }}</div>
+</gtx-tooltip>
+
+<ng-template #buttonTemplate>
+    <button
+        gtx-tooltip-trigger
+        class="gtx-editor-button context-button"
+        [class.icon-only]="hasIcon && !hasText"
+        [class.hidden]="!settings.visible"
+        [disabled]="disabled"
+        (click)="handleClick()"
+    >
+        <icon
+            *ngIf="hasIcon"
+            class="button-icon"
+            [class.icon-left]="hasText"
+        >{{ settings.icon | gtxAlohaCompatIcon }}</icon>
+
+        <span
+            *ngIf="hasText"
+            class="button-label"
+            [innerHTML]="settings.html || settings.text"
+        ></span>
+    </button>
+</ng-template>

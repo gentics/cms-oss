@@ -1135,3 +1135,15 @@ constructs_loading:
 constructs_no_favourites:
     en: No Constructs have been favourited yet
     de: Keine TagTypen wurden favoritisiert
+table_size_input_rows:
+    en: Rows
+    de: Zeilen
+table_size_input_columns:
+    en: Columns
+    de: Spalten
+dropdown_confirm:
+    en: Confirm
+    de: Bestätigen
+dropdown_abort:
+    en: Abort
+    de: Abbrechen

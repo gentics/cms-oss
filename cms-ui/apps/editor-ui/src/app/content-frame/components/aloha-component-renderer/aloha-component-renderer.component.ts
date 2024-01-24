@@ -1,13 +1,16 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { AlohaComponent, AlohaCoreComponentNames } from '@gentics/aloha-models';
+import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-aloha-component-renderer',
     templateUrl: './aloha-component-renderer.component.html',
     styleUrls: ['./aloha-component-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaComponentRendererComponent)],
 })
-export class AlohaComponentRendererComponent {
+export class AlohaComponentRendererComponent<T> extends BaseFormElementComponent<T> implements OnInit {
 
     public readonly AlohaCoreComponentNames = AlohaCoreComponentNames;
 
@@ -23,7 +26,33 @@ export class AlohaComponentRendererComponent {
     @Input()
     public settings?: Record<string, any>;
 
+    @Output()
+    public requiresConfirm = new EventEmitter<boolean>();
+
+    public control: FormControl<T>;
+
     constructor(
-        protected changeDetector: ChangeDetectorRef,
-    ) {}
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
+
+    public ngOnInit(): void {
+        this.control = new FormControl(this.value);
+        this.subscriptions.push(this.control.valueChanges.subscribe(value => {
+            if (value !== this.value) {
+                this.triggerChange(value);
+            }
+        }));
+    }
+
+    public forwardRequiresConfirm(confirm: boolean): void {
+        this.requiresConfirm.emit(confirm);
+    }
+
+    protected onValueChange(): void {
+        if (this.control.value !== this.value) {
+            this.control.setValue(this.value);
+        }
+    }
 }

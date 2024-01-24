@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaToggleSplitButtonComponent } from '@gentics/aloha-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -7,11 +8,9 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     templateUrl: './aloha-toggle-split-button-renderer.component.html',
     styleUrls: ['./aloha-toggle-split-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaToggleSplitButtonRendererComponent)],
 })
 export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleSplitButtonComponent, boolean> implements OnChanges {
-
-    @Input()
-    public settings?: AlohaToggleSplitButtonComponent | Partial<AlohaToggleSplitButtonComponent> | Record<string, any>;
 
     public hasText = false;
     public hasIcon = false;

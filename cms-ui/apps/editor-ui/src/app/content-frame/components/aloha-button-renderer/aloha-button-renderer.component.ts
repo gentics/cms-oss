@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaButtonComponent } from '@gentics/aloha-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
@@ -7,11 +8,9 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     templateUrl: './aloha-button-renderer.component.html',
     styleUrls: ['./aloha-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(AlohaButtonRendererComponent)],
 })
 export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<AlohaButtonComponent, void> implements OnChanges {
-
-    @Input()
-    public settings?: AlohaButtonComponent | Partial<AlohaButtonComponent> | Record<string, any>;
 
     public hasText = false;
     public hasIcon = false;

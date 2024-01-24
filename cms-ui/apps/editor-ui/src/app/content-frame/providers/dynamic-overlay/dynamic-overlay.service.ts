@@ -29,9 +29,12 @@ export class DynamicOverlayService {
             dropdownRef = null;
         });
 
+        if (slot) {
+            this.positionDropdown(slot, dropdownRef.location.nativeElement);
+        }
+
         // Apply input parameters and initialize the component
         instance.configuration = configuration;
-        instance.ngOnInit();
         dropdownRef.changeDetectorRef.markForCheck();
 
         return {
@@ -42,8 +45,26 @@ export class DynamicOverlayService {
                 }
             },
             isOpen: () => open,
-            value: Promise.resolve(null),
+            value: new Promise((resolve, reject) => {
+                instance.registerCloseFn(resolve);
+                instance.registerErrorFn(reject);
+            }),
         };
+    }
+
+    protected positionDropdown(slot: string, dropdownElement: HTMLElement): void {
+        const comp = this.aloha.renderedComponents[slot];
+        // target element doesn't exist
+        if (comp == null || comp.element == null || comp.element.nativeElement == null) {
+            return;
+        }
+
+        const rect = comp.element.nativeElement.getBoundingClientRect();
+
+        dropdownElement.style.setProperty('--target-width', `${rect.width}px`);
+        dropdownElement.style.setProperty('--target-height', `${rect.height}px`);
+        dropdownElement.style.setProperty('--target-x', `${rect.x}px`);
+        dropdownElement.style.setProperty('--target-y', `${rect.y}px`);
     }
 
     public openDynamicModal<T>(configuration: DynamicFormModalConfiguration<T>): Promise<OverlayElementControl<T>> {

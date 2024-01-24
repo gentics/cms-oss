@@ -1,6 +1,8 @@
 export * from './aloha-button-renderer/aloha-button-renderer.component';
 export * from './aloha-component-renderer/aloha-component-renderer.component';
+export * from './aloha-context-button-renderer/aloha-context-button-renderer.component';
 export * from './aloha-split-button-renderer/aloha-split-button-renderer.component';
+export * from './aloha-table-size-select-renderer/aloha-table-size-select-renderer.component';
 export * from './aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
 export * from './aloha-toggle-split-button-renderer/aloha-toggle-split-button-renderer.component';
 export * from './combined-properties-editor/combined-properties-editor.component';
@@ -17,4 +19,5 @@ export * from './page-editor-controls/page-editor-controls.component';
 export * from './page-editor-tabs/page-editor-tabs.component';
 export * from './properties-editor/properties-editor.component';
 export * from './simple-delete-modal/simple-delete-modal.component';
+export * from './table-size-input/table-size-input.component';
 export * from './table-size-select/table-size-select.component';

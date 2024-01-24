@@ -3,23 +3,47 @@
         *ngSwitchCase="AlohaCoreComponentNames.BUTTON"
         [slot]="slot"
         [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
     ></gtx-aloha-button-renderer>
 
     <gtx-aloha-toggle-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.TOGGLE_BUTTON"
         [slot]="slot"
         [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
     ></gtx-aloha-toggle-button-renderer>
 
     <gtx-aloha-split-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.SPLIT_BUTTON"
         [slot]="slot"
         [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
     ></gtx-aloha-split-button-renderer>
 
     <gtx-aloha-toggle-split-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON"
         [slot]="slot"
         [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
     ></gtx-aloha-toggle-split-button-renderer>
+
+    <gtx-aloha-context-button-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.CONTEXT_BUTTON"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+    ></gtx-aloha-context-button-renderer>
+
+    <gtx-aloha-table-size-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.TABLE_SIZE_SELECT"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+    ></gtx-aloha-table-size-renderer>
 </ng-container>

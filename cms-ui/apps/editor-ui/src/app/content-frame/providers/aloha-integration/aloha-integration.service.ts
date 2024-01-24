@@ -59,7 +59,7 @@ function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullCom
     return comp;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class AlohaIntegrationService {
 
     /*

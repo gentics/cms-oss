@@ -1,7 +1,7 @@
-import { ChangeDetectorRef, Component, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
-import { AlohaIntegrationService } from '../../providers';
+import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 
 @Component({ template: '' })
 export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> extends BaseFormElementComponent<T> implements OnInit, OnDestroy {
@@ -11,6 +11,9 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
 
     @Input()
     public settings?: C | Partial<C> | Record<string, any>;
+
+    @Output()
+    public requiresConfirm = new EventEmitter<boolean>();
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -26,6 +29,7 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
     }
 
     public ngOnDestroy(): void {
+        super.ngOnDestroy();
         this.unregisterAsRendered();
     }
 

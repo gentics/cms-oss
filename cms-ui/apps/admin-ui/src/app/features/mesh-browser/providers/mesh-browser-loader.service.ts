@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BranchReference, GraphQLOptions, Language, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, NumberOfSchemaElements, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
 @Injectable()
@@ -56,7 +56,6 @@ export class MeshBrowserLoaderService {
         return response.data.project.rootNode.uuid;
     }
 
-
     public async listProjectSchemas(project: string): Promise<SchemaContainer[]> {
         const response = await this.meshClient.projects.listSchemas(project);
 
@@ -67,6 +66,60 @@ export class MeshBrowserLoaderService {
             } as SchemaContainer
         });
     }
+
+
+    public async listNonEmptyProjectSchemas(project: string, nodeUuid: string): Promise<SchemaContainer[]> {
+        const projectSchemas = await this.listProjectSchemas(project)
+        const projectSchemaNames = projectSchemas.map(schemaItem => schemaItem.name);
+
+        // filter out all schemas with no elements
+        const schemasWithNumElements = await this.getSchemasWithNumberOfElements(project, projectSchemaNames, nodeUuid);
+
+        const schemasContainingElements = [];
+        for(const schemaName in schemasWithNumElements) {
+            if(schemasWithNumElements[schemaName]?.totalCount > 0) {
+                schemasContainingElements.push(schemaName);
+            }
+        }
+
+        const filteredProjectSchemas = projectSchemas.filter(schemaItem => schemasContainingElements
+            .includes(schemaItem.name));
+
+        return filteredProjectSchemas;
+    }
+
+
+    private async getSchemasWithNumberOfElements(project: string, schemas: string[], nodeUuid: string): Promise<NumberOfSchemaElements> {
+        const response = await this.meshClient.graphql(project, {
+            query: `
+            query ($nodeUuid: String) {
+    	        node(uuid: $nodeUuid) { 
+                    ${this.constructSchemaFilterQuery(schemas)}
+                }
+            }    
+            `,
+            variables: {
+                nodeUuid: nodeUuid,
+            },
+        });
+
+        return response.data?.node;
+    }
+
+    private constructSchemaFilterQuery(schema: Array<string>): string {
+        const template = `[schemaName]: children(filter: {schema: {is: [schemaName]}}) { 
+			totalCount 
+		}` as string;
+
+        const query = schema.reduce((query: string, schemaName: string) => {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-call
+            query += template.replaceAll('[schemaName]', schemaName) +'\n';
+            return query;
+        })
+
+        return query;
+    }
+
 
     public async getRootNodeUuid(project: string): Promise<string> {
         const response = await this.meshClient.projects.list();

@@ -4,9 +4,11 @@ import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
 import {
+    AlohaAttributeButtonRendererComponent,
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
+    AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
@@ -39,9 +41,11 @@ import {
 } from './providers';
 
 const COMPONENTS = [
+    AlohaAttributeButtonRendererComponent,
     AlohaButtonRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
+    AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,

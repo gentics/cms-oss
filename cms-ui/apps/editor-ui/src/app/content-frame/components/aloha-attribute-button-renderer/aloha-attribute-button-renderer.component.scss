@@ -1,0 +1,22 @@
+@import '../aloha-split-button-renderer/aloha-split-button-renderer.component.scss';
+
+.gtx-editor-toggle-split-button {
+    @extend %basic-split-button;
+
+    .split-button-secondary {
+        display: none;
+    }
+
+    &.always-secondary,
+    &.active {
+        .split-button-secondary {
+            display: flex;
+
+            + .split-button-main {
+                border-top-right-radius: 0;
+                border-bottom-right-radius: 0;
+                border-right: none;
+            }
+        }
+    }
+}

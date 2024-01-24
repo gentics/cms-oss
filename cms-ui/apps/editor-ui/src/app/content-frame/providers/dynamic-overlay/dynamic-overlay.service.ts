@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { ComponentRef, Injectable } from '@angular/core';
 import { DynamicFormModal } from '@editor-ui/app/shared/components/dynamic-form-modal/dynamic-form-modal.component';
 import {
     DynamicDropdownConfiguration,
@@ -20,7 +20,7 @@ export class DynamicOverlayService {
 
     public async openDynamicDropdown<T>(configuration: DynamicDropdownConfiguration<T>, slot?: string): Promise<OverlayElementControl<T>> {
         const host = await this.overlayHost.getHostView();
-        let dropdownRef = host.createComponent(DynamicDropdownComponent);
+        let dropdownRef: ComponentRef<DynamicDropdownComponent<T>> = host.createComponent(DynamicDropdownComponent) as any;
         const instance = dropdownRef.instance;
         let open = true;
 
@@ -37,17 +37,25 @@ export class DynamicOverlayService {
         instance.configuration = configuration;
         dropdownRef.changeDetectorRef.markForCheck();
 
+        const closeDropdown = () => {
+            if (dropdownRef != null) {
+                // Rest will be handled by the on-destroy handler above
+                dropdownRef.destroy();
+            }
+        };
+
         return {
-            close: () => {
-                if (dropdownRef != null) {
-                    // Rest will be handled by the on-destroy handler above
-                    dropdownRef.destroy();
-                }
-            },
+            close: () => closeDropdown,
             isOpen: () => open,
             value: new Promise((resolve, reject) => {
-                instance.registerCloseFn(resolve);
-                instance.registerErrorFn(reject);
+                instance.registerCloseFn(value => {
+                    closeDropdown();
+                    resolve(value);
+                });
+                instance.registerErrorFn(error => {
+                    closeDropdown();
+                    reject(error);
+                });
             }),
         };
     }

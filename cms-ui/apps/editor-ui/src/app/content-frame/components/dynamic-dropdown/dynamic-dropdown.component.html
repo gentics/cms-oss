@@ -31,6 +31,7 @@
             [settings]="configuration.options"
             [formControl]="control"
             (requiresConfirm)="updateNeedsConfirm($event)"
+            (manualConfirm)="handleManualComponentConfirm()"
         ></gtx-aloha-component-renderer>
     </div>
 </div>

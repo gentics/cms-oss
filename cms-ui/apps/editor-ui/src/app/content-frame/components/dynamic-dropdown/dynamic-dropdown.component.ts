@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { AlohaCoreComponentNames } from '@gentics/aloha-models';
 import { DynamicDropdownConfiguration } from '@gentics/cms-integration-api-models';
 import { BaseComponent, ModalCloseError, ModalClosingReason } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
@@ -45,7 +44,7 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
             map(([, value]) => value),
         ).subscribe(value => {
             if (!this.configuration.resolveWithConfirmButton && !this.controlNeedsConfirm) {
-                this.closeFn(value);
+                this.closeIfValid(value);
             }
         }));
     }
@@ -68,7 +67,17 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
     }
 
     public handleConfirmClick(): void {
-        this.closeFn(this.control.value);
+        this.closeIfValid(this.control.value);
+    }
+
+    public handleManualComponentConfirm(): void {
+        this.closeIfValid(this.control.value);
+    }
+
+    public closeIfValid(value: T): void {
+        if (this.control.valid) {
+            this.closeFn(value);
+        }
     }
 
     public handleAbortClick(): void {

@@ -6,6 +6,11 @@ export interface AlohaToggleButtonComponent extends Omit<AlohaButtonComponent, '
 
     active: boolean;
 
+    onToggle?: (isActive: boolean) => void;
+    toggleActivation: () => void;
+    activate: () => void;
+    deactivate: () => void;
+
     /** @deprecated use `setValue` instead. */
     setState: (toggled: boolean) => void;
     /** @deprecated use `getValue` instead. */

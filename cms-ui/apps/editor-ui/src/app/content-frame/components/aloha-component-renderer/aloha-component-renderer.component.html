@@ -5,6 +5,7 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-button-renderer>
 
     <gtx-aloha-toggle-button-renderer
@@ -13,6 +14,7 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-toggle-button-renderer>
 
     <gtx-aloha-split-button-renderer
@@ -21,6 +23,7 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-split-button-renderer>
 
     <gtx-aloha-toggle-split-button-renderer
@@ -29,6 +32,7 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-toggle-split-button-renderer>
 
     <gtx-aloha-context-button-renderer
@@ -37,7 +41,17 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-context-button-renderer>
+
+    <gtx-aloha-attribute-button-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.ATTRIBUTE_BUTTON"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-attribute-button-renderer>
 
     <gtx-aloha-table-size-renderer
         *ngSwitchCase="AlohaCoreComponentNames.TABLE_SIZE_SELECT"
@@ -45,5 +59,15 @@
         [settings]="component || settings"
         [formControl]="control"
         (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-table-size-renderer>
+
+    <gtx-aloha-select-menu-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.SELECT_MENU"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-select-menu-renderer>
 </ng-container>

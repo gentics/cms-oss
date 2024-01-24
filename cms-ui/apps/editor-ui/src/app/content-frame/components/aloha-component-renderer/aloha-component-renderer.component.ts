@@ -26,8 +26,17 @@ export class AlohaComponentRendererComponent<T> extends BaseFormElementComponent
     @Input()
     public settings?: Record<string, any>;
 
+    /**
+     * @see BaseAlohaRendererComponent.requiresConfirm
+     */
     @Output()
     public requiresConfirm = new EventEmitter<boolean>();
+
+    /**
+     * @see BaseAlohaRendererComponent.manualConfirm
+     */
+    @Output()
+    public manualConfirm = new EventEmitter<void>();
 
     public control: FormControl<T>;
 
@@ -48,6 +57,10 @@ export class AlohaComponentRendererComponent<T> extends BaseFormElementComponent
 
     public forwardRequiresConfirm(confirm: boolean): void {
         this.requiresConfirm.emit(confirm);
+    }
+
+    public forwardManualConfirm(): void {
+        this.manualConfirm.emit();
     }
 
     protected onValueChange(): void {

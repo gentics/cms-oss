@@ -1,16 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { AlohaButtonComponent, ButtonIcon } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
+import { AlohaAttributeButtonComponent, ButtonIcon } from '@gentics/aloha-models';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
-    selector: 'gtx-aloha-button-renderer',
-    templateUrl: './aloha-button-renderer.component.html',
-    styleUrls: ['./aloha-button-renderer.component.scss'],
+    selector: 'gtx-aloha-attribute-button-renderer',
+    templateUrl: './aloha-attribute-button-renderer.component.html',
+    styleUrls: ['./aloha-attribute-button-renderer.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [generateFormProvider(AlohaButtonRendererComponent)],
+    providers: [generateFormProvider(AlohaAttributeButtonRendererComponent)],
 })
-export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<AlohaButtonComponent, void> implements OnChanges {
+export class AlohaAttributeButtonRendererComponent
+    extends BaseAlohaRendererComponent<AlohaAttributeButtonComponent, string>
+    implements OnChanges {
 
     public hasText = false;
     public hasIcon = false;
@@ -18,6 +20,7 @@ export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<Alo
 
     public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
+
         this.hasText = !!this.settings?.text || !!this.settings?.html;
 
         this.iconToRender = typeof this.settings?.icon === 'string'
@@ -58,5 +61,12 @@ export class AlohaButtonRendererComponent extends BaseAlohaRendererComponent<Alo
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
+    }
+
+    public handleSecondaryClick(): void {
+        if (!this.settings) {
+            return;
+        }
+        // TODO: Open dropdown with input
     }
 }

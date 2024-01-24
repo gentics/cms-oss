@@ -12,8 +12,15 @@ const MAPPING: Record<string, string> = {
     'aloha-icon-strong': 'format_bold',
     'aloha-icon-code': 'code',
 
+    'aloha-icon-typography': 'format_size',
     'aloha-icon-paragraph': 'format_paragraph',
-    // 'aloha-icon-'
+    'aloha-icon-h1': 'format_h1',
+    'aloha-icon-h2': 'format_h2',
+    'aloha-icon-h3': 'format_h3',
+    'aloha-icon-h4': 'format_h4',
+    'aloha-icon-h5': 'format_h5',
+    'aloha-icon-h6': 'format_h6',
+    'aloha-icon-pre': 'segment',
 
     'aloha-icon-link': 'link',
     'aloha-icon-unlink': 'link_off',

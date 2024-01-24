@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { AlohaContextButtonComponent } from '@gentics/aloha-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { AlohaContextButtonComponent, ButtonIcon } from '@gentics/aloha-models';
 import { OverlayElementControl } from '@gentics/cms-integration-api-models';
 import { ModalCloseError, ModalClosingReason, generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
@@ -18,6 +18,7 @@ export class AlohaContextButtonRendererComponent<T>
 
     public hasText = false;
     public hasIcon = false;
+    public iconToRender: string;
 
     protected openControl: OverlayElementControl<T>;
 
@@ -30,12 +31,46 @@ export class AlohaContextButtonRendererComponent<T>
         super(changeDetector, element, aloha);
     }
 
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+
+        this.hasText = !!this.settings?.text || !!this.settings?.html;
+
+        this.iconToRender = typeof this.settings?.icon === 'string'
+            ? this.settings?.icon
+            : this.settings?.icon?.primary;
+        this.hasIcon = !!this.iconToRender;
+    }
+
+    public override ngOnDestroy(): void {
+        super.ngOnDestroy();
+        this.closeAndClearContext();
+    }
+
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
 
         if (!this.settings) {
             return;
         }
+
+        this.settings.setIcon = (icon: ButtonIcon) => {
+            this.settings.icon = icon;
+            this.iconToRender = typeof this.settings?.icon === 'string'
+                ? this.settings?.icon
+                : this.settings?.icon?.primary;
+            this.hasIcon = !!this.iconToRender;
+            this.changeDetector.markForCheck();
+        };
+        this.settings.setText = (text: string) => {
+            this.settings.text = text;
+            this.hasText = !!this.settings.text || !!this.settings.html;
+            this.changeDetector.markForCheck();
+        };
+        this.settings.setTooltip = (tooltip: string) => {
+            this.settings.tooltip = tooltip;
+            this.changeDetector.markForCheck();
+        };
 
         this.settings.isOpen = () => {
             return this.openControl != null && this.openControl.isOpen();
@@ -45,21 +80,13 @@ export class AlohaContextButtonRendererComponent<T>
         };
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-        this.hasText = !!this.settings?.text || !!this.settings?.html;
-        this.hasIcon = !!this.settings?.icon;
-    }
-
-    public override ngOnDestroy(): void {
-        super.ngOnDestroy();
-        this.closeAndClearContext();
-    }
-
     public handleClick(): void {
         if (!this.settings) {
             return;
         }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.settings.click?.();
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const context = typeof this.settings.context === 'function' ? this.settings.context() : this.settings.context;

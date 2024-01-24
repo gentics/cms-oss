@@ -6,3 +6,4 @@ export * from './split-button';
 export * from './table-size-select';
 export * from './toggle-button';
 export * from './toggle-split-button';
+export * from './select-menu';

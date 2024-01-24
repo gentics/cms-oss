@@ -12,8 +12,19 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
     @Input()
     public settings?: C | Partial<C> | Record<string, any>;
 
+    /**
+     * Event which is triggered to let the parent component (typically `DynamicDropdownComponent`) know,
+     * if this component requires the user to manually confirm it with an additional confirm button.
+     */
     @Output()
     public requiresConfirm = new EventEmitter<boolean>();
+
+    /**
+     * Event which is triggered when the parent component should confirm the current value of this component.
+     * Typically used together with with `requiresConfirm` (`true`), and on final user input (i.E. text input and pressing `ENTER`).
+     */
+    @Output()
+    public manualConfirm = new EventEmitter<void>();
 
     constructor(
         changeDetector: ChangeDetectorRef,

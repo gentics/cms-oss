@@ -38,6 +38,7 @@ export enum AlohaCoreComponentNames {
     ATTRIBUTE_BUTTON = 'attribute-button',
     BUTTON = 'button',
     CONTEXT_BUTTON = 'context-button',
+    SELECT_MENU = 'select-menu',
     SPLIT_BUTTON = 'split-button',
     TOGGLE_BUTTON = 'toggle-button',
     TOGGLE_SPLIT_BUTTON = 'toggle-split-button',

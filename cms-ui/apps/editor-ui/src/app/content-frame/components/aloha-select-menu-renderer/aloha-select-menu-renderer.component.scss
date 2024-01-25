@@ -62,6 +62,15 @@
             width: 2rem;
             height: 2rem;
             padding: 0.25rem;
+            border: none;
+
+            &.active {
+                background: rgba($gtx-color-primary, 20%);
+
+                &:hover {
+                    background: rgba($gtx-color-primary, 40%);
+                }
+            }
 
             .entry-icon {
                 padding: 0;

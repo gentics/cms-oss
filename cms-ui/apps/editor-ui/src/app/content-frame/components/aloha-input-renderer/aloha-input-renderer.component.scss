@@ -1,0 +1,46 @@
+.gtx-editor-input {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+
+    input {
+        box-sizing: border-box;
+        border: 2px solid #d6d6d6;
+        border-radius: 3px;
+        height: 2.5rem;
+        padding: 5px;
+        transition: border .2s;
+        background-color: transparent;
+        outline: none;
+        width: 100%;
+        font-size: 1rem;
+        margin: 20px 0;
+        box-shadow: none;
+        line-height: 1.15;
+        overflow: visible;
+
+        order: 2;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    label {
+        position: absolute;
+        top: 0;
+        display: block;
+        color: #797979;
+        transition: color .2s;
+        max-width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        -webkit-user-select: none;
+        user-select: none;
+        font-size: .8rem;
+
+        order: 1;
+        position: relative;
+        margin-bottom: 4px;
+    }
+}

@@ -70,4 +70,13 @@
         (requiresConfirm)="forwardRequiresConfirm($event)"
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-select-menu-renderer>
+
+    <gtx-aloha-input-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.INPUT"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-input-renderer>
 </ng-container>

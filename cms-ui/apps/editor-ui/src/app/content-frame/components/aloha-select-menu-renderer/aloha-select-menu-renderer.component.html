@@ -8,6 +8,7 @@
             *ngFor="let entry of (settings?.options || [])"
             class="select-menu-entry"
             [class.multi-step-entry]="entry.isMultiStep"
+            [class.active]="entry.id === value"
             (click)="handleOptionClick(entry)"
         >
             <div class="entry-icon icon-left">

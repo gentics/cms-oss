@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { generateFormProvider } from '@gentics/ui-core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { AlohaAttributeButtonComponent, ButtonIcon } from '@gentics/aloha-models';
+import { OverlayElementControl } from '@gentics/cms-integration-api-models';
+import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
 
 @Component({
     selector: 'gtx-aloha-attribute-button-renderer',
@@ -12,11 +14,22 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
 })
 export class AlohaAttributeButtonRendererComponent
     extends BaseAlohaRendererComponent<AlohaAttributeButtonComponent, string>
-    implements OnChanges {
+    implements OnChanges, OnDestroy {
 
     public hasText = false;
     public hasIcon = false;
     public iconToRender: string;
+
+    protected inputDropdown: OverlayElementControl<string>;
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        element: ElementRef<HTMLElement>,
+        aloha: AlohaIntegrationService,
+        protected overlay: DynamicOverlayService,
+    ) {
+        super(changeDetector, element, aloha);
+    }
 
     public override ngOnChanges(changes: SimpleChanges): void {
         super.ngOnChanges(changes);
@@ -27,6 +40,14 @@ export class AlohaAttributeButtonRendererComponent
             ? this.settings?.icon
             : this.settings?.icon?.primary;
         this.hasIcon = !!this.iconToRender;
+    }
+
+    public override ngOnDestroy(): void {
+        super.ngOnDestroy();
+
+        if (this.inputDropdown != null) {
+            this.inputDropdown.close();
+        }
     }
 
     protected override setupAlohaHooks(): void {
@@ -67,6 +88,35 @@ export class AlohaAttributeButtonRendererComponent
         if (!this.settings) {
             return;
         }
-        // TODO: Open dropdown with input
+
+        if (this.inputDropdown != null || this.settings.targetElement == null) {
+            return;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        const initialValue: string = (this.settings.targetElement as JQuery).attr(this.settings.targetAttribute) as any || '';
+
+        this.overlay.openDynamicDropdown({
+            type: 'input',
+            initialValue: initialValue,
+        }, this.slot).then(ctl => {
+            this.inputDropdown = ctl;
+            return ctl.value;
+        }).then(value => {
+            this.inputDropdown = null;
+            this.triggerChange(value);
+        }).catch(err => {
+            this.inputDropdown = null;
+        });
+    }
+
+    protected override onValueChange(): void {
+        super.onValueChange();
+
+        if (this.settings.targetElement == null || this.settings.targetAttribute == null) {
+            return;
+        }
+
+        (this.settings.targetElement as JQuery).attr(this.settings.targetAttribute, this.value);
     }
 }

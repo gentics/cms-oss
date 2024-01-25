@@ -67,6 +67,11 @@
         &::ng-deep .gtx-table-size-input {
             padding: 0.25rem 0.75rem;
         }
+
+        &::ng-deep .gtx-editor-input {
+            padding: 0.25rem 0.5rem;
+            min-width: 240px;
+        }
     }
 }
 

@@ -1,0 +1,10 @@
+<div class="gtx-editor-input">
+    <input
+        #input
+        type="text"
+        [value]="value"
+        [disabled]="disabled"
+        (change)="handleInputChange($event)"
+    />
+    <label *ngIf="settings?.label">{{ settings?.label }}</label>
+</div>

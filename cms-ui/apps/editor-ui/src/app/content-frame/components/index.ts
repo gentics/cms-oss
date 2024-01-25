@@ -2,6 +2,7 @@ export * from './aloha-attribute-button-renderer/aloha-attribute-button-renderer
 export * from './aloha-button-renderer/aloha-button-renderer.component';
 export * from './aloha-component-renderer/aloha-component-renderer.component';
 export * from './aloha-context-button-renderer/aloha-context-button-renderer.component';
+export * from './aloha-input-renderer/aloha-input-renderer.component';
 export * from './aloha-select-menu-renderer/aloha-select-menu-renderer.component';
 export * from './aloha-split-button-renderer/aloha-split-button-renderer.component';
 export * from './aloha-table-size-select-renderer/aloha-table-size-select-renderer.component';

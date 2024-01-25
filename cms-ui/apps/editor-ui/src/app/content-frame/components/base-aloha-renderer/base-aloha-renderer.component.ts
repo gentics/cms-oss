@@ -1,10 +1,10 @@
-import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AlohaComponent } from '@gentics/aloha-models';
 import { BaseFormElementComponent } from '@gentics/ui-core';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 
 @Component({ template: '' })
-export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> extends BaseFormElementComponent<T> implements OnInit, OnDestroy {
+export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> extends BaseFormElementComponent<T> implements OnInit, OnChanges, OnDestroy {
 
     @Input()
     public slot?: string;
@@ -39,7 +39,14 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
         this.registerAsRendered();
     }
 
-    public ngOnDestroy(): void {
+    public override ngOnChanges(changes: SimpleChanges): void {
+        super.ngOnChanges(changes);
+        if (changes.settings && !changes.settings.firstChange) {
+            this.setupAlohaHooks();
+        }
+    }
+
+    public override ngOnDestroy(): void {
         super.ngOnDestroy();
         this.unregisterAsRendered();
     }

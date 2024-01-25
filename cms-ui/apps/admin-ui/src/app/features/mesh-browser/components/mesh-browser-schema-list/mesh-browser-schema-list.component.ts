@@ -12,7 +12,7 @@ import { MeshBrowserLoaderService } from '../../providers';
     styleUrls: ['./mesh-browser-schema-list.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
+export class MeshBrowserSchemaListComponent implements OnChanges {
 
     @Input()
     public currentProject: string;
@@ -44,17 +44,16 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
         protected appState: AppStateService,
     ) { }
 
-    ngOnChanges(): void {
-        this.noSchemaElements = true;
-    }
 
-    ngOnInit(): void {
+    async ngOnChanges(): Promise<void> {
+        this.noSchemaElements = true;
+
         this.route.params.subscribe((params) => {
             if (params.parent) {
                 this.currentNodeUuid = params.parent
             }
         })
-        this.loadSchemas()
+        await this.loadSchemas()
     }
 
     protected async loadSchemas(): Promise<void> {

@@ -106,16 +106,16 @@ export class MeshBrowserLoaderService {
         return response.data?.node;
     }
 
-    private constructSchemaFilterQuery(schema: Array<string>): string {
+    private constructSchemaFilterQuery(schemas: Array<string>): string {
         const template = `[schemaName]: children(filter: {schema: {is: [schemaName]}}) { 
 			totalCount 
 		}` as string;
 
-        const query = schema.reduce((query: string, schemaName: string) => {
+        const query = schemas.reduce((query: string, schemaName: string) => {
             // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-call
             query += template.replaceAll('[schemaName]', schemaName) +'\n';
             return query;
-        })
+        }, '')
 
         return query;
     }

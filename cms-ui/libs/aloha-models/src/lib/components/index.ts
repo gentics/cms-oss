@@ -8,6 +8,7 @@ export * from './input';
 export * from './link-target';
 export * from './select-menu';
 export * from './split-button';
+export * from './symbol-grid';
 export * from './table-size-select';
 export * from './toggle-button';
 export * from './toggle-split-button';

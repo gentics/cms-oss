@@ -106,4 +106,13 @@
         (requiresConfirm)="forwardRequiresConfirm($event)"
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-link-target-renderer>
+
+    <gtx-aloha-symbol-grid-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.SYMBOL_GRID"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-symbol-grid-renderer>
 </ng-container>

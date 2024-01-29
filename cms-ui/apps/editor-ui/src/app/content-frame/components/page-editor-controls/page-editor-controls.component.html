@@ -1,15 +1,13 @@
 <ng-container *ngIf="settings">
-    <ng-container *ngFor="let componentGroup of settings.components; let last = last">
+    <ng-container *ngFor="let componentGroup of settings.slotsToRender; let last = last">
         <div class="component-group">
-            <ng-container *ngFor="let tabComponentDefinition of componentGroup">
-                <ng-container *ngIf="components[tabComponentDefinition.slot] as alohaComp">
-                    <gtx-aloha-component-renderer
-                        class="dynamic-component"
-                        [attr.slot]="tabComponentDefinition.slot"
-                        [slot]="tabComponentDefinition.slot"
-                        [component]="alohaComp"
-                    ></gtx-aloha-component-renderer>
-                </ng-container>
+            <ng-container *ngFor="let slot of componentGroup">
+                <gtx-aloha-component-renderer
+                    class="dynamic-component"
+                    [attr.slot]="slot"
+                    [slot]="slot"
+                    [component]="components[slot]"
+                ></gtx-aloha-component-renderer>
             </ng-container>
         </div>
         <div *ngIf="!last" class="group-separator"></div>

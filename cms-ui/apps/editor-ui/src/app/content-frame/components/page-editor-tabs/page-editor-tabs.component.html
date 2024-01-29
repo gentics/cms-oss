@@ -1,14 +1,16 @@
 <div class="gtx-editor-tabs gtx-overflow-managed">
-    <div
-        *ngFor="let tab of tabs"
-        class="editor-tab"
-        [attr.data-id]="tab.id"
-        [class.active]="tab.id === activeTab"
-        (click)="setActiveTab(tab.id)"
-    >
-        <div class="tab-icon">
-            <icon>{{ tab.icon }}</icon>
+    <ng-container *ngFor="let tab of tabs">
+        <div
+            *ngIf="tab.hasSlotsToRender"
+            class="editor-tab"
+            [attr.data-id]="tab.id"
+            [class.active]="tab.id === activeTab"
+            (click)="setActiveTab(tab.id)"
+        >
+            <div class="tab-icon">
+                <icon>{{ tab.icon }}</icon>
+            </div>
+            <div class="tab-label">{{ tab.label | i18n }}</div>
         </div>
-        <div class="tab-label">{{ tab.label | i18n }}</div>
-    </div>
+    </ng-container>
 </div>

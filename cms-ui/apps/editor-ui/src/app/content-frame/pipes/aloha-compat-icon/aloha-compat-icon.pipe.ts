@@ -11,6 +11,7 @@ const MAPPING: Record<string, string> = {
     'aloha-icon-emphasis': 'format_italic',
     'aloha-icon-strong': 'format_bold',
     'aloha-icon-code': 'code',
+    'aloha-icon-clear': 'format_clear',
 
     'aloha-icon-typography': 'format_size',
     'aloha-icon-paragraph': 'format_paragraph',
@@ -45,6 +46,8 @@ const MAPPING: Record<string, string> = {
 
     'aloha-icon-indent': 'format_indent_increase',
     'aloha-icon-outdent': 'format_indent_decrease',
+
+    'aloha-icon-characterpicker': 'special_character',
 };
 const FALLBACK_ICON = 'question_mark';
 

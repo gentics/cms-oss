@@ -44,6 +44,7 @@ export enum AlohaCoreComponentNames {
     LINK_TARGET = 'link-target',
     SELECT_MENU = 'select-menu',
     SPLIT_BUTTON = 'split-button',
+    SYMBOL_GRID = 'symbol-grid',
     TOGGLE_BUTTON = 'toggle-button',
     TOGGLE_SPLIT_BUTTON = 'toggle-split-button',
     TABLE_SIZE_SELECT = 'table-size-select',

@@ -14,6 +14,7 @@ import {
     AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
+    AlohaSymbolGridRendererComponent,
     AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
     AlohaToggleSplitButtonRendererComponent,
@@ -32,6 +33,7 @@ import {
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
+    SymbolGridComponent,
     TableSizeInputComponent,
     TableSizeSelectComponent,
 } from './components';
@@ -56,6 +58,7 @@ const COMPONENTS = [
     AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
+    AlohaSymbolGridRendererComponent,
     AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
     AlohaToggleSplitButtonRendererComponent,
@@ -74,6 +77,7 @@ const COMPONENTS = [
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
+    SymbolGridComponent,
     TableSizeInputComponent,
     TableSizeSelectComponent,
 ];

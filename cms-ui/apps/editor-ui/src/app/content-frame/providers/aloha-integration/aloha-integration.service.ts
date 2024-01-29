@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import {
     AlohaComponent,
     AlohaComponentSetting,
+    AlohaCoreComponentNames,
     AlohaFullComponentSetting,
     AlohaRangeObject,
     AlohaSettings,
@@ -12,45 +13,64 @@ import {
     ScreenSize,
 } from '@gentics/aloha-models';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
-import { AlohaGlobal } from '../../models/content-frame';
+import { filter, map, withLatestFrom } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
+import { AlohaGlobal } from '../../models/content-frame';
 
 export interface NormalizedTabsSettings extends Omit<AlohaToolbarTabsSettings, 'components'> {
     components: AlohaFullComponentSetting[][];
+    slotsToRender: string[][];
+    hasSlotsToRender: boolean;
 }
 
 export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings {
     tabs: NormalizedTabsSettings[];
 }
 
+export const RENDERABLE_COMPONENTS: string[] = Object.values(AlohaCoreComponentNames);
+
 const LINE_BREAK_COMPONENT = '\n';
 
-function normalizeToolbarSizeSettings(settings: AlohaToolbarSizeSettings): NormalizedToolbarSizeSettings {
+function normalizeToolbarSizeSettings(
+    settings: AlohaToolbarSizeSettings,
+    components: Record<string, AlohaComponent>,
+): NormalizedToolbarSizeSettings {
     if (settings == null) {
         return null;
     }
     return {
         ...settings,
-        tabs: (settings.tabs || []).map(normalizeToolbarTab),
+        tabs: (settings.tabs || []).map(tabSettings => normalizeToolbarTab(tabSettings, components)),
     };
 }
 
-function normalizeToolbarTab(tab: AlohaToolbarTabsSettings): NormalizedTabsSettings {
-    let components = tab.components;
-    if (!Array.isArray(components[0])) {
-        components = components.map(comp => [comp]);
+function normalizeToolbarTab(
+    tab: AlohaToolbarTabsSettings,
+    globalComponents: Record<string, AlohaComponent>,
+): NormalizedTabsSettings {
+    let tabComponents = tab.components;
+    if (!Array.isArray(tabComponents[0])) {
+        tabComponents = tabComponents.map(comp => [comp]);
     }
-    components = components.map(toMap => (toMap as AlohaComponentSetting[])
+    tabComponents = tabComponents.map(toMap => (toMap as AlohaComponentSetting[])
         .map(normalizeComponentDefinition)
         .filter(comp => comp != null),
     ).filter(arr => (arr || []).length > 0);
+
+    const slotsToRender = (tabComponents as AlohaFullComponentSetting[][])
+        .map(arr => arr
+            .map(comp => comp.slot)
+            .filter(slot => RENDERABLE_COMPONENTS.includes(globalComponents[slot]?.type)),
+        )
+        .filter(arr => arr.length > 0);
 
     return {
         ...tab,
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-call
         label: `aloha.${(tab.label || '').replaceAll('.', '_')}`,
-        components: components as AlohaFullComponentSetting[][],
+        components: tabComponents as AlohaFullComponentSetting[][],
+        slotsToRender,
+        hasSlotsToRender: slotsToRender.length > 0,
     };
 }
 
@@ -118,10 +138,12 @@ export class AlohaIntegrationService {
             ),
             this.size$,
             this.settings$.asObservable(), // Also needs a reload when global settings change
+            this.components$,
         ]).pipe(
             filter(([settings, size]) => settings != null && size != null && settings[size] != null),
             map(([settings, size]) => settings[size]),
-            map(normalizeToolbarSizeSettings),
+            withLatestFrom(this.components$),
+            map(([settings, components]) => normalizeToolbarSizeSettings(settings, components)),
         );
     }
 

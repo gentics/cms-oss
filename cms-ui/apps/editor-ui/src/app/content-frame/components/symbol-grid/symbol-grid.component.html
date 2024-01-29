@@ -1,0 +1,12 @@
+<div class="gtx-symbol-grid">
+    <div class="symbol-grid-content">
+        <button
+            *ngFor="let singleSymbol of symbols"
+            class="symbol-grid-cell"
+            [class.active]="singleSymbol === value"
+            (click)="selectSymbol(singleSymbol)"
+        >
+            <span class="symbol-grid-cell-content" [innerHTML]="singleSymbol"></span>
+        </button>
+    </div>
+</div>

@@ -65,13 +65,13 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             this.page = 1;
             // make sure current language is the first element
             this.languages = this.languages.sort((a,_b) => a === this.currentLanguage ? -1 : 1);
-            this.loadNodeContent(this.currentNodeUuid);
+            this.loadNodeChildren(this.currentNodeUuid);
         }
     }
 
     public loadContent(element: SchemaElement): void {
         if (element.isContainer) {
-            this.loadNodeContent(element.uuid)
+            this.loadNodeChildren(element.uuid)
             return;
         }
 
@@ -87,7 +87,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         )
     }
 
-    public async loadNodeContent(nodeUuid: string): Promise<void> {
+    private async loadNodeChildren(nodeUuid: string): Promise<void> {
         const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schemaName,
             nodeUuid: nodeUuid,

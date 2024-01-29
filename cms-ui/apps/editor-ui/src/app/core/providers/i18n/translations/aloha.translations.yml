@@ -1,3 +1,19 @@
 tab_format_label:
     de: 'Formartieren'
     en: 'Formatting'
+linktarget_target_label:
+    de: 'Ziel URL'
+    en: 'Target URL'
+linktarget_target_and_ref_label:
+    de: 'Ziel URL/Element'
+    en: 'Target URL/Element'
+linktarget_anchor_label:
+    de: 'Anker'
+    en: 'Anchor'
+linktarget_pick_target:
+    de: 'Ziel Element auswählen'
+    en: 'Pick target element'
+linktarget_clear_target:
+    de: 'Ziel Element entfernen'
+    en: 'Remove target element'
+

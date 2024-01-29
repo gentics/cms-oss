@@ -4,6 +4,7 @@ import { DynamicDropdownConfiguration } from '@gentics/cms-integration-api-model
 import { BaseComponent, ModalCloseError, ModalClosingReason } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
+import { applyControl } from '../../utils';
 
 type CloseFn<T> = (value: T) => void;
 type ErrorFn = (error?: any) => void;
@@ -31,6 +32,11 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
 
     public ngOnInit(): void {
         this.control = new FormControl(this.configuration.initialValue);
+
+        const forwardSub = applyControl(this.control, this.configuration);
+        if (forwardSub) {
+            this.subscriptions.push(forwardSub);
+        }
 
         this.showOverlay = this.configuration.closeOnOverlayClick == null || this.configuration.closeOnOverlayClick;
 

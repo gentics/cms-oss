@@ -36,9 +36,12 @@ export interface AlohaComponent {
 
 export enum AlohaCoreComponentNames {
     ATTRIBUTE_BUTTON = 'attribute-button',
+    ATTRIBUTE_TOGGLE_BUTTON = 'attribute-toggle-button',
     BUTTON = 'button',
+    CHECKBOX = 'checkbox',
     CONTEXT_BUTTON = 'context-button',
     INPUT = 'input',
+    LINK_TARGET = 'link-target',
     SELECT_MENU = 'select-menu',
     SPLIT_BUTTON = 'split-button',
     TOGGLE_BUTTON = 'toggle-button',

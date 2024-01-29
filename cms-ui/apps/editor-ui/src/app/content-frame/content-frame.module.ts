@@ -5,10 +5,13 @@ import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
 import {
     AlohaAttributeButtonRendererComponent,
+    AlohaAttributeToggleButtonRendererComponent,
     AlohaButtonRendererComponent,
+    AlohaCheckboxRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
     AlohaInputRendererComponent,
+    AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaTableSizeSelectRendererComponent,
@@ -20,6 +23,7 @@ import {
     ContentFrameComponent,
     DescriptionTooltipComponent,
     DynamicDropdownComponent,
+    DynamicFormModal,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
@@ -43,10 +47,13 @@ import {
 
 const COMPONENTS = [
     AlohaAttributeButtonRendererComponent,
+    AlohaAttributeToggleButtonRendererComponent,
     AlohaButtonRendererComponent,
+    AlohaCheckboxRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
     AlohaInputRendererComponent,
+    AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaTableSizeSelectRendererComponent,
@@ -58,6 +65,7 @@ const COMPONENTS = [
     ContentFrameComponent,
     DescriptionTooltipComponent,
     DynamicDropdownComponent,
+    DynamicFormModal,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,

@@ -77,7 +77,9 @@ export interface ExposedControl<T> {
      * Sets this control as pristine/not yet touched by the user.
      */
     markAsPristine(): void;
-    /** Synchronizes the value of the control and the component and runs the validation again. */
+    /**
+     * Synchronizes the value of the control and the component and runs the validation again.
+     */
     updateValueAndValidity(): void;
 }
 

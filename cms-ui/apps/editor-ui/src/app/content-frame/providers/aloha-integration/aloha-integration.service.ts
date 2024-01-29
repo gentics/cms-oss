@@ -24,6 +24,8 @@ export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings 
     tabs: NormalizedTabsSettings[];
 }
 
+const LINE_BREAK_COMPONENT = '\n';
+
 function normalizeToolbarSizeSettings(settings: AlohaToolbarSizeSettings): NormalizedToolbarSizeSettings {
     if (settings == null) {
         return null;
@@ -39,7 +41,10 @@ function normalizeToolbarTab(tab: AlohaToolbarTabsSettings): NormalizedTabsSetti
     if (!Array.isArray(components[0])) {
         components = components.map(comp => [comp]);
     }
-    components = components.map(toMap => (toMap as AlohaComponentSetting[]).map(normalizeComponentDefinition));
+    components = components.map(toMap => (toMap as AlohaComponentSetting[])
+        .map(normalizeComponentDefinition)
+        .filter(comp => comp != null),
+    ).filter(arr => (arr || []).length > 0);
 
     return {
         ...tab,
@@ -50,7 +55,7 @@ function normalizeToolbarTab(tab: AlohaToolbarTabsSettings): NormalizedTabsSetti
 }
 
 function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullComponentSetting {
-    if (comp == null) {
+    if (comp == null || comp === LINE_BREAK_COMPONENT || (comp as any)?.slot === LINE_BREAK_COMPONENT) {
         return null;
     }
     if (typeof comp === 'string') {

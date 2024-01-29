@@ -8,7 +8,7 @@
     }
 
     &.always-secondary,
-    &.active {
+    &.input-active {
         .split-button-secondary {
             display: flex;
 
@@ -17,6 +17,13 @@
                 border-bottom-right-radius: 0;
                 border-right: none;
             }
+        }
+    }
+
+    &.active {
+        .split-button-main,
+        .split-button-secondary {
+            @include gtxActiveToggleButton();
         }
     }
 }

@@ -1,13 +1,13 @@
 import { ComponentRef, Injectable } from '@angular/core';
-import { DynamicFormModal } from '@editor-ui/app/shared/components/dynamic-form-modal/dynamic-form-modal.component';
 import {
     DynamicDropdownConfiguration,
     DynamicFormModalConfiguration,
     OverlayElementControl,
 } from '@gentics/cms-integration-api-models';
 import { ModalClosingReason, ModalService, OverlayHostService } from '@gentics/ui-core';
-import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { DynamicDropdownComponent } from '../../components';
+import { DynamicFormModal } from '../../components/dynamic-form-modal/dynamic-form-modal.component';
+import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 
 @Injectable()
 export class DynamicOverlayService {

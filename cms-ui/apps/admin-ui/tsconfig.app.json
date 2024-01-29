@@ -1,9 +1,7 @@
 {
     "extends": "./tsconfig.json",
     "compilerOptions": {
-        "types": [],
-        "target": "es2022",
-        "lib": ["dom", "es2022"],
+        "types": []
     },
     "files": [
         "src/main.ts",

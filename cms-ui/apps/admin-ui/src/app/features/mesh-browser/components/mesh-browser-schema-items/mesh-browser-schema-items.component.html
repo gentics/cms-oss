@@ -19,7 +19,7 @@
                     {{  element.isContainer ? 'folder' : 'description' }}
                 </icon> 
 
-                <div class="title" (click)="loadContent(element)">
+                <div class="title" (click)="loadContent(element)" [attr.data-is-container]="element.isContainer">
                    <span> {{ element.displayName ?? element?.uuid }}  </span>
                 
                     <gtx-mesh-browser-content-version 

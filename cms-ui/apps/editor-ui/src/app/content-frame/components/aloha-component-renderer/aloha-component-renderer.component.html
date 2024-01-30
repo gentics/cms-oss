@@ -115,4 +115,13 @@
         (requiresConfirm)="forwardRequiresConfirm($event)"
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-symbol-grid-renderer>
+
+    <gtx-aloha-iframe-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.IFRAME"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-iframe-renderer>
 </ng-container>

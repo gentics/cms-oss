@@ -4,6 +4,7 @@ export * from './base-component';
 export * from './button';
 export * from './checkbox';
 export * from './context-button';
+export * from './iframe';
 export * from './input';
 export * from './link-target';
 export * from './select-menu';

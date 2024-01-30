@@ -290,7 +290,8 @@ export class MeshRestClient {
     public graphql: MeshGraphQLAPI = (project, body, params) => this.executeJsonRequest(POST, `/${project}/graphql`, body, params);
 
     public language: MeshLanguageAPI = {
-        list: (project) => this.executeJsonRequest(GET, `${project}/languages`),
+        list: () => this.executeJsonRequest(GET, '/languages'),
+        getDefault: () => this.executeJsonRequest(GET, '/languages'),
     } as const;
 
 }

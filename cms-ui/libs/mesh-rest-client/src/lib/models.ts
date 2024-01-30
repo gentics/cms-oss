@@ -302,5 +302,6 @@ export interface MeshPluginAPI {
 export type MeshGraphQLAPI = (project: string, body: GraphQLRequest, params?: GraphQLOptions) => Promise<GraphQLResponse>;
 
 export interface MeshLanguageAPI {
-    list(project: string): Promise<ListResponse<Language>>;
+    getDefault(): Promise<Language>;
+    list(): Promise<ListResponse<Language>>;
 }

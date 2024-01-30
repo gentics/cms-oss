@@ -189,7 +189,7 @@ export class MeshBrowserLoaderService {
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
         // request for all project languages
         if (params?.lang) {
-            const projectLanguages = await this.getProjectLanguages(project);
+            const projectLanguages = await this.getAllLanguages();
             params.lang += ',' + projectLanguages
                 .filter(lang => lang.languageTag !== params.lang)
                 .map(lang => lang.languageTag)
@@ -200,9 +200,38 @@ export class MeshBrowserLoaderService {
         return response;
     }
 
-    public async getProjectLanguages(project: string): Promise<Language[]> {
-        const response = await this.meshClient.language.list(project);
-        return response.data;
+    public async getAllLanguages(): Promise<Language[]> {
+        // const response = await this.meshClient.language.list();
+        // return response.data;
+
+        // todo: replace with real call
+        return [
+            {
+                uuid: 'b104a4da343a4a888818a410611b09e5',
+                name: 'English',
+                nativeName: 'English',
+                languageTag: 'en',
+            },
+            {
+                uuid: '38f65ccfa9bd4c51ab997aa98179090d',
+                name: 'German',
+                nativeName: 'Deutsch',
+                languageTag: 'de',
+            },
+        ]
+    }
+
+    public async getDefaultLanguage(): Promise<Language>{
+        // const response = await this.meshClient.language.getDefault();
+        // return response;
+
+        // todo: replace with real call
+        return {
+            uuid: 'b104a4da343a4a888818a410611b09e5',
+            name: 'English',
+            nativeName: 'English',
+            languageTag: 'en',
+        }
     }
 
 }

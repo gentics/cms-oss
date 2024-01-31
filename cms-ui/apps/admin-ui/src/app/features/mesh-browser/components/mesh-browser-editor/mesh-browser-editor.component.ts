@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldType } from '@gentics/mesh-models';
 import { MeshField, SchemaContainer } from '../../models/mesh-browser-models';
-import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService } from '../../providers';
+import { MeshBrowserCanActivateGuard, MeshBrowserImageService, MeshBrowserLoaderService, MeshBrowserNavigatorService } from '../../providers';
 
 
 @Component({
@@ -31,6 +31,8 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
 
     public title: string;
 
+    public version: string;
+
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -40,6 +42,7 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         protected loader: MeshBrowserLoaderService,
         protected imageService: MeshBrowserImageService,
         protected activationGuard: MeshBrowserCanActivateGuard,
+        protected navigator: MeshBrowserNavigatorService,
     ) { }
 
     async ngOnInit(): Promise<void> {
@@ -61,6 +64,12 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         }
     }
 
+    public loadNode(nodeUuid: string): void {
+        this.currentNodeUuid = nodeUuid;
+        this.updateComponent();
+        this.navigator.navigateToDetails(this.route, nodeUuid, this.project, this.currentBranchUuid, this.currentLanguage);
+    }
+
     private async mapResponseToSchemaFields(): Promise<void> {
         const response = await this.loader.getNodeByUuid(this.project, this.currentNodeUuid, {
             lang: this.currentLanguage,
@@ -76,17 +85,26 @@ export class MeshBrowserEditorComponent  implements OnInit, OnChanges {
         }
 
         this.fields = [];
+        this.version = response.version;
 
         for (const fieldDefinition of currentSchema.fields) {
             let fieldValue = response.fields[fieldDefinition.name] as unknown as string;
 
-            if (fieldDefinition.type === FieldType.BINARY) {
-                fieldValue = this.getImagePath(fieldDefinition.name);
-            }
-
-            if (fieldDefinition.type === FieldType.NODE) {
-                const node = response.fields[fieldDefinition.name] as unknown as object;
-                fieldValue = node['displayName'] ?? node['uuid'];
+            switch(fieldDefinition.type) {
+                case FieldType.BINARY: {
+                    fieldValue = this.getImagePath(fieldDefinition.name);
+                    break;
+                }
+                case FieldType.NODE: {
+                    const node = response.fields[fieldDefinition.name] as unknown as object;
+                    fieldValue = node['displayName'] ?? node['uuid'];
+                    break;
+                }
+                case FieldType.MICRONODE: {
+                    const microNode = response.fields[fieldDefinition.name] as unknown as object;
+                    fieldValue = microNode['fields'];
+                    break;
+                }
             }
 
             this.fields.push({

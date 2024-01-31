@@ -1,5 +1,5 @@
 import { AppStateService, SchemasLoaded } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BranchReference } from '@gentics/mesh-models';
 import { SchemaContainer } from '../../models/mesh-browser-models';
@@ -44,36 +44,42 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
         protected appState: AppStateService,
     ) { }
 
-    ngOnChanges(): void {
-        this.noSchemaElements = true;
-    }
 
-    ngOnInit(): void {
-        this.route.params.subscribe((params) => {
-            if (params.parent) {
-                this.currentNodeUuid = params.parent
-            }
-        })
-        this.loadSchemas()
-    }
-
-    protected async loadSchemas(): Promise<void> {
-        this.noSchemaElements = true;
-        this.schemas = await this.loader.listProjectSchemas(this.currentProject)
-        this.schemas = this.schemas.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-        this.appState.dispatch(new SchemasLoaded(this.schemas));
-
+    async ngOnInit(): Promise<void> {
         if (!this.currentNodeUuid) {
             this.currentNodeUuid = await this.loader.getRootNodeUuid(this.currentProject);
         }
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        this.noSchemaElements = true;
+
+        this.route.params.subscribe((params) => {
+            if (params.parent) {
+                this.currentNodeUuid = params.parent;
+            }
+        });
+
+        let nodeUuid = this.currentNodeUuid;
+
+        if (changes?.currentNodeUuid?.currentValue) {
+            nodeUuid = changes?.currentNodeUuid?.currentValue;
+        }
+
+        this.loadSchemas(nodeUuid);
+    }
+
+    private async loadSchemas(nodeUuid: string): Promise<void> {
+        this.noSchemaElements = true;
+
+        this.schemas = await this.loader.listNonEmptyProjectSchemas(this.currentProject, nodeUuid);
+        this.schemas = this.schemas.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+        this.appState.dispatch(new SchemasLoaded(this.schemas));
 
         this.changeDetector.markForCheck();
     }
 
     public nodeChanged(nodeUuid: string): void {
-        if (!nodeUuid) {
-            this.loadSchemas();
-        }
         if (nodeUuid === this.currentNodeUuid) {
             return;
         }

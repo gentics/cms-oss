@@ -39,7 +39,14 @@
                     [languages]="languages"
                     (languageChange)="languageChangeHandler($event)"
                 />
-                    
+
+                <gtx-mesh-browser-breadcrumbs
+                    [currentProject]="currentProject"
+                    [currentBranchUuid]="currentBranchUuid"
+                    [currentNodeUuid]="parentNodeUuid"
+                    [currentLanguage]="currentLanguage"
+                />
+
                 <gtx-mesh-browser-schema-list
                     [currentProject]="currentProject"
                     [currentLanguage]="currentLanguage"

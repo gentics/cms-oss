@@ -84,12 +84,10 @@ export class MeshBrowserMasterComponent
         }
 
         if (this.parentNodeUuid && this.loggedIn) {
-            this.navigatorService.handleBreadcrumbNavigation(
-                this.selectedRepository?.id,
+            this.navigatorService.handleTopLevelBreadcrumbNavigation(
                 this.currentProject,
                 this.currentBranchUuid,
                 this.parentNodeUuid,
-                this.currentLanguage,
             );
         }
     }
@@ -106,12 +104,10 @@ export class MeshBrowserMasterComponent
     }
 
     private handleBreadcrumbNavigation(currentNodeUuid: string) {
-        this.navigatorService.handleBreadcrumbNavigation(
-            this.selectedRepository?.id,
+        this.navigatorService.handleTopLevelBreadcrumbNavigation(
             this.currentProject,
             this.currentBranchUuid,
             currentNodeUuid,
-            this.currentLanguage,
         );
     }
 
@@ -147,26 +143,26 @@ export class MeshBrowserMasterComponent
 
     protected async loadProjectDetails(): Promise<void> {
         if (this.loggedIn) {
-            const [languages, defaultLanguage, projects] = await Promise.all([
-                this.loader.getAllLanguages(),
-                this.loader.getDefaultLanguage(),
-                this.loader.getProjects(),
-            ]);
-
-            this.languages = languages.map(language => language.languageTag).sort((a, b) => a.localeCompare(b));
-            this.currentLanguage = defaultLanguage.languageTag;
+            const projects = await this.loader.getProjects();
 
             if (projects.length > 0) {
                 this.projects = projects.map(project => project.name);
-                this.setCurrentProject(projects)
+                this.setCurrentProject(projects);
                 const branches = await this.loader.getBranches(this.currentProject);
-                this.setCurrentBranch(branches)
+                this.setCurrentBranch(branches);
+                this.setLanguageDetails();
 
                 this.changeDetector.markForCheck();
                 return Promise.resolve();
             }
         }
         return Promise.reject('Mesh client is unauthenticated');
+    }
+
+    private async setLanguageDetails(): Promise<void> {
+        const languages = await this.loader.getProjectLanguages(this.currentProject);
+        this.languages = languages.map(language => language.languageTag).sort((a, b) => a.localeCompare(b));
+        this.currentLanguage = this.appState.now.ui.language;
     }
 
     private setCurrentProject(projects: ProjectResponse[]): void {
@@ -211,7 +207,6 @@ export class MeshBrowserMasterComponent
     public nodeChangeHandler(nodeId: string): void {
         if (this.parentNodeUuid !== nodeId) {
             this.parentNodeUuid = nodeId;
-            this.handleBreadcrumbNavigation(nodeId);
             this.handleNavigation();
         }
     }

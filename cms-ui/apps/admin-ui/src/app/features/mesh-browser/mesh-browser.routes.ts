@@ -34,7 +34,7 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
         },
         children: [
             {
-                path: 'list',
+                path: AdminUIEntityDetailRoutes.MESH_BROWSER_LIST,
                 outlet: ROUTE_MESH_BROWSER_OUTLET,
                 data: {
                     [ROUTE_PERMISSIONS_KEY]: [],
@@ -65,7 +65,7 @@ export const MESH_BROWSER_ROUTES: GcmsAdminUiRoute[] = [
         ],
     },
     {
-        path: AdminUIEntityDetailRoutes.MESH_BROWSER,
+        path: AdminUIEntityDetailRoutes.MESH_BROWSER_NODE,
         outlet: ROUTE_DETAIL_OUTLET,
         data: {
             typePermissions: [],

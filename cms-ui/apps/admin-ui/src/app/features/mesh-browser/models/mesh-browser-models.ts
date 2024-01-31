@@ -17,6 +17,11 @@ export interface SchemaContainer {
     fields: SchemaField[];
 }
 
+export interface NumberOfSchemaElements {
+    schemaName: {[key:string]: string }
+    totalCount: number;
+}
+
 export interface SchemaElement {
     uuid: string;
     displayName: string;

@@ -1,9 +1,8 @@
-import { AdminUIModuleRoutes, ROUTE_MESH_BROWSER_OUTLET } from '@admin-ui/common';
 import { RouteEntityResolverService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IBreadcrumbRouterLink } from '@gentics/ui-core';
 import { MeshBrowserNavigatorService } from '../../providers';
+import { BreadcrumbNode } from '../../models/mesh-browser-models';
 
 
 @Component({
@@ -12,7 +11,7 @@ import { MeshBrowserNavigatorService } from '../../providers';
     styleUrls: ['./mesh-browser-breadcrumbs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
+export class MeshBrowserBreadcrumbComponent implements OnChanges {
 
     @Input()
     public currentProject: string;
@@ -26,9 +25,8 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
     @Input()
     public currentLanguage: string;
 
-    public breadcrumbLinks: IBreadcrumbRouterLink[];
 
-    public nodeUuids: string[];
+    public breadcrumbEntries: BreadcrumbNode[] = [];
 
 
     constructor(
@@ -39,46 +37,28 @@ export class MeshBrowserBreadcrumbComponent implements OnInit, OnChanges {
         protected resolver: RouteEntityResolverService,
     ) { }
 
-    ngOnInit(): void { }
 
-    ngOnChanges(changes: SimpleChanges): void {
+    ngOnChanges(): void {
         this.updateComponent();
-
     }
 
     async updateComponent(): Promise<void> {
-        const breadcrumbs = await this.navigationService.getBreadcrumbNavigation(
+        const breadcrumbs = await this.navigationService.getBreadcrumbNavigationEntries(
             this.currentProject,
             { nodeUuid: this.currentNodeUuid },
             this.currentBranchUuid,
         );
         breadcrumbs.splice(0,1);
 
-        const selectedRepositoryId = this.resolver.extractRepositoryId(this.route.snapshot)
-        this.breadcrumbLinks = [];
+        this.breadcrumbEntries = [];
 
         for(const entry of breadcrumbs) {
-            this.breadcrumbLinks.push({
-                route: [
-                    '/' + AdminUIModuleRoutes.MESH_BROWSER,
-                    selectedRepositoryId,
-                    {
-                        outlets: {
-                            [ROUTE_MESH_BROWSER_OUTLET]: [
-                                'list',
-                                this.currentProject,
-                                this.currentBranchUuid,
-                                entry.node.uuid,
-                                this.currentLanguage,
-                            ],
-                        },
-                    },
-                ],
-                text: entry.node?.displayName,
+            this.breadcrumbEntries.push({
+                uuid: entry.node.uuid,
+                displayName: entry.node.displayName,
             })
         }
 
-        this.breadcrumbLinks = this.breadcrumbLinks.slice();
         this.changeDetector.markForCheck();
     }
 

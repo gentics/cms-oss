@@ -73,7 +73,8 @@ export enum AdminUIEntityDetailRoutes {
     SCHEDULE_TASK = 'task',
     TEMPLATE = 'template',
     USER = 'user',
-    MESH_BROWSER = 'mesh-node',
+    MESH_BROWSER_NODE = 'mesh-node',
+    MESH_BROWSER_LIST = 'list',
 }
 
 /**

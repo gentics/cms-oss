@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BranchReference, GraphQLOptions, Language, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, NumberOfSchemaElements, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
 
 
 @Injectable()
@@ -56,7 +56,6 @@ export class MeshBrowserLoaderService {
         return response.data.project.rootNode.uuid;
     }
 
-
     public async listProjectSchemas(project: string): Promise<SchemaContainer[]> {
         const response = await this.meshClient.projects.listSchemas(project);
 
@@ -67,6 +66,60 @@ export class MeshBrowserLoaderService {
             } as SchemaContainer
         });
     }
+
+
+    public async listNonEmptyProjectSchemas(project: string, nodeUuid: string): Promise<SchemaContainer[]> {
+        const projectSchemas = await this.listProjectSchemas(project)
+        const projectSchemaNames = projectSchemas.map(schemaItem => schemaItem.name);
+
+        // filter out all schemas with no elements
+        const schemasWithNumElements = await this.getSchemasWithNumberOfElements(project, projectSchemaNames, nodeUuid);
+
+        const schemasContainingElements = [];
+        for(const schemaName in schemasWithNumElements) {
+            if(schemasWithNumElements[schemaName]?.totalCount > 0) {
+                schemasContainingElements.push(schemaName);
+            }
+        }
+
+        const filteredProjectSchemas = projectSchemas.filter(schemaItem => schemasContainingElements
+            .includes(schemaItem.name));
+
+        return filteredProjectSchemas;
+    }
+
+
+    private async getSchemasWithNumberOfElements(project: string, schemas: string[], nodeUuid: string): Promise<NumberOfSchemaElements> {
+        const response = await this.meshClient.graphql(project, {
+            query: `
+            query ($nodeUuid: String) {
+    	        node(uuid: $nodeUuid) { 
+                    ${this.constructSchemaFilterQuery(schemas)}
+                }
+            }    
+            `,
+            variables: {
+                nodeUuid: nodeUuid,
+            },
+        });
+
+        return response.data?.node;
+    }
+
+    private constructSchemaFilterQuery(schemas: Array<string>): string {
+        const template = `[schemaName]: children(filter: {schema: {is: [schemaName]}}) { 
+			totalCount 
+		}` as string;
+
+        const query = schemas.reduce((query: string, schemaName: string) => {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unsafe-call
+            query += template.replaceAll('[schemaName]', schemaName) +'\n';
+            return query;
+        }, '')
+
+        return query;
+    }
+
 
     public async getRootNodeUuid(project: string): Promise<string> {
         const response = await this.meshClient.projects.list();
@@ -124,23 +177,6 @@ export class MeshBrowserLoaderService {
 
 
     public async getSchemaNameForNode(project: string, nodeUuid: string): Promise<string>  {
-        // todo: report graphql bug: schema is null for some nodes
-        // const response = await this.meshClient.graphql(project, {
-        //     query: `
-        //         query($nodeUuid: String) {
-        //             node(uuid: $nodeUuid) {
-        //                 uuid
-        //                 schema {
-        //                     name
-        //                 }
-        //             }
-        //         }
-        //     `,
-        //     variables: params,
-        // });
-
-        // return response.data?.node?.schema?.name;
-
         const schemaFieldsFilter: NodeLoadOptions = {
             fields: ['schema'],
         }
@@ -151,43 +187,22 @@ export class MeshBrowserLoaderService {
 
 
     public async getNodeByUuid(project: string, uuid: string, params?: NodeLoadOptions): Promise<NodeResponse> {
+        // request for all project languages
+        if (params?.lang) {
+            const projectLanguages = await this.getProjectLanguages(project);
+            params.lang += ',' + projectLanguages
+                .filter(lang => lang.languageTag !== params.lang)
+                .map(lang => lang.languageTag)
+                .reduce((result, lang) => result += ','+lang);
+        }
+
         const response = await this.meshClient.nodes.get(project, uuid, params);
         return response;
     }
 
-
-    public async getAllLanguages(): Promise<Language[]>{
-        // const response = await this.meshClient.language.list();
-        // return response.data;
-
-        // todo: replace with real call
-        return [
-            {
-                uuid: 'b104a4da343a4a888818a410611b09e5',
-                name: 'English',
-                nativeName: 'English',
-                languageTag: 'en',
-            },
-            {
-                uuid: '38f65ccfa9bd4c51ab997aa98179090d',
-                name: 'German',
-                nativeName: 'Deutsch',
-                languageTag: 'de',
-            },
-        ]
-    }
-
-    public async getDefaultLanguage(): Promise<Language>{
-        // const response = await this.meshClient.language.getDefault();
-        // return response;
-
-        // todo: replace with real call
-        return {
-            uuid: 'b104a4da343a4a888818a410611b09e5',
-            name: 'English',
-            nativeName: 'English',
-            languageTag: 'en',
-        }
+    public async getProjectLanguages(project: string): Promise<Language[]> {
+        const response = await this.meshClient.language.list(project);
+        return response.data;
     }
 
 }

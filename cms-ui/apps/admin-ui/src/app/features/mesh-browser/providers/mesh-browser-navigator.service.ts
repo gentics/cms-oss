@@ -15,6 +15,7 @@ import {
     NavigationEntry,
 } from '../models/mesh-browser-models';
 
+
 @Injectable()
 export class MeshBrowserNavigatorService {
     constructor(
@@ -57,10 +58,10 @@ export class MeshBrowserNavigatorService {
             {
                 outlets: {
                     [ROUTE_MESH_BROWSER_OUTLET]: [
-                        'list',
+                        AdminUIEntityDetailRoutes.MESH_BROWSER_LIST,
                         currentProject,
                         currentBranchUuid,
-                        parentNodeUuid ?? 'undefined',
+                        parentNodeUuid,
                         currentLanguage,
                     ],
                 },
@@ -90,7 +91,7 @@ export class MeshBrowserNavigatorService {
             {
                 outlets: {
                     [ROUTE_DETAIL_OUTLET]:  [
-                        AdminUIEntityDetailRoutes.MESH_BROWSER,
+                        AdminUIEntityDetailRoutes.MESH_BROWSER_NODE,
                         currentProject,
                         currentBranchUuid,
                         currentNodeUuid,
@@ -105,14 +106,12 @@ export class MeshBrowserNavigatorService {
         this.appState.dispatch(new FocusEditor());
     }
 
-    public async handleBreadcrumbNavigation(
-        selectedRepositoryId: number,
+    public async handleTopLevelBreadcrumbNavigation(
         currentProject: string,
         currentBranchUuid: string,
         currentNodeUuid: string,
-        currentLanguage: string,
     ): Promise<void> {
-        const breadcrumbEntries = await this.getBreadcrumbNavigation(
+        const breadcrumbEntries = await this.getBreadcrumbNavigationEntries(
             currentProject,
             { nodeUuid: currentNodeUuid },
             currentBranchUuid,
@@ -133,39 +132,10 @@ export class MeshBrowserNavigatorService {
             },
         ];
 
-        for (const breadcrumbEntry of breadcrumbEntries) {
-            if (!breadcrumbEntry.parent) {
-                continue;
-            }
-
-            const navigationEntry: IBreadcrumbRouterLink = {
-                route: [
-                    '/' + AdminUIModuleRoutes.MESH_BROWSER,
-                    selectedRepositoryId,
-                    {
-                        outlets: {
-                            [ROUTE_MESH_BROWSER_OUTLET]: [
-                                'list',
-                                currentProject,
-                                currentBranchUuid,
-                                breadcrumbEntry.parent.node.uuid,
-                                currentLanguage,
-                            ],
-                        },
-                    },
-                ],
-                text:
-                    breadcrumbEntry.node.displayName ??
-                    breadcrumbEntry.node.uuid,
-            };
-
-            breadcrumbPath.push(navigationEntry);
-        }
-
         this.breadcrumbService.setBreadcrumbs(breadcrumbPath);
     }
 
-    public async getBreadcrumbNavigation(
+    public async getBreadcrumbNavigationEntries(
         project: string,
         params: MeshSchemaListParams,
         branchUuid: string,

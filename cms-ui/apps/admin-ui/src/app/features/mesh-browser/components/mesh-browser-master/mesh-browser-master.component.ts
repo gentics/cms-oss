@@ -84,12 +84,10 @@ export class MeshBrowserMasterComponent
         }
 
         if (this.parentNodeUuid && this.loggedIn) {
-            this.navigatorService.handleBreadcrumbNavigation(
-                this.selectedRepository?.id,
+            this.navigatorService.handleTopLevelBreadcrumbNavigation(
                 this.currentProject,
                 this.currentBranchUuid,
                 this.parentNodeUuid,
-                this.currentLanguage,
             );
         }
     }
@@ -106,12 +104,10 @@ export class MeshBrowserMasterComponent
     }
 
     private handleBreadcrumbNavigation(currentNodeUuid: string) {
-        this.navigatorService.handleBreadcrumbNavigation(
-            this.selectedRepository?.id,
+        this.navigatorService.handleTopLevelBreadcrumbNavigation(
             this.currentProject,
             this.currentBranchUuid,
             currentNodeUuid,
-            this.currentLanguage,
         );
     }
 
@@ -211,7 +207,6 @@ export class MeshBrowserMasterComponent
     public nodeChangeHandler(nodeId: string): void {
         if (this.parentNodeUuid !== nodeId) {
             this.parentNodeUuid = nodeId;
-            this.handleBreadcrumbNavigation(nodeId);
             this.handleNavigation();
         }
     }

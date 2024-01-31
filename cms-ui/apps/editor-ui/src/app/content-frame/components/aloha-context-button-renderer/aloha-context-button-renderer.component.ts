@@ -85,11 +85,21 @@ export class AlohaContextButtonRendererComponent<T>
             return;
         }
 
+        this.triggerTouch();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
 
+        this.handleContext();
+    }
+
+    protected handleContext(): void {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         const context = typeof this.settings.context === 'function' ? this.settings.context() : this.settings.context;
+
+        if (context == null) {
+            return;
+        }
+
         let ctl: Promise<OverlayElementControl<T>>;
 
         if (this.settings.contextType === 'dropdown') {

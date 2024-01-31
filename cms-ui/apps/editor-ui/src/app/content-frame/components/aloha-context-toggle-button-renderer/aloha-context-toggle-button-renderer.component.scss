@@ -1,0 +1,5 @@
+@import '../aloha-context-button-renderer/aloha-context-button-renderer.component.scss';
+
+.gtx-editor-button.context-button.active {
+    @include gtxActiveToggleButton();
+}

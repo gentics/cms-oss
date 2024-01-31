@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
 import { AlohaToggleSplitButtonComponent, ButtonIcon } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
@@ -52,21 +52,19 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
             this.changeDetector.markForCheck();
         };
 
-        this.settings.activate = () => {
-            this.triggerChange(true);
+        this.settings.setActive = (active) => {
+            this.settings.active = active;
             this.changeDetector.markForCheck();
-        };
-        this.settings.deactivate = () => {
-            this.triggerChange(false);
-            this.changeDetector.markForCheck();
-        };
+        }
     }
 
     public handleClick(): void {
         if (!this.settings) {
             return;
         }
-        this.triggerChange(!this.settings.active);
+        this.triggerTouch();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        this.settings.toggleActivation();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call

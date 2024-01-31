@@ -1,13 +1,7 @@
-import { AlohaAttributeButtonComponent } from "./attribute-button";
-import { AlohaCoreComponentNames } from "./base-component";
+import { AlohaAttributeButtonComponent } from './attribute-button';
+import { AlohaCoreComponentNames } from './base-component';
+import { BaseToggleButton } from './toggle-button';
 
-export interface AlohaAttributeToggleButtonComponent extends Omit<AlohaAttributeButtonComponent, 'type'> {
+export interface AlohaAttributeToggleButtonComponent extends Omit<AlohaAttributeButtonComponent, 'type'>, BaseToggleButton {
     type: AlohaCoreComponentNames.ATTRIBUTE_TOGGLE_BUTTON;
-
-    active: boolean;
-
-    onToggle?: (isActive: boolean) => void;
-    toggleActivation: () => void;
-    activate: () => void;
-    deactivate: () => void;
 }

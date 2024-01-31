@@ -1,14 +1,9 @@
 import { AlohaCoreComponentNames } from './base-component';
 import { AlohaSplitButtonComponent } from './split-button';
+import { BaseToggleButton } from './toggle-button';
 
-export interface AlohaToggleSplitButtonComponent extends Omit<AlohaSplitButtonComponent, 'type'> {
+export interface AlohaToggleSplitButtonComponent extends Omit<AlohaSplitButtonComponent, 'type'>, BaseToggleButton {
     type: AlohaCoreComponentNames.TOGGLE_SPLIT_BUTTON;
 
-    active: boolean;
     alwaysSecondary: boolean;
-
-    onToggle?: (isActive: boolean) => void;
-    toggleActivation: () => void;
-    activate: () => void;
-    deactivate: () => void;
 }

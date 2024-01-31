@@ -4,6 +4,7 @@ export * from './aloha-button-renderer/aloha-button-renderer.component';
 export * from './aloha-checkbox-renderer/aloha-checkbox-renderer.component';
 export * from './aloha-component-renderer/aloha-component-renderer.component';
 export * from './aloha-context-button-renderer/aloha-context-button-renderer.component';
+export * from './aloha-context-toggle-button-renderer/aloha-context-toggle-button-renderer.component';
 export * from './aloha-iframe-renderer/aloha-iframe-renderer.component';
 export * from './aloha-input-renderer/aloha-input-renderer.component';
 export * from './aloha-link-target-renderer/aloha-link-target-renderer.component';

@@ -22,14 +22,10 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
             return;
         }
 
-        this.settings.activate = () => {
-            this.settings.active = true;
+        this.settings.setActive = (active) => {
+            this.settings.active = active;
             this.changeDetector.markForCheck();
-        };
-        this.settings.deactivate = () => {
-            this.settings.active = false;
-            this.changeDetector.markForCheck();
-        };
+        }
     }
 
     public override handleClick(): void {

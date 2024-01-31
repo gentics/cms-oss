@@ -40,6 +40,7 @@ export enum AlohaCoreComponentNames {
     BUTTON = 'button',
     CHECKBOX = 'checkbox',
     CONTEXT_BUTTON = 'context-button',
+    CONTEXT_TOGGLE_BUTTON = 'context-toggle-button',
     IFRAME = 'iframe',
     INPUT = 'input',
     LINK_TARGET = 'link-target',

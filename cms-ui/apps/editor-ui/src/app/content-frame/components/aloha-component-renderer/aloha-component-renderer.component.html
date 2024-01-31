@@ -44,6 +44,15 @@
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-context-button-renderer>
 
+    <gtx-aloha-context-toggle-button-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.CONTEXT_TOGGLE_BUTTON"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-context-toggle-button-renderer>
+
     <gtx-aloha-attribute-button-renderer
         *ngSwitchCase="AlohaCoreComponentNames.ATTRIBUTE_BUTTON"
         [slot]="slot"

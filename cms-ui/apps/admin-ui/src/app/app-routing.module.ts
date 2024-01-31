@@ -467,6 +467,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
         pathMatch: 'full',
         loadChildren: () => import('./login/login.module').then(m => m.LoginModule),
     },
+    {
+        path: '**',
+        redirectTo: '/',
+    },
 ];
 
 @NgModule({

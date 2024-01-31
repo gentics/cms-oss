@@ -529,5 +529,17 @@
     "assign_to_category": {
         "en": "Assign Constructs to Category",
         "de": "Tagtypen zu Kategorie zuweisen"
+    },
+    "overwrite_button": {
+        "en": "Overwrite",
+        "de": "Überschreiben"
+    },
+    "tagpart_conflict_title": {
+        "en": "Edit Construct \"{{ keyword }}\"",
+        "de": "Tagtyp „{{ entityName }}“ bearbeiten"
+    },
+    "tagpart_conflict_body": {
+        "en": "Data on the file system has changed during the editing process.<br>Are you sure you want to overwrite these changes?",
+        "de": "Die Daten im Dateisystem wurden während des Bearbeitungsvorgangs geändert.<br>Sind Sie sicher, dass Sie diese Änderungen überschreiben wollen?"
     }
 }

@@ -1,6 +1,6 @@
 import { schema } from 'normalizr';
 import { CmsI18nValue } from './cms-i18n-value';
-import { InstancePermissionItem, InstancePermissionMap } from './permissions';
+import { InstancePermissionItem } from './permissions';
 import { TagPart, TagPartProperty } from './tag-part';
 import { DefaultModelType, IndexByKey, ModelType } from './type-util';
 import { User } from './user';
@@ -117,6 +117,7 @@ export const tagTypeSchema = new schema.Entity('tagType');
  * Describes a TagType in GCMS.
  * Note that TagTypes are called Constructs by the REST API.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface TagTypeBase<T extends ModelType> {
 
     /** primary identifier of a construct */
@@ -262,7 +263,7 @@ export enum TagPartValidatorId {
 }
 
 /** Generic validator data for `RegexValidationInfo`. */
-// tslint:disable-next-line: variable-name
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: RegexValidationInfo; }> = {
 
     // Zahl (natürlich)
@@ -278,7 +279,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_EMAIL,
         name: 'validator_name_email_address',
         description: null,
-        expression: '^([-_.&0-9a-zA-Z\+])+@[0-9a-z]([-.]?[0-9a-z])*.[a-z]{2,}$',
+        expression: '^([-_.&0-9a-zA-Z+])+@[0-9a-z]([-.]?[0-9a-z])*.[a-z]{2,}$',
     },
 
     // Nicht leer
@@ -286,7 +287,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_NOTEMPTY,
         name: 'validator_name_must_not_be_emty',
         description: null,
-        expression: '.+',
+        expression: '^.+$',
     },
 
     // Text (kurz)
@@ -302,7 +303,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_TEXT,
         name: 'validator_name_text_long',
         description: null,
-        expression: '',
+        expression: '^.{255}$',
     },
 
     // Zahl (reell)
@@ -334,7 +335,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_TEXT_RESTRICTED,
         name: 'validator_name_text_username_password',
         description: null,
-        expression: '^[a-zA-Z0-9\._@\+\-]{4,40}$',
+        expression: '^[a-zA-Z0-9._@+-]{4,40}$',
     },
 
     // Web Adresse
@@ -342,7 +343,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_URL,
         name: 'validator_name_www_address',
         description: null,
-        expression: '.+',
+        expression: '^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$',
     },
 
     // Ordnername
@@ -350,7 +351,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_FOLDERNAME,
         name: 'validator_name_foldername',
         description: null,
-        expression: '^[0-9ßäöüÄÖÜa-zA-Z \.-]{1,255}$',
+        expression: '^[0-9ßäöüÄÖÜa-zA-Z .-]{1,255}$',
     },
 
     // Filename
@@ -406,7 +407,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_PATH,
         name: 'validator_name_directory_path',
         description: null,
-        expression: '^/{0,1}([a-zA-Z0-9\._-]{1,64}/{0,1}){0,127}$',
+        expression: '^/{0,1}([a-zA-Z0-9._-]{1,64}/{0,1}){0,127}$',
     },
 
     // Hostname
@@ -430,7 +431,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_PLZ,
         name: 'validator_name_1166.zip_code',
         description: null,
-        expression: '[A-Z]{0,2}[\-]{0,1}[0-9]{4,6}',
+        expression: '[A-Z]{0,2}[-]{0,1}[0-9]{4,6}',
     },
 
     // Telefon/Faxnummer
@@ -438,7 +439,7 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_PHONE,
         name: 'validator_name_telefonfaxnummer',
         description: null,
-        expression: '^[0-9\-\/ \+\(\)]{4,25}$',
+        expression: '^[0-9-/ +()]{4,25}$',
     },
 
     // Preis (SN)
@@ -462,6 +463,6 @@ export const TagPartValidatorConfigs: Readonly<{ [key in TagPartValidatorId]: Re
         id: TagPartValidatorId.REG_NODETAG,
         name: 'validator_name_1173.node_tag',
         description: null,
-        expression: '^[a-zA-Z0-9\_\-]{3,255}$',
+        expression: '^[a-zA-Z0-9_-]{3,255}$',
     },
 } as const;

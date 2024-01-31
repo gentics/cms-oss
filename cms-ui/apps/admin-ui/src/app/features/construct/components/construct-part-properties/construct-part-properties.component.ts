@@ -2,6 +2,7 @@ import {
     blacklistValidator,
     createI18nRequiredValidator,
 } from '@admin-ui/common';
+import { I18nService } from '@admin-ui/core';
 import { DataSourceDataService, MarkupLanguageDataService } from '@admin-ui/shared';
 import {
     ChangeDetectionStrategy,
@@ -29,6 +30,7 @@ import {
     Normalized,
     OverviewSetting,
     Raw,
+    RegexValidationInfo,
     SelectSetting,
     TagPart,
     TagPartProperty,
@@ -119,6 +121,9 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.Form,
 ];
 
+/** Using a symbol so the tag-part can be safely converted to JSON without extra handling. */
+const TRANSLATED_NAME_PROP = Symbol('translated-name');
+
 /**
  * Defines the data editable by the `ConstructPartPropertiesComponentMode`.
  *
@@ -138,12 +143,11 @@ export class ConstructPartPropertiesComponent
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
     public readonly REMOVED_CONSTRUCT_PART_TYPES = REMOVED_CONSTRUCT_PART_TYPES;
-    // tslint:disable-next-line: variable-name
+    public readonly TRANSLATED_NAME_PROP = TRANSLATED_NAME_PROP;
     public readonly TagPartTypePropertyType = TagPartTypePropertyType;
-    // tslint:disable-next-line: variable-name
     public readonly ConstructPartPropertiesMode = ConstructPartPropertiesMode;
-    // tslint:disable-next-line: variable-name
-    public readonly TagPartValidatorConfigs = TagPartValidatorConfigs;
+
+    public readonly SORTED_VALIDATOR_CONFIGS: (RegexValidationInfo & { [TRANSLATED_NAME_PROP]: string })[];
 
     @Input()
     public mode: ConstructPartPropertiesMode;
@@ -175,8 +179,17 @@ export class ConstructPartPropertiesComponent
         changeDetector: ChangeDetectorRef,
         private dataSourceDataService: DataSourceDataService,
         private markupLanguageData: MarkupLanguageDataService,
+        private i18n: I18nService,
     ) {
         super(changeDetector);
+
+        this.SORTED_VALIDATOR_CONFIGS = Object.values(TagPartValidatorConfigs)
+        // Translate the name once, so we don't have to do it everytime while sorting and then in the template as well.
+            .map(config => ({
+                ...config,
+                [TRANSLATED_NAME_PROP]: i18n.instant('construct.' + config.name),
+            }))
+            .sort((a, b) => a[TRANSLATED_NAME_PROP].localeCompare(b[TRANSLATED_NAME_PROP]));
     }
 
     ngOnInit(): void {
@@ -358,6 +371,7 @@ export class ConstructPartPropertiesComponent
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     protected assembleValue(formData: any): TagPart<Normalized> {
         if (formData == null) {
             return null;

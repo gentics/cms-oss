@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { ColorAlphaModule } from 'ngx-color/alpha';
+import { ColorSliderModule } from 'ngx-color/slider';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
@@ -8,6 +10,7 @@ import {
     AlohaAttributeToggleButtonRendererComponent,
     AlohaButtonRendererComponent,
     AlohaCheckboxRendererComponent,
+    AlohaColorPickerRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
     AlohaContextToggleButtonRendererComponent,
@@ -54,6 +57,7 @@ const COMPONENTS = [
     AlohaAttributeToggleButtonRendererComponent,
     AlohaButtonRendererComponent,
     AlohaCheckboxRendererComponent,
+    AlohaColorPickerRendererComponent,
     AlohaComponentRendererComponent,
     AlohaContextButtonRendererComponent,
     AlohaContextToggleButtonRendererComponent,
@@ -108,6 +112,8 @@ const GUARDS = [
         SharedModule,
         TagEditorModule,
         EditorOverlayModule,
+        ColorSliderModule,
+        ColorAlphaModule,
         RouterModule.forChild(contentFrameRoutes),
     ],
     exports: [],

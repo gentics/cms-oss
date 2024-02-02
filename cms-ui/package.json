@@ -108,6 +108,7 @@
     "moment-timezone": "^0.5.43",
     "mousetrap": "^1.6.3",
     "ngx-autosize": "^2.0.4",
+    "ngx-color": "^9.0.0",
     "ngx-logger": "^5.0.11",
     "ngx-pagination": "^6.0.3",
     "normalizr": "^3.4.1",

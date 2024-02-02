@@ -48,6 +48,8 @@ const MAPPING: Record<string, string> = {
     'aloha-icon-outdent': 'format_indent_decrease',
 
     'aloha-icon-characterpicker': 'special_character',
+    'aloha-icon-textcolor-color': 'format_color_text',
+    'aloha-icon-textcolor-background-color': 'format_color_fill',
 };
 const FALLBACK_ICON = 'question_mark';
 

@@ -133,4 +133,13 @@
         (requiresConfirm)="forwardRequiresConfirm($event)"
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-iframe-renderer>
+
+    <gtx-aloha-color-picker-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.COLOR_PICKER"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-color-picker-renderer>
 </ng-container>

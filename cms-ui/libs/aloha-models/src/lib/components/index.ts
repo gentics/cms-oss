@@ -3,6 +3,7 @@ export * from './attribute-toggle-button';
 export * from './base-component';
 export * from './button';
 export * from './checkbox';
+export * from './color-picker';
 export * from './context-button';
 export * from './context-toggle-button';
 export * from './iframe';

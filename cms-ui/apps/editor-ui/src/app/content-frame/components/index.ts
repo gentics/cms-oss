@@ -2,6 +2,7 @@ export * from './aloha-attribute-button-renderer/aloha-attribute-button-renderer
 export * from './aloha-attribute-toggle-button-renderer/aloha-attribute-toggle-button-renderer.component';
 export * from './aloha-button-renderer/aloha-button-renderer.component';
 export * from './aloha-checkbox-renderer/aloha-checkbox-renderer.component';
+export * from './aloha-color-picker-renderer/aloha-color-picker-renderer.component';
 export * from './aloha-component-renderer/aloha-component-renderer.component';
 export * from './aloha-context-button-renderer/aloha-context-button-renderer.component';
 export * from './aloha-context-toggle-button-renderer/aloha-context-toggle-button-renderer.component';

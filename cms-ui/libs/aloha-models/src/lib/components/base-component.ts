@@ -39,6 +39,7 @@ export enum AlohaCoreComponentNames {
     ATTRIBUTE_TOGGLE_BUTTON = 'attribute-toggle-button',
     BUTTON = 'button',
     CHECKBOX = 'checkbox',
+    COLOR_PICKER = 'color-picker',
     CONTEXT_BUTTON = 'context-button',
     CONTEXT_TOGGLE_BUTTON = 'context-toggle-button',
     IFRAME = 'iframe',

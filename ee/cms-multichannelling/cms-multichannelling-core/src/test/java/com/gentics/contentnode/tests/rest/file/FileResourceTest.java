@@ -3,6 +3,23 @@ package com.gentics.contentnode.tests.rest.file;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getFileResource;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.client.Entity;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.model.Resource;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.RuleChain;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Trx;
@@ -13,33 +30,19 @@ import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.parttype.ShortTextPartType;
-import com.gentics.contentnode.rest.model.ObjectTag;
 import com.gentics.contentnode.rest.model.Tag;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.request.FileCopyRequest;
 import com.gentics.contentnode.rest.model.request.FileCreateRequest;
 import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.FileUploadResponse;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
 import com.gentics.contentnode.testutils.GCNFeature;
 import com.gentics.contentnode.testutils.RESTAppContext;
-import org.apache.commons.lang3.tuple.Pair;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-
-import javax.ws.rs.client.Entity;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 @GCNFeature(set = { Feature.NICE_URLS, Feature.MULTICHANNELLING })
 public class FileResourceTest {
@@ -61,6 +64,8 @@ public class FileResourceTest {
 	private static UserGroup testGroup;
 	private static SystemUser testUser;
 	private static SystemUser systemUser;
+
+	private static final Map<String, Object> localStorage = new HashMap<>();
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -144,7 +149,7 @@ public class FileResourceTest {
 		Assert.assertEquals(responseFile.getMasterNodeId(), node.getId());
 		Assert.assertEquals(responseFile.getName(), "new-filename.txt");
 
-		Trx.operate(() -> file.delete(true));
+		Trx.operate(t -> t.getObject(File.class, file.getId(), true).delete(true));
 		Trx.operate(t -> t.getObject(File.class, responseFile.getId(), true).delete(true));
 	}
 
@@ -189,23 +194,8 @@ public class FileResourceTest {
 	public void testCreateWithProperties() throws NodeException {
 		String objPropName = "copyright";
 		String objPropValue = "Copyright";
-		String niceUrl = "/nice/testfile.txt";
-		Set<String> alternateUrls = new HashSet<>(Arrays.asList("/foo/testfile.txt", "/bar/testfile.txt"));
-		Integer constructId = Trx.supply(() ->
-			ContentNodeTestDataUtils.createConstruct(node, ShortTextPartType.class, "text_short", "text"));
-		ObjectTagDefinition def = Trx.supply(() ->
-			ContentNodeTestDataUtils .createObjectPropertyDefinition(File.TYPE_FILE, constructId, objPropValue, objPropName));
-		FileUploadResponse response = Trx.supply(systemUser, () -> createFromUrl("testfile.txt", niceUrl, alternateUrls, Pair.of(objPropName, objPropValue)));
 
-		ContentNodeRESTUtils.assertResponseOK(response);
-
-		assertThat(response.getFile().getNiceUrl())
-			.as("Saved nice URL")
-			.isEqualTo(niceUrl);
-
-		assertThat(response.getFile().getAlternateUrls())
-			.as("Saved alternate URLs")
-			.contains(alternateUrls.toArray(new String[0]));
+		FileUploadResponse response = createWithProperties(objPropName, objPropValue);
 
 		Map<String, Tag> tags = response.getFile().getTags();
 
@@ -226,6 +216,117 @@ public class FileResourceTest {
 		assertThat(tags.get(objPropKey))
 			.as("Object property " + objPropName)
 			.matches(tag -> tag.getProperties().get("text").getStringValue().equals(objPropValue), "Object property value is \"Copyright\"");
+
+		Trx.operate(t -> t.getObject(File.class, response.getFile().getId(), true).delete(true));
+	}
+	@Test
+	public void testCopyWithPropertiesSameFolder() throws NodeException {
+		String objPropName = "copyright";
+		String objPropValue = "Copyright";
+
+		FileUploadResponse response = createWithProperties(objPropName, objPropValue);
+		FileCopyRequest copyRequest = new FileCopyRequest();
+		com.gentics.contentnode.rest.model.File fileModel = new com.gentics.contentnode.rest.model.File();
+		com.gentics.contentnode.rest.model.File file = response.getFile();
+
+		fileModel.setId(file.getId());
+		fileModel.setName(file.getName());
+		copyRequest.setFile(fileModel);
+
+		response = ContentNodeTestUtils.assertRequiredPermissions(
+			testGroup,
+			TEST_USER,
+			TEST_USER,
+			restContext,
+			target -> target.path("file").path("copy").request().post(Entity.json(copyRequest), FileUploadResponse.class),
+			ContentNodeTestUtils.perm(folder, PermType.read),
+			ContentNodeTestUtils.perm(folder, PermType.readitems),
+			ContentNodeTestUtils.perm(folder, PermType.createitems));
+		com.gentics.contentnode.rest.model.File responseFile = response.getFile();
+
+		Assert.assertEquals(responseFile.getChannelId(), 0);
+		Assert.assertEquals(responseFile.getMasterNodeId(), node.getId());
+		Assert.assertEquals(responseFile.getName(), "testfile_1.txt");
+
+		Map<String, Tag> tags = responseFile.getTags();
+
+		assertThat(tags)
+			.as("File tags")
+			.hasSize(1);
+
+		String objPropKey = "object." + objPropName;
+
+		assertThat(tags.containsKey(objPropKey))
+			.as("File has object property " + objPropName)
+			.isTrue();
+
+		assertThat(tags.get(objPropKey))
+			.as("Object property " + objPropName + " is active")
+			.matches(Tag::getActive, "is active");
+
+		assertThat(tags.get(objPropKey))
+			.as("Object property " + objPropName)
+			.matches(tag -> tag.getProperties().get("text").getStringValue().equals(objPropValue), "Object property value is \"Copyright\"");
+
+		Trx.operate(t -> t.getObject(File.class, file.getId(), true).delete(true));
+		Trx.operate(t -> t.getObject(File.class, responseFile.getId(), true).delete(true));
+	}
+
+	@Test
+	public void testCopyWithPropertiesTargetFolder() throws NodeException {
+		String objPropName = "copyright";
+		String objPropValue = "Copyright";
+
+		FileUploadResponse response = createWithProperties(objPropName, objPropValue);
+		FileCopyRequest copyRequest = new FileCopyRequest();
+		com.gentics.contentnode.rest.model.File fileModel = new com.gentics.contentnode.rest.model.File();
+		com.gentics.contentnode.rest.model.File file = response.getFile();
+
+		fileModel.setId(file.getId());
+		copyRequest.setFile(fileModel);
+		copyRequest.setNewFilename("new-filename-obj.txt");
+		copyRequest.setTargetFolder(new TargetFolder(targetFolder.getId(), node.getId()));
+
+		response = ContentNodeTestUtils.assertRequiredPermissions(
+			testGroup,
+			TEST_USER,
+			TEST_USER,
+			restContext,
+			target -> target.path("file").path("copy").request().post(Entity.json(copyRequest), FileUploadResponse.class),
+			ContentNodeTestUtils.perm(folder, PermType.read),
+			ContentNodeTestUtils.perm(folder, PermType.readitems),
+			ContentNodeTestUtils.perm(targetFolder, PermType.read),
+			ContentNodeTestUtils.perm(targetFolder, PermType.readitems),
+			ContentNodeTestUtils.perm(targetFolder, PermType.createitems));
+
+		com.gentics.contentnode.rest.model.File responseFile = response.getFile();
+
+		Assert.assertEquals(responseFile.getChannelId(), 0);
+		Assert.assertEquals(responseFile.getMasterNodeId(), node.getId());
+		Assert.assertEquals(responseFile.getName(), "new-filename-obj.txt");
+
+		Map<String, Tag> tags = responseFile.getTags();
+
+		assertThat(tags)
+			.as("File tags")
+			.hasSize(1);
+
+		String objPropKey = "object." + objPropName;
+
+		assertThat(tags.containsKey(objPropKey))
+			.as("File has object property " + objPropName)
+			.isTrue();
+
+		assertThat(tags.get(objPropKey))
+			.as("Object property " + objPropName + " is active")
+			.matches(Tag::getActive, "is active");
+
+		assertThat(tags.get(objPropKey))
+			.as("Object property " + objPropName)
+			.matches(tag -> tag.getProperties().get("text").getStringValue().equals(objPropValue), "Object property value is \"Copyright\"");
+
+		Trx.operate(t -> t.getObject(File.class, file.getId(), true).delete(true));
+		Trx.operate(t -> t.getObject(File.class, responseFile.getId(), true).delete(true));
 	}
 
 	/**
@@ -250,5 +351,35 @@ public class FileResourceTest {
 		}
 
 		return getFileResource().create(request);
+	}
+
+	private FileUploadResponse createWithProperties(String objPropName, String objPropValue) throws NodeException {
+		String hex = Long.toHexString(System.currentTimeMillis());
+		String niceUrl = "/nice/testfile" + hex + ".txt";
+		Set<String> alternateUrls = new HashSet<>(Arrays.asList("/foo/testfile" + hex + ".txt", "/bar/testfile" + hex + ".txt"));
+		Integer constructId = Trx.supply(() ->
+			ContentNodeTestDataUtils.createConstruct(node, ShortTextPartType.class, "text_short", "text"));
+		ObjectTagDefinition def = (ObjectTagDefinition) localStorage.computeIfAbsent(objPropName, key -> {
+			try {
+				return Trx.supply(() ->
+					ContentNodeTestDataUtils.createObjectPropertyDefinition(File.TYPE_FILE, constructId, objPropValue, objPropName));
+			} catch (NodeException e) {
+				throw new RuntimeException(e);
+			}
+		});
+		FileUploadResponse response = Trx.supply(systemUser, () -> createFromUrl("testfile.txt", niceUrl, alternateUrls, Pair.of(objPropName, objPropValue)));
+
+		ContentNodeRESTUtils.assertResponseOK(response);
+
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
+			assertThat(response.getFile().getNiceUrl())
+				.as("Saved nice URL")
+				.isEqualTo(niceUrl);
+	
+			assertThat(response.getFile().getAlternateUrls())
+				.as("Saved alternate URLs")
+				.contains(alternateUrls.toArray(new String[0]));
+		}
+		return response;
 	}
 }

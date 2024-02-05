@@ -258,6 +258,15 @@ public class MCFileResourceImpl implements MCFileResource {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			File file = t.getObject(File.class, id);
 
+			if (file == null) {
+				I18nString message = new CNI18nString("file.notfound");
+				message.setParameter("0", id.toString());
+
+				return new LocalizationsResponse(
+						new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.NOTFOUND, message.toString()));
+			}
+
 			if (!ObjectPermission.view.checkObject(file, file.getChannel())) {
 				String msg = new CNI18nString("file.nopermission").toString();
 

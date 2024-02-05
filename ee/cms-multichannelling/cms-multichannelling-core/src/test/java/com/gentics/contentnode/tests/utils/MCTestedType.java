@@ -290,25 +290,35 @@ public enum MCTestedType {
 	}
 
 	/**
+	 * Get the localizations for the object with given ID
+	 * @param objectId object ID
+	 * @return localizations response
+	 * @throws NodeException
+	 */
+	public LocalizationsResponse localizations(int objectId) throws NodeException {
+		switch (this) {
+		case file:
+			return new MCFileResourceImpl().localizations(objectId);
+		case folder:
+			return new MCFolderResourceImpl().localizations(objectId);
+		case image:
+			return new MCImageResourceImpl().localizations(objectId);
+		case page:
+			return new MCPageResourceImpl().localizations(objectId, true);
+		default:
+			fail("Cannot get localizations for object of unknown type " + this);
+			return null;
+		}
+	}
+
+	/**
 	 * Get the localizations for the given object
 	 * @param object object
 	 * @return localizations response
 	 * @throws NodeException
 	 */
 	public LocalizationsResponse localizations(LocalizableNodeObject<?> object) throws NodeException {
-		switch (this) {
-		case file:
-			return new MCFileResourceImpl().localizations(object.getId());
-		case folder:
-			return new MCFolderResourceImpl().localizations(object.getId());
-		case image:
-			return new MCImageResourceImpl().localizations(object.getId());
-		case page:
-			return new MCPageResourceImpl().localizations(object.getId(), true);
-		default:
-			fail("Cannot get localizations for object of unknown type " + this);
-			return null;
-		}
+		return localizations(object.getId());
 	}
 
 	/**

@@ -266,6 +266,15 @@ public class MCPageResourceImpl implements MCPageResource {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			Page page = t.getObject(Page.class, id);
 
+			if (page == null) {
+				I18nString message = new CNI18nString("page.notfound");
+				message.setParameter("0", id.toString());
+
+				return new LocalizationsResponse(
+						new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.NOTFOUND, message.toString()));
+			}
+
 			if (!ObjectPermission.view.checkObject(page, page.getChannel())) {
 				String msg = new CNI18nString("page.nopermission").toString();
 

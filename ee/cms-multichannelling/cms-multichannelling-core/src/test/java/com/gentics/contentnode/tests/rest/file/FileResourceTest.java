@@ -354,8 +354,9 @@ public class FileResourceTest {
 	}
 
 	private FileUploadResponse createWithProperties(String objPropName, String objPropValue) throws NodeException {
-		String niceUrl = "/nice/testfile.txt";
-		Set<String> alternateUrls = new HashSet<>(Arrays.asList("/foo/testfile.txt", "/bar/testfile.txt"));
+		String hex = Long.toHexString(System.currentTimeMillis());
+		String niceUrl = "/nice/testfile" + hex + ".txt";
+		Set<String> alternateUrls = new HashSet<>(Arrays.asList("/foo/testfile" + hex + ".txt", "/bar/testfile" + hex + ".txt"));
 		Integer constructId = Trx.supply(() ->
 			ContentNodeTestDataUtils.createConstruct(node, ShortTextPartType.class, "text_short", "text"));
 		ObjectTagDefinition def = (ObjectTagDefinition) localStorage.computeIfAbsent(objPropName, key -> {

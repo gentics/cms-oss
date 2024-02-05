@@ -6,9 +6,11 @@ import {
     ElementRef,
     HostListener,
     Input,
+    OnChanges,
     OnDestroy,
     OnInit,
     QueryList,
+    SimpleChanges,
     ViewChild,
     ViewChildren,
 } from '@angular/core';
@@ -20,30 +22,6 @@ import {
     UntypedFormGroup,
     Validators,
 } from '@angular/forms';
-import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
-import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { ListSearchService } from '@editor-ui/app/core/providers/list-search/list-search.service';
-import { PresentationService } from '@editor-ui/app/shared/providers/presentation/presentation.service';
-import {
-    ApplicationStateService,
-    FocusEditorAction, FocusListAction,
-    FolderActionsService,
-    PublishQueueActionsService,
-} from '@editor-ui/app/state';
-import { Node } from '@gentics/cms-models';
-import {
-    BehaviorSubject,
-    Observable,
-    Subject,
-    combineLatest,
-} from 'rxjs';
-import {
-    debounceTime,
-    filter,
-    map,
-    takeUntil,
-    tap,
-} from 'rxjs/operators';
 import {
     GtxChipOperator,
     GtxChipSearchChipData,
@@ -55,6 +33,32 @@ import {
     GtxChipSearchSearchFilterMap,
     GtxChipValue,
 } from '@editor-ui/app/common/models';
+import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
+import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
+import { ListSearchService } from '@editor-ui/app/core/providers/list-search/list-search.service';
+import { PresentationService } from '@editor-ui/app/shared/providers/presentation/presentation.service';
+import {
+    ApplicationStateService,
+    FocusEditorAction, FocusListAction,
+    FolderActionsService,
+    PublishQueueActionsService,
+} from '@editor-ui/app/state';
+import { Node } from '@gentics/cms-models';
+import { isEqual } from 'lodash-es';
+import {
+    BehaviorSubject,
+    Observable,
+    Subject,
+    combineLatest,
+} from 'rxjs';
+import {
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    map,
+    takeUntil,
+    tap,
+} from 'rxjs/operators';
 
 /**
  * # Chip Search Bar
@@ -74,19 +78,18 @@ import {
     styleUrls: ['./chip-search-bar.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit {
+export class ChipSearchBarComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
 
     /** filter properties to choose from when creating a new filter chip */
     @Input()
     chipSearchBarConfig: GtxChipSearchConfig;
 
-    /** If TRUE visually indicates application processing user input and disabling further user input. */
-    private _loading$ = new BehaviorSubject<boolean>(false);
-    loading$ = this._loading$.asObservable();
     @Input()
-    set loading(v: boolean) {
-        this._loading$.next(v);
-    }
+    public loading: boolean;
+
+    /** If TRUE visually indicates application processing user input and disabling further user input. */
+    private loadingSub = new BehaviorSubject<boolean>(false);
+    public loading$ = this.loadingSub.asObservable();
 
     /** Recent Items settings */
     showRecentButton$: Observable<boolean>;
@@ -97,14 +100,19 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
     formGroupMain: UntypedFormGroup;
 
     /** Main form group DOM element */
-    @ViewChild('formGroupMainElement') formGroupMainElement: ElementRef;
+    @ViewChild('formGroupMainElement')
+    formGroupMainElement: ElementRef;
 
     /** searchbar main input DOM element */
-    @ViewChild('searchBarValueElement') searchBarValueElement: ElementRef;
-    searchBarKeyup: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
+    @ViewChild('searchBarValueElement')
+    searchBarValueElement: ElementRef;
 
     /** searchbar dropdown for adding filter properties DOM element */
-    @ViewChildren('chipElements', { read: ElementRef }) chipElements$: QueryList<ElementRef>;
+    @ViewChildren('chipElements', { read: ElementRef })
+    chipElements$: QueryList<ElementRef>;
+
+    searchBarKeyup: Subject<KeyboardEvent> = new Subject<KeyboardEvent>();
+
     chipElements: ElementRef[];
 
     /** Chip relation for data type Boolean */
@@ -133,7 +141,10 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
 
     private stopper = new ObservableStopper();
 
-    /** While TRUE, formGroupMain.valueChanges won't trigger any consequences. This is for special search behavior like jumpToId syntax or niceUrl search. */
+    /**
+     * While `true`, formGroupMain.valueChanges won't trigger any consequences.
+     * This is for special search behavior like jumpToId syntax or niceUrl search.
+     */
     private specialSearchActionInProgess = false;
 
     /** Debounced onResize event */
@@ -203,8 +214,13 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
         this.initFormGroup();
     }
 
-    ngAfterViewInit(): void {
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.loading) {
+            this.loadingSub.next(this.loading);
+        }
+    }
 
+    ngAfterViewInit(): void {
         this.loading$.pipe(
             debounceTime(1000),
             tap(() => this.searchInputHasChanged$.next(false)),
@@ -214,6 +230,22 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
                 this.formGroupMain?.disable({ emitEvent: false });
             } else {
                 this.formGroupMain?.enable({ emitEvent: false });
+            }
+        });
+
+        // We want the search to be auto-focused correctly when loading has finished.
+        // However, when an editor is open, we don't want to redirect the focus back to
+        // the search/list.
+        combineLatest([
+            this.loading$.pipe(
+                debounceTime(1000),
+            ),
+            this.state.select(appState => appState.editor.editorIsOpen),
+        ]).pipe(
+            takeUntil(this.stopper.stopper$),
+            distinctUntilChanged(isEqual),
+        ).subscribe(([loading, editorOpen]) => {
+            if (!loading && !editorOpen) {
                 this.focusSearchbarValue();
             }
         });
@@ -532,9 +564,9 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
         const propertyConfig = this.chipSearchBarConfig.searchableProperties.find(p => p.value === property);
         const isBoolean = propertyConfig && propertyConfig.type === 'boolean';
         return this.formBuilder.group({
-            chipProperty: [ property, Validators.required ],
-            chipOperator: [ operator || '', Validators.required ],
-            chipValue: [ isBoolean || value || null, Validators.required ],
+            chipProperty: [property, Validators.required],
+            chipOperator: [operator || '', Validators.required],
+            chipValue: [isBoolean || value || null, Validators.required],
         });
     }
 
@@ -555,20 +587,19 @@ export class ChipSearchBarComponent implements AfterViewInit, OnDestroy, OnInit 
             const chips: AbstractControl[] = this.getChips().controls || [];
             // iterate through all searchable fields and check if chips are set for them
             chipPropertyIdentifiers.forEach(chipPropertyIdentifier => {
-                let chipValue: GtxChipValue<K>;
-                let chipOperator: GtxChipOperator<K>;
                 // try to get chip of field
                 const chipExisting = chips.find(chip => this.getChipPropertyIdentifier(chip) === chipPropertyIdentifier);
-                // get value from it
-                chipValue = this.getChipValue(chipExisting);
-                chipOperator = this.getChipOperator(chipExisting);
 
                 // if chip is set for field, set field to filter values of chip
                 if (chipExisting) {
+                    // get value from it
+                    const chipValue: GtxChipValue<K> = this.getChipValue(chipExisting);
+                    const chipOperator: GtxChipOperator<K> = this.getChipOperator(chipExisting);
+
                     this.setFilter(chipPropertyIdentifier, chipOperator, chipValue);
                 } else {
                     // remove filter
-                    this.folderActions.setSearchFilter( chipPropertyIdentifier, null );
+                    this.folderActions.setSearchFilter(chipPropertyIdentifier, null);
                 }
             });
             // notify state that filters finnished changing

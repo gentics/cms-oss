@@ -81,6 +81,7 @@ spec:
         booleanParam(name: 'runBaseLibTests',           defaultValue: false,  description: "Whether to run tests from the base-lib module.")
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
+        booleanParam(name: 'install',                   defaultValue: false, description: "Install the Maven artifacts to the local repository (unless deploy or runReleaseBuild is true)")
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
         booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
@@ -190,6 +191,9 @@ spec:
                         if (params.deploy) {
                             // Deploy
                             mvnGoal = "deploy"
+                        } else if (params.install) {
+                            // Install
+                            mvnGoal = "install"
                         }
                     }
 

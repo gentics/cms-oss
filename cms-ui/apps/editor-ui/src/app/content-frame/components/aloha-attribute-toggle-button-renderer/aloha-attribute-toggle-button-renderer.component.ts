@@ -25,18 +25,24 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
         this.settings.setActive = (active) => {
             this.settings.active = active;
             this.changeDetector.markForCheck();
-        }
+        };
     }
 
     public override handleClick(): void {
         if (!this.settings) {
             return;
         }
-        this.settings.active = !this.settings.active;
+
+        this.triggerTouch();
+        const switched = !this.settings.activate;
+        if (!this.settings.pure) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.settings.toggleActivation();
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.settings.onToggle?.(this.settings.active);
+        this.settings.onToggle?.(switched);
     }
 
 }

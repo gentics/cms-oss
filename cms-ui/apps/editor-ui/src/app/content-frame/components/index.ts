@@ -6,6 +6,7 @@ export * from './aloha-color-picker-renderer/aloha-color-picker-renderer.compone
 export * from './aloha-component-renderer/aloha-component-renderer.component';
 export * from './aloha-context-button-renderer/aloha-context-button-renderer.component';
 export * from './aloha-context-toggle-button-renderer/aloha-context-toggle-button-renderer.component';
+export * from './aloha-date-time-picker-renderer/aloha-date-time-picker-renderer.component';
 export * from './aloha-iframe-renderer/aloha-iframe-renderer.component';
 export * from './aloha-input-renderer/aloha-input-renderer.component';
 export * from './aloha-link-target-renderer/aloha-link-target-renderer.component';
@@ -33,3 +34,4 @@ export * from './simple-delete-modal/simple-delete-modal.component';
 export * from './symbol-grid/symbol-grid.component';
 export * from './table-size-input/table-size-input.component';
 export * from './table-size-select/table-size-select.component';
+

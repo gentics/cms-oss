@@ -142,4 +142,13 @@
         (requiresConfirm)="forwardRequiresConfirm($event)"
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-color-picker-renderer>
+
+    <gtx-aloha-date-time-picker-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.DATE_TIME_PICKER"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-date-time-picker-renderer>
 </ng-container>

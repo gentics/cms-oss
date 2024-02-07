@@ -197,9 +197,7 @@ export class DateTimePickerControlsComponent
         const calendarEl = this.calendarContainer.nativeElement;
 
         this.calendarInstance = rome(calendarEl, this.getRomeConfig()).on('data', () => {
-            this.momentValue = this.calendarInstance.getMoment();
-            this.updateInternalValues();
-            this.triggerChange(this.getUnixTimestamp());
+            this.handleRomeValueChange();
         });
     }
 
@@ -264,6 +262,12 @@ export class DateTimePickerControlsComponent
         this.updateCalendarOptions();
     }
 
+    protected handleRomeValueChange(): void {
+        this.momentValue = this.calendarInstance.getMoment();
+        this.updateInternalValues();
+        this.triggerChange(this.getUnixTimestamp());
+    }
+
     protected updateMomentValue(timestamp: number): void {
         this.momentValue = unix(timestamp);
         this.updateInternalValues();
@@ -283,6 +287,12 @@ export class DateTimePickerControlsComponent
     protected updateCalendarOptions(): void {
         if (this.calendarInstance) {
             this.calendarInstance.options(this.getRomeConfig());
+            // `options` call destroys and restores the instance.
+            // Therefore, we have to re-assign the event listener, otherwise that one is lost as well.
+            this.calendarInstance.on('data', () => {
+                this.handleRomeValueChange();
+            });
+            this.calendarInstance.show();
         }
     }
 
@@ -366,10 +376,7 @@ export class DateTimePickerControlsComponent
 
                 // When the locale changes, re-initialize the calendar to update the
                 // weekdays as these are only updated when initialized.
-                if (this.calendarInstance != null) {
-                    this.calendarInstance.options(this.getRomeConfig());
-                    this.calendarInstance.show();
-                }
+                this.updateCalendarOptions();
 
                 this.determineDateOrder();
             });
@@ -481,6 +488,9 @@ export class DateTimePickerControlsComponent
                     localeStrings.weekdays
                     && localeStrings.weekdays.map(weekday => weekday.substr(0, 2))
                 ),
+            week: {
+                dow: localeStrings.weekStart ?? 0,
+            },
         });
         momentLocales.push([localeStrings, newLocale]);
 

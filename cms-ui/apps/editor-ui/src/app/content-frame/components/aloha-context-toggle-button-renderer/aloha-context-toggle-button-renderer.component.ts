@@ -34,12 +34,15 @@ export class AlohaContextToggleButtonRendererComponent<T> extends AlohaContextBu
         }
 
         this.triggerTouch();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.settings.toggleActivation();
+        const switched = !this.settings.activate;
+        if (!this.settings.pure) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.settings.toggleActivation();
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.settings.onToggle?.(this.settings.active);
+        this.settings.onToggle?.(switched);
 
         this.handleContext();
     }

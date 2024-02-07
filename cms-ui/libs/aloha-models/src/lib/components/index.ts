@@ -6,6 +6,7 @@ export * from './checkbox';
 export * from './color-picker';
 export * from './context-button';
 export * from './context-toggle-button';
+export * from './date-time-picker';
 export * from './iframe';
 export * from './input';
 export * from './link-target';

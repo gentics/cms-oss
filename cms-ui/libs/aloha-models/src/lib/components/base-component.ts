@@ -42,6 +42,7 @@ export enum AlohaCoreComponentNames {
     COLOR_PICKER = 'color-picker',
     CONTEXT_BUTTON = 'context-button',
     CONTEXT_TOGGLE_BUTTON = 'context-toggle-button',
+    DATE_TIME_PICKER = 'date-time-picker',
     IFRAME = 'iframe',
     INPUT = 'input',
     LINK_TARGET = 'link-target',

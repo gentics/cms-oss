@@ -63,12 +63,15 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
             return;
         }
         this.triggerTouch();
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.settings.toggleActivation();
+        const switched = !this.settings.active;
+        if (!this.settings.pure) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.settings.toggleActivation();
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        this.settings.onToggle?.(this.settings.active);
+        this.settings.onToggle?.(switched);
     }
 
     public handleSecondaryClick(): void {

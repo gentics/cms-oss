@@ -3,9 +3,11 @@ import { AlohaButtonComponent } from './button';
 
 export interface BaseToggleButton {
     active: boolean;
+    pure: boolean;
 
     onToggle?: (isActive: boolean) => void;
     setActive: (active: boolean) => void;
+    setPure: (pure: boolean) => void;
     toggleActivation: () => void;
     activate: () => void;
     deactivate: () => void;

@@ -2,7 +2,9 @@ import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    EventEmitter, Input, OnInit,
+    EventEmitter,
+    Input,
+    OnInit,
     Optional,
     Output,
 } from '@angular/core';
@@ -38,6 +40,12 @@ import { DateTimePickerModal } from '../date-time-picker-modal/date-time-picker-
 export class DateTimePickerComponent
     extends BaseFormElementComponent<number>
     implements OnInit {
+
+    /**
+     * Set to overwrite texts and date formatting in the modal.
+     */
+    @Input()
+    public formatProvider: DateTimePickerFormatProvider;
 
     /** Sets the date picker to be auto-focused. Handled by `AutofocusDirective`. */
     @Input()
@@ -92,20 +100,20 @@ export class DateTimePickerComponent
     constructor(
         changeDetector: ChangeDetectorRef,
         @Optional()
-        private formatProvider: DateTimePickerFormatProvider,
+        private defaultFormatProvider: DateTimePickerFormatProvider,
         private modalService: ModalService,
     ) {
         super(changeDetector);
         this.booleanInputs.push('selectYear', 'displayTime', 'displaySeconds', 'clearable', 'autofocus');
 
-        if (!formatProvider) {
-            this.formatProvider = new DateTimePickerFormatProvider();
+        if (!defaultFormatProvider) {
+            this.defaultFormatProvider = new DateTimePickerFormatProvider();
         }
     }
 
     ngOnInit(): void {
         this.subscriptions.push(
-            this.formatProvider.changed$.subscribe(() => this.updateDisplayValue()),
+            (this.formatProvider || this.defaultFormatProvider).changed$.subscribe(() => this.updateDisplayValue()),
         );
     }
 
@@ -146,7 +154,7 @@ export class DateTimePickerComponent
                 padding: false,
             }, {
                 timestamp: this.getUnixTimestamp(),
-                formatProvider: this.formatProvider,
+                formatProvider: (this.formatProvider || this.defaultFormatProvider),
                 displayTime: this.displayTime,
                 displaySeconds: this.displaySeconds,
                 min: this.min,
@@ -171,7 +179,7 @@ export class DateTimePickerComponent
         } else if (this.format) {
             this.displayValue = this.momentValue.format(this.format);
         } else {
-            this.displayValue = this.formatProvider.format(this.momentValue, this.displayTime, this.displaySeconds);
+            this.displayValue = (this.formatProvider || this.defaultFormatProvider).format(this.momentValue, this.displayTime, this.displaySeconds);
         }
 
         this.changeDetector.markForCheck();

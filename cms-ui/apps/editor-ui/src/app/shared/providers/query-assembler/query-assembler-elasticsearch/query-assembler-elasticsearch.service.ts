@@ -114,7 +114,7 @@ export class QueryAssemblerElasticSearchService {
     ): ElasticSearchQueryRequestPayload {
         filters.forEach(filter => {
             if (typeof filter.value === 'boolean') {
-                let value = filter.value;
+                const value = filter.value;
                 // property `online` is not boolean but integer indicating node where it's published
                 if (property === 'online') {
                     const allNodeIds: number[] = Object.keys(allNodes).map(nodeId => parseInt(nodeId, 10));
@@ -662,6 +662,8 @@ export class QueryAssemblerElasticSearchService {
             mustArray: [],
             mustNotArray: [],
         };
+        // always add the parentId as folderId
+        queryParts.options.folderId = parentId;
         let queryPartsEquipped: ElasticSearchQueryRequestPayload;
 
         Object.entries(esFilters).forEach(([paramfilterKey, paramFilters]: [

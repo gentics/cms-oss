@@ -188,4 +188,13 @@ public class LocalizationsTest {
 			trx.success();
 		}
 	}
+
+	@Test
+	public void testNotExistingId() throws NodeException {
+		try (Trx trx = new Trx(user)) {
+			LocalizationsResponse localizations = type.localizations(4711);
+			assertResponse(localizations, ResponseCode.NOTFOUND);
+			trx.success();
+		}
+	}
 }

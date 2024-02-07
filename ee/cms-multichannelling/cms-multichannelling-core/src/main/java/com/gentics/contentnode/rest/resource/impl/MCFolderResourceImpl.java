@@ -407,6 +407,13 @@ public class MCFolderResourceImpl implements MCFolderResource {
 			com.gentics.contentnode.object.Folder folder =
 				t.getObject(com.gentics.contentnode.object.Folder.class, id);
 
+			if (folder == null) {
+				I18nString message = new CNI18nString("folder.notfound");
+				return new LocalizationsResponse(
+						new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.NOTFOUND, message.toString()));
+			}
+
 			if (!ObjectPermission.view.checkObject(folder)) {
 				String msg = new CNI18nString("folder.nopermission").toString();
 

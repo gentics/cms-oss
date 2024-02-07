@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { AlohaSymbolGridComponent } from '@gentics/aloha-models';
+import { AlohaSymbolGridComponent, SymbolGridItem } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -11,9 +11,9 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaSymbolGridRendererComponent)],
 })
-export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent<AlohaSymbolGridComponent, string> implements OnInit {
+export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent<AlohaSymbolGridComponent, SymbolGridItem> implements OnInit {
 
-    public control: FormControl<string>;
+    public control: FormControl<SymbolGridItem>;
 
     public override ngOnInit(): void {
         super.ngOnInit();
@@ -35,9 +35,12 @@ export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent
 
         this.settings.updateSymbols = (symbols) => {
             this.settings.symbols = symbols;
+            this.onSymbolsChange();
             this.changeDetector.markForCheck();
         };
     }
+
+    protected onSymbolsChange(): void {}
 
     protected override onValueChange(): void {
         super.onValueChange();

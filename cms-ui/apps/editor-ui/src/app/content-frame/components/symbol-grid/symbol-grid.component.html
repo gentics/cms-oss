@@ -3,10 +3,11 @@
         <button
             *ngFor="let singleSymbol of symbols"
             class="symbol-grid-cell"
-            [class.active]="singleSymbol === value"
+            [class.active]="singleSymbol.symbol === (value?.symbol || value)"
+            [attr.title]="singleSymbol.label"
             (click)="selectSymbol(singleSymbol)"
         >
-            <span class="symbol-grid-cell-content" [innerHTML]="singleSymbol"></span>
+            <span class="symbol-grid-cell-content" [innerHTML]="singleSymbol.symbol"></span>
         </button>
     </div>
 </div>

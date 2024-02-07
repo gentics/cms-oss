@@ -34,4 +34,4 @@ export * from './simple-delete-modal/simple-delete-modal.component';
 export * from './symbol-grid/symbol-grid.component';
 export * from './table-size-input/table-size-input.component';
 export * from './table-size-select/table-size-select.component';
-
+export * from './aloha-symbol-search-grid-renderer/aloha-symbol-search-grid-renderer.component';

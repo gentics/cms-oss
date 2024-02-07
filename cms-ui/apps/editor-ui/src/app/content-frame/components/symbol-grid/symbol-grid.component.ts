@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { SymbolGridItem } from '@gentics/aloha-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
@@ -8,12 +9,12 @@ import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(SymbolGridComponent)],
 })
-export class SymbolGridComponent extends BaseFormElementComponent<string> {
+export class SymbolGridComponent extends BaseFormElementComponent<SymbolGridItem> {
 
     @Input()
-    public symbols: string[];
+    public symbols: SymbolGridItem[];
 
-    public selectSymbol(symbol: string): void {
+    public selectSymbol(symbol: SymbolGridItem): void {
         this.triggerChange(symbol);
     }
 

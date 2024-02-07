@@ -125,6 +125,15 @@
         (manualConfirm)="forwardManualConfirm()"
     ></gtx-aloha-symbol-grid-renderer>
 
+    <gtx-aloha-symbol-search-grid-renderer
+        *ngSwitchCase="AlohaCoreComponentNames.SYMBOL_SEARCH_GRID"
+        [slot]="slot"
+        [settings]="component || settings"
+        [formControl]="control"
+        (requiresConfirm)="forwardRequiresConfirm($event)"
+        (manualConfirm)="forwardManualConfirm()"
+    ></gtx-aloha-symbol-search-grid-renderer>
+
     <gtx-aloha-iframe-renderer
         *ngSwitchCase="AlohaCoreComponentNames.IFRAME"
         [slot]="slot"

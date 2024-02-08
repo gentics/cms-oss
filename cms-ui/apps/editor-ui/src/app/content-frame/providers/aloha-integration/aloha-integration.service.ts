@@ -13,7 +13,7 @@ import {
     ScreenSize,
 } from '@gentics/aloha-models';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { filter, map, withLatestFrom } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal } from '../../models/content-frame';
 
@@ -30,6 +30,10 @@ export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings 
 export const RENDERABLE_COMPONENTS: string[] = Object.values(AlohaCoreComponentNames);
 
 const LINE_BREAK_COMPONENT = '\n';
+export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
+export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
+
+const TABS_TO_IGNORE = [TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER];
 
 function normalizeToolbarSizeSettings(
     settings: AlohaToolbarSizeSettings,
@@ -60,7 +64,7 @@ function normalizeToolbarTab(
     const slotsToRender = (tabComponents as AlohaFullComponentSetting[][])
         .map(arr => arr
             .map(comp => comp.slot)
-            .filter(slot => RENDERABLE_COMPONENTS.includes(globalComponents[slot]?.type)),
+            .filter(slot => TABS_TO_IGNORE.includes(tab.id) || RENDERABLE_COMPONENTS.includes(globalComponents[slot]?.type)),
         )
         .filter(arr => arr.length > 0);
 
@@ -133,17 +137,23 @@ export class AlohaIntegrationService {
         });
 
         this.activeToolbarSettings$ = combineLatest([
-            this.uiPlugin$.asObservable().pipe(
-                map(plugin => plugin?.getToolbarSettings?.()),
+            combineLatest([
+                this.uiPlugin$.asObservable().pipe(
+                    map(plugin => plugin?.getToolbarSettings?.()),
+                ),
+                this.settings$.asObservable(), // Also needs a reload when global settings change
+            ]).pipe(
+                map(([toolbarSettings]) => toolbarSettings),
             ),
             this.size$,
-            this.settings$.asObservable(), // Also needs a reload when global settings change
             this.components$,
         ]).pipe(
-            filter(([settings, size]) => settings != null && size != null && settings[size] != null),
-            map(([settings, size]) => settings[size]),
-            withLatestFrom(this.components$),
-            map(([settings, components]) => normalizeToolbarSizeSettings(settings, components)),
+            map(([settings, size, components]) => {
+                if (settings == null || size == null || settings[size] == null) {
+                    return null;
+                }
+                return normalizeToolbarSizeSettings(settings[size], components);
+            }),
         );
     }
 
@@ -161,6 +171,16 @@ export class AlohaIntegrationService {
         if (media.matches) {
             this.activeSizeSub.next(target);
         }
+    }
+
+    public clearReferences(): void {
+        this.reference$.next(null);
+        this.settings$.next(null);
+        this.contextChange$.next(null);
+        this.gcnPlugin$.next(null);
+        this.uiPlugin$.next(null);
+        this.registeredComponents = {};
+        this.renderedComponents = {};
     }
 
     public changeActivePageEditorTab(id: string): boolean {

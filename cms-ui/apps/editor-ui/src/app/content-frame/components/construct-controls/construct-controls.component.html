@@ -1,0 +1,59 @@
+<ng-template #groupTpl let-label="label" let-constructs="constructs">
+    <gtx-dropdown-list
+        class="dropdown"
+        [belowTrigger]="true"
+        [sticky]="true"
+        [width]="'content'"
+    >
+        <gtx-dropdown-trigger>
+            <div class="construct-group">
+                <div class="group-label">{{ label }}</div>
+                <div class="group-icon">
+                    <icon>keyboard_arrow_down</icon>
+                </div>
+            </div>
+        </gtx-dropdown-trigger>
+
+        <gtx-dropdown-content>
+            <div class="construct-list">
+                <div
+                    *ngFor="let construct of constructs"
+                    class="construct-element"
+                    [attr.data-keyword]="construct.keyword"
+                    (click)="insertConstruct(construct, $event)"
+                >
+                    <div class="construct-label">{{ construct.name }}</div>
+                    <button
+                        class="favourite-toggle-button"
+                        [class.active]="favourites.includes(construct.keyword)"
+                        (click)="toggleFavourite(construct, $event)"
+                    >
+                        <icon>star</icon>
+                    </button>
+                </div>
+            </div>
+        </gtx-dropdown-content>
+    </gtx-dropdown-list>
+</ng-template>
+
+<div class="group-overview">
+    <div class="groups-container">
+        <ng-container *ngIf="favouriteConstructs.length > 0">
+            <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                label: (FAVOURITES_LABEL | i18n),
+                constructs: favouriteConstructs
+            }"></ng-container>
+        </ng-container>
+
+        <ng-container *ngFor="let group of displayGroups">
+            <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                label: group.label,
+                constructs: group.constructs
+            }"></ng-container>
+        </ng-container>
+    </div>
+
+    <div class="search-container">
+
+    </div>
+</div>

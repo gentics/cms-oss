@@ -191,6 +191,10 @@ export class CustomerScriptService implements OnDestroy {
                 subscription.unsubscribe();
                 subscription = null;
             }
+
+            this.aloha.clearReferences();
+            this.overlays.closeRemaining();
+
             window.GCMSUI = null;
             window.removeEventListener('unload', onUnload);
         };

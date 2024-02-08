@@ -35,7 +35,7 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
         });
 
         this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(toolbar => {
-            this.tabs = (toolbar.tabs || []);
+            this.tabs = toolbar?.tabs ?? [];
             if (!this.tabs.some(tab => tab.id === this.activeTab)) {
                 this.setActiveTab(DefaultEditorControlTabs.FORMATTING);
             }

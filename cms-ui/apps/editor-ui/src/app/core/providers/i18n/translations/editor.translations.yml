@@ -1129,6 +1129,9 @@ constructs_no_results:
 construct_no_category:
     en: No Category
     de: Kategorielos
+construct_favourites:
+    en: Favourites
+    de: Favoriten
 constructs_loading:
     en: Loading ...
     de: Lade daten ...

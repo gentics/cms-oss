@@ -1,10 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaComponent } from '@gentics/aloha-models';
+import { AlohaComponent, GCNAlohaPlugin } from '@gentics/aloha-models';
 import { ConstructCategory, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription, combineLatest } from 'rxjs';
-import { AlohaIntegrationService, NormalizedTabsSettings } from '../../providers/aloha-integration/aloha-integration.service';
+import {
+    AlohaIntegrationService,
+    NormalizedTabsSettings,
+    TAB_ID_CONSTRUCTS,
+    TAB_ID_LINK_CHECKER,
+} from '../../providers/aloha-integration/aloha-integration.service';
+import { AlohaGlobal } from '../../models/content-frame';
 
 @Component({
     selector: 'gtx-page-editor-controls',
@@ -14,9 +21,14 @@ import { AlohaIntegrationService, NormalizedTabsSettings } from '../../providers
 })
 export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
+    public readonly TAB_ID_CONSTRUCTS = TAB_ID_CONSTRUCTS;
+    public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
+
     public activeTab: string;
     public settings: NormalizedTabsSettings;
     public components: Record<string, AlohaComponent> = {};
+    public gcnPlugin: GCNAlohaPlugin;
+    public alohaRef: AlohaGlobal;
 
     /*
      * Editor Elements which are handled/loaded in this component
@@ -24,6 +36,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public constructs: TagType[] = [];
     public constructCategories: ConstructCategory[] = [];
     public overlayActive = false;
+    public constructFavourites: string[] = [];
 
     protected subscriptions: Subscription[] = [];
 
@@ -32,9 +45,10 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         protected appState: ApplicationStateService,
         protected client: GCMSRestClientService,
         protected aloha: AlohaIntegrationService,
+        protected userSettings: UserSettingsService,
     ) {}
 
-    ngOnInit(): void {
+    public ngOnInit(): void {
         this.activeTab = this.aloha.activeTab;
 
         this.subscriptions.push(this.client.construct.list().subscribe(res => {
@@ -57,7 +71,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.aloha.activeToolbarSettings$,
         ]).subscribe(([editor, settings]) => {
             this.activeTab = editor;
-            this.settings = settings.tabs.find(tab => tab.id === editor);
+            this.settings = (settings?.tabs ?? []).find(tab => tab.id === editor);
             this.changeDetector.markForCheck();
         }));
 
@@ -65,9 +79,28 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.components = components;
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.aloha.gcnPlugin$.subscribe(gcnPlugin => {
+            this.gcnPlugin = gcnPlugin;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.ui.constructFavourites).subscribe(favourites => {
+            this.constructFavourites = favourites;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.aloha.reference$.subscribe(ref => {
+            this.alohaRef = ref;
+            this.changeDetector.markForCheck();
+        }));
     }
 
-    ngOnDestroy(): void {
+    public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    public updateFavourites(favourites: string[]): void {
+        this.userSettings.setConstructFavourites(favourites);
     }
 }

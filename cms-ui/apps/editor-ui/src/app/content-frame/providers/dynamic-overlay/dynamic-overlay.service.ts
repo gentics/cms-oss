@@ -12,11 +12,18 @@ import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.
 @Injectable()
 export class DynamicOverlayService {
 
+    private openOverlays: OverlayElementControl<any>[] = [];
+
     constructor(
         protected aloha: AlohaIntegrationService,
         protected modals: ModalService,
         protected overlayHost: OverlayHostService,
     ) {}
+
+    public closeRemaining(): void {
+        this.openOverlays.forEach(ctl => ctl.close());
+        this.openOverlays = [];
+    }
 
     public async openDynamicDropdown<T>(configuration: DynamicDropdownConfiguration<T>, slot?: string): Promise<OverlayElementControl<T>> {
         const host = await this.overlayHost.getHostView();
@@ -44,7 +51,7 @@ export class DynamicOverlayService {
             }
         };
 
-        return {
+        const ctl: OverlayElementControl<T> = {
             close: () => closeDropdown,
             isOpen: () => open,
             value: new Promise((resolve, reject) => {
@@ -58,6 +65,10 @@ export class DynamicOverlayService {
                 });
             }),
         };
+
+        this.openOverlays.push(ctl);
+
+        return ctl;
     }
 
     protected positionDropdown(slot: string, dropdownElement: HTMLElement): void {
@@ -87,7 +98,7 @@ export class DynamicOverlayService {
         }, {
             configuration,
         } as any).then(ref => {
-            return {
+            const ctl: OverlayElementControl<T> = {
                 close: () => {
                     if (open && ref?.instance) {
                         ref.instance.cancelFn(null, ModalClosingReason.API);
@@ -95,7 +106,11 @@ export class DynamicOverlayService {
                 },
                 isOpen: () => open,
                 value: ref.open(),
-            }
+            };
+
+            this.openOverlays.push(ctl);
+
+            return ctl;
         });
     }
 }

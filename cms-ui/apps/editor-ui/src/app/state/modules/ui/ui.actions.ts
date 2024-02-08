@@ -90,6 +90,13 @@ export class SetUIModeAction {
 }
 
 @ActionDeclaration(UI_STATE_KEY)
+export class SetConstructFavourites {
+    constructor(
+        public favourites: string[],
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
 export class IncreaseOverlayCountAction {}
 
 @ActionDeclaration(UI_STATE_KEY)

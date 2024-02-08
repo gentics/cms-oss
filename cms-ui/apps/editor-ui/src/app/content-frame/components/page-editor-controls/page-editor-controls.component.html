@@ -1,15 +1,32 @@
-<ng-container *ngIf="settings">
-    <ng-container *ngFor="let componentGroup of settings.slotsToRender; let last = last">
-        <div class="component-group">
-            <ng-container *ngFor="let slot of componentGroup">
-                <gtx-aloha-component-renderer
-                    class="dynamic-component"
-                    [attr.slot]="slot"
-                    [slot]="slot"
-                    [component]="components[slot]"
-                ></gtx-aloha-component-renderer>
+<ng-container [ngSwitch]="activeTab">
+
+    <gtx-construct-controls
+        *ngSwitchCase="TAB_ID_CONSTRUCTS"
+        [constructs]="constructs"
+        [categories]="constructCategories"
+        [favourites]="constructFavourites"
+        [gcnPlugin]="gcnPlugin"
+        [alohaRef]="alohaRef"
+        (favouritesChange)="updateFavourites($event)"
+    ></gtx-construct-controls>
+
+    <ng-container *ngSwitchDefault>
+        <ng-container *ngIf="settings">
+            <ng-container *ngFor="let componentGroup of settings.slotsToRender; let last = last">
+                <div class="component-group">
+                    <ng-container *ngFor="let slot of componentGroup">
+                        <gtx-aloha-component-renderer
+                            class="dynamic-component"
+                            [attr.slot]="slot"
+                            [slot]="slot"
+                            [component]="components[slot]"
+                        ></gtx-aloha-component-renderer>
+                    </ng-container>
+                </div>
+                <div *ngIf="!last" class="group-separator"></div>
             </ng-container>
-        </div>
-        <div *ngIf="!last" class="group-separator"></div>
+        </ng-container>
     </ng-container>
 </ng-container>
+
+

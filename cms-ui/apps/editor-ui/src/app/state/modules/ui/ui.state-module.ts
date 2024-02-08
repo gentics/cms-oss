@@ -14,6 +14,7 @@ import {
     SetBreadcrumbExpandedAction,
     SetBrokenLinksCountAction,
     SetCMPVersionAction,
+    SetConstructFavourites,
     SetHideExtrasAction,
     SetUILanguageAction,
     SetUIModeAction,
@@ -41,6 +42,7 @@ const INITIAL_UI_STATE: UIState = {
     },
     hideExtras: false,
     overlayCount: 0,
+    constructFavourites: [],
 };
 
 @AppStateBranch<UIState>({
@@ -148,6 +150,13 @@ export class UIStateModule {
     handleSetUIModeAction(ctx: StateContext<UIState>, action: SetUIModeAction): void {
         ctx.patchState({
             mode: action.mode,
+        });
+    }
+
+    @ActionDefinition(SetConstructFavourites)
+    handleSetConstructFavourites(ctx: StateContext<UIState>, action: SetConstructFavourites): void {
+        ctx.patchState({
+            constructFavourites: action.favourites,
         });
     }
 

@@ -9,6 +9,7 @@ define([
 	'aloha/core',
 	'jquery',
 	'block/block',
+	'block/blockmanager',
 	'gcn/gcn-plugin',
 	'gcn/gcn-util',
 	'gcn/gcn-tags',
@@ -20,6 +21,7 @@ define([
 	Aloha,
 	$,
 	block,
+	BlockManager,
 	gcn,
 	Util,
 	Tags,
@@ -52,27 +54,6 @@ define([
 				? $(block.$element[0].outerHTML)
 				: block.$element
 		);
-	}
-
-	/**
-	 * Resizes a DOM element.
-	 *
-	 * Sets the element's "width" style property to the element's automatic
-	 * width size.
-	 *
-	 * @param {jQuery.<HTMLElement>} $element jQuery unit set of DOM element.
-	 */
-	function autoResizeElementWidth($element) {
-		var originalDisplay = $element.css('display');
-		$element.css({
-			display: 'inline-block',
-			width: 'auto'
-		});
-		var width = $element.width();
-		$element.css({
-			display: originalDisplay,
-			width: width
-		});
 	}
 
 	/**
@@ -315,43 +296,49 @@ define([
 
 			// Check whether the handles have already been added (only
 			// do add them "IfNeeded").
-			if ($block.children('.gcn-tagicons').length) {
+			if ($block.children('.aloha-construct-buttons-container').length) {
 				return;
 			}
 
 			// Do not render block handles for blocks that are currently copied
-			if (!$block.attr('data-gcn-editicon')) {
+			if (!$block.attr('data-gcn-constructid')) {
 				return;
 			}
 
 			var canBeDeleted = block.shouldDestroy();
 
 			var tagname = $block.attr('data-gcn-tagname');
+
 			// Escape possible html elements and quotes in construct name
 			var constructname = $('<div/>').text($block.attr('data-gcn-i18n-constructname')).html().replace(/"/g, '&quot;');
-			var spanTitle = '';
-			var editTitle = ' title="' + i18n.t('edit.msg').replace('$1', '') + '" ';
-			var deleteTitle = ' title="' + i18n.t('delete.msg').replace('$1', '') + '" ';
-			if (tagname) {
-				if (constructname) {
-					tagname += ' (' + constructname + ')';
-				}
-				spanTitle = ' title="' + tagname + '" ';
-				editTitle = ' title="' + i18n.t('edit.msg').replace('$1', tagname) + '" ';
-				deleteTitle = ' title="' + i18n.t('delete.msg').replace('$1', tagname) + '" ';
+			if (tagname && constructname) {
+				tagname += ' (' + constructname + ')';
 			}
-			var $editicons = $('<span class="aloha-block-handle aloha-cleanme ' +
-					(block.isDraggable() ? 'aloha-block-draghandle ' : '') +
-					(!canBeDeleted ? 'aloha-editicons-small ' : '') +
-					'aloha-editicons gcn-tagicons"' + spanTitle + '></span>');
 
-			
-			var $editbutton = $('<button class="gcn-tagicon-edit"' + editTitle + '>' +
-					'<img class="aloha-ui" src="' +
-						$block.attr('data-gcn-editicon') + '"/>' +
-					'</button>');
+			var $blockHandleContainer = $('<span>', {
+				class: 'aloha-block-handle aloha-construct-buttons-container aloha-cleanme', 
+				title: tagname,
+			});
 
-			$editbutton.click(function ($event) {
+			if (block.isDraggable()) {
+				// Make the block dragable on default
+				$blockHandleContainer.addClass('aloha-block-draghandle');
+
+				$('<div>', {
+					class: 'gcn-construct-drag-handle aloha-block-handle',
+				}).append($('<i>', {
+					class: 'material-symbols-outlined aloha-block-button-icon',
+					text: 'drag_pan'
+				})).appendTo($blockHandleContainer);
+			}
+
+			var $editButton = $('<button>', {
+				class: 'gcn-block-button gcn-construct-button-edit',
+				title: i18n.t('edit.msg').replace('$1', tagname || ''),
+			}).append($('<i>', {
+				class: 'material-symbols-outlined aloha-block-button-icon',
+				text: 'edit'
+			})).click(function ($event) {
 				var $block = getBlockElement(block);
 				Aloha.GCN.openTagFill(
 					$block.attr('data-gcn-tagid'),
@@ -374,54 +361,34 @@ define([
 				return false;
 			});
 
-			$editicons.append($editbutton);
+			$blockHandleContainer.append($editButton);
 
 			if (canBeDeleted) {
-				var $deletebutton = $('<button class="gcn-tagicon-delete"' + deleteTitle + '>' +
-					'<img class="aloha-ui" src="' +
-						$block.attr('data-gcn-deleteicon') + '"/>' +
-					'</button>');
-				$deletebutton.click(function ($event) {
+				var $deleteButton = $('<button>', {
+					class: 'gcn-block-button gcn-construct-button-delete',
+					title: i18n.t('delete.msg').replace('$1', tagname || ''),
+				}).append($('<i>', {
+					class: 'material-symbols-outlined aloha-block-button-icon',
+					text: 'delete'
+				})).click(function ($event) {
 					block.confirmedDestroy(function () {
 						deleteBlock(block);
 					}, block.$element.attr('data-gcn-tagname'));
 					$event.preventDefault();
 					return false;
 				});
-				$editicons.append($deletebutton);
+				$blockHandleContainer.append($deleteButton);
 			}
 
 			setTimeout(function () {
-				$editicons.show();
+				$blockHandleContainer.show();
 			}, 0);
 
-			block.$element.prepend($editicons);
+			block.$element.prepend($blockHandleContainer);
 			var editableHost = Aloha.getEditableHost(block.$element);
 			if (editableHost) {
 				editableHost.smartContentChange({type: 'block-change'});
 			}
-		},
-
-		/**
-		 * Adds a delete button to this block's edit icons.
-		 */
-		addDeleteButton: function () {
-			var block = this;
-			var $button = $('<button class="gcn-tagicon-delete">' +
-				'<img class="aloha-ui" src="' +
-					block.$element.attr('data-gcn-deleteicon') + '"/>' +
-				'</button>');
-			$button.click(function ($event) {
-				block.confirmedDestroy(function () {
-					deleteBlock(block);
-				}, block.$element.attr('data-gcn-tagname'));
-				$event.preventDefault();
-				return false;
-			});
-			// add the delete button to this block (but not to nested blocks)
-			var $editicons = block.$element.find('>.aloha-editicons');
-			$editicons.show().append($button);
-			autoResizeElementWidth($editicons);
 		},
 
 		/**

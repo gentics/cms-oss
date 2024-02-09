@@ -8,6 +8,7 @@
   },
   "mayBeSubtag" : true,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : true,
   "newEditor" : true,
   "parts" : [ {

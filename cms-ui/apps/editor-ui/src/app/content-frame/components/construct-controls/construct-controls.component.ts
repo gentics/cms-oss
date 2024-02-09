@@ -3,7 +3,7 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/aloha-models';
 import { Construct, ConstructCategory, TagPartType } from '@gentics/cms-models';
 import { isEqual } from 'lodash-es';
-import { cancelEvent } from '@gentics/ui-core';
+import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { AlohaGlobal } from '../../models/content-frame';
 
@@ -63,6 +63,8 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
 
     protected gcnTags: GCNTags;
 
+    protected currentlyOpenDropdown: DropdownListComponent | null;
+
     constructor(
         protected i18n: I18nService,
         protected tagEditor: TagEditorService,
@@ -112,6 +114,13 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
         }
     }
 
+    public handleDropdownOpen(instance: DropdownListComponent): void {
+        if (this.currentlyOpenDropdown?.isOpen) {
+            this.currentlyOpenDropdown.closeDropdown();
+        }
+        this.currentlyOpenDropdown = instance;
+    }
+
     public insertConstruct(construct: Construct, event?: Event): void {
         cancelEvent(event);
 
@@ -129,6 +138,10 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
         this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
             this.gcnPlugin.handleBlock(data, true, () => {
                 this.gcnTags.decorate(tag, data);
+                if (this.currentlyOpenDropdown?.isOpen) {
+                    this.currentlyOpenDropdown.closeDropdown();
+                    this.currentlyOpenDropdown = null;
+                }
 
                 const editableParts = construct.parts
                     // Ignore template and velocity parts in all cases

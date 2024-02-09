@@ -102,13 +102,13 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
      * Fired whenever the dropdown contents are opened.
      */
     @Output()
-    public open = new EventEmitter<void>();
+    public open = new EventEmitter<DropdownListComponent>();
 
     /**
      * Fired whenever the dropdown contents are closed.
      */
     @Output()
-    public close = new EventEmitter<void>();
+    public close = new EventEmitter<DropdownListComponent>();
 
     @ViewChild('contents', { static: true, read: TemplateRef })
     protected contentsTemplate: TemplateRef<any>;
@@ -220,7 +220,7 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
 
         this.scrollMaskRef = this.overlayHostView.createComponent(ScrollMaskComponent);
         this.scrollMaskRef.instance.clicked.pipe(take(1)).subscribe(() => this.closeDropdown());
-        this.open.emit();
+        this.open.emit(this);
     }
 
     resize(): void {
@@ -252,6 +252,6 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
             this.contentComponentRef.destroy();
             this.contentComponentRef = null;
         }
-        this.close.emit();
+        this.close.emit(this);
     }
 }

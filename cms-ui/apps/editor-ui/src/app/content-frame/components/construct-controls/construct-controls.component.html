@@ -2,8 +2,9 @@
     <gtx-dropdown-list
         class="dropdown"
         [belowTrigger]="true"
-        [sticky]="true"
+        [sticky]="false"
         [width]="'content'"
+        (open)="handleDropdownOpen($event)"
     >
         <gtx-dropdown-trigger>
             <div class="construct-group">

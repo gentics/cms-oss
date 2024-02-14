@@ -399,7 +399,7 @@ export interface GCNAlohaPlugin extends AlohaPlugin {
     settings: GcnPluginSettings;
     createTag(constructId: number, async?: boolean, successCallback?: (html: string, tag: any, data: any) => any): void;
     handleBlock(data: any, insert: boolean, onInsert: () => void, content?: any): void;
-    openTagFill(tagId: string | number, pageId: string | number): void;
+    openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
 }
 
 export interface GCNTags {

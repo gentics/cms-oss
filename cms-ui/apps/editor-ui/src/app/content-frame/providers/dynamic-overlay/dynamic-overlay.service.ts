@@ -1,10 +1,11 @@
 import { ComponentRef, Injectable } from '@angular/core';
 import {
+    DynamicDialogConfiguration,
     DynamicDropdownConfiguration,
     DynamicFormModalConfiguration,
     OverlayElementControl,
 } from '@gentics/cms-integration-api-models';
-import { ModalClosingReason, ModalService, OverlayHostService } from '@gentics/ui-core';
+import { ModalCloseError, ModalClosingReason, ModalService, OverlayHostService } from '@gentics/ui-core';
 import { DynamicDropdownComponent } from '../../components';
 import { DynamicFormModal } from '../../components/dynamic-form-modal/dynamic-form-modal.component';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
@@ -23,6 +24,27 @@ export class DynamicOverlayService {
     public closeRemaining(): void {
         this.openOverlays.forEach(ctl => ctl.close());
         this.openOverlays = [];
+    }
+
+    public async openDialog<T>(config: DynamicDialogConfiguration<T>): Promise<OverlayElementControl<T>> {
+        const dialog = await this.modals.dialog(config);
+
+        let open = true;
+
+        const ctl: OverlayElementControl<T> = {
+            isOpen: () => open,
+            close: () => {
+                dialog?.instance?.cancelFn(new ModalCloseError(ModalClosingReason.API));
+                open = false;
+            },
+            value: dialog.open().finally(() => {
+                open = false;
+            }),
+        };
+
+        this.openOverlays.push(ctl);
+
+        return ctl;
     }
 
     public async openDynamicDropdown<T>(configuration: DynamicDropdownConfiguration<T>, slot?: string): Promise<OverlayElementControl<T>> {

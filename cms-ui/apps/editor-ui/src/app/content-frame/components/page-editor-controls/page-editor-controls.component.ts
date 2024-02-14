@@ -29,6 +29,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public components: Record<string, AlohaComponent> = {};
     public gcnPlugin: GCNAlohaPlugin;
     public alohaRef: AlohaGlobal;
+    public tagEditorOpen = false;
 
     /*
      * Editor Elements which are handled/loaded in this component
@@ -63,6 +64,11 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.appState.select(state => state.ui.overlayCount).subscribe(count => {
             this.overlayActive = count > 0;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(this.appState.select(state => state.ui.tagEditorOpen).subscribe(open => {
+            this.tagEditorOpen = open;
             this.changeDetector.markForCheck();
         }));
 

@@ -1,8 +1,6 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { TableSize } from '@gentics/aloha-models';
 import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
-
-export interface TableSizeSelectEvent extends TableSize { }
 
 @Component({
     selector: 'gtx-table-size-select',
@@ -18,9 +16,6 @@ export class TableSizeSelectComponent extends BaseFormElementComponent<TableSize
 
     @Input()
     public maxRows = 10;
-
-    @Output()
-    public select = new EventEmitter<TableSizeSelectEvent>();
 
     constructor(
         changeDetector: ChangeDetectorRef,
@@ -38,7 +33,8 @@ export class TableSizeSelectComponent extends BaseFormElementComponent<TableSize
     }
 
     public triggerSelection(columnIdx: number, rowIdx: number): void {
-        this.select.emit({ columns: columnIdx + 1, rows: rowIdx + 1 });
+        const size = { columns: columnIdx + 1, rows: rowIdx + 1 };
+        this.triggerChange(size);
     }
 
     protected onValueChange(): void {

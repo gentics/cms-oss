@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostBinding, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, OnInit } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { WindowRef } from '@gentics/cms-components';
 import {
@@ -129,6 +129,7 @@ export class AppComponent implements OnInit {
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected elementRef: ElementRef<HTMLElement>,
         // State Logger needs to be injected to get initialized
         private appState: ApplicationStateService,
         private authActions: AuthActionsService,
@@ -156,6 +157,7 @@ export class AppComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.onWindowResize();
         this.uiActions.getUiVersion();
         this.userSettings.loadInitialSettings();
 
@@ -461,6 +463,16 @@ export class AppComponent implements OnInit {
                 })
                 .catch(this.errorHandler.catch);
         });
+    }
+
+    @HostListener('window:resize')
+    onWindowResize(): void {
+        const elem = this.elementRef?.nativeElement;
+        if (!elem) {
+            return;
+        }
+        elem.style.setProperty('--gtx-vvh', `${window.visualViewport?.height || 0}px`);
+        elem.style.setProperty('--gtx-vvw', `${window.visualViewport?.width || 0}px`);
     }
 
     resetHideExtras() {

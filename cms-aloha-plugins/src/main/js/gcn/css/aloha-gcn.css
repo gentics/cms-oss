@@ -36,6 +36,10 @@
 
 /* --------------- */
 
+.GENTICS_block {
+	--gtx-block-handle-gap: 4px;
+}
+
 .GENTICS_block .aloha-construct-buttons-container {
 	display: flex !important;
 	flex-direction: row;
@@ -49,6 +53,7 @@
 	background: none;
 	border: none;
 	border-radius: 0;
+	transition: 200ms;
 }
 
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button,
@@ -108,22 +113,28 @@
 }
 
 .GENTICS_block[data-gcn-constructdisplay="above"] {
-	margin-top: 38px;
+	margin-top: calc(var(--gtx-block-handle-height) + (var(--gtx-block-handle-gap) * 2));
 }
 
 .GENTICS_block[data-gcn-constructdisplay="above"] .aloha-construct-buttons-container {
-	margin-top: -34px;
+	margin-top: calc((var(--gtx-block-handle-height) + var(--gtx-block-handle-gap)) * -1);
 	margin-left: -2px;
 }
 
-.GENTICS_block[data-gcn-constructdisplay="aside"] .aloha-construct-buttons-container {
-
+.GENTICS_block[data-gcn-constructdisplay="aside"] .aloha-construct-buttons-container,
+.GENTICS_block[data-gcn-constructdisplay="click"] .aloha-construct-buttons-container {
+	margin-left: calc((var(--gtx-block-handle-width) + var(--gtx-block-handle-gap)) * -1);
+	flex-direction: column;
 }
 
 .GENTICS_block[data-gcn-constructdisplay="inside"] .aloha-construct-buttons-container {
-	
+	opacity: 0;
 }
 
-.GENTICS_block[data-gcn-constructdisplay="click"] .aloha-construct-buttons-container {
-	
+.GENTICS_block[data-gcn-constructdisplay="inside"]:hover .aloha-construct-buttons-container {
+	opacity: 1;
+}
+
+.GENTICS_block[data-gcn-constructdisplay="click"] .aloha-construct-buttons-container .gcn-block-button {
+	display: none;
 }

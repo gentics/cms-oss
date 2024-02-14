@@ -16,6 +16,7 @@ import {
     SetCMPVersionAction,
     SetConstructFavourites,
     SetHideExtrasAction,
+    SetTagEditorOpenAction,
     SetUILanguageAction,
     SetUIModeAction,
     SetUIOverridesAction,
@@ -43,6 +44,7 @@ const INITIAL_UI_STATE: UIState = {
     hideExtras: false,
     overlayCount: 0,
     constructFavourites: [],
+    tagEditorOpen: false,
 };
 
 @AppStateBranch<UIState>({
@@ -178,6 +180,13 @@ export class UIStateModule {
     handleResetOverlayCountAction(ctx: StateContext<UIState>): void {
         ctx.patchState({
             overlayCount: 0,
+        });
+    }
+
+    @ActionDefinition(SetTagEditorOpenAction)
+    handleSetTagEditorOpenAction(ctx: StateContext<UIState>, action: SetTagEditorOpenAction): void {
+        ctx.patchState({
+            tagEditorOpen: action.isOpen,
         });
     }
 }

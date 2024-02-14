@@ -104,3 +104,10 @@ export class DecreaseOverlayCountAction {}
 
 @ActionDeclaration(UI_STATE_KEY)
 export class ResetOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetTagEditorOpenAction {
+    constructor(
+        public isOpen: boolean,
+    ) {}
+}

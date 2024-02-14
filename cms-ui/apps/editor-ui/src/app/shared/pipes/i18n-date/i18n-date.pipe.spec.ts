@@ -3,7 +3,7 @@ import {LangChangeEvent} from '@ngx-translate/core';
 
 import {I18nDatePipe} from './i18n-date.pipe';
 
-declare var window: Window & {
+declare let window: Window & {
     Intl: typeof Intl
 };
 
@@ -39,7 +39,7 @@ describe('I18nDatePipe', () => {
             configurable: true,
             enumerable: true,
             value: navigator,
-            writable: false
+            writable: false,
         });
 
         pipe = new I18nDatePipe(mockTranslateService as any, mockChangeDetector as any);
@@ -55,17 +55,17 @@ describe('I18nDatePipe', () => {
             configurable: true,
             enumerable: true,
             value: originalNavigator,
-            writable: false
+            writable: false,
         });
     });
 
     it('transforms Date objects and timestamps with seconds and milliseconds equally', () => {
         mockTranslateService.currentLang = 'en';
 
-        for (let date of [newYears2016, fiveBeforeTwelve, leadingZeroesDate]) {
-            let fromDate = pipe.transform(date, 'longDateTime');
-            let fromMilliseconds = pipe.transform(date.getTime(), 'longDateTime');
-            let fromSeconds = pipe.transform(date.getTime() / 1000, 'longDateTime');
+        for (const date of [newYears2016, fiveBeforeTwelve, leadingZeroesDate]) {
+            const fromDate = pipe.transform(date, 'longDateTime');
+            const fromMilliseconds = pipe.transform(date.getTime(), 'longDateTime');
+            const fromSeconds = pipe.transform(date.getTime() / 1000, 'longDateTime');
 
             expect(fromDate).toBe(fromMilliseconds);
             expect(fromDate).toBe(fromSeconds);
@@ -346,14 +346,14 @@ describe('I18nDatePipe', () => {
 
 class MockTranslateService {
     onLangChange = new EventEmitter<LangChangeEvent>();
-    get currentLang(): string { return this._lang; }
+    get currentLang(): string { return this.internalLang; }
     set currentLang(lang: string) {
         this.onLangChange.emit({
-            lang: this._lang = lang,
-            translations: {}
+            lang: this.internalLang = lang,
+            translations: {},
         });
     }
-    private _lang: string;
+    private internalLang: string;
 }
 
 class MockChangeDetectorRef {
@@ -361,20 +361,20 @@ class MockChangeDetectorRef {
 }
 
 class MockNavigator {
-    private _languages = ['en'];
+    private internalLanguages = ['en'];
 
     userAgent = originalNavigator.userAgent;
 
     get language(): string {
-        return this._languages[0];
+        return this.internalLanguages[0];
     }
 
     get languages(): string[] {
-        return this._languages;
+        return this.internalLanguages;
     }
 
     mockUserAgentLanguages(...languages: string[]): void {
-        this._languages = languages;
+        this.internalLanguages = languages;
     }
 }
 
@@ -389,11 +389,20 @@ class MockDateTimeFormat implements Intl.DateTimeFormat {
     constructorArgs: any[];
 
     constructor() {
+        // eslint-disable-next-line prefer-rest-params
         this.constructorArgs = Array.from(arguments);
     }
 
     format(): string {
         return '';
+    }
+
+    formatRange(startDate: number | bigint | Date, endDate: number | bigint | Date): string {
+        throw new Error('Method not implemented.');
+    }
+
+    formatRangeToParts(startDate: number | bigint | Date, endDate: number | bigint | Date): Intl.DateTimeRangeFormatPart[] {
+        throw new Error('Method not implemented.');
     }
 
     formatToParts(date?: number | Date): Intl.DateTimeFormatPart[] {

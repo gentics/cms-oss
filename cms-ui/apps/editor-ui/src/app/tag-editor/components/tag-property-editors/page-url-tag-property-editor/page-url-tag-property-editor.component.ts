@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';

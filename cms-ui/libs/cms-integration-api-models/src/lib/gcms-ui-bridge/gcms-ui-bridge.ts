@@ -1,5 +1,7 @@
+import { AlohaComponent } from '@gentics/aloha-models';
 import {
     EditMode,
+    EditableTag,
     File,
     Folder,
     Form,
@@ -13,10 +15,10 @@ import {
     Raw,
     RepositoryBrowserOptions,
     Tag,
+    TagEditorResult,
     TagInContainer,
     TagType,
 } from '@gentics/cms-models';
-import { AlohaComponent } from '@gentics/aloha-models';
 import { GCMSRestClient } from '@gentics/cms-rest-client';
 
 /**
@@ -182,6 +184,34 @@ export interface DynamicFormModalConfiguration<T> extends OverlayElementSettings
     onChange?: (formValue: T, formControl: ExposedControl<T>) => void;
 }
 
+interface BaseDialogButton {
+    label: string;
+    type?: 'default' | 'secondary' | 'success' | 'warning' | 'alert';
+    flat?: boolean;
+    // If true, clicking the button will cause
+    // the promise to reject rather than resolve
+    shouldReject?: boolean;
+}
+
+interface DialogValueButton<T> extends BaseDialogButton {
+    // If specified, will be returned as the
+    // value of the resolved promise (or the reason if rejected).
+    returnValue?: T;
+    shouldReject: never | false;
+}
+
+interface DialogRejectButton extends BaseDialogButton {
+    shouldReject: true;
+}
+
+type DialogButton<T> = DialogValueButton<T> | DialogRejectButton;
+
+export interface DynamicDialogConfiguration<T> {
+    title: string;
+    body?: string;
+    buttons: DialogButton<T>[];
+}
+
 /**
  * Configuration for a dynamic dropdown.
  */
@@ -273,7 +303,7 @@ export interface GcmsUiBridge {
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>) => Promise<Tag>;
+    openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>, withDelete?: boolean) => Promise<TagEditorResult>;
 
     /**
      * Opens a modal with a dynamic form configuration.
@@ -290,7 +320,12 @@ export interface GcmsUiBridge {
      * A rejection (`ModalCloseError`) is being thrown when the user cancels the modal.
      */
     openDynamicDropdown: <T>(configuration: DynamicDropdownConfiguration<T>, componentSlot?: string) => Promise<OverlayElementControl<T>>;
-
+    /**
+     * Displays a Dialog to the user to interact with.
+     * @param configuration The configuration for the dialog.
+     * @returns A Promise which resolves/rejects once the User clicks one of the configured buttons.
+     */
+    openDialog: <T>(configuration: DynamicDialogConfiguration<T>) => Promise<OverlayElementControl<T>>;
     /**
      * Class of the error which is thrown when a overlay element has been closed.
      */

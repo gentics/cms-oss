@@ -33,30 +33,6 @@ define([
 	'use strict';
 
 	/**
-	 * Returns an element that represents the tag's corresponding DOM element.
-	 *
-	 * Beware that the returned element may not be the tag's actual DOM
-	 * element.
-	 *
-	 * This function provides a work-around for #51971, where IE 7 would
-	 * sometimes not return the correct values for attributes of a DOM
-	 * element. Cloning the element with jQuery, using the elment's outerHTML
-	 * circumvents this problem.
-	 *
-	 * @param {GCNBlock} block A block instance.
-	 * @return {jQuery.<HTMLElement>} A jQuery object containing a DOM element
-	 *                                that is either the block's DOM element or
-	 *                                a copy of it.
-	 */
-	function getBlockElement(block) {
-		return (
-			(Browser.ie7 && !block.$element.attr('data-gcn-tagid'))
-				? $(block.$element[0].outerHTML)
-				: block.$element
-		);
-	}
-
-	/**
 	 * Get the page object with given Id stored in the plugin or
 	 * retrieve one from the CMS.
 	 *
@@ -292,7 +268,7 @@ define([
 		 */
 		renderBlockHandlesIfNeeded: function () {
 			var block = this;
-			var $block = getBlockElement(block);
+			var $block = block.$element;
 
 			// Check whether the handles have already been added (only
 			// do add them "IfNeeded").
@@ -339,7 +315,6 @@ define([
 				class: 'material-symbols-outlined aloha-block-button-icon',
 				text: 'edit'
 			})).click(function ($event) {
-				var $block = getBlockElement(block);
 				Aloha.GCN.openTagFill(
 					$block.attr('data-gcn-tagid'),
 					$block.attr('data-gcn-pageid')
@@ -373,7 +348,7 @@ define([
 				})).click(function ($event) {
 					block.confirmedDestroy(function () {
 						deleteBlock(block);
-					}, block.$element.attr('data-gcn-tagname'));
+					}, $block.attr('data-gcn-tagname'));
 					$event.preventDefault();
 					return false;
 				});
@@ -384,15 +359,55 @@ define([
 				$blockHandleContainer.show();
 			}, 0);
 
-			block.$element.prepend($blockHandleContainer);
-			var editableHost = Aloha.getEditableHost(block.$element);
+			$block.prepend($blockHandleContainer);
+
+			function setHeightProperties() {
+				$block.css('--gtx-block-content-height', $block.height() + 'px');
+				$block.css('--gtx-block-handle-height', $blockHandleContainer.height() + 'px');
+				$block.css('--gtx-block-handle-width', $blockHandleContainer.width() + 'px');
+			}
+			var observer = new ResizeObserver(setHeightProperties);
+			observer.observe($block[0]);
+			observer.observe($blockHandleContainer[0]);
+			setHeightProperties();
+
+			// Additional double-click handler for click type construct blocks.
+			$block.on('dblclick', function($event) {
+				var type = $block.attr('data-gcn-constructdisplay');
+				if (type !== 'click') {
+					return;
+				}
+
+				Aloha.GCN.openTagFill(
+					$block.attr('data-gcn-tagid'),
+					$block.attr('data-gcn-pageid'),
+					true
+				);
+
+				// Aloha Blocks sets the
+				// `Aloha.Selection.preventSelectionChangedFlag' when a click
+				// event is initialized on a block element.  This is done in
+				// order to be able to select nested blocks.  When the click
+				// event is triggered by cause we clicked on the edit button
+				// inside the block, however, we must reset the flag so that
+				// when the TagFill modal is closed, the next
+				// `aloha-selection-changed' event will be processed as needed.
+				//
+				// See rt#51554
+				Aloha.Selection.preventSelectionChangedFlag = false;
+
+				$event.preventDefault();
+				return false;
+			});
+
+			var editableHost = Aloha.getEditableHost($block);
 			if (editableHost) {
 				editableHost.smartContentChange({type: 'block-change'});
 			}
 		},
 
 		/**
-		 * Function which is executed when a user tries to delete a block with the keyboard
+		 * Function to prompt the user if they really wish to delete the current tag.
 		 * 
 		 * @param {Function} destroyFn function, that is executed, if the block shall be destroyed
 		 * @param {String} name Name of the tag

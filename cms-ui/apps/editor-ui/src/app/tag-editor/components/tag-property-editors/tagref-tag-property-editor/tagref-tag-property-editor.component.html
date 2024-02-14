@@ -1,13 +1,14 @@
 <ng-container>
-    <div class="row column">
+    <div class="tag-part-editor">
         <browse-box
             [label]="tagPart | tagPropLabel"
             [displayValue]="tagDisplayValue$ | async"
             [browseTooltip]="'tag_editor.browse_for_tag' | i18n"
             [disabled]="readOnly"
             (clear)="changeSelection({ container: null, tag: null })"
-            (browse)="browseForTag()">
-        </browse-box>
+            (browse)="browseForTag()"
+        ></browse-box>
+
         <div>
             <ng-container *ngIf="selectedContainer">
                 <ng-container *ngIf="selectedContainer.type === 'page'; else isTemplateTag">

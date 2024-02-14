@@ -1,3 +1,4 @@
+import { EditableTag } from './editable-tag';
 
 /** Describes the current size of a `CustomEditor`. */
 export interface CustomEditorSize {
@@ -19,4 +20,9 @@ export interface CustomEditor {
      */
     registerOnSizeChange(fn: CustomEditorSizeChangedFn): void;
 
+}
+
+export interface TagEditorResult {
+    doDelete: boolean;
+    tag: EditableTag;
 }

@@ -289,6 +289,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
 
                 testComponent.item = mockPage;
@@ -340,6 +341,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -382,6 +384,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -473,6 +476,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: editedObjProp,
                     tagType: editedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {

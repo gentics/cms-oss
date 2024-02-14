@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ElementRef, NgZone } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaToolbarTabsSettings } from '@gentics/aloha-models';
 import { Subscription } from 'rxjs';
 import { DefaultEditorControlTabs } from '../../../common/models';
@@ -15,6 +16,7 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
 
     public activeTab: string;
     public tabs: AlohaToolbarTabsSettings[] = [];
+    public tagEditorOpen = false;
 
     protected subscriptions: Subscription[] = [];
     protected overflow: OverflowManager;
@@ -23,6 +25,7 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
         protected changeDetector: ChangeDetectorRef,
         protected zone: NgZone,
         protected element: ElementRef<HTMLDivElement>,
+        protected appState: ApplicationStateService,
         protected aloha: AlohaIntegrationService,
     ) {}
 
@@ -33,6 +36,11 @@ export class PageEditorTabsComponent implements OnInit, OnDestroy {
             this.overflow = new OverflowManager(this.element.nativeElement);
             this.overflow.init();
         });
+
+        this.subscriptions.push(this.appState.select(state => state.ui.tagEditorOpen).subscribe(open => {
+            this.tagEditorOpen = open;
+            this.changeDetector.markForCheck();
+        }));
 
         this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(toolbar => {
             this.tabs = toolbar?.tabs ?? [];

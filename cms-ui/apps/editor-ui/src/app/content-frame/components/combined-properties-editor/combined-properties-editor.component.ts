@@ -38,15 +38,13 @@ import {
     TagEditorHostComponent,
     TagEditorService,
 } from '@editor-ui/app/tag-editor';
-import { EditableObjectTag } from '@editor-ui/app/tag-editor/common';
 import {
     EditMode,
     EditableFileProps,
     EditableFolderProps,
     EditableFormProps,
     EditableImageProps,
-    EditableNodeProps,
-    EditablePageProps,
+    EditableNodeProps, EditableObjectTag, EditablePageProps,
     EditableTag,
     Folder,
     FolderItemOrTemplateType,
@@ -401,8 +399,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
     openContentTag(item: ItemWithContentTags, tagElement: Tag): void {
         this.tagEditorService.openTagEditor(tagElement, tagElement.construct, item).then(
-            (editedTag: EditableTag) => {
-                this.saveObjectProperty(editedTag, {}, true).then(() => {
+            (result) => {
+                this.saveObjectProperty(result.tag as any, {}, true).then(() => {
                     this.item$.next(this.item as ItemWithContentTags);
                 }).catch(() => {
                     // silence
@@ -767,6 +765,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             tagOwner: item,
             tagType: objProp.tagType,
             readOnly: isReadOnly,
+            withDelete: false,
         });
 
         const isValid = tagEditorContext.validator.validateAllTagProperties(objProp.properties).allPropertiesValid;

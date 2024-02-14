@@ -279,6 +279,7 @@ export function getMockedTagEditorContext(
         contextInfo.translator,
         contextInfo.variableContext,
         contextInfo.gcmsUiServices,
+        contextInfo.withDelete,
     );
 }
 

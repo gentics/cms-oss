@@ -11,8 +11,11 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
+        border: none;
+        outline: none;
         padding: 0.25rem 0.75rem;
         border-bottom: 2px solid transparent;
+        background: transparent;
         align-items: center;
         cursor: pointer;
         transition: 200ms;

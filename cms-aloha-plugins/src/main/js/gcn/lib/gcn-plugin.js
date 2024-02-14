@@ -154,7 +154,7 @@ define([
 		return OBJECT_PROPERTY_PREFIX.test(tag.prop('name'));
 	}
 
-	function openTagFill(tag, gcn) {
+	function openTagFill(tag, gcn, withDelete) {
 		var page = tag.parent();
 		var tagname = tag.prop("name");
 		getConstructById(
@@ -168,7 +168,20 @@ define([
 				// that will potentially re-rendered after closing the tagfill
 				page._updateEditableBlocks();
 
-				GCMSUI.openTagEditor(tag._data, construct, page._data).then(function (newtag) {
+				GCMSUI.openTagEditor(tag._data, construct, page._data, !!withDelete).then(function (result) {
+
+					if (result.doDelete) {
+						var $block = $('.aloha-block[id="GENTICS_BLOCK_' + tag._data.id + '"]');
+						var block = BlockManager.getBlock($block);
+
+						block.unblock();
+						$block.remove();
+						tag.remove();
+						return;
+					}
+
+					var newtag = result.tag;
+
 					page.tag(tagname, function (tag) {
 						var parts = tag.parts();
 						var partslength = parts.length;
@@ -1604,12 +1617,13 @@ define([
 	 * @param {number|string} pageId The id of page the tag belongs to.
 	 *                               Note that this page must already have
 	 *                               had its data fetched.
+	 * @param {boolean=} withDelete If the option to delete the tag should be given as well
 	 */
-	openTagFill: function (tagId, pageId) {
+	openTagFill: function (tagId, pageId, withDelete) {
 		var gcn = this;
 
 		Tags.getById(GCN.page(pageId), tagId, function (tag) {
-			openTagFill(tag, gcn);
+			openTagFill(tag, gcn, !!withDelete);
 		});
 	},
 

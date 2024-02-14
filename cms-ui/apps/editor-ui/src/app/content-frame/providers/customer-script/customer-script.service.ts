@@ -177,8 +177,8 @@ export class CustomerScriptService implements OnDestroy {
             this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise();
         const restRequestPOST = (endpoint: string, data: object, params?: object): Promise<object> =>
             this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
-        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>) =>
-            this.tagEditorService.openTagEditor(tag, tagType, page);
+        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>, withDelete?: boolean) =>
+            this.tagEditorService.openTagEditor(tag, tagType, page, withDelete);
         const openRepositoryBrowser = (options: RepositoryBrowserOptions): Promise<ItemInNode | ItemInNode[]> =>
             this.repositoryBrowserClient.openRepositoryBrowser(options);
 
@@ -244,6 +244,9 @@ export class CustomerScriptService implements OnDestroy {
             },
             openDynamicModal: (configuration) => {
                 return this.overlays.openDynamicModal(configuration);
+            },
+            openDialog: (configuration) => {
+                return this.overlays.openDialog(configuration);
             },
             closeErrorClass: ModalCloseError,
             registerComponent: (slot, component) => {

@@ -48,6 +48,10 @@ export class AlohaComponentRendererComponent<T> extends BaseFormElementComponent
 
     public ngOnInit(): void {
         this.control = new FormControl(this.value);
+        if (this.disabled) {
+            this.control.disable();
+        }
+
         this.subscriptions.push(this.control.valueChanges.subscribe(value => {
             if (value !== this.value) {
                 this.triggerChange(value);
@@ -66,6 +70,18 @@ export class AlohaComponentRendererComponent<T> extends BaseFormElementComponent
     protected onValueChange(): void {
         if (this.control.value !== this.value) {
             this.control.setValue(this.value);
+        }
+    }
+
+    protected override onDisabledChange(): void {
+        super.onDisabledChange();
+
+        if (this.control) {
+            if (this.disabled) {
+                this.control.disable();
+            } else {
+                this.control.enable();
+            }
         }
     }
 }

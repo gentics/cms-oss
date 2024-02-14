@@ -1,15 +1,6 @@
 @import "variables";
 
 :host {
-
-    .column {
-        padding: 0;
-    }
-
-    .row .row {
-        margin-left: 0;
-    }
-
     @include input-label-styles('.tag-prop-label');
 
     .tag-prop-label {

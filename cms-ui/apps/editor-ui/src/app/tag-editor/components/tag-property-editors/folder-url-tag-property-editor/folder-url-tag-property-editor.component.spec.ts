@@ -36,7 +36,7 @@ import { TagPropertyEditorResolverService } from '../../../providers/tag-propert
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { ImagePreviewComponent } from '../../shared/image-preview/image-preview.component';
 import { UploadWithPropertiesComponent } from '../../shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { FolderUrlTagPropertyEditor } from './folder-url-tag-property-editor.component';
 
@@ -117,7 +117,7 @@ describe('FolderUrlTagPropertyEditor', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 UploadWithPropertiesComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
 

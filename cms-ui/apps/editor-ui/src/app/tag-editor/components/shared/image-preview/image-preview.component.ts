@@ -4,10 +4,8 @@ import {
     Component,
     Input,
     OnChanges,
-    SecurityContext,
-    SimpleChanges
+    SimpleChanges,
 } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 /**
  * Shows a preview of an image supplied as File object.
@@ -16,14 +14,14 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
     selector: 'image-preview',
     templateUrl: './image-preview.component.html',
     styleUrls: ['./image-preview.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImagePreviewComponent implements OnChanges {
 
     @Input() file: File;
 
     imageUrl: string;
-    loading: boolean = false;
+    loading = false;
 
     constructor(private changeDetector: ChangeDetectorRef) { }
 

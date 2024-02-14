@@ -31,4 +31,5 @@ export interface UIState {
     hideExtras: boolean;
     overlayCount: number;
     constructFavourites: string[];
+    tagEditorOpen: boolean;
 }

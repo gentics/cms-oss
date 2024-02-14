@@ -62,7 +62,9 @@ describe('UIStateModule', () => {
             hideExtras: false,
             mode: UIMode.EDIT,
             overlayCount: 0,
-        } as UIState);
+            constructFavourites: [],
+            tagEditorOpen: false,
+        });
     });
 
     it('setCmsVersion works', () => {

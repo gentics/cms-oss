@@ -12,6 +12,7 @@ import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
@@ -19,7 +20,7 @@ import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre
 import { CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomerScriptService } from './customer-script.service';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { DynamicOverlayService } from '..';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -76,6 +77,7 @@ describe('CustomerScriptService', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                DynamicOverlayService,
             ],
         });
 
@@ -304,9 +306,9 @@ describe('CustomerScriptService', () => {
             spyOn(mockTagEditorService, 'openTagEditor').and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage);
+            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, false);
 
-            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage);
+            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage, false);
             expect(actualResult).toBe(expectedResult);
         });
 

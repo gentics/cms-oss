@@ -1565,26 +1565,38 @@ public class PermHandler {
 	 * @throws NodeException
 	 */
 	public boolean canPublish(NodeObject object) throws NodeException {
-		// check view permission
-		if (!canView(object)) {
-			return false;
-		}
+		Transaction t = null;
+		boolean setChannelId = false;
 
-		if (object instanceof PublishableNodeObjectInFolder) {
-			return ((PublishableNodeObjectInFolder) object).canPublish(this);
-		} else if (object instanceof Page) {
-			Folder folder = ((Page) object).getFolder();
+		try {
+			t = TransactionManager.getCurrentTransaction();
+			setChannelId = changeTransactionChannel(object);
 
-			if (folder == null) {
+			// check view permission
+			if (!canView(object)) {
 				return false;
-			} else {
-				int languageId = ObjectTransformer.getInt(((Page) object).getLanguageId(), -1);
-
-				return checkPermissionBit(Folder.TYPE_FOLDER, folder.getId(), PERM_PAGE_PUBLISH, ObjectTransformer.getInt(object.getTType(), -1), languageId,
-						ROLE_PUBLISH);
 			}
-		} else {
-			return true;
+
+			if (object instanceof PublishableNodeObjectInFolder) {
+				return ((PublishableNodeObjectInFolder) object).canPublish(this);
+			} else if (object instanceof Page) {
+				Folder folder = ((Page) object).getFolder();
+
+				if (folder == null) {
+					return false;
+				} else {
+					int languageId = ObjectTransformer.getInt(((Page) object).getLanguageId(), -1);
+
+					return checkPermissionBit(Folder.TYPE_FOLDER, folder.getId(), PERM_PAGE_PUBLISH, ObjectTransformer.getInt(object.getTType(), -1), languageId,
+							ROLE_PUBLISH);
+				}
+			} else {
+				return true;
+			}
+		} finally {
+			if (setChannelId) {
+				t.resetChannel();
+			}
 		}
 	}
 

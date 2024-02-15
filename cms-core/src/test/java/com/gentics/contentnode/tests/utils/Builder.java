@@ -29,6 +29,10 @@ public class Builder<T extends NodeObject> {
 
 	protected int publishAt = 0;
 
+	protected boolean takeOffline = false;
+
+	protected int takeOfflineAt = 0;
+
 	protected boolean unlock = false;
 
 	/**
@@ -116,6 +120,25 @@ public class Builder<T extends NodeObject> {
 	}
 
 	/**
+	 * Enable taking the object offline (if it can be published)
+	 * @return fluent API
+	 */
+	public Builder<T> takeOffline() {
+		return takeOffline(0);
+	}
+
+	/**
+	 * Enable taking the object offline (if it can be published)
+	 * @param timestamp offline timestamp
+	 * @return fluent API
+	 */
+	public Builder<T> takeOffline(int timestamp) {
+		this.takeOffline = true;
+		this.takeOfflineAt = timestamp;
+		return this;
+	}
+
+	/**
 	 * Disable publishing the object (if it can be published), which is the default
 	 * @return fluent API
 	 */
@@ -184,6 +207,10 @@ public class Builder<T extends NodeObject> {
 
 			if (publish && modifiedObject instanceof PublishableNodeObject) {
 				((PublishableNodeObject) modifiedObject).publish(publishAt, false);
+			}
+
+			if (takeOffline && modifiedObject instanceof PublishableNodeObject) {
+				((PublishableNodeObject) modifiedObject).takeOffline(takeOfflineAt);
 			}
 
 			if (unlock) {

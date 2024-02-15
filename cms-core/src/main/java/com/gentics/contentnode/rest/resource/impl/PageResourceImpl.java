@@ -752,7 +752,12 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 		try (AutoCommit cmt = new AutoCommit()) {
 			// first get the page and lock it (for checking the permission to
 			// save)
-			page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+			if (request.isClearOfflineAt() || request.isClearPublishAt()) {
+				// clearing offlineAt or publishAt currently requires the publish permission (since that cannot be queued)
+				page = getLockedPage(id, PermHandler.ObjectPermission.edit, PermHandler.ObjectPermission.publish);
+			} else {
+				page = getLockedPage(id, PermHandler.ObjectPermission.edit);
+			}
 
 			// Transform the rest PageSaveRequest into a rest page
 			com.gentics.contentnode.rest.model.Page restPage = request.getPage();
@@ -859,15 +864,11 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 			// save the page
 			page.save(request.isCreateVersion());
 
-			if (t.canPublish(page)) {
-				if (request.isClearPublishAt()) {
-					page.clearTimePub();
-				}
-				if (request.isClearOfflineAt()) {
-					page.clearTimeOff();
-				}
-			} else {
-				// TODO if the user has no publish permission, should we queue the request to clear the time_pub/time_off (currently, this request cannot be stored in the DB)
+			if (request.isClearPublishAt()) {
+				page.clearTimePub();
+			}
+			if (request.isClearOfflineAt()) {
+				page.clearTimeOff();
 			}
 
 			// unlock the page if requested

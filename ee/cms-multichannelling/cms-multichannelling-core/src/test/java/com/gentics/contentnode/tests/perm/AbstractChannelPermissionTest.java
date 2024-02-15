@@ -170,7 +170,7 @@ public abstract class AbstractChannelPermissionTest {
 	 */
 	protected void doPermissionCheck(Folder folder) throws Exception {
 		// data change operations will always be done in the scope of the object's owning channel
-		boolean dataChange = perm == ObjectPermission.edit || perm == ObjectPermission.delete;
+		boolean dataChange = perm == ObjectPermission.edit || perm == ObjectPermission.delete || perm == ObjectPermission.publish;
 		boolean allowDataChange = objectSetting == ChannelSetting.LOCAL;
 
 		switch (perm) {

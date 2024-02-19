@@ -28,6 +28,7 @@ export * from './dynamic-form-modal/dynamic-form-modal.component';
 export * from './editor-toolbar/editor-toolbar.component';
 export * from './file-preview/file-preview.component';
 export * from './form-reports-list/form-reports-list.component';
+export * from './link-checker-controls/link-checker-controls.component';
 export * from './node-properties-form/node-properties-form.component';
 export * from './page-editor-controls/page-editor-controls.component';
 export * from './page-editor-tabs/page-editor-tabs.component';
@@ -36,3 +37,4 @@ export * from './simple-delete-modal/simple-delete-modal.component';
 export * from './symbol-grid/symbol-grid.component';
 export * from './table-size-input/table-size-input.component';
 export * from './table-size-select/table-size-select.component';
+

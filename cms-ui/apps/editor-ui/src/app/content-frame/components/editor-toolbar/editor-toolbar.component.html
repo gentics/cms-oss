@@ -11,7 +11,9 @@
 
         <ng-container *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT; else itemBreadcrumb">
             <div class="page-editor-tabs">
-                <gtx-page-editor-tabs></gtx-page-editor-tabs>
+                <gtx-page-editor-tabs
+                    [brokenLinkCount]="brokenLinkCount"
+                ></gtx-page-editor-tabs>
             </div>
         </ng-container>
 
@@ -180,6 +182,7 @@
     <gtx-page-editor-controls
         *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT"
         class="page-editor-controls"
+        (brokenLinkCountChange)="updateBrokenLinkCount($event)"
     ></gtx-page-editor-controls>
 
     <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>

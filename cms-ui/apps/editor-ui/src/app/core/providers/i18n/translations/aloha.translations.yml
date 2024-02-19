@@ -1,6 +1,9 @@
-tab_format_label:
-    de: 'Formartieren'
-    en: 'Formatting'
+tab_gtx_constructs:
+    de: 'Tag Typen'
+    en: 'Constructs'
+tab_gtx_link-checker:
+    de: 'Link Checker'
+    en: 'Link Checker'
 linktarget_target_label:
     de: 'Ziel URL'
     en: 'Target URL'
@@ -16,4 +19,9 @@ linktarget_pick_target:
 linktarget_clear_target:
     de: 'Ziel Element entfernen'
     en: 'Remove target element'
-
+link_checker_edit:
+    de: 'Bearbeiten'
+    en: 'Edit'
+link_checker_delete:
+    de: 'Löschen'
+    en: 'Delete'

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { DynamicFormModalConfiguration } from '@gentics/cms-integration-api-models';
+import { DynamicFormModalConfiguration } from '@gentics/aloha-models';
 import { BaseModal, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
 import { applyControl } from '../../utils';

@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { AlohaAttributeButtonComponent, ButtonIcon } from '@gentics/aloha-models';
-import { OverlayElementControl } from '@gentics/cms-integration-api-models';
+import { AlohaAttributeButtonComponent, ButtonIcon, OverlayElementControl } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
+import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
 @Component({
     selector: 'gtx-aloha-attribute-button-renderer',

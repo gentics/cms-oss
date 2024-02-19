@@ -1,13 +1,16 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "editor-ui",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/editor-ui/src",
     "implicitDependencies": [
+        "aloha-models",
         "cms-components",
+        "cms-integration-api-models",
         "cms-models",
         "cms-rest-clients-angular",
+        "cms-rest-client-angular",
         "form-generator",
         "image-editor",
         "mesh-models",

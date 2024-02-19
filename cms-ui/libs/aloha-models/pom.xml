@@ -10,10 +10,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-	<artifactId>cms-rest-clients-angular</artifactId>
-	<name>Gentics CMS UI - CMS Rest Clients Angular</name>
+	<artifactId>aloha-models</artifactId>
+	<name>Gentics CMS UI - Aloha Models</name>
 	<packaging>jar</packaging>
-	<description>This is the editor-ui module.</description>
+	<description>Aloha Models for the UI.</description>
 	<url>http://www.gentics.com</url>
 
 	<properties>
@@ -23,13 +23,20 @@
         <ui.application>false</ui.application>
         <ui.library>true</ui.library>
         <ui.skip.build>false</ui.skip.build>
-        <ui.skip.test>false</ui.skip.test>
+        <ui.skip.test>true</ui.skip.test>
         <ui.skip.assembly>true</ui.skip.assembly>
         <ui.assembly.phase></ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
 
     <dependencies>
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>aloha-models</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+
         <dependency>
 			<groupId>com.gentics.cms-oss</groupId>
 			<artifactId>cms-models</artifactId>
@@ -39,7 +46,7 @@
 
         <dependency>
 			<groupId>com.gentics.cms-oss</groupId>
-			<artifactId>mesh-models</artifactId>
+			<artifactId>cms-rest-client</artifactId>
 			<type>zip</type>
 			<scope>provided</scope>
 		</dependency>

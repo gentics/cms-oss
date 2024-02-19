@@ -1,10 +1,9 @@
+import { NormalizedResponse, Response as ResponseModel } from '@gentics/cms-models';
 import { Action, State } from '@ngxs/store';
 import { StateClass } from '@ngxs/store/internals';
 import { StateOperator, StoreOptions } from '@ngxs/store/src/symbols';
 import { Schema, normalize } from 'normalizr';
 import {
-    NormalizedResponse,
-    Response as ResponseModel,
     fileSchema,
     folderSchema,
     formSchema,
@@ -84,6 +83,8 @@ export function ActionDefinition(actionClass: ConstructorOf<any>): (target: any,
     };
 }
 
+type CompareFn<T, H> = ((element: T) => H) | ((a: T, b: T) => boolean);
+
 /**
  * Concatenate two Lists/arrays without duplicates, maintaining array order.
  * Can be passed a hashing function or a comparator to handle objects by value.
@@ -98,7 +99,8 @@ export function ActionDefinition(actionClass: ConstructorOf<any>): (target: any,
 export function concatUnique(left: number[], right: number[]): number[];
 export function concatUnique(left: string[], right: string[]): string[];
 export function concatUnique<T>(left: T[], right: T[], compareFn?: (a: T, b?: T) => boolean | string | number | object): T[];
-export function concatUnique<T, H>(left: any, right: any, fn?: Function): T[] {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function concatUnique<T, H>(left: any, right: any, fn?: CompareFn<T, H>): T[] {
     const both: T[] = [].concat(left, right);
 
     let result: T[];
@@ -159,7 +161,7 @@ export function concatUnique<T, H>(left: any, right: any, fn?: Function): T[] {
 export function removeEntries(haystack: number[], needle: number[]): number[];
 export function removeEntries(haystack: string[], needle: string[]): string[];
 export function removeEntries<T>(haystack: T[], needle: T[], compareFn?: (a: T, b?: T) => boolean | string | number | object): T[];
-export function removeEntries<T, H>(left: T[], right: T[], fn?: Function): T[] {
+export function removeEntries<T, H>(left: T[], right: T[], fn?: CompareFn<T, H>): T[] {
     let result: T[];
 
     if (left === undefined || !left.length) {
@@ -193,8 +195,9 @@ export function removeEntries<T, H>(left: T[], right: T[], fn?: Function): T[] {
  * a new object with an appended `_normalized` property, which contains the
  * result of the normalizr operation.
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function normalizeEntities(res: ResponseModel, collection: any, schema: any): NormalizedResponse {
-    let normalized = normalize(collection, schema);
+    const normalized = normalize(collection, schema);
     // eslint-disable-next-line @typescript-eslint/naming-convention
     return Object.assign({}, res, { _normalized: normalized });
 }

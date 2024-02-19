@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { DynamicDropdownConfiguration } from '@gentics/cms-integration-api-models';
+import { DynamicDropdownConfiguration } from '@gentics/aloha-models';
 import { BaseComponent, ModalCloseError, ModalClosingReason } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
 import { filter, map } from 'rxjs/operators';

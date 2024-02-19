@@ -1,4 +1,4 @@
-import { DynamicDropdownConfiguration, DynamicFormModalConfiguration } from '@gentics/cms-integration-api-models';
+import { DynamicDropdownConfiguration, DynamicFormModalConfiguration } from '../overlay-elements';
 import { AlohaCoreComponentNames } from './base-component';
 import { AlohaButtonComponent } from './button';
 

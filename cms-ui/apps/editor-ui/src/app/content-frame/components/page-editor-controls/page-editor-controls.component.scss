@@ -2,10 +2,23 @@
 
 :host {
     display: flex;
+    overflow: auto hidden;
+}
+
+.control-element.tab-controls {
+    display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
     gap: 0.5rem;
+}
+
+.control-element {
+    width: 100%;
+}
+
+.control-element:not(.active) {
+    display: none;
 }
 
 .component-group {

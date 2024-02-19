@@ -53,7 +53,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         };
 
         this.settings.setActive = (active) => {
-            this.settings.active = active;
+            this.writeValue(active);
             this.changeDetector.markForCheck();
         }
     }

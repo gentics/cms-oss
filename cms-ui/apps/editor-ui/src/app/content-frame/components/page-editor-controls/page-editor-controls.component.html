@@ -1,18 +1,32 @@
-<ng-container [ngSwitch]="activeTab">
+<gtx-construct-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_CONSTRUCTS"
+    [attr.data-tab-id]="TAB_ID_CONSTRUCTS"
+    [constructs]="constructs"
+    [categories]="constructCategories"
+    [favourites]="constructFavourites"
+    [gcnPlugin]="gcnPlugin"
+    [alohaRef]="alohaRef"
+    (favouritesChange)="updateFavourites($event)"
+></gtx-construct-controls>
 
-    <gtx-construct-controls
-        *ngSwitchCase="TAB_ID_CONSTRUCTS"
-        [constructs]="constructs"
-        [categories]="constructCategories"
-        [favourites]="constructFavourites"
-        [gcnPlugin]="gcnPlugin"
-        [alohaRef]="alohaRef"
-        (favouritesChange)="updateFavourites($event)"
-    ></gtx-construct-controls>
+<gtx-link-checker-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_LINK_CHECKER"
+    [attr.data-tab-id]="TAB_ID_LINK_CHECKER"
+    [plugin]="linkCheckerPlugin"
+    [brokenLinks]="brokenLinkElements"
+    (updateCount)="updateBrokenLinkCount()"
+></gtx-link-checker-controls>
 
-    <ng-container *ngSwitchDefault>
-        <ng-container *ngIf="settings">
-            <ng-container *ngFor="let componentGroup of settings.slotsToRender; let last = last">
+<ng-container *ngIf="settings">
+    <ng-container *ngFor="let tab of settings?.tabs">
+        <div
+            class="control-element tab-controls"
+            [attr.data-tab-id]="tab.id"
+            [class.active]="activeTab === tab.id && tab.hasSlotsToRender"
+        >
+            <ng-container *ngFor="let componentGroup of tab.slotsToRender; let last = last">
                 <div class="component-group">
                     <ng-container *ngFor="let slot of componentGroup">
                         <gtx-aloha-component-renderer
@@ -26,8 +40,7 @@
                 </div>
                 <div *ngIf="!last" class="group-separator"></div>
             </ng-container>
-        </ng-container>
+        </div>
     </ng-container>
 </ng-container>
-
 

@@ -11,9 +11,9 @@
     </parent>
 
 	<artifactId>cms-integration-api-models</artifactId>
-	<name>Gentics CMS UI - CMS API Models</name>
+	<name>Gentics CMS UI - CMS Integration API Models</name>
 	<packaging>jar</packaging>
-	<description>This is the editor-ui module.</description>
+	<description>Typings for GCMS UI and Aloha integration.</description>
 	<url>http://www.gentics.com</url>
 
 	<properties>
@@ -28,4 +28,27 @@
         <ui.assembly.phase></ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
+
+    <dependencies>
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>aloha-models</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-models</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-rest-client</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+    </dependencies>
 </project>

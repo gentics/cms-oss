@@ -614,8 +614,8 @@ export class GCMSRestClient implements GCMSRootAPI {
         pages: (options) => this.executeMappedJsonRequest(GET, '/linkChecker/pages', null, options),
         pageLinks: (pageId) => this.executeMappedJsonRequest(GET, `/linkChecker/pages/${pageId}`),
         pageStatus: (pageId, body) => this.executeMappedJsonRequest(POST, `/linkChecker/pages/${pageId}`, body),
-        link: (pageId, linkId) => this.executeMappedJsonRequest(GET, `/linkChecker/patges/${pageId}/links/${linkId}`),
-        replace: (pageId, linkId, body) => this.executeMappedJsonRequest(POST, `/linkChecker/patges/${pageId}/links/${linkId}`, body),
+        link: (pageId, linkId) => this.executeMappedJsonRequest(GET, `/linkChecker/pages/${pageId}/links/${linkId}`),
+        replace: (pageId, linkId, body) => this.executeMappedJsonRequest(POST, `/linkChecker/pages/${pageId}/links/${linkId}`, body),
     } as const;
 
     public markupLanguage: GCMSMarkupLanguageAPI = {

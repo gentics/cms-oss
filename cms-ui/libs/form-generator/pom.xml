@@ -28,4 +28,27 @@
         <ui.assembly.phase></ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
+
+    <dependencies>
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-models</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-rest0clients-angular</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>ui-core</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+    </dependencies>
 </project>

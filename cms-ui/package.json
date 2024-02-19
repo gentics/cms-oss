@@ -1,6 +1,6 @@
 {
   "name": "@gentics/root",
-  "version": "6.0.0-SNAPSHOT",
+  "version": "6.1.0-SNAPSHOT",
   "description": "Monorepo for all UIs and Libraries related to the Gentics CMS",
   "private": true,
   "engines": {

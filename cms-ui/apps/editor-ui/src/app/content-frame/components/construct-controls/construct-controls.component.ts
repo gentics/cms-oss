@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
-import { GCNAlohaPlugin, GCNTags } from '@gentics/aloha-models';
-import { Construct, ConstructCategory, TagPartType } from '@gentics/cms-models';
-import { isEqual } from 'lodash-es';
-import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
+import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
+import { Construct, ConstructCategory, TagPartType } from '@gentics/cms-models';
+import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { AlohaGlobal } from '../../models/content-frame';
 
 interface DisplayGroup {

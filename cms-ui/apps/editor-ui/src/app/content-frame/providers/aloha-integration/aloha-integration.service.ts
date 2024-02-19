@@ -9,9 +9,9 @@ import {
     AlohaToolbarSizeSettings,
     AlohaToolbarTabsSettings,
     AlohaUiPlugin,
-    GCNAlohaPlugin,
     ScreenSize,
 } from '@gentics/aloha-models';
+import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
@@ -35,17 +35,14 @@ export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
 
 const TABS_TO_IGNORE = [TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER];
 
-function normalizeToolbarSizeSettings(
-    settings: AlohaToolbarSizeSettings,
-    components: Record<string, AlohaComponent>,
-): NormalizedToolbarSizeSettings {
-    if (settings == null) {
+function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullComponentSetting {
+    if (comp == null || comp === LINE_BREAK_COMPONENT || (comp as any)?.slot === LINE_BREAK_COMPONENT) {
         return null;
     }
-    return {
-        ...settings,
-        tabs: (settings.tabs || []).map(tabSettings => normalizeToolbarTab(tabSettings, components)),
-    };
+    if (typeof comp === 'string') {
+        return { slot: comp };
+    }
+    return comp;
 }
 
 function normalizeToolbarTab(
@@ -71,21 +68,24 @@ function normalizeToolbarTab(
     return {
         ...tab,
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-call
-        label: `aloha.${(tab.label || '').replaceAll('.', '_')}`,
+        label: tab.label,
         components: tabComponents as AlohaFullComponentSetting[][],
         slotsToRender,
         hasSlotsToRender: slotsToRender.length > 0,
     };
 }
 
-function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullComponentSetting {
-    if (comp == null || comp === LINE_BREAK_COMPONENT || (comp as any)?.slot === LINE_BREAK_COMPONENT) {
+function normalizeToolbarSizeSettings(
+    settings: AlohaToolbarSizeSettings,
+    components: Record<string, AlohaComponent>,
+): NormalizedToolbarSizeSettings {
+    if (settings == null) {
         return null;
     }
-    if (typeof comp === 'string') {
-        return { slot: comp };
-    }
-    return comp;
+    return {
+        ...settings,
+        tabs: (settings.tabs || []).map(tabSettings => normalizeToolbarTab(tabSettings, components)),
+    };
 }
 
 @Injectable({ providedIn: 'root' })

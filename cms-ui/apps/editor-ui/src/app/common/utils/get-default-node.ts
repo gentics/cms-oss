@@ -1,4 +1,4 @@
-import {Node} from '../models';
+import { Node } from '@gentics/cms-models';
 
 /**
  * Given an array of nodes, return a single node which could be considered the "default" or starting node.

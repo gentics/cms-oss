@@ -1,5 +1,5 @@
 import { AbstractControl } from '@angular/forms';
-import { DynamicControlConfiguration, ExposedControl } from '@gentics/cms-integration-api-models';
+import { DynamicControlConfiguration, ExposedControl } from '@gentics/aloha-models';
 import { Subscription } from 'rxjs';
 
 const READONLY_PROPERTIES: (keyof ExposedControl<any>)[] = [

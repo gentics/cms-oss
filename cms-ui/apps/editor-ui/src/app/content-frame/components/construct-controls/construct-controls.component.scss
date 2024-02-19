@@ -1,4 +1,5 @@
 @import 'variables';
+@import 'aloha-utils';
 
 :host {
     width: 100%;
@@ -32,10 +33,12 @@
     align-items: center;
 
     padding: 0.25rem 0.5rem;
-    border: 1px solid $gtx-color-light-gray;
-    border-radius: 3px;
+    border: 1px solid $gtx-color-dark-gray;
+    color: $gtx-color-very-dark-gray;
+    border-radius: 2px;
     user-select: none;
     cursor: pointer;
+    @include gtxCommonButtonShadow;
 
     .group-icon {
         height: 24px;

@@ -4,7 +4,7 @@ import {
     DynamicDropdownConfiguration,
     DynamicFormModalConfiguration,
     OverlayElementControl,
-} from '@gentics/cms-integration-api-models';
+} from '@gentics/aloha-models';
 import { ModalCloseError, ModalClosingReason, ModalService, OverlayHostService } from '@gentics/ui-core';
 import { DynamicDropdownComponent } from '../../components';
 import { DynamicFormModal } from '../../components/dynamic-form-modal/dynamic-form-modal.component';

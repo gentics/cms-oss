@@ -1,4 +1,3 @@
-import { Item } from '@gentics/cms-models';
 import { AlohaComponent } from './components';
 
 export enum ScreenSize {
@@ -19,9 +18,6 @@ export interface AlohaSettings {
     locale: string;
     plugins: {
         block?: BlockPluginSettings;
-        gcn?: GcnPluginSettings;
-        'gcn-linkbrowser'?: GcnLinkBrowserPluginSettings;
-        gcnlinkchecker?: GcnLinkCheckerPluginSettings;
         format: FormatPluginSettings;
         [key: string]: any;
     };
@@ -106,162 +102,10 @@ export interface BlockPluginGlobalConfig extends BlockPluginEditableConfig {
     toggleDragdropGlobal?: boolean;
 }
 
-export interface GcnPluginSettings {
-    blocks?: GcnPluginBlockDefintion[];
-    buildRootTimestamp?: string;
-    constructCategories?: GcnPluginCategoryDefinition[];
-    copy_tags?: boolean;
-    description?: string;
-    devtools?: boolean;
-    config?: {
-        tagtypeWhitelist?: string[];
-    };
-    editables?: {
-        [cssQuery: string]: {
-            tagtypeWhitelist?: string[];
-        };
-    };
-    editableNode?: GcnPluginEditableNodeDefinition[];
-    enabled?: boolean;
-    fileName?: string;
-    folderId?: number;
-    forms?: boolean;
-    gcnLibVersion?: string;
-    id?: number;
-    isPublicationPermitted?: boolean;
-    languageMenu?: GcnPluginLanguageDefinition[];
-    languageid?: string;
-    lastAction?: string;
-    links?: string;
-    magiclinkconstruct?: number;
-    metaeditables?: any[];
-    modified?: boolean;
-    name?: string;
-    nodeFolderId?: string;
-    nodeId?: string;
-    online?: boolean;
-    pagelanguage?: string;
-    portletapp_prefix?: string;
-    priority?: number;
-    renderMessages?: any[];
-    sid?: string;
-    stag_prefix?: string;
-    tags?: GcnPluginTagDefinition[];
-    templateId?: number;
-    webappPrefix?: string;
-}
-
-export interface GcnPluginBlockDefintion {
-    constructid: string;
-    editdo: string;
-    icontitle: string;
-    iconurl: string;
-    id: string;
-    tagid: string;
-    tagname: string;
-}
-
-export interface GcnPluginCategoryDefinition {
-    id: number;
-    name: string;
-    constructs: {
-        id: string;
-        icon: string;
-        keyword: string;
-        name: string;
-    }[];
-}
-
-export interface GcnPluginEditableNodeDefinition {
-    id: string;
-    tagname: string;
-    partname: string;
-}
-
-export interface GcnPluginLanguageDefinition {
-    name: string;
-    code: string;
-    id: string;
-}
-
-export interface GcnPluginTagDefinition {
-    element: string;
-    onlyeditables: boolean;
-    tagname: string;
-    editables?: GcnPluginEditableDefinition[];
-    editablesNode?: GcnPluginEditableDefinition[];
-}
-
-export interface GcnPluginEditableDefinition {
-    _gcnContainedBlocks?: GcnPluginTagDefinition[];
-    element: string;
-    partname: string;
-    tagname: string;
-}
-
-export interface GcnLinkBrowserPluginSettings {
-    enabled?: boolean;
-    objectTypeFilter?: string[];
-}
-
-export interface GcnLinkCheckerPluginSettings {
-    absoluteBase?: string;
-    defaultProtocol?: string;
-    enabled?: boolean;
-    relativeBase?: string;
-}
-
 export interface FormatPluginSettings {
     config: string[];
     editables?: Record<string, string[]>;
     removeFormats?: string[];
-}
-
-export interface AlohaUiComponent {
-    id: number;
-    isInstance: boolean;
-    container: any | null;
-    type: string | null;
-    visible: boolean;
-    show(showOptions: any): void;
-    hide(): void;
-    focus(): void;
-    foreground(): void;
-    enable(enableOptions: any): void;
-    disable(): void;
-}
-
-export interface AlohaTextUiComponent extends AlohaUiComponent {
-    setValue(value: string): void;
-    getValue(): string;
-    updateValue(value: string): void;
-    element: JQuery<HTMLElement>;
-}
-
-export interface AlohaAttributeFieldUiComponent extends AlohaUiComponent  {
-    addAdditionalTargetObject(target: HTMLElement): void;
-    addListener(eventName: string, handler: (data: any) => void): void;
-    disableInput(): void;
-    enableInput(): void;
-    finishEditing(selectElement: boolean): void;
-    getInputElem(): HTMLElement | null;
-    getInputId(): string;
-    getInputJQuery(): JQuery<HTMLElement>;
-    getItem(): Item;
-    getTargetObject(): JQuery<HTMLElement>;
-    getValue(allowModification: boolean): void;
-    hasInputElem(): true;
-    /**
-     * Sets an attribute optionally based on a regex on reference
-     * @param attribute The Attribute name which should be set. Ex. "lang"
-     * @param value The value to set. Ex. "de-AT"
-     * @param regex The regex when the attribute should be set. The regex is applied to the value of refernece.
-     * @param reference The value for the regex.
-     */
-    setAttribute(attribute: string, value: string, regex: string, reference: string): void;
-    setItem(item: Item): void;
-    setObjectTypeFilter(filter: string[]): void;
-    setValue(value: string): void;
 }
 
 export interface AlohaPlugin {
@@ -270,11 +114,7 @@ export interface AlohaPlugin {
 }
 
 export interface AlohaLinkPlugin extends AlohaPlugin {
-    anchorField?: AlohaTextUiComponent & {
-        clear(): void;
-    },
     anchorLinks?: boolean;
-    hrefField: AlohaAttributeFieldUiComponent;
     config: string[];
     title: string;
     titleregex?: string | null;
@@ -320,7 +160,6 @@ export interface AlohaTablePlugin extends AlohaPlugin {
     createTable(columnCount: number, rowCount: number): void;
     updateWaiImage(): void;
     makeCaptionEditable(captionElem: JQuery<HTMLTableCaptionElement>, defaultText: string): void;
-    summary: AlohaAttributeFieldUiComponent;
 }
 
 export interface AlohaTablePluginParameters {
@@ -395,18 +234,6 @@ export interface AlohaUiPlugin extends AlohaPlugin {
     getToolbarSettings: () => AlohaToolbarSettings;
 }
 
-export interface GCNAlohaPlugin extends AlohaPlugin {
-    settings: GcnPluginSettings;
-    createTag(constructId: number, async?: boolean, successCallback?: (html: string, tag: any, data: any) => any): void;
-    handleBlock(data: any, insert: boolean, onInsert: () => void, content?: any): void;
-    openTagFill(tagId: string | number, pageId: string | number, withDelete?: boolean): void;
-}
-
-export interface GCNTags {
-    insert(data: any, callback?: (data: any) => void): JQuery;
-    decorate(tag: any, data: any, callback?: () => void): void;
-}
-
 export interface AlohaDOM {
     /**
      * Apply the given markup additively to the given range. The given rangeObject will be modified if necessary
@@ -464,4 +291,14 @@ export interface AlohaPubSub {
     sub: (eventName: string, handler: (eventData: any) => void) => void;
     pub: (eventName: string, eventData: any) => void;
     unsub: (eventName: string, handler: (eventData: any) => void) => void;
+}
+
+export interface AlohaLinkChangeEvent {
+    href: string;
+    element: JQuery<HTMLAnchorElement>;
+}
+
+export interface AlohaLinkRemoveEvent {
+    range: AlohaRangeObject;
+    text: string;
 }

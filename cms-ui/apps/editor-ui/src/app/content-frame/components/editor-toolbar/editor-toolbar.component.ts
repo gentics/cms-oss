@@ -107,6 +107,7 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     public isSaving: boolean;
     public inQueue: boolean;
     public focusMode: boolean;
+    public brokenLinkCount = 0;
 
     /** Subscriptions to cleanup */
     protected subscriptions: Subscription[] = [];
@@ -185,6 +186,10 @@ export class EditorToolbarComponent implements OnInit, OnChanges, OnDestroy {
     logoClick(): void {
         this.folderActions.setSearchTerm('');
         this.appState.dispatch(new FocusListAction());
+    }
+
+    updateBrokenLinkCount(count: number): void {
+        this.brokenLinkCount = count;
     }
 
     setUpBreadcrumbs(item: Page | File | Folder | Form | Image | Node | undefined, nodeId: number): void {

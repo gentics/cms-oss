@@ -1,3 +1,8 @@
+/* Always hide the toolbar - Everything is getting rendered via GCMSUI surface */
+.aloha.aloha-surface.aloha-toolbar {
+	display: none !important;
+}
+
 .aloha-editable div.aloha-table-wrapper.ui-draggable {
 	margin-top: 32px;
 }

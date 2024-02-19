@@ -1,6 +1,6 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "ui-core",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "apps/ui-core/src",

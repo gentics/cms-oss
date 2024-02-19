@@ -5,40 +5,40 @@
     "projectType": "library",
     "tags": ["lib", "models"],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
-        "options": {
-          "outputPath": "dist/libs/mesh-models",
-          "tsConfig": "libs/mesh-models/tsconfig.lib.json",
-          "packageJson": "libs/mesh-models/package.json",
-          "main": "libs/mesh-models/src/public-api.ts",
-          "assets": ["libs/mesh-models/*.md"]
-        }
-      },
-      "lint": {
-        "executor": "@nx/linter:eslint",
-        "outputs": ["{options.outputFile}"],
-        "options": {
-          "lintFilePatterns": [
-            "libs/mesh-models/**/*.ts",
-            "libs/mesh-models/package.json"
-          ]
-        }
-      },
-      "test": {
-        "executor": "@nx/jest:jest",
-        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-        "options": {
-          "jestConfig": "libs/mesh-models/jest.config.ts",
-          "passWithNoTests": true
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/mesh-models",
+                "tsConfig": "libs/mesh-models/tsconfig.lib.json",
+                "packageJson": "libs/mesh-models/package.json",
+                "main": "libs/mesh-models/src/public-api.ts",
+                "assets": ["libs/mesh-models/*.md"]
+            }
         },
-        "configurations": {
-          "ci": {
-            "ci": true,
-            "codeCoverage": true
-          }
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/mesh-models/**/*.ts",
+                    "libs/mesh-models/package.json"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/mesh-models/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
         }
-      }
     }
-  }
+}

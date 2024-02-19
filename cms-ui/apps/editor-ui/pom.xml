@@ -27,4 +27,13 @@
         <ui.assembly.phase>package</ui.assembly.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
+
+    <dependencies>
+        <dependency>
+			<groupId>com.gentics.cms-oss</groupId>
+			<artifactId>cms-models</artifactId>
+			<type>zip</type>
+			<scope>provided</scope>
+		</dependency>
+    </dependencies>
 </project>

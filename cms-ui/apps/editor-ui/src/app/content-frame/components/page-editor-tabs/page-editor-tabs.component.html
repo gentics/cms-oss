@@ -1,7 +1,7 @@
-<div class="gtx-editor-tabs gtx-overflow-managed">
+<div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
     <ng-container *ngFor="let tab of tabs">
         <button
-            *ngIf="tab.hasSlotsToRender"
+            *ngIf="tab.hasSlotsToRender && (tab.id !== TAB_ID_LINK_CHECKER || linkCheckerEnabled)"
             class="editor-tab"
             [attr.data-id]="tab.id"
             [class.active]="tab.id === activeTab"
@@ -10,6 +10,9 @@
         >
             <div class="tab-icon">
                 <icon>{{ tab.icon }}</icon>
+                <div *ngIf="tab.id === TAB_ID_LINK_CHECKER && brokenLinkCount" class="icon-badge">
+                    {{ brokenLinkCount }}
+                </div>
             </div>
             <div class="tab-label">{{ tab.label | i18n }}</div>
         </button>

@@ -1,0 +1,5 @@
+Copying or moving a page into another node will no longer be possible, if the page has variants in languages,
+which are not activated in the target node. The only exception is when copying or moving a page with a single language
+into a node, that does not have languages at all (in this case, the target page will also have no language) or when
+copying or moving a page without a language into a node with languages (the target node will get the first assigned language
+of the target node).

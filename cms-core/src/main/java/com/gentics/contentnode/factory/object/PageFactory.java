@@ -1629,277 +1629,316 @@ public class PageFactory extends AbstractFactory {
 		public PageCopyOpResult copyTo(Integer sourceChannelId, Folder targetFolder, boolean createCopy, Integer contentSetId, Integer targetChannelId) throws NodeException {
 			final Transaction t = TransactionManager.getCurrentTransaction();
 			try (ChannelTrx trx = new ChannelTrx()) {
-			if (targetChannelId == null) {
-				targetChannelId = 0;
-			}
-			if (targetFolder == null) {
-				return PageCopyOpResult.fail("op.no_targetfolder");
-			}
-			targetFolder = targetFolder.getMaster();
-			// Validate whether targetChannelId is valid
-			if (targetChannelId != 0) {
-				Node targetNode = t.getObject(Node.class, targetChannelId);
-				if (targetNode == null) {
-					throw new NodeException("Could not load node for targetChannelId {" + targetChannelId + "}.");
-				}
-				if (targetNode.isChannel()) {
-					if (MultichannellingFactory.getChannelVariant(targetFolder, targetNode) == null) {
-						return PageCopyOpResult.fail("op.folder_not_inherited_by_channel", targetFolder.getName(), ObjectTransformer.getString(targetNode.getId(), "?"));
-					}
-				} else {
-					// targetchannel is a node
+				if (targetChannelId == null) {
 					targetChannelId = 0;
 				}
-			}
-
-			final NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
-
-			// Check for read permissions of the source page
-			try (ChannelTrx trx1 = new ChannelTrx(sourceChannelId)) {
-			if (!t.canView(this)) {
-				return PageCopyOpResult.fail("page_copy.missing_view_perm_for_source_page", getLocation(this), this.getFolder().getName());
-			}
-			}
-
-			// Check create permissions for new pages in folder
-			try (ChannelTrx trx1 = new ChannelTrx(targetChannelId)) {
-				if (!t.canCreate(targetFolder, Page.class, this.getLanguage())) {
-					return PageCopyOpResult.fail("page_copy.missing_create_perms_for_target", I18NHelper.getLocation(targetFolder));
+				if (targetFolder == null) {
+					return PageCopyOpResult.fail("op.no_targetfolder");
 				}
-			}
-
-			// Map that stores information which language variation source page
-			// id was mapped to which new page id
-			Map<Integer, Integer> updateSyncInfoPages = new HashMap<Integer, Integer>();
-
-			// copy all pages in contentset if no contentset is given..
-			PageCopyOpResult result = new PageCopyOpResult();
-			if (contentSetId == null || contentSetId == 0) {
-				contentSetId = createContentSetId(null);
-				if (prefs.isFeature(Feature.CONTENTGROUP3)) {
-					// If we come here, we need to update the syncinfo (later)
-					// in the following loop, all other language variants of the
-					// page will be copied, so we keep track of the page copies.
-					// this array will map the old page ids to the new page ids
-
-					List<Page> pageVariants = getLanguageVariants(true);
-					Collections.sort(new ArrayList<Page>(pageVariants), new PageComparator("filename", "desc"));
-					for (Page languageVariant : pageVariants) {
-						// Don't invoke copy again for the initial copy call for
-						// the page
-						if (this.equals(languageVariant)) {
-							continue;
+				targetFolder = targetFolder.getMaster();
+				// Validate whether targetChannelId is valid
+				if (targetChannelId != 0) {
+					Node targetNode = t.getObject(Node.class, targetChannelId);
+					if (targetNode == null) {
+						throw new NodeException("Could not load node for targetChannelId {" + targetChannelId + "}.");
+					}
+					if (targetNode.isChannel()) {
+						if (MultichannellingFactory.getChannelVariant(targetFolder, targetNode) == null) {
+							return PageCopyOpResult.fail("op.folder_not_inherited_by_channel", targetFolder.getName(), ObjectTransformer.getString(targetNode.getId(), "?"));
 						}
-
-						PageCopyOpResult copyLanguageVariationOpResult = languageVariant.copyTo(sourceChannelId, targetFolder, createCopy, contentSetId, targetChannelId);
-
-						// Return early with the failure when the copy call
-						// was not successful
-						if (!copyLanguageVariationOpResult.isOK()) {
-							return copyLanguageVariationOpResult;
-						}
-
-						// For now we always assume that the copy call only
-						// copies one page.
-						if (copyLanguageVariationOpResult.getCopyInfos().size() != 1) {
-							throw new NodeException("The recursive copy call should not create more than one copy. Something went wrong.");
-						}
-						PageCopyOpResultInfo info = copyLanguageVariationOpResult.getCopyInfos().get(0);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Invoked copy call. Resulting Info: {" + info + "}");
-						}
-						Page createdPageCopy = info.getCreatedPageCopy();
-						if (createdPageCopy == null) {
-							throw new NodeException("The recursive copy call did finish successful but no copy was created.");
-						}
-						updateSyncInfoPages.put(getInteger(languageVariant.getId(), -1), getInteger(createdPageCopy.getId(), -1));
-						// Merge the data (not the status)
-						result.mergeData(copyLanguageVariationOpResult);
-
+					} else {
+						// targetchannel is a node
+						targetChannelId = 0;
 					}
 				}
-			}
 
-			final Integer fTargetFolderId = getInteger(targetFolder.getId(),-1);
-			String pageName = getName();
+				final NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 
-			// Check whether a page with the same name in the target folder
-			// already exists.
-			// TODO check whether getContent().getPages().getName() comparison
-			// is faster. This would be nicer
-			if (createCopy) {
-
-				int i = 0;
-				final AtomicBoolean pageNameCollisionFound = new AtomicBoolean(true);
-				String determinedName = pageName;
-				while (i == 0 || pageNameCollisionFound.get()) {
-					String tmp = "";
-					if (i != 0) {
-						tmp = " " + (i + 1);
+				// Check for read permissions of the source page
+				try (ChannelTrx trx1 = new ChannelTrx(sourceChannelId)) {
+					if (!t.canView(this)) {
+						return PageCopyOpResult.fail("page_copy.missing_view_perm_for_source_page", getLocation(this), this.getFolder().getName());
 					}
-					CNI18nString i18n = new CNI18nString("copy_of");
-					i18n.addParameter(tmp);
-					i18n.addParameter(pageName);
-					determinedName = i18n.toString();
-					final String sql = "SELECT count(*) c FROM page WHERE deleted = 0 AND name = ? AND folder_id = ?";
-					final String currentName = determinedName;
-					DBUtils.executeStatement(sql, new SQLExecutor() {
+				}
+
+				// Check create permissions for new pages in folder
+				try (ChannelTrx trx1 = new ChannelTrx(targetChannelId)) {
+					if (!t.canCreate(targetFolder, Page.class, this.getLanguage())) {
+						return PageCopyOpResult.fail("page_copy.missing_create_perms_for_target", I18NHelper.getLocation(targetFolder));
+					}
+				}
+
+				// Map that stores information which language variation source page
+				// id was mapped to which new page id
+				Map<Integer, Integer> updateSyncInfoPages = new HashMap<Integer, Integer>();
+
+				// this will be the language of the target page
+				ContentLanguage targetLanguage = getLanguage();
+
+				// copy all pages in contentset if no contentset is given..
+				PageCopyOpResult result = new PageCopyOpResult();
+				if (contentSetId == null || contentSetId == 0) {
+					contentSetId = createContentSetId(null);
+					if (prefs.isFeature(Feature.CONTENTGROUP3)) {
+						// If we come here, we need to update the syncinfo (later)
+						// in the following loop, all other language variants of the
+						// page will be copied, so we keep track of the page copies.
+						// this array will map the old page ids to the new page ids
+
+						List<Page> pageVariants = getLanguageVariants(true);
+
+						// when copying into another node, we check whether all required languages exist in the target node
+						if (!getOwningNode().equals(targetFolder.getOwningNode())) {
+							Set<ContentLanguage> pageLanguages = new HashSet<>();
+							for (Page variant : pageVariants) {
+								ContentLanguage variantLanguage = variant.getLanguage();
+								if (variantLanguage != null) {
+									pageLanguages.add(variantLanguage);
+								}
+							}
+							List<ContentLanguage> targetNodeLanguages = targetFolder.getOwningNode().getLanguages();
+							pageLanguages.removeAll(targetNodeLanguages);
+
+							// when the page to copy does not have a language, but the target node has languages, we let the copy have the first
+							// language assigned to the node
+							if (targetLanguage == null && !targetNodeLanguages.isEmpty()) {
+								targetLanguage = targetNodeLanguages.get(0);
+							}
+
+							// special case: the page to copy has exactly one language and the target node does not have languages at all
+							if (targetNodeLanguages.isEmpty() && pageLanguages.size() == 1) {
+								targetLanguage = null;
+							} else if (!pageLanguages.isEmpty()) {
+								String missingLanguageNames = pageLanguages.stream().map(ContentLanguage::getName).sorted().collect(Collectors.joining(", "));
+								if (pageLanguages.size() == 1) {
+									return PageCopyOpResult.fail("page_copy.missing_language", missingLanguageNames);
+								} else {
+									return PageCopyOpResult.fail("page_copy.missing_languages", missingLanguageNames);
+								}
+							}
+						}
+
+						Collections.sort(new ArrayList<Page>(pageVariants), new PageComparator("filename", "desc"));
+						for (Page languageVariant : pageVariants) {
+							// Don't invoke copy again for the initial copy call for
+							// the page
+							if (this.equals(languageVariant)) {
+								continue;
+							}
+
+							PageCopyOpResult copyLanguageVariationOpResult = languageVariant.copyTo(sourceChannelId, targetFolder, createCopy, contentSetId, targetChannelId);
+
+							// Return early with the failure when the copy call
+							// was not successful
+							if (!copyLanguageVariationOpResult.isOK()) {
+								return copyLanguageVariationOpResult;
+							}
+
+							// For now we always assume that the copy call only
+							// copies one page.
+							if (copyLanguageVariationOpResult.getCopyInfos().size() != 1) {
+								throw new NodeException("The recursive copy call should not create more than one copy. Something went wrong.");
+							}
+							PageCopyOpResultInfo info = copyLanguageVariationOpResult.getCopyInfos().get(0);
+							if (logger.isDebugEnabled()) {
+								logger.debug("Invoked copy call. Resulting Info: {" + info + "}");
+							}
+							Page createdPageCopy = info.getCreatedPageCopy();
+							if (createdPageCopy == null) {
+								throw new NodeException("The recursive copy call did finish successful but no copy was created.");
+							}
+							updateSyncInfoPages.put(getInteger(languageVariant.getId(), -1), getInteger(createdPageCopy.getId(), -1));
+							// Merge the data (not the status)
+							result.mergeData(copyLanguageVariationOpResult);
+
+						}
+					}
+				}
+
+				final Integer fTargetFolderId = getInteger(targetFolder.getId(),-1);
+				String pageName = getName();
+
+				// Check whether a page with the same name in the target folder
+				// already exists.
+				// TODO check whether getContent().getPages().getName() comparison
+				// is faster. This would be nicer
+				if (createCopy) {
+
+					int i = 0;
+					final AtomicBoolean pageNameCollisionFound = new AtomicBoolean(true);
+					String determinedName = pageName;
+					while (i == 0 || pageNameCollisionFound.get()) {
+						String tmp = "";
+						if (i != 0) {
+							tmp = " " + (i + 1);
+						}
+						CNI18nString i18n = new CNI18nString("copy_of");
+						i18n.addParameter(tmp);
+						i18n.addParameter(pageName);
+						determinedName = i18n.toString();
+						final String sql = "SELECT count(*) c FROM page WHERE deleted = 0 AND name = ? AND folder_id = ?";
+						final String currentName = determinedName;
+						DBUtils.executeStatement(sql, new SQLExecutor() {
+							@Override
+							public void prepareStatement(PreparedStatement stmt) throws SQLException {
+								stmt.setString(1, currentName);
+								stmt.setInt(2, fTargetFolderId);
+							}
+
+							@Override
+							public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
+								while (rs.next()) {
+									if (rs.getInt("c") == 0) {
+										pageNameCollisionFound.set(false);
+										return;
+									}
+								}
+							}
+						});
+						i++;
+					}
+					pageName = determinedName;
+
+				} else {
+
+					final AtomicInteger foundPageId = new AtomicInteger(-1);
+					final String currentPageName = pageName;
+					final Integer fContentSetId = contentSetId;
+
+					// Check for pages with given name in the target folder
+					StringBuilder sqlBuilder = new StringBuilder();
+					sqlBuilder.append("SELECT id FROM page WHERE deleted = 0 AND name = ? AND folder_id =  ? ");
+					if (prefs.isFeature(Feature.CONTENTGROUP3)) {
+						sqlBuilder.append(" AND contentset_id != ?");
+					}
+					DBUtils.executeStatement(sqlBuilder.toString(), new SQLExecutor() {
+
 						@Override
 						public void prepareStatement(PreparedStatement stmt) throws SQLException {
-							stmt.setString(1, currentName);
+							stmt.setString(1, currentPageName);
 							stmt.setInt(2, fTargetFolderId);
+							if (prefs.isFeature(Feature.CONTENTGROUP3)) {
+								stmt.setInt(3, fContentSetId);
+							}
 						}
 
 						@Override
 						public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
 							while (rs.next()) {
-								if (rs.getInt("c") == 0) {
-									pageNameCollisionFound.set(false);
-									return;
-								}
+								foundPageId.set(rs.getInt(1));
+								return;
 							}
 						}
 					});
-					i++;
-				}
-				pageName = determinedName;
-
-			} else {
-
-				final AtomicInteger foundPageId = new AtomicInteger(-1);
-				final String currentPageName = pageName;
-				final Integer fContentSetId = contentSetId;
-
-				// Check for pages with given name in the target folder
-				StringBuilder sqlBuilder = new StringBuilder();
-				sqlBuilder.append("SELECT id FROM page WHERE deleted = 0 AND name = ? AND folder_id =  ? ");
-				if (prefs.isFeature(Feature.CONTENTGROUP3)) {
-					sqlBuilder.append(" AND contentset_id != ?");
-				}
-				DBUtils.executeStatement(sqlBuilder.toString(), new SQLExecutor() {
-
-					@Override
-					public void prepareStatement(PreparedStatement stmt) throws SQLException {
-						stmt.setString(1, currentPageName);
-						stmt.setInt(2, fTargetFolderId);
-						if (prefs.isFeature(Feature.CONTENTGROUP3)) {
-							stmt.setInt(3, fContentSetId);
-						}
-					}
-
-					@Override
-					public void handleResultSet(ResultSet rs) throws SQLException, NodeException {
-						while (rs.next()) {
-							foundPageId.set(rs.getInt(1));
-							return;
-						}
-					}
-				});
-				// We found a conflict. Load the page and return a failure
-				if (foundPageId.get() != -1) {
-					Page foundPage = t.getObject(Page.class, foundPageId.get());
-					if (foundPage != null) {
-						return PageCopyOpResult.fail("page_copy.name_conflict_detected", I18NHelper.getLocation(this), I18NHelper.getLocation(targetFolder));
-					}
-				}
-			}
-
-			// Create the copy and modify the copy according to the given
-			// parameters
-			Page pageCopy = copy();
-
-			// Reset the contentset id to set a new one
-			pageCopy.resetContentsetId();
-			pageCopy.setContentsetId(contentSetId);
-
-			pageCopy.setName(pageName);
-			pageCopy.setLanguage(getLanguage());
-			pageCopy.setFolderId(targetFolder.getId());
-
-			// Autogenerate channelset id when copying into master node folders
-			pageCopy.setChannelInfo(targetChannelId, null);
-
-			pageCopy.save(false);
-			result.addPageCopyInfo(this, pageCopy, targetFolder, targetChannelId);
-
-			if (prefs.isFeature(Feature.MULTICHANNELLING) && isMaster()) {
-				ChannelTreeSegment originalSegment = new ChannelTreeSegment(this, true);
-				ChannelTreeSegment newSegment = originalSegment.addRestrictions(targetFolder.isExcluded(), targetFolder.getDisinheritedChannels());
-				pageCopy.changeMultichannellingRestrictions(newSegment.isExcluded(), newSegment.getRestrictions(), false);
-				logger.debug("calling setDisinheritDefault() for pageCopy: " + (getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault()));
-				pageCopy.setDisinheritDefault(
-					getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault(),
-					false);
-			}
-
-			// Generate new filename if needed
-			makePageFilenameUnique(pageCopy);
-			pageCopy.save();
-			pageCopy.unlock();
-
-			if (updateSyncInfoPages.size() > 0) {
-				updateSyncInfoPages.put(getInteger(getId(), -1), getInteger(pageCopy.getId(), -1));
-			}
-
-			// Check whether new language variants have been copied. In this
-			// case the sync info has to be updated.
-			// now we possibly need to update the syncinfo for the new created
-			// pages (including all language variants)
-			for (Map.Entry<Integer, Integer> mapping : updateSyncInfoPages.entrySet()) {
-				final Integer oldPageId = mapping.getKey();
-				final Integer newPageId = mapping.getValue();
-
-				Page oldPage = t.getObject(Page.class, oldPageId);
-				Integer oldSyncPageId = oldPage.getSyncPageId();
-				if (oldSyncPageId == null) {
-					continue;
-				}
-				final Integer newSyncPageId = updateSyncInfoPages.get(oldSyncPageId);
-				if (newSyncPageId == null) {
-					continue;
-				}
-				// The original page was sync'ed with another page
-				Integer oldSyncTimestamp = 0;
-				if (oldPage.getSyncTimestamp() != null) {
-					oldSyncTimestamp = oldPage.getSyncTimestamp().getTimestamp();
-				}
-
-				final AtomicInteger newSyncTimestamp = new AtomicInteger(0);
-				if (oldSyncTimestamp != null) {
-					// The original page was synchronized with a
-					// specific version, check whether it was the
-					// latest version
-					Page syncPageObject = t.getObject(Page.class, oldSyncPageId);
-					NodeObjectVersion[] versions = syncPageObject.getVersions();
-					if (versions != null && versions.length >= 1) {
-						NodeObjectVersion lastversion = versions[versions.length - 1];
-						Integer latestVersionTimestamp = lastversion.getDate().getTimestamp();
-						if (latestVersionTimestamp == oldSyncTimestamp) {
-							// The original page was in sync
-							// with  the latest version of another
-							// page, so the copy must also be.
-							newSyncTimestamp.set(t.getUnixTimestamp());
+					// We found a conflict. Load the page and return a failure
+					if (foundPageId.get() != -1) {
+						Page foundPage = t.getObject(Page.class, foundPageId.get());
+						if (foundPage != null) {
+							return PageCopyOpResult.fail("page_copy.name_conflict_detected", I18NHelper.getLocation(this), I18NHelper.getLocation(targetFolder));
 						}
 					}
 				}
 
-				// // update sync_info for the copy
-				String sql = "UPDATE page SET sync_page_id = ?, sync_timestamp = ? WHERE id = ?";
-				DBUtils.executeStatement(sql, new SQLExecutor() {
-					@Override
-					public void prepareStatement(PreparedStatement stmt) throws SQLException {
-						stmt.setInt(1, newSyncPageId);
-						stmt.setInt(2, newSyncTimestamp.get());
-						stmt.setInt(3, newPageId);
+				// Create the copy and modify the copy according to the given
+				// parameters
+				Page pageCopy = copy();
+
+				// Reset the contentset id to set a new one
+				pageCopy.resetContentsetId();
+				pageCopy.setContentsetId(contentSetId);
+
+				pageCopy.setName(pageName);
+				if (targetLanguage == null) {
+					pageCopy.setLanguageId(0);
+				} else {
+					pageCopy.setLanguage(targetLanguage);
+				}
+				pageCopy.setFolderId(targetFolder.getId());
+
+				// Autogenerate channelset id when copying into master node folders
+				pageCopy.setChannelInfo(targetChannelId, null);
+
+				pageCopy.save(false);
+				result.addPageCopyInfo(this, pageCopy, targetFolder, targetChannelId);
+
+				if (prefs.isFeature(Feature.MULTICHANNELLING) && isMaster()) {
+					ChannelTreeSegment originalSegment = new ChannelTreeSegment(this, true);
+					ChannelTreeSegment newSegment = originalSegment.addRestrictions(targetFolder.isExcluded(), targetFolder.getDisinheritedChannels());
+					pageCopy.changeMultichannellingRestrictions(newSegment.isExcluded(), newSegment.getRestrictions(), false);
+					logger.debug("calling setDisinheritDefault() for pageCopy: " + (getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault()));
+					pageCopy.setDisinheritDefault(
+						getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault(),
+						false);
+				}
+
+				// Generate new filename if needed
+				makePageFilenameUnique(pageCopy);
+				pageCopy.save();
+				pageCopy.unlock();
+
+				if (updateSyncInfoPages.size() > 0) {
+					updateSyncInfoPages.put(getInteger(getId(), -1), getInteger(pageCopy.getId(), -1));
+				}
+
+				// Check whether new language variants have been copied. In this
+				// case the sync info has to be updated.
+				// now we possibly need to update the syncinfo for the new created
+				// pages (including all language variants)
+				for (Map.Entry<Integer, Integer> mapping : updateSyncInfoPages.entrySet()) {
+					final Integer oldPageId = mapping.getKey();
+					final Integer newPageId = mapping.getValue();
+
+					Page oldPage = t.getObject(Page.class, oldPageId);
+					Integer oldSyncPageId = oldPage.getSyncPageId();
+					if (oldSyncPageId == null) {
+						continue;
 					}
-				});
+					final Integer newSyncPageId = updateSyncInfoPages.get(oldSyncPageId);
+					if (newSyncPageId == null) {
+						continue;
+					}
+					// The original page was sync'ed with another page
+					Integer oldSyncTimestamp = 0;
+					if (oldPage.getSyncTimestamp() != null) {
+						oldSyncTimestamp = oldPage.getSyncTimestamp().getTimestamp();
+					}
 
+					final AtomicInteger newSyncTimestamp = new AtomicInteger(0);
+					if (oldSyncTimestamp != null) {
+						// The original page was synchronized with a
+						// specific version, check whether it was the
+						// latest version
+						Page syncPageObject = t.getObject(Page.class, oldSyncPageId);
+						NodeObjectVersion[] versions = syncPageObject.getVersions();
+						if (versions != null && versions.length >= 1) {
+							NodeObjectVersion lastversion = versions[versions.length - 1];
+							Integer latestVersionTimestamp = lastversion.getDate().getTimestamp();
+							if (latestVersionTimestamp == oldSyncTimestamp) {
+								// The original page was in sync
+								// with  the latest version of another
+								// page, so the copy must also be.
+								newSyncTimestamp.set(t.getUnixTimestamp());
+							}
+						}
+					}
+
+					// // update sync_info for the copy
+					String sql = "UPDATE page SET sync_page_id = ?, sync_timestamp = ? WHERE id = ?";
+					DBUtils.executeStatement(sql, new SQLExecutor() {
+						@Override
+						public void prepareStatement(PreparedStatement stmt) throws SQLException {
+							stmt.setInt(1, newSyncPageId);
+							stmt.setInt(2, newSyncTimestamp.get());
+							stmt.setInt(3, newPageId);
+						}
+					});
+
+				}
+
+				ActionLogger.logCmd(ActionLogger.COPY, TYPE_PAGE, getId(), targetFolder.getId(), "page_copy_java: {" + "channel_id: " + targetChannelId + "}");
+				t.dirtObjectCache(t.getClass(Folder.TYPE_FOLDER), targetFolder.getId());
+				return result;
 			}
-
-			ActionLogger.logCmd(ActionLogger.COPY, TYPE_PAGE, getId(), targetFolder.getId(), "page_copy_java: {" + "channel_id: " + targetChannelId + "}");
-			t.dirtObjectCache(t.getClass(Folder.TYPE_FOLDER), targetFolder.getId());
-			return result;
-		}
 		}
 
 		@Override
@@ -2449,10 +2488,43 @@ public class PageFactory extends AbstractFactory {
 		@Override
 		public OpResult move(Folder target, int targetChannelId, boolean allLanguages) throws NodeException {
 			List<Page> languageVariants = null;
-				try (ChannelTrx trx = new ChannelTrx(getChannel())) {
-					languageVariants = getLanguageVariants(false);
-				}
+			ContentLanguage targetLanguage = getLanguage();
+
+			try (ChannelTrx trx = new ChannelTrx(getChannel())) {
+				languageVariants = getLanguageVariants(false);
+			}
 			if (allLanguages) {
+				// when moving to another node, check whether all languages are activated in the other node
+				if (!getOwningNode().equals(target.getOwningNode())) {
+					Set<ContentLanguage> pageLanguages = new HashSet<>();
+					for (Page variant : languageVariants) {
+						ContentLanguage variantLanguage = variant.getLanguage();
+						if (variantLanguage != null) {
+							pageLanguages.add(variantLanguage);
+						}
+					}
+					List<ContentLanguage> targetNodeLanguages = target.getOwningNode().getLanguages();
+					pageLanguages.removeAll(targetNodeLanguages);
+
+					// when the page to move does not have a language, but the target node has languages, we let the page have the first
+					// language assigned to the node
+					if (targetLanguage == null && !targetNodeLanguages.isEmpty()) {
+						targetLanguage = targetNodeLanguages.get(0);
+					}
+
+					// special case: the page to move has exactly one language and the target node does not have languages at all
+					if (targetNodeLanguages.isEmpty() && pageLanguages.size() == 1) {
+						targetLanguage = null;
+					} else if (!pageLanguages.isEmpty()) {
+						String missingLanguageNames = pageLanguages.stream().map(ContentLanguage::getName).sorted().collect(Collectors.joining(", "));
+						if (pageLanguages.size() == 1) {
+							return PageCopyOpResult.fail("page.move.missing_language", missingLanguageNames);
+						} else {
+							return PageCopyOpResult.fail("page.move.missing_languages", missingLanguageNames);
+						}
+					}
+				}
+
 				for (Page langVariant : languageVariants) {
 					if (langVariant.equals(this)) {
 						continue;
@@ -2473,6 +2545,16 @@ public class PageFactory extends AbstractFactory {
 				for (Page page : languageVariants) {
 					t.dirtObjectCache(Page.class, page.getId());
 				}
+			}
+
+			// change the language of the page (if necessary)
+			if (!Objects.equals(getLanguage(), targetLanguage)) {
+				if (targetLanguage == null) {
+					DBUtils.update("UPDATE page SET contentgroup_id = ? WHERE id = ?", 0, getId());
+				} else {
+					DBUtils.update("UPDATE page SET contentgroup_id = ? WHERE id = ?", targetLanguage.getId(), getId());
+				}
+				TransactionManager.getCurrentTransaction().dirtObjectCache(Page.class, getId());
 			}
 			return moveObject(this, target, targetChannelId, false);
 		}

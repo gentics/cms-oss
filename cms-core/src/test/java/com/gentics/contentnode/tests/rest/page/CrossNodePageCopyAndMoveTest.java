@@ -40,9 +40,11 @@ public class CrossNodePageCopyAndMoveTest {
 	public static DBTestContext testContext = new DBTestContext();
 	private static ContentLanguage german;
 	private static ContentLanguage english;
+	private static ContentLanguage french;
 	private static Node germanNode;
 	private static Node englishNode;
 	private static Node germanEnglishNode;
+	private static Node germanFrenchNode;
 	private static Node noLanguageNode;
 	private static Node otherNoLanguageNode;
 	private static Template template;
@@ -53,9 +55,11 @@ public class CrossNodePageCopyAndMoveTest {
 
 		german = supply(() -> getLanguage("de"));
 		english = supply(() -> getLanguage("en"));
+		french = supply(() -> getLanguage("fr"));
 		germanNode = supply(() -> createNode("german.only", "Node with german only", PublishTarget.NONE, german));
 		englishNode = supply(() -> createNode("english.only", "Node with english only", PublishTarget.NONE, english));
 		germanEnglishNode = supply(() -> createNode("german.english", "Node with german and english", PublishTarget.NONE, german, english));
+		germanFrenchNode = supply(() -> createNode("german.french", "Node with german and french", PublishTarget.NONE, german, french));
 		noLanguageNode = supply(() -> createNode("no.language", "Node without languages", PublishTarget.NONE));
 		otherNoLanguageNode = supply(() -> createNode("other.no.language", "Another Node without languages", PublishTarget.NONE));
 
@@ -69,7 +73,7 @@ public class CrossNodePageCopyAndMoveTest {
 	@Before
 	public void setup() throws NodeException {
 		operate(() -> {
-			for (Node n : Arrays.asList(germanNode, englishNode, germanEnglishNode, noLanguageNode, otherNoLanguageNode)) {
+			for (Node n : Arrays.asList(germanNode, englishNode, germanEnglishNode, germanFrenchNode, noLanguageNode, otherNoLanguageNode)) {
 				clear(n);
 			}
 		});
@@ -89,7 +93,7 @@ public class CrossNodePageCopyAndMoveTest {
 		new TestCase()
 			.createPage(germanNode, german)
 			.copyTo(englishNode)
-			.expectFailure("page_copy.missing_language", "Deutsch")
+			.expectSuccess(english)
 			.run();
 	}
 
@@ -98,7 +102,16 @@ public class CrossNodePageCopyAndMoveTest {
 		new TestCase()
 			.createPage(germanEnglishNode, german, english)
 			.copyTo(germanNode)
-			.expectFailure("page_copy.missing_language", "English")
+			.expectSuccess(german)
+			.run();
+	}
+
+	@Test
+	public void testCopyEnglishGermanToGerman() throws NodeException {
+		new TestCase()
+			.createPage(germanEnglishNode, english, german)
+			.copyTo(germanNode)
+			.expectSuccess(german)
 			.run();
 	}
 
@@ -107,7 +120,7 @@ public class CrossNodePageCopyAndMoveTest {
 		new TestCase()
 			.createPage(germanEnglishNode, german, english)
 			.copyTo(noLanguageNode)
-			.expectFailure("page_copy.missing_languages", "Deutsch, English")
+			.expectSuccess()
 			.run();
 	}
 
@@ -135,6 +148,15 @@ public class CrossNodePageCopyAndMoveTest {
 			.createPage(noLanguageNode)
 			.copyTo(otherNoLanguageNode)
 			.expectSuccess()
+			.run();
+	}
+
+	@Test
+	public void testCopyGermanEnglishToGermanFrench() throws NodeException {
+		new TestCase()
+			.createPage(germanEnglishNode, german, english)
+			.copyTo(germanFrenchNode)
+			.expectSuccess(german)
 			.run();
 	}
 
@@ -201,6 +223,15 @@ public class CrossNodePageCopyAndMoveTest {
 			.run();
 	}
 
+	@Test
+	public void testMoveGermanEnglishToGermanFrench() throws NodeException {
+		new TestCase()
+			.createPage(germanEnglishNode, german, english)
+			.moveTo(germanFrenchNode)
+			.expectFailure("page.move.missing_language", "English")
+			.run();
+	}
+
 	/**
 	 * Implementation of the test cases
 	 */
@@ -251,7 +282,7 @@ public class CrossNodePageCopyAndMoveTest {
 		protected ContentLanguage[] expectedLanguages;
 
 		/**
-		 * Let the test case create a page in the node with the given languages
+		 * Let the test case create a page in the node with the given languages. The "selected" page (the one, for which the copy is called) is the one with the last given language
 		 * @param node source node
 		 * @param languages languages of the page to create
 		 * @return fluent API

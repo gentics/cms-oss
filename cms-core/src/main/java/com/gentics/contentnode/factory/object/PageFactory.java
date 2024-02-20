@@ -1674,9 +1674,11 @@ public class PageFactory extends AbstractFactory {
 
 				// this will be the language of the target page
 				ContentLanguage targetLanguage = getLanguage();
+				boolean doCopyThis = true;
 
 				// copy all pages in contentset if no contentset is given..
 				PageCopyOpResult result = new PageCopyOpResult();
+
 				if (contentSetId == null || contentSetId == 0) {
 					contentSetId = createContentSetId(null);
 					if (prefs.isFeature(Feature.CONTENTGROUP3)) {
@@ -1685,19 +1687,23 @@ public class PageFactory extends AbstractFactory {
 						// page will be copied, so we keep track of the page copies.
 						// this array will map the old page ids to the new page ids
 
-						List<Page> pageVariants = getLanguageVariants(true);
+						List<Page> pageVariants = new ArrayList<>(getLanguageVariants(true));
 
 						// when copying into another node, we check whether all required languages exist in the target node
 						if (!getOwningNode().equals(targetFolder.getOwningNode())) {
-							Set<ContentLanguage> pageLanguages = new HashSet<>();
-							for (Page variant : pageVariants) {
+							// get the languages available in the target node
+							List<ContentLanguage> targetNodeLanguages = targetFolder.getOwningNode().getLanguages();
+
+							// remove the page variants with languages, that do not exist in the target node
+							for (Iterator<Page> iterator = pageVariants.iterator(); iterator.hasNext();) {
+								Page variant = iterator.next();
 								ContentLanguage variantLanguage = variant.getLanguage();
 								if (variantLanguage != null) {
-									pageLanguages.add(variantLanguage);
+									if (!targetNodeLanguages.contains(variantLanguage)) {
+										iterator.remove();
+									}
 								}
 							}
-							List<ContentLanguage> targetNodeLanguages = targetFolder.getOwningNode().getLanguages();
-							pageLanguages.removeAll(targetNodeLanguages);
 
 							// when the page to copy does not have a language, but the target node has languages, we let the copy have the first
 							// language assigned to the node
@@ -1705,20 +1711,21 @@ public class PageFactory extends AbstractFactory {
 								targetLanguage = targetNodeLanguages.get(0);
 							}
 
-							// special case: the page to copy has exactly one language and the target node does not have languages at all
-							if (targetNodeLanguages.isEmpty() && pageLanguages.size() == 1) {
-								targetLanguage = null;
-							} else if (!pageLanguages.isEmpty()) {
-								String missingLanguageNames = pageLanguages.stream().map(ContentLanguage::getName).sorted().collect(Collectors.joining(", "));
-								if (pageLanguages.size() == 1) {
-									return PageCopyOpResult.fail("page_copy.missing_language", missingLanguageNames);
+							if (pageVariants.isEmpty()) {
+								// we found no language, which exists in the target node, so we will copy only the selected page and
+								// give it the first language of the target node. If the target node does not have languages, we give the copy no language
+								if (targetNodeLanguages.isEmpty()) {
+									targetLanguage = null;
 								} else {
-									return PageCopyOpResult.fail("page_copy.missing_languages", missingLanguageNames);
+									targetLanguage = targetNodeLanguages.get(0);
 								}
+							} else if (!pageVariants.contains(this)) {
+								// if the allowed page languages do not contain the selected page, we will not copy it
+								doCopyThis = false;
 							}
 						}
 
-						Collections.sort(new ArrayList<Page>(pageVariants), new PageComparator("filename", "desc"));
+						Collections.sort(pageVariants, new PageComparator("filename", "desc"));
 						for (Page languageVariant : pageVariants) {
 							// Don't invoke copy again for the initial copy call for
 							// the page
@@ -1839,45 +1846,47 @@ public class PageFactory extends AbstractFactory {
 					}
 				}
 
-				// Create the copy and modify the copy according to the given
-				// parameters
-				Page pageCopy = copy();
+				if (doCopyThis) {
+					// Create the copy and modify the copy according to the given
+					// parameters
+					Page pageCopy = copy();
 
-				// Reset the contentset id to set a new one
-				pageCopy.resetContentsetId();
-				pageCopy.setContentsetId(contentSetId);
+					// Reset the contentset id to set a new one
+					pageCopy.resetContentsetId();
+					pageCopy.setContentsetId(contentSetId);
 
-				pageCopy.setName(pageName);
-				if (targetLanguage == null) {
-					pageCopy.setLanguageId(0);
-				} else {
-					pageCopy.setLanguage(targetLanguage);
-				}
-				pageCopy.setFolderId(targetFolder.getId());
+					pageCopy.setName(pageName);
+					if (targetLanguage == null) {
+						pageCopy.setLanguageId(0);
+					} else {
+						pageCopy.setLanguage(targetLanguage);
+					}
+					pageCopy.setFolderId(targetFolder.getId());
 
-				// Autogenerate channelset id when copying into master node folders
-				pageCopy.setChannelInfo(targetChannelId, null);
+					// Autogenerate channelset id when copying into master node folders
+					pageCopy.setChannelInfo(targetChannelId, null);
 
-				pageCopy.save(false);
-				result.addPageCopyInfo(this, pageCopy, targetFolder, targetChannelId);
+					pageCopy.save(false);
+					result.addPageCopyInfo(this, pageCopy, targetFolder, targetChannelId);
 
-				if (prefs.isFeature(Feature.MULTICHANNELLING) && isMaster()) {
-					ChannelTreeSegment originalSegment = new ChannelTreeSegment(this, true);
-					ChannelTreeSegment newSegment = originalSegment.addRestrictions(targetFolder.isExcluded(), targetFolder.getDisinheritedChannels());
-					pageCopy.changeMultichannellingRestrictions(newSegment.isExcluded(), newSegment.getRestrictions(), false);
-					logger.debug("calling setDisinheritDefault() for pageCopy: " + (getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault()));
-					pageCopy.setDisinheritDefault(
-						getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault(),
-						false);
-				}
+					if (prefs.isFeature(Feature.MULTICHANNELLING) && isMaster()) {
+						ChannelTreeSegment originalSegment = new ChannelTreeSegment(this, true);
+						ChannelTreeSegment newSegment = originalSegment.addRestrictions(targetFolder.isExcluded(), targetFolder.getDisinheritedChannels());
+						pageCopy.changeMultichannellingRestrictions(newSegment.isExcluded(), newSegment.getRestrictions(), false);
+						logger.debug("calling setDisinheritDefault() for pageCopy: " + (getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault()));
+						pageCopy.setDisinheritDefault(
+							getMaster().isDisinheritDefault() || targetFolder.isDisinheritDefault(),
+							false);
+					}
 
-				// Generate new filename if needed
-				makePageFilenameUnique(pageCopy);
-				pageCopy.save();
-				pageCopy.unlock();
+					// Generate new filename if needed
+					makePageFilenameUnique(pageCopy);
+					pageCopy.save();
+					pageCopy.unlock();
 
-				if (updateSyncInfoPages.size() > 0) {
-					updateSyncInfoPages.put(getInteger(getId(), -1), getInteger(pageCopy.getId(), -1));
+					if (updateSyncInfoPages.size() > 0) {
+						updateSyncInfoPages.put(getInteger(getId(), -1), getInteger(pageCopy.getId(), -1));
+					}
 				}
 
 				// Check whether new language variants have been copied. In this
@@ -1922,7 +1931,7 @@ public class PageFactory extends AbstractFactory {
 						}
 					}
 
-					// // update sync_info for the copy
+					// update sync_info for the copy
 					String sql = "UPDATE page SET sync_page_id = ?, sync_timestamp = ? WHERE id = ?";
 					DBUtils.executeStatement(sql, new SQLExecutor() {
 						@Override

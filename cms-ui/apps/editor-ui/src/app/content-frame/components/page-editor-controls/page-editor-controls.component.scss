@@ -41,3 +41,7 @@
     margin: auto 0;
     border-left: 1px solid $gtx-color-mid-gray;
 }
+
+.dynamic-component.hidden {
+    display: none;
+}

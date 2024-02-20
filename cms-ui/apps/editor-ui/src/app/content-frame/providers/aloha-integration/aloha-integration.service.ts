@@ -4,7 +4,10 @@ import {
     AlohaComponentSetting,
     AlohaCoreComponentNames,
     AlohaFullComponentSetting,
+    AlohaPubSub,
     AlohaRangeObject,
+    AlohaScopeChangeEvent,
+    AlohaScopes,
     AlohaSettings,
     AlohaToolbarSizeSettings,
     AlohaToolbarTabsSettings,
@@ -12,15 +15,25 @@ import {
     ScreenSize,
 } from '@gentics/aloha-models';
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal } from '../../models/content-frame';
 
+export interface NormalizedSlotDisplay {
+    name: string;
+    visible: boolean;
+}
+
+export interface NormalizedComponentGroup {
+    slots: NormalizedSlotDisplay[];
+    hasVisibleSlots: boolean;
+}
+
 export interface NormalizedTabsSettings extends Omit<AlohaToolbarTabsSettings, 'components'> {
     components: AlohaFullComponentSetting[][];
-    slotsToRender: string[][];
-    hasSlotsToRender: boolean;
+    componentGroups: NormalizedComponentGroup[];
+    hasVisibleGroups: boolean;
 }
 
 export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings {
@@ -33,7 +46,24 @@ const LINE_BREAK_COMPONENT = '\n';
 export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
 export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
 
-const TABS_TO_IGNORE = [TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER];
+/** Special scope which is to filter out that it should only be visible in the GCMS UI. */
+const GCMSUI_SCOPE = 'gtx.gcmsui';
+
+const TABS_TO_ALWAYS_DISPLAY = [TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER];
+
+function inScope(scopesRef: AlohaScopes, scopeDef?: string | string[]): boolean {
+    if (scopesRef == null) {
+        return false;
+    }
+
+    if (scopeDef == null) {
+        return true;
+    } else if (typeof scopeDef === 'string') {
+        return scopeDef === GCMSUI_SCOPE || scopesRef.isActiveScope(scopeDef);
+    } else {
+        return scopeDef.some(def => def === GCMSUI_SCOPE || scopesRef.isActiveScope(def));
+    }
+}
 
 function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullComponentSetting {
     if (comp == null || comp === LINE_BREAK_COMPONENT || (comp as any)?.slot === LINE_BREAK_COMPONENT) {
@@ -48,6 +78,7 @@ function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullCom
 function normalizeToolbarTab(
     tab: AlohaToolbarTabsSettings,
     globalComponents: Record<string, AlohaComponent>,
+    scopesRef: AlohaScopes,
 ): NormalizedTabsSettings {
     let tabComponents = tab.components;
     if (!Array.isArray(tabComponents[0])) {
@@ -58,33 +89,54 @@ function normalizeToolbarTab(
         .filter(comp => comp != null),
     ).filter(arr => (arr || []).length > 0);
 
-    const slotsToRender = (tabComponents as AlohaFullComponentSetting[][])
-        .map(arr => arr
-            .map(comp => comp.slot)
-            .filter(slot => TABS_TO_IGNORE.includes(tab.id) || RENDERABLE_COMPONENTS.includes(globalComponents[slot]?.type)),
-        )
-        .filter(arr => arr.length > 0);
+    let hasVisibleGroups = TABS_TO_ALWAYS_DISPLAY.includes(tab.id);
+
+    const groups: NormalizedComponentGroup[] = (tabComponents as AlohaFullComponentSetting[][])
+        .map(arr => {
+            let hasVisibleSlots = false;
+            const slots = arr.map(comp => {
+                const visible = inScope(scopesRef, comp.scope)
+                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type);
+                hasVisibleSlots ||= visible;
+
+                return {
+                    name: comp.slot,
+                    visible,
+                };
+            });
+
+            hasVisibleGroups ||= hasVisibleSlots;
+
+            return {
+                hasVisibleSlots,
+                slots,
+            };
+        });
 
     return {
         ...tab,
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-call
         label: tab.label,
         components: tabComponents as AlohaFullComponentSetting[][],
-        slotsToRender,
-        hasSlotsToRender: slotsToRender.length > 0,
+        componentGroups: groups,
+        hasVisibleGroups,
     };
 }
 
 function normalizeToolbarSizeSettings(
     settings: AlohaToolbarSizeSettings,
     components: Record<string, AlohaComponent>,
+    scopesRef: AlohaScopes,
 ): NormalizedToolbarSizeSettings {
     if (settings == null) {
         return null;
     }
+
     return {
         ...settings,
-        tabs: (settings.tabs || []).map(tabSettings => normalizeToolbarTab(tabSettings, components)),
+        tabs: (settings.tabs || [])
+            .map(tabSettings => normalizeToolbarTab(tabSettings, components, scopesRef))
+            .filter(tabSettings => inScope(scopesRef, tabSettings.showOn?.scope)),
     };
 }
 
@@ -101,6 +153,10 @@ export class AlohaIntegrationService {
     public gcnPlugin$ = new BehaviorSubject<GCNAlohaPlugin>(null);
     public uiPlugin$ = new BehaviorSubject<AlohaUiPlugin>(null);
     public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
+
+    public scopesRef$: Observable<AlohaScopes>;
+    public pubSubRef$: Observable<AlohaPubSub>;
+    public scopeChange$: Observable<AlohaScopeChangeEvent>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
     protected editorChangeSub = new BehaviorSubject<void>(null);
@@ -136,6 +192,10 @@ export class AlohaIntegrationService {
             this.handleMedia('(min-width: 1025px)', ScreenSize.DESKTOP);
         });
 
+        this.scopesRef$ = this.require('ui/scopes');
+        this.pubSubRef$ = this.require('PubSub');
+        this.scopeChange$ = this.on('aloha.ui.scope.change');
+
         this.activeToolbarSettings$ = combineLatest([
             combineLatest([
                 this.uiPlugin$.asObservable().pipe(
@@ -147,12 +207,76 @@ export class AlohaIntegrationService {
             ),
             this.size$,
             this.components$,
+            this.scopesRef$,
+            this.scopeChange$,
         ]).pipe(
-            map(([settings, size, components]) => {
+            map(([settings, size, components, scopesRef]) => {
                 if (settings == null || size == null || settings[size] == null) {
                     return null;
                 }
-                return normalizeToolbarSizeSettings(settings[size], components);
+                return normalizeToolbarSizeSettings(settings[size], components, scopesRef);
+            }),
+        );
+    }
+
+    public require<T = any>(resourceName: string): Observable<T> {
+        return this.reference$.asObservable().pipe(
+            distinctUntilChanged(),
+            map(ref => {
+                try {
+                    return ref == null ? null :ref.require(resourceName);
+                } catch (err) {
+                    return null;
+                }
+            }),
+        );
+    }
+
+    /**
+     * Aloha bind subscription
+     * @param eventName Event name
+     */
+    public bind<T = any>(eventName: string): Observable<T> {
+        return this.reference$.asObservable().pipe(
+            distinctUntilChanged(),
+            switchMap(ref => {
+                if (ref == null) {
+                    return of(null);
+                }
+
+                return new Observable<T>(sub => {
+                    const handler = (event: T) => {
+                        sub.next(event);
+                    };
+                    ref.bind(eventName, handler);
+
+                    return () => ref.unbind(eventName, handler);
+                });
+            }),
+        );
+    }
+
+    /**
+     * PubSub "sub" subscription.
+     * @param eventName Event name
+     * @returns Observable which emits all the events
+     */
+    public on<T = any>(eventName: string): Observable<T> {
+        return this.pubSubRef$.pipe(
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            switchMap((PubSub: AlohaPubSub) => {
+                if (PubSub == null) {
+                    return of(null);
+                }
+
+                return new Observable<T>(sub => {
+                    const handler = (event: T) => {
+                        sub.next(event);
+                    };
+                    PubSub.sub(eventName, handler);
+
+                    return () => PubSub.unsub(eventName, handler);
+                });
             }),
         );
     }

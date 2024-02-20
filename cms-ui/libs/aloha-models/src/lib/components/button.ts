@@ -1,19 +1,16 @@
 import { AlohaComponent, AlohaCoreComponentNames } from './base-component';
 
-export type ButtonIcon = string | { primary: string, secondary?: string };
-
 export interface AlohaButtonComponent extends AlohaComponent {
     type: AlohaCoreComponentNames.BUTTON;
 
     text?: string;
-    html?: string;
-    icon?: ButtonIcon;
+    icon?: string;
     iconUrl?: string;
     tooltip?: string;
 
     closeTooltip: () => void;
     click: () => void;
-    setIcon: (icon?: ButtonIcon) => void;
+    setIcon: (icon?: string) => void;
     setText: (text: string) => void;
     setTooltip: (tooltip: string) => void;
 }

@@ -13,21 +13,21 @@
     <button
         gtx-tooltip-trigger
         class="gtx-editor-button"
-        [class.icon-only]="hasIcon && !hasText"
+        [class.icon-only]="settings.icon && !settings.text"
         [class.hidden]="!settings.visible"
         [disabled]="disabled"
         (click)="handleClick()"
     >
         <icon
-            *ngIf="hasIcon"
+            *ngIf="settings.icon"
             class="button-icon"
-            [class.icon-left]="hasText"
-        >{{ iconToRender | gtxAlohaCompatIcon }}</icon>
+            [class.icon-left]="settings.text"
+        >{{ settings.icon }}</icon>
 
         <span
-            *ngIf="hasText"
+            *ngIf="settings.text"
             class="button-label"
-            [innerHTML]="settings.html || settings.text"
+            [innerHTML]="settings.text"
         ></span>
     </button>
 </ng-template>

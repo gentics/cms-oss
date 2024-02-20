@@ -1,7 +1,7 @@
 <div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
-    <ng-container *ngFor="let tab of tabs">
+    <ng-container *ngFor="let tab of tabs; trackBy: identifyTab">
         <button
-            *ngIf="tab.hasSlotsToRender && (tab.id !== TAB_ID_LINK_CHECKER || linkCheckerEnabled)"
+            *ngIf="tab.hasVisibleGroups && (tab.id !== TAB_ID_LINK_CHECKER || linkCheckerEnabled)"
             class="editor-tab"
             [attr.data-id]="tab.id"
             [class.active]="tab.id === activeTab"

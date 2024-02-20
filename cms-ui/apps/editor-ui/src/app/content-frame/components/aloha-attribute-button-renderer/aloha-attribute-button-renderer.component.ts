@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
-import { AlohaAttributeButtonComponent, ButtonIcon, OverlayElementControl } from '@gentics/aloha-models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy } from '@angular/core';
+import { AlohaAttributeButtonComponent, OverlayElementControl } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { AlohaIntegrationService, DynamicOverlayService } from '../../providers';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
@@ -13,11 +13,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
 })
 export class AlohaAttributeButtonRendererComponent
     extends BaseAlohaRendererComponent<AlohaAttributeButtonComponent, string>
-    implements OnChanges, OnDestroy {
-
-    public hasText = false;
-    public hasIcon = false;
-    public iconToRender: string;
+    implements OnDestroy {
 
     protected inputDropdown: OverlayElementControl<string>;
 
@@ -28,17 +24,6 @@ export class AlohaAttributeButtonRendererComponent
         protected overlay: DynamicOverlayService,
     ) {
         super(changeDetector, element, aloha);
-    }
-
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-
-        this.hasText = !!this.settings?.text || !!this.settings?.html;
-
-        this.iconToRender = typeof this.settings?.icon === 'string'
-            ? this.settings?.icon
-            : this.settings?.icon?.primary;
-        this.hasIcon = !!this.iconToRender;
     }
 
     public override ngOnDestroy(): void {
@@ -56,17 +41,12 @@ export class AlohaAttributeButtonRendererComponent
             return;
         }
 
-        this.settings.setIcon = (icon: ButtonIcon) => {
+        this.settings.setIcon = (icon: string) => {
             this.settings.icon = icon;
-            this.iconToRender = typeof this.settings?.icon === 'string'
-                ? this.settings?.icon
-                : this.settings?.icon?.primary;
-            this.hasIcon = !!this.iconToRender;
             this.changeDetector.markForCheck();
         };
         this.settings.setText = (text: string) => {
             this.settings.text = text;
-            this.hasText = !!this.settings.text || !!this.settings.html;
             this.changeDetector.markForCheck();
         };
         this.settings.setTooltip = (tooltip: string) => {

@@ -48,7 +48,7 @@ import {
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
-import { AlohaCompatIconPipe, CommandToIconPipe, TagTypeIconPipe } from './pipes';
+import { TagTypeIconPipe } from './pipes';
 import {
     AlohaIntegrationService,
     CustomerScriptService,
@@ -99,8 +99,6 @@ const COMPONENTS = [
 ];
 
 const PIPES = [
-    AlohaCompatIconPipe,
-    CommandToIconPipe,
     TagTypeIconPipe,
 ];
 

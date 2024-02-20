@@ -5,7 +5,7 @@ import { NodeFeature } from '@gentics/cms-models';
 import { Subscription, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { DefaultEditorControlTabs } from '../../../common/models';
-import { AlohaIntegrationService, TAB_ID_LINK_CHECKER } from '../../providers/aloha-integration/aloha-integration.service';
+import { AlohaIntegrationService, NormalizedTabsSettings, TAB_ID_LINK_CHECKER } from '../../providers/aloha-integration/aloha-integration.service';
 import { OverflowManager } from '../../utils';
 
 @Component({
@@ -95,6 +95,10 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
             this.overflow.destroy();
             this.overflow = null;
         }
+    }
+
+    public identifyTab(_idx: number, tab: NormalizedTabsSettings): string {
+        return tab.id;
     }
 
     public setActiveTab(tab: string): void {

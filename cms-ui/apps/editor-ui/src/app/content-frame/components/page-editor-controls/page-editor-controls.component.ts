@@ -1,15 +1,18 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkRemoveEvent, AlohaPubSub } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaFullComponentSetting, AlohaLinkChangeEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
-import { ConstructCategory, NodeFeature, TagType } from '@gentics/cms-models';
+import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Subscription, combineLatest, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Subscription, combineLatest, forkJoin, of } from 'rxjs';
+import { filter, map, switchMap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,
+    NormalizedComponentGroup,
+    NormalizedSlotDisplay,
+    NormalizedTabsSettings,
     NormalizedToolbarSizeSettings,
     TAB_ID_CONSTRUCTS,
     TAB_ID_LINK_CHECKER,
@@ -77,10 +80,9 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public constructFavourites: string[] = [];
 
     /* Link Checker properties */
-    public intiialBrokenLinks = [];
+    public initialBrokenLinks: ExternalLink[] = [];
     public brokenLinkElements: HTMLElement[] = [];
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
-    protected pubSub: AlohaPubSub;
 
     protected subscriptions: Subscription[] = [];
 
@@ -143,12 +145,11 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.aloha.reference$.subscribe(ref => {
             this.alohaRef = ref;
-            this.setupLinkChecker();
             this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(combineLatest([
-            this.aloha.reference$,
+            this.aloha.reference$.asObservable(),
             this.appState.select(state => state.editor.nodeId).pipe(
                 switchMap(nodeId => this.appState.select(state => state.features.nodeFeatures[nodeId])),
                 map(features => (features || []).includes(NodeFeature.LINK_CHECKER)),
@@ -159,18 +160,59 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
                 this.changeDetector.markForCheck();
 
                 if (!ref || !enabled) {
-                    return of([]);
+                    return of([false, []]);
                 }
 
                 return this.client.linkChecker.pageLinks(this.appState.now.editor.itemId).pipe(
-                    map(res => res.items),
+                    map(res => [true, res.items]),
                 );
             }),
-        ).subscribe(links => {
-            this.intiialBrokenLinks = links;
-            this.setupLinkCheckerPlugin();
-            this.brokenLinkCountChange.emit(this.intiialBrokenLinks.length);
+        ).subscribe(([enabled, links]: [boolean, ExternalLink[]]) => {
+            this.initialBrokenLinks = links;
+            this.brokenLinkCountChange.emit(this.initialBrokenLinks.length);
             this.changeDetector.markForCheck();
+
+            if (!enabled) {
+                return;
+            }
+
+            this.subscriptions.push(forkJoin([
+                this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').pipe(
+                    filter(plugin => plugin != null),
+                ),
+                this.aloha.bind('aloha-ready'),
+            ]).subscribe(([plugin]) => {
+                this.linkCheckerPlugin = plugin;
+                this.brokenLinkElements = this.linkCheckerPlugin.initializeBrokenLinks(this.initialBrokenLinks).slice();
+                this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
+                this.changeDetector.markForCheck();
+            }));
+        }));
+
+        this.subscriptions.push(this.aloha.on<AlohaLinkChangeEvent>('aloha.link.changed').subscribe(event => {
+            if (!this.linkCheckerPlugin) {
+                return;
+            }
+
+            // if livecheck is activated and the link is external and not empty and not only an anchor, the check is done after a delay
+            if (
+                this.linkCheckerPlugin?.settings?.livecheck
+                && event.href !== ''
+                && event.href.indexOf('#') !== 0
+                && !isInternalLink(event.element)
+            ) {
+                this.checkWithDelay(event.href.trim(), event.element);
+            }
+        }));
+
+        this.subscriptions.push(this.aloha.on<AlohaLinkRemoveEvent>('aloha.link.remove').subscribe(() => {
+            if (!this.linkCheckerPlugin) {
+                return;
+            }
+
+            this.linkCheckerPlugin.refreshLinksFromDom();
+            this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
+            this.brokenLinkCountChange.emit(this.brokenLinkElements.length);
         }));
     }
 
@@ -186,54 +228,16 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
     }
 
-    protected setupLinkChecker(): void {
-        if (this.alohaRef == null) {
-            this.linkCheckerPlugin = null;
-            this.pubSub = null;
-            return;
-        }
-
-        try {
-            this.linkCheckerPlugin = this.alohaRef.require('gcnlinkchecker/gcnlinkchecker-plugin');
-            this.setupLinkCheckerPlugin();
-        } catch (err) {}
-
-        try {
-            this.pubSub = this.alohaRef.require('PubSub');
-            this.setupLinkCheckerSubscriptions();
-        } catch (err) {}
+    public identifyTab(_idx: number, tab: NormalizedTabsSettings): string {
+        return tab.id;
     }
 
-    protected setupLinkCheckerPlugin(): void {
-        if (!this.linkCheckerPlugin) {
-            return;
-        }
-
-        this.alohaRef.bind('aloha-ready', () => {
-            this.brokenLinkElements = this.linkCheckerPlugin.initializeBrokenLinks(this.intiialBrokenLinks).slice();
-            this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
-        });
+    public identifyComponentGroup(_idx: number, group: NormalizedComponentGroup): string {
+        return group.slots.map(s => s.name).join(',');
     }
 
-    protected setupLinkCheckerSubscriptions(): void {
-        // Add an event handler for changed links.
-        this.pubSub.sub('aloha.link.changed', (msg: AlohaLinkChangeEvent) => {
-            // if livecheck is activated and the link is external and not empty and not only an anchor, the check is done after a delay
-            if (
-                this.linkCheckerPlugin?.settings?.livecheck
-                && msg.href !== ''
-                && msg.href.indexOf('#') !== 0
-                && !isInternalLink(msg.element)
-            ) {
-                this.checkWithDelay(msg.href.trim(), msg.element);
-            }
-        });
-
-        this.pubSub.sub('aloha.link.remove', (_event: AlohaLinkRemoveEvent) => {
-            this.linkCheckerPlugin.refreshLinksFromDom();
-            this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
-            this.brokenLinkCountChange.emit(this.brokenLinkElements.length);
-        });
+    public identifySlot(_idx: number, slot: NormalizedSlotDisplay): string {
+        return slot.name;
     }
 
     protected checkWithDelay(url: string, element: JQuery): void {

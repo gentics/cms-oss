@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, OnChanges, SimpleChanges } from '@angular/core';
-import { AlohaToggleButtonComponent, ButtonIcon } from '@gentics/aloha-models';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { AlohaToggleButtonComponent } from '@gentics/aloha-models';
 import { generateFormProvider } from '@gentics/ui-core';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -10,21 +10,7 @@ import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-re
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [generateFormProvider(AlohaToggleButtonRendererComponent)],
 })
-export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleButtonComponent, boolean> implements OnChanges {
-
-    public hasText = false;
-    public hasIcon = false;
-    public iconToRender: string;
-
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-        this.hasText = !!this.settings?.text || !!this.settings?.html;
-
-        this.iconToRender = typeof this.settings?.icon === 'string'
-            ? this.settings?.icon
-            : this.settings?.icon?.primary;
-        this.hasIcon = !!this.iconToRender;
-    }
+export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererComponent<AlohaToggleButtonComponent, boolean> {
 
     protected override setupAlohaHooks(): void {
         super.setupAlohaHooks();
@@ -33,17 +19,12 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
             return;
         }
 
-        this.settings.setIcon = (icon: ButtonIcon) => {
+        this.settings.setIcon = (icon: string) => {
             this.settings.icon = icon;
-            this.iconToRender = typeof this.settings?.icon === 'string'
-                ? this.settings?.icon
-                : this.settings?.icon?.primary;
-            this.hasIcon = !!this.iconToRender;
             this.changeDetector.markForCheck();
         };
         this.settings.setText = (text: string) => {
             this.settings.text = text;
-            this.hasText = !!this.settings.text || !!this.settings.html;
             this.changeDetector.markForCheck();
         };
         this.settings.setTooltip = (tooltip: string) => {

@@ -302,3 +302,22 @@ export interface AlohaLinkRemoveEvent {
     range: AlohaRangeObject;
     text: string;
 }
+
+export interface AlohaScopes {
+    registerScope: (scope: string, dependencies?: string[]) => boolean;
+    removeScope: (scope: string, force?: boolean) => boolean;
+
+    enterScope: (scope: string, temp?: boolean) => void;
+    leaveScope: (scope: string) => void;
+    setScope: (scope: string) => void;
+
+    isActiveScope: (scope: string) => boolean;
+    getActiveScopes: (withResolved?: boolean) => string[];
+}
+
+export interface AlohaScopeChangeEvent {
+    previousScopes: string[];
+    previousScopeList: string[];
+    activeScopes: string[];
+    activeScopeList: string[];
+}

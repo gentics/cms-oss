@@ -2099,9 +2099,8 @@ public class ContentNodeTestDataUtils {
 	 * @param result result to check
 	 * @param messageKey message key
 	 * @param parameters optional list of parameters
-	 * @throws Exception
 	 */
-	public static void assertResultMessage(OpResult result, String messageKey, String... parameters) throws Exception {
+	public static void assertResultMessage(OpResult result, String messageKey, String... parameters) {
 		assertEquals("Check # of messages in the result", 1, result.getMessages().size());
 		CNI18nString message = new CNI18nString(messageKey);
 		for (String p : parameters) {

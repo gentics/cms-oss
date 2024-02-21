@@ -16,7 +16,8 @@ import {
 } from '@gentics/aloha-models';
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { isEqual } from 'lodash-es';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal } from '../../models/content-frame';
 
@@ -132,11 +133,13 @@ function normalizeToolbarSizeSettings(
         return null;
     }
 
+    const tabs = (settings.tabs || [])
+        .map(tabSettings => normalizeToolbarTab(tabSettings, components, scopesRef))
+        .filter(tabSettings => inScope(scopesRef, tabSettings.showOn?.scope));
+
     return {
         ...settings,
-        tabs: (settings.tabs || [])
-            .map(tabSettings => normalizeToolbarTab(tabSettings, components, scopesRef))
-            .filter(tabSettings => inScope(scopesRef, tabSettings.showOn?.scope)),
+        tabs,
     };
 }
 
@@ -149,13 +152,13 @@ export class AlohaIntegrationService {
      */
     public reference$ = new BehaviorSubject<AlohaGlobal>(null);
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
-    public contextChange$ = new BehaviorSubject<AlohaRangeObject>(null);
-    public gcnPlugin$ = new BehaviorSubject<GCNAlohaPlugin>(null);
-    public uiPlugin$ = new BehaviorSubject<AlohaUiPlugin>(null);
     public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
 
+    public gcnPlugin$: Observable<GCNAlohaPlugin>;
+    public uiPlugin$: Observable<AlohaUiPlugin>;
     public scopesRef$: Observable<AlohaScopes>;
     public pubSubRef$: Observable<AlohaPubSub>;
+    public contextChange$: Observable<AlohaRangeObject>;
     public scopeChange$: Observable<AlohaScopeChangeEvent>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
@@ -194,24 +197,29 @@ export class AlohaIntegrationService {
 
         this.scopesRef$ = this.require('ui/scopes');
         this.pubSubRef$ = this.require('PubSub');
+        this.uiPlugin$ = this.require('ui/ui-plugin');
+        this.gcnPlugin$ = this.require('gcn/gcn-plugin');
         this.scopeChange$ = this.on('aloha.ui.scope.change');
+        this.contextChange$ = this.on('aloha.selection.context-change');
 
         this.activeToolbarSettings$ = combineLatest([
             combineLatest([
-                this.uiPlugin$.asObservable().pipe(
+                this.uiPlugin$.pipe(
                     map(plugin => plugin?.getToolbarSettings?.()),
                 ),
                 this.settings$.asObservable(), // Also needs a reload when global settings change
             ]).pipe(
                 map(([toolbarSettings]) => toolbarSettings),
+                distinctUntilChanged(isEqual),
             ),
             this.size$,
             this.components$,
             this.scopesRef$,
             this.scopeChange$,
         ]).pipe(
+            debounceTime(10),
             map(([settings, size, components, scopesRef]) => {
-                if (settings == null || size == null || settings[size] == null) {
+                if (settings == null || size == null || settings[size] == null && scopesRef != null) {
                     return null;
                 }
                 return normalizeToolbarSizeSettings(settings[size], components, scopesRef);
@@ -221,10 +229,10 @@ export class AlohaIntegrationService {
 
     public require<T = any>(resourceName: string): Observable<T> {
         return this.reference$.asObservable().pipe(
-            distinctUntilChanged(),
+            distinctUntilChanged((a, b) => (a == null && b == null) || (a === b)),
             map(ref => {
                 try {
-                    return ref == null ? null :ref.require(resourceName);
+                    return ref == null ? null : ref.require(resourceName);
                 } catch (err) {
                     return null;
                 }
@@ -238,7 +246,7 @@ export class AlohaIntegrationService {
      */
     public bind<T = any>(eventName: string): Observable<T> {
         return this.reference$.asObservable().pipe(
-            distinctUntilChanged(),
+            distinctUntilChanged((a, b) => (a == null && b == null) || (a === b)),
             switchMap(ref => {
                 if (ref == null) {
                     return of(null);
@@ -300,9 +308,6 @@ export class AlohaIntegrationService {
     public clearReferences(): void {
         this.reference$.next(null);
         this.settings$.next(null);
-        this.contextChange$.next(null);
-        this.gcnPlugin$.next(null);
-        this.uiPlugin$.next(null);
         this.registeredComponents = {};
         this.renderedComponents = {};
     }

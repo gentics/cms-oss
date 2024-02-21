@@ -11,5 +11,5 @@ export interface AlohaSymbolGridComponent extends AlohaComponent {
 
     symbols: SymbolGridItem[];
 
-    updateSymbols: (symbols: string[]) => void;
+    setSymbols: (symbols: string[]) => void;
 }

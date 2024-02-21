@@ -63,12 +63,12 @@ export interface AlohaIFrameTouchEvent {
 }
 
 export type AlohaIFrameEvent = AlohaIFrameInitEvent
-    | AlohaIFrameUpdateValueEvent
-    | AlohaIFrameUpdateOptionsEvent
-    | AlohaIFrameDisabledEvent
-    | AlohaIFrameWindowSizeEvent
-    | AlohaIFrameChangeEvent
-    | AlohaIFrameTouchEvent
+| AlohaIFrameUpdateValueEvent
+| AlohaIFrameUpdateOptionsEvent
+| AlohaIFrameDisabledEvent
+| AlohaIFrameWindowSizeEvent
+| AlohaIFrameChangeEvent
+| AlohaIFrameTouchEvent
     ;
 
 export interface AlohaIFrameComponent extends AlohaComponent {
@@ -78,8 +78,8 @@ export interface AlohaIFrameComponent extends AlohaComponent {
     value: any;
     options?: any;
 
-    updateOptions: (options: any) => void;
-    updateUrl: (url: string) => void;
+    setOptions: (options: any) => void;
+    setUrl: (url: string) => void;
 
     onFrameLoad: (elem: HTMLIFrameElement) => void;
     onFrameInit: (elem: HTMLIFrameElement) => void;

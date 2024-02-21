@@ -129,12 +129,12 @@ export class AlohaIFrameRendererComponent<T>
             return;
         }
 
-        this.settings.updateUrl = (url) => {
+        this.settings.setUrl = (url) => {
             this.settings.url = url;
             this.updateUrlToUse(url);
             this.changeDetector.markForCheck();
         };
-        this.settings.updateOptions = (options) => {
+        this.settings.setOptions = (options) => {
             this.settings.options = options;
             this.sendMessageIfAvailable({
                 eventName: AlohaIFrameEventNames.UPDATE_OPTIONS,

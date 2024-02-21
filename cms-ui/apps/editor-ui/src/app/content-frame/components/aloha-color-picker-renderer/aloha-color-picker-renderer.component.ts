@@ -57,7 +57,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
             return;
         }
 
-        this.settings.updatePalette = (palette) => {
+        this.settings.setPalette = (palette) => {
             this.settings.palette = palette;
             this.updateAndNormalizePalette();
             this.changeDetector.markForCheck();

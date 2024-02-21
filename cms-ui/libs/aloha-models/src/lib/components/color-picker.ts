@@ -16,9 +16,9 @@ export interface AlohaColorPickerComponent extends AlohaComponent {
     allowTransparency: boolean;
     allowClear: boolean;
 
-    updatePalette: (palette: ColorValue[]) => void;
-    updateAllowOutsidePalette: (allowOutsidePalette: boolean) => void;
-    updateAllowCustomInput: (allowCustomInput: boolean) => void;
-    updateAllowClear: (allowTransparency: boolean) => void;
-    updateAllowTransparency: (allowClear: boolean) => void;
+    setPalette: (palette: ColorValue[]) => void;
+    setAllowOutsidePalette: (allowOutsidePalette: boolean) => void;
+    setAllowCustomInput: (allowCustomInput: boolean) => void;
+    setAllowClear: (allowTransparency: boolean) => void;
+    setAllowTransparency: (allowClear: boolean) => void;
 }

@@ -27,15 +27,16 @@
 
         <button
             class="split-button-main"
-            [class.icon-only]="settings.icon && !settings.text"
+            [class.icon-only]="settings.iconOnly"
             [disabled]="disabled"
             (click)="handleClick()"
         >
             <icon
                 *ngIf="settings.icon"
                 class="button-icon"
-                [class.icon-left]="settings.text"
-            >{{ settings.icon  }}</icon>
+                [class.hollow]="settings.iconHollow"
+                [class.icon-left]="!settings.iconOnly"
+            >{{ settings.icon }}</icon>
 
             <span
                 *ngIf="settings.text"

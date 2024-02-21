@@ -19,15 +19,23 @@ export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponen
             return;
         }
 
-        this.settings.setIcon = (icon: string) => {
+        this.settings.setIcon = icon => {
             this.settings.icon = icon;
             this.changeDetector.markForCheck();
         };
-        this.settings.setText = (text: string) => {
+        this.settings.setIconOnly = only => {
+            this.settings.iconOnly = only;
+            this.changeDetector.markForCheck();
+        }
+        this.settings.setIconHollow = hollow => {
+            this.settings.iconHollow = hollow;
+            this.changeDetector.markForCheck();
+        };
+        this.settings.setText = text => {
             this.settings.text = text;
             this.changeDetector.markForCheck();
         };
-        this.settings.setTooltip = (tooltip: string) => {
+        this.settings.setTooltip = tooltip => {
             this.settings.tooltip = tooltip;
             this.changeDetector.markForCheck();
         };

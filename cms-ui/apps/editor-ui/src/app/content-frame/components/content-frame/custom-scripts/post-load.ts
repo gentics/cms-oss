@@ -1,5 +1,5 @@
+/* eslint-disable no-underscore-dangle */
 import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
-import { AlohaContextChangeEvent, AlohaPubSub } from '@gentics/aloha-models';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions } from '../../../models/content-frame';
@@ -86,11 +86,6 @@ export class PostLoadScript {
         let innerSettings = this.window.Aloha.settings;
         this.aloha.settings$.next(innerSettings);
 
-        let innerGcnPlugin = this.window.Aloha.GCN as any;
-        this.aloha.gcnPlugin$.next(innerGcnPlugin);
-
-        const innerUiPlugin = this.window.Aloha.require('ui/ui-plugin');
-        this.aloha.uiPlugin$.next(innerUiPlugin);
 
         Object.defineProperty(this.window.Aloha, 'settings', {
             configurable: true,
@@ -104,30 +99,7 @@ export class PostLoadScript {
             },
         });
 
-        Object.defineProperty(this.window.Aloha, 'GCN', {
-            configurable: true,
-            enumerable: true,
-            get: () => {
-                return innerGcnPlugin;
-            },
-            set: (newPlugin) => {
-                innerGcnPlugin = newPlugin;
-                this.aloha.gcnPlugin$.next(innerGcnPlugin);
-            },
-        });
-
-        // Update to the current selection
-        this.aloha.contextChange$.next(this.window.Aloha.Selection.getRangeObject());
-
-        const pubSub: AlohaPubSub = this.window.Aloha.require('PubSub');
-        if (pubSub) {
-            pubSub.sub('aloha.selection.context-change', (event: AlohaContextChangeEvent) => {
-                this.aloha.contextChange$.next(event.range);
-            });
-        }
-
         this.window.addEventListener('unload', () => {
-            this.aloha.contextChange$.next(null);
             this.aloha.settings$.next(null);
             this.aloha.reference$.next(null);
         });
@@ -451,6 +423,7 @@ export class PostLoadScript {
     }
 
     notifyWhenPageIsModifiedViaJsLib(): void {
+        // eslint-disable-next-line prefer-const
         let checkIfPageWasModifiedWhenPageIsUpdated: () => void;
 
         const pollForGCNObject = () => {
@@ -468,6 +441,7 @@ export class PostLoadScript {
             let originalPageContents = GCN.page._data;
             let originalPageJSON = this.safelyStringifyAlohaPageObject(originalPageContents);
 
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             const originalUpdate = GCN.page._update;
             GCN.page._update = (path, value, error, force) => {
                 const returnValue = originalUpdate.call(GCN.page, path, value, error, force);
@@ -502,12 +476,15 @@ export class PostLoadScript {
     }
 
     observeAllGCNJsLibAjaxRequests(): void {
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         const originalAjax = this.window.Aloha.GCN.page._ajax;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
 
         this.window.Aloha.GCN.page._ajax = function wrappedJslibAjax(requestOptions: GCNJsLibRequestOptions): void {
             self.beforeJsLibAjaxRequest(requestOptions);
 
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             const originalSuccess = requestOptions.success;
             requestOptions.success = data => {
                 self.afterJsLibAjaxRequest(data, requestOptions);
@@ -633,6 +610,7 @@ function isFormGeneratorSaveButton(element: Element): boolean {
     if (element && element.matches) {
         return element.matches(selector);
     } else if (element && (<any> element).msMatchesSelector) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         return (<any> element).msMatchesSelector(selector);
     } else {
         return false;

@@ -33,7 +33,7 @@ export class AlohaSymbolGridRendererComponent extends BaseAlohaRendererComponent
             return;
         }
 
-        this.settings.updateSymbols = (symbols) => {
+        this.settings.setSymbols = (symbols) => {
             this.settings.symbols = symbols;
             this.onSymbolsChange();
             this.changeDetector.markForCheck();

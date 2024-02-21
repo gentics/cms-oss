@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TagValidatorImpl } from '../../validation/tag-validator-impl';
 
+// Why does this class even exist??? A regular obj with a cloneDeep call would do the same
 /** Describes the current context, in which a TagEditor is operating. */
 export class TagEditorContextImpl implements TagEditorContext {
 
@@ -28,7 +29,9 @@ export class TagEditorContextImpl implements TagEditorContext {
     translator: Translator;
     variableContext: Observable<VariableTagEditorContext>;
     gcmsUiServices: GcmsUiServices;
+    withDelete: boolean;
 
+    // TODO: Shouldn't be so many params, but use a object instead.
     /**
      * Creates a new controller with a TagEditorContext with the specified objects.
      *
@@ -40,6 +43,7 @@ export class TagEditorContextImpl implements TagEditorContext {
      * @param translator The Translator that should be used by custom TagEditors and TagPropertyEditors for resolving i18n keys.
      * @param initialVariableContext An Observable (ideally a BehaviorSubjet) that provides the VariableTagEditorContext.
      * @param gcmsUiServices Services for opening the repository browser and the image editor.
+     * @param withDelete If the tag-editor should allow the user to delete the tag entirely.
      */
     static create(
         tag: EditableTag,
@@ -50,6 +54,7 @@ export class TagEditorContextImpl implements TagEditorContext {
         translator: Translator,
         variableContext: Observable<VariableTagEditorContext>,
         gcmsUiServices: GcmsUiServices,
+        withDelete: boolean,
     ): TagEditorContext {
         const context = new TagEditorContextImpl();
         context.editedTag = tag;
@@ -60,6 +65,7 @@ export class TagEditorContextImpl implements TagEditorContext {
         context.validator = new TagValidatorImpl(tag.tagType);
         context.variableContext = variableContext;
         context.gcmsUiServices = gcmsUiServices;
+        context.withDelete = withDelete;
 
         switch (tagOwner.type) {
             case 'page':
@@ -102,6 +108,7 @@ export class TagEditorContextImpl implements TagEditorContext {
         clone.file = cloneDeep(this.file);
         clone.template = cloneDeep(this.template);
         clone.gcmsUiServices = { ...this.gcmsUiServices };
+        clone.withDelete = this.withDelete;
 
         clone.variableContext = this.variableContext.pipe(
             map(variableContext => cloneDeep(variableContext)),

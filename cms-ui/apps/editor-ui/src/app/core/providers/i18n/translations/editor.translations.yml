@@ -1,4 +1,4 @@
-alert_center_title:
+:
     en: Alert Center
     de: Warnungszentrale
 alert_notification_singular_label:
@@ -1129,9 +1129,24 @@ constructs_no_results:
 construct_no_category:
     en: No Category
     de: Kategorielos
+construct_favourites:
+    en: Favourites
+    de: Favoriten
 constructs_loading:
     en: Loading ...
     de: Lade daten ...
 constructs_no_favourites:
     en: No Constructs have been favourited yet
     de: Keine TagTypen wurden favoritisiert
+table_size_input_rows:
+    en: Rows
+    de: Zeilen
+table_size_input_columns:
+    en: Columns
+    de: Spalten
+dropdown_confirm:
+    en: Confirm
+    de: Bestätigen
+dropdown_abort:
+    en: Abort
+    de: Abbrechen

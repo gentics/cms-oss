@@ -4,41 +4,42 @@
     "sourceRoot": "libs/mesh-rest-client/src",
     "projectType": "library",
     "tags": ["lib"],
+    "implicitDependencies": ["mesh-models"],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
-        "options": {
-          "outputPath": "dist/libs/mesh-rest-client",
-          "tsConfig": "libs/mesh-rest-client/tsconfig.lib.json",
-          "packageJson": "libs/mesh-rest-client/package.json",
-          "main": "libs/mesh-rest-client/src/public-api.ts",
-          "assets": ["libs/mesh-rest-client/*.md"]
-        }
-      },
-      "lint": {
-        "executor": "@nx/linter:eslint",
-        "outputs": ["{options.outputFile}"],
-        "options": {
-          "lintFilePatterns": [
-            "libs/mesh-rest-client/**/*.ts",
-            "libs/mesh-rest-client/package.json"
-          ]
-        }
-      },
-      "test": {
-        "executor": "@nx/jest:jest",
-        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-        "options": {
-          "jestConfig": "libs/mesh-rest-client/jest.config.ts",
-          "passWithNoTests": true
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/mesh-rest-client",
+                "tsConfig": "libs/mesh-rest-client/tsconfig.lib.json",
+                "packageJson": "libs/mesh-rest-client/package.json",
+                "main": "libs/mesh-rest-client/src/public-api.ts",
+                "assets": ["libs/mesh-rest-client/*.md"]
+            }
         },
-        "configurations": {
-          "ci": {
-            "ci": true,
-            "codeCoverage": true
-          }
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/mesh-rest-client/**/*.ts",
+                    "libs/mesh-rest-client/package.json"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/mesh-rest-client/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
         }
-      }
     }
-  }
+}

@@ -1,10 +1,9 @@
 import { Component, ViewChild } from '@angular/core';
-import { TestBed, tick } from '@angular/core/testing';
+import { tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
-import { EditableTag, StringTagPartProperty, TagChangedFn, TagPropertyMap } from '@gentics/cms-models';
+import { EditableTag, StringTagPartProperty, TagChangedFn, TagEditorResult, TagPropertyMap } from '@gentics/cms-models';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest } from '../../../../testing/component-test';
@@ -55,7 +54,7 @@ describe('TagEditorHostComponent', () => {
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagSpy: jasmine.Spy = null;
-                let resolve: (tag: EditableTag) => void = null;
+                let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([GenticsTagEditorComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
                         new Promise(resolveFn => resolve = resolveFn),
@@ -79,12 +78,16 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(actualEditedTag => {
+                result.then(editorResult => {
                     expect(origPromiseResolved).toBe(true);
-                    expect(actualEditedTag).toEqual(expectedEditedTag);
+                    expect(editorResult.doDelete).toEqual(false);
+                    expect(editorResult.tag).toEqual(expectedEditedTag);
                     resultResolved = true;
                 }).catch(() => fail('result promise should not be rejected.'));
-                resolve(expectedEditedTag);
+                resolve({
+                    doDelete: false,
+                    tag: expectedEditedTag,
+                });
                 origPromiseResolved = true;
                 tick();
                 expect(resultResolved).toBe(true);
@@ -107,7 +110,7 @@ describe('TagEditorHostComponent', () => {
                 const context = getMockedTagEditorContext(tag);
 
                 let editTagSpy: jasmine.Spy = null;
-                let resolve: (tag: EditableTag) => void = null;
+                let resolve: (tag: TagEditorResult) => void = null;
                 spyOnDynamicallyCreatedComponent([CustomTagEditorHostComponent], (componentType, componentInstance) => {
                     editTagSpy = spyOn(componentInstance.instance, 'editTag').and.returnValue(
                         new Promise(resolveFn => resolve = resolveFn),
@@ -131,12 +134,16 @@ describe('TagEditorHostComponent', () => {
                 // Make sure that the promise is resolved correctly.
                 let origPromiseResolved = false;
                 let resultResolved = false;
-                result.then(actualEditedTag => {
+                result.then(editorResult => {
                     expect(origPromiseResolved).toBe(true);
-                    expect(actualEditedTag).toEqual(expectedEditedTag);
+                    expect(editorResult.doDelete).toEqual(false);
+                    expect(editorResult.tag).toEqual(expectedEditedTag);
                     resultResolved = true;
                 }).catch(() => fail('result promise should not be rejected.'));
-                resolve(expectedEditedTag);
+                resolve({
+                    doDelete: false,
+                    tag: expectedEditedTag,
+                });
                 origPromiseResolved = true;
                 tick();
                 expect(resultResolved).toBe(true);

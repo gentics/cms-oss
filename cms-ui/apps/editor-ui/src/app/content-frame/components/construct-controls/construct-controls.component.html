@@ -1,125 +1,60 @@
-<div class="content">
-    <ng-container *ngIf="!gcnPlugin; else loadedContent">
-        <div class="loading-placeholder">{{ 'editor.constructs_loading' | i18n }}</div>
-    </ng-container>
-</div>
-
-<ng-template #loadedContent>
+<ng-template #groupTpl let-label="label" let-constructs="constructs">
     <gtx-dropdown-list
-        #dropdown
         class="dropdown"
-        [belowTrigger]="false"
-        [sticky]="true"
-        [width]="'trigger'"
-        [disabled]="true"
+        [belowTrigger]="true"
+        [sticky]="false"
+        [width]="'content'"
+        (open)="handleDropdownOpen($event)"
     >
         <gtx-dropdown-trigger>
-            <!-- <div class="category-overview">
-                <div
-                    *ngFor="let group of groups"
-                    class="construct-category"
-                    [attr.data-id]="group.id"
-                >
-                    <div class="category-name">
-                        {{ group.label }}
-                    </div>
-                    <gtx-button class="category-toggle" icon [disabled]="disabled || !active">
-                        <icon>keyboard_arrow_down</icon>
-                    </gtx-button>
+            <div class="construct-group">
+                <div class="group-label">{{ label }}</div>
+                <div class="group-icon">
+                    <icon>keyboard_arrow_down</icon>
                 </div>
-            </div> -->
-
-            <div class="construct-overview">
-                <ng-container *ngIf="favouriteConstructs.length > 0; else noFavouriteConstructs">
-                    <ng-container *ngTemplateOutlet="constructs; context: { list: availableConstructs | gtxFilter:isFavourite(favouriteConstructs) }"></ng-container>
-                </ng-container>
-                <ng-template #noFavouriteConstructs>
-                    <div class="no-elements">
-                        {{ 'editor.constructs_no_favourites' | i18n }}
-                    </div>
-                </ng-template>
             </div>
         </gtx-dropdown-trigger>
 
         <gtx-dropdown-content>
-            <div class="full-view-wrapper">
-                <div class="inner-view-wrapper">
-                    <div class="groups-container">
-                        <div
-                            *ngFor="let group of groups"
-                            class="construct-group"
-                            [attr.data-id]="group.id"
-                        >
-                            <div *ngIf="group.id !== UNCATEGORIZED_CONSTRUCTS_ID" class="group-label">
-                                {{ group.label }}
-                            </div>
-                            <div class="group-entries">
-                                <ng-template *ngTemplateOutlet="constructs; context: { list: group.constructs }"></ng-template>
-                            </div>
-                        </div>
-
-                        <div *ngIf="groups.length === 0" class="no-elements">
-                            {{ 'editor.constructs_no_results' | i18n }}
-                        </div>
-                    </div>
-
-                    <div class="search-bar">
-                        <gtx-search-bar
-                            [query]="filterText"
-                            (change)="updateFilterText($event)"
-                            (clear)="updateFilterText('')"
-                        ></gtx-search-bar>
-                    </div>
+            <div class="construct-list">
+                <div
+                    *ngFor="let construct of constructs"
+                    class="construct-element"
+                    [attr.data-keyword]="construct.keyword"
+                    (click)="insertConstruct(construct, $event)"
+                >
+                    <div class="construct-label">{{ construct.name }}</div>
+                    <button
+                        class="favourite-toggle-button"
+                        [class.active]="favourites.includes(construct.keyword)"
+                        (click)="toggleFavourite(construct, $event)"
+                    >
+                        <icon>star</icon>
+                    </button>
                 </div>
             </div>
         </gtx-dropdown-content>
     </gtx-dropdown-list>
-
-    <gtx-button
-        class="dropdown-toggle"
-        icon
-        [disabled]="availableConstructs.length === 0"
-        (click)="openDropdown()"
-    >
-        <icon>keyboard_arrow_down</icon>
-    </gtx-button>
 </ng-template>
 
-<ng-template #constructs let-list="list">
-    <ng-container *ngFor="let construct of list">
-        <gtx-tooltip
-            position="bottom"
-            align="left"
-            type="light"
-        >
-            <button
-                gtx-tooltip-trigger
-                class="format-button construct"
-                [attr.data-keyword]="construct.keyword"
-                [attr.data-id]="construct.id"
-                [disabled]="disabled || !active"
-                (click)="insertConstructIntoPage(construct)"
-            >
-                <button
-                    class="construct-favourite-toggle"
-                    [class.active]="favouriteConstructs | gtxIncludes:(construct | gtxTransform:'keyword')"
-                    [disabled]="disabled || !active"
-                    (click)="toggleFavourite(construct, $event)"
-                >
-                    <icon>star</icon>
-                </button>
-                <div class="construct-icon">
-                    <icon>{{ construct | gtxConstructIconNormalizer }}</icon>
-                </div>
-                <div class="construct-name">
-                    {{ construct.name }}
-                </div>
-            </button>
+<div class="group-overview">
+    <div class="groups-container">
+        <ng-container *ngIf="favouriteConstructs.length > 0">
+            <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                label: (FAVOURITES_LABEL | i18n),
+                constructs: favouriteConstructs
+            }"></ng-container>
+        </ng-container>
 
-            <div class="construct-tooltip-details" gtx-tooltip-content>
-                <h3 class="constuct-keyword">{{ construct.keyword }}</h3>
-                <div *ngIf="construct.description" class="construct-description">{{ construct.description }}</div>
-            </div>
-        </gtx-tooltip>
-    </ng-container>
-</ng-template>
+        <ng-container *ngFor="let group of displayGroups">
+            <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
+                label: group.label,
+                constructs: group.constructs
+            }"></ng-container>
+        </ng-container>
+    </div>
+
+    <div class="search-container">
+
+    </div>
+</div>

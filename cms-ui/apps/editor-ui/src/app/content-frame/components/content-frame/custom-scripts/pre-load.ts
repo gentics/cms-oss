@@ -31,7 +31,8 @@ export class PreLoadScript {
     constructor(
         private window: CNWindow,
         private document: CNIFrameDocument,
-        private scriptHost: CustomScriptHostService) { }
+        private scriptHost: CustomScriptHostService,
+    ) { }
 
     run(): void {
         this.applyGcmsUiStyles();

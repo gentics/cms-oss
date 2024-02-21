@@ -1,21 +1,23 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
-import { GCNAlohaPlugin, GCNTags } from '@gentics/aloha-models';
-import { ConstructCategory, TagPartType, TagType } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
+import { TagEditorService } from '@editor-ui/app/tag-editor';
+import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
+import { Construct, ConstructCategory, TagPartType } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
-import { distinctUntilChanged } from 'rxjs/operators';
-import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
-import { BaseControlsComponent } from '../base-controls/base-controls.component';
+import { AlohaGlobal } from '../../models/content-frame';
 
-interface GroupedConstructs {
+interface DisplayGroup {
     id: number;
-    label?: string;
+    label: string;
     order?: number;
-    constructs: TagType[];
+    constructs: Construct[];
 }
 
-const UNCATEGORIZED_CONSTRUCTS_LABEL = 'editor.construct_no_category';
-const UNCATEGORIZED_CONSTRUCTS_ID = -1;
+const FAVOURITES_ID = -2;
+const FAVOURITES_LABEL = 'editor.construct_favourites';
+const UNCATEGORIZED_ID = -1;
+const UNCATEGORIZED_LABEL = 'editor.construct_no_category';
 
 @Component({
     selector: 'gtx-construct-controls',
@@ -23,76 +25,105 @@ const UNCATEGORIZED_CONSTRUCTS_ID = -1;
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructControlsComponent extends BaseControlsComponent implements OnInit, OnChanges {
+export class ConstructControlsComponent implements OnInit, OnChanges {
 
-    public readonly UNCATEGORIZED_CONSTRUCTS_ID = UNCATEGORIZED_CONSTRUCTS_ID;
+    public readonly FAVOURITES_ID = FAVOURITES_ID;
+    public readonly FAVOURITES_LABEL = FAVOURITES_LABEL;
+    public readonly UNCATEGORIZED_ID = UNCATEGORIZED_ID;
+    public readonly UNCATEGORIZED_LABEL = UNCATEGORIZED_LABEL;
 
-    /** All constructs which exist. */
     @Input()
-    public constructs: TagType[] = [];
+    public constructs: Construct[] = [];
 
-    /** All construct-categories which exist. */
     @Input()
     public categories: ConstructCategory[] = [];
 
-    @ViewChild('dropdown', { static: false })
-    public dropdown: DropdownListComponent;
+    @Input()
+    public favourites: string[] = [];
 
-    /** The text the user filtered/searched for in the search bar. */
-    public filterText: string;
+    @Input()
+    public gcnPlugin: GCNAlohaPlugin;
 
-    /** If any selection/editable is active, so we can insert constructs there. */
-    public active = false;
+    @Input()
+    public alohaRef: AlohaGlobal;
 
-    /** Constructs which are available to be inseted. */
-    public availableConstructs: TagType[] = [];
-    /** Constructs without a category set. */
-    public favouriteConstructs: string[] = [];
-    /** `availableConstructs`, but grouped by the category. */
-    public groups: GroupedConstructs[] = [];
+    @Output()
+    public favouritesChange = new EventEmitter<string[]>();
+
+    public filterText = '';
+
+    public availableConstructs: Construct[] = [];
+    public favouriteConstructs: Construct[] = [];
+    public displayGroups: DisplayGroup[] = [];
 
     /** Ids of all the constructs which were used for the previous grouping. Used for caching */
     protected previousConstructIds: number[] = [];
     /** Previous search term. Used for caching */
     protected previousHaystack = '';
 
-    public gcnPlugin: GCNAlohaPlugin;
-    public gcnTags: GCNTags;
+    protected gcnTags: GCNTags;
+
+    protected currentlyOpenDropdown: DropdownListComponent | null;
 
     constructor(
-        changeDetector: ChangeDetectorRef,
-        protected integration: AlohaIntegrationService,
-    ) {
-        super(changeDetector);
-    }
+        protected i18n: I18nService,
+        protected tagEditor: TagEditorService,
+    ) {}
 
     public ngOnInit(): void {
-        this.subscriptions.push(this.integration.gcnPlugin$.pipe(distinctUntilChanged()).subscribe(plugin => {
-            this.gcnPlugin = plugin;
-            if (this.gcnPlugin) {
-                this.gcnTags = this.safeRequire('gcn/gcn-tags');
-            } else {
-                this.gcnTags = null;
-            }
-            this.updateAvailableConstructs();
-            this.changeDetector.markForCheck();
-        }));
+        this.updateAvailableConstructs();
+        this.updateFavouriteConstructs();
+        this.updateDisplayGroups();
+
+        // TODO: Aloha context change (activeEditable) needs to be observed and then constructs need to be checked again.
     }
 
-    public override ngOnChanges(changes: SimpleChanges): void {
-        super.ngOnChanges(changes);
-
-        if (changes.constructs || changes.categories) {
+    public ngOnChanges(changes: SimpleChanges): void {
+        let didChange = false;
+        if (changes.constructs && !changes.constructs.firstChange) {
             this.updateAvailableConstructs();
+            this.updateFavouriteConstructs();
+            this.updateDisplayGroups();
+            didChange = true;
+        }
+
+        if (!didChange && changes.favourites && !changes.favourites.firstChange) {
+            this.updateFavouriteConstructs();
         }
     }
 
     public updateFilterText(text: string): void {
         this.filterText = text;
-        this.updateGroups();
+        this.updateDisplayGroups();
     }
 
-    public insertConstructIntoPage(construct: TagType): void {
+    public toggleFavourite(construct: Construct, event?: Event): void {
+        cancelEvent(event);
+
+        const idx = this.favourites.indexOf(construct.keyword);
+        if (idx > -1) {
+            this.favouritesChange.emit([
+                ...this.favourites.slice(0, idx),
+                ...this.favourites.slice(idx + 1),
+            ]);
+        } else {
+            this.favouritesChange.emit([
+                ...this.favourites,
+                construct.keyword,
+            ]);
+        }
+    }
+
+    public handleDropdownOpen(instance: DropdownListComponent): void {
+        if (this.currentlyOpenDropdown?.isOpen) {
+            this.currentlyOpenDropdown.closeDropdown();
+        }
+        this.currentlyOpenDropdown = instance;
+    }
+
+    public insertConstruct(construct: Construct, event?: Event): void {
+        cancelEvent(event);
+
         if (!this.gcnPlugin) {
             return;
         }
@@ -107,6 +138,10 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         this.gcnPlugin.createTag(construct.id, true, (html, tag, data) => {
             this.gcnPlugin.handleBlock(data, true, () => {
                 this.gcnTags.decorate(tag, data);
+                if (this.currentlyOpenDropdown?.isOpen) {
+                    this.currentlyOpenDropdown.closeDropdown();
+                    this.currentlyOpenDropdown = null;
+                }
 
                 const editableParts = construct.parts
                     // Ignore template and velocity parts in all cases
@@ -114,49 +149,30 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
                     // Only check for parts which are editable and are shown in the editor
                     .filter(part => part.editable && !part.hideInEditor);
 
+                // TODO: Check the new flag for this instead
                 if (editableParts.length > 0 || (construct.externalEditorUrl || '').trim().length > 0) {
-                    // eslint-disable-next-line no-underscore-dangle
-                    this.gcnPlugin.openTagFill(tag._data.id, tag._chain._data.id);
+                    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
+                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent());
                 }
             }, html);
         });
     }
 
-    public openDropdown(): void {
-        if (!this.dropdown || this.availableConstructs.length === 0) {
-            return;
+    protected safeRequire(dependency: string): any {
+        if (!this.alohaRef) {
+            return null;
         }
-        this.dropdown.openDropdown(true);
-    }
-
-    public toggleFavourite(construct: TagType, event?: MouseEvent): void {
-        cancelEvent(event);
-
-        const idx = this.favouriteConstructs.findIndex(fav => fav === construct.keyword);
-        if (idx > -1) {
-            this.favouriteConstructs.splice(idx, 1);
-            // Create a copy, so angular properly detects the change
-            this.favouriteConstructs = this.favouriteConstructs.slice();
-        } else {
-            this.favouriteConstructs = [
-                ...this.favouriteConstructs,
-                construct.keyword,
-            ];
+        try {
+            return this.alohaRef.require(dependency);
+        } catch (err) {
+            console.warn(`Could not require aloha element "${dependency}"!`, err);
+            return null;
         }
-    }
-
-    public isFavourite(favourites: string[]): (construct: TagType) => boolean {
-        return (construct) => favourites.findIndex(fav => fav === construct.keyword) > -1;
-    }
-
-    protected selectionOrEditableChanged(): void {
-        this.updateAvailableConstructs();
-        this.active = this.range && this.aloha.activeEditable?.obj != null;
     }
 
     protected updateAvailableConstructs(): void {
         let whitelist: string[] | null = this.gcnPlugin?.settings?.config?.tagtypeWhitelist;
-        const elem = this.aloha?.activeEditable?.obj?.get?.(0);
+        const elem = this.alohaRef?.activeEditable?.obj?.get?.(0);
 
         // Check for whitelists which are more specific
         if (elem != null) {
@@ -177,11 +193,14 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
             .filter(construct => whitelist == null || (whitelist.length !== 0 && whitelist.includes(construct.keyword)))
             // Sort them by name to be nicely displayed
             .sort((a, b) => a.name.localeCompare(b.name));
-
-        this.updateGroups();
     }
 
-    protected updateGroups(): void {
+    protected updateFavouriteConstructs(): void {
+        this.favouriteConstructs = this.availableConstructs
+            .filter(construct => (this.favourites || []).includes(construct.keyword));
+    }
+
+    protected updateDisplayGroups(): void {
         const haystack = (this.filterText || '').toLocaleLowerCase();
         const newIds = this.availableConstructs.map(c => c.id);
 
@@ -193,7 +212,7 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
         this.previousConstructIds = newIds;
         this.previousHaystack = haystack;
 
-        const constructMap: Record<number, TagType> = this.availableConstructs
+        const constructMap: Record<number, Construct> = this.availableConstructs
             // Filter out all constructs which do not match the current search/filtering.
             // Only do this for the grouped constructs, as these are shown in the dropdown.
             .filter(construct => haystack.length > 1
@@ -206,9 +225,9 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
                 return agg;
             }, {});
 
-        const groups: GroupedConstructs[] = this.categories.map(category => {
+        const groups: DisplayGroup[] = this.categories.map(category => {
             // Filter out all constructs which aren't allowed
-            const allowed: TagType[] = Object.values(category.constructs).filter(construct => {
+            const allowed: Construct[] = Object.values(category.constructs).filter(construct => {
                 const found = constructMap[construct.id] != null;
                 // Delete for later lookup
                 delete constructMap[construct.id];
@@ -230,14 +249,14 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
 
         if (uncategorized.length > 0) {
             groups.unshift({
-                id: UNCATEGORIZED_CONSTRUCTS_ID,
-                label: UNCATEGORIZED_CONSTRUCTS_LABEL,
+                id: UNCATEGORIZED_ID,
+                label: this.i18n.translate(UNCATEGORIZED_LABEL),
                 order: -1,
                 constructs: uncategorized.sort((a, b) => a.name.localeCompare(b.name)),
             });
         }
 
-        this.groups = groups.sort((a, b) => {
+        this.displayGroups = groups.sort((a, b) => {
             if (typeof a.order === 'number' && typeof b.order === 'number') {
                 return a.order - b.order;
             }
@@ -246,9 +265,5 @@ export class ConstructControlsComponent extends BaseControlsComponent implements
             }
             return 1;
         });
-
-        if (this.dropdown && this.dropdown.isOpen) {
-            this.dropdown.resize();
-        }
     }
 }

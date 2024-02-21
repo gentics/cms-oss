@@ -1,0 +1,56 @@
+@import 'variables';
+@import 'aloha-utils';
+
+.gtx-editor-button {
+    outline: none;
+    border: 1px solid $gtx-color-dark-gray;
+    background: #fff;
+    height: 2rem;
+    transition: 200ms;
+    color: $gtx-color-very-dark-gray;
+    cursor: pointer;
+    border-radius: 2px;
+    padding: 0.25rem 0.75rem;
+    display: flex;
+    align-items: center;
+    @include gtxCommonButtonShadow;
+
+    &:hover,
+    &:focus {
+        background: $gtx-color-off-white;
+        border-color: $gtx-color-off-black;
+        color: $gtx-color-off-black;
+    }
+
+    &.icon-only {
+        padding: 0.25rem;
+        width: 2rem;
+
+        .button-icon {
+            margin: auto;
+            text-align: center;
+        }
+    }
+
+    .button-icon {
+        height: 20px;
+        width: 20px;
+        font-size: 20px;
+        transition: 200ms;
+
+        &.icon-left {
+            margin-right: 0.5rem;
+        }
+
+        &.icon-right {
+            margin-left: 0.5rem;
+        }
+    }
+
+    &:disabled,
+    &[disabled] {
+        background: $gtx-color-light-gray;
+        color: $gtx-color-off-black;
+        cursor: not-allowed;
+    }
+}

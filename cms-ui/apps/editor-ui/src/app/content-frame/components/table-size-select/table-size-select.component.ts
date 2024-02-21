@@ -1,17 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
-
-export interface TableSizeSelectEvent {
-    columns: number;
-    rows: number;
-}
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { TableSize } from '@gentics/aloha-models';
+import { BaseFormElementComponent, generateFormProvider } from '@gentics/ui-core';
 
 @Component({
     selector: 'gtx-table-size-select',
     templateUrl: './table-size-select.component.html',
     styleUrls: ['./table-size-select.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [generateFormProvider(TableSizeSelectComponent)],
 })
-export class TableSizeSelectComponent {
+export class TableSizeSelectComponent extends BaseFormElementComponent<TableSize> {
 
     @Input()
     public maxColumns = 10;
@@ -19,12 +17,11 @@ export class TableSizeSelectComponent {
     @Input()
     public maxRows = 10;
 
-    @Output()
-    public select = new EventEmitter<TableSizeSelectEvent>();
-
     constructor(
-        public changeDetector: ChangeDetectorRef,
-    ) {}
+        changeDetector: ChangeDetectorRef,
+    ) {
+        super(changeDetector);
+    }
 
     public activeColumn = -1;
     public activeRow = -1;
@@ -36,6 +33,11 @@ export class TableSizeSelectComponent {
     }
 
     public triggerSelection(columnIdx: number, rowIdx: number): void {
-        this.select.emit({ columns: columnIdx + 1, rows: rowIdx + 1 });
+        const size = { columns: columnIdx + 1, rows: rowIdx + 1 };
+        this.triggerChange(size);
+    }
+
+    protected onValueChange(): void {
+        // No op
     }
 }

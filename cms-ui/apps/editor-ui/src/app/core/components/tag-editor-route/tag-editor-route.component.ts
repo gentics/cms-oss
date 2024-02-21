@@ -327,6 +327,7 @@ export class TagEditorRouteComponent implements OnInit, AfterViewInit, OnDestroy
             tagOwner: item,
             tagType: tag.tagType,
             readOnly: isReadOnly,
+            withDelete: false,
         });
 
         const isValid = tagEditorContext.validator.validateAllTagProperties(tag.properties).allPropertiesValid;

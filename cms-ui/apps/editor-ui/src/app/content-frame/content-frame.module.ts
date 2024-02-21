@@ -1,71 +1,112 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { ColorAlphaModule } from 'ngx-color/alpha';
+import { ColorSliderModule } from 'ngx-color/slider';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
 import {
+    AlohaAttributeButtonRendererComponent,
+    AlohaAttributeToggleButtonRendererComponent,
+    AlohaButtonRendererComponent,
+    AlohaCheckboxRendererComponent,
+    AlohaColorPickerRendererComponent,
+    AlohaComponentRendererComponent,
+    AlohaContextButtonRendererComponent,
+    AlohaContextToggleButtonRendererComponent,
+    AlohaDateTimePickerRendererComponent,
+    AlohaIFrameRendererComponent,
+    AlohaInputRendererComponent,
+    AlohaLinkTargetRendererComponent,
+    AlohaSelectMenuRendererComponent,
+    AlohaSplitButtonRendererComponent,
+    AlohaSymbolGridRendererComponent,
+    AlohaSymbolSearchGridRendererComponent,
+    AlohaTableSizeSelectRendererComponent,
+    AlohaToggleButtonRendererComponent,
+    AlohaToggleSplitButtonRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,
     ConstructControlsComponent,
     ContentFrameComponent,
-    CustomEditorControlComponent,
     DescriptionTooltipComponent,
+    DynamicDropdownComponent,
+    DynamicFormModal,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
-    FormattingControlsComponent,
-    LinkControlsComponent,
-    ListControlsComponent,
+    LinkCheckerControlsComponent,
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
-    TableControlsComponent,
+    SymbolGridComponent,
+    TableSizeInputComponent,
     TableSizeSelectComponent,
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
-import { CommandToIconPipe, TagTypeIconPipe } from './pipes';
+import { TagTypeIconPipe } from './pipes';
 import {
     AlohaIntegrationService,
     CustomerScriptService,
+    DynamicOverlayService,
     IFrameCollectionService,
 } from './providers';
 
 const COMPONENTS = [
+    AlohaAttributeButtonRendererComponent,
+    AlohaAttributeToggleButtonRendererComponent,
+    AlohaButtonRendererComponent,
+    AlohaCheckboxRendererComponent,
+    AlohaColorPickerRendererComponent,
+    AlohaComponentRendererComponent,
+    AlohaContextButtonRendererComponent,
+    AlohaContextToggleButtonRendererComponent,
+    AlohaDateTimePickerRendererComponent,
+    AlohaIFrameRendererComponent,
+    AlohaInputRendererComponent,
+    AlohaLinkTargetRendererComponent,
+    AlohaSelectMenuRendererComponent,
+    AlohaSplitButtonRendererComponent,
+    AlohaSymbolGridRendererComponent,
+    AlohaSymbolSearchGridRendererComponent,
+    AlohaTableSizeSelectRendererComponent,
+    AlohaToggleButtonRendererComponent,
+    AlohaToggleSplitButtonRendererComponent,
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,
     ConstructControlsComponent,
     ContentFrameComponent,
-    CustomEditorControlComponent,
     DescriptionTooltipComponent,
+    DynamicDropdownComponent,
+    DynamicFormModal,
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
-    FormattingControlsComponent,
-    LinkControlsComponent,
-    ListControlsComponent,
+    LinkCheckerControlsComponent,
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
     PropertiesEditor,
     SimpleDeleteModalComponent,
-    TableControlsComponent,
+    SymbolGridComponent,
+    TableSizeInputComponent,
     TableSizeSelectComponent,
 ];
 
 const PIPES = [
-    CommandToIconPipe,
     TagTypeIconPipe,
 ];
 
 const PROVIDERS = [
     AlohaIntegrationService,
-    IFrameCollectionService,
     CustomerScriptService,
+    DynamicOverlayService,
+    IFrameCollectionService,
 ];
 
 const GUARDS = [
@@ -77,6 +118,8 @@ const GUARDS = [
         SharedModule,
         TagEditorModule,
         EditorOverlayModule,
+        ColorSliderModule,
+        ColorAlphaModule,
         RouterModule.forChild(contentFrameRoutes),
     ],
     exports: [],

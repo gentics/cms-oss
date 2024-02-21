@@ -4,41 +4,42 @@
     "sourceRoot": "libs/aloha-models/src",
     "projectType": "library",
     "tags": ["lib", "models"],
+    "implicitDependencies": [],
     "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
-        "options": {
-          "outputPath": "dist/libs/aloha-models",
-          "tsConfig": "libs/aloha-models/tsconfig.lib.json",
-          "packageJson": "libs/aloha-models/package.json",
-          "main": "libs/aloha-models/src/public-api.ts",
-          "assets": ["libs/aloha-models/*.md"]
-        }
-      },
-      "lint": {
-        "executor": "@nx/linter:eslint",
-        "outputs": ["{options.outputFile}"],
-        "options": {
-          "lintFilePatterns": [
-            "libs/aloha-models/**/*.ts",
-            "libs/aloha-models/package.json"
-          ]
-        }
-      },
-      "test": {
-        "executor": "@nx/jest:jest",
-        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-        "options": {
-          "jestConfig": "libs/aloha-models/jest.config.ts",
-          "passWithNoTests": true
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/aloha-models",
+                "tsConfig": "libs/aloha-models/tsconfig.lib.json",
+                "packageJson": "libs/aloha-models/package.json",
+                "main": "libs/aloha-models/src/public-api.ts",
+                "assets": []
+            }
         },
-        "configurations": {
-          "ci": {
-            "ci": true,
-            "codeCoverage": true
-          }
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/aloha-models/**/*.ts",
+                    "libs/aloha-models/package.json"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/aloha-models/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
         }
-      }
     }
-  }
+}

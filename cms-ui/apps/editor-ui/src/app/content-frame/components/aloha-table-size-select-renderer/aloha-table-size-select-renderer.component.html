@@ -1,0 +1,14 @@
+<gtx-table-size-input
+    *ngIf="!isDesktop; else select"
+    [maxColumns]="settings.maxColumns"
+    [maxRows]="settings.maxRows"
+    [formControl]="control"
+></gtx-table-size-input>
+
+<ng-template #select>
+    <gtx-table-size-select
+        [maxColumns]="settings.maxColumns"
+        [maxRows]="settings.maxRows"
+        [formControl]="control"
+    ></gtx-table-size-select>
+</ng-template>

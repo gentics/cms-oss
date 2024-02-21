@@ -1,13 +1,6 @@
-import {ChangeDetectionStrategy, Component, Input, EventEmitter, Output, TemplateRef, ContentChild, forwardRef, ChangeDetectorRef} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {ISortableEvent} from '@gentics/ui-core';
-
-const SORTABLE_ARRAY_LIST_VALUE_ACCESSOR = {
-    provide: NG_VALUE_ACCESSOR,
-    // tslint:disable-next-line:no-forward-ref
-    useExisting: forwardRef(() => SortableArrayListComponent),
-    multi: true
-};
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, Input, Output, TemplateRef } from '@angular/core';
+import { ControlValueAccessor } from '@angular/forms';
+import { ISortableEvent, generateFormProvider } from '@gentics/ui-core';
 
 /**
  * Displays an array as a sortable list and allows the removal of items.
@@ -25,8 +18,8 @@ const SORTABLE_ARRAY_LIST_VALUE_ACCESSOR = {
     selector: 'sortable-array-list',
     templateUrl: './sortable-array-list.component.html',
     styleUrls: ['./sortable-array-list.component.scss'],
-    providers: [ SORTABLE_ARRAY_LIST_VALUE_ACCESSOR ],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    providers: [ generateFormProvider(SortableArrayListComponent) ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SortableArrayListComponent<T> implements ControlValueAccessor {
 

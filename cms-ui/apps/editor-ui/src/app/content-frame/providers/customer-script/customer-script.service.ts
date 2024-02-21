@@ -8,7 +8,6 @@ import { ApiBase } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
-import { DynamicFormModal } from '@editor-ui/app/shared/components/dynamic-form-modal/dynamic-form-modal.component';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
@@ -21,7 +20,8 @@ import {
     Tag,
     TagType,
 } from '@gentics/cms-models';
-import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { ModalCloseError } from '@gentics/ui-core';
 import { Subscription, of as observableOf } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
@@ -29,7 +29,7 @@ import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre
 import { CNIFrameDocument, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomScriptHostService } from '../custom-script-host/custom-script-host.service';
-import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 
 const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms-ui-styles.precompile-scss');
 
@@ -69,7 +69,7 @@ export class CustomerScriptService implements OnDestroy {
         private errorHandlerService: ErrorHandler,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private aloha: AlohaIntegrationService,
-        private modals: ModalService,
+        private overlays: DynamicOverlayService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -177,8 +177,8 @@ export class CustomerScriptService implements OnDestroy {
             this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise();
         const restRequestPOST = (endpoint: string, data: object, params?: object): Promise<object> =>
             this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
-        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>) =>
-            this.tagEditorService.openTagEditor(tag, tagType, page);
+        const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>, withDelete?: boolean) =>
+            this.tagEditorService.openTagEditor(tag, tagType, page, withDelete);
         const openRepositoryBrowser = (options: RepositoryBrowserOptions): Promise<ItemInNode | ItemInNode[]> =>
             this.repositoryBrowserClient.openRepositoryBrowser(options);
 
@@ -191,6 +191,10 @@ export class CustomerScriptService implements OnDestroy {
                 subscription.unsubscribe();
                 subscription = null;
             }
+
+            this.aloha.clearReferences();
+            this.overlays.closeRemaining();
+
             window.GCMSUI = null;
             window.removeEventListener('unload', onUnload);
         };
@@ -235,40 +239,22 @@ export class CustomerScriptService implements OnDestroy {
             },
             callDebugTool: gcmsui_debugTool,
             openTagEditor,
-            openDynamicDropdown: (configuration) => {
-                let open = true;
-                return Promise.resolve({
-                    close: () => {
-                        open = false;
-                    },
-                    isOpen: () => open,
-                    value: Promise.resolve(null),
-                });
+            openDynamicDropdown: (configuration, slot) => {
+                return this.overlays.openDynamicDropdown(configuration, slot);
             },
             openDynamicModal: (configuration) => {
-                let open = true;
-
-                return this.modals.fromComponent(DynamicFormModal, {
-                    closeOnEscape: configuration.closeOnEscape,
-                    closeOnOverlayClick: configuration.closeOnOverlayClick,
-                    onClose: () => {
-                        open = false;
-                    },
-                }, {
-                    configuration,
-                } as any).then(ref => {
-                    return {
-                        close: () => {
-                            if (open && ref?.instance) {
-                                ref.instance.cancelFn(null, ModalClosingReason.API);
-                            }
-                        },
-                        isOpen: () => open,
-                        value: ref.open(),
-                    }
-                });
+                return this.overlays.openDynamicModal(configuration);
+            },
+            openDialog: (configuration) => {
+                return this.overlays.openDialog(configuration);
             },
             closeErrorClass: ModalCloseError,
+            registerComponent: (slot, component) => {
+                this.aloha.registerComponent(slot, component);
+            },
+            unregisterComponent: (slot) => {
+                this.aloha.unregisterComponent(slot);
+            },
         };
 
         window.GCMSUI = gcmsUi;

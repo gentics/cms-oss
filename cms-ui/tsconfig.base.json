@@ -21,7 +21,7 @@
         "target": "ES2022",
         "module": "esnext",
         "lib": [
-            "es2020",
+            "es2022",
             "dom"
         ],
         "typeRoots": [
@@ -63,6 +63,7 @@
                 "libs/cms-models/src/lib/*"
             ],
             "@gentics/aloha-models": [
+                "dist/libs/aloha-models/src/public-api",
                 "libs/aloha-models/src/public-api"
             ],
             "@gentics/cms-rest-client": [
@@ -103,9 +104,6 @@
             ],
             "@gentics/ui-core": [
                 "libs/ui-core/src/public-api"
-            ],
-            "jszip": [
-                "node_modules/jszip/dist/jszip.min.js"
             ]
         }
     },

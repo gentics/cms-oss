@@ -253,7 +253,6 @@ class CustomScriptsTestFixture {
     window: FakeWindow;
     document: FakeDocument;
     scriptHost: FakeScriptHost;
-    aloha = new AlohaIntegrationService();
     eventPreventedByCustomScript = false;
 
     private subscription = new Subscription();
@@ -316,7 +315,7 @@ class CustomScriptsTestFixture {
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
             this.scriptHost as any as CustomScriptHostService,
-            this.aloha,
+            null,
         );
         script.run();
     }

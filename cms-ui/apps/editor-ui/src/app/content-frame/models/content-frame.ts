@@ -95,7 +95,8 @@ export interface CNWindow extends CNParentWindow {
 }
 
 export interface AlohaGlobal {
-    bind: Function;
+    bind: <T = any>(eventName: string, handlerFn: (value?: T) => void) => void;
+    unbind: <T = any>(eventName: string, handlerFn: (value?: T) => void) => void;
     GCN: GCNJSLib;
     require: AlohaRequireFunction;
     settings: AlohaSettings;

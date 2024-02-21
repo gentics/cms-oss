@@ -1,12 +1,12 @@
 <ng-container>
-    <div class="row column">
+    <div class="tag-part-editor">
         <browse-box
             [label]="tagPart | tagPropLabel"
             [displayValue]="displayValue$ | async"
             [disabled]="readOnly"
             (clear)="changeSelectedItem(null)"
-            (browse)="browseForItem()">
-        </browse-box>
+            (browse)="browseForItem()"
+        ></browse-box>
 
         <ul class="uploaded-files" *ngFor="let file of uploadedFiles">
             <li>{{ file.name }} ({{ file.fileSize | filesize }})</li>
@@ -16,32 +16,34 @@
 
             <expansion-button
                 #expandUploadButton
-                [label]="'tag_editor.upload_new_file_button' | i18n">
+                [label]="'tag_editor.upload_new_file_button' | i18n"
+            >
 
                 <upload-with-properties
                     [allowFolderSelection]="false"
                     [destinationFolder]="selectedFolder?.selectedItem$ | async"
                     [itemType]="'file'"
-                    (upload)="onUpload($event)">
-                </upload-with-properties>
+                    (upload)="onUpload($event)"
+                ></upload-with-properties>
 
             </expansion-button>
 
             <expansion-button
                 #expandCreateSubfolderButton
                 [label]="'tag_editor.create_subfolder' | i18n"
-                [tooltip]="'tag_editor.create_subfolder_tooltip' | i18n:{ parent: (selectedFolder?.selectedItem$ | async).name }">
-
+                [tooltip]="'tag_editor.create_subfolder_tooltip' | i18n:{ parent: (selectedFolder?.selectedItem$ | async).name }"
+            >
                 <gtx-input
                     class="subfolder-name"
                     [disabled]="creatingSubfolder"
                     [(ngModel)]="subfolderName"
-                    [label]="'tag_editor.name' | i18n">
-                </gtx-input>
+                    [label]="'tag_editor.name' | i18n"
+                ></gtx-input>
 
                 <gtx-button
                     [disabled]="!subfolderName || creatingSubfolder"
-                    (click)="onCreateSubfolderClick()">
+                    (click)="onCreateSubfolderClick()"
+                >
                     {{ 'tag_editor.create_subfolder' | i18n }}
                 </gtx-button>
 

@@ -2,12 +2,6 @@ import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normal
 import { RequestFailedError } from '@gentics/cms-rest-client';
 import { FileCreateRequest, FileUploadResponse, Image, File as CMSFile } from '@gentics/cms-models';
 
-/**
- * In order not to rewrite all imports, we export all model types here as well.
- * The '@gentics/cms-models' path is defined in the root tsconfig.json.
- */
-export * from '@gentics/cms-models';
-
 export * from './actions';
 export * from './chip-search';
 export * from './events';

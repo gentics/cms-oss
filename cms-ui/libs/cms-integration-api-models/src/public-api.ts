@@ -1,1 +1,1 @@
-export * from './lib/gcms-ui-bridge';
+export * from './lib';

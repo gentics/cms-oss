@@ -1,7 +1,7 @@
 export const GCMSUI_EDITOR_TABS_NAMESPACE = 'gcmsui.';
 
 export enum DefaultEditorControlTabs {
-    FORMATTING = `${GCMSUI_EDITOR_TABS_NAMESPACE}formatting`,
+    FORMATTING = 'formatting',
     CONSTRUCTS = `${GCMSUI_EDITOR_TABS_NAMESPACE}constructs`,
 }
 

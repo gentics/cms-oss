@@ -2,7 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { Node, NodeTagPartProperty, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import { EditableTag, Node, NodeTagPartProperty, TagEditorContext, TagPart, TagPartType, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
 import { DropdownContentWrapperComponent, GenticsUICoreModule, SelectComponent } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { componentTest, configureComponentTest } from '../../../../../testing';
@@ -17,10 +17,9 @@ import { EntityResolver } from '../../../../core/providers/entity-resolver/entit
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
-import { EditableTag, TagEditorContext } from '../../../common';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { NodeSelectorTagPropertyEditor } from './node-selector-tag-property-editor.component';
 
@@ -43,7 +42,7 @@ describe('NodeSelectorTagPropertyEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 NodeSelectorTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
     });

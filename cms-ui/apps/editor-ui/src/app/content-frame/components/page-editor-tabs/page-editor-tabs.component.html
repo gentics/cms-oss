@@ -1,26 +1,20 @@
-<gtx-tabs class="page-control-tabs" pure wrap [activeId]="activeTab">
-    <gtx-tab
-        icon="border_color"
-        [title]="'editor.page_controls_tab_formatting' | i18n"
-        [id]="DefaultEditorControlTabs.FORMATTING"
-        (select)="setActiveTab($event)"
-    ></gtx-tab>
-
-    <gtx-tab
-        icon="web"
-        [title]="'editor.page_controls_tab_constructs' | i18n"
-        [id]="DefaultEditorControlTabs.CONSTRUCTS"
-        (select)="setActiveTab($event)"
-    ></gtx-tab>
-
-    <ng-container *ngFor="let editorEntry of editors | gtxEntries">
-        <gtx-tab
-            [id]="editorEntry.key"
-            [icon]="editorEntry.value.icon"
-            [title]="editorEntry.value.label"
-            [disabled]="editorEntry.value.disabled"
-            [hidden]="editorEntry.value.hidden"
-            (select)="setActiveTab($event)"
-        ></gtx-tab>
+<div #tabContainer class="gtx-editor-tabs gtx-overflow-managed">
+    <ng-container *ngFor="let tab of tabs; trackBy: identifyTab">
+        <button
+            *ngIf="tab.hasVisibleGroups && (tab.id !== TAB_ID_LINK_CHECKER || linkCheckerEnabled)"
+            class="editor-tab"
+            [attr.data-id]="tab.id"
+            [class.active]="tab.id === activeTab"
+            [disabled]="tagEditorOpen"
+            (click)="setActiveTab(tab.id)"
+        >
+            <div class="tab-icon">
+                <icon>{{ tab.icon }}</icon>
+                <div *ngIf="tab.id === TAB_ID_LINK_CHECKER && brokenLinkCount" class="icon-badge">
+                    {{ brokenLinkCount }}
+                </div>
+            </div>
+            <div class="tab-label">{{ tab.label | i18n }}</div>
+        </button>
     </ng-container>
-</gtx-tabs>
+</div>

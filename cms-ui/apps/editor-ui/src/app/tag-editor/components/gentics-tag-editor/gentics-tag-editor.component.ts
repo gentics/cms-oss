@@ -6,6 +6,7 @@ import {
     TagChangedFn,
     TagEditorContext,
     TagEditorError,
+    TagEditorResult,
     TagPart,
     TagPropertyEditor,
     TagPropertyMap,
@@ -26,8 +27,8 @@ import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-
     selector: 'gentics-tag-editor',
     templateUrl: './gentics-tag-editor.component.html',
     styleUrls: ['./gentics-tag-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewInit, OnDestroy {
 
     @Input()
@@ -74,7 +75,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
      * The current TagEditorContext.
      * TagPropertyEditors get a deep copy of this object.
      */
-    private context: TagEditorContext;
+    public context: TagEditorContext;
 
     /**
      * Contains all TagPropertyEditors used by this TagEditor.
@@ -88,7 +89,7 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
 
     private subscriptions = new Subscription();
 
-    private editResolve: (editedTag: EditableTag) => void;
+    private editResolve: (result: TagEditorResult) => void;
     private editReject: () => void;
 
     constructor(
@@ -110,11 +111,11 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
         this.subscriptions.unsubscribe();
     }
 
-    editTag(tag: EditableTag, context: TagEditorContext): Promise<EditableTag> {
+    editTag(tag: EditableTag, context: TagEditorContext): Promise<TagEditorResult> {
         this.onTagChangeFn = null;
         this.initTagEditor(tag, context);
 
-        return new Promise<EditableTag>((resolveFn, rejectFn) => {
+        return new Promise<TagEditorResult>((resolveFn, rejectFn) => {
             this.editResolve = resolveFn;
             this.editReject = rejectFn;
         });
@@ -125,6 +126,13 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
         this.initTagEditor(tag, context);
     }
 
+    onDeleteClick(): void {
+        this.editResolve({
+            doDelete: true,
+            tag: this.originalTag,
+        });
+    }
+
     onCancelClick(): void {
         this.editReject();
     }
@@ -132,7 +140,10 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     onOkClick(): void {
         const editedTag = cloneDeep(this.originalTag);
         editedTag.properties = cloneDeep(this.currentTagState);
-        this.editResolve(editedTag);
+        this.editResolve({
+            doDelete: false,
+            tag: editedTag,
+        });
     }
 
     private initTagEditor(tag: EditableTag, context: TagEditorContext): void {

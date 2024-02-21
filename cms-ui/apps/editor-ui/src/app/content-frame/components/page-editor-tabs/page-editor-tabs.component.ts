@@ -1,7 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
-import { DefaultEditorControlTabs, PageEditorTab } from '../../../common/models';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ApplicationStateService } from '@editor-ui/app/state';
+import { AlohaToolbarTabsSettings } from '@gentics/aloha-models';
+import { NodeFeature } from '@gentics/cms-models';
+import { Subscription, combineLatest, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { DefaultEditorControlTabs } from '../../../common/models';
+import { AlohaIntegrationService, NormalizedTabsSettings, TAB_ID_LINK_CHECKER } from '../../providers/aloha-integration/aloha-integration.service';
+import { OverflowManager } from '../../utils';
 
 @Component({
     selector: 'gtx-page-editor-tabs',
@@ -9,49 +14,94 @@ import { DefaultEditorControlTabs, PageEditorTab } from '../../../common/models'
     styleUrls: ['./page-editor-tabs.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageEditorTabsComponent implements OnInit, OnDestroy {
+export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy {
 
-    public readonly DefaultEditorControlTabs = DefaultEditorControlTabs;
+    public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
+
+    @Input()
+    public brokenLinkCount: number;
+
+    @ViewChild('tabContainer')
+    public tabContainerRef: ElementRef<HTMLElement>;
 
     public activeTab: string;
-    public editors: Record<string, PageEditorTab> = {};
+    public tabs: AlohaToolbarTabsSettings[] = [];
+    public tagEditorOpen = false;
+    public linkCheckerEnabled = false;
 
     protected subscriptions: Subscription[] = [];
+    protected overflow: OverflowManager;
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
+        protected zone: NgZone,
+        protected appState: ApplicationStateService,
         protected aloha: AlohaIntegrationService,
     ) {}
 
-    ngOnInit(): void {
-        this.editors = this.aloha.editors;
-        this.activeTab = this.aloha.activeEditor;
+    public ngOnInit(): void {
+        this.activeTab = this.aloha.activeTab;
 
-        this.subscriptions.push(this.aloha.activeEditor$.subscribe(active => {
-            if (active == null) {
-                this.aloha.changeActivePageEditorTab(DefaultEditorControlTabs.FORMATTING);
-                return;
+        this.subscriptions.push(this.appState.select(state => state.ui.tagEditorOpen).subscribe(open => {
+            this.tagEditorOpen = open;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(combineLatest([
+            this.appState.select(state => state.editor.itemType),
+            this.appState.select(state => state.editor.nodeId),
+        ]).pipe(
+            switchMap(([itemType, nodeId]) => {
+                if (itemType !== 'page' || !nodeId) {
+                    return of(false);
+                }
+
+                return this.appState.select(state => state.features.nodeFeatures[nodeId]).pipe(
+                    map(features => (features || []).includes(NodeFeature.LINK_CHECKER)),
+                );
+            }),
+        ).subscribe(enabled => {
+            this.linkCheckerEnabled = enabled;
+            if (!enabled && this.activeTab === TAB_ID_LINK_CHECKER) {
+                this.aloha.changeActivePageEditorTab(this.tabs?.[0]?.id);
             }
-            this.activeTab = active;
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.editorsChange$.subscribe(() => {
-            this.editors = this.aloha.editors;
+        this.subscriptions.push(this.aloha.activeToolbarSettings$.subscribe(toolbar => {
+            this.tabs = toolbar?.tabs ?? [];
+            if (!this.tabs.some(tab => tab.id === this.activeTab)) {
+                this.setActiveTab(DefaultEditorControlTabs.FORMATTING);
+            }
             this.changeDetector.markForCheck();
         }));
+
+        this.subscriptions.push(this.aloha.activeEditor$.subscribe(activeEditor => {
+            this.activeTab = activeEditor;
+            this.changeDetector.markForCheck();
+        }))
     }
 
-    ngOnDestroy(): void {
+    public ngAfterViewInit(): void {
+        this.zone.runOutsideAngular(() => {
+            this.overflow = new OverflowManager(this.tabContainerRef.nativeElement);
+            this.overflow.init();
+        });
+    }
+
+    public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+        if (this.overflow) {
+            this.overflow.destroy();
+            this.overflow = null;
+        }
     }
 
-    public setActiveTab(tab: DefaultEditorControlTabs | string | Event): void {
-        // This handles the "select" event, which is also triggered by the browser events when ... selecting things.
-        // Preventing these browser events from actually changing/breaking the tabs is important here.
-        if (tab == null || tab instanceof Event) {
-            return;
-        }
+    public identifyTab(_idx: number, tab: NormalizedTabsSettings): string {
+        return tab.id;
+    }
+
+    public setActiveTab(tab: string): void {
         this.aloha.changeActivePageEditorTab(tab);
     }
 }

@@ -1,0 +1,83 @@
+@import 'variables';
+@import '../aloha-input-renderer/aloha-input-renderer.component.scss';
+
+.gtx-link-target {
+
+    .target-wrapper,
+    .anchor-wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        width: 100%;
+
+        > .gtx-editor-input {
+            flex: 1 1 auto;
+        }
+    }
+
+    .target-wrapper {
+        margin-bottom: 0.5rem;
+    }
+
+    &.has-picker {
+        .target-wrapper {
+            input {
+                border-right: none;
+                border-top-right-radius: 0px;
+                border-bottom-right-radius: 0px;
+            }
+        }
+    }
+
+    .internal-target-picker,
+    .internal-target-clear {
+        height: 2.5rem;
+        margin-top: auto;
+
+        outline: none;
+        border: 2px solid #d6d6d6;
+        border-left-width: 1px;
+        border-radius: 2px;
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+        background: #fff;
+        color: $gtx-color-off-black;
+        transition: 200ms;
+        position: relative;
+        cursor: pointer;
+        display: flex;
+
+        > icon {
+            margin: auto 0;
+        }
+
+        &:hover {
+            background: $gtx-color-off-white;
+        }
+
+        &:focus {
+            border-color: #c1c4ad;
+        }
+    }
+
+    .target-input {
+        order: 1;
+    }
+
+    .internal-target-picker {
+        order: 2;
+    }
+
+    .internal-target-clear {
+        order: 3;
+
+        > icon {
+            color: $gtx-color-alert;
+        }
+
+        + .internal-target-picker {
+            border-radius: 0;
+            border-right-width: 1px;
+        }
+    }
+}

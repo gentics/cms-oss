@@ -1,12 +1,10 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "image-editor",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "apps/image-editor/src",
-    "implicitDependencies": [
-        "ui-core"
-    ],
+    "implicitDependencies": ["ui-core"],
     "tags": ["lib", "angular"],
     "targets": {
         "build": {

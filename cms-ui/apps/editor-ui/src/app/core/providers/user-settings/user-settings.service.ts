@@ -5,7 +5,7 @@ import { cloneDeep, flatten, isEqual, merge } from 'lodash-es';
 import { Observable, combineLatest, forkJoin } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
-import { environment } from '../../../development/development-tools';
+import { environment as ENVIRONMENT_TOKEN } from '../../../development/development-tools';
 import {
     ApplicationStateService,
     FavouritesLoadedAction,
@@ -15,6 +15,7 @@ import {
     RecentItemsFetchingSuccessAction,
     SetActiveFolderAction,
     SetActiveNodeAction,
+    SetConstructFavourites,
     SetOpenObjectPropertyGroupsAction,
     SetUILanguageAction,
     UIActionsService,
@@ -39,7 +40,7 @@ export class UserSettingsService {
         private appState: ApplicationStateService,
         private folderActions: FolderActionsService,
         private publishQueueActions: PublishQueueActionsService,
-        @Inject(environment) private environment: string,
+        @Inject(ENVIRONMENT_TOKEN) private environment: string,
         private uiActions: UIActionsService,
         private i18nService: I18nService,
         private notification: I18nNotification,
@@ -253,6 +254,7 @@ export class UserSettingsService {
 
             repositoryBrowserBreadcrumbsExpanded: state.ui.repositoryBrowserBreadcrumbsExpanded,
             uiLanguage: state.ui.language,
+            constructFavourites: state.ui.constructFavourites,
         };
         return result;
     }
@@ -323,6 +325,10 @@ export class UserSettingsService {
 
     setUiLanguage(language: GcmsUiLanguage): void {
         this.dispatchAndSaveChange('uiLanguage', language);
+    }
+
+    setConstructFavourites(favourites: string[]): void {
+        this.dispatchAndSaveChange('constructFavourites', favourites);
     }
 
     setLastNodeId(nodeId: number): void {
@@ -498,6 +504,10 @@ export class UserSettingsService {
             case 'lastSaveUiVersion':
                 break;
 
+            case 'constructFavourites':
+                this.appState.dispatch(new SetConstructFavourites(value));
+                break;
+
             default:
                 if (this.environment === 'development') {
                     // eslint-disable-next-line no-console
@@ -586,10 +596,12 @@ export class UserSettingsService {
                         return {
                             // Get actual nodeId if its a master, channel or localized version
                             nodeId: !existingItem.channelId ?
+                                // eslint-disable-next-line no-underscore-dangle
                                 (existingItem.inherited ? existingItem._checkedNodeId : existingItem.masterNodeId) :
                                 existingItem.channelId,
                             type: existingItem.type,
                             id: existingItem.id,
+                            // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
                             _checkedNodeId: existingItem._checkedNodeId,
                         };
                     }),
@@ -608,6 +620,7 @@ export class UserSettingsService {
                             item.type === 'node'
                             && fav.type === 'folder'
                         )
+                    // eslint-disable-next-line no-underscore-dangle
                     ) && item._checkedNodeId === fav.nodeId;
                 });
 

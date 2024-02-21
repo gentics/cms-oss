@@ -30,4 +30,6 @@ export interface UIState {
     usersnap: UsersnapSettings;
     hideExtras: boolean;
     overlayCount: number;
+    constructFavourites: string[];
+    tagEditorOpen: boolean;
 }

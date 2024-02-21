@@ -12,6 +12,7 @@ import {
     RepositoryBrowserOptions,
     Tag,
     TagEditorContext,
+    TagEditorResult,
     TagType,
     Template,
     VariableTagEditorContext,
@@ -22,7 +23,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
-import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '../../../state';
+import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction, SetTagEditorOpenAction } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
@@ -51,6 +52,8 @@ export interface EditTagInfo {
 
     /** If the tagOwner object comes from an IFrame, this must be set to true in order to apply polyfills to it in IE. */
     tagOwnerFromIFrame?: boolean;
+
+    withDelete: boolean;
 }
 
 /**
@@ -77,10 +80,12 @@ export class TagEditorService {
      *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param context The current context.
+     * @param page The page in which the tag is being edited.
+     * @param withDelete If a delete option for the Tag should be provided.
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    async openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>): Promise<Tag> {
+    async openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>, withDelete?: boolean): Promise<TagEditorResult> {
         // Since the ContentFrame uses the currentNode object when opening a page,
         // we can assume that the entity has already been loaded.
         const node = this.entityResolver.getNode(this.appState.now.editor.nodeId);
@@ -91,18 +96,25 @@ export class TagEditorService {
             tagOwner: page,
             node: node,
             readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
+            withDelete,
             tagOwnerFromIFrame: true,
         });
 
-        await this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise();
+        await Promise.all([
+            this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise(),
+            this.appState.dispatch(new SetTagEditorOpenAction(true)).toPromise(),
+        ]);
         try {
-            const editedTag = await this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
-            if (editedTag) {
-                delete editedTag.tagType;
+            const result = await this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
+            if (result.tag) {
+                delete result.tag.tagType;
             }
-            return <Tag> editedTag;
+            return result;
         } finally {
-            await this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise();
+            await Promise.all([
+                this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
+                this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
+            ]);
         }
     }
 
@@ -172,7 +184,17 @@ export class TagEditorService {
         const sid = this.appState.now.auth.sid;
         const translator = new TranslatorImpl(this.translateService);
 
-        return TagEditorContextImpl.create(editableTag, editTagInfo.readOnly, rawTagOwner, rawNode, sid, translator, variableContext$, gcmsUiServices);
+        return TagEditorContextImpl.create(
+            editableTag,
+            editTagInfo.readOnly,
+            rawTagOwner,
+            rawNode,
+            sid,
+            translator,
+            variableContext$,
+            gcmsUiServices,
+            editTagInfo.withDelete,
+        );
     }
 
     /**

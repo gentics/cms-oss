@@ -3,16 +3,19 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import {
+    EditableTag,
     Folder,
     Page,
     PageTagTagPartProperty,
     Raw,
     RepositoryBrowserOptions,
     Tag,
+    TagEditorContext,
     TagEditorError,
     TagInContainer,
     TagPart,
     TagPartProperty,
+    TagPropertiesChangedFn, TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
     TagType,
@@ -23,7 +26,6 @@ import { BehaviorSubject, Observable, Subject, Subscription, merge, of } from 'r
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Api } from '../../../../core/providers/api/api.service';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
-import { EditableTag, TagEditorContext, TagPropertiesChangedFn, TagPropertyEditor } from '../../../common';
 
 /**
  * Helper class for fetching a Page or a Template depending on the TagPropertyType

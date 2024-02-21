@@ -1,11 +1,11 @@
 <ng-container *ngIf="tagProperty">
-    <div class="row column">
+    <div class="tag-part-editor">
         <browse-box
             [label]="'tag_editor.internal_page' | i18n"
             [displayValue]="internalFormDisplayValue$ | async"
             [disabled]="readOnly"
             (clear)="changeSelectedForm(null)"
-            (browse)="browseForForm()">
-        </browse-box>
+            (browse)="browseForForm()"
+        ></browse-box>
     </div>
 </ng-container>

@@ -18,7 +18,7 @@ import {
 } from '../../../../../testing/test-tag-editor-data.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { TextTagPropertyEditor } from './text-tag-property-editor.component';
 
@@ -42,7 +42,7 @@ describe('TextTagPropertyEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 TextTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
     });
@@ -362,7 +362,7 @@ describe('TextTagPropertyEditorComponent', () => {
 
             // Get the actual textBox element (input or textarea, depending on TagPartType) and the ValidationErrorInfo element.
             const textBoxElement = editorElement.query(By.css('input, textarea')).nativeElement as HTMLInputElement;
-            const validationInfoElement = editorElement.query(By.directive(ValidationErrorInfo));
+            const validationInfoElement = editorElement.query(By.directive(ValidationErrorInfoComponent));
 
             // Simulate the entering of some valid text.
             onChangeSpy.and.returnValue(getMultiValidationResult(tagPart, getExampleValidationSuccess()));

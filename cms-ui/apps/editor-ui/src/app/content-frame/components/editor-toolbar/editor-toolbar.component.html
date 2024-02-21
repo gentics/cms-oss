@@ -11,7 +11,9 @@
 
         <ng-container *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT; else itemBreadcrumb">
             <div class="page-editor-tabs">
-                <gtx-page-editor-tabs></gtx-page-editor-tabs>
+                <gtx-page-editor-tabs
+                    [brokenLinkCount]="brokenLinkCount"
+                ></gtx-page-editor-tabs>
             </div>
         </ng-container>
 
@@ -20,6 +22,7 @@
                 <item-status-label
                     class="full-size"
                     [item]="currentItem"
+                    [iconOnly]="true"
                     [nodeLanguages]="activeNodeLanguages"
                     [activeNodeId]="currentNode?.id"
                 ></item-status-label>
@@ -39,23 +42,6 @@
             </gtx-button>
 
             <gtx-button
-                *ngIf="buttons.previewPage"
-                class="primary-action preview-button with-shadow"
-                flat
-                size="small"
-                [routerLink]="previewLink"
-            >
-                <div *ngIf="!editorState.version">
-                    <icon left>pageview</icon>
-                    <span>{{ 'editor.preview_label' | i18n }}</span>
-                </div>
-                <div *ngIf="editorState.version">
-                    <icon left>update</icon>
-                    <span>{{ 'editor.preview_current_version_label' | i18n }}</span>
-                </div>
-            </gtx-button>
-
-            <gtx-button
                 *ngIf="buttons.edit"
                 class="primary-action edit-button"
                 size="small"
@@ -63,8 +49,7 @@
                 (click)="editItem()"
                 [title]="'editor.edit_tooltip' | i18n"
             >
-                <icon left>edit</icon>
-                <span>{{ 'editor.edit_type_button' | i18n:{ _type: currentItem?.type  } }}</span>
+                <icon>edit</icon>
             </gtx-button>
 
             <gtx-button
@@ -76,8 +61,7 @@
                 disabled="true"
                 [title]="'editor.content_frame_page_locked_tooltip' | i18n"
             >
-                <icon left>lock</icon>
-                <span>{{ 'editor.edit_type_button' | i18n:{ _type: currentItem?.type  } }}</span>
+                <icon>lock</icon>
             </gtx-button>
 
             <gtx-split-button
@@ -89,8 +73,8 @@
             >
                 <gtx-split-button-primary-action (click)="saveChanges(SaveBehaviour.REGULAR)">
                     <div class="save-button-primary-action">
-                        <icon left>save</icon>
-                        <span [innerHTML]="'editor.content_frame_save_changes_button' | i18n"></span>
+                        <icon>save</icon>
+                        <!-- <span [innerHTML]="'editor.content_frame_save_changes_button' | i18n"></span> -->
                     </div>
                 </gtx-split-button-primary-action>
 
@@ -125,6 +109,15 @@
 
                     <gtx-dropdown-item *ngIf="buttons.editItem" (click)="editItem()">
                         <icon left>edit</icon> {{ 'editor.edit_label' | i18n }}
+                    </gtx-dropdown-item>
+
+                    <gtx-dropdown-item *ngIf="buttons.previewPage" (click)="previewPage()">
+                        <ng-container *ngIf="!editorState.version; else previewCurrentVersion">
+                            <icon left>pageview</icon> {{ 'editor.preview_label' | i18n }}
+                        </ng-container>
+                        <ng-template #previewCurrentVersion>
+                            <icon left>update</icon> {{ 'editor.preview_current_version_label' | i18n }}
+                        </ng-template>
                     </gtx-dropdown-item>
 
                     <gtx-dropdown-item *ngIf="buttons.compareSources" (click)="switchToCompareSources()">
@@ -189,6 +182,7 @@
     <gtx-page-editor-controls
         *ngIf="currentItem?.type === 'page' && editorState?.editMode === EditMode.EDIT"
         class="page-editor-controls"
+        (brokenLinkCountChange)="updateBrokenLinkCount($event)"
     ></gtx-page-editor-controls>
 
     <gtx-progress-bar class="image-loading" [for]="uploadInProgress$"></gtx-progress-bar>

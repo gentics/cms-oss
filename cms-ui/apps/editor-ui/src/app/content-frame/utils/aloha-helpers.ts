@@ -1,57 +1,59 @@
-import { TAG_ALIASES } from '@editor-ui/app/common/models/aloha-integration';
-import { AlohaDOM, AlohaEditable, AlohaRangeObject } from '@gentics/aloha-models';
+import { AbstractControl } from '@angular/forms';
+import { DynamicControlConfiguration, ExposedControl } from '@gentics/aloha-models';
+import { Subscription } from 'rxjs';
 
-export interface ToggleOptions {
-    allowAdd: boolean;
-    allowRemove: boolean;
-    skipAliases?: boolean;
-}
+const READONLY_PROPERTIES: (keyof ExposedControl<any>)[] = [
+    'value',
+    'enabled',
+    'dirty',
+    'pristine',
+    'valid',
+];
 
-export interface FormatApplyResult {
-    added: boolean;
-    format: string;
-}
+const FORWARD_METHODS: (keyof ExposedControl<any>)[] = [
+    'setValue',
+    'enable',
+    'disable',
+    'markAsDirty',
+    'markAsPristine',
+    'updateValueAndValidity',
+];
 
-export function findAndToggleFormats(
-    currentRange: AlohaRangeObject,
-    dom: AlohaDOM,
-    activeEditable: AlohaEditable,
-    jQueryInstance: JQueryStatic,
-    nodeNames: string[],
-    options: ToggleOptions,
-): FormatApplyResult[] {
-    const appliedFormats: FormatApplyResult[] = [];
+export function exposeControl<T>(formControl: AbstractControl<T>): ExposedControl<T> {
+    const obj: ExposedControl<T> = {} as any;
 
-    for (const nameToCheck of nodeNames) {
-        const alias = options.skipAliases ? null : TAG_ALIASES[nameToCheck];
-        const nodeName = alias ?? nameToCheck;
-
-        const foundMarkup = currentRange.findMarkup(function() {
-            return this.nodeName === nameToCheck || (alias != null && this.nodeName === alias);
-        }, activeEditable.obj);
-
-        // Push/Splice can't be used, as the change detection isn't triggered, because it's still
-        // the same array. Even with `markForCheck`, it simply doesn't re-run the includes pipe.
-        if (!foundMarkup) {
-            if (options.allowAdd) {
-                dom.addMarkup(currentRange, jQueryInstance(`<${nodeName}>`));
-                if (activeEditable) {
-                    activeEditable.smartContentChange({type: 'block-change'});
-                }
-                appliedFormats.push({ added: true, format: nodeName });
-            }
-        } else if (options.allowRemove) {
-            // remove the markup
-            if (currentRange.isCollapsed()) {
-                // when the range is collapsed, we remove exactly the one DOM element
-                dom.removeFromDOM(foundMarkup, currentRange, true);
-            } else {
-                // the range is not collapsed, so we remove the markup from the range
-                dom.removeMarkup(currentRange, jQueryInstance(foundMarkup), activeEditable.obj);
-            }
-            appliedFormats.push({ added: false, format: nodeName });
-        }
+    for (const fnProp of FORWARD_METHODS) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+        obj[fnProp as any] = (...args) => (formControl as any)[fnProp](...args);
     }
 
-    return appliedFormats;
+    for (const prop of READONLY_PROPERTIES) {
+        Object.defineProperty(obj, prop, {
+            configurable: true,
+            enumerable: true,
+            get: () => formControl[prop],
+            set: () => {},
+        });
+    }
+
+    return obj;
+}
+
+export function applyControl<T>(formControl: AbstractControl<T>, config: DynamicControlConfiguration<T>): Subscription | null {
+    let sub: Subscription | null = null;
+
+    if (typeof config.validate === 'function') {
+        formControl.addValidators((ctl) => {
+            return config.validate(ctl.value);
+        });
+    }
+
+    if (typeof config.onChange === 'function') {
+        const exposed = exposeControl(formControl);
+        sub = formControl.valueChanges.subscribe(value => {
+            config.onChange(value, exposed);
+        });
+    }
+
+    return sub;
 }

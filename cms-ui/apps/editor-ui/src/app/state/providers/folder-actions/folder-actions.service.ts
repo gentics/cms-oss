@@ -241,7 +241,7 @@ export class FolderActionsService {
             this.client.folder.folders(0),
         ]).pipe(
             switchMap(([, folderRes]) => {
-                return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.id))).pipe(
+                return forkJoin(folderRes.folders.map(folder => this.client.node.get(folder.nodeId ?? folder.id))).pipe(
                     map(responses => [folderRes, responses.map(res => res.node)]),
                 );
             }),
@@ -1141,7 +1141,7 @@ export class FolderActionsService {
 
         let fetchPromise: Promise<InheritableItem<Raw> | Template<Raw>>;
 
-        switch (type) {
+        switch (type  as any) {
             case 'template':
                 fetchPromise = this.client.template.get(itemId, options).pipe(
                     map(res => res.template),
@@ -1193,6 +1193,12 @@ export class FolderActionsService {
                 fetchPromise = this.client.page.get(itemId, options).pipe(
                     map(res => res.page),
                 ).toPromise();
+                break;
+
+            case 'node':
+                fetchPromise = this.client.node.get(itemId).pipe(
+                    map(res => res.node),
+                ).toPromise() as any;
                 break;
 
             default:

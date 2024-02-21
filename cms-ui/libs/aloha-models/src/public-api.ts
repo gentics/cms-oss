@@ -1,1 +1,1 @@
-export * from './lib/aloha';
+export * from './lib';

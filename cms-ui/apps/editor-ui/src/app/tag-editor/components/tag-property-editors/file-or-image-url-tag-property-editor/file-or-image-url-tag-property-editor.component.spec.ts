@@ -4,12 +4,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import {
+    EditableTag,
     Feature,
     FileResponse,
     FileTagPartProperty,
     FolderResponse,
     ImageResponse,
     ImageTagPartProperty,
+    TagEditorContext,
     TagPart,
     TagPartType,
     TagPropertyType,
@@ -23,7 +25,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { FeaturesState } from '../../../../common/models';
-import { Api, ApiBase } from '../../../../core/providers/api';
+import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -34,13 +36,12 @@ import { FileSizePipe } from '../../../../shared/pipes/file-size/file-size.pipe'
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
-import { EditableTag, TagEditorContext } from '../../../common';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { ImagePreviewComponent } from '../../shared/image-preview/image-preview.component';
 import { UploadWithPropertiesComponent } from '../../shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { FileOrImageUrlTagPropertyEditor } from './file-or-image-url-tag-property-editor.component';
 
@@ -149,7 +150,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 UploadWithPropertiesComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
 

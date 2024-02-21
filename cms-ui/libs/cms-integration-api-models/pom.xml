@@ -11,9 +11,9 @@
     </parent>
 
 	<artifactId>cms-integration-api-models</artifactId>
-	<name>Gentics CMS UI - CMS API Models</name>
+	<name>Gentics CMS UI - CMS Integration API Models</name>
 	<packaging>jar</packaging>
-	<description>This is the editor-ui module.</description>
+	<description>Typings for GCMS UI and Aloha integration.</description>
 	<url>http://www.gentics.com</url>
 
 	<properties>

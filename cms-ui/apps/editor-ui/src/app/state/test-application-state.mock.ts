@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { IS_NORMALIZED } from '@gentics/cms-models';
+import { IS_NORMALIZED, RecursivePartial } from '@gentics/cms-models';
 import { Store } from '@ngxs/store';
 import { cloneDeep, mergeWith } from 'lodash-es';
 import { Observable, defer } from 'rxjs';
@@ -17,7 +17,6 @@ import {
     MaintenanceModeState,
     MessageState,
     PublishQueueState,
-    RecursivePartial,
     ToolsState,
     UIState,
     UsageState,
@@ -151,7 +150,7 @@ export class TestApplicationState extends ApplicationStateService {
         selectors = selectors || this.trackedSubscriptions;
 
         const usedBranches: any = {};
-        for (let selectorFunction of selectors) {
+        for (const selectorFunction of selectors) {
             // Get name of first function argument from function body
             // Parsing the source of a function is NOT a best practice,
             // but during the upgrade to Angular 8 and ES2015 output, we decided that it
@@ -173,7 +172,7 @@ export class TestApplicationState extends ApplicationStateService {
             // eslint-disable-next-line no-useless-escape
             const regex = new RegExp(`(?:^|[^.\[])${firstParam}\.([a-zA-Z0-9_$]+)`, 'g');
             const matches = functionBody.match(regex) || [];
-            for (let match of matches) {
+            for (const match of matches) {
                 const accessedProperty = match.split('.')[1];
                 usedBranches[accessedProperty] = true;
             }

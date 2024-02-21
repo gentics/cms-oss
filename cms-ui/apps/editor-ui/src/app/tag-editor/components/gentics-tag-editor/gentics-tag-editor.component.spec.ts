@@ -31,7 +31,7 @@ import { assertTagEditorContextsEqual } from '../../common/impl/tag-editor-conte
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagEditorService } from '../../providers/tag-editor/tag-editor.service';
 import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TextTagPropertyEditor } from '../tag-property-editors/text-tag-property-editor/text-tag-property-editor.component';
 import { GenticsTagEditorComponent } from './gentics-tag-editor.component';
@@ -58,7 +58,7 @@ describe('GenticsTagEditorComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 TextTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
                 mockPipes('objTagName'),
             ],
         });
@@ -208,10 +208,11 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(finalTag => {
+            result.then(editorResult => {
                 expect(promiseResolved).toBe(false);
-                expect(finalTag).toEqual(tag);
-                expect(finalTag).not.toBe(tag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(tag);
+                expect(editorResult.tag).not.toBe(tag);
                 promiseResolved = true;
             }).catch(() => fail('The openTagEditor() promise should not be rejected'));
             tick();
@@ -417,9 +418,10 @@ describe('GenticsTagEditorComponent', () => {
 
         // Click the OK button and make sure that the promise resolves with the expected edits.
         let promiseResolved = false;
-        result.then(finalTag => {
+        result.then(editorResult => {
             expect(promiseResolved).toBe(false);
-            expect(finalTag).toEqual(expectedFinalTag);
+            expect(editorResult.doDelete).toEqual(false);
+            expect(editorResult.tag).toEqual(expectedFinalTag);
             promiseResolved = true;
         }).catch(() => fail('The openTagEditor() promise should not be rejected'));
         tick();
@@ -601,9 +603,10 @@ describe('GenticsTagEditorComponent', () => {
 
             // Click the OK button and make sure that the promise resolves with the expected edits.
             let promiseResolved = false;
-            result.then(finalTag => {
+            result.then(editorResult => {
                 expect(promiseResolved).toBe(false);
-                expect(finalTag).toEqual(expectedFinalTag);
+                expect(editorResult.doDelete).toEqual(false);
+                expect(editorResult.tag).toEqual(expectedFinalTag);
                 promiseResolved = true;
             }).catch(() => fail('The openTagEditor() promise should not be rejected'));
             tick();

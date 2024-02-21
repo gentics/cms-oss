@@ -1,10 +1,146 @@
-import { Injectable } from '@angular/core';
-import { DefaultEditorControlTabs, GCMSUI_EDITOR_TABS_NAMESPACE, INVERSE_DEFAULT_EDITOR_TABS_MAPPING, PageEditorTab } from '@editor-ui/app/common/models';
-import { AlohaRangeObject, AlohaSettings, GCNAlohaPlugin } from '@gentics/aloha-models';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, NgZone } from '@angular/core';
+import {
+    AlohaComponent,
+    AlohaComponentSetting,
+    AlohaCoreComponentNames,
+    AlohaFullComponentSetting,
+    AlohaPubSub,
+    AlohaRangeObject,
+    AlohaScopeChangeEvent,
+    AlohaScopes,
+    AlohaSettings,
+    AlohaToolbarSizeSettings,
+    AlohaToolbarTabsSettings,
+    AlohaUiPlugin,
+    ScreenSize,
+} from '@gentics/aloha-models';
+import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal } from '../../models/content-frame';
 
-@Injectable()
+export interface NormalizedSlotDisplay {
+    name: string;
+    visible: boolean;
+}
+
+export interface NormalizedComponentGroup {
+    slots: NormalizedSlotDisplay[];
+    hasVisibleSlots: boolean;
+}
+
+export interface NormalizedTabsSettings extends Omit<AlohaToolbarTabsSettings, 'components'> {
+    components: AlohaFullComponentSetting[][];
+    componentGroups: NormalizedComponentGroup[];
+    hasVisibleGroups: boolean;
+}
+
+export interface NormalizedToolbarSizeSettings extends AlohaToolbarSizeSettings {
+    tabs: NormalizedTabsSettings[];
+}
+
+export const RENDERABLE_COMPONENTS: string[] = Object.values(AlohaCoreComponentNames);
+
+const LINE_BREAK_COMPONENT = '\n';
+export const TAB_ID_CONSTRUCTS = 'gtx.constructs';
+export const TAB_ID_LINK_CHECKER = 'gtx.link-checker';
+
+/** Special scope which is to filter out that it should only be visible in the GCMS UI. */
+const GCMSUI_SCOPE = 'gtx.gcmsui';
+
+const TABS_TO_ALWAYS_DISPLAY = [TAB_ID_CONSTRUCTS, TAB_ID_LINK_CHECKER];
+
+function inScope(scopesRef: AlohaScopes, scopeDef?: string | string[]): boolean {
+    if (scopesRef == null) {
+        return false;
+    }
+
+    if (scopeDef == null) {
+        return true;
+    } else if (typeof scopeDef === 'string') {
+        return scopeDef === GCMSUI_SCOPE || scopesRef.isActiveScope(scopeDef);
+    } else {
+        return scopeDef.some(def => def === GCMSUI_SCOPE || scopesRef.isActiveScope(def));
+    }
+}
+
+function normalizeComponentDefinition(comp: AlohaComponentSetting): AlohaFullComponentSetting {
+    if (comp == null || comp === LINE_BREAK_COMPONENT || (comp as any)?.slot === LINE_BREAK_COMPONENT) {
+        return null;
+    }
+    if (typeof comp === 'string') {
+        return { slot: comp };
+    }
+    return comp;
+}
+
+function normalizeToolbarTab(
+    tab: AlohaToolbarTabsSettings,
+    globalComponents: Record<string, AlohaComponent>,
+    scopesRef: AlohaScopes,
+): NormalizedTabsSettings {
+    let tabComponents = tab.components;
+    if (!Array.isArray(tabComponents[0])) {
+        tabComponents = tabComponents.map(comp => [comp]);
+    }
+    tabComponents = tabComponents.map(toMap => (toMap as AlohaComponentSetting[])
+        .map(normalizeComponentDefinition)
+        .filter(comp => comp != null),
+    ).filter(arr => (arr || []).length > 0);
+
+    let hasVisibleGroups = TABS_TO_ALWAYS_DISPLAY.includes(tab.id);
+
+    const groups: NormalizedComponentGroup[] = (tabComponents as AlohaFullComponentSetting[][])
+        .map(arr => {
+            let hasVisibleSlots = false;
+            const slots = arr.map(comp => {
+                const visible = inScope(scopesRef, comp.scope)
+                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type);
+                hasVisibleSlots ||= visible;
+
+                return {
+                    name: comp.slot,
+                    visible,
+                };
+            });
+
+            hasVisibleGroups ||= hasVisibleSlots;
+
+            return {
+                hasVisibleSlots,
+                slots,
+            };
+        });
+
+    return {
+        ...tab,
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unsafe-call
+        label: tab.label,
+        components: tabComponents as AlohaFullComponentSetting[][],
+        componentGroups: groups,
+        hasVisibleGroups,
+    };
+}
+
+function normalizeToolbarSizeSettings(
+    settings: AlohaToolbarSizeSettings,
+    components: Record<string, AlohaComponent>,
+    scopesRef: AlohaScopes,
+): NormalizedToolbarSizeSettings {
+    if (settings == null) {
+        return null;
+    }
+
+    return {
+        ...settings,
+        tabs: (settings.tabs || [])
+            .map(tabSettings => normalizeToolbarTab(tabSettings, components, scopesRef))
+            .filter(tabSettings => inScope(scopesRef, tabSettings.showOn?.scope)),
+    };
+}
+
+@Injectable({ providedIn: 'root' })
 export class AlohaIntegrationService {
 
     /*
@@ -15,9 +151,17 @@ export class AlohaIntegrationService {
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
     public contextChange$ = new BehaviorSubject<AlohaRangeObject>(null);
     public gcnPlugin$ = new BehaviorSubject<GCNAlohaPlugin>(null);
+    public uiPlugin$ = new BehaviorSubject<AlohaUiPlugin>(null);
+    public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
+
+    public scopesRef$: Observable<AlohaScopes>;
+    public pubSubRef$: Observable<AlohaPubSub>;
+    public scopeChange$: Observable<AlohaScopeChangeEvent>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
     protected editorChangeSub = new BehaviorSubject<void>(null);
+    protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
+    protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
 
     /**
      * The currently selected/active editor in the page-controls.
@@ -30,60 +174,137 @@ export class AlohaIntegrationService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly editorsChange$ = this.editorChangeSub.asObservable();
 
-    public activeEditor: string;
-    public editors: Record<string, PageEditorTab> = {};
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly size$ = this.activeSizeSub.asObservable();
 
-    public registerPageEditorTab(tab: PageEditorTab): boolean {
-        return this.doWithCustomTab(tab.id, (() => {
-            // More type checkings?
-            this.editors[tab.id] = tab;
-            this.editorChangeSub.next();
-        }), false);
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly components$ = this.componentsSub.asObservable();
+
+    public activeTab: string;
+    public registeredComponents: Record<string, AlohaComponent> = {};
+    public renderedComponents: Record<string, BaseAlohaRendererComponent<any, any>> = {};
+
+    constructor(zone: NgZone) {
+        zone.runOutsideAngular(() => {
+            // TODO: Define the breakpoints somewhere static
+            this.handleMedia('(max-width: 400px)', ScreenSize.MOBILE);
+            this.handleMedia('(min-width: 401px) and (max-width: 1024px)', ScreenSize.TABLET);
+            this.handleMedia('(min-width: 1025px)', ScreenSize.DESKTOP);
+        });
+
+        this.scopesRef$ = this.require('ui/scopes');
+        this.pubSubRef$ = this.require('PubSub');
+        this.scopeChange$ = this.on('aloha.ui.scope.change');
+
+        this.activeToolbarSettings$ = combineLatest([
+            combineLatest([
+                this.uiPlugin$.asObservable().pipe(
+                    map(plugin => plugin?.getToolbarSettings?.()),
+                ),
+                this.settings$.asObservable(), // Also needs a reload when global settings change
+            ]).pipe(
+                map(([toolbarSettings]) => toolbarSettings),
+            ),
+            this.size$,
+            this.components$,
+            this.scopesRef$,
+            this.scopeChange$,
+        ]).pipe(
+            map(([settings, size, components, scopesRef]) => {
+                if (settings == null || size == null || settings[size] == null) {
+                    return null;
+                }
+                return normalizeToolbarSizeSettings(settings[size], components, scopesRef);
+            }),
+        );
     }
 
-    public removePageEditorTab(id: string): boolean {
-        return this.doWithCustomTab(id, () => {
-            delete this.editors[id];
-            this.editorChangeSub.next();
+    public require<T = any>(resourceName: string): Observable<T> {
+        return this.reference$.asObservable().pipe(
+            distinctUntilChanged(),
+            map(ref => {
+                try {
+                    return ref == null ? null :ref.require(resourceName);
+                } catch (err) {
+                    return null;
+                }
+            }),
+        );
+    }
 
-            if (this.activeEditor === id) {
-                this.activeEditorSub.next(null);
+    /**
+     * Aloha bind subscription
+     * @param eventName Event name
+     */
+    public bind<T = any>(eventName: string): Observable<T> {
+        return this.reference$.asObservable().pipe(
+            distinctUntilChanged(),
+            switchMap(ref => {
+                if (ref == null) {
+                    return of(null);
+                }
+
+                return new Observable<T>(sub => {
+                    const handler = (event: T) => {
+                        sub.next(event);
+                    };
+                    ref.bind(eventName, handler);
+
+                    return () => ref.unbind(eventName, handler);
+                });
+            }),
+        );
+    }
+
+    /**
+     * PubSub "sub" subscription.
+     * @param eventName Event name
+     * @returns Observable which emits all the events
+     */
+    public on<T = any>(eventName: string): Observable<T> {
+        return this.pubSubRef$.pipe(
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            switchMap((PubSub: AlohaPubSub) => {
+                if (PubSub == null) {
+                    return of(null);
+                }
+
+                return new Observable<T>(sub => {
+                    const handler = (event: T) => {
+                        sub.next(event);
+                    };
+                    PubSub.sub(eventName, handler);
+
+                    return () => PubSub.unsub(eventName, handler);
+                });
+            }),
+        );
+    }
+
+    private handleMedia(query: string, target: ScreenSize): void {
+        const media = window.matchMedia(query);
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const ref = this;
+
+        media.onchange = function(change) {
+            if (change.matches) {
+                ref.activeSizeSub.next(target);
             }
-        });
+        };
+
+        if (media.matches) {
+            this.activeSizeSub.next(target);
+        }
     }
 
-    public disablePageEditorTab(id: string): boolean {
-        return this.doWithCustomTab(id, (tab) => {
-            tab.disabled = true;
-            if (this.activeEditor === id) {
-                this.activeEditorSub.next(null);
-            }
-            this.editorChangeSub.next();
-        });
-    }
-
-    public enablePageEditorTab(id: string): boolean {
-        return this.doWithCustomTab(id, (tab) => {
-            tab.disabled = false;
-            this.editorChangeSub.next();
-        });
-    }
-
-    public hidePageEditorTab(id: string): boolean {
-        return this.doWithCustomTab(id, (tab) => {
-            tab.hidden = true;
-            if (this.activeEditor === id) {
-                this.activeEditorSub.next(null);
-            }
-            this.editorChangeSub.next();
-        });
-    }
-
-    public showPageEditorTab(id: string): boolean {
-        return this.doWithCustomTab(id, (tab) => {
-            tab.hidden = false;
-            this.editorChangeSub.next();
-        });
+    public clearReferences(): void {
+        this.reference$.next(null);
+        this.settings$.next(null);
+        this.contextChange$.next(null);
+        this.gcnPlugin$.next(null);
+        this.uiPlugin$.next(null);
+        this.registeredComponents = {};
+        this.renderedComponents = {};
     }
 
     public changeActivePageEditorTab(id: string): boolean {
@@ -91,38 +312,18 @@ export class AlohaIntegrationService {
             return false;
         }
 
-        const tab = this.editors[id];
-        // ID has to be either a gcmsui-tab or a custom tab to be able to activate.
-        if (!DefaultEditorControlTabs[id] && !INVERSE_DEFAULT_EDITOR_TABS_MAPPING[id] && !tab) {
-            return false;
-        }
-
-        // Cannot focus a disabled/hidden tab
-        if (tab && (tab.disabled || tab.hidden)) {
-            return false;
-        }
-
-        this.activeEditor = id;
+        this.activeTab = id;
         this.activeEditorSub.next(id);
 
         return true;
     }
 
-    protected doWithCustomTab(
-        id: string,
-        handler: (tab: PageEditorTab, id: string) => void | boolean,
-        checkForExistance: boolean = true,
-    ): boolean {
-        const exists = typeof id === 'string' && !id.startsWith(GCMSUI_EDITOR_TABS_NAMESPACE) && this.editors[id];
-        if (checkForExistance ? !exists : exists) {
-            return false;
-        }
+    public registerComponent(slot: string, component: AlohaComponent): void {
+        this.registeredComponents[slot] = component;
+        this.componentsSub.next({ ...this.registeredComponents });
+    }
 
-        const value = handler(this.editors[id], id);
-        if (value === false) {
-            return false;
-        }
-
-        return true;
+    public unregisterComponent(slot: string): void {
+        delete this.registeredComponents[slot];
     }
 }

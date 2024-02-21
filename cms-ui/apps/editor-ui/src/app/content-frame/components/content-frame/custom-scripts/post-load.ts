@@ -43,6 +43,44 @@ export class PostLoadScript {
     ) { }
 
     run(): void {
+        this.setupAlohaHooks();
+
+        // Determine which type of editor frame is opened (previewing page, tagfill, ...)
+        const editFrameType = this.determineEditFrameType();
+
+        // Depending on the frame type, do the right things
+        switch (editFrameType) {
+            case 'tagfill':
+                this.appendTypeIdToTagfillForm();
+                break;
+
+            case 'objectProperties':
+                this.setObjPropValidStateAccordingToEditingStep();
+                this.notifyWhenObjectPropertiesChange();
+                break;
+
+            case 'objectPropertiesNoValidation':
+                break;
+
+            case 'editImage':
+                this.handleImageEditingEvents();
+                break;
+
+            case 'editPage':
+            case 'previewPage':
+                this.handleClickEventsOnLinks();
+                this.notifyWhenContentsChange();
+                break;
+        }
+
+        this.scriptHost.runChangeDetection();
+    }
+
+    private setupAlohaHooks(): void {
+        if (!this.aloha) {
+            return;
+        }
+
         this.aloha.reference$.next(this.window.Aloha);
 
         let innerSettings = this.window.Aloha.settings;
@@ -50,6 +88,9 @@ export class PostLoadScript {
 
         let innerGcnPlugin = this.window.Aloha.GCN as any;
         this.aloha.gcnPlugin$.next(innerGcnPlugin);
+
+        const innerUiPlugin = this.window.Aloha.require('ui/ui-plugin');
+        this.aloha.uiPlugin$.next(innerUiPlugin);
 
         Object.defineProperty(this.window.Aloha, 'settings', {
             configurable: true,
@@ -90,36 +131,6 @@ export class PostLoadScript {
             this.aloha.settings$.next(null);
             this.aloha.reference$.next(null);
         });
-
-        // Determine which type of editor frame is opened (previewing page, tagfill, ...)
-        const editFrameType = this.determineEditFrameType();
-
-        // Depending on the frame type, do the right things
-        switch (editFrameType) {
-            case 'tagfill':
-                this.appendTypeIdToTagfillForm();
-                break;
-
-            case 'objectProperties':
-                this.setObjPropValidStateAccordingToEditingStep();
-                this.notifyWhenObjectPropertiesChange();
-                break;
-
-            case 'objectPropertiesNoValidation':
-                break;
-
-            case 'editImage':
-                this.handleImageEditingEvents();
-                break;
-
-            case 'editPage':
-            case 'previewPage':
-                this.handleClickEventsOnLinks();
-                this.notifyWhenContentsChange();
-                break;
-        }
-
-        this.scriptHost.runChangeDetection();
     }
 
     determineEditFrameType(): 'tagfill' | 'editPage' | 'editImage' | 'objectProperties' | 'objectPropertiesNoValidation' | 'previewPage' {

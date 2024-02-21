@@ -1,6 +1,6 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "admin-ui",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/admin-ui/src",

@@ -1,11 +1,22 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { Node, NodeTagPartProperty, TagEditorError, TagPart, TagPartProperty, TagPropertyMap, TagPropertyType } from '@gentics/cms-models';
+import {
+    EditableTag,
+    Node,
+    NodeTagPartProperty,
+    TagEditorContext,
+    TagEditorError,
+    TagPart,
+    TagPartProperty,
+    TagPropertiesChangedFn,
+    TagPropertyEditor,
+    TagPropertyMap,
+    TagPropertyType,
+} from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { EntityResolver } from '../../../../core/providers/entity-resolver/entity-resolver';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '../../../../state';
-import { EditableTag, TagEditorContext, TagPropertiesChangedFn, TagPropertyEditor } from '../../../common';
 
 /**
  * Used to edit NodeSelector TagParts.
@@ -14,8 +25,8 @@ import { EditableTag, TagEditorContext, TagPropertiesChangedFn, TagPropertyEdito
     selector: 'node-selector-tag-property-editor',
     templateUrl: './node-selector-tag-property-editor.component.html',
     styleUrls: ['./node-selector-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class NodeSelectorTagPropertyEditor implements TagPropertyEditor {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */

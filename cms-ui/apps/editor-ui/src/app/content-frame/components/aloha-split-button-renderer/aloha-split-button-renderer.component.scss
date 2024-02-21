@@ -1,0 +1,48 @@
+@import '../aloha-button-renderer/aloha-button-renderer.component.scss';
+
+%basic-split-button {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .split-button-main {
+        @extend .gtx-editor-button;
+
+        order: 1;
+    }
+
+    .split-button-secondary {
+        @extend .gtx-editor-button;
+        order: 2;
+        padding: 0.25rem 0;
+        width: 22px;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+
+        .secondary-icon {
+            width: 12px;
+        }
+    }
+
+    &[disabled],
+    &:disabled {
+        .split-button-main,
+        .split-button-secondary {
+            background: $gtx-color-light-gray;
+            color: $gtx-color-off-black;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.gtx-editor-split-button {
+    @extend %basic-split-button;
+
+    .split-button-secondary {
+        + .split-button-main {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            border-right: none;
+        }
+    }
+}

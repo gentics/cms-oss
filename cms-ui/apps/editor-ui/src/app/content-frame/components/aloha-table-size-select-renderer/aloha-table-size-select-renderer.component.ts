@@ -52,7 +52,7 @@ export class AlohaTableSizeSelectRendererComponent
 
     protected override onValueChange(): void {
         super.onValueChange();
-        if (this.control.value !== this.value) {
+        if (this.control != null && this.control.value !== this.value) {
             this.control.setValue(this.value);
         }
     }

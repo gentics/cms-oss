@@ -4,6 +4,7 @@ import { userSchema } from '@editor-ui/app/common/models';
 import { AccessControlledType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { normalize } from 'normalizr';
+import { RequestFailedError } from '@gentics/cms-rest-client';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '../../../core/providers/i18n-notification/i18n-notification.service';
 import { LocalStorage } from '../../../core/providers/local-storage/local-storage.service';
@@ -60,9 +61,10 @@ export class AuthActionsService {
             this.localStorage.setSid(null);
             await this.appState.dispatch(new ValidationErrorAction(error.message)).toPromise();
 
-            if (error.reason !== 'auth') {
+            if (error instanceof RequestFailedError && error.responseCode !== 401) {
                 this.errorHandler.catch(error);
             }
+
             return false;
         }
     }

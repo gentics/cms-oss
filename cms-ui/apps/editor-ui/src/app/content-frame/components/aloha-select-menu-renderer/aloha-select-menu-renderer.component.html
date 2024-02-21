@@ -12,7 +12,7 @@
             (click)="handleOptionClick(entry)"
         >
             <div class="entry-icon icon-left">
-                <icon *ngIf="entry.icon">{{ entry.icon | gtxAlohaCompatIcon }}</icon>
+                <icon *ngIf="entry.icon">{{ entry.icon }}</icon>
             </div>
 
             <ng-container *ngIf="!settings.iconsOnly">

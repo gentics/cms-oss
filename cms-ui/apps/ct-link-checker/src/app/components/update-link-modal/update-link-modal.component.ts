@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
 import { NgModel } from '@angular/forms';
 import { ExternalLink, LinkCheckerCheckResponse, ReplaceScope } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
@@ -10,15 +9,16 @@ import { debounceTime, filter, switchMap, tap } from 'rxjs/operators';
 @Component({
     selector: 'update-link-modal',
     templateUrl: './update-link-modal.tpl.html',
-    styleUrls: ['./update-link-modal.scss']
+    styleUrls: ['./update-link-modal.scss'],
 })
 export class UpdateLinkModalComponent implements IModalDialog, OnInit, OnDestroy {
 
+    public readonly ReplaceScope = ReplaceScope;
+
     public pageId: number;
     public item: ExternalLink;
-    public scopes = ReplaceScope;
 
-    public scope: ReplaceScope = ReplaceScope.Link;
+    public scope: ReplaceScope = ReplaceScope.LINK;
     public newUrl$ = new BehaviorSubject('');
     public newUrlProgress$ = new BehaviorSubject(false);
     public newUrlValidity$ = new BehaviorSubject({} as LinkCheckerCheckResponse);
@@ -30,7 +30,7 @@ export class UpdateLinkModalComponent implements IModalDialog, OnInit, OnDestroy
     constructor(public api: GcmsApi) {
         this.newUrl$.pipe(
             tap(url => {
-                if (!!url) {
+                if (url) {
                     this.newUrlProgress$.next(true);
                 } else {
                     this.newUrlValidity$.next({} as LinkCheckerCheckResponse);
@@ -39,7 +39,7 @@ export class UpdateLinkModalComponent implements IModalDialog, OnInit, OnDestroy
             }),
             debounceTime(300),
             filter(url => !!url),
-            switchMap(url => this.api.linkChecker.checkLink(url))
+            switchMap(url => this.api.linkChecker.checkLink(url)),
         ).subscribe(validity => {
             setTimeout(() => {
                 this.newUrlModel.control.setErrors(validity.valid ? null : { invalid: true });
@@ -66,12 +66,12 @@ export class UpdateLinkModalComponent implements IModalDialog, OnInit, OnDestroy
         if (!this.newUrlProgress$.value && !this.newUrlModel.invalid) {
             this.closeFn({
                 url: this.newUrl$.value,
-                scope: this.scope
+                scope: this.scope,
             });
         }
     }
 
-    closeFn = (val: any, ) => {};
+    closeFn = (val: any ) => {};
     cancelFn = (val?: any) => {};
 
     registerCloseFn(close: (val: any) => void): void {

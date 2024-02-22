@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule, Provider } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ColorAlphaModule } from 'ngx-color/alpha';
 import { ColorSliderModule } from 'ngx-color/slider';
@@ -113,6 +113,15 @@ const GUARDS = [
     ContentFrameGuard,
 ];
 
+const MODULE_INITIALIZER: Provider = {
+    provide: APP_INITIALIZER,
+    multi: true,
+    deps: [CustomerScriptService],
+    useFactory: (customScriptService: CustomerScriptService) => {
+        return customScriptService.loadCustomerScript();
+    },
+};
+
 @NgModule({
     imports: [
         SharedModule,
@@ -124,10 +133,6 @@ const GUARDS = [
     ],
     exports: [],
     declarations: [...COMPONENTS, ...PIPES],
-    providers: [...PROVIDERS, ...GUARDS],
+    providers: [...PROVIDERS, ...GUARDS, MODULE_INITIALIZER],
 })
-export class ContentFrameModule {
-    constructor(private customScriptService: CustomerScriptService) {
-        this.customScriptService.loadCustomerScript();
-    }
-}
+export class ContentFrameModule {}

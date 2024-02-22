@@ -18,6 +18,7 @@ import { BaseEntityTableComponent, DELETE_ACTION } from '../base-entity-table/ba
 const SYNC_FROM_FILE_SYSTEM_ACTION = 'syncFromFs';
 const SYNC_TO_FILE_SYSTEM_ACTION = 'syncToFs';
 const UNASSIGN_FROM_NODE_ACTION = 'unassignFromNode';
+const PACKAGE_CHECK = 'packageCheck';
 
 @Component({
     selector: 'gtx-dev-tool-package-table',
@@ -201,9 +202,18 @@ export class DevToolPackageTableComponent
                         multiple: true,
                     },
                     {
+                        id: PACKAGE_CHECK,
+                        icon: 'offline_pin',
+                        label: this.i18n.instant('package.consistency_check_title'),
+                        type: 'secondary',
+                        enabled: true,
+                        single: true,
+                        multiple: true,
+                    },
+                    {
                         id: DELETE_ACTION,
                         icon: 'delete',
-                        label: this.i18n.instant('package.package_deletes_singular'),
+                        label: this.i18n.instant('package.package_delete_singular'),
                         type: 'alert',
                         enabled: canDelete,
                         single: true,
@@ -257,6 +267,10 @@ export class DevToolPackageTableComponent
             case UNASSIGN_FROM_NODE_ACTION:
                 this.unassignPackageFromNode(this.getAffectedEntityIds(event));
                 return;
+
+            case PACKAGE_CHECK:
+                this.performPackageCheck(this.getAffectedEntityIds(event));
+                return;
         }
 
         super.handleAction(event);
@@ -289,5 +303,9 @@ export class DevToolPackageTableComponent
                 this.removeFromSelection(packageName);
                 this.loadTrigger.next();
             });
+    }
+
+    protected performPackageCheck(packageName: string | string[]): Promise<void> {
+        return this.handler.checkOneOrMoreWithSuccessMessage(packageName, { wait: 5_000, checkAll: true }).toPromise()
     }
 }

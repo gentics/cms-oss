@@ -1,0 +1,31 @@
+@import '../base-entity-table/base-entity-table.component.scss';
+
+
+.entity-table-actions-bar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+
+    .table-action-button {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .table-action-button + .table-action-button {
+        margin-left: 0.5rem;
+    }
+}
+
+.package-check-checkbox {
+    margin-top: 1rem;
+    margin-left: 0.5rem;
+}
+
+.check-package-button {
+    margin-left: 1rem;
+}
+
+.no-result-text {
+    font-size: 18px;
+}

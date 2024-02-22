@@ -1,0 +1,61 @@
+<div *ngIf="!hideActions || packageName" class="entity-table-actions-bar">
+
+    <gtx-button
+        *ngIf="!hideActions"
+        class="table-action-button check-package-button"
+        flat
+        size="small"
+        type="primary"
+        [disabled]="disabled || loading"
+        (click)="handleLoadButtonClick()"
+    >
+        <icon left>offline_pin</icon> {{ 'package.consistency_check_button' | i18n }}
+    </gtx-button>
+</div> 
+
+
+<gtx-trable
+    class="entity-table"
+
+    [selectable]="selectable"
+    [hideActions]="hideActions"
+    [multiple]="multiple"
+    [inlineExpansion]="inlineExpansion"
+    [inlineSelection]="inlineSelection"
+
+    [columns]="columns"
+    [rows]="rows"
+    [active]="activeEntity"
+    [selected]="selection"
+    [actions]="actions"
+
+    [renderers]="{
+        label: nameRenderer,
+        isInPackage: boolIconRenderer
+    }"
+
+    (loadRow)="loadRow($event)"
+    (rowClick)="handleRowClick($event)"
+    (rowExpand)="updateRowExpansion($event)"
+    (actionClick)="handleActionClick($event)"
+    (selectedChange)="updateSelection($event)"
+    (select)="forwardSelect($event)"
+    (deselect)="forwardDeselect($event)"
+></gtx-trable>
+
+
+<ng-template #nameRenderer let-value="value" let-row="row">
+    <div class="name-wrapper">
+        <gtx-icon class="gtx-type-icon type-icon" [name]="row.item.type"></gtx-icon>
+        <span class="name">{{ value }}</span>
+    </div>
+</ng-template>
+
+
+<ng-template #boolIconRenderer let-value="value">
+    <icon
+        *ngIf="value !== undefined" 
+        class="gtx-table-cell-boolean"
+        [ngClass]="'gtx-table-cell-boolean-' + value"
+    >{{ value ? 'check' : 'close' }}</icon>
+</ng-template>

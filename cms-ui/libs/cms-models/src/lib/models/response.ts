@@ -1362,9 +1362,9 @@ export interface MaintenanceModeResponse extends Response {
 
 /**
  * Response from:
- *  * `GET /scheduler/status`
- *  * `PUT /scheduler/suspend`
- *  * `PUT /scheduler/resume`
+ * `GET /scheduler/status`
+ * `PUT /scheduler/suspend`
+ * `PUT /scheduler/resume`
  */
 export interface SchedulerStatusResponse extends Response {
     /** The current status of the scheduler */

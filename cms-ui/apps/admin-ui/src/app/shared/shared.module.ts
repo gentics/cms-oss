@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
+import { PackageCheckTrableLoaderService } from '@admin-ui/core';
 import {
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
@@ -45,6 +46,7 @@ import {
     NodeTableComponent,
     ObjectPropertyTableComponent,
     PermissionIconComponent,
+    PackageCheckTrableComponent,
     PermissionsTrableComponent,
     PropertiesManagerComponent,
     PropertiesTabsComponent,
@@ -116,6 +118,7 @@ const COMPONENTS: any[] = [
     ConfirmDeleteModalComponent,
     ConfirmRemoveUserFromGroupModalComponent,
     ConstructTableComponent,
+    PackageCheckTrableComponent,
     PermissionsTrableComponent,
     ContentRepositoryTableComponent,
     ContentItemTrableComponent,
@@ -199,6 +202,7 @@ const PROVIDERS: any[] = [
     NodeDataService,
     NodeDataService,
     NotificationService,
+    PackageCheckTrableLoaderService,
     RoleDataService,
     ScheduleDataService,
     ScheduleExecutionDataService,

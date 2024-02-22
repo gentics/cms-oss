@@ -33,6 +33,7 @@ import { Template } from './template';
 import { Raw } from './type-util';
 import { User } from './user';
 import { ExternalLink } from './external-link';
+import { DependencyType } from './package-check';
 
 export interface ElasticSearchQuery {
     query: BoolQuery;
@@ -1841,6 +1842,26 @@ export type PackageListOptions = BaseListOptionsWithPaging<Package>;
 export interface PackageSyncOptions {
     wait?: number;
 }
+
+export interface PackageCheckFilter {
+    type?: DependencyType;
+    filter?: PackageCheckCompletenessFilter;
+}
+
+
+enum PackageCheckCompletenessFilter {
+    INCOMPLETE,
+    ALL
+}
+
+
+
+export interface PackageCheckOptions extends PackageSyncOptions {
+    wait?: number;
+    checkAll?: boolean;
+    filter?: PackageCheckFilter
+}
+
 
 /**
  * Request used for saving a `Package`.

@@ -31,6 +31,7 @@ export * from './node';
 export * from './object-property';
 export * from './object-property-category';
 export * from './package';
+export * from './package-check';
 export * from './page';
 export * from './permissions';
 export * from './request';

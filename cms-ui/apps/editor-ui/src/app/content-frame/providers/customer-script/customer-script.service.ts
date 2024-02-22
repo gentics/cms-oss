@@ -98,22 +98,27 @@ export class CustomerScriptService implements OnDestroy {
      * Check to see if a customer script has been defined in the customer-config/scripts folder, and if so attempt to
      * load and parse it.
      */
-    loadCustomerScript(): void {
+    loadCustomerScript(): Promise<void> {
         const customerScriptPath = CUSTOMER_CONFIG_PATH + 'index.js';
         const sourceMapComment = `//# sourceURL=${customerScriptPath}`;
 
-        this.http.get(customerScriptPath, { responseType: 'text' }).pipe(
-            catchError(err => observableOf(null) /* script not found, don't throw error */),
-            map(script => {
-                if (script) {
-                    // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
-                    // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
-                    return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
-                } else {
-                    return null;
-                }
-            }),
-        ).subscribe(script => this.customerScript = script);
+        return new Promise<void>((resolve, reject) => {
+            this.http.get(customerScriptPath, { responseType: 'text' }).pipe(
+                catchError(err => observableOf(null) /* script not found, don't throw error */),
+                map(script => {
+                    if (script) {
+                        // We don't catch parsing errors here, because we want them to be thrown by loadCustomerScript().
+                        // eslint-disable-next-line @typescript-eslint/no-implied-eval, @typescript-eslint/restrict-template-expressions
+                        return new Function('module', 'exports', 'window', 'document', `${script}; ${sourceMapComment}`);
+                    } else {
+                        return null;
+                    }
+                }),
+            ).subscribe(script => {
+                this.customerScript = script;
+                resolve();
+            });
+        });
     }
 
     /**

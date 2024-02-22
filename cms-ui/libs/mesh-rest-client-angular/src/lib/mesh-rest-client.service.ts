@@ -7,6 +7,7 @@ import {
     MeshCoordinatorAPI,
     MeshGraphQLAPI,
     MeshGroupAPI,
+    MeshLanguageAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
     MeshPermissionAPI,
@@ -14,12 +15,14 @@ import {
     MeshProjectAPI,
     MeshRestClient,
     MeshRestClientConfig,
+    MeshRestClientRequest,
     MeshRoleAPI,
     MeshSchemaAPI,
     MeshServerAPI,
     MeshTagFamiliesAPI,
     MeshTagsAPI,
-    MeshUserAPI
+    MeshUserAPI,
+    RequestMethod,
 } from '@gentics/mesh-rest-client';
 import { AngularMeshClientDriver } from './angular-mesh-client-driver';
 
@@ -47,6 +50,15 @@ export class MeshRestClientService {
 
     getConfig(): MeshRestClientConfig {
         return this.config;
+    }
+
+    public prepareRequest(
+        requestMethod: RequestMethod,
+        path: string,
+        queryParams: Record<string, any>,
+        requestHeaders: Record<string, string>,
+    ): MeshRestClientRequest {
+        return this.client.prepareRequest(requestMethod, path, queryParams, requestHeaders);
     }
 
     get auth(): MeshAuthAPI {
@@ -115,5 +127,9 @@ export class MeshRestClientService {
 
     get graphql(): MeshGraphQLAPI {
         return this.client.graphql;
+    }
+
+    get language(): MeshLanguageAPI {
+        return this.client.language;
     }
 }

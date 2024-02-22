@@ -37,6 +37,7 @@ export class DashboardComponent implements OnInit {
     public contentMaintenanceModuleEnabled$: Observable<boolean>;
     public objectPropertiesModuleEnabled$: Observable<boolean>;
     public constructsModuleEnabled$: Observable<boolean>;
+    public meshBrowserModuleEnabled$: Observable<boolean>;
 
     constructor(
         private appState: AppStateService,
@@ -118,6 +119,12 @@ export class DashboardComponent implements OnInit {
             type: AccessControlledType.SYSTEM_MAINTANANCE,
             permissions: GcmsPermission.READ,
         });
+        this.meshBrowserModuleEnabled$ = combineLatest([
+            this.appState.select(state => state.features.global[Feature.MESH_CR]),
+            this.permissions.checkPermissions({ type: AccessControlledType.CONTENT_REPOSITORY_ADMIN, permissions: GcmsPermission.READ }),
+        ]).pipe(
+            map(([featureEnabled, hasPermission]) => featureEnabled && hasPermission),
+        );
 
         // Just for testing.
         this.testingModuleEnabled$ = this.permissions.checkPermissions([

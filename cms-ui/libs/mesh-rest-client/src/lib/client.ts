@@ -8,6 +8,7 @@ import {
     MeshCoordinatorAPI,
     MeshGraphQLAPI,
     MeshGroupAPI,
+    MeshLanguageAPI,
     MeshMicroschemaAPI,
     MeshNodeAPI,
     MeshPermissionAPI,
@@ -34,7 +35,7 @@ export class MeshRestClient {
         public apiKey?: string,
     ) { }
 
-    protected prepareRequest(
+    public prepareRequest(
         requestMethod: RequestMethod,
         path: string,
         queryParams: Record<string, any>,
@@ -287,4 +288,9 @@ export class MeshRestClient {
     } as const;
 
     public graphql: MeshGraphQLAPI = (project, body, params) => this.executeJsonRequest(POST, `/${project}/graphql`, body, params);
+
+    public language: MeshLanguageAPI = {
+        list: (project) => this.executeJsonRequest(GET, `${project}/languages`),
+    } as const;
+
 }

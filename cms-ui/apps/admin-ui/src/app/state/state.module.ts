@@ -12,6 +12,7 @@ import { PermissionsStateModule } from './permissions/permissions.state';
 import { AppStateService } from './providers/app-state/app-state.service';
 import { assembleReduxDevToolsConfig, OPTIONS_CONFIG } from './state-store.config';
 import { UIStateModule } from './ui/ui.state';
+import { MeshStateModule } from './mesh/mesh.state';
 
 /** Contains all ngxs state modules. */
 export const STATE_MODULES = [
@@ -23,6 +24,7 @@ export const STATE_MODULES = [
     MessageStateModule,
     PermissionsStateModule,
     UIStateModule,
+    MeshStateModule,
 ];
 
 @NgModule({

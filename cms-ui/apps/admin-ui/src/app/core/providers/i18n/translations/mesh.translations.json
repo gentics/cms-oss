@@ -773,5 +773,38 @@
     "plugin_status_FAILED_RETRY": {
         "de": "Fehlgeschlagen (Neustart)",
         "en": "Failed (retry)"
+    },
+    "browser_title": {
+        "en": "Mesh Browser for",
+        "de": "Mesh Browser für"
+    },
+    "browser_no_projects": {
+        "en": "No Project available",
+        "de": "Keine Projekte verfügbar"
+    },
+    "browser_no_schema_elements": {
+        "en": "This node has no schema elements",
+        "de": "Dieser Node hat keine Schema-Elemente"
+    },
+
+    "published_state_published": {
+        "en": "Published",
+        "de": "Publiziert"
+    },
+    "published_state_archived": {
+        "en": "Archived",
+        "de": "Archiviert"
+    },
+    "published_state_draft": {
+        "en": "Draft",
+        "de": "Entwurf"
+    },
+    "published_state_updated": {
+        "en": "Updated",
+        "de": "Geändert"
+    },
+    "published_state_changed": {
+        "en": "Last modified at",
+        "de": "Geändert am"
     }
 }

@@ -1,0 +1,58 @@
+@import "variables";
+
+.content-state-wrapper {
+    display: flex;
+    margin-left: 1rem;
+    font-size: 9px;
+    border: 1px solid $gtx-color-primary;
+    padding: 1px 2px;
+    border-radius: 3px;
+    height: 18px;
+
+    &.published {
+        border-color: $gtx-color-success;
+
+        .state-icon, .state-text {
+            color:  $gtx-color-success;
+        }
+    }
+
+    &.archived {
+        border-color: $gtx-color-alert;
+
+        .state-icon, .state-text {
+            color:  $gtx-color-alert;
+        }
+    }
+
+    &.draft {
+        border-color: $gtx-color-warning;
+
+        .state-icon, .state-text {
+            color:  $gtx-color-warning;
+        }
+    }
+
+    &.updated {
+        border-color: $gtx-color-primary;
+
+        .state-icon, .state-text {
+            color:  $gtx-color-primary;
+        }
+    }
+
+    .state-icon {
+        width: 16px;
+        margin-left: 0.1rem;
+        margin-right: 0.1rem;
+        
+        icon {
+            font-size: 14px;
+        }
+    }
+
+    .state-text {
+        margin-top: 0.12rem;
+        text-transform: uppercase;
+    }
+}

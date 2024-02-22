@@ -2,25 +2,32 @@ import {
     EditableEntity,
     EditableEntityBusinessObjects,
     EntityEditorHandler,
+    ROUTE_DATA_MESH_REPO_ID,
+    ROUTE_DATA_MESH_REPO_ITEM,
     ROUTE_ENTITY_LOADED,
     ROUTE_ENTITY_RESOLVER_KEY,
     ROUTE_ENTITY_TYPE_KEY,
     ROUTE_IS_EDITOR_ROUTE,
+    ROUTE_MESH_REPOSITORY_ID,
     ROUTE_PARAM_ENTITY_ID,
     ROUTE_PARAM_NODE_ID,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
+import { ContentRepository } from '@gentics/cms-models';
 import { ConstructCategoryHandlerService } from '../construct-category-handler/construct-category-handler.service';
 import { ConstructHandlerService } from '../construct-handler/construct-handler.service';
+import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
 import { DataSourceHandlerService } from '../data-source-handler/data-source-handler.service';
+import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 import { LanguageHandlerService } from '../language-handler/language-handler.service';
 import { ObjectPropertyCategoryHandlerService } from '../object-property-category-handler/object-property-category-handler.service';
 import { ObjectPropertyHandlerService } from '../object-property-handler/object-property-handler.service';
-import { ContentRepositoryHandlerService } from '../content-repository-handler/content-repository-handler.service';
-import { DevToolPackageHandlerService } from '../dev-tool-package-handler/dev-tool-package-handler.service';
 
-export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRouteSnapshot): boolean {
+export function runEntityResolver(
+    from: ActivatedRouteSnapshot,
+    to: ActivatedRouteSnapshot,
+): boolean {
     if (from.component !== to.component) {
         return true;
     }
@@ -31,8 +38,10 @@ export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRou
         return true;
     }
 
-    if ((from.params[ROUTE_PARAM_ENTITY_ID] === to.params[ROUTE_PARAM_ENTITY_ID])
-        && (from.params[ROUTE_PARAM_NODE_ID] === to.params[ROUTE_PARAM_NODE_ID])
+    if (
+        from.params[ROUTE_PARAM_ENTITY_ID] ===
+            to.params[ROUTE_PARAM_ENTITY_ID] &&
+        from.params[ROUTE_PARAM_NODE_ID] === to.params[ROUTE_PARAM_NODE_ID]
     ) {
         return false;
     }
@@ -46,7 +55,6 @@ export function runEntityResolver(from: ActivatedRouteSnapshot, to: ActivatedRou
 
 @Injectable()
 export class RouteEntityResolverService {
-
     constructor(
         private router: Router,
         private contentRepository: ContentRepositoryHandlerService,
@@ -59,7 +67,9 @@ export class RouteEntityResolverService {
         private objPro: ObjectPropertyHandlerService,
     ) {}
 
-    async resolve<K extends EditableEntity>(route: ActivatedRouteSnapshot): Promise<EditableEntityBusinessObjects[K]> {
+    async resolve<K extends EditableEntity>(
+        route: ActivatedRouteSnapshot,
+    ): Promise<EditableEntityBusinessObjects[K]> {
         const nav = this.router.getCurrentNavigation();
         const state: any = nav.extras?.state || {};
 
@@ -77,12 +87,54 @@ export class RouteEntityResolverService {
             return null;
         }
 
-        const entity = await handler.getMapped(id).toPromise() as EditableEntityBusinessObjects[K];
+        const entity = (await handler
+            .getMapped(id)
+            .toPromise()) as EditableEntityBusinessObjects[K];
 
         return entity;
     }
 
-    public getHandler<K extends EditableEntity>(type: EditableEntity): EntityEditorHandler<K> {
+    async resolveMeshRoute(
+        route: ActivatedRouteSnapshot,
+    ): Promise<ContentRepository> {
+        const nav = this.router.getCurrentNavigation();
+        const state: any = nav.extras?.state || {};
+
+        // If the entity is already provided to the route, then we don't need to fetch it again.
+        if (state?.[ROUTE_DATA_MESH_REPO_ITEM]) {
+            return state[ROUTE_DATA_MESH_REPO_ITEM];
+        }
+
+        const repositoryId = this.extractRepositoryId(route)
+        const res = await this.contentRepository.get(repositoryId).toPromise();
+
+        return res.contentRepository;
+    }
+
+    public extractRepositoryId(route: ActivatedRouteSnapshot): number {
+        const nav = this.router.getCurrentNavigation();
+
+        let repositoryId = nav?.extras?.state?.[ROUTE_DATA_MESH_REPO_ID] ??
+            route.params?.[ROUTE_MESH_REPOSITORY_ID];
+
+        if (!repositoryId) {
+            let parent = route.parent;
+
+            while(parent && !repositoryId) {
+                if (parent.params?.repository) {
+                    repositoryId = parent.params?.repository;
+                }
+
+                parent = parent.parent;
+            }
+        }
+
+        return repositoryId;
+    }
+
+    public getHandler<K extends EditableEntity>(
+        type: EditableEntity,
+    ): EntityEditorHandler<K> {
         switch (type) {
             case EditableEntity.CONTENT_REPOSITORY:
                 return this.contentRepository as any;
@@ -109,7 +161,7 @@ export class RouteEntityResolverService {
                 return this.objPropCat as any;
 
             default:
-                return null
+                return null;
         }
     }
 }

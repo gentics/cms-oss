@@ -18,6 +18,17 @@ export const ROUTE_CHILD_BREADCRUMB_OUTLET_KEY = 'childOutletsForBreadcrumbs';
 export const ROUTE_MANAGEMENT_OUTLET = 'management';
 export const ROUTE_PARAM_MESH_TAB = 'activeTab';
 export const ROUTE_PATH_MESH = 'mesh';
+export const ROUTE_SKIP_BREADCRUMB = 'skipBreadcrumb';
+
+// MESH_BROWSER
+export const ROUTE_MESH_REPOSITORY_ID = 'repository';
+export const ROUTE_MESH_PROJECT_ID = 'project';
+export const ROUTE_MESH_BRANCH_ID = 'branch';
+export const ROUTE_MESH_PARENT_NODE_ID = 'parent';
+export const ROUTE_MESH_CURRENT_NODE_ID = 'node';
+export const ROUTE_MESH_LANGUAGE = 'language';
+export const ROUTE_DATA_MESH_REPO_ID = 'repoId';
+export const ROUTE_DATA_MESH_REPO_ITEM = 'repoItem';
 
 export enum AdminUIModuleRoutes {
     CONSTRUCTS = 'constructs',
@@ -40,6 +51,7 @@ export enum AdminUIModuleRoutes {
     SEARCH_INDEX_MAINTENANCE = 'search-index-maintenance',
     TEMPLATES = 'templates',
     USERS = 'users',
+    MESH_BROWSER =  'mesh-browser',
 }
 
 export enum AdminUIEntityDetailRoutes {
@@ -61,6 +73,8 @@ export enum AdminUIEntityDetailRoutes {
     SCHEDULE_TASK = 'task',
     TEMPLATE = 'template',
     USER = 'user',
+    MESH_BROWSER_NODE = 'mesh-node',
+    MESH_BROWSER_LIST = 'list',
 }
 
 /**

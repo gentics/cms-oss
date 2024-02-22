@@ -1,4 +1,10 @@
-import { ROUTE_BREADCRUMB_KEY, ROUTE_CHILD_BREADCRUMB_OUTLET_KEY, ROUTE_ENTITY_RESOLVER_KEY, ROUTE_ENTITY_TYPE_KEY, RouteData } from '@admin-ui/common';
+import {
+    ROUTE_BREADCRUMB_KEY,
+    ROUTE_CHILD_BREADCRUMB_OUTLET_KEY,
+    ROUTE_ENTITY_RESOLVER_KEY,
+    ROUTE_ENTITY_TYPE_KEY,
+    ROUTE_SKIP_BREADCRUMB,
+    RouteData } from '@admin-ui/common';
 import { InitializableServiceBase } from '@admin-ui/shared/providers/initializable-service-base';
 import { SelectState } from '@admin-ui/state';
 import { Injectable } from '@angular/core';
@@ -56,6 +62,7 @@ export class BreadcrumbsService extends InitializableServiceBase {
     protected onServiceInit(): void {
         const breadcrumbChanges$ = this.router.events.pipe(
             filter(event => event instanceof NavigationEnd),
+            filter(() => !this.shouldSkipBreadcrumb()),
             switchMap(() => combineLatest([
                 this.collectBreadcrumbsFromRoute(this.activatedRoute),
                 this.uiLanguage$,
@@ -71,6 +78,26 @@ export class BreadcrumbsService extends InitializableServiceBase {
         );
 
         breadcrumbChanges$.subscribe(breadcrumbs => this.currBreadcrumbs$.next(breadcrumbs));
+    }
+
+    private shouldSkipBreadcrumb(): boolean {
+        const routeSnapshot =  this.activatedRoute.snapshot;
+        let shouldSkip = routeSnapshot.data[ROUTE_SKIP_BREADCRUMB] ?? false;
+
+        let child = routeSnapshot.firstChild;
+
+        while (child && !shouldSkip) {
+            shouldSkip = child.data[ROUTE_SKIP_BREADCRUMB]
+            child = child.firstChild;
+        }
+
+        return shouldSkip;
+    }
+
+    public setBreadcrumbs(breadcrumbs: IBreadcrumbRouterLink[]): void {
+        this.currBreadcrumbs$.next([
+            ...breadcrumbs,
+        ])
     }
 
     private collectBreadcrumbsFromRoute(activatedRoute: ActivatedRoute): Observable<RouteSegment[]> {

@@ -14,6 +14,10 @@ export interface GraphQLError {
 export interface GraphQLOptions {
     /** Specify whether search should wait for the search to be idle before responding. */
     wait?: boolean;
+    /** Specify a branch to only have node versions for that particular branch in the response  */
+    branch?: string;
+    /** Specify the version to only have node versions for that particular version in the response  */
+    version?: string;
 }
 
 export interface GraphQLRequest {

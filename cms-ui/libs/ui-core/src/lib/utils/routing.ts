@@ -13,10 +13,12 @@ export function getFullPrimaryPath(route: ActivatedRoute): string {
         if (snapshot.outlet !== PRIMARY_OUTLET) {
             break;
         }
-        snapshot.url.forEach(part => fullPath.push(part));
+        snapshot.url.forEach((part) => fullPath.push(part));
     }
 
-    const urlSegments = fullPath.map(part => part.path).filter(str => str != null && str.length > 0);
+    const urlSegments = fullPath
+        .map((part) => part.path)
+        .filter((str) => str != null && str.length > 0);
     const fullUrl = `/${urlSegments.join('/')}`;
 
     return fullUrl;

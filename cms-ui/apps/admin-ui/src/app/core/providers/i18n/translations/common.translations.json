@@ -283,6 +283,10 @@
         "en": "Okay",
         "de": "OK"
     },
+    "back_button": {
+        "en": "Back",
+        "de": "Zurück"
+    },
     "create_button": {
         "en": "Create",
         "de": "Erstellen"
@@ -346,6 +350,10 @@
     "templateTag_singular": {
         "en": "Template Tag",
         "de": "Vorlagen-Tag"
+    },
+    "repository_plural": {
+        "en": "Repositories",
+        "de": "Repositories"
     },
     "contentRepository_singular": {
         "en": "ContentRepository",

@@ -104,7 +104,7 @@ export class NavigationService {
     ): InstructionActions {
         // Image Editing is provided by EditorOverlay
         // This helper funcion would help to move from ContentFrame editors
-        if (itemType === 'image' && editMode === 'edit') {
+        if (itemType === 'image' && editMode === EditMode.EDIT) {
             return this.modal(nodeId, itemType, itemId, editMode, options);
         } else {
             return this.detail(nodeId, itemType, itemId, editMode, options);

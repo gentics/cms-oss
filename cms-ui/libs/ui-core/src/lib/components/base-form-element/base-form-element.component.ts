@@ -93,6 +93,11 @@ export abstract class BaseFormElementComponent<T>
     }
 
     /**
+     * Hook which is called whenever the component is being touched by the user.
+     */
+    protected onTouch(): void {}
+
+    /**
      * Function to trigger all required external hooks and to update the
      * internal state correctly, when the value is supposed to change.
      *

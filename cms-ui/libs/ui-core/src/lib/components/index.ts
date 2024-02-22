@@ -1,3 +1,4 @@
+export * from './accordion/accordion.component';
 export * from './base-component/base.component';
 export * from './base-form-element/base-form-element.component';
 export * from './base-modal/base-modal.component';

@@ -1,19 +1,16 @@
 import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normalizer/schemas';
-
-/**
- * In order not to rewrite all imports, we export all model types here as well.
- * The '@gentics/cms-models' path is defined in the root tsconfig.json.
- */
-export * from '@gentics/cms-models';
+import { RequestFailedError } from '@gentics/cms-rest-client';
+import { FileCreateRequest, FileUploadResponse, Image, File as CMSFile } from '@gentics/cms-models';
 
 export * from './actions';
 export * from './chip-search';
 export * from './events';
 export * from './list';
+export * from './message';
 export * from './page';
+export * from './page-controls';
 export * from './repository-browser';
 export * from './staging';
-export * from './message';
 
 // State models
 export * from './auth-state';
@@ -52,3 +49,15 @@ export const nodeSchema = schemas.node;
 export const pageSchema = schemas.page;
 export const templateSchema = schemas.template;
 export const userSchema = schemas.user;
+
+export interface UploadResponse {
+    /** The file/blob that was attempted to be uploaded. May be optimized away. */
+    file?: File | Blob;
+    /** The request for creating a file/image. */
+    request?: FileCreateRequest;
+    /** If it was successfull. */
+    successfull: boolean;
+    error?: RequestFailedError;
+    response?: FileUploadResponse;
+    item?: CMSFile | Image;
+}

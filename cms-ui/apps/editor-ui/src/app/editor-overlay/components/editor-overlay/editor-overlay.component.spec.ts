@@ -1,6 +1,7 @@
 import { Component, Pipe, PipeTransform, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { EditMode } from '@gentics/cms-models';
 import { GenticsUIImageEditorModule } from '@gentics/image-editor';
 import { GenticsUICoreModule, IModalInstance } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
@@ -119,7 +120,7 @@ function editImageState(fixture: ComponentFixture<any>): void {
 
 class MockActivatedRoute {
     params = new BehaviorSubject<EditorStateUrlParams>({
-        editMode: 'edit',
+        editMode: EditMode.EDIT,
         itemId: ITEM_ID,
         nodeId: ITEM_NODE,
         options: 'e30=',

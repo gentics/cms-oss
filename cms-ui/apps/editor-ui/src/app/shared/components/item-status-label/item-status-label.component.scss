@@ -13,6 +13,7 @@
     color: $gtx-color-alert;
     opacity: 0.9;
     vertical-align: middle;
+    align-items: center;
     cursor: pointer;
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
 
@@ -66,3 +67,88 @@
     }
 }
 
+/* Styles to make it look and behave like a regular gtx-button */
+:host {
+    &.full-size .status-label {
+        height: 24px;
+        font-size: 12px;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.12), 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+        color: #9f2623;
+        user-select: none;
+
+        icon {
+            font-size: 1.1rem;
+        }
+
+        &:hover {
+            background: rgba(201, 48, 44, 0.1);
+
+            icon.alert {
+                color: $gtx-color-alert;
+            }
+            icon.info {
+                color: $gtx-color-dark-gray;
+            }
+            icon.success {
+                color: $gtx-color-success;
+            }
+        }
+
+        &.online {
+            color: #357935;
+
+            &:hover {
+                background: rgba(68, 157, 68, 0.2);
+            }
+        }
+    }
+}
+
+.status-label {
+    position: relative;
+
+    .icon-bottom-left,
+    .icon-bottom-right,
+    .icon-top-left,
+    .icon-top-right {
+        position: absolute;
+        background: $gtx-color-very-light-gray;
+        border-radius: 50%;
+        height: 14px;
+        width: 14px;
+
+        .secondary-icon {
+            font-size: 14px;
+            text-align: center;
+            color: $gtx-color-very-dark-gray;
+
+            &.icon-modified {
+                font-size: 20px;
+                height: 14px;
+                width: 14px;
+                display: block;
+                margin-top: 4px;
+            }
+        }
+    }
+
+    .icon-bottom-left,
+    .icon-bottom-right {
+        bottom: -7px;
+    }
+
+    .icon-top-left,
+    .icon-top-right {
+        top: -7px;
+    }
+
+    .icon-bottom-left,
+    .icon-top-left {
+        left: -7px;
+    }
+
+    .icon-bottom-right,
+    .icon-top-right {
+        right: -7px;
+    }
+}

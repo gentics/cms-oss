@@ -11,7 +11,7 @@ import { ImagePreviewComponent } from './components/shared/image-preview/image-p
 import { SortableArrayListComponent } from './components/shared/sortable-array-list/sortable-array-list.component';
 import { UploadWithPropertiesModalComponent } from './components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { UploadWithPropertiesComponent } from './components/shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from './components/shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from './components/shared/validation-error-info/validation-error-info.component';
 import { TagEditorHostComponent } from './components/tag-editor-host/tag-editor-host.component';
 import { TagEditorOverlayHostComponent } from './components/tag-editor-overlay-host/tag-editor-overlay-host.component';
 import { TagPropertyEditorHostComponent } from './components/tag-property-editor-host/tag-property-editor-host.component';
@@ -62,7 +62,7 @@ export const COMPONENTS: any[] = [
     TextTagPropertyEditor,
     UploadWithPropertiesComponent,
     UploadWithPropertiesModalComponent,
-    ValidationErrorInfo,
+    ValidationErrorInfoComponent,
 ];
 
 export const PIPES: any[] = [

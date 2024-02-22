@@ -1,0 +1,47 @@
+<gtx-construct-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_CONSTRUCTS"
+    [attr.data-tab-id]="TAB_ID_CONSTRUCTS"
+    [constructs]="constructs"
+    [categories]="constructCategories"
+    [favourites]="constructFavourites"
+    [gcnPlugin]="gcnPlugin"
+    [alohaRef]="alohaRef"
+    (favouritesChange)="updateFavourites($event)"
+></gtx-construct-controls>
+
+<gtx-link-checker-controls
+    class="control-element"
+    [class.active]="activeTab === TAB_ID_LINK_CHECKER"
+    [attr.data-tab-id]="TAB_ID_LINK_CHECKER"
+    [plugin]="linkCheckerPlugin"
+    [brokenLinks]="brokenLinkElements"
+    (updateCount)="updateBrokenLinkCount()"
+></gtx-link-checker-controls>
+
+<ng-container *ngIf="settings">
+    <ng-container *ngFor="let tab of settings?.tabs; trackBy: identifyTab">
+        <div
+            class="control-element tab-controls"
+            [attr.data-tab-id]="tab.id"
+            [class.active]="activeTab === tab.id && tab.hasVisibleGroups"
+        >
+            <ng-container *ngFor="let group of tab.componentGroups; last as last; trackBy: identifyComponentGroup">
+                <div class="component-group" *ngIf="group.hasVisibleSlots">
+                    <ng-container *ngFor="let slot of group.slots; trackBy: identifySlot">
+                        <gtx-aloha-component-renderer
+                            class="dynamic-component"
+                            [class.hidden]="!slot.visible"
+                            [attr.slot]="slot.name"
+                            [slot]="slot.name"
+                            [component]="components[slot.name]"
+                            [disabled]="tagEditorOpen"
+                        ></gtx-aloha-component-renderer>
+                    </ng-container>
+                </div>
+                <div *ngIf="!last && group.hasVisibleSlots" class="group-separator"></div>
+            </ng-container>
+        </div>
+    </ng-container>
+</ng-container>
+

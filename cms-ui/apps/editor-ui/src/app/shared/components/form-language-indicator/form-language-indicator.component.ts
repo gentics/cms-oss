@@ -19,7 +19,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
         trigger('animNgForParent', [
             transition(':enter, :leave', [
                 query('@animNgForChild', [
-                    animateChild()
+                    animateChild(),
                 ]),
             ]),
         ]),
@@ -32,7 +32,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                     'padding-right': '*',
                     'margin-left': '*',
                     'margin-right': '*',
-                    }),
+                }),
                 animate(
                     '0.2s ease-in-out',
                     style({
@@ -42,7 +42,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                         'padding-right': '*',
                         'margin-left': '*',
                         'margin-right': '*',
-                        }),
+                    }),
                 ),
             ]),
             transition('* => void', [
@@ -53,7 +53,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                     'padding-right': '*',
                     'margin-left': '*',
                     'margin-right': '*',
-                    }),
+                }),
                 animate(
                     '0.2s ease-in-out',
                     style({
@@ -63,7 +63,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
                         'padding-right': '*',
                         'margin-left': '*',
                         'margin-right': '*',
-                        }),
+                    }),
                 ),
             ]),
         ]),

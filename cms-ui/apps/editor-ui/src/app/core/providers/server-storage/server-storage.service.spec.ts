@@ -2,10 +2,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { UserDataResponse } from '@gentics/cms-models';
+import { ResponseCode, UserDataResponse } from '@gentics/cms-models';
 import { MockResponseInfo, expectOneRequest, respondTo } from '@gentics/cms-rest-clients-angular/testing';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { API_BASE_URL } from '../../../common/utils/base-urls';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { Api, ApiBase, FileUploaderFactory, GcmsApi } from '../api';
@@ -56,7 +56,7 @@ describe('ServerStorage', () => {
 
         it('requests all user data from the API if not marked as unsupported', () => {
             api.userData.getAllKeys = jasmine.createSpy('getAllKeys')
-                .and.returnValue(Observable.of({ data: { key1: 'value1', key2: 1234 } }));
+                .and.returnValue(of({ data: { key1: 'value1', key2: 1234 } }));
 
             expect(serverStorage.supported).toBe('unknown');
 
@@ -69,7 +69,7 @@ describe('ServerStorage', () => {
 
         it('marks user storage as supported if the request succeeds', () => {
             api.userData.getAllKeys = jasmine.createSpy('getAllKeys')
-                .and.returnValue(Observable.of({ data: { } }));
+                .and.returnValue(of({ data: { } }));
 
             expect(serverStorage.supported).toBe('unknown');
             serverStorage.getAll().subscribe(() => {});
@@ -87,7 +87,7 @@ describe('ServerStorage', () => {
         });
 
         it('does nothing if the CMS version has no server storage', () => {
-            api.userData.getAllKeys = jasmine.createSpy('getAllKeys').and.returnValue(Observable.never());
+            api.userData.getAllKeys = jasmine.createSpy('getAllKeys').and.returnValue(NEVER);
             serverStorage.supported$.next(false);
 
             let result: any;
@@ -103,7 +103,7 @@ describe('ServerStorage', () => {
 
         it('requests a specific user data key from the API if not marked as unsupported', () => {
             api.userData.getKey = jasmine.createSpy('getKey')
-                .and.returnValue(Observable.of({ data: testData }));
+                .and.returnValue(of({ data: testData }));
 
             expect(serverStorage.supported).toBe('unknown');
 
@@ -117,7 +117,7 @@ describe('ServerStorage', () => {
 
         it('marks user storage as supported if the request succeeds', () => {
             api.userData.getKey = jasmine.createSpy('getKey')
-                .and.returnValue(Observable.of({ data: { } }));
+                .and.returnValue(of({ data: { } }));
 
             expect(serverStorage.supported).toBe('unknown');
             serverStorage.get('testData').subscribe(() => {});
@@ -136,7 +136,7 @@ describe('ServerStorage', () => {
         });
 
         it('does nothing if the CMS version has no server storage', () => {
-            api.userData.getKey = jasmine.createSpy('getKey').and.returnValue(Observable.never());
+            api.userData.getKey = jasmine.createSpy('getKey').and.returnValue(NEVER);
             serverStorage.supported$.next(false);
 
             let userData: any;
@@ -152,7 +152,7 @@ describe('ServerStorage', () => {
 
         it('saves specific user data to the API if not marked as unsupported', fakeAsync(() => {
             api.userData.setKey = jasmine.createSpy('setKey')
-                .and.returnValue(Observable.of({ responseInfo: { responseCode: 'OK' } }));
+                .and.returnValue(of({ responseInfo: { responseCode: ResponseCode.OK } }));
 
             expect(serverStorage.supported).toBe('unknown');
 
@@ -168,7 +168,7 @@ describe('ServerStorage', () => {
             expect(serverStorage.supported).toBe('unknown');
             serverStorage.set('testData', testData);
             const req = expectOneRequest(httpTestingController, 'user/me/data/testData', 'POST');
-            respondTo(req, {body: {responseInfo: {responseCode: 'OK'}}});
+            respondTo(req, {body: {responseInfo: {responseCode: ResponseCode.OK}}});
             tick();
             expect(serverStorage.supported).toBe(true);
         }));
@@ -204,7 +204,7 @@ describe('ServerStorage', () => {
         }));
 
         it('does nothing and returns the passed data if the CMS version has no server storage', fakeAsync(() => {
-            api.userData.setKey = jasmine.createSpy('setKey').and.returnValue(Observable.never());
+            api.userData.setKey = jasmine.createSpy('setKey').and.returnValue(NEVER);
             serverStorage.supported$.next(false);
 
             let userData: any;
@@ -232,7 +232,7 @@ const createApiNotImplementedResponse = (): MockResponseInfo<UserDataResponse> =
             type: 'CRITICAL',
         }],
         responseInfo: {
-            responseCode: 'FAILURE',
+            responseCode: ResponseCode.FAILURE,
         },
     },
 });

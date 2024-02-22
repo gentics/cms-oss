@@ -1,7 +1,5 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FolderItemType, FolderItemTypePlural, folderItemTypes, Language } from '@gentics/cms-models';
-import { NgxsModule } from '@ngxs/store';
-import { Observable, of, throwError } from 'rxjs';
 import {
     getExampleFolderData,
     getExampleLanguageData,
@@ -9,8 +7,10 @@ import {
     getExamplePageData,
     getExampleUserDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { NgxsModule } from '@ngxs/store';
+import { of, throwError } from 'rxjs';
 import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '../../../common/models';
-import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -41,31 +41,32 @@ class MockPermissionService {
 }
 class MockI18nService {}
 
-class MockApi {
-    folders = {
-        createFolder: jasmine.createSpy('createFolder').and.callFake((props: { name: string }) => {
+class MockClient {
+    folder = {
+        create: jasmine.createSpy('create').and.callFake((props: { name: string }) => {
             if (props.name === 'existing') {
                 return throwError({ message: '' });
             } else {
                 return of({ folder: getExampleFolderData() });
             }
         }),
-        getFolders: createSpyApiMethod('getFolders', 'folders'),
-        getPages: createSpyApiMethod('getPages', 'pages'),
-        getFiles: createSpyApiMethod('getFiles', 'files'),
-        getImages: createSpyApiMethod('getImages', 'files'),
-        getItem: createSpyApiMethod('getItem', 'items'),
-        getItems: createSpyApiMethod('getItems', 'items'),
-        searchItems: createSpyApiMethod('searchItems', 'items'),
-        updateItem: createSpyApiMethod('updateItem', 'items'),
+        folders: createSpyApiMethod('folders', 'folders'),
+        pages: createSpyApiMethod('pages', 'pages'),
+        files: createSpyApiMethod('files', 'files'),
+        images: createSpyApiMethod('images', 'files'),
+        items: createSpyApiMethod('items', 'items'),
     };
-    publishQueue = {
-        approvePageStatus: createSpyApiMethod('approvePageStatus', 'pages'),
+    page = {
+        update: createSpyApiMethod('update', 'items'),
+        workflowApprove: createSpyApiMethod('workflowApprove', 'pages'),
+    };
+    elasticSearch = {
+        search: createSpyApiMethod('search', 'items'),
     };
 }
 
 const createSpyApiMethod = (name: string, collectionKey: FolderItemTypePlural | 'items'): jasmine.Spy => jasmine.createSpy(name).and
-    .returnValue(Observable.of({
+    .returnValue(of({
         [collectionKey]: RESPONSE_ITEM_LIST,
         hasMoreItems: false,
         numItems: RESPONSE_ITEM_LIST.length,
@@ -75,11 +76,10 @@ const createSpyApiMethod = (name: string, collectionKey: FolderItemTypePlural | 
 describe('FolderActionsService', () => {
 
     let folderActions: FolderActionsService;
-    let api: MockApi;
+    let client: MockClient;
     let permissions: MockPermissionService;
     let initialState: MockAppState;
     let state: TestApplicationState;
-    let queryAssembler: QueryAssemblerElasticSearchService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -93,17 +93,16 @@ describe('FolderActionsService', () => {
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: NavigationService, useClass: MockNavigationService },
+                { provide: GCMSRestClientService, useClass: MockClient },
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
-                { provide: Api, useClass: MockApi },
             ],
         });
 
         folderActions = TestBed.get(FolderActionsService);
-        api = TestBed.get(Api);
+        client = TestBed.get(GCMSRestClientService);
         permissions = TestBed.get(PermissionService);
         state = TestBed.get(ApplicationStateService);
-        queryAssembler = TestBed.get(QueryAssemblerElasticSearchService);
 
         initialState = {
             folder: {
@@ -152,9 +151,9 @@ describe('FolderActionsService', () => {
             expectedPage.name = payload.name;
             folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
 
-            folderActions.updateItem(page.type, page.id, payload).then(value => {
-                expect(api.folders.updateItem).toHaveBeenCalledWith(page.type, page.id, payload, undefined);
-                expect(folderActions.getItem).toHaveBeenCalledWith(page.id, page.type, { });
+            folderActions.updateItem(page.type, page.id, payload, { }).then(value => {
+                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload, deriveFileName: true });
+                expect(folderActions.getItem).toHaveBeenCalledWith(page.id, page.type);
                 expect(value).toEqual(expectedPage);
             });
         }));
@@ -173,7 +172,7 @@ describe('FolderActionsService', () => {
                 // spyOn(state.actions.folder, 'fetchItemSuccess');
                 const result = folderActions.updateItem(page.type, page.id, payload);
                 tick();
-                expect(api.folders.updateItem).toHaveBeenCalledWith(page.type, page.id, payload, undefined);
+                expect(client.page.update).toHaveBeenCalledWith(page.id, { page: payload, deriveFileName: true });
                 // expect(state.actions.folder.fetchItemSuccess).toHaveBeenCalledWith({ type: expectedPage.type, item: expectedPage });
 
                 let promiseResolved = false;
@@ -205,7 +204,7 @@ describe('FolderActionsService', () => {
             folderActions.pageQueuedApprove([examplePage]);
             tick();
 
-            expect(api.publishQueue.approvePageStatus).toHaveBeenCalledWith([examplePage.id]);
+            expect(client.page.workflowApprove).toHaveBeenCalledWith(examplePage.id);
         }));
 
         it('calls the correct api method with right parameters for pages with queuedOffline', () => {
@@ -220,7 +219,7 @@ describe('FolderActionsService', () => {
             };
 
             folderActions.pageQueuedApprove([examplePage]);
-            expect(api.publishQueue.approvePageStatus).toHaveBeenCalledWith([examplePage.id]);
+            expect(client.page.workflowApprove).toHaveBeenCalledWith(examplePage.id);
         });
     });
 
@@ -260,7 +259,7 @@ describe('FolderActionsService', () => {
         it('calls the correct api method and options according to state', fakeAsync(() => {
             folderActions.refreshList('page');
             tick();
-            expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
         }));
 
         it('calls the correct api method and options according to state for multiple languages', fakeAsync(() => {
@@ -271,13 +270,13 @@ describe('FolderActionsService', () => {
                 ...expectedOptions,
                 language: 'en',
             };
-            expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsFirst);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsFirst);
 
             const expectedOptionsSecond = {
                 ...expectedOptions,
                 language: 'de',
             };
-            expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsSecond);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsSecond);
         }));
 
     });
@@ -289,25 +288,25 @@ describe('FolderActionsService', () => {
         it('calls the correct api method for folders', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'folder');
             tick();
-            expect(api.folders.getFolders).toHaveBeenCalled();
+            expect(client.folder.folders).toHaveBeenCalled();
         }));
 
         it('calls the correct api method for pages', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'page');
             tick();
-            expect(api.folders.getPages).toHaveBeenCalled();
+            expect(client.folder.pages).toHaveBeenCalled();
         }));
 
         it('calls the correct api method for files', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'file');
             tick();
-            expect(api.folders.getFiles).toHaveBeenCalled();
+            expect(client.folder.files).toHaveBeenCalled();
         }));
 
         it('calls the correct api method for images', fakeAsync(() => {
             folderActions.getItems(PARENT_ID, 'image');
             tick();
-            expect(api.folders.getImages).toHaveBeenCalled();
+            expect(client.folder.images).toHaveBeenCalled();
         }));
 
         it('adds nodeId, sortby and sortorder to the options', fakeAsync(() => {
@@ -322,7 +321,7 @@ describe('FolderActionsService', () => {
                 langvars: true,
                 folderId: 42,
             };
-            expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
         }));
 
         it('adds nodeId, sortby and sortorder to the options and includes deleted items', fakeAsync(() => {
@@ -339,7 +338,7 @@ describe('FolderActionsService', () => {
                 langvars: true,
                 folderId: 42,
             };
-            expect(api.folders.getPages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
         }));
 
         it('adds privilegeMap = true to folder requests', fakeAsync(() => {
@@ -354,15 +353,15 @@ describe('FolderActionsService', () => {
                 folderId: 42,
                 privilegeMap: true,
             };
-            expect(api.folders.getFolders).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.folders).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
         }));
 
         it('calls PermissionService.normalizeAPIResponse() on folder result', fakeAsync(() => {
             const privilegeMap1 = {};
             const privilegeMap2 = {};
 
-            api.folders.getFolders = jasmine.createSpy('folders.getFolders').and
-                .returnValue(Observable.of({
+            client.folder.folders = jasmine.createSpy('folders.getFolders').and
+                .returnValue(of({
                     folders: [{ privilegeMap: privilegeMap1 }, { privilegeMap: privilegeMap2 }],
                     hasMoreItems: false,
                     numItems: 3,
@@ -445,7 +444,7 @@ describe('FolderActionsService', () => {
                 });
                 folderActions.getItems(PARENT_ID, 'page');
                 tick();
-                expect(api.folders.searchItems).not.toHaveBeenCalled();
+                expect(client.elasticSearch.search).not.toHaveBeenCalled();
             }));
 
             it('uses search endpoint if filters exist and are valid', fakeAsync(() => {
@@ -461,9 +460,8 @@ describe('FolderActionsService', () => {
                 folderActions.getItems(PARENT_ID, 'page');
                 tick();
 
-                expect(api.folders.searchItems).toHaveBeenCalledWith(
+                expect(client.elasticSearch.search).toHaveBeenCalledWith(
                     'page',
-                    PARENT_ID,
                     {
                         query: {
                             bool: {
@@ -651,16 +649,15 @@ describe('FolderActionsService', () => {
             folderActions.updatePageLanguage(PAGE_ID, LANGUAGE);
             tick();
 
-            expect(api.folders.updateItem).toHaveBeenCalledWith('page', PAGE_ID,
-                {
+            expect(client.page.update).toHaveBeenCalledWith(PAGE_ID, {
+                page: {
                     id: PAGE_ID,
                     language: LANGUAGE.code,
                 },
-                {
-                    createVersion: true,
-                    unlock: true,
-                    deriveFileName: true,
-                });
+                createVersion: true,
+                unlock: true,
+                deriveFileName: true,
+            });
         }));
     });
 
@@ -700,7 +697,7 @@ describe('FolderActionsService', () => {
 
             expect(createdFolder).not.toBeUndefined();
             expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
-            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
+            expect(client.folder.create).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
         }));
 
         it('creates correct folder with optional failOnDuplicate flag', fakeAsync(async () => {
@@ -717,7 +714,7 @@ describe('FolderActionsService', () => {
 
             expect(createdFolder).not.toBeUndefined();
             expect(createdFolder ? createdFolder.name : '').toEqual('A new folder');
-            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
+            expect(client.folder.create).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
         }));
 
         it('emits void value if an error occurs', fakeAsync(async () => {
@@ -733,7 +730,7 @@ describe('FolderActionsService', () => {
             tick();
 
             expect(createdFolder).toBeUndefined();
-            expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
+            expect(client.folder.create).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
         }));
     });
 });

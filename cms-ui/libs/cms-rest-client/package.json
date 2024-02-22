@@ -1,0 +1,11 @@
+{
+  "name": "@gentics/cms-rest-client",
+  "version": "6.1.0-SNAPSHOT",
+  "peerDependencies": {
+    "@gentics/cms-models": "^6.1.0-SNAPSHOT",
+    "@gentics/mesh-models": "^6.1.0-SNAPSHOT"
+  },
+  "publishConfig": {
+    "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"
+  }
+}

@@ -61,7 +61,10 @@ describe('UIStateModule', () => {
             usersnap: { key: undefined },
             hideExtras: false,
             mode: UIMode.EDIT,
-        } as UIState);
+            overlayCount: 0,
+            constructFavourites: [],
+            tagEditorOpen: false,
+        });
     });
 
     it('setCmsVersion works', () => {

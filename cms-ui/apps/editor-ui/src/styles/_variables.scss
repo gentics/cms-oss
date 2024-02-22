@@ -24,6 +24,14 @@ $gcms-icon-size: 14px;
 // language status icons
 $gcms-icon-font-size: calc( #{$gcms-icon-size} - #{$gcms-icon-size} * 0.15 );
 
+// Aloha Size breakpoints
+$aloha-size-mobile-min: 0px;
+$aloha-size-mobile-max: 400px;
+$aloha-size-tablet-min: 401px;
+$aloha-size-tablet-max: 1024px;
+$aloha-size-desktop-min: 1025px;
+$aloha-size-desktop-max: 99999px;
+
 // ui-core component-specific overrides
 $gtx-breadcrumbs-background-color: white;
 $gtx-breadcrumbs-active-color: #444444;

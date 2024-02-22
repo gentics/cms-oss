@@ -5,6 +5,14 @@ export const PRODUCT_TOOL_KEYS = [
 
 export const ADMIN_TOOL_KEY = 'administration';
 
+export enum SaveBehaviour {
+    REGULAR,
+    SAVE_AS_COPY,
+    SAVE_AND_PUBLISH,
+    APPLY_TO_SUBFOLDERS,
+    APPLY_TO_LANGUAGE_VARIANTS,
+}
+
 export enum ActionButtonIconType {
     URL = 'url',
     FONT = 'font',

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
@@ -23,10 +22,11 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { ModalService } from '@gentics/ui-core';
-import { merge, Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
@@ -81,12 +81,12 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
     /** The helper for managing and loading the selected item. */
     private selectedItem: SelectedItemHelper<ItemInNode<FileOrImage<Raw>>>;
 
-    private subscriptions = new Subscription();
+    private subscriptions: Subscription[] = [];
 
     constructor(
-        private api: Api,
-        private appState: ApplicationStateService,
         private changeDetector: ChangeDetectorRef,
+        private client: GCMSRestClientService,
+        private appState: ApplicationStateService,
         private editorOverlayService: EditorOverlayService,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private i18n: I18nService,
@@ -99,7 +99,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
     }
 
     ngOnDestroy(): void {
-        this.subscriptions.unsubscribe();
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
@@ -114,7 +114,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
                 throw new TagEditorError(`TagPropertyType ${tagProperty.type} not supported by FileOrImageUrlTagPropertyEditor.`);
         }
 
-        this.selectedItem = new SelectedItemHelper(this.itemType, context.node.id, this.api.folders);
+        this.selectedItem = new SelectedItemHelper(this.itemType, context.node.id, this.client);
 
         this.displayValue$ = merge(
             this.selectedItem.selectedItem$.pipe(
@@ -199,7 +199,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
      * user input.
      */
     changeSelectedItem(newSelectedItem: ItemInNode<FileOrImage<Raw>>): void {
-        let idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
+        const idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
         if (newSelectedItem) {
             (<any> this.tagProperty)[idProp] = newSelectedItem.id;
             this.tagProperty.nodeId = newSelectedItem.nodeId;
@@ -239,7 +239,15 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
      * Opens an upload modal to allow the user to upload an item.
      */
     uploadItem(): void {
-        this.modalService.fromComponent(UploadWithPropertiesModalComponent, { padding: true, width: '1000px' }, { allowFolderSelection: true, destinationFolder: this.uploadDestination, itemType: this.itemType })
+        this.modalService.fromComponent(
+            UploadWithPropertiesModalComponent,
+            { padding: true, width: '1000px' },
+            {
+                allowFolderSelection: true,
+                destinationFolder: this.uploadDestination,
+                itemType: this.itemType,
+            },
+        )
             .then(modal => modal.open())
             .then((uploadedItem: FileUpload) => {
                 if (uploadedItem) {
@@ -274,7 +282,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         if (newValue.type !== TagPropertyType.FILE && newValue.type !== TagPropertyType.IMAGE) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FileOrImageUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as FileTagPartProperty | ImageTagPartProperty;
+        this.tagProperty = newValue ;
 
         let itemId: number;
         switch (this.tagProperty.type) {
@@ -336,24 +344,20 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
 
         this.selectedItem.selectedItem$.subscribe(selectedItem => {
             if (selectedItem) {
-                const sub = this.api.folders.getItem(selectedItem.folderId, 'folder')
-                    .map(response => response.folder)
-                    .subscribe(folder => {
-                        this.uploadDestination = folder;
-                        this.changeDetector.markForCheck();
-                    });
-                this.subscriptions.add(sub);
+                const sub = this.client.folder.get(selectedItem.folderId).subscribe(res => {
+                    this.uploadDestination = res.folder;
+                    this.changeDetector.markForCheck();
+                });
+                this.subscriptions.push(sub);
             } else if (folderObj) {
                 this.uploadDestination = folderObj;
                 this.changeDetector.markForCheck();
             } else {
-                const sub = this.api.folders.getItem(folderId, 'folder')
-                    .map(response => response.folder)
-                    .subscribe(folder => {
-                        this.uploadDestination = folder;
-                        this.changeDetector.markForCheck();
-                    });
-                this.subscriptions.add(sub);
+                const sub = this.client.folder.get(folderId).subscribe(res => {
+                    this.uploadDestination = res.folder;
+                    this.changeDetector.markForCheck();
+                });
+                this.subscriptions.push(sub);
             }
         });
     }

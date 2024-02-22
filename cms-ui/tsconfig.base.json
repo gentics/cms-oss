@@ -21,7 +21,7 @@
         "target": "ES2022",
         "module": "esnext",
         "lib": [
-            "es2020",
+            "es2022",
             "dom"
         ],
         "typeRoots": [
@@ -53,11 +53,30 @@
             "@gentics/cms-components": [
                 "libs/cms-components/src/public-api"
             ],
+            "@gentics/cms-integration-api-models": [
+                "libs/cms-integration-api-models/src/public-api"
+            ],
             "@gentics/cms-models": [
                 "libs/cms-models/src/public-api"
             ],
             "@gentics/cms-models/*": [
                 "libs/cms-models/src/lib/*"
+            ],
+            "@gentics/aloha-models": [
+                "dist/libs/aloha-models/src/public-api",
+                "libs/aloha-models/src/public-api"
+            ],
+            "@gentics/cms-rest-client": [
+                "libs/cms-rest-client/src/public-api"
+            ],
+            "@gentics/cms-rest-client/*": [
+                "libs/cms-rest-client/src/lib/*"
+            ],
+            "@gentics/cms-rest-client-angular": [
+                "libs/cms-rest-client-angular/src/public-api"
+            ],
+            "@gentics/cms-rest-client-angular/testing": [
+                "libs/cms-rest-client-angular/src/lib/testing"
             ],
             "@gentics/cms-rest-clients-angular": [
                 "libs/cms-rest-clients-angular/src/public-api"
@@ -85,9 +104,6 @@
             ],
             "@gentics/ui-core": [
                 "libs/ui-core/src/public-api"
-            ],
-            "jszip": [
-                "node_modules/jszip/dist/jszip.min.js"
             ]
         }
     },

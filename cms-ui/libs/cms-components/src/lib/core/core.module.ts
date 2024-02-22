@@ -24,6 +24,7 @@ import {
     ClickOutsideDirective,
 } from './directives';
 import {
+    ConstructIconNormalizerPipe,
     DurationPipe,
     EntriesPipe,
     FilterPipe,
@@ -65,6 +66,7 @@ const DIRECTIVES = [
 ];
 
 const PIPES: any[] = [
+    ConstructIconNormalizerPipe,
     DurationPipe,
     EntriesPipe,
     FilterPipe,

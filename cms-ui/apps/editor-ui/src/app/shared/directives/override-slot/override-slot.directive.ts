@@ -1,4 +1,17 @@
-import { ChangeDetectorRef, Directive, ElementRef, HostBinding, Input, OnDestroy, OnInit, Optional, Renderer2, Self, SkipSelf } from '@angular/core';
+import {
+    AfterViewChecked,
+    ChangeDetectorRef,
+    Directive,
+    ElementRef,
+    HostBinding,
+    Input,
+    OnDestroy,
+    OnInit,
+    Optional,
+    Renderer2,
+    Self,
+    SkipSelf,
+} from '@angular/core';
 import {
     ButtonComponent,
     DropdownItemComponent,
@@ -7,6 +20,7 @@ import {
     FilePickerComponent,
 } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import {
     UIButtonOverride, UIOverrideParameters,
@@ -24,7 +38,7 @@ import { UIOverridesService } from '../../providers/ui-overrides/ui-overrides.se
 @Directive({
     selector: '[overrideSlot]',
 })
-export class OverrideSlotDirective implements OnInit, OnDestroy {
+export class OverrideSlotDirective implements OnInit, AfterViewChecked, OnDestroy {
 
     /** The name of the UI element in "ui-overrides.json" */
     @Input()
@@ -73,24 +87,23 @@ export class OverrideSlotDirective implements OnInit, OnDestroy {
 
     private followOverridesState(): void {
         let alreadyIntialized = false;
-        const sub = this.state
-            .select(state => state.ui)
-            .filter(ui => ui.overridesReceived)
-            .take(1)
-            .subscribe(ui => {
-                if (!ui.overrides.hasOwnProperty(this.overrideSlot)) {
-                    // Most customers don't use overrides, which means we can disable all logic
-                    return this.subscriptions.unsubscribe();
-                }
+        const sub = this.state.select(state => state.ui).pipe(
+            filter(ui => ui.overridesReceived),
+            take(1),
+        ).subscribe(ui => {
+            if (!ui.overrides.hasOwnProperty(this.overrideSlot)) {
+                // Most customers don't use overrides, which means we can disable all logic
+                return this.subscriptions.unsubscribe();
+            }
 
-                this.override = ui.overrides[this.overrideSlot];
-                this.interceptNativeClickEvents();
-                this.applyOverride();
+            this.override = ui.overrides[this.overrideSlot];
+            this.interceptNativeClickEvents();
+            this.applyOverride();
 
-                if (alreadyIntialized) {
-                    this.changeDetector.markForCheck();
-                }
-            });
+            if (alreadyIntialized) {
+                this.changeDetector.markForCheck();
+            }
+        });
 
         this.subscriptions.add(sub);
         alreadyIntialized = true;

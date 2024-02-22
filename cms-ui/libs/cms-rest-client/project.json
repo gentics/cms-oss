@@ -1,0 +1,45 @@
+{
+    "name": "cms-rest-client",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/cms-rest-client/src",
+    "projectType": "library",
+    "tags": ["lib"],
+    "implicitDependencies": ["cms-models", "mesh-models"],
+    "targets": {
+        "build": {
+            "executor": "@nx/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/libs/cms-rest-client",
+                "tsConfig": "libs/cms-rest-client/tsconfig.lib.json",
+                "packageJson": "libs/cms-rest-client/package.json",
+                "main": "libs/cms-rest-client/src/public-api.ts",
+                "assets": ["libs/cms-rest-client/*.md"]
+            }
+        },
+        "lint": {
+            "executor": "@nx/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": [
+                    "libs/cms-rest-client/**/*.ts",
+                    "libs/cms-rest-client/package.json"
+                ]
+            }
+        },
+        "test": {
+            "executor": "@nx/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+                "jestConfig": "libs/cms-rest-client/jest.config.ts",
+                "passWithNoTests": true
+            },
+            "configurations": {
+                "ci": {
+                    "ci": true,
+                    "codeCoverage": true
+                }
+            }
+        }
+    }
+}

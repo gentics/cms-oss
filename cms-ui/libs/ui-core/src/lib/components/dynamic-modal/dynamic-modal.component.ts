@@ -9,7 +9,7 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions } from '../../common';
+import { DEFAULT_MODAL_OPTIONS, IModalDialog, IModalOptions, ModalClosingReason } from '../../common';
 
 /**
  * This is an internal component which is responsible for creating the modal dialog window and overlay.
@@ -25,7 +25,7 @@ export class DynamicModal implements OnDestroy {
     @ViewChild('portal', { read: ViewContainerRef, static: true })
     portal: ViewContainerRef;
 
-    dismissFn: () => any;
+    dismissFn: (reason?: ModalClosingReason) => any;
 
     visible = false;
     options: IModalOptions = DEFAULT_MODAL_OPTIONS;
@@ -77,23 +77,23 @@ export class DynamicModal implements OnDestroy {
     /**
      * Close the modal and call the cancelFn of the embedded component.
      */
-    cancel(): void {
+    cancel(reason: ModalClosingReason): void {
         clearTimeout(this.openTimer);
         this.visible = false;
-        this.cmpRef.instance.cancelFn();
+        this.cmpRef.instance.cancelFn(null, reason);
         this.cmpRef.destroy();
     }
 
     overlayClick(): void {
         if (this.options.closeOnOverlayClick) {
-            this.cancel();
+            this.cancel(ModalClosingReason.OVERLAY_CLICK);
         }
     }
 
     @HostListener('document:keydown', ['$event'])
     keyHandler(e: KeyboardEvent): void {
         if (e.which === 27 && this.options.closeOnEscape) {
-            this.cancel();
+            this.cancel(ModalClosingReason.ESCAPE);
         }
     }
 }

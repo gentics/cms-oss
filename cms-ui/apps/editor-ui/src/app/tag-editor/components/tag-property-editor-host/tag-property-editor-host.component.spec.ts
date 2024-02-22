@@ -10,7 +10,7 @@ import { componentTest, configureComponentTest } from '../../../../testing';
 import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { TagPropertyLabelPipe } from '../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../shared/validation-error-info/validation-error-info.component';
 import { TextTagPropertyEditor } from '../tag-property-editors/text-tag-property-editor/text-tag-property-editor.component';
 import { TagPropertyEditorHostComponent } from './tag-property-editor-host.component';
 
@@ -31,7 +31,7 @@ describe('TagPropertyEditorHostComponent', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 TextTagPropertyEditor,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
     });

@@ -19,7 +19,7 @@ import { ApplicationStateService, FolderActionsService } from '../../../../state
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { TagRefTagPropertyEditor } from './tagref-tag-property-editor.component';
 
@@ -97,7 +97,7 @@ describe('TagRefTagPropertyEditor', () => {
                 TagPropertyLabelPipe,
                 TagRefTagPropertyEditor,
                 TestComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
     });

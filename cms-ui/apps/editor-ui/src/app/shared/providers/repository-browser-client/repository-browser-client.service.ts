@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
+import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction } from '@editor-ui/app/state';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
     ItemInNode,
     RepositoryBrowserOptions,
-    TagInContainer
+    TagInContainer,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { RepositoryBrowser } from '../../components';
@@ -12,7 +13,10 @@ import { RepositoryBrowser } from '../../components';
 @Injectable()
 export class RepositoryBrowserClient {
 
-    constructor(private modalService: ModalService) {}
+    constructor(
+        private appState: ApplicationStateService,
+        private modalService: ModalService,
+    ) {}
 
     /**
      * Opens a repository browser window that allows selecting items / an item from
@@ -61,16 +65,33 @@ export class RepositoryBrowserClient {
         options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: true }
     ): Promise<R[]>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
-    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]> {
+    async openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]> {
+        await this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise();
+
+        let didDecrease = false;
         // Because of https://jira.gentics.com/browse/GUIC-224 we cannot use the promise to determine if the RepositoryBrowser
         // was closed by clicking Cancel. To maintain compatibility with existing RepositoryBrowser usages and
         // also because there is probably no other way right now, the promise only resolves if the user clicks OK.
         // If the user clicks Cancel, nothing happens.
-        return this.modalService.fromComponent(RepositoryBrowser, { padding: true, width: '1000px' }, { options })
-            .then(modal => modal.open())
-            .then((selected: R | R[]) => {
-                return selected;
-            });
+        const modal = await this.modalService.fromComponent(
+            RepositoryBrowser,
+            {
+                padding: true,
+                width: '1000px',
+                onClose: () => {
+                    this.appState.dispatch(new DecreaseOverlayCountAction());
+                    didDecrease = true;
+                },
+            },
+            { options },
+        );
+        const selected: R | R[] = await modal.open();
+
+        if (!didDecrease) {
+            this.appState.dispatch(new DecreaseOverlayCountAction());
+        }
+
+        return selected;
     }
 
 }

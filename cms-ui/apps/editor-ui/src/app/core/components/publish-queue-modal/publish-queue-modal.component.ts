@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
-import { Page, PageRequestOptions } from '@gentics/cms-models';
+import { EditMode, Page, PageRequestOptions } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService, PublishQueueActionsService } from '../../../state';
 import { Api } from '../../providers/api/api.service';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
@@ -37,8 +38,9 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
     ngOnInit(): void {
         this.publishQueueActions.getQueue();
         this.loading$ = this.appState.select(state => state.publishQueue.fetching);
-        this.queue$ = this.appState.select(state => state.publishQueue.pages.list)
-            .map(pages => pages.map(id => this.entityResolver.getPage(id)));
+        this.queue$ = this.appState.select(state => state.publishQueue.pages.list).pipe(
+            map(pages => pages.map(id => this.entityResolver.getPage(id))),
+        );
     }
 
     ngOnDestroy(): void {
@@ -59,7 +61,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
 
         this.api.folders.getItem(page.id, 'page', options).toPromise()
             .then(res => {
-                let pageWithVersion: Page = res.page;
+                const pageWithVersion: Page = res.page;
                 const oldVersion = this.getLastVersion(pageWithVersion);
                 const version = pageWithVersion.currentVersion;
 
@@ -68,7 +70,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
                 this.navigationService.instruction({
                     modal: null,
                     detail: {
-                        nodeId, itemType: 'page', itemId: pageWithVersion.id, editMode: 'compareVersionContents', options: { version, oldVersion },
+                        nodeId, itemType: 'page', itemId: pageWithVersion.id, editMode: EditMode.COMPARE_VERSION_CONTENTS, options: { version, oldVersion },
                     },
                 }).navigate({ replaceUrl: false });
             })
@@ -78,7 +80,7 @@ export class PublishQueueModal extends BaseModal<void | Page[]> implements OnIni
                 this.navigationService.instruction({
                     modal: null,
                     detail: {
-                        nodeId, itemType: 'page', itemId: page.id, editMode: 'edit',
+                        nodeId, itemType: 'page', itemId: page.id, editMode: EditMode.EDIT,
                     },
                 }).navigate({ replaceUrl: false });
 

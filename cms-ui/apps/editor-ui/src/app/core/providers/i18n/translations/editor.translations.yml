@@ -1,4 +1,4 @@
-alert_center_title:
+:
     en: Alert Center
     de: Warnungszentrale
 alert_notification_singular_label:
@@ -898,3 +898,255 @@ user_no_nodes_message:
 admin_ui_button_link:
     en: Open Administration Interface
     de: Administrator Oberfläche öffnen
+page_controls_tab_formatting:
+    en: Formatting
+    de: Formartierung
+page_controls_tab_constructs:
+    en: Insert
+    de: Einfügen
+page_controls_tab_link_settings:
+    en: Link Settings
+    de: Verweis Einstellungen
+page_controls_tab_table_settings:
+    en: Table Settings
+    de: Tabellen Einstelleungen
+format_style_bold:
+    en: Bold
+    de: Fett
+format_style_italic:
+    en: Italic
+    de: Kursiv
+format_style_underline:
+    en: Underlined
+    de: Unterstrichen
+format_style_strikethrough:
+    en: Strikethrough
+    de: Durchstrichen
+format_style_code:
+    en: Code
+    de: Quellcode
+format_style_quote:
+    en: Quote
+    de: Zitat
+format_style_citation:
+    en: Citation
+    de: Zitierung
+format_style_abbreviation:
+    en: Abbreviation
+    de: Abkürzung
+format_style_sub:
+    en: Subscript
+    de: Tiefgestellt
+format_style_sup:
+    en: Superscript
+    de: Hochgestellt
+format_style_removeFormat:
+    en: Remove formatting
+    de: Formartierung entfernen
+format_list_unsorted:
+    en: Unsorted List
+    de: Unsortierte Liste
+format_list_ordered:
+    en: Sorted List
+    de: Sortierte Liste
+format_typography_paragraph:
+    en: Paragraph
+    de: Absatz
+format_typography_h1:
+    en: Heading 1
+    de: Überschrift 1
+format_typography_h2:
+    en: Heading 2
+    de: Überschrift 2
+format_typography_h3:
+    en: Heading 3
+    de: Überschrift 3
+format_typography_h4:
+    en: Heading 4
+    de: Überschrift 4
+format_typography_h5:
+    en: Heading 5
+    de: Überschrift 5
+format_typography_h6:
+    en: Heading 6
+    de: Überschrift 6
+format_typography_pre:
+    en: Preformatted
+    de: Vorformartiert
+format_link:
+    en: Link
+    de: Verweis
+format_link_insert:
+    en: Insert Link
+    de: Verweis einfügen
+format_link_remove:
+    en: Remove Link
+    de: Verweis entfernen
+format_link_target:
+    en: Link Target
+    de: Verweis Ziel
+format_link_target_loading:
+    en: Loading ...
+    de: Lade ...
+format_link_pick_cms_target:
+    en: Pick Target from CMS
+    de: Ziel aus CMS wählen
+format_link_pick_cms_target_modal_title:
+    en: Pick a target for the Link
+    de: Ziel für Verweis auswählen
+format_link_remove_cms_target:
+    en: Clear target
+    de: Ziel bereinigen
+format_link_checker:
+    en: Link-Checker
+    de: Link-Checker
+format_link_checker_valid:
+    en: "Link-Checker: valid"
+    de: "Link-Checker: valide"
+format_link_checker_invalid:
+    en: "Link-Checker: invalid"
+    de: "Link-Checker: invalide"
+format_link_checker_loading:
+    en: "Link-Checker: validating ..."
+    de: "Link-Checker: am validieren ..."
+format_link_additional_options:
+    en: Additional Options
+    de: Weitere Einstellungen
+format_link_anchor:
+    en: Link Anchor
+    de: Verweis Anker
+format_link_title:
+    en: Link Title
+    de: Verweis Titel
+format_link_language:
+    en: Link Language
+    de: Verweis Sprache
+format_link_new_tab:
+    en: Open in new Tab
+    de: In neuen Tab öffenen
+format_table:
+    en: Table
+    de: Tabelle
+format_table_insert:
+    en: Insert Table
+    de: Tabelle einfügen
+format_table_delete:
+    en: Delete Table
+    de: Tabelle löschen
+format_table_caption:
+    en: Table caption
+    de: Tabellen Überschrift
+format_table_caption_insert:
+    en: Insert Table caption
+    de: Tabellen Überschrift einfügen
+format_table_caption_delete:
+    en: Delete Table caption
+    de: Tabellen Überschrift löschen
+format_table_additional_options:
+    en: Additional Options
+    de: Weitere Einstellungen
+format_table_summary:
+    en: Summary
+    de: Zusammenfassung
+format_table_merge_cell:
+    en: Merge Cells
+    de: Zellen verknüpfen
+format_table_split_cell:
+    en: Split Cell
+    de: Zelle spalten
+format_table_add_column_left:
+    en: Add column to left
+    de: Spalte links einfügen
+format_table_add_column_right:
+    en: Add column to right
+    de: Spalte rechts einfügen
+format_table_remove_column:
+    en: Remove column
+    de: Spalte entfernen
+format_table_add_row_above:
+    en: Add row above
+    de: Zeile darüber einfügen
+format_table_add_row_below:
+    en: Add row below
+    de: Zeile darunter einfügen
+format_table_remove_row:
+    en: Remove row
+    de: Zeile entfernen
+format_table_format_as_header:
+    en: Format as table header
+    de: Als Tabellenkopf formartieren
+format_table_format_remove_header:
+    en: Remove table header format
+    de: Tabellenkopf formartierung entfernen
+format_list_unordered_insert:
+    en: Insert unsorted list
+    de: Unsortierte Liste einfügen
+format_list_unordered_remove:
+    en: Remove unsorted list
+    de: Unsortierte Liste entfernen
+format_list_unordered_convert_to:
+    en: Convert to unsorted list
+    de: Zu unsortierter Liste konvertieren
+format_list_ordered_insert:
+    en: Insert sorted list
+    de: Sortierte Liste einfügen
+format_list_ordered_remove:
+    en: Remove sorted list
+    de: Sortierte liste entfernen
+format_list_ordered_convert_to:
+    en: Convert to sorted list
+    de: Zu sortierter Liste konvertieren
+format_list_description_insert:
+    en: Insert description list
+    de: Beschreibungsliste einfügen
+format_list_description_remove:
+    en: Remove description list
+    de: Beschreibunsliste entfernen
+format_list_description_convert_to:
+    en: Convert to description list
+    de: Zu Beschreibungsliste konvertieren
+table_delete_warning_title:
+    en: Delete table
+    de: Tabelle löschen
+table_delete_warning_message:
+    en: Are you sure you want to delete the current table?
+    de: Sind Sie sicher, dass Sie die aktuelle Tabelle löschen möchten?
+table_delete_column_warning_title:
+    en: Delete table columns
+    de: Tabellenspalten löschen
+table_delete_column_warning_message:
+    en: Are you sure you want to delete the currently selected table columns?
+    de: Sind Sie sicher, dass Sie die aktuell ausgewählten Tabellenspalten löschen möchten?
+table_delete_row_warning_title:
+    en: Delete table rows
+    de: Tabellenreihen löschen
+table_delete_row_warning_message:
+    en: Are you sure you want to delete the currently selected table rows?
+    de: Sind Sie sicher, dass Sie die aktuell ausgewählten Tabellenreihen löschen möchten?
+constructs_no_results:
+    en: No Constructs are matching your search
+    de: Es wurden keine TagTypen passend zu ihrerer Suche gefunden
+construct_no_category:
+    en: No Category
+    de: Kategorielos
+construct_favourites:
+    en: Favourites
+    de: Favoriten
+constructs_loading:
+    en: Loading ...
+    de: Lade daten ...
+constructs_no_favourites:
+    en: No Constructs have been favourited yet
+    de: Keine TagTypen wurden favoritisiert
+table_size_input_rows:
+    en: Rows
+    de: Zeilen
+table_size_input_columns:
+    en: Columns
+    de: Spalten
+dropdown_confirm:
+    en: Confirm
+    de: Bestätigen
+dropdown_abort:
+    en: Abort
+    de: Abbrechen

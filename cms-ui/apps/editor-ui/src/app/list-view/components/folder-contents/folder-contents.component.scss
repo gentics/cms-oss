@@ -86,6 +86,8 @@
                 }
 
                 >.inner-wrapper {
+                    align-items: center;
+
                     .back-button {
                         display: none;
                     }
@@ -284,10 +286,6 @@
     node-selector+.breadcrumb::before {
         display: none;
     }
-
-    .breadcrumb:last-child {
-        cursor: default;
-    }
 }
 
 .lastPart .breadcrumb:last-of-type {
@@ -401,6 +399,15 @@ gtx-progress-bar::ng-deep {
         padding: 0;
     }
 
+    .lastPart {
+        display: flex;
+        align-items: center;
+    }
+
+    .breadcrumb:first-child::before {
+        display: inline-block;
+    }
+
     > nav {
         color: rgba(0, 0, 0, 0.87);
         box-shadow: none;
@@ -441,11 +448,6 @@ gtx-progress-bar::ng-deep {
     .node-selector + .breadcrumb::before {
         display: none !important;
     }
-
-    .breadcrumb:last-child {
-        cursor: default;
-    }
-
 }
 
 .show-on-hover {

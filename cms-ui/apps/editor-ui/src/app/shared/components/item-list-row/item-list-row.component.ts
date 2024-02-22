@@ -12,6 +12,7 @@ import {
 import { ItemLanguageClickEvent, ItemListRowMode, ItemsInfo, UIMode } from '@editor-ui/app/common/models';
 import { ApplicationStateService, ChangeListSelectionAction, FocusEditorAction, FolderActionsService, WastebinActionsService } from '@editor-ui/app/state';
 import {
+    EditMode,
     File,
     Folder,
     FolderItemType,
@@ -231,7 +232,7 @@ export class ItemListRowComponent implements OnInit {
             } else {
                 const languageVariantId = item.languageVariants[language.id];
                 const languageVariant = this.entityResolver.getPage(languageVariantId);
-                this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, 'preview').navigate();
+                this.navigationService.detailOrModal(this.activeNode.id, 'page', languageVariant.id, EditMode.PREVIEW).navigate();
             }
             return;
         } else if (source && pageTranslation && !isDeleted) {
@@ -291,14 +292,14 @@ export class ItemListRowComponent implements OnInit {
 
         if (source) {
             this.folderActions.setActiveFormLanguage(language.id);
-            this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'preview').navigate();
+            this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.PREVIEW).navigate();
             return;
         }
 
         await this.folderActions.updateFormLanguage(item, language);
         await this.folderActions.setActiveFormLanguage(language.id);
         await this.folderActions.refreshList('form');
-        this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, 'edit').navigate();
+        this.navigationService.detailOrModal(this.activeNode.id, 'form', item.id, EditMode.EDIT).navigate();
     }
 
     isModeSelect(): boolean {
@@ -341,7 +342,7 @@ export class ItemListRowComponent implements OnInit {
      */
     private editPage(page: Page): void {
         const nodeId = page.inherited ? page.inheritedFromId : this.activeNode.id;
-        this.navigationService.detailOrModal(nodeId, 'page', page.id, 'edit').navigate();
+        this.navigationService.detailOrModal(nodeId, 'page', page.id, EditMode.EDIT).navigate();
     }
 
     /**
@@ -350,7 +351,7 @@ export class ItemListRowComponent implements OnInit {
     private editPageCompareWithLanguage(page: Page, compareWithId: number): void {
         const nodeId = page.inherited ? page.inheritedFromId : this.activeNode.id;
         const options = { compareWithId };
-        this.navigationService.detailOrModal(nodeId, 'page', page.id, 'edit', options).navigate();
+        this.navigationService.detailOrModal(nodeId, 'page', page.id, EditMode.EDIT, options).navigate();
     }
 
 }

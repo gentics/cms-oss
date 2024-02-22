@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { Language } from '@gentics/cms-models';
-import { combineLatest, forkJoin, of } from 'rxjs';
-import { Observable } from 'rxjs/Observable';
+import { Observable, combineLatest, forkJoin, of } from 'rxjs';
 import { first, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { ApplicationStateService, FolderActionsService } from '../../../state';
 import { FormLanguageIndicatorComponent } from '../form-language-indicator/form-language-indicator.component';

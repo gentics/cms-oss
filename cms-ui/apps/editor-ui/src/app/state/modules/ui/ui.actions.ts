@@ -88,3 +88,26 @@ export class SetUIModeAction {
         public mode: UIMode,
     ) {}
 }
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetConstructFavourites {
+    constructor(
+        public favourites: string[],
+    ) {}
+}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class IncreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class DecreaseOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class ResetOverlayCountAction {}
+
+@ActionDeclaration(UI_STATE_KEY)
+export class SetTagEditorOpenAction {
+    constructor(
+        public isOpen: boolean,
+    ) {}
+}

@@ -1,0 +1,112 @@
+@import 'variables';
+@import 'aloha-utils';
+
+.link-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding: 0;
+    height: 32px;
+    border: 1px solid $gtx-color-dark-gray;
+    color: $gtx-color-very-dark-gray;
+    border-radius: 2px;
+    user-select: none;
+    @include gtxCommonButtonShadow;
+
+    &:hover,
+    &:focus {
+        border-color: $gtx-color-off-black;
+        color: $gtx-color-off-black;
+    }
+
+    .link-label,
+    .link-opener {
+        background: transparent;
+        border: none;
+        outline: none;
+        cursor: pointer;
+
+        transition: 200ms;
+        display: flex;
+        align-items: center;
+        height: 100%;
+
+        &:hover,
+        &:focus {
+            background: $gtx-color-off-white;
+        }
+    }
+
+    .link-label {
+        padding: 0.25rem;
+        padding-left: 0.5rem;
+        flex: 1 1 auto;
+        white-space: nowrap;
+    }
+
+    .link-opener {
+        padding: 0.25rem;
+        flex: 0 0;
+
+        icon {
+            height: 20px;
+            width: 20px;
+        }
+    }
+}
+
+.links-container {
+    height: 100%;
+    width: 100%;
+
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.link-options {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    background: #fff;
+    border-radius: 0;
+
+    .link-option-button {
+        padding: 0.5rem 0.75rem;
+        flex: 1 1 auto;
+        background: transparent;
+        border-radius: 0;
+        border: none;
+        outline: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+
+        icon {
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+        }
+
+        .link-button-label {
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        &:hover {
+            background: $gtx-color-off-white;
+        }
+    }
+
+    .link-edit-button {
+        color: $gtx-color-primary;
+    }
+
+    .link-delete-button {
+        color: $gtx-color-alert;
+    }
+}

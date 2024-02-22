@@ -11,6 +11,7 @@ import {
     ViewChild,
 } from '@angular/core';
 import {
+    EditMode,
     File as FileModel,
     Folder,
     Image as ImageModel,
@@ -20,7 +21,7 @@ import {
 } from '@gentics/cms-models';
 import { ProgressBarComponent } from '@gentics/ui-core';
 import { Observable, Subscription, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, publishReplay, refCount, startWith, switchMap } from 'rxjs/operators';
 import { getFileExtension } from '../../../common/utils/get-file-extension';
 import { isEditableImage } from '../../../common/utils/is-editable-image';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -36,11 +37,17 @@ import { ApplicationStateService, ApplyImageDimensionsAction, FolderActionsServi
     styleUrls: ['./file-preview.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FilePreview implements OnChanges, OnDestroy {
-    @Input() file: FileModel | ImageModel;
-    @Output() imageLoading = new EventEmitter<boolean>();
+export class FilePreviewComponent implements OnChanges, OnDestroy {
 
-    @ViewChild('thumbnailImage') thumbnailImage: ElementRef;
+    @Input()
+    public file: FileModel | ImageModel;
+
+    @Output()
+    public imageLoading = new EventEmitter<boolean>();
+
+    @ViewChild('thumbnailImage')
+    public thumbnailImage: ElementRef;
+
     imageUrl: string;
     downloadUrl: string;
     fileExtension: string;
@@ -122,7 +129,7 @@ export class FilePreview implements OnChanges, OnDestroy {
 
     editImage(): void {
         const nodeId = this.appState.now.editor.nodeId;
-        this.navigationService.modal(nodeId, 'image', this.file.id, 'edit').navigate();
+        this.navigationService.modal(nodeId, 'image', this.file.id, EditMode.EDIT).navigate();
     }
 
     rotateImage(direction: 'cw' | 'ccw'): void {
@@ -155,13 +162,24 @@ export class FilePreview implements OnChanges, OnDestroy {
             return;
         }
 
-        const folderId = this.file.folderId;
         const nodeId = this.appState.now.editor.nodeId;
         const fileNameToReplace = this.keepFileName ? this.file.name : undefined;
-        const progress$ = this.folderActions.replaceFile(this.file.type, this.file.id, files[0], folderId, nodeId, fileNameToReplace)
-            .progress$
-            .publishReplay(1).refCount();
-        uploadProgress.start(progress$);
+
+        const upload = this.folderActions.replaceFile(
+            this.file.type,
+            this.file.id,
+            files[0],
+            fileNameToReplace,
+            { nodeId },
+        ).pipe(
+            publishReplay(1),
+            refCount(),
+        );
+
+        uploadProgress.start(upload.pipe(
+            startWith(0),
+            map(() => 1),
+        ));
 
         if (this.keepFileName && (this.file.fileType !== files[0].type) ) {
             this.notification.show({
@@ -175,31 +193,28 @@ export class FilePreview implements OnChanges, OnDestroy {
             });
         }
 
-        progress$
-            .filter(progress => progress === 1)
-            .take(1)
-            .subscribe(() => {
-                if (!this.keepFileName) {
-                    this.notification.show({
-                        message: 'message.file_replaced_with_success',
-                        translationParams: {
-                            fileName: this.file.name,
-                            newFileName: files[0].name,
-                        },
-                        type: 'success',
-                        delay: 5000,
-                    });
-                } else {
-                    this.notification.show({
-                        message: 'message.file_replaced_success',
-                        translationParams: {
-                            fileName: this.file.name,
-                        },
-                        type: 'success',
-                        delay: 5000,
-                    });
-                }
-            });
+        upload.subscribe(() => {
+            if (!this.keepFileName) {
+                this.notification.show({
+                    message: 'message.file_replaced_with_success',
+                    translationParams: {
+                        fileName: this.file.name,
+                        newFileName: files[0].name,
+                    },
+                    type: 'success',
+                    delay: 5000,
+                });
+            } else {
+                this.notification.show({
+                    message: 'message.file_replaced_success',
+                    translationParams: {
+                        fileName: this.file.name,
+                    },
+                    type: 'success',
+                    delay: 5000,
+                });
+            }
+        });
     }
 
     acceptedFiles(): string {

@@ -5,7 +5,6 @@ import { RouterModule } from '@angular/router';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import {
-    AccordionComponent,
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,
@@ -105,7 +104,6 @@ import {
 } from './providers';
 
 const COMPONENTS: any[] = [
-    AccordionComponent,
     AssignCRFragmentsToContentRepositoryModal,
     AssignContentrepositoriesToNodesModalComponent,
     AssignEntityToPackageModalComponent,

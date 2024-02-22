@@ -5,7 +5,7 @@
         [required]="true"
         formControlName="type"
     >
-        <gtx-option *ngFor="let type of ScheduleType | entries" [value]="type.value">{{ ('scheduler.scheduleType_' + type.value) | i18n }}</gtx-option>
+        <gtx-option *ngFor="let type of ScheduleType | gtxEntries" [value]="type.value">{{ ('scheduler.scheduleType_' + type.value) | i18n }}</gtx-option>
     </gtx-select>
 
     <div class="flex-row row">

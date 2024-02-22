@@ -41,6 +41,7 @@ export interface UserSettings {
     pageSorting: { sortBy: SortField, sortOrder: 'asc' | 'desc' };
     repositoryBrowserBreadcrumbsExpanded: boolean;
     uiLanguage: GcmsUiLanguage;
+    constructFavourites: string[];
 }
 
 export type UserSettingName = keyof UserSettings;
@@ -84,6 +85,7 @@ export const defaultUserSettings: UserSettings = {
     pageSorting: { sortBy: 'name', sortOrder: 'asc' },
     repositoryBrowserBreadcrumbsExpanded: false,
     uiLanguage: FALLBACK_LANGUAGE,
+    constructFavourites: [],
 };
 
 export const userSettingNames = Object.keys(defaultUserSettings) as UserSettingName[];

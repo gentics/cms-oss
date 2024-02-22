@@ -11,12 +11,12 @@ import {
     Output,
     QueryList,
     SimpleChange,
-    ViewChildren
+    ViewChildren,
 } from '@angular/core';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {Observable, Subscription} from 'rxjs';
-
-import {IFrameStylesService} from '../../providers/iframe-styles/iframe-styles.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Subscription, fromEvent, of } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs/operators';
+import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 
 /**
  * Wraps an IFrame, provides easy access to its `load` event,
@@ -27,7 +27,7 @@ import {IFrameStylesService} from '../../providers/iframe-styles/iframe-styles.s
     selector: 'iframe-wrapper',
     templateUrl: './iframe-wrapper.component.html',
     styleUrls: ['./iframe-wrapper.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestroy {
 
@@ -77,29 +77,31 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
     constructor(
         private changeDetector: ChangeDetectorRef,
         private domSanitizer: DomSanitizer,
-        iFrameStyles: IFrameStylesService
+        iFrameStyles: IFrameStylesService,
     ) {
         this.iFrameStylesUrl = iFrameStyles.stylesUrl;
     }
 
     ngAfterViewInit(): void {
         // This observable emits the IFrame when it has completed loading.
-        const iFrame$ = this.iFrameList.changes
-            .filter((newIFrames: QueryList<ElementRef>) => newIFrames.length === 1)
-            .map((newIFrames: QueryList<ElementRef>) => newIFrames.first.nativeElement as HTMLIFrameElement)
-            .do(iFrame => this.applyIFrameSize(iFrame))
-            .switchMap(iFrame => {
+        const iFrame$ = this.iFrameList.changes.pipe(
+            filter((newIFrames: QueryList<ElementRef>) => newIFrames.length === 1),
+            map((newIFrames: QueryList<ElementRef>) => newIFrames.first.nativeElement as HTMLIFrameElement),
+            tap(iFrame => this.applyIFrameSize(iFrame)),
+            switchMap(iFrame => {
                 if (iFrame.contentDocument.readyState === 'complete' && this.checkIfCorrectSrc(iFrame)) {
                     this.iFrameLoadedStateChange.emit(true);
-                    return Observable.of(iFrame);
+                    return of(iFrame);
                 }
-                return Observable.fromEvent(iFrame, 'load')
-                    .map(() => iFrame);
-            });
+                return fromEvent(iFrame, 'load').pipe(
+                    map(() => iFrame),
+                );
+            }),
+        );
 
-        const iFrameUnload$ = iFrame$.switchMap(iFrame => {
-            return Observable.fromEvent(iFrame.contentWindow, 'unload');
-        });
+        const iFrameUnload$ = iFrame$.pipe(
+            switchMap(iFrame => fromEvent(iFrame.contentWindow, 'unload')),
+        );
 
         this.subscriptions.add(
             iFrame$.subscribe(iFrame => {
@@ -109,12 +111,12 @@ export class IFrameWrapperComponent implements AfterViewInit, OnChanges, OnDestr
                     this.iFrameLoad.emit(iFrame);
                 }
                 this.iFrameLoadedStateChange.emit(true);
-            })
+            }),
         );
         this.subscriptions.add(
             iFrameUnload$.subscribe(() => {
                 this.iFrameLoadedStateChange.emit(false);
-            })
+            }),
         );
         this.iFrameList.notifyOnChanges();
     }

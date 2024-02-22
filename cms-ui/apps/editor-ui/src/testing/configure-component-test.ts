@@ -1,9 +1,9 @@
 import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
-import { getTestBed, TestModuleMetadata } from '@angular/core/testing';
+import { TestBed, TestModuleMetadata, getTestBed } from '@angular/core/testing';
 import { STATE_MODULES } from '@editor-ui/app/state';
 import { TranslateService } from '@ngx-translate/core';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 /**
  * Merge two arrays and remove duplicate items.
@@ -23,9 +23,9 @@ class MockI18nPipe implements PipeTransform {
 }
 
 export class MockTranslateService {
-    onTranslationChange = Observable.of({});
-    onLangChange = Observable.of({});
-    get(): Observable<string> { return Observable.of('mocked i18n string'); }
+    onTranslationChange = of({});
+    onLangChange = of({});
+    get(): Observable<string> { return of('mocked i18n string'); }
 }
 
 /**
@@ -35,7 +35,7 @@ export class MockTranslateService {
  * For tests which are testing non-component functionality (e.g. reducer tests), this function is
  * not needed.
  */
-export function configureComponentTest(config: TestModuleMetadata): void {
+export function configureComponentTest(config: TestModuleMetadata): TestBed {
     const testBed = getTestBed();
     const defaultConfig: TestModuleMetadata = {
         imports: [NgxsModule.forRoot(STATE_MODULES)],
@@ -51,4 +51,6 @@ export function configureComponentTest(config: TestModuleMetadata): void {
         schemas: mergeUnique(defaultConfig.schemas, config.schemas),
     };
     testBed.configureTestingModule(mergedConfig);
+
+    return testBed;
 }

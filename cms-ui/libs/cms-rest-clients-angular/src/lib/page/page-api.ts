@@ -1,4 +1,4 @@
-import { EntityIdType, PageListOptions, PageListResponse, PageResponse } from '@gentics/cms-models';
+import { EntityIdType, PageListOptions, PageListResponse, PageRequestOptions, PageResponse } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { ApiBase } from '../base/api-base.service';
 
@@ -7,8 +7,8 @@ export class PageApi {
         private apiBase: ApiBase,
     ) {}
 
-    getPage(id: EntityIdType): Observable<PageResponse> {
-        return this.apiBase.get(`page/load/${id}`);
+    getPage(id: EntityIdType, options?: PageRequestOptions): Observable<PageResponse> {
+        return this.apiBase.get(`page/load/${id}`, options);
     }
 
     listPages(options?: PageListOptions): Observable<PageListResponse> {

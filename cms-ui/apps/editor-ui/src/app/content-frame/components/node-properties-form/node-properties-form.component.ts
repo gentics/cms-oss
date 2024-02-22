@@ -15,6 +15,7 @@ import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms
 import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
 import { EditableNodeProps, Folder, Node, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
+import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { RepositoryBrowserClient } from '../../../shared/providers';
@@ -28,16 +29,24 @@ import { RepositoryBrowserClient } from '../../../shared/providers';
     styleUrls: ['./node-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NodePropertiesForm implements OnInit, OnChanges, OnDestroy {
+export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy {
 
-    @Input() properties: EditableNodeProps = {};
-    @Input() disabled = false;
-    @Input() node: Node;
-    @Input() mode: 'create' | 'edit' = 'edit';
-    @Output() changes = new EventEmitter<EditableNodeProps>();
+    @Input()
+    public properties: EditableNodeProps = {};
+
+    @Input()
+    public disabled = false;
+
+    @Input()
+    public node: Node;
+
+    @Input()
+    public mode: 'create' | 'edit' = 'edit';
+
+    @Output()
+    public changes = new EventEmitter<EditableNodeProps>();
 
     form: UntypedFormGroup;
-    changeSub: Subscription;
     defaultFileFolder: Folder | undefined;
     defaultImageFolder: Folder | undefined;
     masterNode: Node | undefined;
@@ -54,6 +63,8 @@ export class NodePropertiesForm implements OnInit, OnChanges, OnDestroy {
     get contentRepositoryDisabled(): boolean {
         return this.publishingDisabled || !this.form.get('contentRepository').value;
     }
+
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private changeDetector: ChangeDetectorRef,
@@ -85,13 +96,13 @@ export class NodePropertiesForm implements OnInit, OnChanges, OnDestroy {
             urlRenderingFiles: new UntypedFormControl(this.properties.urlRenderingFiles || 0),
         });
 
-        this.changeSub = this.form.valueChanges.subscribe(changes => {
+        this.subscriptions.push(this.form.valueChanges.subscribe(changes => {
             // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
             const isModified = !deepEqual(this.properties, changes);
             this.state.dispatch(new MarkObjectPropertiesAsModifiedAction(isModified, this.form.valid));
 
             this.changes.emit(changes);
-        });
+        }));
 
         this.linkInputs = this.properties.fileSystemPageDir === this.properties.fileSystemBinaryDir;
 
@@ -101,14 +112,14 @@ export class NodePropertiesForm implements OnInit, OnChanges, OnDestroy {
         const imageFolderPromise = this.properties.defaultImageFolderId === undefined ?
             undefined : this.folderActions.getFolder(this.properties.defaultImageFolderId);
 
-        this.state.select(state => state.entities.node)
-            .map(nodeMap => nodeMap[this.node.inheritedFromId])
-            .filter(node => !!node)
-            .take(1)
-            .subscribe(node => {
-                this.masterNode = node;
-                this.changeDetector.markForCheck();
-            });
+        this.subscriptions.push(this.state.select(state => state.entities.node).pipe(
+            map(nodeMap => nodeMap[this.node.inheritedFromId]),
+            filter(node => !!node),
+            take(1),
+        ).subscribe(node => {
+            this.masterNode = node;
+            this.changeDetector.markForCheck();
+        }));
 
         Promise.all([fileFolderPromise, imageFolderPromise])
             .then(([fileFolder, imageFolder]) => {
@@ -135,9 +146,7 @@ export class NodePropertiesForm implements OnInit, OnChanges, OnDestroy {
     }
 
     public ngOnDestroy(): void {
-        if (this.changeSub) {
-            this.changeSub.unsubscribe();
-        }
+        this.subscriptions.forEach(s => s.unsubscribe());
     }
 
     selectDefaultFolder(type: 'file' | 'image'): void {

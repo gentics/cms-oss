@@ -8,3 +8,4 @@ export * from './matches-mime-type';
 export * from './routing';
 export * from './to-number';
 export * from './value-by-path';
+export * from './wait-take.operator';

@@ -10,7 +10,8 @@ import {
     Template,
 } from '@gentics/cms-models';
 import { IModalDialog } from '@gentics/ui-core';
-import { Observable } from 'rxjs';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { NavigationService } from '../../../core/providers/navigation/navigation.service';
 import { Version } from '../../../core/providers/user-settings/version.class';
@@ -20,7 +21,7 @@ import { ApplicationStateService, UsageActionsService } from '../../../state';
     selector: 'usage-modal',
     templateUrl: './usage-modal.tpl.html',
     styleUrls: ['./usage-modal.scss'],
-    })
+})
 export class UsageModalComponent implements IModalDialog, OnInit {
 
     item: Item;
@@ -55,22 +56,41 @@ export class UsageModalComponent implements IModalDialog, OnInit {
         this.supportsExtendedUsage = currentVersion.satisfiesMinimum(targetVersion);
 
         const usageState$ = this.appState.select(state => state.usage);
-        this.linkedPages$ = usageState$.map(state => state.linkedPages.map(id => this.entityResolver.getPage(id)));
-        this.linkedFiles$ = usageState$.map(state => state.linkedFiles.map(id => this.entityResolver.getFile(id)));
-        this.linkedImages$ = usageState$.map(state => state.linkedImages.map(id => this.entityResolver.getImage(id)));
-        this.files$ = usageState$.map(state => state.files.map(id => this.entityResolver.getFile(id)));
-        this.folders$ = usageState$.map(state => state.folders.map(id => this.entityResolver.getFolder(id)));
-        this.images$ = usageState$.map(state => state.images.map(id => this.entityResolver.getImage(id)));
-        this.templates$ = usageState$.map(state => state.templates.map(id => this.entityResolver.getTemplate(id)));
-        this.variants$ = usageState$
-            .map(state => state.variants.map(id => this.entityResolver.getPage(id)))
-            .map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId));
-        this.pages$ = usageState$.map(state => {
-            const pagesAndTags = state.pages.concat(state.tags);
-            return pagesAndTags.map(id => this.entityResolver.getPage(id));
-        })
-            .map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId));
-        this.fetching$ = usageState$.map(state => state.fetching);
+        this.linkedPages$ = usageState$.pipe(
+            map(state => state.linkedPages.map(id => this.entityResolver.getPage(id))),
+        );
+        this.linkedFiles$ = usageState$.pipe(
+            map(state => state.linkedFiles.map(id => this.entityResolver.getFile(id))),
+        );
+        this.linkedImages$ = usageState$.pipe(
+            map(state => state.linkedImages.map(id => this.entityResolver.getImage(id))),
+        );
+        this.files$ = usageState$.pipe(
+            map(state => state.files.map(id => this.entityResolver.getFile(id))),
+        );
+        this.folders$ = usageState$.pipe(
+            map(state => state.folders.map(id => this.entityResolver.getFolder(id))),
+        );
+        this.images$ = usageState$.pipe(
+            map(state => state.images.map(id => this.entityResolver.getImage(id))),
+        );
+        this.templates$ = usageState$.pipe(
+            map(state => state.templates.map(id => this.entityResolver.getTemplate(id))),
+        );
+        this.variants$ = usageState$.pipe(
+            map(state => state.variants.map(id => this.entityResolver.getPage(id))),
+            map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId)),
+        );
+        this.pages$ = usageState$.pipe(
+            map(state => {
+                const pagesAndTags = state.pages.concat(state.tags);
+                return pagesAndTags.map(id => this.entityResolver.getPage(id));
+            }),
+            map(pages => this.groupPagesByLanguage(pages, this.currentLanguageId)),
+        )
+        this.fetching$ = usageState$.pipe(
+            map(state => state.fetching),
+        );
 
         this.usageCount$ = this.sumObservable(
             this.files$,
@@ -87,23 +107,25 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             this.linkedFiles$,
         );
 
-        this.usageEmpty$ = Observable.combineLatest([
+        this.usageEmpty$ = combineLatest([
             this.fetching$,
             this.usageCount$,
-        ])
-            .map((result: any[]) => {
+        ]).pipe(
+            map((result: any[]) => {
                 const [fetching, count] = result;
                 return fetching ? false : 0 === count;
-            });
+            }),
+        );
 
-        this.linksEmpty$ = Observable.combineLatest([
+        this.linksEmpty$ = combineLatest([
             this.fetching$,
             this.linksCount$,
-        ])
-            .map((result: any[]) => {
+        ]).pipe(
+            map((result: any[]) => {
                 const [fetching, count] = result;
                 return fetching ? false : 0 === count;
-            });
+            }),
+        );
     }
 
     ngOnInit(): void {
@@ -120,7 +142,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             // The current node does not have multiple languages configured, so skip this step.
             return pages;
         }
-        let languageGroups: { [contentSetId: number]: Page[] } = {};
+        const languageGroups: { [contentSetId: number]: Page[] } = {};
         pages.forEach(page => {
             if (!languageGroups[page.contentSetId]) {
                 languageGroups[page.contentSetId] = [];
@@ -128,17 +150,17 @@ export class UsageModalComponent implements IModalDialog, OnInit {
             languageGroups[page.contentSetId].push(page);
         });
 
-        let groupedPages: Page[] = [];
-        for (let contentSetId in languageGroups) {
+        const groupedPages: Page[] = [];
+        for (const contentSetId in languageGroups) {
             if (languageGroups.hasOwnProperty(contentSetId)) {
-                let pages = languageGroups[contentSetId];
+                const pages = languageGroups[contentSetId];
                 let primaryPage: Page;
                 if (pages.length === 1) {
                     primaryPage = pages[0];
                 } else {
                     primaryPage = this.getPrimaryPage(pages, currentLanguageId);
                 }
-                let variants = pages.filter(p => p !== primaryPage);
+                const variants = pages.filter(p => p !== primaryPage);
                 primaryPage.languageVariants = {
                     [primaryPage.contentGroupId]: primaryPage.id,
                 };
@@ -155,7 +177,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      * Handle the item being clicked.
      */
     itemClicked(item: InheritableItem): void {
-        const editMode: EditMode = item.type === 'page' ? 'preview' : 'editProperties';
+        const editMode: EditMode = item.type === 'page' ? EditMode.PREVIEW : EditMode.EDIT_PROPERTIES;
         this.navigationService
             .detailOrModal(item.inheritedFromId, item.type, item.id, editMode)
             .navigate();
@@ -167,10 +189,11 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      * of items in all those streams.
      */
     private sumObservable(...streams: Array<Observable<any[]>>): Observable<number> {
-        return Observable.combineLatest([...streams])
-            .map((lists: Array<any[]>) => {
+        return combineLatest([...streams]).pipe(
+            map((lists: Array<any[]>) => {
                 return lists.reduce((sum: number, list: any[]) => sum + (list ? list.length : 0), 0);
-            });
+            }),
+        );
     }
 
     /**
@@ -179,7 +202,7 @@ export class UsageModalComponent implements IModalDialog, OnInit {
      */
     private getPrimaryPage(pages: Page[], languageId: number): Page {
         let primaryPage: Page;
-        let currentLanguagePages = pages.filter(p => p.contentGroupId === languageId);
+        const currentLanguagePages = pages.filter(p => p.contentGroupId === languageId);
         if (currentLanguagePages.length === 1) {
             primaryPage = currentLanguagePages[0];
         } else {

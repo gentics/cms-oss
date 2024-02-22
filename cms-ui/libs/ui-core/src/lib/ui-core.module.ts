@@ -7,6 +7,7 @@ import 'hammerjs';
 import { AutosizeModule } from 'ngx-autosize';
 import { NgxPaginationModule } from 'ngx-pagination';
 import {
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
@@ -68,7 +69,7 @@ import {
     TooltipTriggerDirective,
 } from './directives';
 import { configFactory, ConfigService, CustomConfig, defaultConfig, optionsConfig, PredefinedConfig } from './module.config';
-import { ConcatPipe, IncludesPipe, MatchesMimeTypePipe, SortPipe, TableActionEnabledPipe, TableCellMapperPipe, ValuePathPipe } from './pipes';
+import { ConcatPipe, IncludesPipe, MatchesMimeTypePipe, RangePipe, SortPipe, TableActionEnabledPipe, TableCellMapperPipe, TransformPipe, ValuePathPipe } from './pipes';
 import {
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
@@ -80,6 +81,7 @@ import {
 } from './providers';
 
 export const UI_CORE_COMPONENTS: Type<any>[] = [
+    AccordionComponent,
     BlankModal,
     BreadcrumbsComponent,
     ButtonComponent,
@@ -146,9 +148,11 @@ export const UI_CORE_PIPES: Type<any>[] = [
     ConcatPipe,
     IncludesPipe,
     MatchesMimeTypePipe,
+    RangePipe,
     SortPipe,
     TableActionEnabledPipe,
     TableCellMapperPipe,
+    TransformPipe,
     ValuePathPipe,
 ];
 

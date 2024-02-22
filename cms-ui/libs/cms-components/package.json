@@ -5,14 +5,12 @@
     "@angular/common": "15.2.5",
     "@angular/core": "15.2.5",
     "@gentics/cms-models": "^6.1.0-SNAPSHOT",
-    "@gentics/image-editor": "^6.1.0-SNAPSHOT",
     "@gentics/ui-core": "^6.1.0-SNAPSHOT",
     "@ngx-translate/core": "^14.0.0",
     "@ngx-translate/http-loader": "^7.0.0",
     "lodash-es": "^4.17.15",
     "ngx-pagination": "^6.0.3",
-    "rxjs": "^6.6.3",
-    "rxjs-compat": "^6.6.3"
+    "rxjs": "^6.6.3"
   },
   "publishConfig": {
     "registry": "https://repo.apa-it.at/artifactory/api/npm/gtx-npm/"

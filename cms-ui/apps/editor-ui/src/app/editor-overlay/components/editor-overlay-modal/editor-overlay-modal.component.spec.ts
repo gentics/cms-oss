@@ -3,13 +3,14 @@ import { ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angul
 import { File as FileModel, Folder, Image, Node, Page } from '@gentics/cms-models';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
+import { take } from 'rxjs/operators';
 import { ApplicationStateService, STATE_MODULES } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { EditorOverlayModal } from './editor-overlay-modal.component';
 
 @Component({
     selector: 'test-component',
-    template: `<gtx-overlay-host></gtx-overlay-host>`
+    template: '<gtx-overlay-host></gtx-overlay-host>',
 })
 class TestComponent extends EditorOverlayModal {
     currentItem: Page | FileModel | Folder | Image | Node;
@@ -54,7 +55,7 @@ describe('EditorOverlayModal', () => {
         tick();
         fixture.detectChanges();
 
-        component.uiLanguage$.take(1).subscribe(language => {
+        component.uiLanguage$.pipe(take(1)).subscribe(language => {
             expect(language).toBe('de');
         });
     }));

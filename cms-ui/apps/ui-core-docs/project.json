@@ -1,12 +1,10 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "ui-core-docs",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "prefix": "gtx",
     "sourceRoot": "apps/ui-core-docs/src",
-    "implicitDependencies": [
-        "ui-core"
-    ],
+    "implicitDependencies": ["ui-core"],
     "tags": ["app", "docs", "demo", "angular"],
     "targets": {
         "build": {

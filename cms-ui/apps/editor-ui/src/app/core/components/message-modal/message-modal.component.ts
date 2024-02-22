@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { Message, Node, Normalized } from '@gentics/cms-models';
 import { BaseModal } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApplicationStateService } from '../../../state';
 import { Api } from '../../providers/api/api.service';
 import { EntityResolver } from '../../providers/entity-resolver/entity-resolver';
@@ -12,9 +13,9 @@ import { MessageLink } from '../message-body';
     selector: 'message-modal',
     templateUrl: './message-modal.component.html',
     styleUrls: ['./message-modal.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessageModal extends BaseModal<MessageLink | void> {
+export class MessageModal extends BaseModal<MessageLink | void> implements OnInit {
 
     @Input()
     message: Message<Normalized>;
@@ -33,12 +34,13 @@ export class MessageModal extends BaseModal<MessageLink | void> {
     }
 
     ngOnInit(): void {
-        this.nodes$ = this.appState.select(state => state.folder.nodes.list)
-            .map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id)));
+        this.nodes$ = this.appState.select(state => state.folder.nodes.list).pipe(
+            map(nodeIds => nodeIds.map(id => this.entityResolver.getNode(id))),
+        );
     }
 
     getFullName(userId: number): string {
-        let user = this.entityResolver.getUser(userId);
+        const user = this.entityResolver.getUser(userId);
         return user.firstName + ' ' + user.lastName;
     }
 

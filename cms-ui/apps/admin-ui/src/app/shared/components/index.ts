@@ -1,4 +1,3 @@
-export * from './accordion/accordion.component';
 export * from './assign-content-repositories-to-nodes-modal/assign-content-repositories-to-nodes-modal.component';
 export * from './assign-cr-fragments-to-content-repository-modal/assign-cr-fragments-to-content-repository-modal.component';
 export * from './assign-entity-to-package-modal/assign-entity-to-package-modal.component';

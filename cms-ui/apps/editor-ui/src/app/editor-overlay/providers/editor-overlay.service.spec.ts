@@ -4,6 +4,7 @@ import { TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import {
     CropResizeParameters,
+    EditMode,
     File,
     Folder,
     FolderItemOrTemplateType,
@@ -170,7 +171,7 @@ function editImageState(): void {
 
 class MockActivatedRoute {
     params = new BehaviorSubject<EditorStateUrlParams>({
-        editMode: 'edit',
+        editMode: EditMode.EDIT,
         itemId: ITEM_ID,
         nodeId: ITEM_NODE,
         options: 'e30=',

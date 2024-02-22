@@ -9,13 +9,18 @@ import { UserAgentRef } from '@editor-ui/app/shared/providers/user-agent-ref';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
 import { MockAppState, TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
-import { ItemInNode, Tag } from '@gentics/cms-models';
+import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { CNParentWindow, CNWindow } from '../../components/content-frame/common';
+import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
+import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomerScriptService } from './customer-script.service';
+import { DynamicOverlayService } from '..';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -37,7 +42,7 @@ describe('CustomerScriptService', () => {
         editor: {
             itemType: 'page',
             itemId: 1,
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
         },
         ui: {
             language: 'en',
@@ -55,11 +60,15 @@ describe('CustomerScriptService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [NgxsModule.forRoot(STATE_MODULES)],
+            imports: [
+                NgxsModule.forRoot(STATE_MODULES),
+                GenticsUICoreModule.forRoot(),
+            ],
             providers: [
                 CustomerScriptService,
                 EntityResolver,
                 UserAgentRef,
+                AlohaIntegrationService,
                 { provide: HttpClient, useClass: MockHttpClient },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
                 { provide: ApiBase, useClass: MockApiBase },
@@ -67,6 +76,8 @@ describe('CustomerScriptService', () => {
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                DynamicOverlayService,
             ],
         });
 
@@ -215,7 +226,7 @@ describe('CustomerScriptService', () => {
 
             expect(result.appState).toEqual({
                 currentItem: mockPage,
-                editMode: 'edit',
+                editMode: EditMode.EDIT,
                 pageLanguage: mockLanguage,
                 sid: 123,
                 uiLanguage: 'en',
@@ -295,9 +306,9 @@ describe('CustomerScriptService', () => {
             spyOn(mockTagEditorService, 'openTagEditor').and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage);
+            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, false);
 
-            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage);
+            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage, false);
             expect(actualResult).toBe(expectedResult);
         });
 
@@ -353,7 +364,7 @@ describe('CustomerScriptService', () => {
 
 class MockHttpClient {
     get(): any {
-        return Observable.of(mockCustomerScript);
+        return of(mockCustomerScript);
     }
 }
 

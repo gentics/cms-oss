@@ -3,6 +3,7 @@ import { ItemsInfo, StageableItem, StagingMode, UIMode, plural } from '@editor-u
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import {
+    EditMode,
     EditableFormProps,
     EditablePageProps,
     EditorPermissions,
@@ -135,8 +136,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.itemsInfo$ = this.appState.select(state => state.folder)
-            .map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]);
+        this.itemsInfo$ = this.appState.select(state => state.folder).pipe(
+            map(folderState => folderState[`${this.itemType}s` as FolderItemTypePlural]),
+        );
 
         const basicSearchQueryActive$ = this.appState.select(state => state.folder.searchTerm).pipe(
             map(term => this.isValidString(term)),
@@ -212,7 +214,9 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             map(itemsInfo => itemsInfo.hasMore),
             filter(hasMore => hasMore === false),
             take(1),
-            switchMap(() => this.itemsInfo$.map(itemsInfo => itemsInfo.list)),
+            switchMap(() => this.itemsInfo$.pipe(
+                map(itemsInfo => itemsInfo.list)),
+            ),
             // This debounce is required due to the batched update feature
             // (see folder-state-actions.ts, applyListBatch())
             debounceTime(Math.ceil(this.itemsInfo.total / 20) * 15),
@@ -261,10 +265,10 @@ export class ItemListHeaderComponent implements OnInit, OnChanges, OnDestroy {
             .then((newItem: Page | Form) => {
                 this.folderActions.refreshList(this.itemType);
                 if (isPage) {
-                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'page', newItem.id, EditMode.EDIT).navigate();
                 }
                 if (isForm) {
-                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, 'edit').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, 'form', newItem.id, EditMode.EDIT).navigate();
                 }
             })
             .catch(this.errorHandler.catch);

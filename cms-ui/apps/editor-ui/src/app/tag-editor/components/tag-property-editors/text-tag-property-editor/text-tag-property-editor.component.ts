@@ -24,8 +24,8 @@ import { debounceTime, distinctUntilChanged, skip } from 'rxjs/operators';
     selector: 'text-tag-property-editor',
     templateUrl: './text-tag-property-editor.component.html',
     styleUrls: ['./text-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
 export class TextTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */

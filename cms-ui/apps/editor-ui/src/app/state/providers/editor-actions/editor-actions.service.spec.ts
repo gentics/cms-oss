@@ -1,5 +1,6 @@
+/* eslint-disable id-blacklist */
 import { TestBed } from '@angular/core/testing';
-import { PageVersion } from '@gentics/cms-models';
+import { EditMode, PageVersion } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Api } from '../../../core/providers/api/api.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -68,7 +69,7 @@ describe('EditorActionsService', () => {
                     itemId: 42,
                     nodeId: 2,
                     itemType: 'page',
-                    editMode: 'edit',
+                    editMode: EditMode.EDIT,
                 },
             });
         });
@@ -81,7 +82,7 @@ describe('EditorActionsService', () => {
                 itemType: 'page',
                 itemId: 10,
                 nodeId: 1,
-                editMode: 'edit',
+                editMode: EditMode.EDIT,
             }));
         });
     });
@@ -94,7 +95,7 @@ describe('EditorActionsService', () => {
                     itemType: 'page',
                     itemId: 42,
                     nodeId: 2,
-                    editMode: 'previewVersion',
+                    editMode: EditMode.PREVIEW_VERSION,
                     version: version12,
                 },
             });
@@ -103,7 +104,7 @@ describe('EditorActionsService', () => {
         it('correctly calls editor.previewPageVersion', () => {
             editorActions.previewPageVersion(10, 1, version12);
             expect(state.now.editor).toEqual(jasmine.objectContaining({
-                editMode: 'previewVersion',
+                editMode: EditMode.PREVIEW_VERSION,
                 editorIsOpen: true,
                 editorIsFocused: true,
                 itemType: 'page',
@@ -122,7 +123,7 @@ describe('EditorActionsService', () => {
                     itemType: 'page',
                     itemId: 42,
                     nodeId: 2,
-                    editMode: 'previewVersion',
+                    editMode: EditMode.PREVIEW_VERSION,
                     version: version12,
                     oldVersion: version10,
                 },
@@ -148,7 +149,7 @@ describe('EditorActionsService', () => {
                     itemType: 'page',
                     itemId: 42,
                     nodeId: 2,
-                    editMode: 'previewVersion',
+                    editMode: EditMode.PREVIEW_VERSION,
                     version: version12,
                     oldVersion: version10,
                 },

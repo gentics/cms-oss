@@ -47,8 +47,12 @@
 
 	<modules>
         <!-- Libraries -->
+        <module>libs/aloha-models</module>
         <module>libs/mesh-models</module>
         <module>libs/cms-models</module>
+        <module>libs/cms-integration-api-models</module>
+        <module>libs/cms-rest-client</module>
+        <module>libs/cms-rest-client-angular</module>
         <module>libs/cms-rest-clients-angular</module>
         <module>libs/mesh-rest-client</module>
         <module>libs/mesh-rest-client-angular</module>

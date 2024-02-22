@@ -6,7 +6,7 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Subject } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { getTestPagePath, getTestPageUrl } from '../../../content-frame/providers/iframe/testing-helpers';
+import { getTestPagePath, getTestPageUrl } from '../../../../testing/iframe-helpers';
 import { IFrameStylesService } from '../../providers/iframe-styles/iframe-styles.service';
 import { IFrameWrapperComponent } from './iframe-wrapper.component';
 

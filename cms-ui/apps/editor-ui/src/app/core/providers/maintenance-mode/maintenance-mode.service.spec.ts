@@ -1,8 +1,9 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ApplicationStateService, STATE_MODULES } from '@editor-ui/app/state';
-import { MaintenanceModeResponse } from '@gentics/cms-models';
+import { MaintenanceModeResponse, ResponseCode } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, throwError } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { ApiBase, ApiError, GcmsApi } from '../api';
 import { MockApiBase } from '../api/api-base.mock';
@@ -61,7 +62,7 @@ describe('MaintenanceModeService', () => {
         it('does not re-request the status if the server does not provide the endpoint', async () => {
             expect(apiBase.get).not.toHaveBeenCalled();
             apiBase.get = jasmine.createSpy('get').and.returnValue(
-                Observable.throw(new ApiError('Not Found', 'http', { statusCode: 404 })),
+                throwError(new ApiError('Not Found', 'http', { statusCode: 404 })),
             );
 
             await service.refresh();
@@ -73,7 +74,7 @@ describe('MaintenanceModeService', () => {
 
         it('dispatches the status to the app state', fakeAsync(() => {
             const responses = new Subject<MaintenanceModeResponse>();
-            apiBase.get = () => responses.take(1);
+            apiBase.get = () => responses.pipe(take(1));
 
             service.refresh();
             tick();
@@ -85,7 +86,7 @@ describe('MaintenanceModeService', () => {
                 message: 'Stop working, the building is on fire!',
                 messages: [],
                 responseInfo: {
-                    responseCode: 'OK',
+                    responseCode: ResponseCode.OK,
                 },
             });
 
@@ -101,7 +102,7 @@ describe('MaintenanceModeService', () => {
 
         it('marks the endpoint as unsupported when it returns an error', fakeAsync(() => {
             const responses = new Subject<MaintenanceModeResponse>();
-            apiBase.get = jasmine.createSpy('get').and.callFake(() => responses.take(1));
+            apiBase.get = jasmine.createSpy('get').and.callFake(() => responses.pipe(take(1)));
 
             service.refresh();
             responses.error(new ApiError('Not Found', 'http', { statusCode: 404 }));

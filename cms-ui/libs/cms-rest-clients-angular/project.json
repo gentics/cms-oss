@@ -1,13 +1,10 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "cms-rest-clients-angular",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "apps/cms-rest-clients-angular/src",
-    "implicitDependencies": [
-        "cms-models",
-        "mesh-models"
-    ],
+    "implicitDependencies": ["cms-models", "mesh-models"],
     "tags": ["lib", "angular"],
     "targets": {
         "build": {

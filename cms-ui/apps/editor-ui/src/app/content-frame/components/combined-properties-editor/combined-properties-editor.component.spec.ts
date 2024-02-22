@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import {
+    EditMode,
     EditableObjectTag, File,
     Folder,
     FolderSaveRequestOptions,
@@ -57,7 +58,7 @@ import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/obj
 import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
-import { NodePropertiesForm } from '../node-properties-form/node-properties-form.component';
+import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
 import { CombinedPropertiesEditorComponent } from './combined-properties-editor.component';
 
@@ -137,7 +138,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockPropertiesEditor,
                 MockTagEditorHost,
                 MockTagEditorOverlayHost,
-                NodePropertiesForm,
+                NodePropertiesFormComponent,
                 ObjectTagNamePipe,
                 TagTypeIconPipe,
                 TestComponent,
@@ -157,7 +158,7 @@ describe('CombinedPropertiesEditorComponent', () => {
         state = TestBed.get(ApplicationStateService);
         state.mockState({
             editor: {
-                editMode: 'editProperties',
+                editMode: EditMode.EDIT_PROPERTIES,
                 itemId: mockPage.id,
                 itemType: 'page',
                 nodeId: mockNode.id,
@@ -288,6 +289,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
 
                 testComponent.item = mockPage;
@@ -339,6 +341,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -381,6 +384,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: expectedObjProp,
                     tagType: expectedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -472,6 +476,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                     tag: editedObjProp,
                     tagType: editedObjProp.tagType,
                     tagOwner: mockPage,
+                    withDelete: false,
                 });
                 state.mockState({
                     editor: {
@@ -1021,7 +1026,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1077,7 +1083,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem0 = cloneDeep(mockFolder);
-                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem0.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem0);
                     const editedItem1 = cloneDeep(editedItem0);
@@ -1152,7 +1159,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty)
+                        .stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 

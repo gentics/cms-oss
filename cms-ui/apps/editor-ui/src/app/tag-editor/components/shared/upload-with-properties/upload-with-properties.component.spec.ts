@@ -5,10 +5,10 @@ import { TestApplicationState } from '@editor-ui/app/state/test-application-stat
 import { BrowseBoxComponent } from '@gentics/cms-components';
 import { File as FileModel, Folder } from '@gentics/cms-models';
 import { getExampleFileObjectData, getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { Api } from '../../../../core/providers/api';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { FilePropertiesForm } from '../../../../shared/components/file-properties-form/file-properties-form.component';
@@ -46,7 +46,7 @@ describe('UploadWithPropertiesComponent', () => {
                 UploadConflictService,
                 UploadWithPropertiesComponent,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
-                { provide: Api, useClass: MockApi },
+                { provide: GCMSRestClientService, useClass: MockClient },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: I18nService, useClass: MockI18nService },
@@ -83,7 +83,7 @@ describe('UploadWithPropertiesComponent', () => {
                     { id: 1, type: 'file', name: 'file1.ext' },
                     { id: 3, type: 'image', name: 'image2.ext' },
                 ];
-                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve(conflictingFiles));
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of(conflictingFiles));
                 const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
                 const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
@@ -93,7 +93,7 @@ describe('UploadWithPropertiesComponent', () => {
                         });
                     }) as any);
 
-                uploadWithProperties.uploadFileOrImage(mockFile, mockFolder, {});
+                uploadWithProperties.uploadFileOrImage(mockFile, mockFolder, {}).subscribe();
                 tick();
 
                 expect(uploadSpy).toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe('UploadWithPropertiesComponent', () => {
 
         it('works for file without conflicting name',
             componentTest(() => TestComponent, () => {
-                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of([]));
                 const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
                 const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
@@ -126,7 +126,7 @@ describe('UploadWithPropertiesComponent', () => {
         it('file properties are updated after upload',
             componentTest(() => TestComponent, () => {
                 uploadWithProperties.itemType = 'file';
-                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of([]));
                 const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
                 const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
@@ -155,7 +155,7 @@ describe('UploadWithPropertiesComponent', () => {
         it('image properties are updated after upload',
             componentTest(() => TestComponent, () => {
                 uploadWithProperties.itemType = 'image';
-                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(Promise.resolve([]));
+                const checkForConflicts = spyOn(uploadConflictService, 'checkForConflicts').and.returnValue(of([]));
                 const uploadSpy = spyOn(uploadConflictService, 'uploadFilesWithConflictsCheck').and.callThrough();
                 const modalServiceSpy =
                     spyOn(modalService, 'fromComponent').and.callFake(((component: any, options: any, locals: { conflictingFiles: FileModel[] }) => {
@@ -220,9 +220,9 @@ class MockRepositoryBrowserClientService {
     openRepositoryBrowser(): void { }
 }
 
-class MockApi {
-    folders = {
-        getItems: (): Observable<any> => Observable.of({
+class MockClient {
+    folder = {
+        items: (): Observable<any> => of({
             items: [
                 { id: 1, type: 'file', name: 'file1.ext' },
                 { id: 2, type: 'file', name: 'file2.ext' },

@@ -150,6 +150,14 @@ export class ConstructEditorComponent extends BaseEntityEditorComponent<Editable
         }
     }
 
+    protected override finalizeEntityToUpdate(construct: TagType): TagType {
+        if (construct.categoryId == null) {
+            construct.categoryId = -1;
+        }
+
+        return construct;
+    }
+
     async updateParts(): Promise<void> {
         const normalizedParts = this.fgParts.value.map(part => {
             // Regexes are saved as `int` in the DB, because they reference entries in the regex table.

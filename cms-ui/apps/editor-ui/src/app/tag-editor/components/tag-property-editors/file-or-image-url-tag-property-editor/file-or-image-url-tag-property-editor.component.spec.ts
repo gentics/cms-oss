@@ -3,15 +3,29 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
-import { Feature, FileTagPartProperty, ImageTagPartProperty, TagPart, TagPartType, TagPropertyType } from '@gentics/cms-models';
+import {
+    EditableTag,
+    Feature,
+    FileResponse,
+    FileTagPartProperty,
+    FolderResponse,
+    ImageResponse,
+    ImageTagPartProperty,
+    TagEditorContext,
+    TagPart,
+    TagPartType,
+    TagPropertyType,
+} from '@gentics/cms-models';
 import { getExampleFileData, getExampleFolderData, getExampleImageData } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { cloneDeep } from 'lodash-es';
 import { Observable, of, throwError } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../../testing';
 import { getMockedTagEditorContext, mockEditableTag } from '../../../../../testing/test-tag-editor-data.mock';
 import { FeaturesState } from '../../../../common/models';
-import { Api, ApiBase } from '../../../../core/providers/api';
+import { ApiBase } from '../../../../core/providers/api';
 import { MockApiBase } from '../../../../core/providers/api/api-base.mock';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
@@ -22,13 +36,12 @@ import { FileSizePipe } from '../../../../shared/pipes/file-size/file-size.pipe'
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { ApplicationStateService, FolderActionsService } from '../../../../state';
 import { TestApplicationState } from '../../../../state/test-application-state.mock';
-import { EditableTag, TagEditorContext } from '../../../common';
 import { TagPropertyLabelPipe } from '../../../pipes/tag-property-label/tag-property-label.pipe';
 import { TagPropertyEditorResolverService } from '../../../providers/tag-property-editor-resolver/tag-property-editor-resolver.service';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { ImagePreviewComponent } from '../../shared/image-preview/image-preview.component';
 import { UploadWithPropertiesComponent } from '../../shared/upload-with-properties/upload-with-properties.component';
-import { ValidationErrorInfo } from '../../shared/validation-error-info/validation-error-info.component';
+import { ValidationErrorInfoComponent } from '../../shared/validation-error-info/validation-error-info.component';
 import { TagPropertyEditorHostComponent } from '../../tag-property-editor-host/tag-property-editor-host.component';
 import { FileOrImageUrlTagPropertyEditor } from './file-or-image-url-tag-property-editor.component';
 
@@ -98,7 +111,14 @@ class MockUploadConflictService { }
 describe('FileOrImageUrlTagPropertyEditor', () => {
 
     let appState: TestApplicationState;
-    let getItemSpy: jasmine.Spy;
+    let client: GCMSTestRestClientService;
+    let fileGet: jasmine.Spy<jasmine.Func>;
+    let imageGet: jasmine.Spy<jasmine.Func>;
+    let folderGet: jasmine.Spy<jasmine.Func>;
+
+    let fileReturnValue: Observable<FileResponse>;
+    let imageReturnValue: Observable<ImageResponse>;
+    let folderReturnValue: Observable<FolderResponse>;
 
     beforeEach(() => {
         configureComponentTest({
@@ -115,7 +135,7 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: FolderActionsService, useClass: MockFolderActions },
                 { provide: UploadConflictService, useClass: MockUploadConflictService },
-                Api,
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 TagPropertyEditorResolverService,
             ],
             declarations: [
@@ -130,16 +150,23 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 TagPropertyLabelPipe,
                 TestComponent,
                 UploadWithPropertiesComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
+
+        client = TestBed.inject(GCMSRestClientService) as any;
+        fileGet = client.file.get = jasmine.createSpy('file.get', client.file.get).and.callFake(() => fileReturnValue);
+        imageGet = client.image.get = jasmine.createSpy('image.get', client.image.get).and.callFake(() => imageReturnValue);
+        folderGet = client.folder.get = jasmine.createSpy('folder.get', client.folder.get).and.callFake(() => folderReturnValue);
     });
 
     beforeEach(() => {
-        appState = TestBed.get(ApplicationStateService);
-        const api = TestBed.get(Api) as Api;
-        getItemSpy = spyOn(api.folders, 'getItem');
-        setFeatures({ [Feature.IMAGE_MANIPULATION2]: true, [Feature.ENABLE_UPLOAD_IN_TAGFILL]: true });
+        appState = TestBed.inject(ApplicationStateService) as any;
+
+        setFeatures({
+            [Feature.IMAGE_MANIPULATION2]: true,
+            [Feature.ENABLE_UPLOAD_IN_TAGFILL]: true,
+        });
     });
 
     function setFeatures(features: Partial<FeaturesState>): void {
@@ -149,6 +176,18 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
     }
 
     describe('initialization', () => {
+
+        beforeEach(() => {
+            client.reset();
+            fileGet.calls.reset();
+            imageGet.calls.reset();
+            folderGet.calls.reset();
+
+            // Default value
+            folderReturnValue = of({
+                folder: { id: -99 },
+            } as any);
+        });
 
         function validateInit(
             fixture: ComponentFixture<TestComponent>,
@@ -169,31 +208,26 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
             expect(editorElement).toBeTruthy();
 
             // Set up the return values for folderApi.getItem().
-            const getItemReturnValues: Observable<any>[] = [];
             if (origTagProperty.type === TagPropertyType.FILE) {
                 if (origTagProperty.fileId) {
                     // If an initial file is set, we need to add a response for loading the file.
                     if (origTagProperty.fileId === FILE_A.id) {
                         // Simulated existing file
-                        getItemReturnValues.push(
-                            of({
-                                file: getExampleFileData({ id: origTagProperty.fileId }),
-                            }),
-                        );
+                        fileReturnValue = of({
+                            file: getExampleFileData({ id: origTagProperty.fileId }),
+                        } as any);
                     } else {
                         // Simulated removed file
-                        getItemReturnValues.push(
-                            throwError({
-                                messages: [{
-                                    message: 'File with ID 4712 does not exist.',
-                                    type: 'CRITICAL',
-                                } ],
-                                responseInfo: {
-                                    responseCode: 'NOTFOUND',
-                                    responseMessage: 'File with ID 4712 does not exist.',
-                                },
-                            }),
-                        );
+                        fileReturnValue = throwError({
+                            messages: [{
+                                message: 'File with ID 4712 does not exist.',
+                                type: 'CRITICAL',
+                            } ],
+                            responseInfo: {
+                                responseCode: 'NOTFOUND',
+                                responseMessage: 'File with ID 4712 does not exist.',
+                            },
+                        });
                     }
                 }
             } else if (origTagProperty.type === TagPropertyType.IMAGE) {
@@ -201,35 +235,28 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                     // If an initial image is set, we need to add a response for loading the image.
                     if (origTagProperty.imageId === IMAGE_A.id) {
                         // Simulated existing image
-                        getItemReturnValues.push(
-                            of({
-                                image: getExampleImageData({ id: origTagProperty.imageId }),
-                            }),
-                        );
+                        imageReturnValue = of({
+                            image: getExampleImageData({ id: origTagProperty.imageId }),
+                        } as any);
                     } else {
                         // Simulated removed image
-                        getItemReturnValues.push(
-                            throwError({
-                                messages: [{
-                                    message: 'The specified image was not found.',
-                                    type: 'CRITICAL',
-                                } ],
-                                responseInfo: {
-                                    responseCode: 'NOTFOUND',
-                                    responseMessage: 'The specified image was not found.',
-                                },
-                            }),
-                        );
+                        imageReturnValue = throwError({
+                            messages: [{
+                                message: 'The specified image was not found.',
+                                type: 'CRITICAL',
+                            } ],
+                            responseInfo: {
+                                responseCode: 'NOTFOUND',
+                                responseMessage: 'The specified image was not found.',
+                            },
+                        });
                     }
                 }
             }
-            getItemReturnValues.push(
-                // The response for loading the folder of the tagOwner.
-                of({
-                    folder: getExampleFolderData({ id: context.page.folderId }),
-                }),
-            );
-            getItemSpy.and.returnValues(...getItemReturnValues);
+
+            folderReturnValue = of({
+                folder: getExampleFolderData({ id: context.page.folderId }),
+            } as any);
 
             const editor: FileOrImageUrlTagPropertyEditor = editorElement.componentInstance;
             editor.initTagPropertyEditor(tagPart, tag, tagProperty, context);
@@ -243,7 +270,6 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
             const browseBox = browseBoxElement.componentInstance as BrowseBoxComponent;
             expect(browseBox.label).toEqual(tagPart.name); // Here it is expected that the element is not mandatory.
             expect(browseBox.disabled).toBe(context.readOnly);
-
 
             if (origTagProperty.type === TagPropertyType.FILE) {
                 if (origTagProperty.fileId) {
@@ -261,20 +287,14 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 }
 
                 // If an image was pre-selected, make sure that is has been loaded.
-                let callIndex = 0;
                 if (origTagProperty.fileId) {
-                    expect(getItemSpy.calls.argsFor(callIndex)[0]).toEqual(origTagProperty.fileId, 'wrong file ID loaded');
-                    expect(getItemSpy.calls.argsFor(callIndex)[1]).toEqual('file', 'wrong item type loaded');
-                    expect(getItemSpy.calls.argsFor(callIndex)[2]).toEqual({ nodeId: context.node.id }, 'wrong node ID');
-                    ++callIndex;
+                    expect(fileGet).toHaveBeenCalledWith(origTagProperty.fileId, { nodeId: context.node.id });
+                } else {
+                    expect(fileGet).not.toHaveBeenCalled();
                 }
 
                 // Make sure that the folder of the tagOwner has been loaded.
-                expect(getItemSpy.calls.argsFor(callIndex)).toEqual([ context.page.folderId, 'folder' ]);
-                ++callIndex;
-
-                expect(getItemSpy.calls.count()).toBe(callIndex);
-
+                expect(folderGet).toHaveBeenCalledWith(context.page.folderId);
 
             } else if (origTagProperty.type === TagPropertyType.IMAGE) {
                 if (origTagProperty.imageId) {
@@ -292,24 +312,16 @@ describe('FileOrImageUrlTagPropertyEditor', () => {
                 }
 
                 // If an image was pre-selected, make sure that is has been loaded.
-                let callIndex = 0;
+
                 if (origTagProperty.imageId) {
-                    expect(getItemSpy.calls.argsFor(callIndex)[0]).toEqual(origTagProperty.imageId, 'wrong image ID loaded');
-                    expect(getItemSpy.calls.argsFor(callIndex)[1]).toEqual('image', 'wrong item type loaded');
-                    expect(getItemSpy.calls.argsFor(callIndex)[2]).toEqual({ nodeId: context.node.id }, 'wrong node ID');
-                    ++callIndex;
+                    expect(imageGet).toHaveBeenCalledWith(origTagProperty.imageId, { nodeId: context.node.id });
+                } else {
+                    expect(imageGet).not.toHaveBeenCalled();
                 }
 
                 // Make sure that the folder of the tagOwner has been loaded.
-                expect(getItemSpy.calls.argsFor(callIndex)).toEqual([ context.page.folderId, 'folder' ]);
-                ++callIndex;
-
-                expect(getItemSpy.calls.count()).toBe(callIndex);
+                expect(folderGet).toHaveBeenCalledWith(context.page.folderId);
             }
-
-
-            getItemSpy.and.stub();
-            getItemSpy.calls.reset();
         }
 
         it('initializes properly for unset TagPropertyType.FILE',

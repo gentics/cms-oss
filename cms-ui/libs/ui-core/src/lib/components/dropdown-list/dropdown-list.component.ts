@@ -102,15 +102,15 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
      * Fired whenever the dropdown contents are opened.
      */
     @Output()
-    public open = new EventEmitter<void>();
+    public open = new EventEmitter<DropdownListComponent>();
 
     /**
      * Fired whenever the dropdown contents are closed.
      */
     @Output()
-    public close = new EventEmitter<void>();
+    public close = new EventEmitter<DropdownListComponent>();
 
-    @ViewChild(TemplateRef, { static: true })
+    @ViewChild('contents', { static: true, read: TemplateRef })
     protected contentsTemplate: TemplateRef<any>;
 
     @ContentChild(DropdownTriggerDirective, { static: true })
@@ -182,9 +182,10 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
 
     /**
      * Open the dropdown contents in the correct position.
+     * @param ignoreDisabled If it should ignore that this dropdown is disabled. Useful for programmatic opening.
      */
-    openDropdown(): void {
-        if (this.disabled) {
+    openDropdown(ignoreDisabled: boolean = false): void {
+        if (this.disabled && !ignoreDisabled) {
             return;
         }
 
@@ -219,7 +220,7 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
 
         this.scrollMaskRef = this.overlayHostView.createComponent(ScrollMaskComponent);
         this.scrollMaskRef.instance.clicked.pipe(take(1)).subscribe(() => this.closeDropdown());
-        this.open.emit();
+        this.open.emit(this);
     }
 
     resize(): void {
@@ -229,6 +230,10 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
     }
 
     onTriggerClick(): void {
+        if (this.disabled) {
+            return;
+        }
+
         if (!this.isOpen) {
             this.openDropdown();
         } else {
@@ -247,6 +252,6 @@ export class DropdownListComponent extends BaseComponent implements OnDestroy {
             this.contentComponentRef.destroy();
             this.contentComponentRef = null;
         }
-        this.close.emit();
+        this.close.emit(this);
     }
 }

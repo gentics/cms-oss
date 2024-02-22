@@ -56,6 +56,9 @@ export interface TagEditorContext {
     /** Additional services provided by the GCMS UI. */
     gcmsUiServices: GcmsUiServices;
 
+    /** If the tag-editor/user should be able to delete the Tag. */
+    withDelete: boolean;
+
     /**
      * Creates a clone of this TagEditorContext.
      *

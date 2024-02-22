@@ -10,7 +10,7 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 
 /**
@@ -20,7 +20,7 @@ import {
     selector: 'select-tag-property-editor',
     templateUrl: './select-tag-property-editor.component.html',
     styleUrls: ['./select-tag-property-editor.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SelectTagPropertyEditor implements TagPropertyEditor {
 
@@ -97,7 +97,7 @@ export class SelectTagPropertyEditor implements TagPropertyEditor {
         if (newValue.type !== TagPropertyType.SELECT && newValue.type !== TagPropertyType.MULTISELECT) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by SelectTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as SelectTagPartProperty;
+        this.tagProperty = newValue ;
 
         if (!this.tagProperty.selectedOptions) {
             this.tagProperty.selectedOptions = [];

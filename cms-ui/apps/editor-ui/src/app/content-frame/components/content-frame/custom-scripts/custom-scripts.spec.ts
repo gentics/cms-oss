@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
+import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
 import { EditMode, Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { Subscription } from 'rxjs';
 import { SpyEventTarget } from '../../../../../testing/spy-event-target';
+import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { GCMSUI } from '../../../providers/customer-script/customer-script.service';
-import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../common';
 import { OBJECT_PROPERTIES_CONTEXT_MENU_CLASS, OBJECT_PROPERTIES_INFO_BUTTON_CLASS, PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';
 
@@ -312,6 +315,7 @@ class CustomScriptsTestFixture {
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
             this.scriptHost as any as CustomScriptHostService,
+            null,
         );
         script.run();
     }
@@ -360,6 +364,7 @@ class CustomScriptsTestFixture {
     }
 
     updateTagToCurrentValuesViaGCNJSLib(): void {
+        // eslint-disable-next-line no-underscore-dangle
         const currentText = (this.window.Aloha.GCN.page._data.tags.tag1.properties.text as StringTagPartProperty).stringValue;
         this.window.Aloha.GCN.page.tag('tag1', tag => {
             tag.part('text', currentText);
@@ -437,11 +442,11 @@ class CustomScriptsTestFixture {
     }
 
     private pretendToBePreviewingAPage(): void {
-        this.scriptHost.editMode = 'preview';
+        this.scriptHost.editMode = EditMode.PREVIEW;
     }
 
     private pretendToBeEditingAPage(): void {
-        this.scriptHost.editMode = 'edit';
+        this.scriptHost.editMode = EditMode.EDIT;
     }
 
     private pretendToBeATagfillDialog(): void {
@@ -652,11 +657,19 @@ class FakeDocument {
 }
 
 class FakeAlohaGlobal implements AlohaGlobal {
+    settings: AlohaSettings;
+    trigger(eventName: string, data: any): void { }
+    activeEditable?: AlohaEditable;
+    getEditableById(id: string | number): AlohaEditable { return null; }
+    jQuery: JQueryStatic;
+    scrollToSelection(): void {}
+
     GCN = new FakeGCNJSLib();
 
-    // tslint:disable:variable-name
     Selection = {
-        getRangeObject(): void { },
+        getRangeObject(): AlohaRangeObject { return null; },
+        updateSelection(): void { },
+        SelectionRange: null,
     };
 
     bind(): void { }
@@ -787,7 +800,7 @@ class FakeJQuery {
 class FakeScriptHost {
     mostRecentModifiedValue: boolean;
     mostRecentPropertyModifiedValue: boolean;
-    editMode: EditMode = 'preview';
+    editMode: EditMode = EditMode.PREVIEW;
     onSaveObjectPropertyHandler: () => void;
     private pageSavedHandler = (): void => {};
     private pageStartsSavingHandler = (): void => {};

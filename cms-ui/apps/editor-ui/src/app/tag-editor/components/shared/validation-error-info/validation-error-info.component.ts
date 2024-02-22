@@ -1,5 +1,5 @@
-import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
-import {ValidationResult} from '../../../common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ValidationResult } from '@gentics/cms-models';
 
 /**
  * Displays the appropriate error message if a TagPropery validation fails.
@@ -16,9 +16,9 @@ import {ValidationResult} from '../../../common';
     selector: 'validation-error-info',
     templateUrl: './validation-error-info.component.html',
     styleUrls: ['./validation-error-info.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ValidationErrorInfo {
+export class ValidationErrorInfoComponent {
 
     /**
      * The result of the last validation of the TagProperty.

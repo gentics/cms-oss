@@ -1,11 +1,10 @@
 {
-    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "name": "form-generator",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
     "projectType": "library",
     "prefix": "gtx",
     "sourceRoot": "apps/form-generator/src",
     "implicitDependencies": [
-        "form-generator",
         "cms-models",
         "cms-rest-clients-angular",
         "ui-core"

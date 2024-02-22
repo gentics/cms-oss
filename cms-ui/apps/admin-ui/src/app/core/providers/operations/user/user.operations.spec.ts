@@ -10,6 +10,7 @@ import {
     Normalized,
     Raw,
     RecursivePartial,
+    ResponseCode,
     User,
     UserListOptions,
     UserListResponse,
@@ -93,7 +94,7 @@ describe('UserOperations', () => {
         // prepare test data
         const requestOptions: UserListOptions = { pageSize: 10 };
         const mockResponse: UserListResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             hasMoreItems: false,
             numItems: MOCK_USERS_RAW.length,
             items: MOCK_USERS_RAW,
@@ -131,7 +132,7 @@ describe('UserOperations', () => {
         const MOCKUSER_RAW = MOCK_USERS_RAW[0];
         const MOCKUSER_NORMALIZED = MOCK_USERS_NORMALIZED[0];
         const mockResponse: UserResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             user: MOCKUSER_RAW,
         };
         api.user.getUser.and.returnValue(observableOf(mockResponse));
@@ -166,7 +167,7 @@ describe('UserOperations', () => {
         const MOCKUSER_ORIGINAL_RAW = MOCK_USERS_RAW[0];
         const MOCKUSER_ORIGINAL_NORMALIZED = MOCK_USERS_NORMALIZED[0];
         const mockGetResponse: UserResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             user: MOCKUSER_ORIGINAL_RAW,
         };
         api.user.getUser.and.returnValue(observableOf(mockGetResponse));
@@ -175,7 +176,7 @@ describe('UserOperations', () => {
         const MOCKUSER_UPDATED_NORMALIZED = convertRawToNormalizedArray([MOCKUSER_UPDATED_RAW])[0];
         const mockUpdateResponse: UserUpdateResponse = {
             messages: [],
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             user: MOCKUSER_UPDATED_RAW,
         };
         api.user.updateUser.and.returnValue(observableOf(mockUpdateResponse));
@@ -220,7 +221,7 @@ describe('UserOperations', () => {
     it('deleteUser() works', () => {
         // prepare test data
         const mockGetResponse: UserListResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             hasMoreItems: false,
             numItems: MOCK_USERS_RAW.length,
             items: MOCK_USERS_RAW,

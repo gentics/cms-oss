@@ -1,28 +1,28 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
 import {
+    EditableTag,
     Folder,
     ItemInNode,
     Page,
     PageTagPartProperty,
     Raw,
+    TagEditorContext,
     TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertyMap,
-    TagPropertyType,
-    EditableTag,
-    TagEditorContext,
     TagPropertiesChangedFn,
     TagPropertyEditor,
+    TagPropertyMap,
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { isEqual } from'lodash-es'
-import { merge, Observable, of, Subject, Subscription } from 'rxjs';
-import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { isEqual } from 'lodash-es';
+import { Observable, Subject, Subscription, merge, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 
 /**
  * Used to edit the following  UrlPage TagParts.
@@ -37,7 +37,7 @@ import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap } from
     templateUrl: './page-url-tag-property-editor.component.html',
     styleUrls: ['./page-url-tag-property-editor.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDestroy {
 
     /** The TagPart that the hosted TagPropertyEditor is responsible for. */
@@ -81,15 +81,15 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     private stopper = new ObservableStopper();
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private i18n: I18nService,
     ) { }
 
     ngOnInit(): void {
-        const debouncer = this.externalUrlChange.debounceTime(100);
-        const blurOrDebouncedChange = Observable.merge(this.externalUrlBlur, debouncer).pipe(
+        const debouncer = this.externalUrlChange.pipe(debounceTime(100));
+        const blurOrDebouncedChange = merge(this.externalUrlBlur, debouncer).pipe(
             distinctUntilChanged(isEqual),
         );
         this.subscriptions.add(
@@ -103,7 +103,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.selectedInternalPage = new SelectedItemHelper('page', context.node.id, this.api.folders);
+        this.selectedInternalPage = new SelectedItemHelper('page', context.node.id, this.client);
 
         this.internalPageDisplayValue$ = merge(
             this.selectedInternalPage.selectedItem$.pipe(
@@ -151,7 +151,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
         this.selectedInternalPage.selectedItem$.pipe(
             switchMap((selectedInternalPage) => {
                 if (selectedInternalPage) {
-                    return this.api.folders.getItem(selectedInternalPage.folderId, 'folder')
+                    return this.client.folder.get(selectedInternalPage.folderId)
                         .pipe(
                             map(response => response.folder),
                             catchError(err => of(err)),
@@ -169,7 +169,7 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
                     return of(context.folder);
                 }
 
-                return this.api.folders.getItem(this.page.folderId, 'folder')
+                return this.client.folder.get(this.page.folderId)
                     .pipe(
                         map(response => response.folder),
                         catchError(err => of(err)),
@@ -240,9 +240,9 @@ export class PageUrlTagPropertyEditor implements TagPropertyEditor, OnInit, OnDe
             externalUrl = newSelectedPage ;
 
         } else if (newIsInternalValue) {
-            this.tagProperty.pageId = (newSelectedPage as ItemInNode<Page<Raw>>).id;
-            this.tagProperty.nodeId = (newSelectedPage as ItemInNode<Page<Raw>>).nodeId;
-            selectedInternalPage = newSelectedPage as ItemInNode<Page<Raw>>;
+            this.tagProperty.pageId = (newSelectedPage ).id;
+            this.tagProperty.nodeId = (newSelectedPage ).nodeId;
+            selectedInternalPage = newSelectedPage ;
 
         } else if (newIsNoValue) {
             this.tagProperty.pageId = 0;

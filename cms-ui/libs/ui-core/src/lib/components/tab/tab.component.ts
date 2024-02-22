@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, HostBinding } from '@angular/core';
 
 /**
  * For documentation, see the Tabs
@@ -25,12 +25,17 @@ export class TabComponent {
     @Input()
     public disabled: boolean;
 
+    @Input()
+    @HostBinding('class.hidden')
+    public hidden: boolean;
+
     /**
      * When the tab is clicked, this event is fired with the tab id.
      */
     @Output()
     public select = new EventEmitter<string>();
 
+    @HostBinding('class.is-active')
     public active = false;
 
     constructor(

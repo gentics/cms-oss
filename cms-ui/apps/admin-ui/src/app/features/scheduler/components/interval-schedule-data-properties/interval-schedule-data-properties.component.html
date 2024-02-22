@@ -13,7 +13,7 @@
         formControlName="unit"
     >
         <gtx-option
-            *ngFor="let unit of IntervalUnit | entries"
+            *ngFor="let unit of IntervalUnit | gtxEntries"
             [value]="unit.value"
         >{{ ('scheduler.interval_unitType_' + unit.value) | i18n }}</gtx-option>
     </gtx-select>

@@ -12,9 +12,10 @@ import {
     RepositoryBrowserOptions,
     Tag,
     TagEditorContext,
+    TagEditorResult,
     TagType,
     Template,
-    VariableTagEditorContext
+    VariableTagEditorContext,
 } from '@gentics/cms-models';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
@@ -22,7 +23,7 @@ import { EntityResolver } from '../../../core/providers/entity-resolver/entity-r
 import { EditorOverlayService } from '../../../editor-overlay/providers/editor-overlay.service';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
-import { ApplicationStateService } from '../../../state';
+import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction, SetTagEditorOpenAction } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
 import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
@@ -51,6 +52,8 @@ export interface EditTagInfo {
 
     /** If the tagOwner object comes from an IFrame, this must be set to true in order to apply polyfills to it in IE. */
     tagOwnerFromIFrame?: boolean;
+
+    withDelete: boolean;
 }
 
 /**
@@ -67,7 +70,7 @@ export class TagEditorService {
         private entityResolver: EntityResolver,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: TranslateService,
-        private userAgentRef: UserAgentRef
+        private userAgentRef: UserAgentRef,
     ) {}
 
     /**
@@ -77,10 +80,12 @@ export class TagEditorService {
      *
      * @param tag The tag to be edited - the property tag.tagType must be set.
      * @param context The current context.
+     * @param page The page in which the tag is being edited.
+     * @param withDelete If a delete option for the Tag should be provided.
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>): Promise<Tag> {
+    async openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>, withDelete?: boolean): Promise<TagEditorResult> {
         // Since the ContentFrame uses the currentNode object when opening a page,
         // we can assume that the entity has already been loaded.
         const node = this.entityResolver.getNode(this.appState.now.editor.nodeId);
@@ -91,16 +96,26 @@ export class TagEditorService {
             tagOwner: page,
             node: node,
             readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
-            tagOwnerFromIFrame: true
+            withDelete,
+            tagOwnerFromIFrame: true,
         });
 
-        return this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
-            .then(editedTag => {
-                if (editedTag) {
-                    delete editedTag.tagType;
-                }
-                return <Tag> editedTag;
-            });
+        await Promise.all([
+            this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise(),
+            this.appState.dispatch(new SetTagEditorOpenAction(true)).toPromise(),
+        ]);
+        try {
+            const result = await this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
+            if (result.tag) {
+                delete result.tag.tagType;
+            }
+            return result;
+        } finally {
+            await Promise.all([
+                this.appState.dispatch(new DecreaseOverlayCountAction()).toPromise(),
+                this.appState.dispatch(new SetTagEditorOpenAction(false)).toPromise(),
+            ]);
+        }
     }
 
     /**
@@ -141,14 +156,14 @@ export class TagEditorService {
     createTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
         let editableTag: EditableTag = {
             ...editTagInfo.tag,
-            tagType: editTagInfo.tagType
+            tagType: editTagInfo.tagType,
         };
 
         const gcmsUiServices: GcmsUiServices = {
             openRepositoryBrowser: (options: RepositoryBrowserOptions) =>
                 this.repositoryBrowserClient.openRepositoryBrowser(options),
             openImageEditor: (options: { nodeId: number, imageId: number }) =>
-                this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId })
+                this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId }),
         };
 
         let tagOwner = editTagInfo.tagOwner;
@@ -164,12 +179,22 @@ export class TagEditorService {
         const rawNode = this.entityResolver.denormalizeEntity('node', editTagInfo.node);
 
         const variableContext$: Observable<VariableTagEditorContext> = this.appState.select(state => ({
-            uiLanguage: state.ui.language
+            uiLanguage: state.ui.language,
         }));
         const sid = this.appState.now.auth.sid;
         const translator = new TranslatorImpl(this.translateService);
 
-        return TagEditorContextImpl.create(editableTag, editTagInfo.readOnly, rawTagOwner, rawNode, sid, translator, variableContext$, gcmsUiServices);
+        return TagEditorContextImpl.create(
+            editableTag,
+            editTagInfo.readOnly,
+            rawTagOwner,
+            rawNode,
+            sid,
+            translator,
+            variableContext$,
+            gcmsUiServices,
+            editTagInfo.withDelete,
+        );
     }
 
     /**
@@ -179,7 +204,7 @@ export class TagEditorService {
      */
     private createSafePageCopy<T extends ModelType>(page: Page<T>): Page<T> {
         const safePage = {
-            ...page
+            ...page,
         };
         delete safePage.pageVariants;
         delete safePage.languageVariants;

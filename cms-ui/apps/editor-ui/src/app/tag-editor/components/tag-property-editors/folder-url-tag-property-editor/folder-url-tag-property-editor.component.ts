@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, ViewChild } from '@angular/core';
 import { ObservableStopper } from '@editor-ui/app/common/utils/observable-stopper/observable-stopper';
-import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
@@ -20,10 +19,11 @@ import {
     TagPropertiesChangedFn,
     TagPropertyEditor,
     TagPropertyMap,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
-import { merge, Observable, of } from 'rxjs';
-import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { Observable, merge, of } from 'rxjs';
+import { catchError, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
 import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
 
@@ -81,7 +81,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
     private stopper = new ObservableStopper();
 
     constructor(
-        private api: Api,
+        private client: GCMSRestClientService,
         private changeDetector: ChangeDetectorRef,
         private folderActions: FolderActionsService,
         private repositoryBrowserClient: RepositoryBrowserClient,
@@ -93,7 +93,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
     }
 
     initTagPropertyEditor(tagPart: TagPart, tag: EditableTag, tagProperty: TagPartProperty, context: TagEditorContext): void {
-        this.selectedFolder = new SelectedItemHelper('folder', context.node.id, this.api.folders);
+        this.selectedFolder = new SelectedItemHelper('folder', context.node.id, this.client);
 
         this.displayValue$ = merge(
             this.selectedFolder.selectedItem$.pipe(
@@ -141,7 +141,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
             .pipe(
                 switchMap((selectedFolder) => {
                     if (selectedFolder) {
-                        return this.api.folders.getItem(selectedFolder.id, 'folder')
+                        return this.client.folder.get(selectedFolder.id)
                             .pipe(
                                 map(response => response.folder),
                                 catchError(err => of(err)),
@@ -152,7 +152,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                             )
                     }
 
-                    return this.api.folders.getItem(this.page.folderId, 'folder')
+                    return this.client.folder.get(this.page.folderId)
                         .pipe(
                             map(response => response.folder),
                             catchError(err => of(err)),
@@ -225,7 +225,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
 
     onCreateSubfolderClick(): void {
         this.creatingSubfolder = true;
-        this.selectedFolder.selectedItem$.take(1).subscribe(parentFolder => {
+        this.selectedFolder.selectedItem$.pipe(take(1)).subscribe(parentFolder => {
             this.folderActions.createNewFolder({
                 name: this.subfolderName,
                 description: '',
@@ -234,19 +234,19 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
                 nodeId: parentFolder.nodeId,
                 failOnDuplicate: true,
             })
-            .then(subfolder => {
-                if (subfolder) {
-                    this.expandCreateSubfolderButton.collapse();
-                    this.subfolderName = '';
-                    this.changeSelectedItem(subfolder);
-                }
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            })
-            .catch(() => {
-                this.creatingSubfolder = false;
-                this.changeDetector.markForCheck();
-            });
+                .then(subfolder => {
+                    if (subfolder) {
+                        this.expandCreateSubfolderButton.collapse();
+                        this.subfolderName = '';
+                        this.changeSelectedItem(subfolder);
+                    }
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                })
+                .catch(() => {
+                    this.creatingSubfolder = false;
+                    this.changeDetector.markForCheck();
+                });
         });
     }
 
@@ -257,7 +257,7 @@ export class FolderUrlTagPropertyEditor implements TagPropertyEditor, OnDestroy 
         if (newValue.type !== TagPropertyType.FOLDER) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FolderUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue as FolderTagPartProperty;
+        this.tagProperty = newValue ;
 
         this.selectedFolder.setSelectedItem(this.tagProperty.folderId, this.tagProperty.nodeId);
         this.changeDetector.markForCheck();

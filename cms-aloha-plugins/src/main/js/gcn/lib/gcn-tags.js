@@ -247,14 +247,13 @@ define('gcn/gcn-tags', [
 					.contentEditable(false);
 
 				if (!Aloha.settings.readonly) {
-					var editIcon = '/images/content/constr/' + construct.icon;
 					var options = {
-						'aloha-block-type' : 'GCNBlock',
-						'gcn-tagname'      : tag.prop('name'),
-						'gcn-tagid'        : tag.prop('id'),
-						'gcn-pageid'       : tag.parent().id(),
-						'gcn-editicon'     : editIcon,
-						'gcn-deleteicon'   : deleteIcon
+						'aloha-block-type': 'GCNBlock',
+						'gcn-tagname': tag.prop('name'),
+						'gcn-tagid': tag.prop('id'),
+						'gcn-pageid': tag.parent().id(),
+						'gcn-constructid': construct.id,
+						'gcn-constructdisplay': construct.editorControlStyle || 'above',
 					};
 					$elements.alohaBlock(options);
 

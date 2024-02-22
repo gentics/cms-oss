@@ -24,7 +24,7 @@
                 mode="SELECT"
                 [item]="item"
                 [nodeId]="currentNodeId"
-                [icon]="iconForItemType"
+                [icon]="iconForItemType(itemType)"
                 [filterTerm]="filterTerm$ | async"
                 [selected]="isSelected(item)"
                 [itemType]="itemType"

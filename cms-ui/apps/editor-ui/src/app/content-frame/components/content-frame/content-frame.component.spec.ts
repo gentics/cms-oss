@@ -14,7 +14,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
+import { EditMode, FolderListResponse, Form, ItemWithObjectTags, Language, Node, Page } from '@gentics/cms-models';
 import {
     getExampleFormDataNormalized,
     getExampleLanguageData,
@@ -22,8 +22,10 @@ import {
     getExamplePageData,
     getExamplePageDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
-import { NEVER, Observable, of as observableOf, of } from 'rxjs';
+import { NEVER, Observable, of as observableOf } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
 import { mockPipes } from '../../../../testing/mock-pipe';
 import { Api } from '../../../core/providers/api/api.service';
@@ -49,10 +51,10 @@ import { TagEditorService } from '../../../tag-editor';
 import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
-import { IFrameManager } from '../../providers/iframe/iframe-manager.service';
+import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
-import { NodePropertiesForm } from '../node-properties-form/node-properties-form.component';
-import { ContentFrame } from './content-frame.component';
+import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
+import { ContentFrameComponent } from './content-frame.component';
 
 let appState: TestApplicationState;
 let permissionService: MockPermissionService;
@@ -162,10 +164,10 @@ class MockEditorOverlayService {}
     `,
 })
 class TestComponent {
-    @ViewChild(ContentFrame, { static: true }) contentFrame: ContentFrame;
+    @ViewChild(ContentFrameComponent, { static: true }) contentFrame: ContentFrameComponent;
 
     // If we want to access the services provided directly by ContentFrame, we need the injector of the ViewContainerRef.
-    @ViewChild(ContentFrame, { static: true, read: ViewContainerRef })
+    @ViewChild(ContentFrameComponent, { static: true, read: ViewContainerRef })
     contentFrameViewContainerRef: ViewContainerRef;
 }
 
@@ -229,11 +231,6 @@ class MockTagEditorService {
     forceCloseTagEditor(): void {}
 }
 
-function contextMenuIsVisible(fixture: ComponentFixture<TestComponent>): boolean {
-    tick();
-    return !!fixture.debugElement.query(By.css('.content-frame-context-menu'));
-}
-
 const findCombinedPropEditor = (fixture: ComponentFixture<TestComponent>): DebugElement =>
     fixture.debugElement.query(By.directive(MockCombinedPropertiesEditor));
 
@@ -241,7 +238,7 @@ function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: b
     appState.mockState({
         editor: {
             editorIsOpen: editorIsOpen,
-            editMode: 'editProperties',
+            editMode: EditMode.EDIT_PROPERTIES,
             itemId: ITEM_ID,
             itemType: 'folder',
             nodeId: ITEM_NODE,
@@ -295,66 +292,11 @@ function openPropertiesOfAFolder(fixture: ComponentFixture<any>, editorIsOpen: b
     tick();
 }
 
-function openPropertiesOfANode(fixture: ComponentFixture<any>): void {
-    appState.mockState({
-        editor: {
-            editorIsOpen: true,
-            editMode: 'editProperties',
-            itemId: ITEM_NODE,
-            itemType: 'node',
-            nodeId: ITEM_NODE,
-            openTab: 'properties',
-            saving: false,
-        },
-        folder: {
-            activeNode: ITEM_NODE,
-            activeFolder: PARENTFOLDER_ID,
-            breadcrumbs: {
-                list: [],
-            },
-            templates: {
-                list: [],
-                saving: false,
-            },
-            activeNodeLanguages: {
-                list: [],
-            },
-            folders: {
-                saving: false,
-            },
-            pages: {
-                saving: false,
-            },
-            files: {
-                saving: false,
-            },
-            images: {
-                saving: false,
-            },
-            forms: {
-                saving: false,
-            },
-        },
-        entities: {
-            node: {
-                [ITEM_NODE]: {
-                    type: 'node',
-                    id: ITEM_NODE,
-                    folderId: PARENTFOLDER_ID,
-                },
-            },
-            language: getExampleLanguageData(),
-        },
-    });
-    fixture.detectChanges();
-    tick();
-}
-
 function openPropertiesOfAPage(fixture: ComponentFixture<any>, pageId: number = ITEM_ID, openPropertiesTab: string = undefined): void {
     appState.mockState({
         editor: {
             editorIsOpen: true,
-            editMode: 'editProperties',
+            editMode: EditMode.EDIT_PROPERTIES,
             itemId: pageId,
             itemType: 'page',
             nodeId: ITEM_NODE,
@@ -407,7 +349,7 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
     appState.mockState({
         editor: {
             editorIsOpen: true,
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
             itemId: pageId,
             itemType: 'page',
             nodeId: ITEM_NODE,
@@ -454,64 +396,11 @@ function openEditModeOfAPage(fixture: ComponentFixture<any>, pageId: number = IT
     tick();
 }
 
-function openPropertiesOfAForm(fixture: ComponentFixture<any>, formId: number = ITEM_ID, openPropertiesTab: string = undefined): void {
-    appState.mockState({
-        editor: {
-            editorIsOpen: true,
-            editMode: 'editProperties',
-            itemId: formId,
-            itemType: 'form',
-            nodeId: ITEM_NODE,
-            openTab: 'properties',
-            openPropertiesTab: openPropertiesTab,
-            saving: false,
-        },
-        entities: {
-            node: {
-                [ITEM_NODE]: getExampleNodeDataNormalized({id: ITEM_NODE}),
-            },
-            form: {
-                [formId]: getExampleFormDataNormalized({ id: formId }),
-            },
-            language: getExampleLanguageData(),
-        },
-        folder: {
-            activeNode: ITEM_NODE,
-            activeNodeLanguages: {
-                list: [ 1 ],
-            },
-            folders: {
-                saving: false,
-            },
-            pages: {
-                saving: false,
-            },
-            files: {
-                saving: false,
-            },
-            images: {
-                saving: false,
-            },
-            forms: {
-                saving: false,
-            },
-            templates: {
-                saving: false,
-            },
-        },
-        ui: {
-            contentFrameBreadcrumbsExpanded: true,
-        },
-    });
-    fixture.detectChanges();
-    tick();
-}
-
 function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = ITEM_ID): void {
     appState.mockState({
         editor: {
             editorIsOpen: true,
-            editMode: 'edit',
+            editMode: EditMode.EDIT,
             itemId: formId,
             itemType: 'form',
             nodeId: ITEM_NODE,
@@ -556,40 +445,6 @@ function openEditModeOfAForm(fixture: ComponentFixture<any>, formId: number = IT
     });
     fixture.detectChanges();
     tick();
-}
-
-function navigateToFolderOfItem(fixture: ComponentFixture<any>): void {
-    appState.mockState({
-        folder: {
-            activeFolder: PARENTFOLDER_ID,
-            activeNode: ITEM_NODE,
-            breadcrumbs: {
-                list: [],
-            },
-            templates: {
-                list: [],
-            },
-            activeNodeLanguages: {
-                list: [],
-            },
-            folders: {
-                saving: false,
-            },
-            pages: {
-                saving: false,
-            },
-            files: {
-                saving: false,
-            },
-            images: {
-                saving: false,
-            },
-            forms: {
-                saving: false,
-            },
-        },
-    });
-    fixture.detectChanges();
 }
 
 describe('ContentFrame', () => {
@@ -628,11 +483,12 @@ describe('ContentFrame', () => {
                 { provide: CustomerScriptService, useClass: MockCustomerScriptService },
                 { provide: EditorOverlayService, useClass: MockEditorOverlayService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 MockCanSaveService,
                 ResourceUrlBuilder,
             ],
             declarations: [
-                ContentFrame,
+                ContentFrameComponent,
                 DynamicDisableDirective,
                 FolderPropertiesForm,
                 InheritedLocalizedIcon,
@@ -643,7 +499,7 @@ describe('ContentFrame', () => {
                 MockOverrideSlotDirective,
                 MockPageStateContextMenu,
                 MockTagEditorOverlayHost,
-                NodePropertiesForm,
+                NodePropertiesFormComponent,
                 ItemStatusLabelComponent,
                 TagTypeIconPipe,
                 TestComponent,
@@ -657,7 +513,7 @@ describe('ContentFrame', () => {
             ],
         });
 
-        TestBed.overrideComponent(ContentFrame, {
+        TestBed.overrideComponent(ContentFrameComponent, {
             set: {
                 providers: [{ provide: IFrameManager, useClass: MockIFrameManager }],
             },
@@ -671,34 +527,13 @@ describe('ContentFrame', () => {
 
         // We need to mock the lodash debounce function, otherwise we will get
         // an error about a pending timer in the queue (in newer Angular versions zone.js supports using tick for lodash).
-        origDebounce = ContentFrame._debounce;
-        ContentFrame._debounce = ((fn: any) => fn) as any;
+        origDebounce = ContentFrameComponent._debounce;
+        ContentFrameComponent._debounce = ((fn: any) => fn) as any;
     });
 
     afterEach(() => {
-        ContentFrame._debounce = origDebounce;
+        ContentFrameComponent._debounce = origDebounce;
     });
-
-    it('shows breadcrumbs correctly',
-        componentTest(() => TestComponent, (fixture, testComponent) => {
-            const folderId = 4;
-            const expected: Partial<FolderListResponse> = {
-                folders: [{
-                    name: 'folderA',
-                    id: folderId,
-                }, {
-                    name: 'folderB',
-                    id: folderId + 1,
-                }] as any,
-            };
-            const spy = spyOn(api.folders, 'getBreadcrumbs').and.returnValue(observableOf(expected));
-            openPropertiesOfAFolder(fixture);
-
-            expect(spy).toHaveBeenCalled();
-            const breadcrumbs = fixture.debugElement.query(By.css('gtx-breadcrumbs')).nativeElement.innerText;
-            expect(breadcrumbs).toContain('folderA', 'folderB');
-        }),
-    );
 
     it('CombinedPropertiesEditor is created and item is set after the state was updated with route params',
         componentTest(() => TestComponent, (fixture, testComponent) => {
@@ -725,94 +560,6 @@ describe('ContentFrame', () => {
             expect(propEditor.componentInstance.item).toBeTruthy();
         }),
     );
-
-    describe('context menu', () => {
-
-        it('is visible if edited item is a page',
-            componentTest(() => TestComponent, (fixture, testComponent) => {
-                const folderId = 4;
-                const expected: Partial<FolderListResponse> = {
-                    folders: [{
-                        name: 'folderA',
-                        id: folderId,
-                    }, {
-                        name: 'folderB',
-                        id: folderId + 1,
-                    }] as any,
-                };
-                spyOn(api.folders, 'getBreadcrumbs').and.returnValue(observableOf(expected));
-
-                openPropertiesOfAPage(fixture);
-
-                const visible = contextMenuIsVisible(fixture);
-                expect(visible).toBe(true);
-            }),
-        );
-
-        it('is not visible if edited item is a folder',
-            componentTest(() => TestComponent, (fixture, testComponent) => {
-                const folderId = 4;
-                const expected: Partial<FolderListResponse> = {
-                    folders: [{
-                        name: 'folderA',
-                        id: folderId,
-                    }, {
-                        name: 'folderB',
-                        id: folderId + 1,
-                    }] as any,
-                };
-                spyOn(api.folders, 'getBreadcrumbs').and.returnValue(observableOf(expected));
-
-                openPropertiesOfAFolder(fixture);
-
-                const visible = contextMenuIsVisible(fixture);
-                expect(visible).toBe(false);
-            }),
-        );
-
-        it('is not visible if edited item is a folder and a navigation is performed',
-            componentTest(() => TestComponent, (fixture, testComponent) => {
-                const folderId = 4;
-                const expected: Partial<FolderListResponse> = {
-                    folders: [{
-                        name: 'folderA',
-                        id: folderId,
-                    }, {
-                        name: 'folderB',
-                        id: folderId + 1,
-                    }] as any,
-                };
-                spyOn(api.folders, 'getBreadcrumbs').and.returnValue(observableOf(expected));
-
-                openPropertiesOfAFolder(fixture);
-                navigateToFolderOfItem(fixture);
-
-                const visible = contextMenuIsVisible(fixture);
-                expect(visible).toBe(false);
-            }),
-        );
-
-        it('is not visible after opening the properties of a node',
-            componentTest(() => TestComponent, (fixture, testComponent) => {
-                const folderId = 4;
-                const expected: Partial<FolderListResponse> = {
-                    folders: [{
-                        name: 'folderA',
-                        id: folderId,
-                    }, {
-                        name: 'folderB',
-                        id: folderId + 1,
-                    }] as any,
-                };
-                spyOn(api.folders, 'getBreadcrumbs').and.returnValue(observableOf(expected));
-
-                openPropertiesOfANode(fixture);
-
-                const visible = contextMenuIsVisible(fixture);
-                expect(visible).toBe(false);
-            }),
-        );
-    });
 
     describe('page editing', () => {
 
@@ -884,185 +631,6 @@ describe('ContentFrame', () => {
             }));
 
         });
-
-    });
-
-    describe('publish button in edit mode', () => {
-
-        it('is visible for pages if the user has right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: true,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAPage(fixture, ITEM_ID);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.publish).toEqual(true);
-        }));
-
-        it('is visible for pages if the user does not have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: false,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAPage(fixture, ITEM_ID);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.publish).toEqual(true);
-        }));
-
-        it('is visible for forms if the user does have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: true,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAForm(fixture, ITEM_ID);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.publish).toEqual(true);
-        }));
-
-        it('is not visible for forms if the user does not have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: false,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAForm(fixture, ITEM_ID);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.publish).toEqual(false);
-        }));
-    });
-
-    describe('takeOffline / timeManagement buttons in edit mode', () => {
-
-        it('are visible for pages if the user has right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: true,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAPage(fixture, ITEM_ID);
-            const currentState = appState.now;
-            currentState.entities.page[ITEM_ID].online = true;
-            instance.contentFrame.setContentModified(true);
-            appState.mockState(currentState);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.takeOffline).toEqual(true);
-            expect(instance.contentFrame.buttons.timeManagement).toEqual(true);
-        }));
-
-        it('are visible for pages if the user does not have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: false,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAPage(fixture, ITEM_ID);
-            const currentState = appState.now;
-            currentState.entities.page[ITEM_ID].online = true;
-            instance.contentFrame.setContentModified(true);
-            appState.mockState(currentState);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.takeOffline).toEqual(true);
-            expect(instance.contentFrame.buttons.timeManagement).toEqual(true);
-        }));
-
-        it('are visible for forms if the user does have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: true,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAForm(fixture, ITEM_ID);
-            const currentState = appState.now;
-            currentState.entities.form[ITEM_ID].online = true;
-            instance.contentFrame.setContentModified(true);
-            appState.mockState(currentState);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.takeOffline).toEqual(true);
-            expect(instance.contentFrame.buttons.timeManagement).toEqual(true);
-        }));
-
-        it('are not visible for forms if the user does not have right permissions ', componentTest(() => TestComponent, (fixture, instance) => {
-            spyOn(permissionService, 'forItemInLanguage').and.returnValue(of({
-                create: false,
-                delete: false,
-                edit: true,
-                inherit: false,
-                localize: false,
-                publish: false,
-                unlocalize: false,
-                view: false,
-            }));
-
-            openEditModeOfAForm(fixture, ITEM_ID);
-            const currentState = appState.now;
-            currentState.entities.form[ITEM_ID].online = true;
-            instance.contentFrame.setContentModified(true);
-            appState.mockState(currentState);
-            tick();
-            fixture.detectChanges();
-
-            expect(instance.contentFrame.buttons.takeOffline).toEqual(false);
-            expect(instance.contentFrame.buttons.timeManagement).toEqual(false);
-        }));
     });
 
     describe('save button', () => {
@@ -1075,7 +643,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is enabled when item properties are edited and are valid and have been modified', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1087,7 +655,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is disabled when object properties are edited but are invalid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1099,24 +667,27 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
         }));
 
-        it('is enabled when properties are edited and valid despite the user has no permissions to save', componentTest(() => TestComponent, (fixture, instance) => {
-            openPropertiesOfAPage(fixture, ITEM_ID, 'item-properties');
-            canSaveService.getCanSave.and.returnValue(false);
+        it(
+            'is enabled when properties are edited and valid despite the user has no permissions to save',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                openPropertiesOfAPage(fixture, ITEM_ID, 'item-properties');
+                canSaveService.getCanSave.and.returnValue(false);
 
-            // set contentModified to true, so it cannot be the reason for disabling the save button
-            const currentState = appState.now;
-            currentState.editor.contentModified = true;
-            currentState.editor.modifiedObjectPropertiesValid = true;
-            appState.mockState(currentState);
+                // set contentModified to true, so it cannot be the reason for disabling the save button
+                const currentState = appState.now;
+                currentState.editor.contentModified = true;
+                currentState.editor.modifiedObjectPropertiesValid = true;
+                appState.mockState(currentState);
 
-            tick();
-            fixture.detectChanges();
+                tick();
+                fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
-        }));
+                expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
+            }),
+        );
 
         it('is enabled when properties are edited and valid and the user is allowed to save', componentTest(() => TestComponent, (fixture, instance) => {
             openPropertiesOfAPage(fixture, ITEM_ID, 'item-properties');
@@ -1131,7 +702,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is enabled despite a form item has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1144,7 +715,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
         it('is disabled when a form item is edited but not valid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1156,7 +727,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
         }));
 
         it('is enabled when a form item is edited, has not been modified and is valid', componentTest(() => TestComponent, (fixture, instance) => {
@@ -1169,22 +740,25 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }));
 
-        it('is disabled when a non-form item is edited but neither aloha editor is ready nor master frame is loaded', componentTest(() => TestComponent, (fixture, instance) => {
-            openEditModeOfAPage(fixture, ITEM_ID);
-            instance.contentFrame.setAlohaReady(false);
-            instance.contentFrame.setMasterFrameLoaded(false);
-            const currentState = appState.now;
-            currentState.editor.contentModified = true;
-            currentState.entities.page[ITEM_ID].locked = false;
-            appState.mockState(currentState);
-            tick();
-            fixture.detectChanges();
+        it(
+            'is disabled when a non-form item is edited but neither aloha editor is ready nor master frame is loaded',
+            componentTest(() => TestComponent, (fixture, instance) => {
+                openEditModeOfAPage(fixture, ITEM_ID);
+                instance.contentFrame.setAlohaReady(false);
+                instance.contentFrame.setMasterFrameLoaded(false);
+                const currentState = appState.now;
+                currentState.editor.contentModified = true;
+                currentState.entities.page[ITEM_ID].locked = false;
+                appState.mockState(currentState);
+                tick();
+                fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
-        }));
+                expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
+            }),
+        );
 
         it('is enabled when a non-form item is edited despite it has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
@@ -1197,7 +771,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
 
         }));
 
@@ -1213,7 +787,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(true);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(true);
 
         }));
 
@@ -1230,7 +804,7 @@ describe('ContentFrame', () => {
             tick();
             fixture.detectChanges();
 
-            expect(instance.contentFrame.isSaveButtonIsDisabled()).toEqual(false);
+            expect(instance.contentFrame.determineSaveButtonIsDisabled()).toEqual(false);
         }))
     });
 });

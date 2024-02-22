@@ -1,0 +1,47 @@
+@import 'variables';
+
+:host {
+    display: flex;
+    overflow: auto hidden;
+}
+
+.control-element.tab-controls {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-element {
+    width: 100%;
+}
+
+.control-element:not(.active) {
+    display: none;
+}
+
+.component-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 100%;
+    align-items: center;
+    gap: 0.25rem;
+
+    &:first-child {
+        margin-left: 0;
+    }
+}
+
+.group-separator {
+    width: 0px;
+    height: calc(100% - 1rem);
+    display: block;
+    margin: auto 0;
+    border-left: 1px solid $gtx-color-mid-gray;
+}
+
+.dynamic-component.hidden {
+    display: none;
+}

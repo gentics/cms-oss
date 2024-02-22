@@ -1,11 +1,6 @@
 @import "variables";
 
 :host {
-
-    .column {
-        padding: 0;
-    }
-
     ::ng-deep input[type=text] {
         margin-bottom: 5px;
     }

@@ -1,0 +1,48 @@
+<gtx-tooltip
+    *ngIf="settings.tooltip; else buttonTemplate"
+    [position]="'top'"
+    [align]="'center'"
+    [type]="'light'"
+>
+    <ng-container [ngTemplateOutlet]="buttonTemplate"></ng-container>
+
+    <div gtx-tooltip-content class="button-tooltip">{{ settings.tooltip }}</div>
+</gtx-tooltip>
+
+<ng-template #buttonTemplate>
+    <div
+        gtx-tooltip-trigger
+        class="gtx-editor-toggle-split-button"
+        [class.hidden]="!settings.visible"
+        [class.active]="settings.active"
+        [class.always-secondary]="settings.alwaysSecondary"
+    >
+        <button
+            class="split-button-secondary"
+            [disabled]="disabled"
+            (click)="handleSecondaryClick()"
+        >
+            <icon class="button-icon secondary-icon">arrow_drop_down</icon>
+        </button>
+
+        <button
+            class="split-button-main"
+            [class.icon-only]="settings.iconOnly"
+            [disabled]="disabled"
+            (click)="handleClick()"
+        >
+            <icon
+                *ngIf="settings.icon"
+                class="button-icon"
+                [class.hollow]="settings.iconHollow"
+                [class.icon-left]="!settings.iconOnly"
+            >{{ settings.icon }}</icon>
+
+            <span
+                *ngIf="settings.text"
+                class="button-label"
+                [innerHTML]="settings.text"
+            ></span>
+        </button>
+    </div>
+</ng-template>

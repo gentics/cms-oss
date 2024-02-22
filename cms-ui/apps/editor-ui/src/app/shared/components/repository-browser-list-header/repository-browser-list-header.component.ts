@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { FolderItemType, Language, SortField } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-import { FolderItemType, Language, SortField } from '@gentics/cms-models';
+import { map, publishReplay, refCount, tap } from 'rxjs/operators';
 import { iconForItemType } from '../../../common/utils/icon-for-item-type';
 import { UserSettingsService } from '../../../core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '../../../state';
@@ -41,12 +42,12 @@ export class RepositoryBrowserListHeader implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.sort$ = this.dataService.sortOrder$
-            .map(sortOrdersByType => sortOrdersByType[this.itemType])
-            .do(sortOrder => {
-                this.sortOptions = sortOrder;
-            })
-            .publishReplay(1).refCount();
+        this.sort$ = this.dataService.sortOrder$.pipe(
+            map(sortOrdersByType => sortOrdersByType[this.itemType]),
+            tap(sortOrder => this.sortOptions = sortOrder),
+            publishReplay(1),
+            refCount(),
+        );
 
         this.nodeLanguages$ = this.dataService.currentAvailableLanguages$;
         this.activeLanguage$ = this.dataService.currentContentLanguage$;

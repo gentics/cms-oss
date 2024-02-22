@@ -28,6 +28,7 @@ import {
     CmsFormData,
     CmsFormElement,
     DependencyItemTypePlural,
+    EditMode,
     EditorPermissions,
     Favourite,
     File as FileModel,
@@ -47,7 +48,7 @@ import {
     Raw, RepositoryBrowserOptions,
 } from '@gentics/cms-models';
 import { ModalService } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
+import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ApiError } from '../api';
@@ -102,12 +103,12 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     }
 
     editNodeProperties(nodeId: number): void {
-        this.navigationService.detailOrModal(nodeId, 'node', nodeId, 'editProperties').navigate();
+        this.navigationService.detailOrModal(nodeId, 'node', nodeId, EditMode.EDIT_PROPERTIES).navigate();
     }
 
     editItem(item: InheritableItem, activeNodeId: number): void {
         this.decisionModals.showInheritedDialog(item, activeNodeId)
-            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, 'edit').navigate());
+            .then(({ item, nodeId }) => this.navigationService.detailOrModal(nodeId, item.type, item.id, EditMode.EDIT).navigate());
     }
 
     editProperties(item: InheritableItem, activeNodeId: number): void {
@@ -120,13 +121,13 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                     type = 'folder';
                 }
 
-                this.navigationService.detailOrModal(nodeId, type, item.id, 'editProperties').navigate();
+                this.navigationService.detailOrModal(nodeId, type, item.id, EditMode.EDIT_PROPERTIES).navigate();
             });
     }
 
     editInParentNode(item: InheritableItem): void {
         const nodeId = item.inherited ? item.inheritedFromId : item.masterNodeId;
-        const editMode = (item.type === 'page' || item.type === 'form' || item.type === 'image') ? 'edit' : 'editProperties';
+        const editMode = (item.type === 'page' || item.type === 'form' || item.type === 'image') ? EditMode.EDIT : EditMode.EDIT_PROPERTIES;
 
         this.folderActions.getItem(item.id, item.type, { nodeId })
             .then(itemInMasterNode => {
@@ -570,7 +571,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             .then((item: InheritableItem) => {
                 this.folderActions.refreshList(item.type);
                 if (this.state.now.editor.editorIsOpen && localizingEditedItem) {
-                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, 'preview').navigate();
+                    this.navigationService.detailOrModal(activeNodeId, item.type, item.id, EditMode.PREVIEW).navigate();
                 }
             });
     }
@@ -596,8 +597,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             title: 'modal.copy_item_title',
             submitLabel: 'modal.copy_item_submit',
             requiredPermissions: (selection: any, parent: Folder<Raw> | Node<Raw>, node: Node): Observable<boolean> => {
-                return this.permissions.forFolder(parent.id, node.id)
-                    .map((perms: any) => perms[itemType] ? perms[itemType].create : false);
+                return this.permissions.forFolder(parent.id, node.id).pipe(
+                    map((perms: any) => perms[itemType] ? perms[itemType].create : false),
+                );
             },
             selectMultiple: false,
         };
@@ -677,8 +679,9 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             title: 'modal.move_item_title',
             submitLabel: 'modal.move_item_submit',
             requiredPermissions: (selection: any, parent: Folder<Raw> | Node<Raw>, node: Node): Observable<boolean> => {
-                return this.permissions.forFolder(parent.id, node.id)
-                    .map((perms: EditorPermissions) => perms[itemType] ? perms[itemType].create : false);
+                return this.permissions.forFolder(parent.id, node.id).pipe(
+                    map((perms: EditorPermissions) => perms[itemType] ? perms[itemType].create : false),
+                );
             },
         };
 
@@ -870,7 +873,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 requests.push(this.folderActions.pushItemsToMaster((type.slice(0, -1)) as FolderItemType | any, item));
             });
         });
-        return Observable.forkJoin(requests);
+        return forkJoin(requests);
     }
 
     private pushFolderToMaster(itemType: FolderItemType, folderResponse: ChannelSyncRequest): Observable<any> {

@@ -16,7 +16,7 @@ import {
     DetailChip,
     DisplayFieldSelector,
     ExternalAssetsModalComponent,
-    FavouriteToggle,
+    FavouriteToggleComponent,
     FilePropertiesForm,
     FileStatusLabel,
     FolderPropertiesForm,
@@ -38,7 +38,7 @@ import {
     LanguageContextSelectorComponent,
     LinkTemplateComponent,
     LinkTemplateModal,
-    ListFilter,
+    ListFilterComponent,
     ListItemDetails,
     MasonryGridComponent,
     MultiDeleteModal,
@@ -74,7 +74,7 @@ import {
     TimeManagementModal,
     TranslatePageModal,
     UploadButtonComponent,
-    UsageList,
+    UsageListComponent,
     UsageModalComponent,
 } from './components';
 import {
@@ -123,7 +123,7 @@ const COMPONENTS = [
     ChipSearchBarComponent,
     DetailChip,
     DynamicDisableDirective,
-    FavouriteToggle,
+    FavouriteToggleComponent,
     FilePropertiesForm,
     FileStatusLabel,
     FolderContextMenuComponent,
@@ -144,7 +144,7 @@ const COMPONENTS = [
     ItemStateContextMenuComponent,
     ItemStatusLabelComponent,
     LanguageContextSelectorComponent,
-    ListFilter,
+    ListFilterComponent,
     ListItemDetails,
     MasonryGridComponent,
     MasonryItemDirective,
@@ -192,7 +192,7 @@ const ENTRY_COMPONENTS = [
     TakePagesOfflineModal,
     TimeManagementModal,
     TranslatePageModal,
-    UsageList,
+    UsageListComponent,
     UsageModalComponent,
 ];
 

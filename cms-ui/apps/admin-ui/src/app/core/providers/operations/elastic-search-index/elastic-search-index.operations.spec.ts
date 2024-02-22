@@ -11,6 +11,7 @@ import {
     Normalized,
     Raw,
     RecursivePartial,
+    ResponseCode,
 } from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { NgxsModule } from '@ngxs/store';
@@ -72,7 +73,7 @@ describe('ElasticSearchIndexOperations', () => {
     it('getItems() works', () => {
         // prepare test data
         const mockResponse: ElasticSearchIndexListResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             hasMoreItems: false,
             numItems: MOCK_ENTITIES_RAW.length,
             items: MOCK_ENTITIES_RAW,
@@ -108,7 +109,7 @@ describe('ElasticSearchIndexOperations', () => {
     it('rebuild() works', () => {
         // prepare test data
         const mockResponse: ElasticSearchIndexListResponse = {
-            responseInfo: { responseCode: 'OK' },
+            responseInfo: { responseCode: ResponseCode.OK },
             hasMoreItems: false,
             numItems: MOCK_ENTITIES_RAW.length,
             items: MOCK_ENTITIES_RAW,

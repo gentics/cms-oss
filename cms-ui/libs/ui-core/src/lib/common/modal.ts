@@ -21,8 +21,8 @@ export interface IDialogConfig {
  * Settings which determine the look and behaviour of the modal wrapper window itself
  */
 export interface IModalOptions {
-    onOpen?: Function;
-    onClose?: Function;
+    onOpen?: () => void;
+    onClose?: (reason?: ModalClosingReason) => void;
     closeOnOverlayClick?: boolean;
     closeOnEscape?: boolean;
     width?: string;
@@ -48,13 +48,13 @@ export interface IModalDialog {
     closeFn: (val: any) => void;
 
     /** Can be called to close the modal by cancelling. */
-    cancelFn: (val?: any) => void;
+    cancelFn: (val?: any, reason?: ModalClosingReason) => void;
 
     /** Is passed a callback which can be called by the modal to close and return a value. */
     registerCloseFn: (close: (val: any) => void) => void;
 
     /** Is passed a callback which can be called by the modal to cancel. */
-    registerCancelFn: (cancel: (val: any) => void) => void;
+    registerCancelFn: (cancel: (val: any, reason?: ModalClosingReason) => void) => void;
 
     /** Is passed a callback which can be called by the modal to signal an error and close. */
     registerErrorFn?: (errorFn: (err: Error) => void) => void;
@@ -65,5 +65,56 @@ export const DEFAULT_MODAL_OPTIONS: IModalOptions = {
     padding: true,
     width: null,
     closeOnEscape: true,
-    closeOnOverlayClick: true
+    closeOnOverlayClick: true,
 };
+
+/**
+ * Enum which defines why the modal has been closed.
+ */
+export enum ModalClosingReason {
+    /**
+     * When the modal has been closed by the user by pressing the Escape button.
+     * Only available when the modal has been opened with `closeOnEscape=true`.
+     */
+    ESCAPE = 'escape',
+    /**
+     * When the modal has been closed by the user by clicking on the overlay.
+     * Only available when the modal has been opened with `closeOnOverlayClick=true`.
+     */
+    OVERLAY_CLICK = 'overlay-click',
+    /**
+     * Canceled by the Modals `cancelFn` function.
+     */
+    CANCEL = 'cancel',
+    /**
+     * When the modal has been closed by the API.
+     */
+    API = 'api',
+    /**
+     * Closed because of a thrown error in the modal.
+     */
+    ERROR = 'error',
+}
+
+/**
+ * Special error which is thrown when a Modal is being closed.
+ */
+export class ModalCloseError extends Error {
+
+    public reason: ModalClosingReason;
+    public cause?: Error;
+
+    constructor(
+        reasonOrError: ModalClosingReason | Error,
+        message?: string,
+    ) {
+        if (reasonOrError instanceof Error) {
+            super(message);
+            this.reason = ModalClosingReason.ERROR;
+            this.cause = reasonOrError;
+        } else {
+            super(message);
+            this.reason = reasonOrError;
+        }
+    }
+}

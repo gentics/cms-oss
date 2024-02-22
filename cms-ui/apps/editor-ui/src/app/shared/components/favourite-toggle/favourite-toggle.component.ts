@@ -8,27 +8,35 @@ import { ApplicationStateService } from '../../../state';
  */
 @Component({
     selector: 'favourite-toggle',
-    templateUrl: './favourite-toggle.tpl.html',
-    styleUrls: ['./favourite-toggle.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
-    })
-export class FavouriteToggle {
+    templateUrl: './favourite-toggle.component.html',
+    styleUrls: ['./favourite-toggle.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class FavouriteToggleComponent {
 
     @Input()
-    item: Item | Item[];
+    public item: Item | Item[];
 
     constructor(
         private appState: ApplicationStateService,
         private favourites: FavouritesService,
     ) { }
 
+    public toggle(item: Item, active: boolean): void {
+        if (active) {
+            this.remove(item);
+        } else {
+            this.add(item);
+        }
+    }
+
     add(item: Item): void {
-        let items: Item[] = (Array.isArray(item) ? item : [item]) as any;
+        const items: Item[] = (Array.isArray(item) ? item : [item]) as any;
         this.favourites.add(items);
     }
 
     remove(item: Item): void {
-        let items: Item[] = (Array.isArray(item) ? item : [item]) as any;
+        const items: Item[] = (Array.isArray(item) ? item : [item]) as any;
         const nodeId = this.appState.now.folder.activeNode;
         this.favourites.remove(items, { nodeId });
     }

@@ -2,12 +2,12 @@ import { Component, Pipe, PipeTransform } from '@angular/core';
 import { tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { ValidationResult } from '@gentics/cms-models';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { componentTest, configureComponentTest } from '../../../../../testing';
-import { ValidationResult } from '../../../common';
-import { ValidationErrorInfo } from './validation-error-info.component';
+import { ValidationErrorInfoComponent } from './validation-error-info.component';
 
 describe('ValidationErrorInfoComponent', () => {
 
@@ -23,7 +23,7 @@ describe('ValidationErrorInfoComponent', () => {
             declarations: [
                 MockI18nPipe,
                 TestComponent,
-                ValidationErrorInfo,
+                ValidationErrorInfoComponent,
             ],
         });
     });
@@ -32,7 +32,7 @@ describe('ValidationErrorInfoComponent', () => {
         componentTest(() => TestComponent, (fixture) => {
             fixture.detectChanges();
             tick();
-            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfo));
+            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfoComponent));
             expect(errorInfoElement.queryAll(By.all()).length).toBe(0);
         }),
     );
@@ -42,7 +42,7 @@ describe('ValidationErrorInfoComponent', () => {
             instance.validationResult = { isSet: true, success: true };
             fixture.detectChanges();
             tick();
-            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfo));
+            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfoComponent));
             expect(errorInfoElement.queryAll(By.all()).length).toBe(0);
         }),
     );
@@ -58,7 +58,7 @@ describe('ValidationErrorInfoComponent', () => {
             fixture.detectChanges();
             tick();
 
-            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfo));
+            const errorInfoElement = fixture.debugElement.query(By.directive(ValidationErrorInfoComponent));
             const spanElement = errorInfoElement.query(By.css('span')).nativeElement as HTMLElement;
             expect(spanElement.innerText.trim()).toEqual(expectedErrorMessage);
         }),
@@ -76,8 +76,8 @@ class MockI18nPipe implements PipeTransform {
 @Component({
     template: `
         <validation-error-info [validationResult]="validationResult"></validation-error-info>
-    `
-    })
+    `,
+})
 class TestComponent {
     validationResult: ValidationResult;
 }

@@ -9,7 +9,7 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { CompleteTagEditor, EditableTag, TagChangedFn, TagEditorContext, TagEditorError } from '@gentics/cms-models';
+import { CompleteTagEditor, EditableTag, TagChangedFn, TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
 import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-editor.component';
@@ -57,7 +57,7 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    editTag(tag: EditableTag, context: TagEditorContext): Promise<EditableTag> {
+    editTag(tag: EditableTag, context: TagEditorContext): Promise<TagEditorResult> {
         const clones = this.initTagEditor(tag, context);
 
         return this.tagEditorComponent.instance.editTag(clones.tagClone, clones.contextClone)
@@ -68,7 +68,7 @@ export class TagEditorHostComponent implements OnDestroy, CompleteTagEditor {
                 } else {
                     // If the tag was opened in read-only mode we always reject the promise (as if the Cancel button had been clicked).
                     // By throwing here, we get to the catch handler.
-                    throw undefined;
+                    throw new Error('Tag-Editor read-only');
                 }
             })
             .catch((reason) => {

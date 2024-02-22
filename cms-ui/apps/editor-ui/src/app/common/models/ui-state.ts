@@ -29,4 +29,7 @@ export interface UIState {
     uiVersion: string;
     usersnap: UsersnapSettings;
     hideExtras: boolean;
+    overlayCount: number;
+    constructFavourites: string[];
+    tagEditorOpen: boolean;
 }

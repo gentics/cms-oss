@@ -1,5 +1,5 @@
-import { GcmsUiLanguage } from '../gcms-ui-bridge';
 import { DefaultModelType, ModelType } from './type-util';
+import { GcmsUiLanguage } from './ui-state';
 
 interface BaseRole<T extends ModelType = DefaultModelType> {
     /** Name of the role in the current language. Only available when loading a role. */

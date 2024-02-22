@@ -1,0 +1,30 @@
+@import 'variables';
+
+.table-size-grid {
+
+    .grid-row {
+        display: grid;
+        grid-template-columns: repeat(var(--gtx-grid-columns), auto);
+
+        &:nth-child(5n):not(:last-child) {
+            border-bottom: 1px solid rgba($gtx-color-dark-gray, 80%);
+        }
+    }
+
+    .cell {
+        width: 1rem;
+        height: 1rem;
+        background: $gtx-color-very-light-gray;
+        margin: 1px;
+        transition: 150ms;
+
+        &.active,
+        &:hover {
+            background: $gtx-color-primary;
+        }
+
+        &:nth-child(5n):not(:last-child) {
+            border-right: 1px solid rgba($gtx-color-dark-gray, 80%);
+        }
+    }
+}

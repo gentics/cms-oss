@@ -1,6 +1,6 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { ItemType, LocalizationsResponse } from '@gentics/cms-models';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Api } from '../api/api.service';
 import { EntityResolver } from '../entity-resolver/entity-resolver';
 import { LocalizationsService } from './localizations.service';
@@ -28,7 +28,7 @@ describe('LocalizationsService', () => {
 
         it('should return correct result when no localizations exist', waitForAsync(() => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {},
                 masterNodeId: 1,
@@ -42,7 +42,7 @@ describe('LocalizationsService', () => {
 
         it('should return correct result when one localization exists', () => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {
                     23: 2,
@@ -60,7 +60,7 @@ describe('LocalizationsService', () => {
 
         it('should return correct result when several localizations exist', () => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {
                     23: 2,
@@ -82,7 +82,7 @@ describe('LocalizationsService', () => {
 
         it('should omit self from results', () => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {
                     23: 2,
@@ -107,7 +107,7 @@ describe('LocalizationsService', () => {
 
         it('should return correct value when given array of ids', () => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {
                     23: 2,
@@ -129,7 +129,7 @@ describe('LocalizationsService', () => {
 
         it('should return correct value when given array of items', () => {
             const itemId = 4;
-            spyOn(api.folders, 'getLocalizations').and.returnValue(Observable.of({
+            spyOn(api.folders, 'getLocalizations').and.returnValue(of({
                 masterId: itemId,
                 nodeIds: {
                     23: 2,
@@ -169,7 +169,7 @@ class MockApi {
         getLocalizations: (
             type: ItemType,
             id: number,
-        ): Observable<LocalizationsResponse> => Observable.of({}) as any,
+        ): Observable<LocalizationsResponse> => of({}) as any,
     };
 }
 

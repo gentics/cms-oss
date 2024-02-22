@@ -34,7 +34,7 @@ export class TagTypeApi {
      * Get all constructs.
      * **Important:** This method only works for Admin users.
      */
-    getTagTypes(options: PagedConstructListRequestOptions): Observable<PermissionListResponse<TagType>> {
+    getTagTypes(options?: PagedConstructListRequestOptions): Observable<PermissionListResponse<TagType>> {
         if (options?.sort) {
             const copy: any = {...options };
             copy.sort = stringifyPagingSortOptions(copy.sort);

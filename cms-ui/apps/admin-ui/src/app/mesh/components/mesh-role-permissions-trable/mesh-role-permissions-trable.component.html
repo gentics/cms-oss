@@ -36,7 +36,7 @@
 
 <ng-template #permissionRenderer let-value="value" let-row="row">
     <div class="permissions-wrapper">
-        <ng-container *ngFor="let perm of (Permission | entries)">
+        <ng-container *ngFor="let perm of (Permission | gtxEntries)">
             <div
                 *ngIf="row.item[MBO_AVILABLE_PERMISSIONS] | gtxIncludes:perm.value; else emptyPermBlock"
                 class="permission-icon"

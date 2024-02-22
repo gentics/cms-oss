@@ -1,6 +1,7 @@
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { EditMode } from '@gentics/cms-models';
 import { InstructionActions, NavigationService } from './navigation.service';
 
 describe('NavigationService', () => {
@@ -44,12 +45,12 @@ describe('NavigationService', () => {
                     nodeId: 1,
                     itemType: 'page',
                     itemId: 6,
-                    editMode: 'preview',
+                    editMode: EditMode.PREVIEW,
                 },
             }).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    detail: ['node', 1, 'page', 6, 'preview', encodeOptions({})],
+                    detail: ['node', 1, 'page', 6, EditMode.PREVIEW, encodeOptions({})],
                 },
             }]);
         });
@@ -61,13 +62,13 @@ describe('NavigationService', () => {
                     nodeId: 1,
                     itemType: 'page',
                     itemId: 6,
-                    editMode: 'preview',
+                    editMode: EditMode.PREVIEW,
                     options: options,
                 },
             }).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    detail: ['node', 1, 'page', 6, 'preview', encodeOptions(options)],
+                    detail: ['node', 1, 'page', 6, EditMode.PREVIEW, encodeOptions(options)],
                 },
             }]);
         });
@@ -91,13 +92,13 @@ describe('NavigationService', () => {
                     nodeId: 1,
                     itemType: 'page',
                     itemId: 6,
-                    editMode: 'preview',
+                    editMode: EditMode.PREVIEW,
                 },
             }).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
                     list: ['node', 3, 'folder', 42],
-                    detail: ['node', 1, 'page', 6, 'preview', encodeOptions({})],
+                    detail: ['node', 1, 'page', 6, EditMode.PREVIEW, encodeOptions({})],
                 },
             }]);
         });
@@ -190,37 +191,37 @@ describe('NavigationService', () => {
         });
 
         it('detail()', () => {
-            const commands = navigationService.detail(1, 'page', 2, 'editProperties').commands();
+            const commands = navigationService.detail(1, 'page', 2, EditMode.EDIT_PROPERTIES).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    detail: ['node', 1, 'page', 2, 'editProperties', encodeOptions({})],
+                    detail: ['node', 1, 'page', 2, EditMode.EDIT_PROPERTIES, encodeOptions({})],
                 },
             }]);
         });
 
         it('modal()', () => {
-            const commands = navigationService.modal(1, 'image', 2, 'edit').commands();
+            const commands = navigationService.modal(1, 'image', 2, EditMode.EDIT).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    modal: ['node', 1, 'image', 2, 'edit', encodeOptions({})],
+                    modal: ['node', 1, 'image', 2, EditMode.EDIT, encodeOptions({})],
                 },
             }]);
         });
 
         it('detail() called by detailOrModal()', () => {
-            const commands = navigationService.detailOrModal(1, 'page', 2, 'editProperties').commands();
+            const commands = navigationService.detailOrModal(1, 'page', 2, EditMode.EDIT_PROPERTIES).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    detail: ['node', 1, 'page', 2, 'editProperties', encodeOptions({})],
+                    detail: ['node', 1, 'page', 2, EditMode.EDIT_PROPERTIES, encodeOptions({})],
                 },
             }]);
         });
 
         it('modal() called by detailOrModal()', () => {
-            const commands = navigationService.detailOrModal(1, 'image', 2, 'edit').commands();
+            const commands = navigationService.detailOrModal(1, 'image', 2, EditMode.EDIT).commands();
             expect(commands).toEqual(['/editor', {
                 outlets: {
-                    modal: ['node', 1, 'image', 2, 'edit', encodeOptions({})],
+                    modal: ['node', 1, 'image', 2, EditMode.EDIT, encodeOptions({})],
                 },
             }]);
         });

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { ResponseCode } from '@gentics/cms-models';
 import { ApiError } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Actions, ActionType, ofActionDispatched } from '@ngxs/store';
-import { ModalService } from '@gentics/ui-core';
 import { Observable } from 'rxjs';
-
 import { AppStateService, LogoutSuccess } from '../../../state';
-import { assembleTestAppStateImports, TestAppState, TEST_APP_STATE } from '../../../state/utils/test-app-state';
+import { assembleTestAppStateImports, TEST_APP_STATE, TestAppState } from '../../../state/utils/test-app-state';
 import { I18nNotificationService } from '../i18n-notification/i18n-notification.service';
 import { ErrorHandler } from './error-handler.service';
 
@@ -129,7 +129,7 @@ describe('ErrorHandler', () => {
                 },
                 response: {
                     responseInfo: {
-                        responseCode: 'NOTFOUND',
+                        responseCode: ResponseCode.NOT_FOUND,
                         responseMessage: 'Did not find a user with given credentials',
                     },
                 },
@@ -152,7 +152,7 @@ describe('ErrorHandler', () => {
                 },
                 response: {
                     responseInfo: {
-                        responseCode: 'AUTHREQUIRED',
+                        responseCode: ResponseCode.AUTH_REQUIRED,
                         responseMessage: 'Invalid SID',
                     },
                 },

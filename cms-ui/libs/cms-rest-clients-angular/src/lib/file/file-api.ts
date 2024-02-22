@@ -1,4 +1,4 @@
-import { EntityIdType, FileListOptions, FileListResponse, FileResponse } from '@gentics/cms-models';
+import { EntityIdType, FileListOptions, FileListResponse, FileRequestOptions, FileResponse } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { ApiBase } from '../base/api-base.service';
 
@@ -7,8 +7,8 @@ export class FileApi {
         private apiBase: ApiBase,
     ) {}
 
-    getFile(id: EntityIdType): Observable<FileResponse> {
-        return this.apiBase.get(`file/load/${id}`);
+    getFile(id: EntityIdType, options?: FileRequestOptions): Observable<FileResponse> {
+        return this.apiBase.get(`file/load/${id}`, options);
     }
 
     listFiles(options?: FileListOptions): Observable<FileListResponse> {

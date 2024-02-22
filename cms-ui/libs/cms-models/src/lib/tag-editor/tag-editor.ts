@@ -1,7 +1,7 @@
-import {Tag, TagPropertyMap} from '../models';
-import {CustomEditor} from './custom-editor';
-import {EditableTag} from './editable-tag';
-import {TagEditorContext} from './tag-editor-context';
+import { Tag, TagPropertyMap } from '../models';
+import { CustomEditor, TagEditorResult } from './custom-editor';
+import { EditableTag } from './editable-tag';
+import { TagEditorContext } from './tag-editor-context';
 
 /**
  * This function needs to be called every time a tag property is changed, when a tag is edited via `TagEditor.editTagLive()`.
@@ -53,7 +53,7 @@ export interface TagEditor {
      * @returns A Promise, which will be resolved with the modified tag if the user clicks the OK button
      * or which will be rejected if the user clicks Cancel button.
      */
-    editTag?(tag: EditableTag, context: TagEditorContext): Promise<EditableTag>;
+    editTag?(tag: EditableTag, context: TagEditorContext): Promise<TagEditorResult>;
 
 }
 

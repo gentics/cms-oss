@@ -1,0 +1,11 @@
+<ng-container *ngTemplateOutlet="renderer; context: { active: (item | isFavourite:'all') }"></ng-container>
+<ng-template #renderer let-active="active">
+    <gtx-button
+        icon
+        type="secondary"
+        [title]="(active ? 'editor.favourites_remove_label' : 'editor.favourites_add_label') | i18n"
+        (click)="toggle(item, active)"
+    >
+        <icon [class.favourite]="active" [class.hollow]="!active">star</icon>
+    </gtx-button>
+</ng-template>

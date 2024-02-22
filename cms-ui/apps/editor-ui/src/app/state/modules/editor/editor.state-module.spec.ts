@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Normalized, Page, PageVersion, PrivilegeMap, User } from '@gentics/cms-models';
+import { EditMode, Normalized, Page, PageVersion, PrivilegeMap, User } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { EditorState, ITEM_PROPERTIES_TAB } from '../../../common/models';
 import { ApplicationStateService } from '../../providers';
@@ -38,6 +38,7 @@ describe('EditorStateModule', () => {
 
     it('sets the correct initial state', () => {
         expect(appState.now.editor).toEqual({
+            compareWithId: undefined,
             editorIsFocused: false,
             editorIsOpen: false,
             focusMode: false,
@@ -207,17 +208,17 @@ describe('EditorStateModule', () => {
 
         it('works for previewing a page', () => {
             appState.dispatch(new EditItemAction({
-                editMode: 'preview',
+                editMode: EditMode.PREVIEW,
                 itemId: PAGEID,
                 itemType: 'page',
                 nodeId: 1,
                 openTab: 'properties',
             }));
-            appState.dispatch(new LockItemAction('page', PAGEID, 'preview'));
+            appState.dispatch(new LockItemAction('page', PAGEID, EditMode.PREVIEW));
 
             expect(appState.now.editor).toEqual(
                 jasmine.objectContaining({
-                    editMode: 'preview',
+                    editMode: EditMode.PREVIEW,
                     editorIsOpen: true,
                     itemId: PAGEID,
                     itemType: 'page',
@@ -239,7 +240,7 @@ describe('EditorStateModule', () => {
 
         it('works for editing a page', () => {
             appState.dispatch(new EditItemAction({
-                editMode: 'edit',
+                editMode: EditMode.EDIT,
                 itemId: PAGEID,
                 itemType: 'page',
                 nodeId: 1,
@@ -248,7 +249,7 @@ describe('EditorStateModule', () => {
 
             expect(appState.now.editor).toEqual(
                 jasmine.objectContaining({
-                    editMode: 'edit',
+                    editMode: EditMode.EDIT,
                     editorIsOpen: true,
                     itemId: PAGEID,
                     itemType: 'page',
@@ -261,13 +262,13 @@ describe('EditorStateModule', () => {
 
         it('locks a page when editing it', () => {
             appState.dispatch(new EditItemAction({
-                editMode: 'edit',
+                editMode: EditMode.EDIT,
                 itemId: PAGEID,
                 itemType: 'page',
                 nodeId: 1,
                 openTab: 'properties',
             }));
-            appState.dispatch(new LockItemAction('page', PAGEID, 'edit'));
+            appState.dispatch(new LockItemAction('page', PAGEID, EditMode.EDIT));
 
             expect(appState.now.entities.page[PAGEID]).toEqual(
                 jasmine.objectContaining({
@@ -280,7 +281,7 @@ describe('EditorStateModule', () => {
 
         it('works for editing the properties of a folder', () => {
             appState.dispatch(new EditItemAction({
-                editMode: 'editProperties',
+                editMode: EditMode.EDIT_PROPERTIES,
                 itemId: FOLDERID,
                 itemType: 'folder',
                 nodeId: 2,
@@ -290,7 +291,7 @@ describe('EditorStateModule', () => {
 
             expect(appState.now.editor).toEqual(
                 jasmine.objectContaining({
-                    editMode: 'editProperties',
+                    editMode: EditMode.EDIT_PROPERTIES,
                     editorIsOpen: true,
                     itemId: FOLDERID,
                     itemType: 'folder',
@@ -304,7 +305,7 @@ describe('EditorStateModule', () => {
         it('locks a page when editing its properties', () => {
             expect(appState.now.entities.page[PAGEID].locked).toBe(false);
 
-            appState.dispatch(new LockItemAction('page', PAGEID, 'editProperties'));
+            appState.dispatch(new LockItemAction('page', PAGEID, EditMode.EDIT_PROPERTIES));
 
             expect(appState.now.entities.page[PAGEID].locked).toBe(true);
         });
@@ -329,11 +330,11 @@ describe('EditorStateModule', () => {
 
             expect(appState.now.entities.page[PAGEID].locked).toBe(false, 'locked before doing anything');
 
-            appState.dispatch(new LockItemAction('page', PAGEID, 'editProperties'));
+            appState.dispatch(new LockItemAction('page', PAGEID, EditMode.EDIT_PROPERTIES));
 
             expect(appState.now.entities.page[PAGEID].locked).toBe(false, 'locked by editProperties');
 
-            appState.dispatch(new LockItemAction('page', PAGEID, 'edit'));
+            appState.dispatch(new LockItemAction('page', PAGEID, EditMode.EDIT));
 
             expect(appState.now.entities.page[PAGEID].locked).toBe(false, 'locked by edit');
         });
@@ -352,7 +353,7 @@ describe('EditorStateModule', () => {
         expect(appState.now.editor).toEqual(
             jasmine.objectContaining({
                 compareWithId: undefined,
-                editMode: 'previewVersion',
+                editMode: EditMode.PREVIEW_VERSION,
                 editorIsOpen: true,
                 itemId: 23,
                 itemType: 'page',
@@ -405,7 +406,7 @@ describe('EditorStateModule', () => {
 
     it('saving works', () => {
         expect(appState.now.editor.saving).toBe(false);
-        let mockErrorMessage = 'Error message';
+        const mockErrorMessage = 'Error message';
 
         appState.dispatch(new StartSavingAction());
         expect(appState.now.editor.saving).toBe(true);

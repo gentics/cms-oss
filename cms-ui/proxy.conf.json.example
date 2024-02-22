@@ -48,5 +48,13 @@
         "target": "http://localhost:8080",
         "secure": false,
         "changeOrigin": true
+    },
+    "/spelling": {
+        "target": "http://localhost:8010/v2",
+        "secure": false,
+        "changeOrigin": true,
+        "pathRewrite": {
+            "^/spelling": ""
+        }
     }
 }

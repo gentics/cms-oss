@@ -15,6 +15,13 @@ let window: never;
 const DEBUG = false;
 
 
+/** Callback for the extended version of pollUntilAvailable(). */
+type PollCallback<T> = (
+    window: CNWindow,
+    document: CNIFrameDocument,
+    receiver: (found: T) => unknown
+) => unknown
+
 /**
  * This script will be executed once when the IFrame calls GCMSUI.runPreLoadScript().
  * This happens when `DOMContentLoaded` is fired inside the IFrame, but before the assets
@@ -102,6 +109,9 @@ export class PreLoadScript {
         });
     }
 
+
+
+
     /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
     pollUntilAvailable<T>(checkFn: (window: CNWindow, document: CNIFrameDocument) => T, callback: (found: T) => any): void {
         let timeout = 0;
@@ -113,13 +123,42 @@ export class PreLoadScript {
                 if (this.window && this.document) {
                     found = checkFn(this.window, this.document);
                 }
-            } catch (ignored) { }
+            } catch (ignored) {
+                console.warn('Error while calling checkFn() from pollUntilAvailable():', ignored);
+            }
 
             if (found != undefined) {
                 timeout = 0;
                 callback(found);
             } else if (this.document.readyState !== 'complete' || --retriesAfterLoad > 0) {
                 timeout = this.window.setTimeout(poll, 10);
+            }
+        };
+        poll();
+    }
+
+
+    /** Poll for a global object to be created by a script between DOMContentLoaded and Load. */
+    pollUntilAvailableWithPollCallback<T>(checkFn: PollCallback<T>, callback: (found: T) => any): void {
+        let timeout = 0;
+        let retriesAfterLoad = 5;
+
+
+        const poll = () => {
+            let found: T;
+            try {
+                if (this.window && this.document) {
+                    checkFn(this.window, this.document, (found) => {
+                        if (found != undefined) {
+                            timeout = 0;
+                            callback(found);
+                        } else if (this.document.readyState !== 'complete' || --retriesAfterLoad > 0) {
+                            timeout = this.window.setTimeout(poll, 10);
+                        }
+                    });
+                }
+            } catch (ignored) {
+                console.warn('Error while calling checkFn() from pollUntilAvailableWithPollCallback():', ignored);
             }
         };
         poll();
@@ -210,8 +249,12 @@ export class PreLoadScript {
     }
 
     overrideUploadsFromGCNFileUploadPlugin(): void {
-        this.pollUntilAvailable(
-            window => window.Aloha.require('aloha/pluginmanager').plugins['gcnfileupload'],
+        this.pollUntilAvailableWithPollCallback(
+            (window, document, receive) => {
+                window.Aloha.require(['aloha/pluginmanager'], (pluginManager) => {
+                    receive(pluginManager.plugins['gcnfileupload']);
+                });
+            },
             (fileUploadPlugin: FileUploadPlugin) => {
                 if (DEBUG) {
                     console.log('GCN fileupload plugin found!');
@@ -372,12 +415,19 @@ export class PreLoadScript {
     }
 
     patchLinkBrowserPluginToUseNewRepositoryBrowser(): void {
-        this.pollUntilAvailable(
-            (window) => window.Aloha.require('aloha/pluginmanager').plugins['gcn-linkbrowser'].browser,
+        this.pollUntilAvailableWithPollCallback(
+            (window, document, receive) => {
+                window.Aloha.require(['aloha/pluginmanager'], ({ plugins }) => {
+                    const browser = plugins['gcn-linkbrowser']?.browser;
+                    receive(browser);
+                });
+
+            },
             (linkBrowser: LinkBrowser) => {
                 if (DEBUG) {
                     console.log('LinkBrowser found!');
                 }
+
 
                 const linkBrowserOldShow = linkBrowser.show.bind(linkBrowser);
                 linkBrowser.show = () => {
@@ -386,6 +436,7 @@ export class PreLoadScript {
                     const types = linkBrowser.getObjectTypeFilter()
                         .map(type => type.replace(/s$/, ''))
                         .map(type => type === 'website' ? 'page' : type) as AllowedSelectionType[];
+
 
                     if (DEBUG) {
                         console.log(`LinkBrowser.show(types = ${linkBrowser.getObjectTypeFilter().join(', ')})`);
@@ -397,15 +448,18 @@ export class PreLoadScript {
                         submitLabel: 'modal.repository_browser_submit_link',
                     };
 
+
                     // Set currentItem's language if the item supports
                     if (this.scriptHost.currentItem && this.scriptHost.currentItem['language']) {
                         options.contentLanguage = this.scriptHost.currentItem['language'];
                     }
 
+
                     linkBrowser.opened = true;
                     this.scriptHost.openRepositoryBrowser(options, selected => {
                         this.document.body.classList.remove('gcn-stop-scrolling');
                         linkBrowser.opened = false;
+
 
                         if (selected) {
                             const repoItem = mapApiItemToOldRepositoryBrowserItem(selected as ItemInNode);
@@ -422,6 +476,7 @@ export class PreLoadScript {
             },
         );
     }
+
 
     // Remove and add custom elements to overview tagfill forms
     overwriteOverviewTagfill(itemList$?: JQuery): void {

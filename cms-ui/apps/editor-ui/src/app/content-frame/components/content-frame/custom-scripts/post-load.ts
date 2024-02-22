@@ -416,7 +416,7 @@ export class PostLoadScript {
      */
     periodicallyPollAlohaModified(): void {
         this.window.setInterval(() => {
-            if (!this.scriptHost.contentFrame.contentModified && this.window.Aloha && this.window.Aloha.isModified()) {
+            if (!this.scriptHost.contentFrame.contentModified && this.window.Aloha && this.window.Aloha.isModified && this.window.Aloha.isModified()) {
                 this.scriptHost.setContentModified(true);
             }
         }, 1000);

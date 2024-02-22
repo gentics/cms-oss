@@ -1,5 +1,5 @@
 //
-// NOTE: Keep this file in sync with the other gcn-tooltips.js file which 
+// NOTE: Keep this file in sync with the other gcn-tooltips.js file which
 //       resides within the aloha editor contentnode webapp minibrowser.
 //
 // Regressive enhancement for parts of Gentics Content.Node that do not have
@@ -141,7 +141,7 @@
 	function getSTagPrefix() {
 		return getGCNRESTSettings().stag_prefix;
 	}
-	
+
 	/**
 	 * Gets the proxy_prefix from the GCNREST settings
 	 *
@@ -370,7 +370,7 @@
 		var $preview = $element.tipsy('show');
 		var $tipsy = pointTooltip(findThumbnail($element));
 		$tipsy.find('.tipsy-inner').css('max-width', 'none');
-		$tipsy.find('.gtx-repobrowser-preview-image').load(onPreviewLoaded);
+		$tipsy.find('.gtx-repobrowser-preview-image').on('load', onPreviewLoaded);
 		return $preview;
 	}
 

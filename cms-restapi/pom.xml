@@ -23,6 +23,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>
+		<enunciate.skip>false</enunciate.skip>
 	</properties>
 
 	<build>
@@ -131,6 +132,7 @@
 							<goal>docs</goal>
 						</goals>
 						<configuration>
+							<skipEnunciate>${enunciate.skip}</skipEnunciate>
 							<!-- the directory where to put the docs -->
 							<docsDir>${project.build.directory}/docs</docsDir>
 							<docsSubdir>.</docsSubdir>

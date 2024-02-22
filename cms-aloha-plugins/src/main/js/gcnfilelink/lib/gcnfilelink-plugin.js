@@ -9,7 +9,7 @@
 define(
 [
 	'jquery',
-	'aloha/plugin', 
+	'aloha/plugin',
 	'i18n!gcnfilelink/nls/i18n',
 	'i18n!link/nls/i18n',
 	'block/blockmanager',
@@ -36,7 +36,7 @@ function (
 	Dom
 ) {
 	"use strict";
-	
+
 	var $ = jQuery,
 		GCN = window.GCN,
 		GENTICS = window.GENTICS,
@@ -55,7 +55,7 @@ function (
 
 		var $blockElement = obj.closest('.aloha-block');
 
-		if ($blockElement.size() == 0) {
+		if ($blockElement.length == 0) {
 			return false;
 		}
 
@@ -128,7 +128,7 @@ function (
 	 * Remove the given file block.
 	 *
 	 * @param {FileBlock} fileBlock The block to remove.
-	 * @param {Boolean|Object} linkRemoveEvent The <code>aloha.link.remove</code> 
+	 * @param {Boolean|Object} linkRemoveEvent The <code>aloha.link.remove</code>
 	 *	event that caused removal of this block, or <code>false</code> if the
 	 *	block is removed, because the link does no longer point to a file.
 	 */

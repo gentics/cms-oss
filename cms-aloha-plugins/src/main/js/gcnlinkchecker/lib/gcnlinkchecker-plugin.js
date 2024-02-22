@@ -113,7 +113,7 @@ define(
         /**
          * Check the given URL asynchronously and mark link and input field according to the result.
          * 
-         * @param {sting} href URL to be checked
+         * @param {string} href URL to be checked
          * @param {jQuery|Dom} element link element
          * @param {jQuery|Dom} input input field
          */
@@ -151,6 +151,21 @@ define(
                     }
                 }
             });
+        }
+
+        /**
+         * Remove any marking on the link and input field (because the link is internal and does not need to be checked)
+         * @param {jQuery|Dom} element link element
+         * @param {jQuery|Dom} input input field
+         */
+        function removeMarking(element, input) {
+            var $input = $(input);
+            GCNLinks.getIcon($input, i18n.t('error.invalid-external.link'))
+                            .html('');
+            $(element).removeClass("aloha-gcnlinkchecker-invalid-url");
+            $input.parent()
+                .removeClass('gcn-link-uri-warning')
+                .removeClass('gcn-link-uri-success');
         }
 
         function openTagfill(event) {
@@ -354,8 +369,12 @@ define(
         // Add an event handler for changed links.
         PubSub.sub('aloha.link.changed', function (msg) {
             // if livecheck is activated and the link is external and not empty and not only an anchor, the check is done after a delay
-            if (plugin.settings.livecheck && plugin.settings.livecheck !== 'false' && msg.href !== '' && msg.href.indexOf('#') !== 0 && !GCNLinks.isInternal(msg.element)) {
-                checkWithDelay($.trim(msg.href), msg.element, msg.input);
+            if (plugin.settings.livecheck && plugin.settings.livecheck !== 'false' && msg.href !== '' && msg.href.indexOf('#') !== 0) {
+                if (GCNLinks.isInternal(msg.element)) {
+                    removeMarking(msg.element, msg.input);
+                } else {
+                    checkWithDelay($.trim(msg.href), msg.element, msg.input);
+                }
             }
         });
 

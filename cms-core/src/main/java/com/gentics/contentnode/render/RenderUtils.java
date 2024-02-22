@@ -94,7 +94,7 @@ public class RenderUtils {
 
 					try (
 						CloseableHttpClient httpClient = getHttpClient(node.isInsecurePreviewUrl());
-						RenderTypeTrx rTrx = new RenderTypeTrx(renderMode, page, false, false); MeshPublisher mp = new MeshPublisher(cr, false)
+						RenderTypeTrx rTrx = new RenderTypeTrx(renderMode, page, false, false, false); MeshPublisher mp = new MeshPublisher(cr, false)
 					) {
 						// rendered tagmap entries should not contain aloha settings or script includes and editables shall not (yet) be replaced
 						rTrx.get().setParameter(AlohaRenderer.RENDER_SETTINGS, false);

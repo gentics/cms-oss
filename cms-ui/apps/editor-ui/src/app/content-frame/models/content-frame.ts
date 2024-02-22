@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { GcmsUiBridge } from '@gentics/cms-integration-api-models';
 import { File as FileModel, Image as ImageModel, Page } from '@gentics/cms-models';
-import { GCMSUI } from '../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
 export interface GCNRestRequestArgs {
@@ -54,7 +54,7 @@ export interface CNParentWindow extends Window {
      * @param iFrameWindow The IFrame's window object.
      * @param iFrameDocument The IFrame's document object.
      */
-    GCMSUI_childIFrameInit: (iFrameWindow: CNWindow, iFrameDocument: CNIFrameDocument) => GCMSUI;
+    GCMSUI_childIFrameInit: (iFrameWindow: CNWindow, iFrameDocument: CNIFrameDocument) => GcmsUiBridge;
 
 }
 
@@ -72,7 +72,7 @@ export interface CNWindow extends CNParentWindow {
      * Methods which allow scripts in the iframe to interact with the UI app.
      * See customer-script.service.ts for implementation.
      */
-    GCMSUI?: GCMSUI;
+    GCMSUI?: GcmsUiBridge;
 
     GCNREST?: {
         performRESTRequest: GCNPerformRESTRequestFunction

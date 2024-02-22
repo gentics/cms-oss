@@ -18,12 +18,7 @@
         </div>
 
         <div
-            *ngFor="let column of (!paginated ? columns : (columns | paginate: {
-                id: UNIQUE_ID,
-                itemsPerPage: perPage,
-                currentPage: page,
-                totalItems: totalCount
-            })); trackBy: trackElement"
+            *ngFor="let column of columns; trackBy: trackElement"
             class="grid-cell data-column"
             [class.sortable]="sortable && column.sortable"
             [class.sort-active]="sortBy === column.id"
@@ -62,7 +57,12 @@
     </div>
 
     <div
-        *ngFor="let row of rows; trackBy: trackRow"
+        *ngFor="let row of rows | paginate:{
+            id: UNIQUE_ID,
+            currentPage: page,
+            itemsPerPage: perPage,
+            totalItems: totalCount,
+        }; trackBy: trackRow"
         class="grid-row data-row"
         [class.selected]="selected | gtxIncludes:row.id"
         [class.active]="!!active && active === row.id"
@@ -141,13 +141,13 @@
 </div>
 
 <div
-    *ngIf="paginated && (rows?.length > perPage || totalCount > perPage)"
+    *ngIf="paginated && ((totalCount == null ? rows?.length : totalCount) > perPage)"
     #p="paginationApi"
     class="table-pagination"
     pagination-template
     [id]="UNIQUE_ID"
     [maxSize]="5"
-    (pageChange)="pageChange.emit($event)"
+    (pageChange)="handlePageChange($event)"
 >
     <ng-container *ngIf="p?.pages?.length > 1">
         <button

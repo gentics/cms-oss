@@ -96,8 +96,11 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
     }
 
     override async updateEntity(): Promise<void> {
-        await this.entitiyOperations.update(this.currentEntity.id, this.fgProperties.value).toPromise();
-        this.tableLoader.reload();
+        this.entitiyOperations.update(this.currentEntity.id, this.fgProperties.value).subscribe(newEntity => {
+            this.currentEntity = newEntity;
+            this.fgProperties.markAsPristine();
+            this.tableLoader.reload();
+        });
     }
 
     btnSavePropertiesOnClick(): void {
@@ -125,7 +128,7 @@ export class ContentPackageDetailComponent extends BaseDetailComponent<'contentP
     /**
      * Set new value of form 'Properties'
      */
-     protected fgPropertiesUpdate(pkg: ContentPackageBO<Normalized | Raw>): void {
+    protected fgPropertiesUpdate(pkg: ContentPackageBO<Normalized | Raw>): void {
         this.fgProperties.setValue(pkg);
         this.fgProperties.markAsPristine();
     }

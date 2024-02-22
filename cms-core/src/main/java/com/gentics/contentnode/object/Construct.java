@@ -406,6 +406,13 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		return tags;
 	}
 
+	/**
+	 * Check whether the construct is used
+	 * @return true, iff the construct is used
+	 * @throws NodeException
+	 */
+	public abstract boolean isUsed() throws NodeException;
+
 	public String getStackHashKey() {
 		return "construct:" + getHashKey();
 	}

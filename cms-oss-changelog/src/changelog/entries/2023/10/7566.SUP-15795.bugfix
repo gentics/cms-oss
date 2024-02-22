@@ -1,0 +1,2 @@
+Some possible NullPointerExceptions during the publish process have been fixed.
+Error logging in cases of lock wait timeouts during the publish process has been improved.

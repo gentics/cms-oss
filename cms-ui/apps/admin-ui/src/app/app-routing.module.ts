@@ -372,7 +372,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     [ROUTE_CHILD_BREADCRUMB_OUTLET_KEY]: [ROUTE_DETAIL_OUTLET],
                     [ROUTE_PERMISSIONS_KEY]: [
                         {
-                            type: AccessControlledType.ADMIN,
+                            type: AccessControlledType.CONTENT_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],
@@ -471,6 +471,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
         canActivate: [AuthGuard],
         pathMatch: 'full',
         loadChildren: () => import('./login/login.module').then(m => m.LoginModule),
+    },
+    {
+        path: '**',
+        redirectTo: '/',
     },
 ];
 

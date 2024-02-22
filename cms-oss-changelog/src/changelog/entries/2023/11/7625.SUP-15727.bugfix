@@ -1,0 +1,4 @@
+The paths for publishing into the filesystem were not correct when using non-empty node publish directories.
+For published nice URLs, the node publish directory was not used at all.
+If the publish path should contain the language code, the language code was inserted into the path before the node
+publish directory, instead of after it.

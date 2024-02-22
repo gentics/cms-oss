@@ -1,0 +1,2 @@
+Updating object property definitions over the REST API failed with an internal error, if not all attributes were sent.
+This has been fixed.

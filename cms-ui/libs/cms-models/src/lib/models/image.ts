@@ -1,5 +1,6 @@
 import { EditableFileProps, FileOrImage } from './file';
-import { DefaultModelType, ModelType } from './type-util';
+import { Folder } from './folder';
+import { DefaultModelType, ModelType, Raw } from './type-util';
 
 /**
  * These are the user-editable properties of a Image object.
@@ -7,6 +8,18 @@ import { DefaultModelType, ModelType } from './type-util';
 export interface EditableImageProps extends EditableFileProps {
     fpX?: number;
     fpY?: number;
+}
+
+/**
+ * Associates an uploaded file with its destination folder.
+ */
+export interface FileUpload {
+
+    /** The folder that the file was uploaded to. */
+    destinationFolder: Folder;
+
+    /** The file that has been uploaded. */
+    file: FileOrImage<Raw>;
 }
 
 /**

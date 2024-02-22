@@ -1829,7 +1829,7 @@ public abstract class AbstractFactory implements BatchObjectFactory {
 
 		// === Check for possible naming conflicts for the object
 		final Folder finalTarget = target;
-		Disinheritable<?> obstructor = (Disinheritable<?>) DisinheritUtils.getObjectUsingURL(object, () -> {
+		Disinheritable<?> obstructor = (Disinheritable<?>) DisinheritUtils.getObjectUsingURL(object, node -> {
 			return object.getFullPublishPath(finalTarget, true, true);
 		}, () -> object.getFilename(), DisinheritUtils.getFoldersWithPotentialObstructors(target, restrictedSegment),
 				folderSegment);

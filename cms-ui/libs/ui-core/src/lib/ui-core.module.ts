@@ -42,8 +42,8 @@ import {
     SplitViewContainerComponent,
     TabComponent,
     TabGroupComponent,
-    TableComponent,
     TabPaneComponent,
+    TableComponent,
     TabsComponent,
     TextareaComponent,
     ToastComponent,
@@ -69,7 +69,17 @@ import {
     TooltipTriggerDirective,
 } from './directives';
 import { configFactory, ConfigService, CustomConfig, defaultConfig, optionsConfig, PredefinedConfig } from './module.config';
-import { ConcatPipe, IncludesPipe, MatchesMimeTypePipe, RangePipe, SortPipe, TableActionEnabledPipe, TableCellMapperPipe, TransformPipe, ValuePathPipe } from './pipes';
+import {
+    ConcatPipe,
+    IncludesPipe,
+    MatchesMimeTypePipe,
+    RangePipe,
+    SortPipe,
+    TableActionEnabledPipe,
+    TableCellMapperPipe,
+    TransformPipe,
+    ValuePathPipe,
+} from './pipes';
 import {
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,

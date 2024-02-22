@@ -6,9 +6,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.factory.MultichannellingFactory;
+import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Page;
@@ -102,6 +106,25 @@ public class PageAssert extends PublishableNodeObjectAssert<PageAssert, Page> {
 	 */
 	public PageAssert hasLanguageVariant(String code, Page variant) throws NodeException {
 		assertThat(actual.getLanguageVariant(code)).as(descriptionText() + " Language variant in " + code).isEqualTo(variant);
+		return myself;
+	}
+
+	/**
+	 * Assert that the page has exactly the given language variants. If languages is empty, assert that the page has no language set.
+	 * @param languages expected languages (empty for asserting no language)
+	 * @return fluent API
+	 * @throws NodeException
+	 */
+	public PageAssert hasLanguageVariants(ContentLanguage...languages) throws NodeException {
+		if (languages.length == 0) {
+			assertThat(actual.getLanguage()).as(descriptionText() + " language").isNull();
+		} else {
+			Set<ContentLanguage> pageLanguages = new HashSet<>();
+			for (Page lang : actual.getLanguageVariants(false)) {
+				pageLanguages.add(lang.getLanguage());
+			}
+			assertThat(pageLanguages).as(descriptionText() + " languages").containsOnly(languages);
+		}
 		return myself;
 	}
 

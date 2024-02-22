@@ -26,10 +26,16 @@ import {
     EntityUpdateRequestParams,
     EntityUpdateResponseModel,
     applyPermissions,
-    discard
+    discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
-import { ContentRepositoryFragment, ContentRepositoryFragmentListOptions, Node, Raw } from '@gentics/cms-models';
+import {
+    ContentRepositoryFragment,
+    ContentRepositoryFragmentListOptions,
+    EntityIdType,
+    Node,
+    Raw,
+} from '@gentics/cms-models';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
@@ -299,7 +305,7 @@ export class ContentRepositoryHandlerService
                     this.notification.show({
                         type: 'success',
                         message: 'contentRepository.result_data_checked',
-                        translationParams: { name: repository[BO_DISPLAY_NAME] },
+                        translationParams: {name: repository[BO_DISPLAY_NAME]},
                     });
                 }
             }),
@@ -318,7 +324,7 @@ export class ContentRepositoryHandlerService
                     this.notification.show({
                         type: 'success',
                         message: 'contentRepository.result_data_repaired',
-                        translationParams: { name: repository[BO_DISPLAY_NAME] },
+                        translationParams: {name: repository[BO_DISPLAY_NAME]},
                     });
                 }
             }),
@@ -337,7 +343,7 @@ export class ContentRepositoryHandlerService
                     this.notification.show({
                         type: 'success',
                         message: 'contentRepository.result_structure_checked',
-                        translationParams: { name: repository[BO_DISPLAY_NAME] },
+                        translationParams: {name: repository[BO_DISPLAY_NAME]},
                     });
                 }
             }),
@@ -356,7 +362,7 @@ export class ContentRepositoryHandlerService
                     this.notification.show({
                         type: 'success',
                         message: 'contentRepository.result_structure_repaired',
-                        translationParams: { name: repository[BO_DISPLAY_NAME] },
+                        translationParams: {name: repository[BO_DISPLAY_NAME]},
                     });
                 }
             }),
@@ -373,7 +379,7 @@ export class ContentRepositoryHandlerService
                 this.notification.show({
                     type: 'success',
                     message: 'contentRepository.result_entries_checked',
-                    translationParams: { name: this.nameMap[repositoryId] },
+                    translationParams: {name: this.nameMap[repositoryId]},
                 });
             }),
             this.catchAndRethrowError(),
@@ -401,7 +407,7 @@ export class ContentRepositoryHandlerService
             ? contentRepositoryId
             : parseInt(contentRepositoryId, 10);
 
-        return this.api.node.updateNode(nodeId, { node: { contentRepositoryId: numberId } }).pipe(
+        return this.api.node.updateNode(nodeId, {node: {contentRepositoryId: numberId}}).pipe(
             discard(),
         );
     }
@@ -409,7 +415,7 @@ export class ContentRepositoryHandlerService
     removeContentRepositoryFromNode(
         nodeId: number,
     ): Observable<void> {
-        return this.api.node.updateNode(nodeId, { node: { contentRepositoryId: 0 } }).pipe(
+        return this.api.node.updateNode(nodeId, {node: {contentRepositoryId: 0}}).pipe(
             discard(),
         );
     }
@@ -569,6 +575,33 @@ export class ContentRepositoryHandlerService
                 type: 'success',
                 message: 'shared.assign_contentRepository_to_crfragments_success',
             })),
+        );
+    }
+
+    // MESH ROLES //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public getAvailableMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
+        return this.api.contentrepositories.getAvailableContentRepositoryRoles(contentRepositoryId).pipe(
+            map(res => res.roles || []),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    public getAssignedMeshRoles(contentRepositoryId: EntityIdType): Observable<string[]> {
+        return this.api.contentrepositories.getAssignedContentRepositoryRoles(contentRepositoryId).pipe(
+            map(res => res.roles || []),
+            this.catchAndRethrowError(),
+        );
+    }
+
+    public assignMeshRoles(contentRepositoryId: EntityIdType, roles: string[]): Observable<string[]> {
+        return this.api.contentrepositories.updateAssignedContentRepositoryRoles(contentRepositoryId, roles).pipe(
+            map(res => res.roles || []),
+            tap(() => this.notification.show({
+                type: 'success',
+                message: 'contentRepository.assign_mesh_roles_success',
+            })),
+            this.catchAndRethrowError(),
         );
     }
 }

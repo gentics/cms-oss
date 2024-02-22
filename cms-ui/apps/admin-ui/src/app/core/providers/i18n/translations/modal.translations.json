@@ -474,5 +474,9 @@
     "update_button": {
         "de": "Aktualisieren",
         "en": "Update"
+    },
+    "synchronize_content_repository_roles_title": {
+        "en": "Synchronize Mesh roles of \"{{crName}}\"",
+        "de": "Mesh Rollen von „{{crName}}“ synchronisieren"
     }
 }

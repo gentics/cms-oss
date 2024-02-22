@@ -170,7 +170,7 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 
 		try (Trx trx = ContentNodeHelper.trx(); AnyChannelTrx aCTrx = new AnyChannelTrx()) {
 			Transaction t = trx.getTransaction();
-			checkObjectPropertyExists(objectProperty);
+			checkObjectPropertyExists(objectProperty.getType(), objectProperty.getKeyword());
 
 			if (!t.getPermHandler().canCreate(null, ObjectTagDefinition.class, null)) {
 				throw new InsufficientPrivilegesException(I18NHelper.get("objectproperty.nopermission"), null, null,
@@ -285,18 +285,25 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 				throw new InsufficientPrivilegesException(I18NHelper.get("objectproperty.nopermission"), null, null,
 						ObjectTagDefinition.TYPE_OBJTAG_DEF, 0, PermType.update);
 			}
-			checkObjectPropertyExists(objectProperty);
-
-			if (objectProperty == null) {
-				I18nString message = new CNI18nString("objectproperty.notfound");
-				message.setParameter("0", objectPropertyId);
-				throw new EntityNotFoundException(message.toString());
-			}
 			ObjectTagDefinition update = load(ObjectTagDefinition.class, objectPropertyId, ObjectPermission.edit);
+
+			if (!StringUtils.isBlank(objectProperty.getKeyword())) {
+				String keyword = StringUtils.removeStart(objectProperty.getKeyword(), KEYWORD_PREFIX);
+				keyword = keyword.trim();
+				if (!KEYWORD_PATTERN.matcher(keyword).matches()) {
+					throw new RestMappedException(I18NHelper.get("keyword.invalid"))
+						.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+				}
+
+				// Update the keyword from the request to make sure it starts with the "object." prefix.
+				objectProperty.setKeyword(KEYWORD_PREFIX + keyword);
+				checkObjectPropertyExists(update.getId(), update.getObjectTag().getObjType(), objectProperty.getKeyword());
+			}
+
 			update = ObjectTagDefinition.REST2NODE.apply(objectProperty, t.getObject(update, true));
 
 			if (update.save()) {
-				updateCorrespondingObjectTags(objectProperty, update.getObjectTag());
+				updateCorrespondingObjectTags(update.getObjectTag());
 				ContentNodeFactory.getInstance()
 						.getFactory()
 						.clear(ObjectTag.class);
@@ -310,21 +317,11 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 		}
 	}
 
-	private void updateCorrespondingObjectTags(ObjectProperty objectProperty, ObjectTag objectTag) throws NodeException {
-		final String UPDATE_OBJECTTAG_SQL = "UPDATE `objtag` SET  obj_type = ?, construct_id = ?, inheritable = ?, required = ? "
-				+ "WHERE name = ? AND obj_type = ?";
+	private void updateCorrespondingObjectTags(ObjectTag objectTag) throws NodeException {
+		final String UPDATE_OBJECTTAG_SQL = "UPDATE `objtag` SET construct_id = ?, inheritable = ?, required = ? "
+				+ "WHERE name = ? AND obj_type = ? AND obj_id != ?";
 
-		String matchName = objectTag.getName();
-		String matchType = objectProperty.getType().toString();
-
-		DBUtils.executeUpdate(UPDATE_OBJECTTAG_SQL, new Object[] {
-				objectProperty.getType(),
-				objectProperty.getConstructId(),
-				objectProperty.getInheritable(),
-				objectProperty.getRequired(),
-				matchName,
-				matchType
-		});
+		DBUtils.update(UPDATE_OBJECTTAG_SQL, objectTag.getConstructId(), objectTag.isInheritable(), objectTag.isRequired(), objectTag.getName(), objectTag.getObjType(), 0);
 	}
 
 	@Override
@@ -607,13 +604,41 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 		}
 	}
 
-	private void checkObjectPropertyExists(ObjectProperty objectProperty) throws RestMappedException, NodeException {
-		if (!DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? AND name = ?", ps -> {
-					ps.setInt(1, objectProperty.getType());
-					ps.setString(2, objectProperty.getKeyword());
+	/**
+	 * Check whether an object property with given type and keyword exists
+	 * @param objType object type
+	 * @param keyword keyword (must be prefixed with object.)
+	 * @throws RestMappedException
+	 * @throws NodeException
+	 */
+	private void checkObjectPropertyExists(int objType, String keyword) throws RestMappedException, NodeException {
+		if (!DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? AND name = ? AND obj_id = ?", ps -> {
+					ps.setInt(1, objType);
+					ps.setString(2, keyword);
+					ps.setInt(3, 0);
 				}, DBUtils.IDS).isEmpty()) {
-			throw new RestMappedException(I18NHelper.get("objectproperty.duplicate"))
-				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
+			throw new RestMappedException(I18NHelper.get("objectproperty.duplicate", keyword))
+				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
+		}
+	}
+
+	/**
+	 * Check whether an object property with given type and keyword with different id exists
+	 * @param id object ID
+	 * @param objType object type
+	 * @param keyword keyword (must be prefixed with object.)
+	 * @throws RestMappedException
+	 * @throws NodeException
+	 */
+	private void checkObjectPropertyExists(int id, int objType, String keyword) throws RestMappedException, NodeException {
+		if (!DBUtils.select("SELECT id FROM objtag WHERE obj_type = ? AND name = ? AND obj_id = ? AND id != ?", ps -> {
+					ps.setInt(1, objType);
+					ps.setString(2, keyword);
+					ps.setInt(3, 0);
+					ps.setInt(4, id);
+				}, DBUtils.IDS).isEmpty()) {
+			throw new RestMappedException(I18NHelper.get("objectproperty.duplicate", keyword))
+				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
 		}
 	}
 

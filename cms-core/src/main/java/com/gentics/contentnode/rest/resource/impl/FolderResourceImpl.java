@@ -3257,12 +3257,26 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	protected Message updatePublishDir(com.gentics.contentnode.object.Folder folder, String pubDir,
 			Map<String, String> pubDirI18n, boolean uniquenessCheck) throws NodeException {
 		boolean checkDuplicatePubDir = false;
-		if (!ObjectTransformer.isEmpty(pubDir)) {
+		if (pubDir != null) {
 			if (uniquenessCheck && !StringUtils.isEqual(folder.getPublishDir(), pubDir)) {
 				checkDuplicatePubDir = true;
 			}
 			folder.setPublishDir(pubDir);
+
+			// When pub dir segments is active, the segment is only allowed to
+			// be empty for the root folder of the node.
+			Node node = folder.getNode();
+			boolean pubDirSegmentRequired = node.isPubDirSegment() && !folder.equals(node.getFolder());
+
+			// setPublishDir will sanitize the name and remove slashes if pub
+			// dir segments is active. When the publish dir is empty afterward,
+			// the request contained an empty string or a '/' for the pub dir
+			// segment.
+			if (pubDirSegmentRequired && StringUtils.isEmpty(folder.getPublishDir())) {
+				return new Message(Message.Type.CRITICAL, new CNI18nString("error.pubdir.segment_missing").toString());
+			}
 		}
+
 		// set the updated translated publish directories
 		if (pubDirI18n != null) {
 			if (uniquenessCheck

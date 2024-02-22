@@ -302,6 +302,44 @@ public class MeshInstantPublishTest {
 	}
 
 	/**
+	 * Test that creating, deleting and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node.
+	 * This time, the "DELETE" events will be removed before the publish run
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteCreateWithRemovedEvents() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (for good)
+		Trx.consume(o -> o.delete(true), object);
+
+		// wait for the dirt queue worker
+		try (Trx trx = new Trx()) {
+			context.waitForDirtqueueWorker();
+			trx.success();
+		}
+		// remove all "DELETE" entries from the publishqueue
+		Trx.operate(() -> {
+			DBUtils.deleteWithPK("publishqueue", "id", "action = ?", new String[] {"DELETE"});
+		});
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
 	 * Test that creating, deleting (into the wastebin) and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node
 	 * @throws Exception
 	 */
@@ -317,6 +355,44 @@ public class MeshInstantPublishTest {
 
 		// delete object (into wastebin)
 		Trx.consume(o -> o.delete(), object);
+
+		// create the test object again
+		object = createTestObject();
+
+		// run publish process
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+	}
+
+	/**
+	 * Test that creating, deleting (into the wastebin) and creating the same object will not let the following publish process fail, even if disable_instant_delete is active for the node.
+	 * This time, the "DELETE" events will be removed before the publish run
+	 * @throws Exception
+	 */
+	@Test
+	public void testCreateDeleteIntoWastebinCreateWithRemovedEvents() throws Exception {
+		node = update(node, n -> {
+			n.activateFeature(Feature.DISABLE_INSTANT_DELETE);
+		});
+
+		// create the test object
+		NodeObject object = createTestObject();
+		assertObject("after creation", mesh.client(), MESH_PROJECT_NAME, object, repair && instant, urlAsserter);
+
+		// delete object (into wastebin)
+		Trx.consume(o -> o.delete(), object);
+
+		// wait for the dirt queue worker
+		try (Trx trx = new Trx()) {
+			context.waitForDirtqueueWorker();
+			trx.success();
+		}
+		// remove all "DELETE" entries from the publishqueue
+		Trx.operate(() -> {
+			DBUtils.deleteWithPK("publishqueue", "id", "action = ?", new String[] {"DELETE"});
+		});
 
 		// create the test object again
 		object = createTestObject();

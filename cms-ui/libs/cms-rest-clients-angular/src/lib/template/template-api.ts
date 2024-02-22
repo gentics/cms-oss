@@ -1,7 +1,11 @@
 import {
     EntityIdType,
+    Node,
+    NodeListRequestOptions,
     PagedTemplateLinkListResponse,
     PagedTemplateListResponse,
+    PermissionListResponse,
+    Raw,
     Response,
     TagStatusOptions,
     TemplateCreateRequest,
@@ -117,6 +121,16 @@ export class TemplateApi {
      */
     unlinkTemplatesFromFolders(request: TemplateMultiLinkRequest): Observable<Response> {
         return this.apiBase.post('template/unlink', request);
+    }
+
+    /**
+     * Gets a page list of nodes, the template is currently linked to
+     * @param templateId template ID
+     * @param options options
+     * @returns response
+     */
+    getLinkedNodes(templateId: EntityIdType, options?: NodeListRequestOptions): Observable<PermissionListResponse<Node<Raw>>> {
+        return this.apiBase.get(`template/${templateId}/nodes`, options);
     }
 
     /**

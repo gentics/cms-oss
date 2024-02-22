@@ -250,7 +250,7 @@ export class ItemListRowComponent implements OnInit {
                     description: item.description || '',
                     language: language.code,
                     priority: item.priority,
-                    templateId: item.template ,
+                    templateId: item.templateId,
                 },
                 languageName: language.name,
                 pageId: item.id,

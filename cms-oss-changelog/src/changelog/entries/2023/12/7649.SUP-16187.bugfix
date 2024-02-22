@@ -1,0 +1,1 @@
+Deleting a page and its language in the same transaction caused an error, which has been fixed.

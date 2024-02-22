@@ -12,15 +12,15 @@ import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
+import { DynamicOverlayService } from '..';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
 import { CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
 import { CustomerScriptService } from './customer-script.service';
-import { DynamicOverlayService } from '..';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -78,6 +78,7 @@ describe('CustomerScriptService', () => {
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 DynamicOverlayService,
+                ModalService,
             ],
         });
 
@@ -397,4 +398,10 @@ class MockWindow {
 
 class MockErrorHandler {
     catch(): void { }
+}
+
+class MockModalService {
+    fromComponent(): Promise<void> {
+        return Promise.resolve();
+    }
 }

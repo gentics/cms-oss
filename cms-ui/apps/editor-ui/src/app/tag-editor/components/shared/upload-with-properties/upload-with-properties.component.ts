@@ -11,7 +11,7 @@ import {
     SimpleChange,
 } from '@angular/core';
 import { UploadResponse } from '@editor-ui/app/common/models';
-import { EditableFileProps, FileCreateRequest, FileOrImage, Folder, Raw } from '@gentics/cms-models';
+import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, from, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
@@ -20,19 +20,6 @@ import { UploadConflictService } from '../../../../core/providers/upload-conflic
 import { GtxExternalAssetManagementApiRootObject } from '../../../../shared/components/external-assets-modal/external-assets-modal.component';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { FolderActionsService } from '../../../../state';
-
-/**
- * Associates an uploaded file with its destination folder.
- */
-export interface FileUpload {
-
-    /** The folder that the file was uploaded to. */
-    destinationFolder: Folder;
-
-    /** The file that has been uploaded. */
-    file: FileOrImage<Raw>;
-
-}
 
 /**
  * Allows the user to upload a file or image and modify its editable properties right after the upload.
@@ -194,14 +181,14 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     onUploadClick(): void {
         if (this.fileToUpload) {
-            this.simpleUploadHandler();
+            this.handleFileToUpload();
         }
         if (this.selectionToUpload) {
             this.assetUploadHandler();
         }
     }
 
-    private simpleUploadHandler(): void {
+    private handleFileToUpload(): void {
         const upload$ = this.uploadFileOrImage(this.fileToUpload, this.destinationFolder, this.removeUnsetProperties(this.fileProperties));
         if (upload$) {
             const sub = upload$.subscribe(uploadedItem => {

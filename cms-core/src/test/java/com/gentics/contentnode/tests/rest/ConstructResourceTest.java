@@ -31,24 +31,27 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
+import com.gentics.contentnode.exception.EntityInUseException;
 import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.Datasource;
+import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.SystemUser;
 import com.gentics.contentnode.object.Template;
+import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.UserGroup;
 import com.gentics.contentnode.object.parttype.CheckboxPartType;
 import com.gentics.contentnode.object.parttype.LongHTMLPartType;
@@ -67,6 +70,7 @@ import com.gentics.contentnode.rest.model.Property.Type;
 import com.gentics.contentnode.rest.model.SelectOption;
 import com.gentics.contentnode.rest.model.SelectSetting;
 import com.gentics.contentnode.rest.model.request.BulkLinkUpdateRequest;
+import com.gentics.contentnode.rest.model.request.IdSetRequest;
 import com.gentics.contentnode.rest.model.request.Permission;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryListResponse;
 import com.gentics.contentnode.rest.model.response.ConstructCategoryLoadResponse;
@@ -87,6 +91,8 @@ import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 import com.gentics.contentnode.rest.util.MiscUtils;
+import com.gentics.contentnode.tests.utils.Builder;
+import com.gentics.contentnode.tests.utils.ExceptionChecker;
 import com.gentics.contentnode.testutils.DBTestContext;
 
 /**
@@ -99,10 +105,14 @@ public class ConstructResourceTest {
 	private static SystemUser user;
 	private static Node node1;
 	private static Node node2;
+	private static Template template;
 	private static Page page1;
 	private static Page page2;
 	private static Datasource firstDs;
 	private static Datasource secondDs;
+
+	@Rule
+	public ExceptionChecker exceptionChecker = new ExceptionChecker();
 
 	@BeforeClass
 	public static void setupOnce() throws NodeException {
@@ -144,7 +154,7 @@ public class ConstructResourceTest {
 			return constructId;
 		});
 
-		Template template = supply(() -> createTemplate(node1.getFolder(), "Template"));
+		template = supply(() -> createTemplate(node1.getFolder(), "Template"));
 
 		page1 = supply(() -> create(Page.class, p -> {
 			p.setFolderId(node1.getFolder().getId());
@@ -167,6 +177,34 @@ public class ConstructResourceTest {
 
 	@Before
 	public void setup() throws NodeException {
+		// delete pages
+		List<Page> preservedPages = Arrays.asList(page1, page2);
+		operate(t -> {
+			for (Page page : t.getObjects(Page.class, DBUtils.select("SELECT id FROM page", DBUtils.IDS))) {
+				if (!preservedPages.contains(page)) {
+					page.delete(true);
+				}
+			}
+		});
+
+		// delete templates
+		List<Template> preservedTemplates = Arrays.asList(template);
+		operate(t -> {
+			for (Template tmpl : t.getObjects(Template.class, DBUtils.select("SELECT id FROM template", DBUtils.IDS))) {
+				if (!preservedTemplates.contains(tmpl)) {
+					tmpl.delete(true);
+				}
+			}
+		});
+
+		// delete object property definitions
+		operate(t -> {
+			for (ObjectTagDefinition def : t.getObjects(ObjectTagDefinition.class, DBUtils.select("SELECT id FROM objtag WHERE obj_id = 0", DBUtils.IDS))) {
+				def.delete(true);
+			}
+		});
+
+		// delete constructs
 		List<String> preserve = Arrays.asList("nonode", "node1", "node2", "both");
 		operate(t -> {
 			for (Construct construct : t.getObjects(Construct.class, DBUtils.select("SELECT id FROM construct", DBUtils.IDS))) {
@@ -500,6 +538,80 @@ public class ConstructResourceTest {
 		constructList = supply(() -> new ConstructResourceImpl().list(new FilterParameterBean(), new SortParameterBean(), new PagingParameterBean(), new ConstructParameterBean(), null, null));
 		assertResponseCodeOk(constructList);
 		assertThat(constructList.getItems()).as("Constructs of node").usingElementComparatorOnFields("id").doesNotContain(response.getConstruct());
+	}
+
+	/**
+	 * Test that deleting a construct, which is used in a template fails with a proper error message
+	 * @throws NodeException
+	 */
+	@Test
+	public void testDeleteUsedInTemplate() throws NodeException {
+		int constructId = Builder.create(Construct.class, c -> {
+			c.setKeyword("deleteme");
+			c.setIconName("icon.png");
+			c.setName("Lösch mich", 1);
+			c.setName("Delete Me", 2);
+		}).save().build().getId();
+
+		Builder.create(Template.class, tmpl -> {
+			tmpl.setFolderId(node1.getFolder().getId());
+			tmpl.setName("Template using construct");
+			TemplateTag tag = Builder.create(TemplateTag.class, t -> {
+				t.setConstructId(constructId);
+				t.setName("tag");
+			}).doNotSave().build();
+			tmpl.getTemplateTags().put("tag", tag);
+		}).save().build();
+
+		exceptionChecker.expect(EntityInUseException.class, String.format("Der Tagtyp %s kann nicht gelöscht werden, weil er noch verwendet wird.", "Lösch mich"));
+		supply(() -> new ConstructResourceImpl().delete(String.valueOf(constructId)));
+	}
+
+	/**
+	 * Test that deleting a construct, which is used in a page (as content tag) fails with a proper error message
+	 * @throws NodeException
+	 */
+	@Test
+	public void testDeleteUsedInPage() throws NodeException {
+		int constructId = Builder.create(Construct.class, c -> {
+			c.setKeyword("deleteme");
+			c.setIconName("icon.png");
+			c.setName("Lösch mich", 1);
+			c.setName("Delete Me", 2);
+		}).save().build().getId();
+
+		Builder.create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(node1.getFolder().getId());
+			p.getContent().addContentTag(constructId);
+		}).save().build();
+
+		exceptionChecker.expect(EntityInUseException.class, String.format("Der Tagtyp %s kann nicht gelöscht werden, weil er noch verwendet wird.", "Lösch mich"));
+		supply(() -> new ConstructResourceImpl().delete(String.valueOf(constructId)));
+	}
+
+	/**
+	 * Test that deleting a construct, which is used in an object property, fails with a proper error message
+	 * @throws NodeException
+	 */
+	@Test
+	public void testDeleteUsedInObjectProperty() throws NodeException {
+		int constructId = Builder.create(Construct.class, c -> {
+			c.setKeyword("deleteme");
+			c.setIconName("icon.png");
+			c.setName("Lösch mich", 1);
+			c.setName("Delete Me", 2);
+		}).save().build().getId();
+
+		Builder.create(ObjectTagDefinition.class, o -> {
+			ObjectTag tag = o.getObjectTag();
+			tag.setConstructId(constructId);
+			tag.setName("object.reference");
+			tag.setObjType(Folder.TYPE_FOLDER);
+		}).build();
+
+		exceptionChecker.expect(EntityInUseException.class, String.format("Der Tagtyp %s kann nicht gelöscht werden, weil er noch verwendet wird.", "Lösch mich"));
+		supply(() -> new ConstructResourceImpl().delete(String.valueOf(constructId)));
 	}
 
 	@Test

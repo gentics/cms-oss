@@ -5,6 +5,9 @@
  */
 package com.gentics.contentnode.perm;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -209,6 +213,13 @@ public class PermHandler {
 	 * Group Id of the group, if the PermHandler was initialized for a group (-1 if not initialized for a group)
 	 */
 	protected int groupId = -1;
+
+	/**
+	 * Optional map of assignment info for templates to folders.
+	 * This map can be filled with {@link #prepareFolderTemplateMap()} and cleared with {@link #resetFolderTemplateMap()}.
+	 * It will be used in {@link #checkTemplatePermission(Template, Integer...)}, if filled
+	 */
+	protected Map<Integer, Set<Integer>> folderIdsPerTemplateId;
 
 	/**
 	 * Resolve the rest permission enum for the given type.
@@ -1152,20 +1163,7 @@ public class PermHandler {
 				return checkPermissionBit(Folder.TYPE_FOLDER, folder.getId(), PERM_PAGE_VIEW, ObjectTransformer.getInt(object.getTType(), -1), languageId, ROLE_VIEW);
 			}
 		} else if (object instanceof Template) {
-			Set<Folder> folders = getFoldersToCheck((Template) object);
-
-			// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
-			if (folders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
-				return true;
-			}
-
-			for (Folder folder : folders) {
-				// at least for one folder, the template must be visible
-				if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), PERM_VIEW, PERM_TEMPLATE_VIEW)) {
-					return true;
-				}
-			}
-			return false;
+			return checkTemplatePermission((Template) object, PERM_VIEW, PERM_TEMPLATE_VIEW);
 		} else if (object instanceof Construct) {
 			// first check the permission to view constructs in the Content.Admin
 			if (!canView(null, Construct.class, null)) {
@@ -1329,20 +1327,7 @@ public class PermHandler {
 							languageId, ROLE_UPDATE);
 				}
 			} else if (object instanceof Template) {
-				Set<Folder> folders = getFoldersToCheck((Template) object);
-
-				// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
-				if (folders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
-					return true;
-				}
-
-				for (Folder folder : folders) {
-					// at least for one folder, the template must be editable
-					if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), PERM_TEMPLATE_UPDATE)) {
-						return true;
-					}
-				}
-				return false;
+				return checkTemplatePermission((Template) object, PERM_TEMPLATE_UPDATE);
 			} else if (object instanceof Construct) {
 				// check the general edit permission for constructs
 				if (!checkPermissionBit(Construct.TYPE_CONSTRUCTS_INTEGER, null, PERM_CONSTRUCT_UPDATE)) {
@@ -1504,20 +1489,7 @@ public class PermHandler {
 							languageId, ROLE_DELETE);
 				}
 			} else if (object instanceof Template) {
-				Set<Folder> folders = getFoldersToCheck((Template) object);
-
-				// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
-				if (folders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
-					return true;
-				}
-
-				for (Folder folder : folders) {
-					// at least for one folder, the template must be deletable
-					if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), PERM_TEMPLATE_DELETE)) {
-						return true;
-					}
-				}
-				return false;
+				return checkTemplatePermission((Template) object, PERM_TEMPLATE_DELETE);
 			} else if (object instanceof ConstructCategory) {
 				return true;
 			} else if (object instanceof Construct) {
@@ -1593,26 +1565,38 @@ public class PermHandler {
 	 * @throws NodeException
 	 */
 	public boolean canPublish(NodeObject object) throws NodeException {
-		// check view permission
-		if (!canView(object)) {
-			return false;
-		}
+		Transaction t = null;
+		boolean setChannelId = false;
 
-		if (object instanceof PublishableNodeObjectInFolder) {
-			return ((PublishableNodeObjectInFolder) object).canPublish(this);
-		} else if (object instanceof Page) {
-			Folder folder = ((Page) object).getFolder();
+		try {
+			t = TransactionManager.getCurrentTransaction();
+			setChannelId = changeTransactionChannel(object);
 
-			if (folder == null) {
+			// check view permission
+			if (!canView(object)) {
 				return false;
-			} else {
-				int languageId = ObjectTransformer.getInt(((Page) object).getLanguageId(), -1);
-
-				return checkPermissionBit(Folder.TYPE_FOLDER, folder.getId(), PERM_PAGE_PUBLISH, ObjectTransformer.getInt(object.getTType(), -1), languageId,
-						ROLE_PUBLISH);
 			}
-		} else {
-			return true;
+
+			if (object instanceof PublishableNodeObjectInFolder) {
+				return ((PublishableNodeObjectInFolder) object).canPublish(this);
+			} else if (object instanceof Page) {
+				Folder folder = ((Page) object).getFolder();
+
+				if (folder == null) {
+					return false;
+				} else {
+					int languageId = ObjectTransformer.getInt(((Page) object).getLanguageId(), -1);
+
+					return checkPermissionBit(Folder.TYPE_FOLDER, folder.getId(), PERM_PAGE_PUBLISH, ObjectTransformer.getInt(object.getTType(), -1), languageId,
+							ROLE_PUBLISH);
+				}
+			} else {
+				return true;
+			}
+		} finally {
+			if (setChannelId) {
+				t.resetChannel();
+			}
 		}
 	}
 
@@ -2064,6 +2048,41 @@ public class PermHandler {
 	}
 
 	/**
+	 * Prepare permission checks on templates in the given node by filling {@link #folderIdsPerTemplateId}.
+	 * @param nodeId node ID
+	 * @throws NodeException
+	 */
+	public void prepareFolderTemplateMap(int nodeId) throws NodeException {
+		String query;
+		if (nodeId > 0) {
+			query = "SELECT template_id, folder_id FROM template_folder JOIN folder ON template_folder.folder_id = folder.id WHERE node_id = ?";
+		} else {
+			query = "SELECT template_id, folder_id FROM template_folder";
+		}
+		folderIdsPerTemplateId = DBUtils.select(query, pst -> {
+			if (nodeId > 0) {
+				pst.setInt(1, nodeId);
+			}
+		}, rs -> {
+			Map<Integer, Set<Integer>> map = new HashMap<>();
+			while (rs.next()) {
+				int templateId = rs.getInt("template_id");
+				int folderId = rs.getInt("folder_id");
+				map.computeIfAbsent(templateId, key -> new HashSet<>()).add(folderId);
+			}
+			return map;
+		});
+	}
+
+	/**
+	 * Reset {@link #folderIdsPerTemplateId}
+	 * @throws NodeException
+	 */
+	public void resetFolderTemplateMap() throws NodeException {
+		folderIdsPerTemplateId = null;
+	}
+
+	/**
 	 * Change the current transaction channel to the channel of the given object, if the object is a channel object, or the owning node for master objects in non-channel nodes.
 	 * For templates, the current channel is set to null
 	 * @param object object
@@ -2093,30 +2112,58 @@ public class PermHandler {
 	}
 
 	/**
-	 * Get the folders which shall be checked for permissions on the given template
+	 * Get the root folders which shall be checked for permissions on the given template
 	 * @param template template
-	 * @return set of folders to check
+	 * @return set of root folders
 	 * @throws NodeException
 	 */
-	protected Set<Folder> getFoldersToCheck(Template template) throws NodeException {
-		// get all folders the template is linked to
-		Set<Folder> folders = new HashSet<>(template.getFolders());
+	protected Set<Folder> getRootFoldersToCheck(Template template) throws NodeException {
+		return unwrap(() -> template.getAssignedNodes().stream().map(node -> wrap(() -> node.getFolder()))
+				.collect(Collectors.toSet()));
+	}
 
-		// add the root folders of nodes, the template is assigned to
-		for (Node node : template.getAssignedNodes()) {
-			folders.add(node.getFolder());
-		}
+	/**
+	 * Check template permissions
+	 * @param template template
+	 * @param permBits permission bits
+	 * @return true if permission is granted on at least one folder, false if not
+	 * @throws NodeException
+	 */
+	protected boolean checkTemplatePermission(Template template, Integer...permBits) throws NodeException {
+		Set<Integer> folderIds = null;
+		Map<Integer, Set<Integer>> checkMap = folderIdsPerTemplateId;
 
-		// Special case for wastebin: If a template is only linked to wastebin folders,
-		// the above call to .getFolders will return no folder. In this case we also want to
-		// get wastebin folders in order to be able to check the template permission.
-		if (folders.isEmpty()) {
-			try (WastebinFilter wb = Wastebin.INCLUDE.set()) {
-				folders.addAll(template.getFolders());
+		if (checkMap == null) {
+			Set<Folder> rootFolders = getRootFoldersToCheck(template);
+			for (Folder folder : rootFolders) {
+				// check for the root folders
+				if (checkPermissionBits(Folder.TYPE_FOLDER, folder.getId(), permBits)) {
+					return true;
+				}
+			}
+
+			folderIds = template.getFolderIds();
+
+			// if the template is linked to no folders at all, we allow access for users that have permission on the devtools
+			if (folderIds.isEmpty() && rootFolders.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
+				return true;
+			}
+		} else {
+			folderIds = checkMap.getOrDefault(template.getMaster().getId(), Collections.emptySet());
+
+			if (folderIds.isEmpty() && checkPermissionBit(TYPE_DEVTOOLS_PACKAGES, null, PERM_VIEW)) {
+				return true;
 			}
 		}
 
-		return folders;
+		for (int folderId : folderIds) {
+			// check for all other folders
+			if (checkPermissionBits(Folder.TYPE_FOLDER, folderId, permBits)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

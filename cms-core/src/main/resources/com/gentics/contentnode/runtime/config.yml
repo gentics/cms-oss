@@ -153,9 +153,6 @@ aloha_plugins_global:
   - "gcn/gcn"
   - "common/dom-to-xhtml"
 aloha_plugins_node: []
-custom_aloha_plugins:
-  - "common/dom-to-xhtml"
-  - "common/block"
 http_auth_login: ""
 fileupload_manipulator_url: ""
 fileupload_manipulator_options: ""

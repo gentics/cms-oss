@@ -40,7 +40,7 @@ import {
     ContentRepositoryListOptions,
     ContentRepositoryListResponse,
     ContentRepositoryResponse,
-    ContentRepositoryRolesListResponse,
+    ContentRepositoryListRolesResponse,
     ContentRepositoryRolesUpdateRequest,
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
@@ -453,9 +453,9 @@ export interface AbstractContentRepositoryAPI extends BasicAPI {
     linkFragment: (crId: number | string, fragmentId: number | string) => Response;
     unlinkFragment: (crId: number | string, fragmentId: number | string) => void;
 
-    listAvailableRoles: (crId: number | string) => ContentRepositoryRolesListResponse;
-    listAssignedRoles: (crId: number | string) => ContentRepositoryRolesListResponse;
-    assignRoles: (crId: number | string, body: ContentRepositoryRolesUpdateRequest) => ContentRepositoryRolesListResponse;
+    listAvailableRoles: (crId: number | string) => ContentRepositoryListRolesResponse;
+    listAssignedRoles: (crId: number | string) => ContentRepositoryListRolesResponse;
+    assignRoles: (crId: number | string, body: ContentRepositoryRolesUpdateRequest) => ContentRepositoryListRolesResponse;
 
     proxyLogin: (id: number | string) => MeshLoginResponse;
 }

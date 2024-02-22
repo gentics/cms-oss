@@ -5,6 +5,7 @@
     flex-direction: row;
     height: 4em;
     max-width: 100%;
+    flex: 1 1 auto;
 }
 
 :host {
@@ -19,18 +20,23 @@
     }
 }
 
-gtx-breadcrumbs {
+.tool-breadcrumbs {
     flex-grow: 1;
     flex-shrink: 1;
 }
 
-gtx-breadcrumbs ::ng-deep nav {
-    background: transparent;
+.tool-breadcrumbs::ng-deep nav {
+    background: transparent !important;
+    color: $gtx-color-dark-gray;
     box-shadow: none;
     padding-left: 0;
+
+    .nav-wrapper .breadcrumb {
+        color: inherit !important;
+    }
 }
 
-gtx-button {
+.tool-close-button {
     flex-grow: 0;
     flex-shrink: 0;
     line-height: 4em;
@@ -46,7 +52,7 @@ node-selector {
     }
 }
 
-gtx-dropdown-item.tools {
+.tools {
     border-bottom: 1px solid $gtx-color-very-light-gray;
     color: $gtx-color-dark-gray;
     display: flex;

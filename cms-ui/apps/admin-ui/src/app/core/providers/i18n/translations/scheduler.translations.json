@@ -151,6 +151,10 @@
         "en": "Failure",
         "de": "Fehlgeschlagen"
     },
+    "execution_result_running": {
+        "en": "Running",
+        "de": "Läuft"
+    },
     "execution_startTime": {
         "en": "Started at",
         "de": "Gestartet am"

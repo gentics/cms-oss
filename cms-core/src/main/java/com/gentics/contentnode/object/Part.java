@@ -595,8 +595,18 @@ public abstract class Part extends AbstractContentObject implements I18nNamedNod
 	 * @throws NodeException
 	 */
 	public boolean isValueless() throws NodeException {
+		return isValueless(true);
+	}
+
+	/**
+	 * Check whether the part is valueless or not
+	 * @param failIfPartTypeNotFound true if this method should fail, when the part type is not found
+	 * @return true for valueless parts, false if not
+	 * @throws NodeException
+	 */
+	public boolean isValueless(boolean failIfPartTypeNotFound) throws NodeException {
 		if (isValueless == -1) {
-			isValueless = PartTypeFactory.getInstance().isValueless(getPartTypeId()) ? 1 : 0;
+			isValueless = PartTypeFactory.getInstance().isValueless(getPartTypeId(), failIfPartTypeNotFound) ? 1 : 0;
 		}
 		return isValueless == 1;
 	}

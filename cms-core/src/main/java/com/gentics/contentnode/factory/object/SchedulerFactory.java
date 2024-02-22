@@ -3,6 +3,7 @@ package com.gentics.contentnode.factory.object;
 import static com.gentics.contentnode.factory.Trx.supply;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
@@ -137,6 +138,72 @@ public class SchedulerFactory extends AbstractFactory {
 			registerFactoryClass("scheduler_schedule", SchedulerSchedule.TYPE_SCHEDULER_SCHEDULE, false, FactorySchedulerSchedule.class);
 		} catch (NodeException e) {
 			logger.error("Error while registering factory", e);
+		}
+	}
+	/**
+	 * Get the file collecting stdout for the given execution.
+	 * If the parameter create is true, this method will try to create the file.
+	 * If the file does not exist (or cannot be created), a warning will be logged and this method will just return null
+	 * @param executionId execution ID
+	 * @param create true to create the file (if it does not exist)
+	 * @return the file, if it exists or null
+	 */
+	public static File getExecutionStdout(int executionId, boolean create) {
+		File out = new File(getLogDirectory(), String.format("scheduler_execution_%d.out", executionId));
+		return getExecutionLogFile(out, create);
+	}
+
+	/**
+	 * Get the file collecting stderr for the given execution.
+	 * If the parameter create is true, this method will try to create the file.
+	 * If the file does not exist (or cannot be created), a warning will be logged and this method will just return null
+	 * @param executionId exeuction ID
+	 * @param create true to create the file (if it does not exist)
+	 * @return the file, if it exists or null
+	 */
+	public static File getExecutionStderr(int executionId, boolean create) {
+		File err = new File(getLogDirectory(), String.format("scheduler_execution_%d.err", executionId));
+		return getExecutionLogFile(err, create);
+	}
+
+	/**
+	 * Get the configured log directory
+	 * @return log directory
+	 */
+	protected static File getLogDirectory() {
+		return new File(ConfigurationValue.LOGS_PATH.get());
+	}
+
+	/**
+	 * Get the given execution file, if it exists, is a file and can be written to (or can be created).
+	 * Return null otherwise
+	 * @param file file
+	 * @param create true to create the file, if it does not exist
+	 * @return the file, it it exists or null
+	 */
+	protected static File getExecutionLogFile(File file, boolean create) {
+		if (!file.exists()) {
+			if (create) {
+				try {
+					file.getParentFile().mkdirs();
+					file.createNewFile();
+					return file;
+				} catch (IOException e) {
+					logger.warn(String.format("Log file %s can not be created", file.getAbsolutePath()));
+					return null;
+				}
+			} else {
+				logger.debug(String.format("Log file %s does not exist", file.getAbsolutePath()));
+				return null;
+			}
+		} else if (file.isDirectory()) {
+			logger.warn(String.format("Log file %s is a directory", file.getAbsolutePath()));
+			return null;
+		} else if (!file.canWrite()) {
+			logger.warn(String.format("Log file %s exists, but is not writable", file.getAbsolutePath()));
+			return null;
+		} else {
+			return file;
 		}
 	}
 
@@ -551,7 +618,7 @@ public class SchedulerFactory extends AbstractFactory {
 			try {
 				SchedulerTask task = supply(() -> schedule.getSchedulerTask());
 				task.validate();
-				resultStatus = task.execute(output);
+				resultStatus = task.execute(executionId, output);
 			} catch (Throwable e) {
 				logger.error(String.format("Could not execute schedule %d (%s): %s", scheduleId, schedule.getName(), e.getMessage()), e);
 				output.add(ExceptionUtils.getStackTrace(e));
@@ -1364,7 +1431,7 @@ public class SchedulerFactory extends AbstractFactory {
 					rs -> rs.next() ? ExecutionModel.fromDbResult(rs) : null);
 
 			// do not execute, if currently running
-			if (execution != null && execution.getEndTime() == null) {
+			if (execution != null && execution.isRunning()) {
 				return false;
 			}
 
@@ -1394,7 +1461,7 @@ public class SchedulerFactory extends AbstractFactory {
 						Boolean result = null;
 
 						while (rs.next() && (result == null || !result)) {
-							result = rs.getByte("result") == 0;
+							result = rs.getInt("result") == 0;
 						}
 
 						return result;
@@ -1417,7 +1484,7 @@ public class SchedulerFactory extends AbstractFactory {
 					return false;
 				}
 
-				return interval.isDue(execution.getStartTime(), timestamp);
+				return interval.isDue(scheduleData.getStartTimestamp(), execution.getStartTime(), timestamp, ZoneId.systemDefault());
 			case manual:
 				// schedule is only executed manually
 				return false;

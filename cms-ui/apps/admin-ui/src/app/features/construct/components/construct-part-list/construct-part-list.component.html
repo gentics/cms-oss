@@ -1,9 +1,14 @@
-<gtx-button
-    *ngIf="allowCreation"
-    size="small"
-    flat="true"
-    (click)="createNewPart()"
-><icon left>add</icon>{{ 'shared.create_new_construct_part' | i18n }}</gtx-button>
+<div class="list-controls">
+    <gtx-button
+        *ngIf="allowCreation"
+        size="small"
+        flat="true"
+        (click)="createNewPart()"
+    >
+        <icon left>add</icon>
+        {{ 'shared.create_new_construct_part' | i18n }}
+    </gtx-button>
+</div>
 
 <div class="gtx-construct-part-list">
     <table

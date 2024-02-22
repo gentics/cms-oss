@@ -26,7 +26,7 @@ import { ApplicationStateService } from '../../../state';
     templateUrl: './folder-properties-form.tpl.html',
     styleUrls: ['./folder-properties-form.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    })
+})
 export class FolderPropertiesForm implements AfterViewInit, OnChanges, OnDestroy, OnInit {
 
     @Input()
@@ -362,9 +362,22 @@ export class FolderPropertiesForm implements AfterViewInit, OnChanges, OnDestroy
     }
 
     private getValidatorsInputDirectory(featurePubDirSegmentIsActive: boolean): ValidatorFn[] {
+        const pattern = new RegExp(this.getPatternInputDirectory(featurePubDirSegmentIsActive));
+
         return [
-            Validators.required,
-            Validators.pattern(this.getPatternInputDirectory(featurePubDirSegmentIsActive)),
+            control => {
+                if (this.appState.now.editor.itemType === 'folder') {
+                    const node = this.appState.now.entities.node[this.appState.now.editor.nodeId];
+
+                    if (node.folderId === this.appState.now.editor.itemId) {
+                        return control.value == null || control.value === '' || pattern.test(control.value) ? null : {pattern: true};
+                    }
+                }
+
+                return control.value == null || control.value === ''
+                    ? {required: true}
+                    : pattern.test(control.value) ? null : {pattern: true};
+            },
         ];
     }
 
@@ -372,7 +385,6 @@ export class FolderPropertiesForm implements AfterViewInit, OnChanges, OnDestroy
         const validatorsInputDirectory: AsyncValidatorFn[] = [];
         // if CR Mesh OR currentNode.pubDirSegment
         // and if any other folder in active folder has same directory property (`publishDir`)
-        // TODO: ask Norbert Pomaroli if checking for both would affect existing custom customer implementations (e. g. client CinePlexx)
         if (featurePubDirSegmentIsActive) {
             validatorsInputDirectory.push(this.asyncValidatorFolderDirectoryIsDuplicate.bind(this));
         }
@@ -384,7 +396,7 @@ export class FolderPropertiesForm implements AfterViewInit, OnChanges, OnDestroy
             ? this.charsAllowedFeaturePubDirSegmentIsActive
             : this.charsAllowedFeaturePubDirSegmentIsNotActive;
         const charsAllowedRegexp = this.escapeChars(charsAllowed).join('');
-        return `[A-Za-z0-9${charsAllowedRegexp}]+`;
+        return `^[A-Za-z0-9${charsAllowedRegexp}]+$`;
     }
 
     private escapeChars(chars: string[]): string[] {

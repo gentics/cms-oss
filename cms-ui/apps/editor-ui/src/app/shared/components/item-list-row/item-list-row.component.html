@@ -47,6 +47,7 @@
                     <span
                         class="item-name-only"
                         [innerHTML]="item?.name | highlight:filterTerm"
+                        (click)="itemClicked($event, item)"
                     ></span>
                 </ng-container>
 
@@ -122,7 +123,6 @@
                 [mode]="mode"
                 [uiMode]="uiMode"
                 [stagingMap]="stagingMap"
-                [displayStatusInfos]="uiMode === UIMode.STAGING"
                 (languageClick)="pageLanguageClicked($event)"
                 (pageLanguageIconClick)="onPageLanguageIconClicked($event)"
             ></page-language-indicator>
@@ -135,7 +135,6 @@
                 [mode]="mode"
                 [uiMode]="uiMode"
                 [stagingMap]="stagingMap"
-                [displayStatusInfos]="uiMode === UIMode.STAGING"
                 (languageClick)="formLanguageClicked($event)"
                 (formLanguageIconClick)="onFormLanguageIconClicked($event)"
             ></form-language-indicator>

@@ -4,6 +4,7 @@ import { CUSTOMER_CONFIG_PATH } from '@editor-ui/app/common/config/config';
 import { AppState } from '@editor-ui/app/common/models/app-state';
 import { ALOHAPAGE_URL, API_BASE_URL, IMAGESTORE_URL } from '@editor-ui/app/common/utils/base-urls';
 import { deepEqual } from '@editor-ui/app/common/utils/deep-equal';
+import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import { ApiBase } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
@@ -11,6 +12,9 @@ import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/ed
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
+import {
+    UploadWithPropertiesModalComponent,
+} from '@editor-ui/app/tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { ExposedPartialState, GcmsUiBridge, StateChangedHandler } from '@gentics/cms-integration-api-models';
 import {
     ItemInNode,
@@ -21,7 +25,7 @@ import {
     TagType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalCloseError } from '@gentics/ui-core';
+import { ModalCloseError, ModalService } from '@gentics/ui-core';
 import { Subscription, of as observableOf } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
@@ -36,9 +40,6 @@ const IFRAME_STYLES = require('../../components/content-frame/custom-styles/gcms
 type ZoneType = any;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const Zone: ZoneType;
-
-// Why?
-export { ExposedPartialState, GcmsUiBridge as GCMSUI, StateChangedHandler } from '@gentics/cms-integration-api-models';
 
 const gcmsui_debugTool = (window as any).gcmsui_debugTool;
 
@@ -70,6 +71,7 @@ export class CustomerScriptService implements OnDestroy {
         private repositoryBrowserClient: RepositoryBrowserClient,
         private aloha: AlohaIntegrationService,
         private overlays: DynamicOverlayService,
+        private modals: ModalService,
     ) {
         // Create a new Zone to be able to track async errors originating from the customer script.
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -177,11 +179,13 @@ export class CustomerScriptService implements OnDestroy {
                 postLoadScriptExecuted = true;
             }
         };
-        const stripLeadingSlash = (url: string): string => url.replace(/^\//, '');
+
         const restRequestGET = (endpoint: string, params: any): Promise<object> =>
             this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise();
         const restRequestPOST = (endpoint: string, data: object, params?: object): Promise<object> =>
             this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise();
+        const restRequestDELETE = (endpoint: string, params?: object): Promise<void | object> =>
+            this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise();
         const openTagEditor = (tag: Tag, tagType: TagType, page: Page<Raw>, withDelete?: boolean) =>
             this.tagEditorService.openTagEditor(tag, tagType, page, withDelete);
         const openRepositoryBrowser = (options: RepositoryBrowserOptions): Promise<ItemInNode | ItemInNode[]> =>
@@ -232,6 +236,7 @@ export class CustomerScriptService implements OnDestroy {
             restRequestPOST,
             restClient: this.client.getClient(),
 
+            restRequestDELETE,
             setContentModified(modified: any): void {
                 if (typeof modified !== 'boolean') {
                     console.warn('setContentModified expects a boolean value as its argument');
@@ -259,6 +264,17 @@ export class CustomerScriptService implements OnDestroy {
             },
             unregisterComponent: (slot) => {
                 this.aloha.unregisterComponent(slot);
+            },
+            openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
+                return this.modals.fromComponent(
+                    UploadWithPropertiesModalComponent,
+                    { padding: true, width: '1000px' },
+                    {
+                        itemType: uploadType,
+                        allowFolderSelection: allowFolderSelection ?? true,
+                        destinationFolder,
+                    },
+                ).then(dialog => dialog.open());
             },
         };
 

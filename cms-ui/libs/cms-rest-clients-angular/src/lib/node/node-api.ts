@@ -23,6 +23,7 @@ import {
     PagedConstructListRequestOptions,
     PermissionListResponse,
     Raw,
+    Response,
     Template,
     TemplateLinkResponse,
     TemplateListRequest,
@@ -202,10 +203,14 @@ export class NodeApi {
         return this.apiBase.get(`node/${nodeId}/templates`, options);
     }
 
+    hasNodeTemplate(nodeId: number, templateId: EntityIdType): Observable<Response> {
+        return this.apiBase.get(`node/${nodeId}/templates/${templateId}`);
+    }
+
     /**
      * Assign a template to a node
      */
-    addNodeTemplate(nodeId: number, templateId: EntityIdType): Observable<TemplateLinkResponse> {
+    addNodeTemplate(nodeId: number | string, templateId: EntityIdType): Observable<TemplateLinkResponse> {
         return this.apiBase.put(`node/${nodeId}/templates/${templateId}`, null);
     }
 
@@ -214,7 +219,7 @@ export class NodeApi {
      *
      * @see https://gentics.com/infoportal/guides/restapi/resource_NodeResource.html#resource_NodeResource_removeTemplate_DELETE
      */
-    removeNodeTemplate(nodeId: number, templateId: EntityIdType): Observable<ItemDeleteResponse> {
+    removeNodeTemplate(nodeId: number | string, templateId: EntityIdType): Observable<ItemDeleteResponse> {
         return this.apiBase.delete(`node/${nodeId}/templates/${templateId}`);
     }
 

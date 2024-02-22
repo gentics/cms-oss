@@ -2,8 +2,10 @@ import {
     createBlacklistValidator,
     createI18nRequiredValidator,
 } from '@admin-ui/common';
+import { I18nService } from '@admin-ui/core';
+import { MarkupLanguageDataService } from '@admin-ui/shared';
 import {
-    ChangeDetectionStrategy,
+    ChangeDetectionStrategy, ChangeDetectorRef,
     Component,
     EventEmitter,
     Input,
@@ -20,6 +22,7 @@ import {
     MarkupLanguage,
     OverviewSetting,
     Raw,
+    RegexValidationInfo,
     SelectSetting,
     TagPartProperty,
     TagPartType,
@@ -114,6 +117,9 @@ export const REMOVED_CONSTRUCT_PART_TYPES: TagPartType[] = [
     TagPartType.Form,
 ];
 
+/** Using a symbol so the tag-part can be safely converted to JSON without extra handling. */
+const TRANSLATED_NAME_PROP = Symbol('translated-name');
+
 /**
  * Defines the data editable by the `ConstructPartPropertiesComponentMode`.
  *
@@ -136,9 +142,10 @@ export class ConstructPartPropertiesComponent
 
     public readonly VIABLE_CONSTRUCT_PART_TYPES = VIABLE_CONSTRUCT_PART_TYPES;
     public readonly REMOVED_CONSTRUCT_PART_TYPES = REMOVED_CONSTRUCT_PART_TYPES;
+    public readonly TRANSLATED_NAME_PROP = TRANSLATED_NAME_PROP;
     public readonly TagPartTypePropertyType = TagPartTypePropertyType;
-    public readonly ConstructPartPropertiesComponentMode = ConstructPartPropertiesMode;
-    public readonly TagPartValidatorConfigs = TagPartValidatorConfigs;
+    public readonly ConstructPartPropertiesMode = ConstructPartPropertiesMode;
+    public readonly SORTED_VALIDATOR_CONFIGS: (RegexValidationInfo & { [TRANSLATED_NAME_PROP]: string })[];
 
     @Input()
     public mode: ConstructPartPropertiesMode;
@@ -165,6 +172,22 @@ export class ConstructPartPropertiesComponent
     public invalidLanguages: string[] = [];
 
     protected override delayedSetup = true;
+
+    constructor(
+        changeDetector: ChangeDetectorRef,
+        private markupLanguageData: MarkupLanguageDataService,
+        private i18n: I18nService,
+    ) {
+        super(changeDetector);
+
+        this.SORTED_VALIDATOR_CONFIGS = Object.values(TagPartValidatorConfigs)
+        // Translate the name once, so we don't have to do it everytime while sorting and then in the template as well.
+            .map(config => ({
+                ...config,
+                [TRANSLATED_NAME_PROP]: i18n.instant('construct.' + config.name),
+            }))
+            .sort((a, b) => a[TRANSLATED_NAME_PROP].localeCompare(b[TRANSLATED_NAME_PROP]));
+    }
 
     ngOnChanges(changes: Record<keyof ConstructPartPropertiesComponent, SimpleChange>): void {
         super.ngOnChanges(changes);
@@ -199,6 +222,10 @@ export class ConstructPartPropertiesComponent
 
     protected createForm(): UntypedFormGroup {
         return new UntypedFormGroup({
+            // Noop controls
+            globalId: new UntypedFormControl(this.value?.globalId),
+            id: new UntypedFormControl(this.value?.id),
+
             // text
             keyword: new UntypedFormControl(this.value?.keyword ?? null, [
                 Validators.required,
@@ -331,9 +358,9 @@ export class ConstructPartPropertiesComponent
         const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
-            (output as TagPartPropertiesFormData).globalId = this.value?.globalId;
-            (output as TagPartPropertiesFormData).id = this.value?.id;
-            (output as TagPartPropertiesFormData).keyword = this.value?.keyword;
+            (output as TagPartPropertiesFormData).globalId = this.value?.globalId ?? formData.globalId;
+            (output as TagPartPropertiesFormData).id = this.value?.id ?? formData.id;
+            (output as TagPartPropertiesFormData).keyword = this.value?.keyword ?? this.form.get('keyword').value;
             output.name = this.value?.name;
             output.type = this.value?.type;
         } else {

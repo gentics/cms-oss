@@ -715,7 +715,7 @@ public class FormFactory extends AbstractFactory {
 			boolean handleDependencies = renderType != null ? renderType.doHandleDependencies() : false;
 			boolean storeDependencies = renderType != null ? renderType.isStoreDependencies() : false;
 
-			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false)) {
+			try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, this, handleDependencies, false, false)) {
 				// for the StaticUrlFactory, forbid auto detection of the linkway
 				RenderUrlFactory renderUrlFactory = rTrx.get().getRenderUrlFactory();
 				if (renderUrlFactory instanceof StaticUrlFactory) {
@@ -751,7 +751,7 @@ public class FormFactory extends AbstractFactory {
 						// disable link management
 						urlFactory.setLinkManagement(LinkManagement.OFF);
 
-						try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, successPage, false, false)) {
+						try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, successPage, false, false, false)) {
 							// Render the URL and set it as live URL
 							RenderUrl renderUrl = urlFactory.createRenderUrl(Page.class, successPage.getId());
 
@@ -1578,7 +1578,7 @@ public class FormFactory extends AbstractFactory {
 	/**
 	 * Get the table version object for forms
 	 * @return table version object for forms
-	 * @throws NodeException 
+	 * @throws NodeException
 	 */
 	private static TableVersion getFormTableVersion() throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();

@@ -21,4 +21,7 @@ export interface ScheduleExecution<T extends ModelType = DefaultModelType> exten
 
     /** The log the execution produced */
     log: string;
+
+    /** If the execution is running */
+    running: boolean;
 }

@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
+import { GcmsUiBridge } from '@gentics/cms-integration-api-models';
 import { EditMode, Page, StringTagPartProperty, Tag, TagPropertyType } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { Subscription } from 'rxjs';
 import { SpyEventTarget } from '../../../../../testing/spy-event-target';
 import { AlohaGlobal, CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJSLib, GCNJsLibRequestOptions, GCNRestRequestArgs } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { GCMSUI } from '../../../providers/customer-script/customer-script.service';
 import { OBJECT_PROPERTIES_CONTEXT_MENU_CLASS, OBJECT_PROPERTIES_INFO_BUTTON_CLASS, PostLoadScript } from './post-load';
 import { PreLoadScript } from './pre-load';
 
@@ -673,6 +674,7 @@ class FakeAlohaGlobal implements AlohaGlobal {
     };
 
     bind(): void { }
+    unbind(): void { }
 
     require(dependency: string): any;
     require(dependencies: string[], callback: (...dependencies: any[]) => any): void;
@@ -692,6 +694,7 @@ class FakeGCNJSLib implements GCNJSLib {
     }
 
     private buildPageObject(): this['page'] {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
         const pageObject = {
             _data: this.buildExamplePageWithTags(),
@@ -855,7 +858,7 @@ class FakeScriptHost {
 
 }
 
-class FakeGCMSUI implements Partial<GCMSUI> {
+class FakeGCMSUI implements Partial<GcmsUiBridge> {
     gcmsUiStylesUrl = 'gcmsUiStyles';
 }
 

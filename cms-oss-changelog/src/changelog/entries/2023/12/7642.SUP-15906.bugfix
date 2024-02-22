@@ -1,0 +1,4 @@
+Administration UI: The performance of fetching all templates, which are assigned to a node, and the assignment operation has been improved.
+REST API: New endpoints have been added:
+* @GET /node/{nodeId}/template/{templateId}@
+* @GET /template/{id}/nodes@

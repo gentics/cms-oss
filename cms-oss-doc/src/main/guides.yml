@@ -39,9 +39,9 @@ index:
     - title: "Compatibility List"
       url: gcn_compatibility_list
       text: "Contains a list of supported browsers, databases and drivers"
-    - title: "Changelog"
-      text: "The Gentics CMS Changelog (online version)"
-      ext-url: "http://www.gentics.com/Content.Node/changelog"
+    - title: "Changelog CMS OSS"
+      text: "The Gentics CMS OSS Changelog (online version)"
+      ext-url: "https://www.gentics.com/Content.Node/cmp8/changelog-oss/"
     - title: "Downloads"
       text: "Gentics CMS related downloads"
       url: downloads

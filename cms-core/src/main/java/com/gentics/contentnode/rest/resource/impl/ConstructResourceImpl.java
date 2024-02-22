@@ -813,16 +813,10 @@ public class ConstructResourceImpl implements ConstructResource {
 
 			// Load the passed construct
 			construct = findConstruct(id, PermType.delete, t);
-			try (WastebinFilter wb = Wastebin.INCLUDE.set()) {
-				List<ContentTag> contentTags = construct.getContentTags();
-				if (!contentTags.isEmpty()) {
-					CNI18nString message = new CNI18nString("resource.cannotdelete");
-					message.setParameter("0", "Object Tag Definition");
-					message.setParameter("1", construct.getName());
-					message.setParameter("2", "Object Tag");
-					message.setParameter("3", contentTags.stream().map(tag -> tag.getName()).collect(Collectors.joining(", ")));
-					throw new EntityInUseException(message.toString());
-				}
+			if (construct.isUsed()) {
+				I18nString message = new CNI18nString("construct.cannotdelete.used");
+				message.setParameter("0", I18NHelper.getName(construct));
+				throw new EntityInUseException(message.toString());
 			}
 			construct.delete();
 			trx.success();

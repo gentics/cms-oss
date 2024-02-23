@@ -1,13 +1,13 @@
-<ng-template #groupTpl let-label="label" let-constructs="constructs">
+<ng-template #groupTpl let-isFavourite="isFavourite" let-label="label" let-constructs="constructs">
     <gtx-dropdown-list
+        #dropdownRef
         class="dropdown"
         [belowTrigger]="true"
         [sticky]="false"
         [width]="'content'"
-        (open)="handleDropdownOpen($event)"
     >
         <gtx-dropdown-trigger>
-            <div class="construct-group">
+            <div class="construct-group" (click)="handleDropdownOpen(dropdownRef, isFavourite)">
                 <div class="group-label">{{ label }}</div>
                 <div class="group-icon">
                     <icon>keyboard_arrow_down</icon>
@@ -42,14 +42,16 @@
         <ng-container *ngIf="favouriteConstructs.length > 0">
             <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
                 label: (FAVOURITES_LABEL | i18n),
-                constructs: favouriteConstructs
+                constructs: favouriteConstructs,
+                isFavourite: true
             }"></ng-container>
         </ng-container>
 
         <ng-container *ngFor="let group of displayGroups">
             <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{
                 label: group.label,
-                constructs: group.constructs
+                constructs: group.constructs,
+                isFavourite: false
             }"></ng-container>
         </ng-container>
     </div>

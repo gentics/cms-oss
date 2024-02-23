@@ -263,6 +263,7 @@ export class CustomerScriptService implements OnDestroy {
         };
 
         window.GCMSUI = gcmsUi;
+        this.aloha.setWindow(window);
         return gcmsUi;
     }
 

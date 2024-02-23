@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaComponent, AlohaFullComponentSetting, AlohaLinkChangeEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Subscription, combineLatest, forkJoin, of } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { Subscription, combineLatest, forkJoin, fromEvent, of } from 'rxjs';
+import { delay, filter, first, map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,
@@ -179,8 +179,17 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.subscriptions.push(forkJoin([
                 this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').pipe(
                     filter(plugin => plugin != null),
+                    first(),
                 ),
-                this.aloha.bind('aloha-ready'),
+                // Check if ready, or wait max 10 sec (as the event could have been triggered before)
+                combineLatest([
+                    this.aloha.bind('aloha-ready'),
+                    of(null).pipe(
+                        delay(5_000),
+                    ),
+                ]).pipe(
+                    first(),
+                ),
             ]).subscribe(([plugin]) => {
                 this.linkCheckerPlugin = plugin;
                 this.brokenLinkElements = this.linkCheckerPlugin.initializeBrokenLinks(this.initialBrokenLinks).slice();

@@ -19,7 +19,7 @@ import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { isEqual } from 'lodash-es';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
-import { AlohaGlobal } from '../../models/content-frame';
+import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
 export interface NormalizedSlotDisplay {
     name: string;
@@ -162,26 +162,23 @@ export class AlohaIntegrationService {
     public scopeChange$: Observable<AlohaScopeChangeEvent>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
-    protected editorChangeSub = new BehaviorSubject<void>(null);
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
+    protected windowSub = new BehaviorSubject<CNWindow>(null);
 
     /**
      * The currently selected/active editor in the page-controls.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly activeEditor$ = this.activeEditorSub.asObservable();
-    /**
-     * Observable which emits every time the `editors` has been changed.
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public readonly editorsChange$ = this.editorChangeSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly size$ = this.activeSizeSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly components$ = this.componentsSub.asObservable();
+
+    public readonly window$ = this.windowSub.asObservable();
 
     public activeTab: string;
     public registeredComponents: Record<string, AlohaComponent> = {};
@@ -321,6 +318,10 @@ export class AlohaIntegrationService {
         this.activeEditorSub.next(id);
 
         return true;
+    }
+
+    public setWindow(window: CNWindow): void {
+        this.windowSub.next(window);
     }
 
     public registerComponent(slot: string, component: AlohaComponent): void {

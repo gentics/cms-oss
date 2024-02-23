@@ -154,7 +154,7 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
                 // TODO: Check the new flag for this instead
                 if (editableParts.length > 0 || (construct.externalEditorUrl || '').trim().length > 0) {
                     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
-                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent());
+                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent()._data);
                 }
             }, html);
         });

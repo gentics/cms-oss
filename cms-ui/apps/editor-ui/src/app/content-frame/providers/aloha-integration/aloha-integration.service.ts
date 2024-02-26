@@ -82,9 +82,12 @@ function normalizeToolbarTab(
     scopesRef: AlohaScopes,
 ): NormalizedTabsSettings {
     let tabComponents = tab.components;
-    if (!Array.isArray(tabComponents[0])) {
+    if (tabComponents == null) {
+        tabComponents = [];
+    } else if (!Array.isArray(tabComponents[0])) {
         tabComponents = tabComponents.map(comp => [comp]);
     }
+
     tabComponents = tabComponents.map(toMap => (toMap as AlohaComponentSetting[])
         .map(normalizeComponentDefinition)
         .filter(comp => comp != null),
@@ -178,6 +181,7 @@ export class AlohaIntegrationService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly components$ = this.componentsSub.asObservable();
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly window$ = this.windowSub.asObservable();
 
     public activeTab: string;

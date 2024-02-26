@@ -260,6 +260,9 @@ export class CustomerScriptService implements OnDestroy {
             unregisterComponent: (slot) => {
                 this.aloha.unregisterComponent(slot);
             },
+            focusEditorTab: (tabId) => {
+                this.aloha.changeActivePageEditorTab(tabId);
+            },
         };
 
         window.GCMSUI = gcmsUi;

@@ -142,6 +142,11 @@ export interface GcmsUiBridge {
      */
     openDialog: <T>(configuration: DynamicDialogConfiguration<T>) => Promise<OverlayElementControl<T>>;
     /**
+     * Attempts to focus the specified editor-tab. If it should not be found, it'll do nothing.
+     * @param tabId The id of the tab that should be focused.
+     */
+    focusEditorTab: (tabId: string) => void;
+    /**
      * Class of the error which is thrown when a overlay element has been closed.
      */
     closeErrorClass: any;

@@ -234,16 +234,6 @@
         }
     }
 
-    @media screen and (max-width: $small-screen) {
-        .primary-action ::ng-deep icon {
-            margin: 0;
-        }
-
-        .primary-action ::ng-deep span {
-            display: none;
-        }
-    }
-
     .dropdown {
         margin: 0 10px;
     }
@@ -253,8 +243,17 @@
     }
 }
 
-@media (max-width: $tiny-screen) {
-    .toolbar-actions .item-status {
+@media (max-width: $aloha-size-tablet-max) {
+    .toolbar-actions .item-status::ng-deep .label-wrapper,
+    .element-toolbar .save-button-label {
         display: none;
+    }
+
+    .toolbar-actions .item-status::ng-deep .corner-icon {
+        display: block;
+    }
+
+    .element-toolbar .save-button-icon {
+        margin-right: 0;
     }
 }

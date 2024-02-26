@@ -2939,7 +2939,10 @@ export class FolderActionsService {
         );
 
         // Combine the publishing and permission fetching
-        return forkJoin([this.client.folder.publishPages(pageIds, nodeId), ...permissionRequests]).pipe(
+        return forkJoin([this.client.page.publishMultiple({
+            ids: pageIds,
+            alllang: false,
+        }, { nodeId }), ...permissionRequests]).pipe(
             // After publish reqeuest(s) display notifications depending on permissions:
             // those pages a user is not permitted to publish will have been queued as publish requests.
             map(allResults => {

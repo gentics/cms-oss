@@ -878,7 +878,7 @@ export interface AbstractPageAPI extends BasicAPI {
     translate: (id: number | string, options: PageTranslateOptions) => PageResponse;
 
     publish: (id: number | string, body: PagePublishRequest, options?: PagePublishOptions) => Response;
-    publishMultiple: (body: MultiPagePublishRequest) => Response;
+    publishMultiple: (body: MultiPagePublishRequest, options?: PagePublishOptions) => Response;
     takeOffline: (id: number | string, body: PageOfflineRequest, options?: PageOfflineOptions) => Response;
 
     listTags: (id: number | string, options?: PageTagListOptions) => PageTagListResponse;

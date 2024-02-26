@@ -708,7 +708,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         translate: (id, options) => this.executeMappedJsonRequest(POST, `/page/translate/${id}`, null, options),
 
         publish: (id, body, options) => this.executeMappedJsonRequest(POST, `/page/publish/${id}`, body, options),
-        publishMultiple: (body) => this.executeMappedJsonRequest(POST, '/page/publish', body),
+        publishMultiple: (body, options) => this.executeMappedJsonRequest(POST, '/page/publish', body, options),
         takeOffline: (id, body, options) => this.executeMappedJsonRequest(POST, `/page/takeOffline/${id}`, body, options),
 
         listTags: (id, options) => this.executeMappedJsonRequest(GET, `/page/getTags/${id}`, null, options),

@@ -67,28 +67,56 @@
     }
 }
 
+@mixin gtxButtonCore {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: 200ms;
+    height: 2rem;
+    padding: 0.25rem 0.75rem;
+    outline: none;
+    background-color: transparent;
+    color: $gtx-color-very-dark-gray;
+    border: 1px solid transparentize($gtx-color-secondary, 0.7);
+
+    &:hover {
+        background-color: transparentize($gtx-color-secondary, 0.5);
+    }
+    &:active {
+        background-color: transparentize($gtx-color-secondary, 0.1);
+    }
+    &:focus {
+        border: 1px solid transparentize($gtx-color-secondary, 0);
+    }
+}
+
 @mixin gtxActiveToggleButton {
-    border-color: $gtx-color-primary;
-    background: #FAFDFF;
-    color: $gtx-color-off-black;
+    border: 1px solid transparentize($gtx-color-primary, 0.8);
+    background-color: transparentize($gtx-color-primary, 0.9);
+    color: darken($gtx-color-primary, 20%);
 
     .button-icon {
-        color: #0b6ea0;
+        color: inherit;
     }
 
     &:hover,
-    &:focus {
-        border-color: darken($gtx-color-primary, 10%);
-        background: #E6F7FF;
+    &:active {
+        box-shadow: none;
+        background-color: transparentize($gtx-color-primary, 0.8);
     }
 
-    &:disabled,
-    &[disabled] {
-        background: #88a3b5;
-        border-color: #0b3345;
+    &:active {
+        background-color: transparentize($gtx-color-primary, 0.6);
+    }
 
-        .button-icon {
-            color: inherit;
-        }
+    &:focus {
+        border: 1px solid transparentize($gtx-color-primary, 0.3);
+    }
+
+    &:focus:not(:hover) {
+        background: none;
     }
 }

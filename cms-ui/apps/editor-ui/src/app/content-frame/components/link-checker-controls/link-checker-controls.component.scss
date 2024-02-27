@@ -2,57 +2,33 @@
 @import 'aloha-utils';
 
 .link-item {
+    user-select: none;
     display: flex;
     flex-direction: row;
-    align-items: center;
-
-    padding: 0;
-    height: 32px;
-    border: 1px solid $gtx-color-dark-gray;
-    color: $gtx-color-very-dark-gray;
-    border-radius: 2px;
-    height: 32px;
-    user-select: none;
-    @include gtxCommonButtonShadow;
-
-    &:hover,
-    &:focus {
-        border-color: $gtx-color-off-black;
-        color: $gtx-color-off-black;
-    }
+    flex-wrap: nowrap;
 
     .link-label,
     .link-opener {
-        background: transparent;
-        border: none;
-        outline: none;
-        cursor: pointer;
-
-        transition: 200ms;
-        display: flex;
-        align-items: center;
-        height: 100%;
-
-        &:hover,
-        &:focus {
-            background: $gtx-color-off-white;
-        }
+        @include gtxButtonCore;
     }
 
     .link-label {
-        padding: 0.25rem;
-        padding-left: 0.5rem;
-        flex: 1 1 auto;
         white-space: nowrap;
+        border-top-left-radius: 2px;
+        border-bottom-left-radius: 2px;
+        padding: 0.25rem 0.75rem;
     }
 
     .link-opener {
-        padding: 0.25rem;
-        flex: 0 0;
+        padding: 0.25rem 0;
+        width: 22px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
 
         icon {
             height: 20px;
             width: 20px;
+            font-size: 20px;
         }
     }
 }
@@ -110,4 +86,12 @@
     .link-delete-button {
         color: $gtx-color-alert;
     }
+}
+
+.no-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    padding: 0 1rem;
 }

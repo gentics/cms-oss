@@ -1,4 +1,4 @@
-<div class="links-container">
+<div *ngIf="displayItems?.length > 0; else noContent" class="links-container">
     <gtx-dropdown-list
         #dropdown
         *ngFor="let item of displayItems"
@@ -47,3 +47,9 @@
         </gtx-dropdown-content>
     </gtx-dropdown-list>
 </div>
+
+<ng-template #noContent>
+    <div class="no-content">
+        <span class="no-content-label">{{ 'aloha.link_checker_no_content' | i18n }}</span>
+    </div>
+</ng-template>

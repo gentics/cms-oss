@@ -100,7 +100,8 @@ function normalizeToolbarTab(
             let hasVisibleSlots = false;
             const slots = arr.map(comp => {
                 const visible = inScope(scopesRef, comp.scope)
-                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type);
+                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type)
+                    && globalComponents[comp.slot]?.visible;
                 hasVisibleSlots ||= visible;
 
                 return {
@@ -168,6 +169,7 @@ export class AlohaIntegrationService {
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
     protected windowSub = new BehaviorSubject<CNWindow>(null);
+    protected toolbarReloadSub = new BehaviorSubject<void>(null);
 
     /**
      * The currently selected/active editor in the page-controls.
@@ -217,6 +219,7 @@ export class AlohaIntegrationService {
             this.components$,
             this.scopesRef$,
             this.scopeChange$,
+            this.toolbarReloadSub.asObservable(),
         ]).pipe(
             debounceTime(10),
             map(([settings, size, components, scopesRef]) => {
@@ -335,5 +338,9 @@ export class AlohaIntegrationService {
 
     public unregisterComponent(slot: string): void {
         delete this.registeredComponents[slot];
+    }
+
+    public reloadToolbarSettings(): void {
+        this.toolbarReloadSub.next();
     }
 }

@@ -84,12 +84,18 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
             this.writeValue(value);
         };
         this.settings.show = () => {
-            this.settings.visible = true;
-            this.changeDetector.markForCheck();
+            if (!this.settings.visible) {
+                this.settings.visible = true;
+                this.aloha.reloadToolbarSettings();
+                this.changeDetector.markForCheck();
+            }
         };
         this.settings.hide = () => {
-            this.settings.visible = false;
-            this.changeDetector.markForCheck();
+            if (this.settings.visible) {
+                this.settings.visible = false;
+                this.aloha.reloadToolbarSettings();
+                this.changeDetector.markForCheck();
+            }
         };
         this.settings.touch = () => {
             this.triggerTouch();

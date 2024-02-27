@@ -4,18 +4,8 @@
 .gtx-editor-button {
     @include gtxButtonCore;
 
-    &.icon-only {
-        padding: 0.25rem;
-        width: 2rem;
-
-        .button-icon {
-            margin: auto;
-            text-align: center;
-        }
-
-        .button-label {
-            display: none;
-        }
+    .button-label {
+        white-space: nowrap;
     }
 
     .button-icon {
@@ -30,6 +20,20 @@
 
         &.icon-right {
             margin-left: 0.5rem;
+        }
+    }
+
+    &.icon-only {
+        padding: 0.25rem;
+        width: 2rem;
+
+        .button-icon {
+            margin: auto;
+            text-align: center;
+        }
+
+        .button-label {
+            display: none;
         }
     }
 

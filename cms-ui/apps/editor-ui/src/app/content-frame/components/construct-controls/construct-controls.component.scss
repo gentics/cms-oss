@@ -32,6 +32,10 @@
 
     @include gtxButtonCore;
 
+    .group-label {
+        white-space: nowrap;
+    }
+
     .group-icon {
         height: 20px;
         width: 16px;

@@ -257,3 +257,9 @@
         margin-right: 0;
     }
 }
+
+@media (max-width: $aloha-size-mobile-max) {
+    .toolbar-actions .item-status {
+        display: none;
+    }
+}

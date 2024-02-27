@@ -16,6 +16,7 @@
     align-items: center;
     cursor: pointer;
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    white-space: nowrap;
 
     &:hover {
         background-color: $gtx-color-alert;

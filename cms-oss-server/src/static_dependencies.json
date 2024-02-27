@@ -12,16 +12,6 @@
               "latest": "11.0.22_7"
             },
             {
-              "name": "Elasticsearch",
-              "current": "6.8.23",
-              "latest": "8.12"
-            },
-            {
-              "name": "Keycloak",
-              "current": "22.0.5",
-              "latest": "23.0.7"
-            },
-            {
               "name": "MariaDB",
               "current": "10.3",
               "latest": "10.6.16-11"

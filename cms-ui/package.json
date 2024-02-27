@@ -38,8 +38,8 @@
     "workspace-generator": "nx workspace-generator",
     "compile:ui-core-docs": "tsc ./apps/ui-core-docs/compile-docs.ts",
     "generate:ui-core-docs": "node ./apps/ui-core-docs/compile-docs.js",
-    "report:list": "npm list --prod --json > dist/dependencies.json",
-    "report:outdated": "npm outdated --json --long > dist/outdated.json || true"
+    "report:list": "npm list --prod --json > target/dependencies.json",
+    "report:outdated": "npm outdated --json --long > target/outdated.json || true"
   },
   "husky": {
     "hooks": {

@@ -58,6 +58,23 @@
 
     <build>
 		<plugins>
+			<!-- Use the antrun plugin to create the target directory -->
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<configuration>
+							<target>
+								<mkdir dir="${project.build.directory}" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>com.github.eirslett</groupId>
 				<artifactId>frontend-maven-plugin</artifactId>
@@ -176,8 +193,8 @@
 						</goals>
 						<configuration>
 							<skip>${ui.skip.report}</skip>
-							<dependenciesFile>dist/dependencies.json</dependenciesFile>
-							<outdatedFile>dist/outdated.json</outdatedFile>
+							<dependenciesFile>${project.build.directory}/dependencies.json</dependenciesFile>
+							<outdatedFile>${project.build.directory}/outdated.json</outdatedFile>
 							<componentName>CMS OSS</componentName>
 							<moduleName>User Interface</moduleName>
 						</configuration>

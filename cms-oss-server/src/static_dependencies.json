@@ -14,7 +14,7 @@
             {
               "name": "MariaDB",
               "current": "10.3",
-              "latest": "10.6.16-11"
+              "latest": "11.3"
             }
           ]
         }

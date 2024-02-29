@@ -41,11 +41,17 @@
             padding: 0rem 0.5rem;
             user-select: none;
             height: 24px;
+
+            icon {
+                width: 24px;
+                height: 24px;
+            }
         }
 
         .entry-label {
             flex: 1 1 auto;
             padding: 0 0.5rem;
+            white-space: nowrap;
         }
 
         &:last-child {
@@ -78,15 +84,21 @@
         }
     }
 
+    &:not(.icons-only).has-right-icons {
+        .select-menu-entry:not(.multi-step-entry) {
+            padding-right: 48px;
+        }
+    }
+
     .next-step {
         display: flex;
         flex-direction: column;
         flex-wrap: nowrap;
         position: absolute;
         width: 100%;
-        height: 100%;
         transition: 200ms;
         transform: translateX(100%);
+        min-width: 240px;
         top: 0;
         left: 0;
 
@@ -99,8 +111,6 @@
         }
 
         .next-step-content {
-            flex: 1 1 auto;
-            min-height: 1px;
             overflow: auto;
             width: 100%;
         }
@@ -113,6 +123,16 @@
 
         .next-step {
             transform: translateX(0);
+        }
+
+        &.next-step-ready {
+            .select-menu-entries-container {
+                display: none;
+            }
+
+            .next-step {
+                position: relative;
+            }
         }
     }
 }

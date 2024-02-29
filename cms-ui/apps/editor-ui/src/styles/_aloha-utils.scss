@@ -39,6 +39,7 @@
         flex: 1 1 auto;
         padding: 0.25rem 0.75rem;
         font-weight: bold;
+        white-space: nowrap;
     }
 
     .header-confirm-button {
@@ -63,6 +64,11 @@
 
         &:focus {
             border-color: #c1c4ad;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     }
 }

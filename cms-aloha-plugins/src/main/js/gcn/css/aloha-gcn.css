@@ -3,14 +3,6 @@
 	display: none !important;
 }
 
-.aloha-editable div.aloha-table-wrapper.ui-draggable {
-	margin-top: 32px;
-}
-
-.aloha-browser-search-field, .aloha-browser-search-btn {
-	display: block !important; 
-}
-
 .gcn-link-uri-warning .aloha .ui-widget input {
 	color: red !important;
 }
@@ -61,10 +53,15 @@
 	transition: 200ms;
 }
 
+.GENTICS_block .aloha-construct-buttons-container {
+	--gtx-block-handle-item-width: 30px;
+	--gtx-block-handle-item-height: 30px;
+}
+
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button,
 .GENTICS_block .aloha-construct-buttons-container .gcn-construct-drag-handle {
-	width: 30px;
-	height: 30px;
+	width: var(--gtx-block-handle-item-width);
+	height: var(--gtx-block-handle-item-height);
 	padding: 4px;
 	margin: 0;
 	border: 1px solid #d6d6d6;

@@ -298,6 +298,11 @@ export interface AlohaLinkChangeEvent {
     element: JQuery<HTMLAnchorElement>;
 }
 
+export interface AlohaLinkInsertEvent {
+    range: AlohaRangeObject;
+    elements: JQuery<HTMLAnchorElement>;
+}
+
 export interface AlohaLinkRemoveEvent {
     range: AlohaRangeObject;
     text: string;

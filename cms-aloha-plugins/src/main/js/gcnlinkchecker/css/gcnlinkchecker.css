@@ -1,17 +1,61 @@
-a.aloha-gcnlinkchecker-invalid-url {
-    background-color: #f5c1bc;
+a.aloha-gcnlinkchecker-item {
     position: relative;
-    margin-right: 12px;
+    margin-right: 14px;
 }
 
-a.aloha-gcnlinkchecker-invalid-url::after {
-    content: "";
-    background: url('../img/icon-report_problem-red.svg');
-    background-size: 14px 14px;
+a.aloha-gcnlinkchecker-item::after {
     width: 14px;
     height: 14px;
     display: block;
     position: absolute;
     right: -14px;
-    top: -4px;
+    top: -1px;
+
+    /* Icon setup */
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 14px;
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -moz-font-feature-settings: 'liga';
+    -moz-osx-font-smoothing: grayscale;
+    font-variation-settings: 'FILL' 1;
+}
+
+/* Unchecked URL */
+
+a.aloha-gcnlinkchecker-unchecked::after {
+    color: #646464;
+    /* Icon to use */
+    content: '\eb8b';
+}
+
+/* Valid URL */
+
+a.aloha-gcnlinkchecker-checked.aloha-gcnlinkchecker-valid-url {
+    background-color: #47cf5247;
+}
+
+a.aloha-gcnlinkchecker-checked.aloha-gcnlinkchecker-valid-url::after {
+    color: rgb(8, 143, 4);
+    /* Icon to use */
+    content: '\e876';
+}
+
+/* Invalid URL */
+
+a.aloha-gcnlinkchecker-checked.aloha-gcnlinkchecker-invalid-url {
+    background-color: #f14a3a47;
+}
+
+a.aloha-gcnlinkchecker-checked.aloha-gcnlinkchecker-invalid-url::after {
+    color: rgb(185, 6, 6);
+    /* Icon to use */
+    content: '\e002';
 }

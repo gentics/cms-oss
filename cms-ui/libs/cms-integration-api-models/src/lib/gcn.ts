@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaPlugin } from '@gentics/aloha-models';
-import { ExternalLink } from '@gentics/cms-models';
+import { ExternalLink, LinkCheckerCheckResponse } from '@gentics/cms-models';
 
 export interface GCNPluginSettings {
     blocks?: GCNPluginBlockDefintion[];
@@ -124,15 +124,24 @@ export interface GCNTags {
 export interface GCNLinkCheckerAlohaPluigin extends AlohaPlugin {
     settings: GCNLinkCheckerPluginSettings;
     brokenLinks: HTMLElement[];
+    validLinks: HTMLElement[];
+    uncheckedLinks: HTMLElement[];
 
     clearBrokenLinks: () => void;
     initializeBrokenLinks: (links: ExternalLink[]) => HTMLElement[];
     refreshLinksFromDom: () => void;
+
+    addLink: (element: HTMLElement, res?: LinkCheckerCheckResponse) => void;
+    addUncheckedLink: (element: HTMLElement) => boolean;
+    addValidLink: (element: HTMLElement) => boolean;
     addBrokenLink: (element: HTMLElement) => boolean;
-    removeBrokenLink: (element: HTMLElement) => boolean;
-    deleteTag: (element: HTMLElement | JQuery) => void;
+
+    updateLinkStatus: (element: HTMLElement, res?: LinkCheckerCheckResponse) => void;
+    removeLink: (element: HTMLElement) => boolean;
 
     selectLinkElement: (element: HTMLElement) => void;
     editLink: (element: HTMLElement) => Promise<void>;
-    removeLink: (element: HTMLElement) => Promise<void>;
+    deleteLink: (element: HTMLElement) => Promise<void>;
+
+    deleteTag: (element: HTMLElement | JQuery) => void;
 }

@@ -23,5 +23,9 @@ link_checker_edit:
     de: 'Bearbeiten'
     en: 'Edit'
 link_checker_delete:
-    de: 'Löschen'
-    en: 'Delete'
+    de: 'Entfernen'
+    en: 'Remove'
+link_checker_no_content:
+    de: 'Keine defekten Links vorhanden'
+    en: 'No broken Links detected'
+

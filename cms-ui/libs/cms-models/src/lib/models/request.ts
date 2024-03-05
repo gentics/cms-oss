@@ -1154,8 +1154,8 @@ export interface PageAssignRequest {
 export interface PagePublishRequest {
     message?: string;
     alllang: boolean;
-    at: number;
-    keepVersion: boolean;
+    at?: number;
+    keepVersion?: boolean;
 }
 
 export interface PagePublishOptions {
@@ -1169,7 +1169,7 @@ export interface PageOfflineOptions {
 export interface MultiPagePublishRequest extends PagePublishRequest {
     ids: (number | string)[];
     foregroundTime?: number;
-    keepPublishAt: boolean;
+    keepPublishAt?: boolean;
 }
 
 export interface PageOfflineRequest {

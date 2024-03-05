@@ -4,7 +4,11 @@
     (click)="handleOverlayClick()"
 ></div>
 
-<div class="gtx-context-menu" [class.with-confirm]="configuration.resolveWithConfirmButton || controlNeedsConfirm">
+<div
+    class="gtx-context-menu"
+    [class.with-confirm]="configuration.resolveWithConfirmButton || controlNeedsConfirm"
+    [class.no-header]="hideHeader"
+>
     <div class="context-menu-header">
         <button
             class="header-abort-button"
@@ -32,6 +36,7 @@
             [formControl]="control"
             (requiresConfirm)="updateNeedsConfirm($event)"
             (manualConfirm)="handleManualComponentConfirm()"
+            (hideHeader)="handleHideHeader($event)"
         ></gtx-aloha-component-renderer>
     </div>
 </div>

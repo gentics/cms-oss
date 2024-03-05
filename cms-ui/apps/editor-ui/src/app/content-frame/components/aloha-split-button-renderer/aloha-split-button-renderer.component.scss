@@ -28,8 +28,7 @@
     &:disabled {
         .split-button-main,
         .split-button-secondary {
-            background: $gtx-color-light-gray;
-            color: $gtx-color-off-black;
+            opacity: 0.5;
             cursor: not-allowed;
         }
     }

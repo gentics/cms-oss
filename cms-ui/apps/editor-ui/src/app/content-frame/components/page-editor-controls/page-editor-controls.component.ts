@@ -1,12 +1,12 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, NgZone, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaComponent, AlohaFullComponentSetting, AlohaLinkChangeEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription, combineLatest, forkJoin, of } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { delay, filter, first, map, switchMap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,
@@ -18,8 +18,16 @@ import {
     TAB_ID_LINK_CHECKER,
 } from '../../providers/aloha-integration/aloha-integration.service';
 
-function isInternalLink(element: JQuery): boolean {
-    return element != null && element.attr('data-gentics-aloha-repository') != null;
+const ALOHA_REPO = 'data-gentics-aloha-repository'
+
+function isInternalLink(element: HTMLElement | JQuery): boolean {
+    if (element == null) {
+        return false;
+    }
+    if (isJQueryElement(element)) {
+        return element.attr(ALOHA_REPO) != null;
+    }
+    return element.getAttribute(ALOHA_REPO) != null;
 }
 
 function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): string {
@@ -44,6 +52,10 @@ function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): stri
     }
 
     return url;
+}
+
+function isJQueryElement(elem: any): elem is JQuery {
+    return elem != null && typeof elem === 'object' && elem.length && typeof elem.attr === 'function';
 }
 
 const ATTR_QUEUED_LINK_CHECK = 'gcmsui-queued-link-check';
@@ -87,7 +99,6 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     protected subscriptions: Subscription[] = [];
 
     constructor(
-        protected zone: NgZone,
         protected changeDetector: ChangeDetectorRef,
         protected appState: ApplicationStateService,
         protected client: GCMSRestClientService,
@@ -169,7 +180,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             }),
         ).subscribe(([enabled, links]: [boolean, ExternalLink[]]) => {
             this.initialBrokenLinks = links;
-            this.brokenLinkCountChange.emit(this.initialBrokenLinks.length);
+            this.brokenLinkCountChange.emit(this.initialBrokenLinks.filter(link => link.lastStatus === 'invalid').length);
             this.changeDetector.markForCheck();
 
             if (!enabled) {
@@ -179,13 +190,27 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.subscriptions.push(forkJoin([
                 this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').pipe(
                     filter(plugin => plugin != null),
+                    first(),
                 ),
-                this.aloha.bind('aloha-ready'),
+                // Check if ready, or wait max 10 sec (as the event could have been triggered before)
+                combineLatest([
+                    this.aloha.bind('aloha-ready'),
+                    of(null).pipe(
+                        delay(5_000),
+                    ),
+                ]).pipe(
+                    first(),
+                ),
             ]).subscribe(([plugin]) => {
                 this.linkCheckerPlugin = plugin;
                 this.brokenLinkElements = this.linkCheckerPlugin.initializeBrokenLinks(this.initialBrokenLinks).slice();
                 this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
                 this.changeDetector.markForCheck();
+
+                // Check each link "live"
+                if (this.linkCheckerPlugin?.settings?.livecheck) {
+                    this.linkCheckerPlugin.uncheckedLinks.forEach(element => this.checkWithDelay(element));
+                }
             }));
         }));
 
@@ -194,15 +219,33 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
                 return;
             }
 
-            // if livecheck is activated and the link is external and not empty and not only an anchor, the check is done after a delay
-            if (
-                this.linkCheckerPlugin?.settings?.livecheck
-                && event.href !== ''
-                && event.href.indexOf('#') !== 0
-                && !isInternalLink(event.element)
-            ) {
-                this.checkWithDelay(event.href.trim(), event.element);
+            if (event == null || event.element == null || event.element.length === 0) {
+                return;
             }
+
+            if (isInternalLink(event.element)) {
+                this.linkCheckerPlugin.removeLink(event.element[0]);
+            } else if (this.linkCheckerPlugin?.settings?.livecheck) {
+                this.checkWithDelay(event.element);
+            }
+        }));
+
+        this.subscriptions.push(this.aloha.on<AlohaLinkInsertEvent>('aloha.link.insert').subscribe(event => {
+            if (!this.linkCheckerPlugin || !this.linkCheckerPlugin?.settings?.livecheck) {
+                return;
+            }
+
+            if (event == null || event.elements == null || event.elements.length === 0) {
+                return;
+            }
+
+            Array.from(event.elements).forEach(linkElement => {
+                if (isInternalLink(linkElement)) {
+                    this.linkCheckerPlugin.removeLink(linkElement);
+                } else {
+                    this.checkWithDelay(linkElement);
+                }
+            });
         }));
 
         this.subscriptions.push(this.aloha.on<AlohaLinkRemoveEvent>('aloha.link.remove').subscribe(() => {
@@ -240,33 +283,36 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         return slot.name;
     }
 
-    protected checkWithDelay(url: string, element: JQuery): void {
-        let timerId = parseInt(element.attr(ATTR_QUEUED_LINK_CHECK), 10);
+    protected checkWithDelay(element: HTMLElement | JQuery, url?: string): void {
+        if (isJQueryElement(element)) {
+            element = element[0];
+        }
+
+        let timerId = parseInt(element.getAttribute(ATTR_QUEUED_LINK_CHECK), 10);
         if (timerId && !Number.isNaN(timerId)) {
             window.clearTimeout(timerId);
         }
+        this.linkCheckerPlugin.addUncheckedLink(element);
+
+        if (!url) {
+            url = (element.getAttribute('href') || '').trim();
+        }
 
         timerId = window.setTimeout(() => {
-            element.removeAttr(ATTR_QUEUED_LINK_CHECK);
-            this.checkLink(url, element[0]);
+            (element as HTMLElement).removeAttribute(ATTR_QUEUED_LINK_CHECK);
+            this.checkLink(url, element as HTMLElement);
         }, this.linkCheckerPlugin.settings.delay ?? DEFAULT_DELAY);
-        element.attr(ATTR_QUEUED_LINK_CHECK, `${timerId}`);
+        element.setAttribute(ATTR_QUEUED_LINK_CHECK, `${timerId}`);
     }
 
     protected checkLink(url: string, element: HTMLElement): void {
         this.subscriptions.push(this.client.linkChecker.check({
             url: normalizeURL(url, this.linkCheckerPlugin.settings),
         }).subscribe(res => {
-            this.zone.runOutsideAngular(() => {
-                if (res.valid) {
-                    this.linkCheckerPlugin.removeBrokenLink(element);
-                } else {
-                    this.linkCheckerPlugin.addBrokenLink(element)
-                }
-                this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
-                this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
-                this.changeDetector.markForCheck();
-            });
+            this.linkCheckerPlugin.updateLinkStatus(element, res);
+            this.brokenLinkElements = this.linkCheckerPlugin.brokenLinks.slice();
+            this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);
+            this.changeDetector.markForCheck();
         }));
     }
 }

@@ -34,7 +34,7 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
         }
 
         this.triggerTouch();
-        const switched = !this.settings.activate;
+        const switched = !this.settings.active;
         if (!this.settings.pure) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             this.settings.toggleActivation();

@@ -19,6 +19,7 @@
         border: none;
         outline: none;
         padding: 0.25rem 0.75rem;
+        color: $gtx-color-dark-gray;
         border-bottom: 2px solid transparent;
         background: transparent;
         align-items: center;
@@ -26,14 +27,21 @@
         transition: 200ms;
         overflow: visible;
 
+        &:hover {
+            color: $gtx-color-off-black;
+        }
+
         &.active {
             border-bottom-color: $gtx-color-primary;
+            color: $gtx-color-primary;
         }
 
         .tab-icon {
             height: 24px;
             position: relative;
             user-select: none;
+            color: inherit;
+            transition: 200ms;
 
             .icon-badge {
                 position: absolute;
@@ -52,7 +60,11 @@
 
         .tab-label {
             margin-left: 0.5rem;
+            transition: 200ms;
             user-select: none;
+            color: inherit;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
     }
 

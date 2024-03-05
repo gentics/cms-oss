@@ -63,6 +63,7 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
 
     protected gcnTags: GCNTags;
 
+    protected dropdownIsFavourites = false;
     protected currentlyOpenDropdown: DropdownListComponent | null;
 
     constructor(
@@ -114,11 +115,12 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
         }
     }
 
-    public handleDropdownOpen(instance: DropdownListComponent): void {
+    public handleDropdownOpen(instance: DropdownListComponent, isFavourites: boolean): void {
         if (this.currentlyOpenDropdown?.isOpen) {
             this.currentlyOpenDropdown.closeDropdown();
         }
         this.currentlyOpenDropdown = instance;
+        this.dropdownIsFavourites = isFavourites;
     }
 
     public insertConstruct(construct: Construct, event?: Event): void {
@@ -152,7 +154,7 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
                 // TODO: Check the new flag for this instead
                 if (editableParts.length > 0 || (construct.externalEditorUrl || '').trim().length > 0) {
                     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
-                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent());
+                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent()._data);
                 }
             }, html);
         });
@@ -198,6 +200,14 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
     protected updateFavouriteConstructs(): void {
         this.favouriteConstructs = this.availableConstructs
             .filter(construct => (this.favourites || []).includes(construct.keyword));
+
+        if (this.currentlyOpenDropdown != null && this.dropdownIsFavourites) {
+            if (this.favourites.length === 0) {
+                this.currentlyOpenDropdown.closeDropdown();
+            } else {
+                this.currentlyOpenDropdown.resize();
+            }
+        }
     }
 
     protected updateDisplayGroups(): void {

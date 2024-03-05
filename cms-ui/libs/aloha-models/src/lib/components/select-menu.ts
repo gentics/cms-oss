@@ -1,22 +1,31 @@
+import { DynamicControlConfiguration } from '../overlay-elements';
 import { AlohaComponent, AlohaCoreComponentNames } from './base-component';
 
-export interface SelectMenuOption {
+interface BaseSelectMenuOption {
     id: string;
     label?: string;
     icon?: string;
-    newTab?: boolean;
+    iconHollow?: boolean;
     isMultiStep?: boolean;
-    multiStepContext?: MultiStepOptionContext<any>;
 }
 
-export interface MultiStepOptionContext<T> {
+export interface MultiStepOptionContext<T> extends DynamicControlConfiguration<T> {
     label?: string;
-    type: string;
-    options?: Record<string, any>;
     initialValue?: T;
     requiresConfirm?: boolean;
     confirmLabel?: string;
 }
+
+export interface SimpleSelectMenuOption extends BaseSelectMenuOption {
+    isMultiStep: false;
+}
+
+export interface MultiStepSelectMenuOption<T> extends BaseSelectMenuOption {
+    isMultiStep: true,
+    multiStepContext: MultiStepOptionContext<T>;
+}
+
+export type SelectMenuOption<T = any> = SimpleSelectMenuOption | MultiStepSelectMenuOption<T>;
 
 export interface SelectMenuSelectEvent<T> {
     id: string;

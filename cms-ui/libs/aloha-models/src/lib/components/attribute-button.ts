@@ -7,8 +7,10 @@ export interface AlohaAttributeButtonComponent extends Omit<AlohaButtonComponent
     targetElement: HTMLElement | JQuery;
     targetAttribute: string;
     inputLabel: string;
+    inputActive: boolean;
     panelLabel: string;
     panelActiveOn?: string;
 
-    updateTargetElement: (element: null | HTMLElement | JQuery) => void;
+    activateInput: (active: boolean) => void;
+    setTargetElement: (element: null | JQuery) => void;
 }

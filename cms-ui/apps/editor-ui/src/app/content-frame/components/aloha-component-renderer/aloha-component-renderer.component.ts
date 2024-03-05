@@ -95,6 +95,12 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
     @Output()
     public manualConfirm = new EventEmitter<void>();
 
+    /**
+     * Special output for dropdowns, since these have to be manually resized when the content size changes.
+     */
+    @Output()
+    public hideHeader = new EventEmitter<boolean>();
+
     @ViewChild('ref', { read: ViewContainerRef, static: true })
     public containerRef: ViewContainerRef;
 
@@ -206,6 +212,12 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
         this.subscriptions.push(this.instanceRef.instance.manualConfirm.subscribe(() => {
             this.manualConfirm.emit();
         }));
+
+        if (this.createInstanceType === AlohaCoreComponentNames.SELECT_MENU) {
+            (this.instanceRef.instance as AlohaSelectMenuRendererComponent).multiStepActivation.subscribe(stepId => {
+                this.hideHeader.emit(stepId != null);
+            });
+        }
     }
 
     writeValue(value: any): void {

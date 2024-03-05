@@ -32,17 +32,17 @@
         cursor: pointer;
     }
 
-    // div a.breadcrumb:not(.last):nth-child(3)::after {
-    //     content: '\E5CC  ';
-    //     display: inline-block;
-    //     font-family: 'Material Symbols';
-    //     font-weight: normal;
-    //     font-style: normal;
-    //     font-size: 25px;
-    //     vertical-align: top;
-    //     -webkit-font-smoothing: antialiased;
-    //     margin: 0 10px 0 8px;
-    // }
+    div a.breadcrumb:not(.last):nth-child(3)::after {
+        content: '\E5CC  ';
+        display: inline-block;
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 25px;
+        vertical-align: top;
+        -webkit-font-smoothing: antialiased;
+        margin: 0 10px 0 8px;
+    }
 
     @media (min-width: 320px) and (max-width: 600px) {
         a.breadcrumb:not(:last-child) {

@@ -78,7 +78,7 @@ export class LinkCheckerControlsComponent implements OnChanges, OnDestroy {
     }
 
     deleteLinkElement(element: HTMLElement): void {
-        this.plugin.removeLink(element).then(() => this.updateCount.emit());
+        this.plugin.deleteLink(element).then(() => this.updateCount.emit());
     }
 
     public focusElement(element: HTMLElement): void {

@@ -37,7 +37,6 @@ define([
 	'gcn/gcn-util',
 	'util/misc',
 	'gcn/gcn-links',
-	'gcn/gcn-repository',
 	'gcn/gcmsui-surface',
 	'css!gcn/css/aloha-gcn.css',
 	'css!gcn/css/gui.css'
@@ -69,7 +68,6 @@ define([
 	Util,
 	Misc,
 	gcnLinks,
-	gcnRepo,
 	GCMSUISurface,
 ) {
 	'use strict';

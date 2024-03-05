@@ -61,6 +61,18 @@ export class AlohaAttributeButtonRendererComponent
             this.settings.tooltip = tooltip;
             this.changeDetector.markForCheck();
         };
+        this.settings.setTargetElement = element => {
+            if (element == null || (element as JQuery).length === 0) {
+                this.settings.targetElement = null;
+            } else {
+                this.settings.targetElement = element;
+            }
+            this.changeDetector.markForCheck();
+        };
+        this.settings.activateInput = active => {
+            this.settings.inputActive = active;
+            this.changeDetector.markForCheck();
+        }
     }
 
     public handleClick(): void {

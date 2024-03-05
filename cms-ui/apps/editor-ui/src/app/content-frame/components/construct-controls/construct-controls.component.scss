@@ -28,20 +28,18 @@
 }
 
 .construct-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    padding: 0.25rem 0.5rem;
-    border: 1px solid $gtx-color-dark-gray;
-    color: $gtx-color-very-dark-gray;
-    border-radius: 2px;
     user-select: none;
-    cursor: pointer;
-    @include gtxCommonButtonShadow;
+
+    @include gtxButtonCore;
+
+    .group-label {
+        white-space: nowrap;
+    }
 
     .group-icon {
-        height: 24px;
+        height: 20px;
+        width: 16px;
+        font-size: 20px;
     }
 }
 

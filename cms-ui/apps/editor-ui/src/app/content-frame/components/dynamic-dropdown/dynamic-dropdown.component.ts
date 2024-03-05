@@ -26,6 +26,7 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
     public controlNeedsConfirm = false;
     public showOverlay = false;
     public control: FormControl<T>;
+    public hideHeader = false;
 
     protected closeFn: CloseFn<T> = () => {};
     protected errorFn: ErrorFn = () => {};
@@ -78,6 +79,10 @@ export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit
 
     public handleManualComponentConfirm(): void {
         this.closeIfValid(this.control.value);
+    }
+
+    public handleHideHeader(hide: boolean): void {
+        this.hideHeader = hide;
     }
 
     public closeIfValid(value: T): void {

@@ -116,6 +116,12 @@ define([
                 ],
             });
         },
+        focusTab: function(tabId) {
+            if (!window.GCMSUI) {
+                return;
+            }
+            window.GCMSUI.focusEditorTab(tabId);
+        },
 
         show: function () {
             // No op

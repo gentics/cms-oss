@@ -2,38 +2,10 @@
 @import 'aloha-utils';
 
 .gtx-editor-button {
-    outline: none;
-    border: 1px solid $gtx-color-dark-gray;
-    background: #fff;
-    height: 2rem;
-    transition: 200ms;
-    color: $gtx-color-very-dark-gray;
-    cursor: pointer;
-    border-radius: 2px;
-    padding: 0.25rem 0.75rem;
-    display: flex;
-    align-items: center;
-    @include gtxCommonButtonShadow;
+    @include gtxButtonCore;
 
-    &:hover,
-    &:focus {
-        background: $gtx-color-off-white;
-        border-color: $gtx-color-off-black;
-        color: $gtx-color-off-black;
-    }
-
-    &.icon-only {
-        padding: 0.25rem;
-        width: 2rem;
-
-        .button-icon {
-            margin: auto;
-            text-align: center;
-        }
-
-        .button-label {
-            display: none;
-        }
+    .button-label {
+        white-space: nowrap;
     }
 
     .button-icon {
@@ -51,10 +23,24 @@
         }
     }
 
+    &.icon-only {
+        padding: 0.25rem;
+        width: 2rem;
+
+        .button-icon {
+            margin: auto;
+            text-align: center;
+        }
+
+        .button-label {
+            display: none;
+        }
+    }
+
     &:disabled,
     &[disabled] {
-        background: $gtx-color-light-gray;
-        color: $gtx-color-off-black;
+        opacity: 0.5;
+        color: $gtx-color-dark-gray;
         cursor: not-allowed;
     }
 }

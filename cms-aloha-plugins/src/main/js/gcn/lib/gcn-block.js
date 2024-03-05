@@ -9,26 +9,18 @@ define([
 	'aloha/core',
 	'jquery',
 	'block/block',
-	'block/blockmanager',
-	'gcn/gcn-plugin',
 	'gcn/gcn-util',
 	'gcn/gcn-tags',
 	'ui/dialog',
 	'i18n!gcn/nls/i18n',
-	'PubSub',
-	'util/browser'
 ], function (
 	Aloha,
 	$,
 	block,
-	BlockManager,
-	gcn,
 	Util,
 	Tags,
 	Dialog,
 	i18n,
-	PubSub,
-	Browser
 ) {
 	'use strict';
 
@@ -300,12 +292,16 @@ define([
 				// Make the block dragable on default
 				$blockHandleContainer.addClass('aloha-block-draghandle');
 
-				$('<div>', {
+				var dragHandle$ = $('<div>', {
 					class: 'gcn-construct-drag-handle aloha-block-handle',
 				}).append($('<i>', {
 					class: 'material-symbols-outlined aloha-block-button-icon',
 					text: 'drag_pan'
 				})).appendTo($blockHandleContainer);
+
+				if (!$block.hasClass('ui-draggable-disabled')) {
+					dragHandle$.addClass('aloha-block-draghandle');
+				}
 			}
 
 			var $editButton = $('<button>', {

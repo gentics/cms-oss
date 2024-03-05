@@ -19,7 +19,7 @@ import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { isEqual } from 'lodash-es';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
-import { AlohaGlobal } from '../../models/content-frame';
+import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
 export interface NormalizedSlotDisplay {
     name: string;
@@ -82,9 +82,12 @@ function normalizeToolbarTab(
     scopesRef: AlohaScopes,
 ): NormalizedTabsSettings {
     let tabComponents = tab.components;
-    if (!Array.isArray(tabComponents[0])) {
+    if (tabComponents == null) {
+        tabComponents = [];
+    } else if (!Array.isArray(tabComponents[0])) {
         tabComponents = tabComponents.map(comp => [comp]);
     }
+
     tabComponents = tabComponents.map(toMap => (toMap as AlohaComponentSetting[])
         .map(normalizeComponentDefinition)
         .filter(comp => comp != null),
@@ -97,7 +100,8 @@ function normalizeToolbarTab(
             let hasVisibleSlots = false;
             const slots = arr.map(comp => {
                 const visible = inScope(scopesRef, comp.scope)
-                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type);
+                    && RENDERABLE_COMPONENTS.includes(globalComponents[comp.slot]?.type)
+                    && globalComponents[comp.slot]?.visible;
                 hasVisibleSlots ||= visible;
 
                 return {
@@ -162,26 +166,25 @@ export class AlohaIntegrationService {
     public scopeChange$: Observable<AlohaScopeChangeEvent>;
 
     protected activeEditorSub = new BehaviorSubject<string>(null);
-    protected editorChangeSub = new BehaviorSubject<void>(null);
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
+    protected windowSub = new BehaviorSubject<CNWindow>(null);
+    protected toolbarReloadSub = new BehaviorSubject<void>(null);
 
     /**
      * The currently selected/active editor in the page-controls.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly activeEditor$ = this.activeEditorSub.asObservable();
-    /**
-     * Observable which emits every time the `editors` has been changed.
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public readonly editorsChange$ = this.editorChangeSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly size$ = this.activeSizeSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly components$ = this.componentsSub.asObservable();
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public readonly window$ = this.windowSub.asObservable();
 
     public activeTab: string;
     public registeredComponents: Record<string, AlohaComponent> = {};
@@ -216,6 +219,7 @@ export class AlohaIntegrationService {
             this.components$,
             this.scopesRef$,
             this.scopeChange$,
+            this.toolbarReloadSub.asObservable(),
         ]).pipe(
             debounceTime(10),
             map(([settings, size, components, scopesRef]) => {
@@ -323,6 +327,10 @@ export class AlohaIntegrationService {
         return true;
     }
 
+    public setWindow(window: CNWindow): void {
+        this.windowSub.next(window);
+    }
+
     public registerComponent(slot: string, component: AlohaComponent): void {
         this.registeredComponents[slot] = component;
         this.componentsSub.next({ ...this.registeredComponents });
@@ -330,5 +338,9 @@ export class AlohaIntegrationService {
 
     public unregisterComponent(slot: string): void {
         delete this.registeredComponents[slot];
+    }
+
+    public reloadToolbarSettings(): void {
+        this.toolbarReloadSub.next();
     }
 }

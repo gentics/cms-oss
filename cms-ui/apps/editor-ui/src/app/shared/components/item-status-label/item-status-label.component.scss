@@ -16,6 +16,7 @@
     align-items: center;
     cursor: pointer;
     transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    white-space: nowrap;
 
     &:hover {
         background-color: $gtx-color-alert;
@@ -26,9 +27,7 @@
         icon.alert { color: white; }
     }
 
-    &.included,
-    &.online,
-    &.recent {
+    &.published {
         border-color: transparentize($gtx-color-success, 0.8);
         color: $gtx-color-success;
 
@@ -60,6 +59,12 @@
 
     .icon-modified {
         color: #444;
+        display: none;
+    }
+
+    &.modified .icon-modified {
+        display: inline-block;
+        padding-left: 3px;
     }
 
     span {
@@ -94,7 +99,7 @@
             }
         }
 
-        &.online {
+        &.published {
             color: #357935;
 
             &:hover {
@@ -111,6 +116,7 @@
     .icon-bottom-right,
     .icon-top-left,
     .icon-top-right {
+        display: none;
         position: absolute;
         background: $gtx-color-very-light-gray;
         border-radius: 50%;
@@ -150,5 +156,29 @@
     .icon-bottom-right,
     .icon-top-right {
         right: -7px;
+    }
+}
+
+/* Icon Only mode when specifically set, or when in mobile */
+
+.status-label.icon-only {
+    .corner-icon {
+        display: block;
+    }
+
+    .label-wrapper {
+        display: none;
+    }
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    .status-label {
+        .corner-icon {
+            display: block;
+        }
+
+        .label-wrapper {
+            display: none;
+        }
     }
 }

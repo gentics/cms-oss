@@ -1,9 +1,9 @@
-import { AllowedSelectionType, ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { ItemInNode, RepositoryBrowserOptions } from '@gentics/cms-models';
 import * as Mousetrap from 'mousetrap';
 import { Subscription } from 'rxjs';
-import { mergeMap, filter } from 'rxjs/operators';
+import { filter, mergeMap } from 'rxjs/operators';
 import { DebugToolService } from '../../../../development/providers/debug-tool.service';
-import { CNIFrameDocument, CNWindow, FileUploadPlugin, LinkBrowser, MiniBrowser } from '../../../models/content-frame';
+import { CNIFrameDocument, CNWindow, FileUploadPlugin, MiniBrowser } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
 import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
 
@@ -45,7 +45,6 @@ export class PreLoadScript {
         this.hideSyncScrollTextWhenComparingLanguages();
         this.overrideUploadsFromGCNFileUploadPlugin();
         this.patchMiniBrowserToUseNewRepositoryBrowser();
-        this.patchLinkBrowserPluginToUseNewRepositoryBrowser();
         this.preventEnterSubmission();
     }
 
@@ -369,58 +368,6 @@ export class PreLoadScript {
 
             miniBrowser.submitForm();
         }
-    }
-
-    patchLinkBrowserPluginToUseNewRepositoryBrowser(): void {
-        this.pollUntilAvailable(
-            (window) => window.Aloha.require('aloha/pluginmanager').plugins['gcn-linkbrowser'].browser,
-            (linkBrowser: LinkBrowser) => {
-                if (DEBUG) {
-                    console.log('LinkBrowser found!');
-                }
-
-                const linkBrowserOldShow = linkBrowser.show.bind(linkBrowser);
-                linkBrowser.show = () => {
-                    // We receive a list like ["files", "images", "website"]
-                    // Transform it to a list of types the RepositoryBrowser understands
-                    const types = linkBrowser.getObjectTypeFilter()
-                        .map(type => type.replace(/s$/, ''))
-                        .map(type => type === 'website' ? 'page' : type) as AllowedSelectionType[];
-
-                    if (DEBUG) {
-                        console.log(`LinkBrowser.show(types = ${linkBrowser.getObjectTypeFilter().join(', ')})`);
-                    }
-
-                    const options: RepositoryBrowserOptions = {
-                        allowedSelection: types,
-                        selectMultiple: false,
-                        submitLabel: 'modal.repository_browser_submit_link',
-                    };
-
-                    // Set currentItem's language if the item supports
-                    if (this.scriptHost.currentItem && this.scriptHost.currentItem['language']) {
-                        options.contentLanguage = this.scriptHost.currentItem['language'];
-                    }
-
-                    linkBrowser.opened = true;
-                    this.scriptHost.openRepositoryBrowser(options, selected => {
-                        this.document.body.classList.remove('gcn-stop-scrolling');
-                        linkBrowser.opened = false;
-
-                        if (selected) {
-                            const repoItem = mapApiItemToOldRepositoryBrowserItem(selected as ItemInNode);
-                            linkBrowser.onSelect(repoItem);
-                            linkBrowser.close();
-                        }
-                    });
-                    // Due to GUIC-224 the callback is not invoked when the user clicks 'Cancel',
-                    // since it doesn't have any side effects, we remove the class already now
-                    setTimeout(() => {
-                        this.document.body.classList.remove('gcn-stop-scrolling');
-                    });
-                };
-            },
-        );
     }
 
     // Remove and add custom elements to overview tagfill forms

@@ -1,8 +1,8 @@
 
 <div class="breadcrumb-container">
     <ng-container *ngFor="let entry of breadcrumbEntries">
-        <a [routerLink]="['../..', entry.uuid , currentLanguage]" title="{{ entry.displayName }}" class="breadcrumb-item">
-            {{ entry.displayName }}
+        <a [routerLink]="entry.route" title="{{ entry.text }}" class="breadcrumb-item">
+            {{ entry.text }}
         </a> 
     </ng-container>
 </div>

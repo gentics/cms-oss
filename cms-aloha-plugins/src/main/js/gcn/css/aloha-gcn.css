@@ -35,6 +35,7 @@
 
 .GENTICS_block {
 	--gtx-block-handle-gap: 4px;
+	position: relative;
 }
 
 .GENTICS_block .aloha-construct-buttons-container {
@@ -71,6 +72,7 @@
 	transition: 200ms;
 	z-index: 100;
 	user-select: none;
+	overflow: hidden;
 }
 
 .GENTICS_block .aloha-construct-buttons-container .gcn-block-button.gcn-construct-button-edit {

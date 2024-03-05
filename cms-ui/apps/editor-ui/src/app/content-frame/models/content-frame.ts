@@ -144,6 +144,43 @@ export interface MiniBrowser {
     submitForm(): void;
 }
 
+export interface LinkBrowser {
+    /** True if the LinkBrowser is open, false if closed */
+    opened: boolean;
+
+    init(config: LinkBrowserConfig): void;
+
+    /** Shows the repository browser instance */
+    show(): void;
+
+    /** Hides the repository browser instance */
+    close(): void;
+
+    /** Called when an item is selected */
+    onSelect(item: Object): void;
+
+    /** Copies the attributes specified in Links.settings.sidebar from the original item to the rendition. */
+    extendRendition(item: Object, rendition: any): any;
+
+    /** Updates the object type filter option */
+    setObjectTypeFilter(filter: string | string[]): void;
+
+    /** Returns the value of the object type filter */
+    getObjectTypeFilter(): string[];
+}
+
+export interface LinkBrowserPlugin {
+    browser: LinkBrowser;
+    init(config: LinkBrowserConfig): void;
+}
+
+export interface LinkBrowserConfig {
+    repositoryFilter: string[];
+    renditionFilter: string[];
+    filter: Array<'language' | 'status' | 'inherited' | 'sizeX' | 'sizeY' | 'fileSize' | 'gisResizable'>;
+    adaptPageSize: boolean;
+}
+
 /** Minimal interface of the gcn/gcnfileupload plugin */
 export interface FileUploadPlugin {
     openModal(): void;

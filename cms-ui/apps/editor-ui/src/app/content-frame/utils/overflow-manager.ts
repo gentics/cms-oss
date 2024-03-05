@@ -94,7 +94,7 @@ export class OverflowManager {
 
         // Another edge case: The calculations for the last item overflow aren't working as expected sometimes,
         // as it doesn't properly add the size of the target for some reason.
-        if (this.ref.scrollWidth > this.ref.getBoundingClientRect().width && lastVisibleElement != null) {
+        if (this.ref.scrollWidth > Math.ceil(this.ref.getBoundingClientRect().width) && lastVisibleElement != null) {
             lastVisibleElement.classList.add(CLASS_OVERFLOW_ELEMENT_OVERFLOWING);
             doesOverflow = true;
         }

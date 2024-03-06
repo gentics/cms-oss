@@ -25,6 +25,8 @@
         <ui.skip.test>false</ui.skip.test>
         <ui.skip.assembly>false</ui.skip.assembly>
         <ui.assembly.phase>package</ui.assembly.phase>
+        <ui.skip.report>true</ui.skip.report>
+        <ui.report.assemply.phase>package</ui.report.assemply.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
 

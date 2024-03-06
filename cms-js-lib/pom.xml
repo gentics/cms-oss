@@ -125,6 +125,20 @@
 							</descriptors>
 						</configuration>
 					</execution>
+					<execution>
+						<?m2e ignore?>
+						<id>make-report-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>true</appendAssemblyId>
+							<descriptors>
+								<descriptor>report-assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

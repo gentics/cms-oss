@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "name": "CMS OSS",
+      "modules": [
+        {
+          "name": "External",
+          "dependencies": [
+            {
+              "name": "Java Runtime",
+              "description": "Version included in the container images.",
+              "current": "11.0.18_10",
+              "latest": "11.0.22_7"
+            },
+            {
+              "name": "MariaDB",
+              "description": "Version used by automated tests.",
+              "current": "10.3",
+              "latest": "11.3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

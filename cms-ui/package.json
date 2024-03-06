@@ -21,7 +21,9 @@
     "e2e": "nx e2e",
     "component-test": "nx component-test",
     "compile:ui-core-docs": "tsc ./apps/ui-core-docs/compile-docs.ts",
-    "generate:ui-core-docs": "node ./apps/ui-core-docs/compile-docs.js"
+    "generate:ui-core-docs": "node ./apps/ui-core-docs/compile-docs.js",
+    "report:list": "npm list --prod --json > target/dependencies.json",
+    "report:outdated": "npm outdated --json --long > target/outdated.json || true"
   },
   "husky": {
     "hooks": {

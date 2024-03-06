@@ -1,0 +1,17 @@
+{
+  "components" : [ {
+    "name" : "CMS OSS",
+    "modules" : [ {
+      "name" : "Aloha Plugins Package",
+      "dependencies" : [ {
+        "name" : "jquery.tipsy",
+        "current" : "1.0.0a",
+        "latest" : "1.0.0a"
+      }, {
+        "name": "jquery.form",
+        "current": "2.67",
+        "latest": "2.67"
+      } ]
+    } ]
+  } ]
+}

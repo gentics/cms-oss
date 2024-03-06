@@ -47,7 +47,9 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public page = 1;
 
-    public perPage = 10;
+    public perPage = 5;
+
+    public totalCount = 0;
 
     public collapsed = false;
 
@@ -87,8 +89,8 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
         )
     }
 
-    private async loadNodeChildren(nodeUuid: string): Promise<void> {
-        const schemaElements = await this.loader.listNodeChildrenForSchema(this.currentProject, {
+    private async loadNodeChildren(nodeUuid: string, emitEvents=true): Promise<void> {
+        const schemaPage = await this.loader.listNodeChildrenForSchema(this.currentProject, {
             schemaName: this.schemaName,
             nodeUuid: nodeUuid,
             lang: this.languages,
@@ -96,26 +98,24 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
             perPage: this.perPage,
         }, this.currentBranch?.uuid);
 
+        this.totalCount = schemaPage.totalCount;
+        const schemaElements: SchemaElement[] = schemaPage.elements;
+
         schemaElements?.forEach((schemaElement) =>
             schemaElement.languages = schemaElement?.languages.sort((a,_b) => a.language === this.currentLanguage ? -1 :1),
         );
-
         this.schemaElements = schemaElements?.sort((a,b) => a.displayName?.localeCompare(b.displayName));
         this.changeDetector.markForCheck();
-        this.nodeChanged.emit(nodeUuid)
-        this.elementsLoaded.emit(this.schemaElements?.length ?? 0);
+
+        if (emitEvents) {
+            this.nodeChanged.emit(nodeUuid)
+            this.elementsLoaded.emit(this.schemaElements?.length ?? 0);
+        }
     }
 
-    public changePage(page: number): void {
+    public changePage(page: number): void  {
         this.page = page;
-
-        this.loader.listNodeChildrenForSchema(this.currentProject, {
-            schemaName: this.schemaName,
-            nodeUuid: this.currentNodeUuid,
-            page: this.page,
-            lang: this.languages,
-            perPage: this.perPage,
-        }, this.currentBranch.uuid)
+        this.loadNodeChildren(this.currentNodeUuid, false);
     }
 
     public toggleSection(): void {

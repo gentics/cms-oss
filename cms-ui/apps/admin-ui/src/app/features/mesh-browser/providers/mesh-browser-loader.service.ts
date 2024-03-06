@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BranchReference, GraphQLOptions, Language, NodeLoadOptions, NodeResponse, ProjectResponse, UserResponse } from '@gentics/mesh-models';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
-import { MeshSchemaListParams, MeshSchemaListResponse, NumberOfSchemaElements, SchemaContainer, SchemaElement } from '../models/mesh-browser-models';
+import { MeshSchemaListParams, MeshSchemaListResponse, NumberOfSchemaElements, SchemaContainer, SchemaPage } from '../models/mesh-browser-models';
 
 
 @Injectable()
@@ -127,7 +127,7 @@ export class MeshBrowserLoaderService {
         return response.data.find(schemaItem => schemaItem.name === project).rootNode.uuid;
     }
 
-    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<SchemaElement[]>  {
+    public async listNodeChildrenForSchema(project: string, params: MeshSchemaListParams, branchUuid?: string): Promise<SchemaPage>  {
         const queryPrams: GraphQLOptions = {
             version: 'draft',
         }
@@ -145,6 +145,10 @@ export class MeshBrowserLoaderService {
                             page: $page
                             lang: $lang
                         ) {
+                            hasNextPage
+                            pageCount
+                            currentPage
+                            totalCount
                             elements {
                                 uuid
                                 displayName
@@ -172,7 +176,7 @@ export class MeshBrowserLoaderService {
         queryPrams,
         );
 
-        return response.data.node?.children?.elements
+        return response.data.node?.children
     }
 
 

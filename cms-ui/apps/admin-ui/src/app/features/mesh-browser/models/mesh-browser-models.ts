@@ -1,5 +1,6 @@
 import { FieldType, PagingOptions, SchemaField } from '@gentics/mesh-models';
 
+
 export interface MeshSchemaListParams extends PagingOptions {
     schemaName?: string;
     nodeUuid: string;
@@ -20,6 +21,14 @@ export interface SchemaContainer {
 export interface NumberOfSchemaElements {
     schemaName: {[key:string]: string }
     totalCount: number;
+}
+
+export interface SchemaPage {
+    elements: SchemaElement[];
+    hasNextPage: boolean;
+    pageCount: number;
+    totalCount: number;
+    currentPage: number;
 }
 
 export interface SchemaElement {

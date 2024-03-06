@@ -9,8 +9,8 @@
             {
               "name": "Java Runtime",
               "description": "Version included in the container images.",
-              "current": "11.0.18_10",
-              "latest": "11.0.22_7"
+              "current": "17",
+              "latest": "17"
             },
             {
               "name": "MariaDB",

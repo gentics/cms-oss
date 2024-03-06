@@ -23,6 +23,8 @@
         <ui.e2e>true</ui.e2e>
         <ui.skip.e2e>false</ui.skip.e2e>
         <ui.skip.assembly>true</ui.skip.assembly>
+		<ui.skip.report>true</ui.skip.report>
+        <ui.report.assemply.phase></ui.report.assemply.phase>
         <npm.workingDirectory>../..</npm.workingDirectory>
 	</properties>
 </project>

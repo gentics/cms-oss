@@ -47,7 +47,7 @@ export class MeshBrowserSchemaItemsComponent implements OnChanges {
 
     public page = 1;
 
-    public perPage = 5;
+    public perPage = 10;
 
     public totalCount = 0;
 

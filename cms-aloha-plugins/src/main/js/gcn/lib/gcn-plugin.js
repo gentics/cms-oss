@@ -13,62 +13,41 @@ define([
 	) + '/gcnjsapi.js',
 	'aloha/core',
 	'jquery',
-	'util/json2',
-	'aloha/plugin',
-	'i18n!gcn/nls/i18n',
-	'i18n!aloha/nls/i18n',
-	'ui/ui-plugin',
-	'ui/dialog',
-	'ui/ui',
-	'ui/button',
-	'ui/arena',
-	'ui/menuButton',
-	'ui/accordionMenuButton',
 	'PubSub',
-	'block/blockmanager',
-	'gcn/gcn-block',
-	'aloha/engine',
+	'aloha/plugin',
 	'aloha/ephemera',
 	'aloha/contenthandlermanager',
-	'gcn/tagcopycontenthandler',
-	'util/dom',
-	'gcn/jquery.noty',
-	'gcn/gcn-tags',
-	'gcn/gcn-util',
+	'ui/ui-plugin',
+	'ui/dialog',
+	'block/blockmanager',
 	'util/misc',
+	'link/link-plugin',
+	'gcn/gcn-block',
+	'gcn/tagcopycontenthandler',
+	'gcn/gcn-tags',
 	'gcn/gcn-links',
 	'gcn/gcmsui-surface',
-	'css!gcn/css/aloha-gcn.css',
-	'css!gcn/css/gui.css'
+	'i18n!gcn/nls/i18n',
+	'css!gcn/css/aloha-gcn.css'
 ], function (
 	_GCN_,
 	Aloha,
 	jQuery,
-	JSON,
-	Plugin,
-	i18n,
-	i18nCore,
-	UiPlugin,
-	Dialog,
-	Ui,
-	Button,
-	Arena,
-	MenuButton,
-	AccordionMenuButton,
 	PubSub,
-	BlockManager,
-	GCNBlock,
-	Engine,
+	Plugin,
 	Ephemera,
 	ContentHandlerManager,
-	TagCopyContentHandler,
-	Dom,
-	noty,
-	Tags,
-	Util,
+	UiPlugin,
+	Dialog,
+	BlockManager,
 	Misc,
-	gcnLinks,
+	LinkPlugin,
+	GCNBlock,
+	TagCopyContentHandler,
+	Tags,
+	GCNLinks,
 	GCMSUISurface,
+	i18n,
 ) {
 	'use strict';
 
@@ -236,12 +215,6 @@ define([
 	var pageObjectHandlers = [];
 
 	/**
-	 * "Loading" button, that is inserted into the gcnArean and shown until the
-	 * correct buttons have been prepared (which is done asynchronously)
-	 */
-	var loadingButton;
-
-	/**
 	 * Gentics Content.Node Integration Plugin.
 	 */
 	gcnPlugin = Plugin.create('gcn', {
@@ -262,17 +235,6 @@ define([
 		 * @type {boolean} True if Aloha has been maximized in GCN.
 		 */
 		maximized: false,
-
-		/**
-		 * @type {object<?>} This stores references to Aloha.ui.Buttons, which
-		 *                   are needed to update pressed states etc.
-		 */
-		buttons: {},
-
-		/**
-		 * Contains references to all tag insert buttons/menues (including the ones for a specific editable) 
-		 */
-		tagInsertMenus: {},
 		
 		/**
 		 * @type {Aloha.Editable} The last active editable since we disable all
@@ -287,6 +249,7 @@ define([
 		 *                  of the last active editable's parents.
 		 */
 		lastActiveEditableScrollPositions: null,
+
 		/**
 		 * @type {string} Base URL for the REST API.
 		 * @todo use gcnjsapi
@@ -298,11 +261,6 @@ define([
 		 * @type {GCN.PageAPI} An API object to the page we will be working on.
 		 */
 		page: null,
-
-		/**
-		 * @type {Arena} The UI box that will hold the tag or other gcn related buttons
-		 */
-		arena: null,
 
 		/**
 		 * allows you to specify an error handler function by setting
@@ -355,12 +313,10 @@ define([
 				GCN.sub('error-encountered', plugin.settings.errorHandler);
 			} else {
 				GCN.sub('error-encountered', function (error) {
-					Aloha.Log.error(GCN,
-							error.toString());
+					Aloha.Log.error(GCN,error.toString());
 				});
 			}
 			GCN.sub('tag.rendered-for-editing', function (msg) {
-				plugin.setupConstructsButton(msg.tag.parent().id());
 				Tags.decorate(msg.tag, msg.data, msg.callback);
 			});
 		},
@@ -423,321 +379,6 @@ define([
 		},
 
 		/**
-		 * Add insert contenttag menu to the floating menu.
-		 *
-		 * @param {number|string} pageId Id of page whose node constructs we
-		 *                               will populate the button with.
-		 */
-		setupConstructsButton: function (pageId) {
-			if (this.isConstructsInitialized) {
-				return;
-			}
-
-			// create the "Loading" button
-			loadingButton = new (Button.extend({
-				tooltip: i18n.t('button.loading'),
-				iconUrl: '/images/system/loading1.gif'
-			}));
-
-			// show the "Loading" button (until the insert icons have been prepared)
-			this.arena = Ui.adopt("gcnArena", Arena);
-			this.arena.adopt(loadingButton);
-			loadingButton.disable();
-			loadingButton.show();
-
-			this.isConstructsInitialized = true;
-
-			var that = this;
-
-			GCN.page(pageId).node().constructCategories(function (categoriesData) {
-				
-				if (!categoriesData) {
-					return;
-				}
-				// Add the uncategorized group to the list of categories
-				categoriesData.categorySortorder.push('GCN_UNCATEGORIZED');
-
-				that.populateTagInsertMenu(categoriesData);
-			});
-		},
-		
-		
-		/**
-		 * Convinience method that can be used to hide the given buttonset
-		 * @param {object} buttonSet
-		 */
-		_hideTagInsertButtonSet: function (buttonSet) {
-			this._setTagInsertButtonSetVisibility(buttonSet, false);
-		},
-		
-		/**
-		 * Convinence method that can be used to show the given buttonset
-		 * @param {object} buttonSet
-		 */
-		_showTagInsertButtonSet: function (buttonSet) {
-			this._setTagInsertButtonSetVisibility(buttonSet, true);	
-		},
-		
-		/**
-		 * This method will hide/show the given tag insert buttonset according to the visible flag
-		 * @param {object} buttonSet
-		 * @param {Boolean} visible
-		 */
-		_setTagInsertButtonSetVisibility: function (buttonSet, visible) {
-			
-			if (buttonSet && buttonSet.tagInsertDropDownButton) {
-				buttonSet.tagInsertDropDownButton.show(visible);
-			}
-
-			if (buttonSet && buttonSet.uncategorizedTagInsertButtons && typeof buttonSet.uncategorizedTagInsertButtons === 'object') {
-				for (var i = 0; i < buttonSet.uncategorizedTagInsertButtons.length; i++) {
-					var currentButton = buttonSet.uncategorizedTagInsertButtons[i];
-					
-					// Only handle buttons with valid data 
-					if (!currentButton) {
-						continue;
-					}
-					
-					currentButton.show(visible);
-				}
-			}
-		},
-		
-		/**
-		 * This method will create a button set for the tag insert buttons. These buttons will be filtered according to the whitelist
-		 * @param {object} constructWhitelist
-		 * @param {object} categories Object that contains all the construct categories and construct information
-		 */
-		createSpecificEditableMenu: function (constructData, constructWhitelist) {
-			var that = this;
-			var contentTagsMenu  = [];
-			var uncategorizedConstructButtons = [];
-			var constructButton;
-
-			var i;
-			// Iterate over all categories
-			for (i in constructData.categorySortorder) {
-				if (constructData.categorySortorder.hasOwnProperty(i)) {
-					var categoryName = constructData.categorySortorder[i];
-					var isEmptyCategory = categoryName === 'GCN_UNCATEGORIZED';
-					var category = constructData.categories[categoryName];
-					var filteredCategoryConstructButtons = [];
-					var wasConstructHandled = false;
-					// Skip categories that have no constructs. This might be 
-					// the case when the system has no uncategorized tagtypes
-					if (!category) {
-						continue;
-					}
-
-					// Iterate over all constructs in the current category
-					var constructName;
-					for (constructName in category.constructs) {
-						// The magic link construct should not be shown in the insert menu.
-						if (constructName === GCN.settings.MAGIC_LINK) {
-							continue;
-						}
-
-						if (category.constructs.hasOwnProperty(constructName)) {
-							var construct = category.constructs[constructName];
-
-							// Handle only tags that are insertable into other tags
-							if (!construct.mayBeSubtag) {
-								continue;
-							}
-
-							// Skip the construct, if flagged to be invisible
-							if (construct.visibleInMenu === false) {
-								continue;
-							}
-
-							// Skip this construct when it is not listed within the whitelist
-							if (constructWhitelist !== null && (constructWhitelist && jQuery.inArray(constructName, constructWhitelist) === -1)) {
-								continue;
-							}
-							wasConstructHandled = true;
-
-							var clickHandler = (function (constructId) {
-								return function () {
-									that.createTag(constructId);
-								};
-							})(construct.constructId);
-
-							var iconUrl = '/images/content/constr/' + construct.icon;
-
-							// Constructs without category will be added as buttons
-							// directly to the floating menu.
-							if (isEmptyCategory) {
-								constructButton = new (Button.extend({
-									tooltip: construct.name,
-									iconUrl: iconUrl,
-									click: clickHandler
-								}));
-								uncategorizedConstructButtons.push(constructButton);
-							} else {
-								constructButton = {
-									text: construct.name,
-									iconUrl: iconUrl,
-									click: clickHandler
-								};
-								filteredCategoryConstructButtons.push(constructButton);
-							}
-						}
-					}
-
-					if (!isEmptyCategory && wasConstructHandled) {
-						contentTagsMenu.push({
-							text: categoryName,
-							menu: filteredCategoryConstructButtons,
-							iconUrl: '/images/content/constructopen.gif'
-						});
-					}
-				}
-			}
-
-			var tagInsertDropDownButton = null;
-			if (contentTagsMenu.length > 0) {
-				var props = {
-					tooltip: i18n.t('insert_tag'),
-					menu: contentTagsMenu,
-					iconUrl: '/images/content/constructopen.gif'
-				};
-
-				if (isResponsiveMode()) {
-					tagInsertDropDownButton = new (AccordionMenuButton.extend(props));
-				} else {
-					tagInsertDropDownButton = new (MenuButton.extend(props));
-				}
-			}
-
-			var buttonSet = {'tagInsertDropDownButton': tagInsertDropDownButton, 'uncategorizedTagInsertButtons': uncategorizedConstructButtons };
-
-			return buttonSet;
-		},
-		
-		/**
-         * Adds the given buttons to the floating menu 
-         * Gets the component types for the given buttons.
-		 *
-		 * @param {object} buttons Buttonset with dropdown and uncategorized buttons
-		 */
-		_addTagInsertButtonsToArena: function (arena, buttons) {
-			// Omit processing the buttonset when no data was specified
-			if (!buttons) {
-				return;
-			}
-
-			if (buttons.tagInsertDropDownButton) {
-				// add the insert tag button
-				arena.adopt(buttons.tagInsertDropDownButton);
-			}
-
-			// Add all buttons with no category to the floatingmenu
-			if (buttons.uncategorizedTagInsertButtons && buttons.uncategorizedTagInsertButtons.length > 0) {
-				// add constructs without category directly to the floating menu
-				for (var i = 0; i < buttons.uncategorizedTagInsertButtons.length; ++i) {
-					arena.adopt(buttons.uncategorizedTagInsertButtons[i]);
-				}
-			}
-		},
-		
-		/**
-		 * Populates the tag insert menu. This method will create multiple
-		 * variations for the tag insert buttons. For each editable a
-		 * configuration of a different variation will be created. We do this so
-		 * that we can hide and show the appropriate variation for each activated
-		 * editable.
-		 * @param {object} categories construct categories
-		 */
-		populateTagInsertMenu: function (categoryData) {
-			var that = this,
-				loadingArena = this.arena;
-			
-			that.arena = Ui.adopt("gcnArena", Arena);
-			that.arena.hide();
-
-			// Create editable specific tag menu variation for each editable configuration
-			if (this.settings.editables) {
-				jQuery.each(this.settings.editables, function (index, editableConfiguration) {
-					// Ommitt the editable configuration when the needed information are not provided
-					if (!editableConfiguration.tagtypeWhitelist) {
-						return true;
-					}
-					
-					var key = index;
-					that.tagInsertMenus[key] = that.createSpecificEditableMenu(categoryData, editableConfiguration.tagtypeWhitelist);
-					that._addTagInsertButtonsToArena(that.arena, that.tagInsertMenus[key]);
-					that._hideTagInsertButtonSet(that.tagInsertMenus[key]);
-				});
-			}
-
-			// Create default configuration tag menu
-			var defaultTagInsertMenu = that.createSpecificEditableMenu(categoryData, null);
-			// Use the given whitelist for default instead of using the buttonset that contain all buttons
-			if (this.settings.config && this.settings.config.tagtypeWhitelist) {
-				// Overwrite the default buttonset with the more specific whitelist default buttonset
-				defaultTagInsertMenu = that.createSpecificEditableMenu(categoryData, this.settings.config.tagtypeWhitelist);
-			}
-			// Add the buttons and reference to the default insert buttonset
-			that.tagInsertMenus['gtx-default-buttonset'] = defaultTagInsertMenu;
-			that._addTagInsertButtonsToArena(that.arena, that.tagInsertMenus['gtx-default-buttonset']);
-			that._hideTagInsertButtonSet(that.tagInsertMenus['gtx-default-buttonset']);
-
-			// hide the "loading button"
-			loadingButton.hide();
-			loadingArena.hide();
-
-			// if an editable is currently active, show the insert tag menu
-			if (Aloha.activeEditable) {
-				that._showInsertTagMenu(Aloha.activeEditable);
-			}
-		},
-
-		/**
-		 * Show the insert tag menu for the given editable.
-		 * @param {Object} editable the editable
-		 */
-		_showInsertTagMenu: function (editable) {
-			var that = this, config = this.getEditableConfig(editable.obj);
-			var areThereButtons = false;
-
-			// Check whether this editable owns a specific configuration
-			if (config && config['aloha-editable-selector'] && that.tagInsertMenus.hasOwnProperty(config['aloha-editable-selector'])) {
-				jQuery.each(that.tagInsertMenus, function (currentId, setOfTagInsertButtons) {
-					if (currentId === config['aloha-editable-selector']) {
-						that._showTagInsertButtonSet(setOfTagInsertButtons);
-
-						if (setOfTagInsertButtons.tagInsertDropDownButton
-								|| setOfTagInsertButtons.uncategorizedTagInsertButtons.length > 0) {
-							areThereButtons = true;
-						}
-					} else {
-						that._hideTagInsertButtonSet(setOfTagInsertButtons);
-					}
-				});
-			} else {
-				// Use the default buttonset for every other case
-				jQuery.each(that.tagInsertMenus, function (currentId, setOfTagInsertButtons) {
-					if (currentId === 'gtx-default-buttonset') {
-						that._showTagInsertButtonSet(setOfTagInsertButtons);
-
-						if (setOfTagInsertButtons.tagInsertDropDownButton
-								|| setOfTagInsertButtons.uncategorizedTagInsertButtons.length > 0) {
-							areThereButtons = true;
-						}
-					} else {
-						that._hideTagInsertButtonSet(setOfTagInsertButtons);
-					}
-				});
-			}
-
-			if (areThereButtons) {
-				this.arena.show();
-			} else {
-				this.arena.hide();
-			}
-		},
-
-		/**
 		 * registers plugin-internal handlers to Aloha Editor Events
 		 */
 		registerAlohaHandlers: function () {
@@ -747,20 +388,10 @@ define([
 				// if an editable is activated all block icons have to be
 
 				// hidden jQuery('.aloha-editicons').fadeOut('normal');
-				that._showInsertTagMenu(params.editable);
 				Misc.addEditingHelpers(params.editable.obj);
 				params.editable.obj.parents('.aloha-editable').each(function () {
 					Misc.addEditingHelpers(jQuery(this));
 				});
-			});
-
-			PubSub.sub('aloha.selection.context-change', function (message) {
-				var container = message.range.startContainer;
-				if (Dom.findHighestElement(container, "a", null)) {
-						that.arena.hide();
-				} else if (Aloha.getActiveEditable()) {
-					that._showInsertTagMenu(Aloha.getActiveEditable());
-				}
 			});
 
 			Aloha.bind('aloha-smart-content-changed', function (event, data) {
@@ -858,6 +489,8 @@ define([
 			Ephemera.classes('GENTICS_block');
 			Ephemera.classes('aloha-block-GCNBlock');
 
+			GCNLinks.interjectLinkPlugin(LinkPlugin);
+
 			// Set the proxy_prefix setting
 			if (this.settings.proxy_prefix) {
 				GCN.settings.proxy_prefix = this.settings.proxy_prefix;
@@ -932,8 +565,6 @@ define([
 			if (this.settings.copy_tags) {
 				ContentHandlerManager.register('gcn-tagcopy', TagCopyContentHandler);
 			}
-
-			this.displayLastActionMessage();
 
 			// preview forms (mainly for page preview or in non-blocks)
 			if (gcnPlugin.settings.forms) {
@@ -1850,47 +1481,6 @@ define([
 				}
 			});
 			return output;
-		},
-
-		/**
-		 * Based on the setting "lastAction", it uses the
-		 * noty jquery library to display a status message
-		 * that the saving or publishing of a page was successful.
-		 * This is currently implemented for saving and publishing a page.
-		 */
-		displayLastActionMessage: function() {
-			var i18nAction = null;
-			if (typeof window.noty !== 'function') {
-				return;
-			}
-
-			if (!this.settings.lastAction) {
-				return;
-			}
-
-			switch (this.settings.lastAction) {
-				case "save":
-					i18nAction = "saved";
-					break;
-				case "publish":
-					i18nAction = "published";
-					break;
-			}
-
-			if (i18nAction === null) {
-				return;
-			}
-
-			window.noty({
-				text:         i18n.t("action." + i18nAction),
-				type:         'alert',
-				dismissQueue: true,
-				modal:        false,
-				maxVisible:   1,
-				timeout:      4000,
-				layout:       'topCenter',
-				theme:        'defaultTheme'
-			});
 		},
 
 		/**

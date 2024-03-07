@@ -2571,9 +2571,10 @@ public class ModelBuilder {
 			}
 
 			// now we sort the list of entries
+			int sort = overview.getOrderWay() == Overview.ORDERWAY_DESC ? -1 : 1;
 			Collections.sort(entries, new Comparator<OverviewEntry>() {
 				public int compare(OverviewEntry o1, OverviewEntry o2) {
-					return o1.getObjectOrder() - o2.getObjectOrder();
+					return sort * (o1.getObjectOrder() - o2.getObjectOrder());
 				}
 			});
 		}

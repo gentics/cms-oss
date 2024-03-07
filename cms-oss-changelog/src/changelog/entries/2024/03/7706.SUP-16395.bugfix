@@ -1,0 +1,2 @@
+Editor User Inferface: When changing the order direction of an overview in the tag editor from "ascending" to "descending",
+the preview of the tag showed the items in the wrong order, this has been fixed.

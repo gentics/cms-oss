@@ -305,7 +305,7 @@ public abstract class Overview extends AbstractContentObject implements ObjectSo
 			return OrderDirection.DESC;
 
 		default:
-			return OrderDirection.UNDEFINED;
+			return OrderDirection.ASC;
 		}
 	}
 

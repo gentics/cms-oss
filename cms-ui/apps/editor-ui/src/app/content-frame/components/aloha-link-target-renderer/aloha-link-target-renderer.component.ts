@@ -3,7 +3,10 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { AlohaLinkTargetComponent, ExtendedLinkTarget } from '@gentics/aloha-models';
 import { ItemInNode } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { generateFormProvider } from '@gentics/ui-core';
+import { NEVER, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AlohaIntegrationService } from '../../providers/aloha-integration/aloha-integration.service';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
@@ -23,6 +26,7 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
         element: ElementRef<HTMLElement>,
         aloha: AlohaIntegrationService,
         protected repositoryBrowserClient: RepositoryBrowserClient,
+        protected client: GCMSRestClientService,
         protected i18n: I18nService,
     ) {
         super(changeDetector, element, aloha);
@@ -95,5 +99,40 @@ export class AlohaLinkTargetRendererComponent extends BaseAlohaRendererComponent
         }
 
         this.settings.value = this.value;
+
+        if (this.value.isInternal && this.value.internalTargetId && !this.value.internalTargetLabel) {
+            this.reloadLabel();
+        }
+    }
+
+    protected reloadLabel(): void {
+        let name$: Observable<string> = NEVER;
+
+        switch (this.value.internalTargetType) {
+            case 'page':
+                name$ = this.client.page.get(this.value.internalTargetId, { nodeId: this.value.internalTargetNodeId }).pipe(
+                    map(res => res.page.name),
+                );
+                break;
+
+            case 'image':
+                name$ = this.client.image.get(this.value.internalTargetId, { nodeId: this.value.internalTargetNodeId }).pipe(
+                    map(res => res.image.name),
+                );
+                break;
+
+            case 'file':
+                name$ = this.client.file.get(this.value.internalTargetId, { nodeId: this.value.internalTargetNodeId }).pipe(
+                    map(res => res.file.name),
+                );
+                break;
+        }
+
+        this.subscriptions.push(name$.subscribe(name => {
+            this.triggerChange({
+                ...this.value,
+                internalTargetLabel: name,
+            });
+        }));
     }
 }

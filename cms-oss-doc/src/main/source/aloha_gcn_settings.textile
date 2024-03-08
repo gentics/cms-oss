@@ -9,6 +9,8 @@ h3. Configuration Example
 Aloha Settings can be configured in a .yml file in /cms/conf using the aloha_settings setting. Those settings will be mapped to a corresponding JavaScript array for use with Aloha Editor.
 You may also define an exclusive per-node configuration by using aloha_settings."KEY", where "key" is either the local id or the global id or the name of the node you want to configure (eg. 1, "3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f" or "Gentics CMS Demo").
 
+NOTE: Configuration per local ID, global ID and name cannot be mixed. The CMS will first look for a configuration by global ID, if that is not found, by node name and if that is not found by local ID.
+
 Per node configuration example:
 <javascript filename="conf/*.yml">
 # configure bundle path for node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f

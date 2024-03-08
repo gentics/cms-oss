@@ -1,0 +1,1 @@
+The documentation for node specific settings has been improved to clarify the behaviour when settings are specified by local ID, global ID and name at the same time.

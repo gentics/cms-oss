@@ -27,6 +27,10 @@
         padding: 0.25rem;
         width: 2rem;
 
+        @media (max-width: $aloha-size-mobile-max) {
+            width: 3.25rem;
+        }
+
         .button-icon {
             margin: auto;
             text-align: center;

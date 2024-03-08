@@ -23,7 +23,7 @@
     flex-direction: column;
     overflow: hidden;
     z-index: 501;
-    border: 1px solid rgba(0,0,0, 0.4);
+    border: 1px solid rgba(0, 0, 0, 0.4);
     @include gtxCommonButtonShadow;
 
     .context-menu-header {
@@ -65,6 +65,9 @@
 
     .context-menu-content {
         background: $gtx-color-off-white;
+        flex: 1 1 auto;
+        min-height: 1px;
+        display: flex;
 
         &::ng-deep .gtx-table-size-input {
             padding: 0.25rem 0.75rem;
@@ -79,4 +82,18 @@
 
 .generic-text-content {
     padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    .gtx-context-menu {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: calc(min(.4 * var(--gtx-vvh), 16rem));
+
+        .context-menu-header {
+            height: 60px;
+        }
+    }
 }

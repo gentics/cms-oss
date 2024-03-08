@@ -45,3 +45,60 @@
 .dynamic-component.hidden {
     display: none;
 }
+
+@media (max-width: $aloha-size-mobile-max) {
+    :host {
+        overflow: hidden;
+    }
+
+    .gtx-mobile-menu-floater {
+        --gtx-menu-size: 64px;
+        position: fixed;
+        width: 100%;
+        height: var(--gtx-menu-size);
+        top: calc(var(--gtx-vvh) - var(--gtx-menu-size));
+        right: 0;
+        z-index: 100;
+    }
+
+    .component-group {
+        display: contents;
+    }
+
+    .group-separator {
+        display: none;
+    }
+
+    .gtx-mobile-menu {
+        height: var(--gtx-menu-size);
+        width: 100%;
+        border-top: 2px solid $gtx-color-warning;
+        background: $gtx-color-off-white;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow: hidden;
+        padding: 0 0.5rem;
+
+        &.stable {
+            justify-content: space-between;
+        }
+
+        .gtx-menu-element {
+            flex: 0 0;
+            margin: auto 0;
+            padding: 0 0.25rem;
+            display: block;
+
+            &.inactive {
+                display: none;
+            }
+
+            .gtx-menu-button {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    }
+}
+

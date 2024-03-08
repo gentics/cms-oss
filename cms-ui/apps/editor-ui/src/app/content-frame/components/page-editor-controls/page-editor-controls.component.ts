@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    OnDestroy,
+    OnInit,
+    Output,
+    QueryList,
+    ViewChildren,
+} from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
@@ -17,6 +28,7 @@ import {
     TAB_ID_CONSTRUCTS,
     TAB_ID_LINK_CHECKER,
 } from '../../providers/aloha-integration/aloha-integration.service';
+import { MobileMenu } from '../../utils';
 
 const ALOHA_REPO = 'data-gentics-aloha-repository'
 
@@ -67,13 +79,16 @@ const DEFAULT_DELAY = 500;
     styleUrls: ['./page-editor-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageEditorControlsComponent implements OnInit, OnDestroy {
+export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDestroy {
 
     public readonly TAB_ID_CONSTRUCTS = TAB_ID_CONSTRUCTS;
     public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
 
     @Output()
     public brokenLinkCountChange = new EventEmitter<number>();
+
+    @ViewChildren('mobileMenu')
+    public menus: QueryList<HTMLElement[]>;
 
     public activeTab: string;
     public settings: NormalizedToolbarSizeSettings;
@@ -97,6 +112,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
 
     protected subscriptions: Subscription[] = [];
+    protected currentMenus: MobileMenu[] = [];
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -264,8 +280,21 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         }));
     }
 
+    public ngAfterViewInit(): void {
+        this.subscriptions.push(this.menus.changes.subscribe(changeObj => {
+            this.currentMenus.forEach(s => s.destroy());
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, no-underscore-dangle
+            (changeObj._results || []).forEach(elem => {
+                const menu = new MobileMenu(elem.nativeElement);
+                menu.init();
+                this.currentMenus.push(menu);
+            });
+        }));
+    }
+
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+        this.currentMenus.forEach(s => s.destroy());
     }
 
     public updateFavourites(favourites: string[]): void {

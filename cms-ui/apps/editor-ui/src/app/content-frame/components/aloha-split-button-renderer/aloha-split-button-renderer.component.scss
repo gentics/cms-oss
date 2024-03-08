@@ -22,6 +22,10 @@
         .secondary-icon {
             width: 12px;
         }
+
+        @media (max-width: $aloha-size-mobile-max) {
+            width: 2.25rem;
+        }
     }
 
     &[disabled],

@@ -244,6 +244,12 @@
         }
     }
 
+    /* This one needs to be hidden, since the ::after element of the first breadcrumb is already shown */
+    .nav-wrapper .breadcrumb + .lastPart .breadcrumb:first-of-type::before {
+        display: none;
+        content: '';
+    }
+
     @media #{$small-and-down} {
         > nav {
             > .nav-wrapper {

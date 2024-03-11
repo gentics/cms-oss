@@ -90,13 +90,20 @@ export class OverflowManager {
             item.classList.add(CLASS_OVERFLOW_ELEMENT_OVERFLOWING);
         }
 
+        let doesOverflow = overflowingChildren.length > 0;
+
         // Another edge case: The calculations for the last item overflow aren't working as expected sometimes,
         // as it doesn't properly add the size of the target for some reason.
-        if (this.ref.scrollWidth > this.ref.getBoundingClientRect().width && lastVisibleElement != null) {
+        if (this.ref.scrollWidth > Math.ceil(this.ref.getBoundingClientRect().width) && lastVisibleElement != null) {
             lastVisibleElement.classList.add(CLASS_OVERFLOW_ELEMENT_OVERFLOWING);
+            doesOverflow = true;
         }
 
-        this.ref.classList.add(CLASS_OVERFLOW_STABLE, CLASS_OVERFLOW_OVERFLOWING);
+        this.ref.classList.add(CLASS_OVERFLOW_STABLE);
+        if (doesOverflow) {
+            this.ref.classList.add(CLASS_OVERFLOW_OVERFLOWING);
+        }
+
         this.isWorking = false;
     }
 

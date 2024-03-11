@@ -62,6 +62,7 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -126,7 +127,7 @@ public class ConstructFactory extends AbstractFactory {
 		@DataField("keyword")
 		@Updateable
 		protected String keyword;
-        
+
 		protected Icon icon;
 
 		@DataField("icon")
@@ -189,6 +190,19 @@ public class ConstructFactory extends AbstractFactory {
 		@DataField("intext")
 		@Updateable
 		protected boolean mayBeSubtag;
+
+		@DataField("edit_on_insert")
+		@Updateable
+		protected boolean editOnInsert;
+
+		@DataField("editor_control_style")
+		@Updateable
+		protected EditorControlStyle editorControlStyle = EditorControlStyle.ASIDE;
+
+		@DataField("editor_control_inside")
+		@Updateable
+		protected boolean editorControlInside;
+
 
 		/**
 		 * Create an empty instance
@@ -554,6 +568,21 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public boolean mayBeSubtag() {
 			return mayBeSubtag;
+		}
+
+		@Override
+		public boolean editOnInsert() {
+			return editOnInsert;
+		}
+
+		@Override
+		public EditorControlStyle editorControlStyle() {
+			return editorControlStyle;
+		}
+
+		@Override
+		public boolean editorControlInside() {
+			return editorControlInside;
 		}
 
 		/**
@@ -927,6 +956,45 @@ public class ConstructFactory extends AbstractFactory {
 		public void setConstructCategoryId(Integer id) throws ReadOnlyException {
 			if (categoryId != ObjectTransformer.getInt(id, 0)) {
 				categoryId = ObjectTransformer.getInt(id, 0);
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditOnInsert(boolean editOnInsert) {
+			if (this.editOnInsert != editOnInsert) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editOnInsert changed from '%b' to '%b'",
+						this, this.editOnInsert, editOnInsert));
+				}
+				this.editOnInsert = editOnInsert;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlStyle(EditorControlStyle editorControlStyle) {
+			if (this.editorControlStyle != editorControlStyle) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlStyle changed from '%d' to '%d'",
+						this, this.editorControlStyle, editorControlStyle));
+				}
+				this.editorControlStyle = editorControlStyle;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlInside(boolean editorControlInside) {
+			if (this.editorControlInside != editorControlInside) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlInside changed from '%b' to '%b'",
+						this, this.editorControlInside, editorControlInside));
+				}
+				this.editorControlInside = editorControlInside;
 				this.modified = true;
 			}
 		}
@@ -1388,7 +1456,7 @@ public class ConstructFactory extends AbstractFactory {
 		/**
 		 * Sets initial permissions for the construct category
 		 * @param id the object's id
-		 * @throws NodeException 
+		 * @throws NodeException
 		 */
 		private void setInitialPermissions() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -1447,7 +1515,7 @@ public class ConstructFactory extends AbstractFactory {
 				"SELECT construct_id AS id, id AS id2 FROM part WHERE construct_id IN " + idSql,
 				"SELECT part.construct_id AS id, value.id AS id2 FROM part,value WHERE part.id = value.part_id AND "
 						+ "value.contenttag_id = 0 AND value.templatetag_id = 0 AND value.objtag_id = 0 AND " + "part.construct_id IN " + idSql };
-    		
+
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_SQL + idSql, preloadSql);
 		} else if (ConstructCategory.class.equals(clazz)) {
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_CATEGORY_SQL + idSql);

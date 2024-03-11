@@ -8,3 +8,10 @@
 body.transparent-bg {
     background: transparent !important;
 }
+
+// Hide tooltips on small devices
+@media (max-width: $aloha-size-tablet-max) {
+    gtx-tooltip-content-wrapper {
+        display: none !important;
+    }
+}

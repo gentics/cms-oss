@@ -1,11 +1,22 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
+import {
+    AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    EventEmitter,
+    OnDestroy,
+    OnInit,
+    Output,
+    QueryList,
+    ViewChildren,
+} from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { Subscription, combineLatest, forkJoin, of } from 'rxjs';
+import { Subscription, combineLatest, forkJoin, merge, of } from 'rxjs';
 import { delay, filter, first, map, switchMap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
@@ -17,6 +28,7 @@ import {
     TAB_ID_CONSTRUCTS,
     TAB_ID_LINK_CHECKER,
 } from '../../providers/aloha-integration/aloha-integration.service';
+import { MobileMenu } from '../../utils';
 
 const ALOHA_REPO = 'data-gentics-aloha-repository'
 
@@ -67,13 +79,16 @@ const DEFAULT_DELAY = 500;
     styleUrls: ['./page-editor-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageEditorControlsComponent implements OnInit, OnDestroy {
+export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDestroy {
 
     public readonly TAB_ID_CONSTRUCTS = TAB_ID_CONSTRUCTS;
     public readonly TAB_ID_LINK_CHECKER = TAB_ID_LINK_CHECKER;
 
     @Output()
     public brokenLinkCountChange = new EventEmitter<number>();
+
+    @ViewChildren('mobileMenu')
+    public menus: QueryList<HTMLElement[]>;
 
     public activeTab: string;
     public settings: NormalizedToolbarSizeSettings;
@@ -97,6 +112,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
     public linkCheckerPlugin: GCNLinkCheckerAlohaPluigin;
 
     protected subscriptions: Subscription[] = [];
+    protected currentMenus: MobileMenu[] = [];
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
@@ -214,7 +230,10 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             }));
         }));
 
-        this.subscriptions.push(this.aloha.on<AlohaLinkChangeEvent>('aloha.link.changed').subscribe(event => {
+        this.subscriptions.push(merge(
+            this.aloha.on<AlohaLinkChangeEvent>('aloha.link.changed'),
+            this.aloha.on<AlohaLinkChangeEvent>('gcn.link.changed'),
+        ).subscribe(event => {
             if (!this.linkCheckerPlugin) {
                 return;
             }
@@ -224,6 +243,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             }
 
             if (isInternalLink(event.element)) {
+                this.removeCheckedDelay(event.element[0]);
                 this.linkCheckerPlugin.removeLink(event.element[0]);
             } else if (this.linkCheckerPlugin?.settings?.livecheck) {
                 this.checkWithDelay(event.element);
@@ -241,6 +261,7 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
 
             Array.from(event.elements).forEach(linkElement => {
                 if (isInternalLink(linkElement)) {
+                    this.removeCheckedDelay(linkElement);
                     this.linkCheckerPlugin.removeLink(linkElement);
                 } else {
                     this.checkWithDelay(linkElement);
@@ -259,8 +280,21 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
         }));
     }
 
+    public ngAfterViewInit(): void {
+        this.subscriptions.push(this.menus.changes.subscribe(changeObj => {
+            this.currentMenus.forEach(s => s.destroy());
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, no-underscore-dangle
+            (changeObj._results || []).forEach(elem => {
+                const menu = new MobileMenu(elem.nativeElement);
+                menu.init();
+                this.currentMenus.push(menu);
+            });
+        }));
+    }
+
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+        this.currentMenus.forEach(s => s.destroy());
     }
 
     public updateFavourites(favourites: string[]): void {
@@ -303,6 +337,22 @@ export class PageEditorControlsComponent implements OnInit, OnDestroy {
             this.checkLink(url, element as HTMLElement);
         }, this.linkCheckerPlugin.settings.delay ?? DEFAULT_DELAY);
         element.setAttribute(ATTR_QUEUED_LINK_CHECK, `${timerId}`);
+    }
+
+    protected removeCheckedDelay(element: HTMLElement | JQuery): void {
+        if (isJQueryElement(element)) {
+            element = element[0];
+        }
+
+        if (!element.hasAttribute(ATTR_QUEUED_LINK_CHECK)) {
+            return;
+        }
+        const timerId = parseInt(element.getAttribute(ATTR_QUEUED_LINK_CHECK) || '', 10);
+        element.removeAttribute(ATTR_QUEUED_LINK_CHECK);
+
+        if (timerId && !Number.isNaN(timerId)) {
+            window.clearTimeout(timerId);
+        }
     }
 
     protected checkLink(url: string, element: HTMLElement): void {

@@ -12,6 +12,7 @@
   },
   "mayBeSubtag" : true,
   "mayContainsSubtags" : false,
+  "editorControlStyle": "ASIDE",
   "autoEnable" : false,
   "newEditor" : true,
   "parts" : [ {

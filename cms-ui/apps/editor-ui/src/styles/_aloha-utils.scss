@@ -97,6 +97,10 @@
     &:focus {
         border: 1px solid transparentize($gtx-color-secondary, 0);
     }
+
+    @media (max-width: $aloha-size-mobile-max) {
+        height: 3.25rem;
+    }
 }
 
 @mixin gtxActiveToggleButton {

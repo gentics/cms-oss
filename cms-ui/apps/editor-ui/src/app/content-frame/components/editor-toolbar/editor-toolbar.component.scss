@@ -14,7 +14,7 @@
         flex: 0 0 auto;
         height: 36px;
 
-        > img {
+        >img {
             width: 36px;
             height: 36px;
         }
@@ -41,6 +41,7 @@
         flex: 1 1 auto;
         align-self: center;
         overflow: hidden;
+        padding-right: 1rem;
     }
 
     .close-button {
@@ -50,7 +51,7 @@
     .content-frame-context-menu {
         margin-left: 0.5rem;
 
-        + .close-button {
+        +.close-button {
             margin-left: 0.25rem;
         }
     }
@@ -128,7 +129,7 @@
         display: inline-block;
         vertical-align: top;
 
-        + gtx-breadcrumbs::ng-deep .breadcrumb::before {
+        +gtx-breadcrumbs::ng-deep .breadcrumb::before {
             display: none;
         }
     }
@@ -244,6 +245,7 @@
 }
 
 @media (max-width: $aloha-size-tablet-max) {
+
     .toolbar-actions .item-status::ng-deep .label-wrapper,
     .element-toolbar .save-button-label {
         display: none;
@@ -261,5 +263,9 @@
 @media (max-width: $aloha-size-mobile-max) {
     .toolbar-actions .item-status {
         display: none;
+    }
+
+    .page-editor-controls {
+        height: 0px !important;
     }
 }

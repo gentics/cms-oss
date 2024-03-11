@@ -9,14 +9,15 @@ import {
     Input,
     OnChanges,
     OnInit,
-    SimpleChange
+    SimpleChange,
 } from '@angular/core';
-import { FormGroup, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { BasePropertiesComponent, CONTROL_INVALID_VALUE } from '@gentics/cms-components';
+import { FormControl, FormGroup, UntypedFormControl, ValidatorFn, Validators } from '@angular/forms';
+import { BasePropertiesComponent, CONTROL_INVALID_VALUE, FormProperties } from '@gentics/cms-components';
 import {
     AccessControlledType,
     CmsI18nValue,
     ConstructCategory,
+    EditorControlStyle,
     GcmsPermission,
     GtxI18nProperty,
     Language,
@@ -24,22 +25,17 @@ import {
     Normalized,
     Raw,
     TagTypeBO,
+    TagTypeBase,
 } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
-export interface ConstructPropertiesFormData {
-    nameI18n?: CmsI18nValue;
-    descriptionI18n?: CmsI18nValue;
-    keyword: string;
-    icon: string;
-    nodeIds: number[];
-    externalEditorUrl?: string;
-    mayBeSubtag?: boolean;
-    mayContainSubtags?: boolean;
-    categoryId?: number;
-    autoEnable?: boolean;
+export type ConstructPropertiesFormData = Omit<
+TagTypeBase<Raw>,
+'name' | 'description' | 'globalId' | 'parts' | 'creator' | 'cdate' | 'editor' | 'edata' | 'editdo'
+> & {
+    nodeIds?: number[];
 }
 
 export enum ConstructPropertiesMode {
@@ -93,8 +89,9 @@ export class ConstructPropertiesComponent
     extends BasePropertiesComponent<ConstructPropertiesFormData>
     implements AfterViewInit, OnChanges, OnInit {
 
-    readonly ConstructPropertiesMode = ConstructPropertiesMode;
-    readonly CONSTRUCT_ICONS = CONSTRUCT_ICONS;
+    public readonly ConstructPropertiesMode = ConstructPropertiesMode;
+    public readonly CONSTRUCT_ICONS = CONSTRUCT_ICONS;
+    public readonly EditorControlStyle = EditorControlStyle;
 
     @Input()
     public mode: ConstructPropertiesMode;
@@ -159,17 +156,20 @@ export class ConstructPropertiesComponent
     }
 
     protected createForm(): FormGroup {
-        return new UntypedFormGroup({
-            keyword: new UntypedFormControl(null, Validators.required),
-            nameI18n: new UntypedFormControl({}, this.createNameValidator()),
-            descriptionI18n: new UntypedFormControl({}),
-            icon: new UntypedFormControl('', Validators.required),
-            nodeIds: new UntypedFormControl([], Validators.required),
-            externalEditorUrl: new UntypedFormControl(''),
-            mayBeSubtag: new UntypedFormControl(false),
-            mayContainSubtags: new UntypedFormControl(false),
-            categoryId: new UntypedFormControl(null),
-            autoEnable: new UntypedFormControl(false),
+        return new FormGroup<FormProperties<ConstructPropertiesFormData>>({
+            keyword: new FormControl<string>(null, Validators.required),
+            nameI18n: new FormControl<CmsI18nValue>({}, this.createNameValidator()),
+            descriptionI18n: new FormControl<CmsI18nValue>({}),
+            icon: new FormControl<string>('', Validators.required),
+            nodeIds: new FormControl<number[]>([], Validators.required),
+            externalEditorUrl: new FormControl<string>(''),
+            mayBeSubtag: new FormControl<boolean>(false),
+            mayContainSubtags: new FormControl<boolean>(false),
+            categoryId: new FormControl<number>(null),
+            autoEnable: new FormControl<boolean>(false),
+            openEditorOnInsert: new FormControl<boolean>(false),
+            editorControlStyle: new FormControl<EditorControlStyle>(EditorControlStyle.ABOVE, Validators.required),
+            editorControlsInside: new FormControl<boolean>(false),
         }, { updateOn: 'change' });
     }
 
@@ -186,27 +186,13 @@ export class ConstructPropertiesComponent
     }
 
     protected assembleValue(formData: ConstructPropertiesFormData): ConstructPropertiesFormData {
-        let output: Partial<ConstructPropertiesFormData> = {
-            nameI18n: formData.nameI18n,
-            descriptionI18n: formData.descriptionI18n,
-            keyword: formData.keyword,
-            icon: formData.icon,
-            externalEditorUrl: formData.externalEditorUrl,
-            mayBeSubtag: formData.mayBeSubtag,
-            mayContainSubtags: formData.mayContainSubtags,
-            categoryId: formData.categoryId,
-            autoEnable: formData.autoEnable,
-        };
-
         // Only add the node-ids when in creation mode
         if (this.mode === ConstructPropertiesMode.CREATE || this.mode === ConstructPropertiesMode.COPY) {
-            output = {
-                nodeIds: formData.nodeIds,
-                ...output,
-            }
+            return formData;
+        } else {
+            const { nodeIds, ...output } = formData;
+            return output;
         }
-
-        return output as ConstructPropertiesFormData;
     }
 
     createNameValidator(): ValidatorFn {
@@ -238,6 +224,9 @@ export class ConstructPropertiesComponent
             mayContainSubtags: this.value?.mayContainSubtags || null,
             categoryId: this.value?.categoryId || null,
             autoEnable: this.value?.autoEnable || false,
+            openEditorOnInsert: this.value?.openEditorOnInsert ?? false,
+            editorControlStyle: this.value?.editorControlStyle ?? EditorControlStyle.ABOVE,
+            editorControlsInside: this.value?.editorControlsInside ?? false,
         };
 
         this.form.setValue(cleanedValue, { emitEvent: false });

@@ -115,6 +115,22 @@
         "en": "Use HTTP/2",
         "de": "HTTP/2 verwenden"
     },
+    "noFoldersIndex": {
+        "en": "Exclude folders from indexing",
+        "de": "Ordner nicht indexieren"
+    },
+    "noFilesIndex": {
+        "en": "Exclude files from indexing",
+        "de": "Dateien/Bilder nicht indexieren"
+    },
+    "noPagesIndex": {
+        "en": "Exclude pages from indexing",
+        "de": "Seiten nicht indexieren"
+    },
+    "noFormsIndex": {
+        "en": "Exclude forms from indexing",
+        "de": "Formulare nicht indexieren"
+    },
     "version": {
         "en": "Implementation version",
         "de": "Implementierungsversion"

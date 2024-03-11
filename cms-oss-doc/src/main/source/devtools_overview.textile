@@ -314,6 +314,7 @@ Example @gentics_structure.json@:
     "displayfield" : false,
     "segmentfield" : false,
     "urlfield" : false,
+    "noindex" : false,
     "elasticsearch" : {
       "basicsearch" : {
         "type" : "text",
@@ -373,7 +374,8 @@ Example @gentics_structure.json@:
     "filesystem" : false,
     "segmentfield" : false,
     "displayfield" : false,
-    "urlfield" : false
+    "urlfield" : false,
+    "noindex" : false
   }
 }
 </shell>

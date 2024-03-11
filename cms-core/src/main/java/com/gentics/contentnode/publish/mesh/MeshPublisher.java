@@ -1292,6 +1292,21 @@ public class MeshPublisher implements AutoCloseable {
 		if (!schemaNames.containsKey(type)) {
 			throw new NodeException(String.format("Cannot create schema for type %d", type));
 		}
+		switch(type) {
+		case Folder.TYPE_FOLDER:
+			schema.setNoIndex(cr.isNoFoldersIndex());
+			break;
+		case ImageFile.TYPE_IMAGE:
+		case File.TYPE_FILE:
+			schema.setNoIndex(cr.isNoFilesIndex());
+			break;
+		case Form.TYPE_FORM:
+			schema.setNoIndex(cr.isNoFormsIndex());
+			break;
+		case Page.TYPE_PAGE:
+			schema.setNoIndex(cr.isNoPagesIndex());
+			break;
+		}
 		schema.setName(getSchemaName(type));
 		schema.setContainer(containerTypes.contains(type));
 
@@ -2986,6 +3001,7 @@ public class MeshPublisher implements AutoCloseable {
 
 		if (fieldSchema != null) {
 			fieldSchema.setName(entry.getMapname());
+			fieldSchema.setNoIndex(entry.isNoIndex());
 			String elasticsearch = entry.getElasticsearch();
 			if ("null".equals(elasticsearch)) {
 				elasticsearch = null;

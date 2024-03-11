@@ -1,0 +1,1 @@
+Mesh Content Repository now has an ability to mark the selected entry or content type as excluded from indexing process, to prevent sensitive data leaks.

@@ -67,6 +67,8 @@ public class CrFragmentSyncTest {
 	public void testEntryMicronodeFilter() throws NodeException {
 		Synchronizer.disable();
 
+		boolean noIndex = (System.currentTimeMillis() % 2) == 0;
+
 		CrFragment fragment = supply(() -> create(CrFragment.class, created -> {
 			created.setName("Test CR");
 
@@ -76,6 +78,7 @@ public class CrFragmentSyncTest {
 				fr.setMapname("target");
 				fr.setTagname("source");
 				fr.setMicronodeFilter("micronodefilter bla");
+				fr.setNoIndex(noIndex);
 			}, false));
 		}));
 		GlobalId globalId = supply(() -> fragment.getGlobalId());
@@ -94,6 +97,7 @@ public class CrFragmentSyncTest {
 				.hasFieldOrPropertyWithValue("attributeTypeId", AttributeType.micronode.getType())
 				.hasFieldOrPropertyWithValue("mapname", "target")
 				.hasFieldOrPropertyWithValue("tagname", "source")
+				.hasFieldOrPropertyWithValue("noIndex", noIndex)
 				.hasFieldOrPropertyWithValue("micronodeFilter", "micronodefilter bla");
 		});
 	}

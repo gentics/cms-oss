@@ -113,6 +113,10 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		}
 		cr.setUrl(nodeCR.getUrl());
 		cr.setHttp2(nodeCR.isHttp2());
+		cr.setNoFoldersIndex(nodeCR.isNoFoldersIndex());
+		cr.setNoFilesIndex(nodeCR.isNoFilesIndex());
+		cr.setNoPagesIndex(nodeCR.isNoPagesIndex());
+		cr.setNoFormsIndex(nodeCR.isNoFormsIndex());
 		cr.setBasepath(nodeCR.getBasepath());
 		cr.setInstantPublishing(nodeCR.isInstantPublishing());
 		cr.setPermissionInformation(nodeCR.isPermissionInformation());
@@ -183,6 +187,18 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		if (cr.getHttp2() != null) {
 			nodeCR.setHttp2(cr.getHttp2());
 		}
+		if (cr.getNoFoldersIndex() != null) {
+			nodeCR.setNoFoldersIndex(cr.getNoFoldersIndex());
+		}
+		if (cr.getNoFilesIndex() != null) {
+			nodeCR.setNoFilesIndex(cr.getNoFilesIndex());
+		}
+		if (cr.getNoPagesIndex() != null) {
+			nodeCR.setNoPagesIndex(cr.getNoPagesIndex());
+		}
+		if (cr.getNoFormsIndex() != null) {
+			nodeCR.setNoFormsIndex(cr.getNoFormsIndex());
+		}
 		if (cr.getUrl() != null) {
 			nodeCR.setUrl(cr.getUrl());
 		}
@@ -246,6 +262,10 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		resolvableProperties.put("url", new NodeObjectProperty<>((o, key) -> o.getUrl()));
 		resolvableProperties.put("basepath", new NodeObjectProperty<>((o, key) -> o.getBasepath()));
 		resolvableProperties.put("http2", new NodeObjectProperty<>((o, key) -> o.isHttp2()));
+		resolvableProperties.put("noFoldersIndex", new NodeObjectProperty<>((o, key) -> o.isNoFoldersIndex()));
+		resolvableProperties.put("noFilesIndex", new NodeObjectProperty<>((o, key) -> o.isNoFilesIndex()));
+		resolvableProperties.put("noPagesIndex", new NodeObjectProperty<>((o, key) -> o.isNoPagesIndex()));
+		resolvableProperties.put("noFormsIndex", new NodeObjectProperty<>((o, key) -> o.isNoFormsIndex()));
 		resolvableProperties.put("instantPublishing", new NodeObjectProperty<>((o, key) -> o.isInstantPublishing()));
 		resolvableProperties.put("languageInformation", new NodeObjectProperty<>((o, key) -> o.isLanguageInformation()));
 		resolvableProperties.put("permissionInformation", new NodeObjectProperty<>((o, key) -> o.isPermissionInformation()));
@@ -388,6 +408,74 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("http2")
 	public void setHttp2(boolean http2) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude folders from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nofoldersindex")
+	public abstract boolean isNoFoldersIndex();
+
+	/**
+	 * Set the 'exclude folders from indexing' flag.
+	 * @param noFoldersIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nofoldersindex")
+	public void setNoFoldersIndex(boolean noFoldersIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude files from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nofilesindex")
+	public abstract boolean isNoFilesIndex();
+
+	/**
+	 * Set the 'exclude files from indexing' flag.
+	 * @param noFilesIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nofilesindex")
+	public void setNoFilesIndex(boolean noFilesIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude pages from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("nopagesindex")
+	public abstract boolean isNoPagesIndex();
+
+	/**
+	 * Set the 'exclude pages from indexing' flag.
+	 * @param noIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("nopagesindex")
+	public void setNoPagesIndex(boolean noIndex) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the 'exclude forms from indexing' flag.
+	 * @return flag
+	 */
+	@FieldGetter("noformsindex")
+	public abstract boolean isNoFormsIndex();
+
+	/**
+	 * Set 'exclude forms from indexing' flag.
+	 * @param noIndex flag
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("noformsindex")
+	public void setNoFormsIndex(boolean noIndex) throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -873,7 +961,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -885,7 +973,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			case mccr:
 				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue", "optimized", "filesystem", "targetType" };
 			case mesh:
-				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "elasticsearch" };
+				return new String[] { "tagname", "mapname", "object", "attributeType", "multivalue",  "targetType", "segmentfield", "displayfield", "urlfield", "noIndex", "elasticsearch" };
 			default:
 				throw new NodeException();
 			}
@@ -931,7 +1019,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
-	 * Add a tagmap entry (for Mesh CRs)
+	 * Add a tagmap entry (for Mesh CRs), defaulting 'noIndex' value to false.
 	 * @param tagName tagname
 	 * @param mapName mapname
 	 * @param object object type
@@ -946,6 +1034,26 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat, boolean segmentfield,
 			boolean displayfield, boolean urlfield) throws NodeException {
+		addEntry(tagName, mapName, object, targetType, type, multivalue, stat, segmentfield, displayfield, urlfield, false);
+	}
+
+	/**
+	 * Add a tagmap entry (for Mesh CRs)
+	 * @param tagName tagname
+	 * @param mapName mapname
+	 * @param object object type
+	 * @param targetType target type (for link attributes)
+	 * @param type attribute type
+	 * @param multivalue true for multivalue
+	 * @param stat true for static
+	 * @param segmentfield true for segmentfield
+	 * @param displayfield true for displayfield
+	 * @param urlfield true for urlfield
+	 * @param noIndex true for noIndex
+	 * @throws NodeException
+	 */
+	public void addEntry(String tagName, String mapName, int object, int targetType, AttributeType type, boolean multivalue, boolean stat, boolean segmentfield,
+			boolean displayfield, boolean urlfield, boolean noIndex) throws NodeException {
 		failReadOnly();
 	}
 

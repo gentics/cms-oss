@@ -219,6 +219,22 @@
         "en": "Use HTTP/2",
         "de": "HTTP/2 verwenden"
     },
+    "property_noFoldersIndex": {
+        "en": "Exclude folders from indexing",
+        "de": "Ordner nicht indexieren"
+    },
+    "property_noFilesIndex": {
+        "en": "Exclude files from indexing",
+        "de": "Dateien/Bilder nicht indexieren"
+    },
+    "property_noPagesIndex": {
+        "en": "Exclude pages from indexing",
+        "de": "Seiten nicht indexieren"
+    },
+    "property_noFormsIndex": {
+        "en": "Exclude forms from indexing",
+        "de": "Formulare nicht indexieren"
+    },
     "property_statusDate": {
         "en": "Statusdate",
         "de": "Statusdatum"

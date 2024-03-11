@@ -87,6 +87,10 @@
         "en": "url field",
         "de": "URL-Feld"
     },
+    "noIndex": {
+        "en": "No indexing",
+        "de": "Keine Indexierung"
+    },
     "elasticsearch": {
         "en": "Search index settings",
         "de": "Suchindex-Einstellungen"

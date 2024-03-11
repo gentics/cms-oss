@@ -3434,6 +3434,7 @@ public class FolderFactory extends AbstractFactory {
 
 			// Check & add numbers until the folder name is unique
 			if (!StringUtils.isEmpty(folder.name)) {
+				folder.name = folder.name.trim();
 				folder.name = folder.name.substring(0, Math.min(folder.name.length(), Folder.MAX_NAME_LENGTH));
 			}
 

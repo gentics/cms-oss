@@ -1154,7 +1154,7 @@ public class SchedulerFactory extends AbstractFactory {
 				original = t.getObject(SchedulerTask.class, getId());
 			}
 
-			name = ObjectTransformer.getString(name, "");
+			name = ObjectTransformer.getString(name, "").trim();
 			description = ObjectTransformer.getString(description, "");
 
 			// make the name unique

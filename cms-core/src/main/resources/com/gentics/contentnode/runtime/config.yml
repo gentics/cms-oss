@@ -60,14 +60,7 @@ aloha_settings:
         - "files"
     block:
       dragdrop: "true"
-    list:
-      templates:
-        ul:
-          classes: []
-        ol:
-          classes: []
-        dl:
-          classes: []
+    list: {}
   contentHandler:
     initEditable:
       - "blockelement"

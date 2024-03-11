@@ -139,8 +139,24 @@ public class Construct implements Serializable {
 	private String hopeditHook;
 
 	/**
+	 * Whether to open the tag editor immediately after inserting the construct.
+	 */
+	private boolean openEditorOnInsert;
+
+	/**
+	 * The placement mode for the constructs edit icons.
+	 */
+	private EditorControlStyle editorControlStyle;
+
+
+	/**
+	 * Whether edit icons should be placed inside the rendered construct.
+	 */
+	private boolean editorControlsInside;
+
+	/**
 	 * Keyword for this construct
-	 * 
+	 *
 	 * @return keyword
 	 */
 	public String getKeyword() {
@@ -158,7 +174,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets the icon for this construct
-	 * 
+	 *
 	 * @param icon
 	 * @return fluent API
 	 */
@@ -169,7 +185,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets the name for this construct
-	 * 
+	 *
 	 * @param name
 	 * @return fluent API
 	 */
@@ -180,7 +196,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Whether a tag of this construct may be inserted/nested in other tags
-	 * 
+	 *
 	 * @return True or false
 	 */
 	public boolean getMayBeSubtag() {
@@ -189,7 +205,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets whether a tag of this construct may be a nested in another tag.
-	 * 
+	 *
 	 * @param value
 	 * @return fluent API
 	 */
@@ -200,7 +216,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Whether this construct may contain other tags.
-	 * 
+	 *
 	 * @return
 	 */
 	public boolean getMayContainSubtags() {
@@ -209,7 +225,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets whether this construct may contain other tags. This means tags can be inserted into a tag from this construct
-	 * 
+	 *
 	 * @param value
 	 * @return fluent API
 	 */
@@ -220,7 +236,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the description
-	 * 
+	 *
 	 * @param description
 	 * @return fluent API
 	 */
@@ -231,7 +247,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Sets the constructId for this construct
-	 * 
+	 *
 	 * @param constructId
 	 * @deprecated use setId() instead
 	 */
@@ -241,7 +257,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Construct id of this construct
-	 * 
+	 *
 	 * @return
 	 * @deprecated use getId() instead
 	 */
@@ -251,7 +267,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * ID of this construct
-	 * 
+	 *
 	 * @return id
 	 */
 	public Integer getId() {
@@ -260,7 +276,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the id of this construct
-	 * 
+	 *
 	 * @param id
 	 *            id
 	 * @return fluent API
@@ -290,7 +306,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Name of this construct
-	 * 
+	 *
 	 * @return
 	 */
 	public String getName() {
@@ -299,7 +315,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Description of this construct
-	 * 
+	 *
 	 * @return description
 	 */
 	public String getDescription() {
@@ -308,7 +324,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Icon of this construct
-	 * 
+	 *
 	 * @return
 	 */
 	public String getIcon() {
@@ -317,7 +333,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Creator of the construct
-	 * 
+	 *
 	 * @return the creator
 	 */
 	public User getCreator() {
@@ -334,7 +350,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Last Editor of the construct
-	 * 
+	 *
 	 * @return the editor
 	 */
 	public User getEditor() {
@@ -391,7 +407,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Edit do
-	 * 
+	 *
 	 * @return edit do
 	 */
 	public Integer getEditdo() {
@@ -400,7 +416,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the edit do
-	 * 
+	 *
 	 * @param editdo
 	 *            edit do
 	 * @return fluent API
@@ -412,7 +428,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Category of the construct
-	 * 
+	 *
 	 * @return category
 	 */
 	public ConstructCategory getCategory() {
@@ -421,7 +437,7 @@ public class Construct implements Serializable {
 
 	/**
 	 * Set the category
-	 * 
+	 *
 	 * @param category
 	 *            category
 	 * @return fluent API
@@ -619,6 +635,71 @@ public class Construct implements Serializable {
 	 */
 	public Construct setHopeditHook(String hopeditHook) {
 		this.hopeditHook = hopeditHook;
+		return this;
+	}
+
+	/**
+	 * Whether the tag editor should be opened immediately when the construct
+	 * is inserted.
+	 *
+	 * @return Whether the tag editor should be opened immediately when the construct
+	 * is inserted.
+	 */
+	public boolean isOpenEditorOnInsert() {
+		return openEditorOnInsert;
+	}
+
+	/**
+	 * Set whether the tag editor should be opened immediately when the
+	 * construct is inserted.
+	 *
+	 * @param openEditorOnInsert Whether the tag editor should be opened
+	 * 		immediately when the construct is inserted.
+	 *
+	 * @return fluent API
+	 */
+	public Construct setOpenEditorOnInsert(boolean openEditorOnInsert) {
+		this.openEditorOnInsert = openEditorOnInsert;
+		return this;
+	}
+
+	/**
+	 * Get the placement mode for edit icons.
+	 * @return The placement mode for edit icons.
+	 */
+	public EditorControlStyle getEditorControlStyle() {
+		return editorControlStyle;
+	}
+
+	/**
+	 * Set the placement mode for edit icons.
+	 * @param editorControlStyle The placement mode for edit icons.
+	 * @return fluent API
+	 */
+	public Construct setEditorControlStyle(EditorControlStyle editorControlStyle) {
+		this.editorControlStyle = editorControlStyle;
+		return this;
+	}
+
+	/**
+	 * Whether the edit icons should be displayed inside the rendered construct.
+	 * @return Whether the edit icons should be displayed inside the rendered construct.
+	 */
+	public boolean isEditorControlsInside() {
+		return editorControlsInside;
+	}
+
+
+	/**
+	 * Set Whether the edit icons should be displayed inside the rendered
+	 * construct.
+	 *
+	 * @param editorControlsInside Whether the edit icons should be displayed
+	 * 		inside the rendered construct.
+	 * @return fluent API
+	 */
+	public Construct setEditorControlsInside(boolean editorControlsInside) {
+		this.editorControlsInside = editorControlsInside;
 		return this;
 	}
 

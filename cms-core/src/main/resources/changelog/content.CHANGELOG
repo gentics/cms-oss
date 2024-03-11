@@ -788,3 +788,6 @@
 2023-03-30  CH-1696 NOP SQL DROP TABLE IF EXISTS template_processes;
 2023-07-10  CH-1698 OG SQL ALTER TABLE type ADD COLUMN deprecated BOOLEAN NOT NULL DEFAULT 0;
 2023-07-31	CH-1699	SP	SQL ALTER TABLE contentrepository ADD COLUMN http2 TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of http usage per cr
+2024-02-07	CH-1706	PK  SQL ALTER TABLE construct ADD COLUMN edit_on_insert TINYINT NOT NULL DEFAULT 0; ## Add flag for opening tag editor on inserting a construct.
+2024-02-07	CH-1707	PK  SQL ALTER TABLE construct ADD COLUMN editor_control_style ENUM('ASIDE', 'ABOVE', 'CLICK') NOT NULL DEFAULT 'ASIDE'; ## Add style mode where the construct edit buttons should appear.
+2024-02-07	CH-1708	PK  SQL ALTER TABLE construct ADD COLUMN editor_control_inside TINYINT NOT NULL DEFAULT 0; ## Add flat whether editing controls should be inside or outside of the construct.

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gentics.contentnode.rest.model.AbstractModel;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -26,6 +27,12 @@ public class ConstructModel extends AbstractModel {
 	private boolean mayBeSubtag;
 
 	private boolean mayContainsSubtags;
+
+	private boolean editOnInsert;
+
+	private EditorControlStyle editorControlStyle;
+
+	private boolean editorControlsInside;
 
 	private boolean autoEnable;
 
@@ -99,6 +106,30 @@ public class ConstructModel extends AbstractModel {
 
 	public void setMayContainsSubtags(boolean mayContainsSubtags) {
 		this.mayContainsSubtags = mayContainsSubtags;
+	}
+
+	public boolean isEditOnInsert() {
+		return editOnInsert;
+	}
+
+	public void setEditOnInsert(boolean editOnInsert) {
+		this.editOnInsert = editOnInsert;
+	}
+
+	public EditorControlStyle getEditorControlStyle() {
+		return editorControlStyle;
+	}
+
+	public void setEditorControlStyle(EditorControlStyle editorControlStyle) {
+		this.editorControlStyle = editorControlStyle;
+	}
+
+	public boolean isEditorControlsInside() {
+		return editorControlsInside;
+	}
+
+	public void setEditorControlsInside(boolean editorControlsInside) {
+		this.editorControlsInside = editorControlsInside;
 	}
 
 	public boolean isAutoEnable() {

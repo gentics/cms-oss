@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
@@ -179,6 +180,102 @@ public class ConstructSyncTest {
 		operate(t -> {
 			Construct afterSync = t.getObject(Construct.class, globalId);
 			Assertions.assertThat(afterSync).as("Construct after sync").isNotNull().hasFieldOrPropertyWithValue("externalEditorUrl", "/external/url.html");
+		});
+	}
+
+	/**
+	 * Test sync of editOnInsert property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testEditOnInsert() throws NodeException {
+		Synchronizer.disable();
+
+		Construct construct = supply(() -> create(Construct.class, created -> {
+			created.setAutoEnable(true);
+			created.setIconName("icon");
+			created.setKeyword("keyword");
+			created.setName("Name", 1);
+			created.setEditOnInsert(true);
+		}));
+		GlobalId globalId = supply(() -> construct.getGlobalId());
+
+		consume(c -> pack.synchronize(c, true), construct);
+
+		operate(() -> update(construct, Construct::delete));
+
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		operate(t -> {
+			Construct afterSync = t.getObject(Construct.class, globalId);
+			Assertions.assertThat(afterSync)
+				.as("Construct after sync")
+				.isNotNull()
+				.hasFieldOrPropertyWithValue("editOnInsert", true);
+		});
+	}
+
+	/**
+	 * Test sync of editorControlStyle property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testEditorControlStyle() throws NodeException {
+		Synchronizer.disable();
+
+		Construct construct = supply(() -> create(Construct.class, created -> {
+			created.setAutoEnable(true);
+			created.setIconName("icon");
+			created.setKeyword("keyword");
+			created.setName("Name", 1);
+			created.setEditorControlStyle(EditorControlStyle.CLICK);
+		}));
+		GlobalId globalId = supply(() -> construct.getGlobalId());
+
+		consume(c -> pack.synchronize(c, true), construct);
+
+		operate(() -> update(construct, Construct::delete));
+
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		operate(t -> {
+			Construct afterSync = t.getObject(Construct.class, globalId);
+			Assertions.assertThat(afterSync)
+				.as("Construct after sync")
+				.isNotNull()
+				.hasFieldOrPropertyWithValue("editorControlStyle", EditorControlStyle.CLICK);
+		});
+	}
+
+	/**
+	 * Test sync of editorControlInside property
+	 * @throws NodeException
+	 */
+	@Test
+	public void testEditorControlInside() throws NodeException {
+		Synchronizer.disable();
+
+		Construct construct = supply(() -> create(Construct.class, created -> {
+			created.setAutoEnable(true);
+			created.setIconName("icon");
+			created.setKeyword("keyword");
+			created.setName("Name", 1);
+			created.setEditorControlInside(true);
+		}));
+		GlobalId globalId = supply(() -> construct.getGlobalId());
+
+		consume(c -> pack.synchronize(c, true), construct);
+
+		operate(() -> update(construct, Construct::delete));
+
+		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
+
+		operate(t -> {
+			Construct afterSync = t.getObject(Construct.class, globalId);
+			Assertions.assertThat(afterSync)
+				.as("Construct after sync")
+				.isNotNull()
+				.hasFieldOrPropertyWithValue("editorControlInside", true);
 		});
 	}
 

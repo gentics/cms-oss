@@ -2,6 +2,7 @@ package com.gentics.contentnode.etc;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -113,7 +114,8 @@ public class SemaphoreMap <T> {
 				for (LockService service : lockServiceLoader) {
 					service.release(lockKey);
 				}
-				throw new NodeException(String.format("Timeout of %d %s reached when trying to acquire lock %d", timeout, unit.name(), key));
+				SemaphoreAcquirer acquirer = semaphoreAcquirerMap.get(key);
+				throw new NodeException(String.format("Timeout of %d %s reached when trying to acquire lock %s for %s. Last Acquirer: %s", timeout, unit.name(), key, this.name, acquirer != null ? acquirer : "unknown"));
 			}
 			semaphoreAcquirerMap.put(key, new SemaphoreAcquirer(Thread.currentThread().getName(), Thread.currentThread().getStackTrace()));
 			if (logger.isDebugEnabled()) {
@@ -145,6 +147,15 @@ public class SemaphoreMap <T> {
 	}
 
 	/**
+	 * Get the number of available permits for the semaphore for the given key
+	 * @param key key
+	 * @return available permits
+	 */
+	public int availablePermits(T key) {
+		return Optional.ofNullable(semaphoreMap.get(key)).map(Semaphore::availablePermits).orElse(0);
+	}
+
+	/**
 	 * Get the LockService lock key
 	 * @param key semaphore key
 	 * @return lock key
@@ -172,7 +183,7 @@ public class SemaphoreMap <T> {
 			info.append("Thread {").append(name).append("} @").append(System.currentTimeMillis()).append("\n");
 
 			for (StackTraceElement element : stackTrace) {
-				info.append(element.toString()).append("\n");
+				info.append("\t").append(element.toString()).append("\n");
 			}
 
 			this.info = info.toString();

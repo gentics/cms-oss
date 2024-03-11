@@ -5,7 +5,6 @@
 >
     <div class="input-container small-12 columns" [class.medium-6]="supportedLanguages">
 
-        <!-- keyword -->
         <gtx-input
             type="text"
             maxlength="255"
@@ -28,7 +27,6 @@
             >{{ node.name }}</gtx-option>
         </gtx-select>
 
-        <!-- icon -->
         <gtx-select
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             [label]="('construct.icon' | i18n) + ' *'"
@@ -40,7 +38,6 @@
             </gtx-option>
         </gtx-select>
 
-        <!-- externalEditorUrl -->
         <gtx-input
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             type="text"
@@ -49,7 +46,6 @@
             formControlName="externalEditorUrl"
         ></gtx-input>
 
-        <!-- category -->
         <gtx-select
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             [label]="'construct.category' | i18n"
@@ -62,35 +58,44 @@
             >{{ item.nameI18n?.[activeTabI18nLanguage?.code] ?? item.name }}</gtx-option>
         </gtx-select>
 
-        <!-- categorySortorder -->
-        <!-- <gtx-input
-            *ngIf="mode !== ConstructPropertiesMode.COPY && form.get('categorySortorder').enabled"
-            type="number"
-            [label]="'construct.categorySortorder' | i18n"
-            formControlName="categorySortorder"
-        ></gtx-input> -->
+        <gtx-select
+            formControlName="editorControlStyle"
+            [label]="('construct.editorControlStyle' | i18n) + ' *'"
+            [required]="true"
+        >
+            <gtx-option
+                *ngFor="let style of (EditorControlStyle | entries)"
+                [value]="style.key"
+            >{{ ('construct.editorControlStyle_' + style.value) | i18n }}</gtx-option>
+        </gtx-select>
 
-        <!-- mayBeSubtag -->
         <gtx-checkbox
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             formControlName="mayBeSubtag"
             [label]="'construct.mayBeSubtag' | i18n"
         ></gtx-checkbox>
 
-        <!-- mayContainSubtags -->
         <gtx-checkbox
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             formControlName="mayContainSubtags"
             [label]="'construct.mayContainSubtags' | i18n"
         ></gtx-checkbox>
 
-        <!-- autoEnable -->
         <gtx-checkbox
             *ngIf="mode !== ConstructPropertiesMode.COPY"
             formControlName="autoEnable"
             [label]="'construct.autoEnable' | i18n"
         ></gtx-checkbox>
 
+        <gtx-checkbox
+            formControlName="openEditorOnInsert"
+            [label]="'construct.openEditorOnInsert' | i18n"
+        ></gtx-checkbox>
+
+        <gtx-checkbox
+            formControlName="editorControlsInside"
+            [label]="'construct.editorControlsInside' | i18n"
+        ></gtx-checkbox>
     </div>
 
     <div *ngIf="supportedLanguages" class="input-container small-12 medium-6 columns">

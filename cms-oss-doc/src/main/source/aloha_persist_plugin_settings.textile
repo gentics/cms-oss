@@ -11,10 +11,10 @@ endprologue.
 
 h3. Enabling the numerated headers plugin
 
-In order to use the numerated headers plugin you have to enable it in your +node.conf+
+In order to use the numerated headers plugin you have to enable it in your configuration:
 
 <javascript filename="conf/*.yml">
-custom_aloha_plugins:
+aloha_plugins_global:
   - "extra/numerated-headers"
 </javascript>
 

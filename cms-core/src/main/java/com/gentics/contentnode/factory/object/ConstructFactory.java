@@ -62,6 +62,7 @@ import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.object.ValueList;
 import com.gentics.contentnode.object.parttype.PartType;
 import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.lib.db.SQLExecutor;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
@@ -126,7 +127,7 @@ public class ConstructFactory extends AbstractFactory {
 		@DataField("keyword")
 		@Updateable
 		protected String keyword;
-        
+
 		protected Icon icon;
 
 		@DataField("icon")
@@ -189,6 +190,19 @@ public class ConstructFactory extends AbstractFactory {
 		@DataField("intext")
 		@Updateable
 		protected boolean mayBeSubtag;
+
+		@DataField("edit_on_insert")
+		@Updateable
+		protected boolean editOnInsert;
+
+		@DataField("editor_control_style")
+		@Updateable
+		protected EditorControlStyle editorControlStyle = EditorControlStyle.ASIDE;
+
+		@DataField("editor_control_inside")
+		@Updateable
+		protected boolean editorControlInside;
+
 
 		/**
 		 * Create an empty instance
@@ -556,6 +570,21 @@ public class ConstructFactory extends AbstractFactory {
 			return mayBeSubtag;
 		}
 
+		@Override
+		public boolean editOnInsert() {
+			return editOnInsert;
+		}
+
+		@Override
+		public EditorControlStyle editorControlStyle() {
+			return editorControlStyle;
+		}
+
+		@Override
+		public boolean editorControlInside() {
+			return editorControlInside;
+		}
+
 		/**
 		 * Load the node ids
 		 * @return list of node ids
@@ -808,6 +837,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setAutoEnable(boolean autoEnable) throws ReadOnlyException {
 			if (this.autoEnable != autoEnable) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': autoEnable changed from '%b' to '%b'", this,
+							this.autoEnable, autoEnable));
+				}
 				this.autoEnable = autoEnable;
 				this.modified = true;
 			}
@@ -816,6 +849,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.hopeditHook, hopeditHook)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': hopeditHook changed from '%s' to '%s'", this,
+							this.hopeditHook, hopeditHook));
+				}
 				this.hopeditHook = hopeditHook;
 				this.modified = true;
 			}
@@ -824,6 +861,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setIconName(String iconName) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.iconName, iconName)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': iconName changed from '%s' to '%s'", this,
+							this.iconName, iconName));
+				}
 				this.iconName = iconName;
 				this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
 				this.modified = true;
@@ -833,6 +874,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setKeyword(String keyword) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.keyword, keyword)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': keyword changed from '%s' to '%s'", this,
+							this.keyword, keyword));
+				}
 				this.keyword = keyword;
 				this.modified = true;
 			}
@@ -841,6 +886,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setLiveEditorTagName(String liveEditorTagName) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.liveEditorTagName, liveEditorTagName)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': liveEditorTagName changed from '%s' to '%s'", this,
+							this.liveEditorTagName, liveEditorTagName));
+				}
 				this.liveEditorTagName = liveEditorTagName;
 				this.modified = true;
 			}
@@ -849,6 +898,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setNewEditor(boolean newEditor) throws ReadOnlyException {
 			if (this.newEditor != newEditor) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': newEditor changed from '%b' to '%b'", this,
+							this.newEditor, newEditor));
+				}
 				this.newEditor = newEditor;
 				this.modified = true;
 			}
@@ -858,6 +911,10 @@ public class ConstructFactory extends AbstractFactory {
 		public void setExternalEditorUrl(String externalEditorUrl) throws ReadOnlyException {
 			externalEditorUrl = ObjectTransformer.getString(externalEditorUrl, "");
 			if (!StringUtils.isEqual(this.externalEditorUrl, externalEditorUrl)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': externalEditorUrl changed from '%s' to '%s'", this,
+							this.externalEditorUrl, externalEditorUrl));
+				}
 				this.externalEditorUrl = externalEditorUrl;
 				this.modified = true;
 			}
@@ -866,6 +923,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setMayBeSubtag(boolean mayBeSubtag) throws ReadOnlyException {
 			if (this.mayBeSubtag != mayBeSubtag) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': mayBeSubtag changed from '%b' to '%b'", this,
+							this.mayBeSubtag, mayBeSubtag));
+				}
 				this.mayBeSubtag = mayBeSubtag;
 				this.modified = true;
 			}
@@ -874,6 +935,10 @@ public class ConstructFactory extends AbstractFactory {
 		@Override
 		public void setMayContainSubtags(boolean mayContainSubtags) throws ReadOnlyException {
 			if (this.mayContainSubtags != mayContainSubtags) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("Change in '%s': mayContainSubtags changed from '%b' to '%b'", this,
+							this.mayContainSubtags, mayContainSubtags));
+				}
 				this.mayContainSubtags = mayContainSubtags;
 				this.modified = true;
 			}
@@ -891,6 +956,45 @@ public class ConstructFactory extends AbstractFactory {
 		public void setConstructCategoryId(Integer id) throws ReadOnlyException {
 			if (categoryId != ObjectTransformer.getInt(id, 0)) {
 				categoryId = ObjectTransformer.getInt(id, 0);
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditOnInsert(boolean editOnInsert) {
+			if (this.editOnInsert != editOnInsert) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editOnInsert changed from '%b' to '%b'",
+						this, this.editOnInsert, editOnInsert));
+				}
+				this.editOnInsert = editOnInsert;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlStyle(EditorControlStyle editorControlStyle) {
+			if (this.editorControlStyle != editorControlStyle) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlStyle changed from '%d' to '%d'",
+						this, this.editorControlStyle, editorControlStyle));
+				}
+				this.editorControlStyle = editorControlStyle;
+				this.modified = true;
+			}
+		}
+
+		@Override
+		public void setEditorControlInside(boolean editorControlInside) {
+			if (this.editorControlInside != editorControlInside) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format(
+						"Change in '%s': editorControlInside changed from '%b' to '%b'",
+						this, this.editorControlInside, editorControlInside));
+				}
+				this.editorControlInside = editorControlInside;
 				this.modified = true;
 			}
 		}
@@ -926,6 +1030,10 @@ public class ConstructFactory extends AbstractFactory {
 			for (UserLanguage lang : languages) {
 				int id = lang.getId();
 				dicEntriesChanged |= CNDictionary.saveDicUserEntry(descriptionId, id, ObjectTransformer.getString(editableDescription.get(id), ""));
+			}
+
+			if (dicEntriesChanged && logger.isDebugEnabled()) {
+				logger.debug(String.format("Change in '%s': dictionary entry changed", this));
 			}
 
 			// make the keyword unique
@@ -1348,7 +1456,7 @@ public class ConstructFactory extends AbstractFactory {
 		/**
 		 * Sets initial permissions for the construct category
 		 * @param id the object's id
-		 * @throws NodeException 
+		 * @throws NodeException
 		 */
 		private void setInitialPermissions() throws NodeException {
 			Transaction t = TransactionManager.getCurrentTransaction();
@@ -1407,7 +1515,7 @@ public class ConstructFactory extends AbstractFactory {
 				"SELECT construct_id AS id, id AS id2 FROM part WHERE construct_id IN " + idSql,
 				"SELECT part.construct_id AS id, value.id AS id2 FROM part,value WHERE part.id = value.part_id AND "
 						+ "value.contenttag_id = 0 AND value.templatetag_id = 0 AND value.objtag_id = 0 AND " + "part.construct_id IN " + idSql };
-    		
+
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_SQL + idSql, preloadSql);
 		} else if (ConstructCategory.class.equals(clazz)) {
 			return batchLoadDbObjects(clazz, ids, info, BATCHLOAD_CONSTRUCT_CATEGORY_SQL + idSql);

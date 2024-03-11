@@ -219,6 +219,30 @@
         "en": "DataSource Template",
         "de": "Datenquellen Template"
     },
+    "editorControlStyle": {
+        "en": "Editor Control Style",
+        "de": "Bearbeitungsfläche-Position"
+    },
+    "editorControlStyle_ABOVE": {
+        "en": "Above",
+        "de": "Darüber"
+    },
+    "editorControlStyle_ASIDE": {
+        "en": "Aside",
+        "de": "Daneben"
+    },
+    "editorControlStyle_CLICK": {
+        "en": "Click",
+        "de": "Klick"
+    },
+    "openEditorOnInsert": {
+        "en": "Edit on insert",
+        "de": "Bearbeiten beim einfügen"
+    },
+    "editorControlsInside": {
+        "en": "Display controls inside",
+        "de": "Bearbeitungsfläche darüber anzeigen"
+    },
 
     "tagPartType_1": {
         "en": "Text",

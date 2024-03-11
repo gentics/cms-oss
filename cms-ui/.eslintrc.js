@@ -212,7 +212,12 @@ module.exports = {
                 lib: 'always',
             },
         ],
-        '@typescript-eslint/unbound-method': 'warn',
+        '@typescript-eslint/unbound-method': [
+            'warn',
+            {
+                ignoreStatic: true,
+            },
+        ],
         '@typescript-eslint/unified-signatures': 'error',
         'arrow-parens': [
             'off',

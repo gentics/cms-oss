@@ -175,6 +175,18 @@ export interface TagTypeBase<T extends ModelType> {
     visibleInMenu?: boolean;
     /** True if tags of this construct shall be enabled by default */
     autoEnable?: boolean;
+    /** If the tag-editor should be opened when the tag get's inserted in a page. */
+    openEditorOnInsert?: boolean;
+    /** How the controls should be displayed in the page. */
+    editorControlStyle?: EditorControlStyle;
+    /** If the controls should be displayed inside/over the tag. */
+    editorControlsInside?: boolean;
+}
+
+export enum EditorControlStyle {
+    ABOVE = 'ABOVE',
+    ASIDE = 'ASIDE',
+    CLICK = 'CLICK',
 }
 
 /** Data model as defined by backend. */

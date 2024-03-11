@@ -253,7 +253,8 @@ define('gcn/gcn-tags', [
 						'gcn-tagid': tag.prop('id'),
 						'gcn-pageid': tag.parent().id(),
 						'gcn-constructid': construct.id,
-						'gcn-constructdisplay': construct.editorControlStyle || 'above',
+						'gcn-construct-ctl-style': (construct.editorControlStyle || 'ASIDE').toLowerCase(),
+						'gcn-construct-ctl-inside': (!!construct.editorControlsInside).toString(),
 					};
 					$elements.alohaBlock(options);
 

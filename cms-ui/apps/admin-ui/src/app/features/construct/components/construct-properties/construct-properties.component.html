@@ -64,7 +64,7 @@
             [required]="true"
         >
             <gtx-option
-                *ngFor="let style of (EditorControlStyle | entries)"
+                *ngFor="let style of (EditorControlStyle | gtxEntries)"
                 [value]="style.key"
             >{{ ('construct.editorControlStyle_' + style.value) | i18n }}</gtx-option>
         </gtx-select>

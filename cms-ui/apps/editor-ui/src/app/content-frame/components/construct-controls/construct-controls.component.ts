@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnI
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
-import { Construct, ConstructCategory, TagPartType } from '@gentics/cms-models';
+import { Construct, ConstructCategory } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { AlohaGlobal } from '../../models/content-frame';
@@ -145,14 +145,7 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
                     this.currentlyOpenDropdown = null;
                 }
 
-                const editableParts = construct.parts
-                    // Ignore template and velocity parts in all cases
-                    .filter(part => part.keyword !== 'template' && part.typeId !== TagPartType.Velocity)
-                    // Only check for parts which are editable and are shown in the editor
-                    .filter(part => part.editable && !part.hideInEditor);
-
-                // TODO: Check the new flag for this instead
-                if (editableParts.length > 0 || (construct.externalEditorUrl || '').trim().length > 0) {
+                if (construct.openEditorOnInsert) {
                     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
                     this.tagEditor.openTagEditor(tag._data, construct, tag.parent()._data);
                 }

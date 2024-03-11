@@ -255,6 +255,15 @@ define([
 			});
 		},
 
+		destroy: function(force) {
+			if (this._observer) {
+				this._observer.disconnect();
+				this._observer = null;
+			}
+
+			this._super(force);
+		},
+
 		/*
 		 * @override
 		 */
@@ -357,19 +366,20 @@ define([
 
 			$block.prepend($blockHandleContainer);
 
-			function setHeightProperties() {
+			function setSizeProperties() {
 				$block.css('--gtx-block-content-height', $block.height() + 'px');
+				$block.css('--gtx-block-content-width', $block.width() + 'px');
 				$block.css('--gtx-block-handle-height', $blockHandleContainer.height() + 'px');
 				$block.css('--gtx-block-handle-width', $blockHandleContainer.width() + 'px');
 			}
-			var observer = new ResizeObserver(setHeightProperties);
-			observer.observe($block[0]);
-			observer.observe($blockHandleContainer[0]);
-			setHeightProperties();
+			block._observer = new ResizeObserver(setSizeProperties);
+			block._observer.observe($block[0]);
+			block._observer.observe($blockHandleContainer[0]);
+			setSizeProperties();
 
 			// Additional double-click handler for click type construct blocks.
 			$block.on('dblclick', function($event) {
-				var type = $block.attr('data-gcn-constructdisplay');
+				var type = $block.attr('data-gcn-construct-ctl-style');
 				if (type !== 'click') {
 					return;
 				}

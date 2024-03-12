@@ -250,7 +250,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 map(state => state.openPropertiesTab || ITEM_PROPERTIES_TAB || ITEM_REPORTS_TAB),
             ),
             this.internalActiveTab.asObservable().pipe(
-                startWith(ITEM_REPORTS_TAB),
+                startWith(ITEM_PROPERTIES_TAB),
             ),
         ]).pipe(
             map(([stateTab, internalTab]) => this.useRouter ? stateTab : internalTab),
@@ -263,6 +263,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             }
 
             this.activeTabId = tabId;
+            this.changeDetector.markForCheck();
         }));
 
         this.activeTabObjectProperty$ = this.activeTabId$.pipe(
@@ -346,15 +347,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
         this.subscriptions.push(editObjPropSub);
         this.tagEditorHostList.notifyOnChanges();
-
-        this.subscriptions.push(this.activeTabId$.subscribe(tabId => {
-            if (tabId === ITEM_TAG_LIST_TAB) {
-                this.selectedContentTags$.next([]);
-            }
-
-            this.activeTabId = tabId;
-            this.changeDetector.markForCheck();
-        }));
     }
 
     ngOnDestroy(): void {

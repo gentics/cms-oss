@@ -83,7 +83,6 @@ describe('CombinedPropertiesEditorComponent', () => {
     let mockObjProps: { [name: string]: EditableObjectTag };
     let mockObjPropsSorted: EditableObjectTag[];
 
-    let editorActions: MockEditorActions;
     let entityResolver: MockEntityResolver;
     let folderActions: MockFolderActions;
     let state: TestApplicationState;
@@ -151,7 +150,6 @@ describe('CombinedPropertiesEditorComponent', () => {
             ],
         });
 
-        editorActions = TestBed.get(EditorActionsService);
         entityResolver = TestBed.get(EntityResolver);
         folderActions = TestBed.get(FolderActionsService);
         state = TestBed.get(ApplicationStateService);
@@ -233,7 +231,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 multiDetectChanges(fixture, 3);
 
                 const changes = { change: 'some change' };
-                testComponent.combinedPropertiesEditor.propertiesEditor.changes.next(changes as any);
+                testComponent.combinedPropertiesEditor.handlePropChanges(changes as any);
 
                 let promiseResolved = false;
                 testComponent.combinedPropertiesEditor.saveChanges()
@@ -1021,7 +1019,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1077,7 +1076,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem0 = cloneDeep(mockFolder);
-                    (editedItem0.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem0.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem0.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem0);
                     const editedItem1 = cloneDeep(editedItem0);
@@ -1152,7 +1152,8 @@ describe('CombinedPropertiesEditorComponent', () => {
                     }));
 
                     const editedItem = cloneDeep(mockPage);
-                    (editedItem.tags[editedObjProp.name].properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
+                    (editedItem.tags[editedObjProp.name]
+                        .properties[editedObjProp.tagType.parts[0].keyword] as StringTagPartProperty).stringValue = 'modified value';
                     editedItem.tags[editedObjProp.name].active = true;
                     folderActions.getItem.and.returnValue(editedItem);
 
@@ -1362,12 +1363,13 @@ describe('CombinedPropertiesEditorComponent', () => {
                 testComponent.item = mockPage;
                 fixture.detectChanges();
                 let contentTags: Tag[];
-                testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
+                const sub = testComponent.combinedPropertiesEditor.itemWithContentTags$.subscribe((itemWithContentTags) => {
                     contentTags = itemWithContentTags.properties;
                 });
-                tick();
+                tick(1000);
                 const mockContentTags = getExampleEditableTag();
                 expect(contentTags).toEqual([mockContentTags]);
+                sub.unsubscribe();
             }),
         );
 

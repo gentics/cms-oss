@@ -1,9 +1,15 @@
 import {
+    ChangeDetectionStrategy,
     Component,
     Input,
     OnDestroy,
-    OnInit, ViewChild,
+    OnInit,
+    ViewChild,
 } from '@angular/core';
+import { EditableProperties } from '@editor-ui/app/common/models';
+import {
+    CombinedPropertiesEditorComponent,
+} from '@editor-ui/app/content-frame/components/combined-properties-editor/combined-properties-editor.component';
 import {
     EditableFileProps,
     File,
@@ -11,19 +17,14 @@ import {
     InheritableItem,
     Node,
 } from '@gentics/cms-models';
-import {
-    EditableProperties,
-} from '@editor-ui/app/content-frame/components/properties-editor/properties-editor.component';
-import {Observable} from 'rxjs';
-import {BaseModal} from '@gentics/ui-core';
-import {
-    CombinedPropertiesEditorComponent,
-} from '@editor-ui/app/content-frame/components/combined-properties-editor/combined-properties-editor.component';
+import { BaseModal } from '@gentics/ui-core';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'image-properties-modal',
     templateUrl: './image-properties-modal.component.html',
     styleUrls: ['./image-properties-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ImagePropertiesModalComponent extends BaseModal<void> implements OnInit, OnDestroy {
 
@@ -50,33 +51,12 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
     }
 
     async saveAndClose(): Promise<void> {
-        console.log(`Saving changes to file ${this.file.id}`);
+        await this.combinedPropertiesEditor.saveItemProperties({ showNotification: false, fetchForConstruct: false, fetchForUpdate: false });
+        await this.combinedPropertiesEditor.saveAllObjectProperties();
 
-        await this.combinedPropertiesEditor.saveItemProperties()
-            .then(() => console.log('Saved properties'))
-            .catch(err => console.log('Could not save properties', err))
-
-        this.combinedPropertiesEditor.saveChanges()
-            .catch(err => {
-                console.log('Saving failed:', err);
-            })
-            .then(() => {
-                console.log('Closing modal');
-
-                this.closeFn()
-            });
+        this.closeFn();
     }
 
-    simplePropertiesChanged(changes: EditableProperties): void {
-        console.log('simplePropertiesChanged() called')
-
-        /*
-        if (this.viewInitialized) {
-            this.valueChange.emit(changes);
-            this.changes.next(changes);
-        }
-         */
-    }
     private getItemProperties(item: InheritableItem | Node): EditableProperties {
         // an item with type "node" or "channel" may be the base folder of a node. If it has
         // a folder-only property, then we can assume it is the base folder.

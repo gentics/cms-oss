@@ -1,5 +1,8 @@
+<div class="modal-title">
+    <h5>File ID: {{file.id}}</h5>
+</div>
+
 <div class="modal-content">
-    File ID: {{file.id}}
     <div class="image-properties-wrapper">
         <combined-properties-editor
             [item]="file"
@@ -9,12 +12,16 @@
         ></combined-properties-editor>
     </div>
 </div>
+
 <div class="modal-footer">
     <gtx-button
         type="secondary"
         flat
-        (click)="cancelFn()">{{ 'common.cancel_button' | i18n }}</gtx-button>
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
     <gtx-button
         type="primary"
-        (click)="saveAndClose()">{{ 'modal.save_changes' | i18n }}</gtx-button>
+        (click)="saveAndClose()"
+    >{{ 'modal.save_changes' | i18n }}</gtx-button>
 </div>

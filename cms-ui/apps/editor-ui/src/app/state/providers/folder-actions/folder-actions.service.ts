@@ -40,6 +40,7 @@ import {
     FileCopyRequest,
     FileCreateRequest,
     FileListResponse,
+    FileOrImage,
     FileResponse,
     FileUploadResponse,
     Folder,
@@ -2647,18 +2648,22 @@ export class FolderActionsService {
     }
 
     async openUploadModals(successfulUploads: UploadResponse[], nodeId: number, showFileProperties: boolean, showImageProperties: boolean): Promise<void> {
-
         for (const upload of successfulUploads) {
             try {
+                const type = upload.response.file.fileType.startsWith('image/')
+                    ? 'image'
+                    : 'file';
                 const showModal = upload.response.file.fileType.startsWith('image/')
                     ? showImageProperties
                     : showFileProperties;
 
                 if (showModal) {
-                    await this.openImageModal(upload.response.file, nodeId)
+                    const properItem: any = await this.api.folders.getItem(upload.response.file.id, type, { construct: true })
+                        .toPromise();
+                    await this.openImageModal(properItem.file || properItem.image, nodeId)
                 }
             } catch (err) {
-                console.log('Modal already closed')
+                console.error(err);
             }
         }
     }
@@ -3536,13 +3541,10 @@ export class FolderActionsService {
             let timer: number;
             let hasResolved = false;
 
-            console.log('Opening image modal');
-
             this.modalService.fromComponent(ImagePropertiesModalComponent, {
                 onClose: () => {
-                    console.log('onClose() called on image modal');
-
-                    timer = setTimeout(() => {
+                    // TODO: Remove this hack after modal-merge and use reject-reason check instead
+                    timer = window.setTimeout(() => {
                         if (!hasResolved) {
                             reject(new Error('User has canceled the modal'));
                         }
@@ -3554,8 +3556,6 @@ export class FolderActionsService {
             })
                 .then(modal => modal.open())
                 .then(result => {
-                    console.log('Image modal result:', result);
-
                     if (timer) {
                         clearTimeout(timer);
                     }
@@ -3564,8 +3564,6 @@ export class FolderActionsService {
                     hasResolved = true;
                 })
                 .catch(err => {
-                    console.log('Error:', err);
-
                     if (timer) {
                         clearTimeout(timer);
                     }

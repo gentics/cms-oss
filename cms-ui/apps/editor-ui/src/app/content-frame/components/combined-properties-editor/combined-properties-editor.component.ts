@@ -13,7 +13,7 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
-import { ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
+import { EditableProperties, ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
@@ -69,13 +69,13 @@ import {
     ModalService,
     TooltipComponent,
 } from '@gentics/ui-core';
-import {cloneDeep, isEqual, merge, startsWith} from 'lodash-es';
+import { cloneDeep, isEqual, merge } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,
-    ReplaySubject,
     Subscription,
     combineLatest,
+    forkJoin,
     from,
     of as observableOf,
 } from 'rxjs';
@@ -91,7 +91,6 @@ import {
     tap,
 } from 'rxjs/operators';
 import { PropertiesEditor } from '../properties-editor/properties-editor.component';
-
 
 /** Allows to define additional options for saving. */
 export interface SaveChangesOptions {
@@ -157,9 +156,6 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     @ViewChild(GroupedTabsComponent, { static: false })
     propertiesTabs: GroupedTabsComponent;
 
-    @ViewChild(PropertiesEditor, { static: false })
-    propertiesEditor: PropertiesEditor;
-
     @ViewChildren(TagEditorHostComponent)
     tagEditorHostList: QueryList<TagEditorHostComponent>;
 
@@ -177,8 +173,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
     editedObjectProperty: EditableObjectTag;
     private activeTabId: PropertiesTab;
     private subscriptions: Subscription[] = [];
-    private internalActiveTab = new BehaviorSubject<string>('item-properties');
-    private activeTabObjectProperty: { item: ItemWithObjectTags, tag: EditableObjectTag };
+    private internalActiveTab = new BehaviorSubject<string>(ITEM_PROPERTIES_TAB);
+    private latestPropChanges: EditableProperties;
 
     expandedState$: Observable<string[]>;
 
@@ -254,35 +250,20 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 map(state => state.openPropertiesTab || ITEM_PROPERTIES_TAB || ITEM_REPORTS_TAB),
             ),
             this.internalActiveTab.asObservable().pipe(
-                startWith('item-properties'),
+                startWith(ITEM_REPORTS_TAB),
             ),
         ]).pipe(
             map(([stateTab, internalTab]) => this.useRouter ? stateTab : internalTab),
             distinctUntilChanged(isEqual),
         );
 
-        this.subscriptions.push(
-            this.activeTabId$.subscribe(tabId => {
-                if (tabId === ITEM_TAG_LIST_TAB) {
-                    this.selectedContentTags$.next([]);
-                }
+        this.subscriptions.push(this.activeTabId$.subscribe(tabId => {
+            if (tabId === ITEM_TAG_LIST_TAB) {
+                this.selectedContentTags$.next([]);
+            }
 
-                this.activeTabId = tabId;
-
-                setTimeout(() => {
-                    if (!this.propertiesEditor) {
-                        return;
-                    }
-
-                    this.propertiesEditor.changes.subscribe(props => {
-                        const newItem = merge({}, this.item);
-
-                        this.item = merge(newItem, props);
-                        this.item$.next(this.item as any); // Necessary?
-                    });
-                }, 200);
-            }),
-        );
+            this.activeTabId = tabId;
+        }));
 
         this.activeTabObjectProperty$ = this.activeTabId$.pipe(
             switchMap(activeTabId => this.itemWithObjectProperties$.pipe(
@@ -306,11 +287,9 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             refCount(),
         );
 
-        this.subscriptions.push(
-            this.activeTabObjectProperty$.subscribe(prop => this.activeTabObjectProperty = prop),
-        );
-
         this.itemProperties$ = this.item$.pipe(
+            filter(item => item != null),
+            distinctUntilChanged(isEqual),
             switchMap(item => this.loadItemFolder(item)),
             switchMap(itemAndFolder => this.loadLanguagesAndTemplates(itemAndFolder.item, itemAndFolder.folder)),
             startWith({
@@ -318,6 +297,8 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
                 languages: [],
                 templates: [],
             }),
+            publishReplay(1),
+            refCount(),
         );
 
         const currNodeSub = currNodeId$.subscribe(nodeId => {
@@ -342,11 +323,11 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         // This emits with all the infos necessary for editing an object property, whenever the object property changes.
         const objPropAndTagEditor$ = this.activeTabObjectProperty$.pipe(
             filter(objProp => !!objProp && !!objProp.tag.tagType),
-            switchMap(objProp => combineLatest(
+            switchMap(objProp => combineLatest([
                 observableOf(objProp),
                 this.loadItemPermissions(objProp.item),
                 tagEditorHost$,
-            )),
+            ])),
             filter(([,,host]) => host != null),
             tap(() => {
                 // Workaround: Trigger AfterContentInit Life-cycle hook to initialize active state of the tabs
@@ -365,6 +346,15 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
 
         this.subscriptions.push(editObjPropSub);
         this.tagEditorHostList.notifyOnChanges();
+
+        this.subscriptions.push(this.activeTabId$.subscribe(tabId => {
+            if (tabId === ITEM_TAG_LIST_TAB) {
+                this.selectedContentTags$.next([]);
+            }
+
+            this.activeTabId = tabId;
+            this.changeDetector.markForCheck();
+        }));
     }
 
     ngOnDestroy(): void {
@@ -382,22 +372,33 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         }
     }
 
-    onTabChange(newTabId: string, readOnly: boolean = false): void {
-        if (this.useRouter) {
-            this.navigationService
-                .detailOrModal(this.currentNode.id, this.item.type, this.item.id, 'editProperties', {
-                    openTab: 'properties',
-                    propertiesTab: newTabId,
-                    readOnly,
-                })
-                .navigate();
+    handlePropChanges(changes: EditableProperties): void {
+        this.latestPropChanges = changes;
+        this.item = {
+            ...this.item,
+            ...changes,
+        } as any;
+        this.item$.next(this.item as any);
+    }
 
-            observableOf(null).pipe(
-                delay(0),
-            ).subscribe(() => this.scrollToRight());
-        } else {
+    onTabChange(newTabId: string, readOnly: boolean = false): void {
+        if (!this.useRouter) {
+            this.item$.next(this.item as any);
             this.internalActiveTab.next(newTabId);
+            return;
         }
+
+        this.navigationService
+            .detailOrModal(this.currentNode.id, this.item.type, this.item.id, 'editProperties', {
+                openTab: 'properties',
+                propertiesTab: newTabId,
+                readOnly,
+            })
+            .navigate();
+
+        observableOf(null).pipe(
+            delay(0),
+        ).subscribe(() => this.scrollToRight());
     }
 
     toggleAllContentTagSelected(tags: Tag[]): void {
@@ -507,6 +508,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             updatePromise = this.saveItemProperties();
         } else if (this.activeTabId === ITEM_TAG_LIST_TAB) {
             // No-op, because its saved on changes
+            updatePromise = Promise.resolve();
         } else {
             updatePromise = this.saveCurrentObjectProperty(options);
         }
@@ -615,15 +617,16 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         return observableOf(editableTags);
     }
 
-    public saveItemProperties(): Promise<ItemWithObjectTags | Form | Node | void> {
-        const formValue = this.item as any;
-        // const formValue = this.propertiesEditor.changes.getValue();
+    public saveItemProperties(
+        postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
+    ): Promise<ItemWithObjectTags | Form | Node | void> {
+        // const formValue = this.item as any;
+        const formValue = this.latestPropChanges;
         if (!formValue) {
             return Promise.resolve(null);
         }
 
         const itemId = this.item.id;
-        const postUpdateBehavior: PostUpdateBehavior = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true };
         let updatePromise: Promise<ItemWithObjectTags | Form | Node | void>;
         switch (this.item.type as ItemType) {
             case 'folder':
@@ -707,6 +710,31 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
             });
     }
 
+    public saveAllObjectProperties(
+        postUpdateBehavior: PostUpdateBehavior & Required<Pick<PostUpdateBehavior, 'fetchForUpdate'>>
+        = { showNotification: true, fetchForUpdate: true, fetchForConstruct: true },
+    ): Promise<void> {
+        if (this.item == null) {
+            return Promise.reject(new Error('No Item present'));
+        }
+
+        if (this.item.type === 'node' || this.item.type === 'channel') {
+            return Promise.reject(new Error('Cannot save Node Object-Properties'));
+        }
+
+        return this.folderActions.updateItemObjectProperties(
+            (this.item as ItemWithObjectTags).type,
+            (this.item as ItemWithObjectTags).id,
+            (this.item as ItemWithObjectTags).tags,
+            postUpdateBehavior,
+        )
+            .then(updatedItem => {
+                this.item = updatedItem;
+                this.item$.next(updatedItem);
+                this.changeDetector.markForCheck();
+            });
+    }
+
     private loadFolderWithTags(item: ItemWithObjectTags | Node): Observable<ItemWithObjectTags | Node> {
         if (item && item.type === 'folder' && !item.tags) {
             return from(this.folderActions.getFolder(item.id, { construct: true, update: true }));
@@ -738,7 +766,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         languages: Language[],
         templates: Template[]
     }> {
-        return combineLatest([
+        return forkJoin([
             this.loadLanguages(folder),
             this.loadTemplates(folder),
         ]).pipe(
@@ -807,20 +835,21 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         this.markObjectPropertiesAsModifiedInState(false, isValid && !isReadOnly);
 
         tagEditorHost.editTagLive(objProp, tagEditorContext, (tagProperties) => {
-            if (tagProperties) {
-                this.editedObjectProperty.properties = tagProperties;
-                this.markObjectPropertiesAsModifiedInState(true, true);
-
-                (this.item as any).properties = merge((this.item as any).properties, this.editedObjectProperty.properties);
-                (this.item as any).tags = {
-                    ... (this.item as any).tags,
-                    [this.editedObjectProperty.name]: this.editedObjectProperty,
-                }
-
-                // this.item$.next(this.item as any);
-            } else {
+            if (!tagProperties) {
                 this.markObjectPropertiesAsModifiedInState(true, false);
+                return;
             }
+
+            this.editedObjectProperty.properties = tagProperties;
+            this.markObjectPropertiesAsModifiedInState(true, true);
+
+            (this.item as any).properties = merge((this.item as any).properties, this.editedObjectProperty.properties);
+            (this.item as any).tags = {
+                ... (this.item as any).tags,
+                [this.editedObjectProperty.name]: this.editedObjectProperty,
+            }
+
+            // this.item$.next(this.item as any);
         });
     }
 

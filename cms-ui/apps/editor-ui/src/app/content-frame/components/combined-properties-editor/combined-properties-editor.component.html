@@ -84,8 +84,9 @@
                 [item]="item"
                 [nodeId]="currentNode?.id"
                 [templates]="itemProps.templates"
-                [languages]="itemProps.languages">
-            </properties-editor>
+                [languages]="itemProps.languages"
+                (valueChange)="handlePropChanges($event)"
+            ></properties-editor>
         </div>
 
         <div class="form-reports" *ngIf="activeTabId === ITEM_REPORTS_TAB">

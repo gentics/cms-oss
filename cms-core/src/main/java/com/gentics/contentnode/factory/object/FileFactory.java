@@ -68,6 +68,7 @@ import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.url.AlternateUrlsContainer;
 import com.gentics.contentnode.factory.url.ContentFileAlternateUrlsContainer;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.io.FileManager;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.ContentFile;
@@ -2167,7 +2168,7 @@ public class FileFactory extends AbstractFactory {
 					}
 					if (dim != null && imageSizeLimits != null && imageSizeLimits.length == 2) {
 						if (imageSizeLimits[0] < dim.x || imageSizeLimits[1] < dim.y) {
-							throw new NodeException(String.format("Image dimensions %s exceed the allowed limit %s", dim.toString(), Arrays.toString(imageSizeLimits)));
+							throw new NodeException(I18NHelper.get("image.exceeds.maxdimensions", Integer.toString(dim.x), Integer.toString(dim.y), Integer.toString(imageSizeLimits[0]), Integer.toString(imageSizeLimits[1])));
 						}
 					}
 				}

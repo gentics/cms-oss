@@ -4987,7 +4987,7 @@ public class PageFactory extends AbstractFactory {
 			// page filename
 			String pageId = ObjectTransformer.getString(page.getId(), "");
 
-			page.name = StringUtils.stripTags(page.name);
+			page.name = StringUtils.stripTags(page.name.trim());
 			page.name = page.name.substring(0, Math.min(page.name.length(), Page.MAX_NAME_LENGTH));
 
 			boolean autogeneratePageFilename = false;

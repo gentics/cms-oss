@@ -756,8 +756,8 @@ public class FileEditSandboxTest {
 	 */
 	@Test
 	public void testLeadingTrailingSpaces() throws Exception {
-		File file = createAndSaveFile("  leadingtrailing  .jpg");
-		assertEquals("leadingtrailing.jpg", file.getName());
+		File file = createAndSaveFile("  leadingtrailing  .jpg  ");
+		assertEquals("leadingtrailing-.jpg", file.getName());
 	}
 
 	/**

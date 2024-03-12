@@ -1351,7 +1351,7 @@ public class FormFactory extends AbstractFactory {
 				origFolderId = origForm.getFolderId();
 			}
 
-			name = ObjectTransformer.getString(name, "");
+			name = ObjectTransformer.getString(name, "").trim();
 			description = ObjectTransformer.getString(description, "");
 			if (languages == null) {
 				languages = new ArrayList<>();

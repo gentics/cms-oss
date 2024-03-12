@@ -235,6 +235,17 @@ public class ImageFileEditSandboxTest {
 	}
 
 	/**
+	 * Tests leading/trailing spaces removal.
+	 * @throws Exception
+	 */
+	@Test
+	public void testLeadingTrailingSpace() throws Exception {
+		ImageFile file = createAndSaveImage("  leadingtrailing.jpg  ");
+		
+		assertEquals("leadingtrailing.jpg", file.getName());
+	}
+
+	/**
 	 * Creates and saves image.
 	 * @param string
 	 * @return

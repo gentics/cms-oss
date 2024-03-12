@@ -2377,7 +2377,6 @@ public class FileFactory extends AbstractFactory {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
 
-		@SuppressWarnings("unchecked")
 		Map<String, String> sanitizeCharacters = nodePreferences.getPropertyMap(
 				"sanitize_character");
 		String replacementChararacter = nodePreferences.getProperty(
@@ -2385,6 +2384,9 @@ public class FileFactory extends AbstractFactory {
 		String[] preservedCharacters = nodePreferences.getProperties(
 				"sanitize_allowed_characters");
 
+		if (!StringUtils.isEmpty(name)) {
+			name = name.trim();
+		}
 		return FileUtil.sanitizeName(
 				name, sanitizeCharacters, replacementChararacter, preservedCharacters);
 	}

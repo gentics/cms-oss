@@ -373,6 +373,9 @@ public class CNDictionary extends Properties {
 		ResultSet res = null;
 		boolean changed = false;
 
+		if (!StringUtils.isEmpty(translation)) {
+			translation = translation.trim();
+		}
 		try {
 			pst = t.prepareStatement("SELECT * FROM dicuser WHERE output_id = ? AND language_id = ?", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 			pst.setInt(1, outputId);
@@ -436,7 +439,9 @@ public class CNDictionary extends Properties {
 		if (value == null) {
 			value = "";
 		}
-
+		if (!StringUtils.isEmpty(value)) {
+			value = value.trim();
+		}
 		StringBuffer sqlBuffer = new StringBuffer("SELECT value FROM dicuser WHERE language_id = ? AND output_id != ? AND output_id IN (SELECT ").append(column).append(" FROM ").append(table).append(
 				") AND value = ?");
 		String sql = sqlBuffer.toString();

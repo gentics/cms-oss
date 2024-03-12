@@ -10,6 +10,8 @@ for all features, if not documented otherwise.
 
 The list of features which require no Enterprise Edition licensing is available in the "OSS guides":https://www.gentics.com/Content.Node/cmp8/guides-oss/feature_overview.html.
 
+The features listed here need to be activated with a license key. Consult the details of the "activation process":activation.html for more information.
+
 h3. Channel Synchronization
 
 See "Channel Synchronization":feature_channelsync.html

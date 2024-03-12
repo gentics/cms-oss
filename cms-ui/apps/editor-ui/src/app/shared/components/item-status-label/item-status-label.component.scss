@@ -27,7 +27,8 @@
         icon.alert { color: white; }
     }
 
-    &.published {
+    &.published,
+    &.included {
         border-color: transparentize($gtx-color-success, 0.8);
         color: $gtx-color-success;
 

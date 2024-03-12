@@ -609,9 +609,9 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			NodeLogger.getNodeLogger(getClass()).debug("Post Data: " + metaData);
 			// Extract values from the fileDataBodyPart
 			String mediaType = fileDataBodyPart.getMediaType().toString();
-			String subMediaType = fileDataBodyPart.getMediaType().getSubtype();
+			String mainMediaType = fileDataBodyPart.getMediaType().getType();
 
-			boolean isImage = subMediaType.equals("image");
+			boolean isImage = mainMediaType.equals("image");
 
 			if (ObjectTransformer.isEmpty(metaData.get(FileUploadMetaData.META_DATA_FILE_NAME_KEY))) {
 
@@ -981,7 +981,25 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		t.commit(false);
 		loadedFile = getFile(file.getId().toString(), true);
 
-		return new FileUploadResponse(message, responseInfo, true, ModelBuilder.getFile(loadedFile, Arrays.asList(Reference.TAGS)));
+		List<Reference> fillRefs = new ArrayList<>();
+
+		fillRefs.add(Reference.TAGS);
+
+		// When the file properties should be automatically opened after the
+		// upload the response must contain the tag data.
+		boolean addTagEditData = loadedFile.isImage()
+			? prefs.isFeature(Feature.UPLOAD_IMAGE_PROPERTIES, node)
+			: prefs.isFeature(Feature.UPLOAD_FILE_PROPERTIES, node);
+
+		if (addTagEditData) {
+			fillRefs.add(Reference.TAG_EDIT_DATA);
+		}
+
+		com.gentics.contentnode.rest.model.File responseFile = loadedFile.isImage() && loadedFile instanceof ImageFile
+			? ModelBuilder.getImage((ImageFile) loadedFile, fillRefs)
+			: ModelBuilder.getFile(loadedFile, fillRefs);
+
+		return new FileUploadResponse(message, responseInfo, true, responseFile);
 
 	}
 
@@ -1880,6 +1898,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		// saving will decide the ttype depending on the class by using the .getTType() method
 		// of the current transaction, which will result in 10008 for images without this fix.
 		if (file.isImage()) {
+			// This does nothing since ContentFile implements ImageFile anyways.
 			file = t.getObject(ImageFile.class, id, forUpdate);
 		}
 

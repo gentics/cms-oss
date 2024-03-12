@@ -921,3 +921,6 @@ link_template_body:
 select_content_package_title:
     en: Select Content Package
     de: Contentpaket auswählen
+image_properties_title:
+    en: 'Properties of "{{fileName}}"'
+    de: 'Eigenschaften von "{{fileName}}"'

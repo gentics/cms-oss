@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ModalService } from '@gentics/ui-core';
 import { fileSchema, folderSchema, imageSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
 import {
@@ -39,6 +40,7 @@ import {
     FileCopyRequest,
     FileCreateRequest,
     FileListResponse,
+    FileOrImage,
     FileResponse,
     FileUploadResponse,
     Folder,
@@ -113,6 +115,7 @@ import {
     switchMap,
     take,
 } from 'rxjs/operators';
+import { ImagePropertiesModalComponent } from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
 import {
     DisplayFields,
     GtxChipSearchProperties,
@@ -219,6 +222,7 @@ export class FolderActionsService {
         private navigationService: NavigationService,
         private queryAssemblerElasticSearch: QueryAssemblerElasticSearchService,
         private queryAssemblerGCMSSearchService: QueryAssemblerGCMSSearchService,
+        private modalService: ModalService,
     ) { }
 
     /**
@@ -2629,10 +2633,40 @@ export class FolderActionsService {
                         },
                         type: 'success',
                     });
+
+                    const showFileProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_FILE_PROPERTIES];
+                    // TODO: Remove once feature can be activated in admin-ui.
+                    // const showImageProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_IMAGE_PROPERTIES];
+                    const showImageProperties = true;
+                    if (showFileProperties || showImageProperties) {
+                        this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
+                    }
                 }
             });
 
         return observable;
+    }
+
+    async openUploadModals(successfulUploads: UploadResponse[], nodeId: number, showFileProperties: boolean, showImageProperties: boolean): Promise<void> {
+        for (const upload of successfulUploads) {
+            try {
+                const type = upload.response.file.fileType.startsWith('image/')
+                    ? 'image'
+                    : 'file';
+                const showModal = upload.response.file.fileType.startsWith('image/')
+                    ? showImageProperties
+                    : showFileProperties;
+
+                if (showModal) {
+                    const properItem: any = await this.api.folders.getItem(upload.response.file.id, type, { construct: true })
+                        .toPromise();
+                    await this.openImageModal(properItem.file || properItem.image, nodeId)
+                }
+            } catch (err) {
+                // TODO: Handle/Ignore user cancelation errors once available
+                console.error(err);
+            }
+        }
     }
 
     /**
@@ -3501,5 +3535,43 @@ export class FolderActionsService {
         }
 
         return itemsPerPage * (pageNumber - 1);
+    }
+
+    private openImageModal(file: File, nodeId: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let timer: number;
+            let hasResolved = false;
+
+            this.modalService.fromComponent(ImagePropertiesModalComponent, {
+                onClose: () => {
+                    // TODO: Remove this hack after modal-merge and use reject-reason check instead
+                    timer = window.setTimeout(() => {
+                        if (!hasResolved) {
+                            reject(new Error('User has canceled the modal'));
+                        }
+                    }, 10);
+                },
+            }, {
+                nodeId: nodeId,
+                file: file,
+            })
+                .then(modal => modal.open())
+                .then(result => {
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+
+                    resolve(result);
+                    hasResolved = true;
+                })
+                .catch(err => {
+                    if (timer) {
+                        clearTimeout(timer);
+                    }
+
+                    reject(err);
+                    hasResolved = true;
+                });
+        });
     }
 }

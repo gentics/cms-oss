@@ -95,6 +95,8 @@ public enum Feature {
 	FOLDER_BASED_TEMPLATE_SELECTION(false),
 	CONTENT_STAGING(false, false, 0),
 	KEYCLOAK(false),
+	UPLOAD_FILE_PROPERTIES(true),
+	UPLOAD_IMAGE_PROPERTIES(true),
 	TAGTYPEMIGRATION(false);
 
 	/**

@@ -28,6 +28,7 @@ export * from './maintenance-mode-state';
 export * from './message-state';
 export * from './node-settings-state';
 export * from './page-language-indicators-state';
+export * from './properties';
 export * from './publish-queue-state';
 export * from './tools-state';
 export * from './ui-state';

@@ -2,6 +2,7 @@ import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { FolderItemType, FolderItemTypePlural, folderItemTypes, Language } from '@gentics/cms-models';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of, throwError } from 'rxjs';
+import { ModalService } from '@gentics/ui-core';
 import {
     getExampleFolderData,
     getExampleLanguageData,
@@ -64,6 +65,12 @@ class MockApi {
     };
 }
 
+class MockModalService {
+    fromComponent = () => Promise.resolve({
+        open: () => Promise.resolve(),
+    });
+}
+
 const createSpyApiMethod = (name: string, collectionKey: FolderItemTypePlural | 'items'): jasmine.Spy => jasmine.createSpy(name).and
     .returnValue(Observable.of({
         [collectionKey]: RESPONSE_ITEM_LIST,
@@ -96,6 +103,7 @@ describe('FolderActionsService', () => {
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
                 { provide: Api, useClass: MockApi },
+                { provide: ModalService, useClass: MockModalService },
             ],
         });
 
@@ -143,11 +151,11 @@ describe('FolderActionsService', () => {
 
     describe('updateItem()', () => {
         it('calls with right parameters if name was changed', fakeAsync(() => {
-            let page = getExamplePageData();
-            let payload = {
+            const page = getExamplePageData();
+            const payload = {
                 name: 'Test Page',
             };
-            let expectedPage = {...page};
+            const expectedPage = {...page};
 
             expectedPage.name = payload.name;
             folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
@@ -161,17 +169,17 @@ describe('FolderActionsService', () => {
 
         describe('updateItemChanges()', () => {
             it('calls with right parameters if niceUrl was removed', fakeAsync(() => {
-                let page = getExamplePageData();
+                const page = getExamplePageData();
                 page.niceUrl = 'Test';
-                let payload: any = {
+                const payload: any = {
                     niceUrl: null,
                 };
-                let expectedPage = {...page};
+                const expectedPage = {...page};
                 delete expectedPage.niceUrl;
 
                 folderActions.getItem = jasmine.createSpy('getItem').and.returnValue(Promise.resolve(expectedPage));
                 // spyOn(state.actions.folder, 'fetchItemSuccess');
-                let result = folderActions.updateItem(page.type, page.id, payload);
+                const result = folderActions.updateItem(page.type, page.id, payload);
                 tick();
                 expect(api.folders.updateItem).toHaveBeenCalledWith(page.type, page.id, payload, undefined);
                 // expect(state.actions.folder.fetchItemSuccess).toHaveBeenCalledWith({ type: expectedPage.type, item: expectedPage });

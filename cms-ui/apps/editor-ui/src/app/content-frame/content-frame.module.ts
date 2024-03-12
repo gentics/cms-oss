@@ -1,6 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { ModalService } from '@gentics/ui-core';
+import {
+    ImagePropertiesModalComponent,
+} from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
 import { SharedModule } from '../shared/shared.module';
 import { TagEditorModule } from '../tag-editor';
@@ -26,6 +29,7 @@ const COMPONENTS = [
     DescriptionTooltipComponent,
     FilePreview,
     FormReportsListComponent,
+    ImagePropertiesModalComponent,
     NodePropertiesForm,
     PropertiesEditor,
     TagTypeIconPipe,
@@ -53,7 +57,7 @@ const PROVIDERS = [
     ],
     exports: [],
     declarations: [...COMPONENTS, ...ENTRY_COMPONENTS],
-    providers: PROVIDERS
+    providers: PROVIDERS,
 })
 export class ContentFrameModule {
     constructor(private customScriptService: CustomerScriptService) {

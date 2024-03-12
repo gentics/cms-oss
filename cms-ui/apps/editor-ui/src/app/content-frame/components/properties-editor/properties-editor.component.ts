@@ -1,4 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange } from '@angular/core';
+import { EditableProperties } from '@editor-ui/app/common/models';
 import {
     EditableFileProps,
     EditableFolderProps,
@@ -17,8 +18,6 @@ import {
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { PermissionService } from '../../../core/providers/permissions/permission.service';
-
-export type EditableProperties = EditableFolderProps | EditablePageProps | EditableFileProps | EditableNodeProps | EditableFormProps;
 
 @Component({
     selector: 'properties-editor',

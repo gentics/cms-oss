@@ -2663,6 +2663,7 @@ export class FolderActionsService {
                     await this.openImageModal(properItem.file || properItem.image, nodeId)
                 }
             } catch (err) {
+                // TODO: Handle/Ignore user cancelation errors once available
                 console.error(err);
             }
         }

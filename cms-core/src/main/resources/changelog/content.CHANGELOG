@@ -18,7 +18,7 @@
 2002-08-22  20020101    LH  COMMENT		## added $FEATURE["dsfallback"]; (use current language pages in ds in available)
 2002-08-26  20020101    SH  COMMENT		## added cnstat tables (ME: should be SQLCREATE, but is old enough to be obsolete)
 2002-08-28  20020101    SH  FEATURE		objprop_recursive=true ##  added feature objprop_recursive
-2002-09-03  20020101    LH  FEATURE		page_pubtime=true ## 
+2002-09-03  20020101    LH  FEATURE		page_pubtime=true ##
 2002-09-13  20020101    LH  FEATURE		symlink_files=true ## speedup writefs, warning add -L to lftp and rsync calls.
 2002-09-25  20020101    LH  SQL			alter table contenttag modify name char(127) not null;
 2002-10-30  20020101    LH  FEATURE		dirt2=true ##  new page dirting.
@@ -57,19 +57,19 @@
 2003-06-25	V3.5-head-20031001d	ME	SQL			insert into type (id,name) values (32,'Datasource');
 2003-06-30	V3.5-head-20031001d	LH	FEATURE		realeditor=true	## adds realeditor.
 2003-06-30	V3.5-head-20031001d	LH	FEATURE		contentversion2=true	## adds pagecontent versioning
-2003-06-30	V3.5-head-20031001d	LH	FEATURE		tuning_pagesave=true	## only mark pages as being edited after first change. 
+2003-06-30	V3.5-head-20031001d	LH	FEATURE		tuning_pagesave=true	## only mark pages as being edited after first change.
 2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.value_nodeversion
 2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.contenttag_nodeversion
 2003-07-17	V3.5-head-20031001d	LH	SQLCREATE	node.ds_nodeversion
 2003-07-17	V3.5-head-20031001d	LH	SQLCREATE	node.ds_obj_nodeversion
-2003-07-17	V3.5-head-20031001d	LH	SQL			alter table ds_obj add id int not null primary key auto_increment; 
+2003-07-17	V3.5-head-20031001d	LH	SQL			alter table ds_obj add id int not null primary key auto_increment;
 2003-06-30	V3.5-head-20031001d	LH	SQLCREATE	node.nodeversion
 2003-06-30	V3.5-head-20031001d	ME	SQLCREATE	node.node_contentgroup
 2003-07-04	V3.5-head-20031001d	SH	SQL 		alter table contentgroup add code char(5) not null;
 2003-07-08	V3.5-head-20031001d	ME	FEATURE 	usefirsttemplate=false	##	on new/page preselect the first template in the list
 2003-07-09	V3.5-head-20031001d	ME	FEATURE 	contentgroup3_pagefilename=false ## use cool apache-autoselect extensions
 2003-07-09	V3.5-head-20031001d	ME	FEATURE 	contentgroup3=true ## languages
-2003-07-09	V3.5-head-20031001d	ME	FEATURE 	@force: contentgroup=false ## disable contentgroup if contentgroup3 is activated 
+2003-07-09	V3.5-head-20031001d	ME	FEATURE 	@force: contentgroup=false ## disable contentgroup if contentgroup3 is activated
 2003-07-21	V3.5-head-20031001d	ME	SQLCREATE 	node.datasource
 2003-07-21	V3.5-head-20031001d	ME	SQLCREATE 	node.datasource_value
 2003-07-21	V3.5-head-20031001d	ME	SQL			insert into tree (itemorder, mother, name, type_id) values (5, 11, 'Page Languages', 10023); ## insert Page-Languages under Content.Admin in Tree
@@ -134,11 +134,11 @@
 2004-01-12	V3.6-stable-20040116a     HM      FEATURE	template_objprop=true; ## inheritable objprops. $FEATURE["inheritable_objtags"] = false ## must be deactivated
 2004-01-12	V3.6-stable-20040116a     HM      FEATURE	@force: inheritable_objtags=false ## must be deactivated
 2004-01-12	V3.6-stable-20040116a     HM      FEATURE	deactivate_objpropedit=false
-2004-01-12	V3.6-stable-20040116a     HM      FEATURE	objtag_required=true; ## required objtags. $FEATURE["template_objprop"] ## must be activated 
+2004-01-12	V3.6-stable-20040116a     HM      FEATURE	objtag_required=true; ## required objtags. $FEATURE["template_objprop"] ## must be activated
 2004-01-12	V3.6-stable-20040116a     HM      FEATURE	@force: template_objprop=true ## must be activated
 ##migrating datsources - START
 2004-01-16	V3.6-stable-20040116a	ME	SQLCREATE	node.param
-2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table datasource add param_id int; 
+2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table datasource add param_id int;
 2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table datasource_value add dsid int;
 2004-01-16	V3.6-stable-20040116a	ME	SQL	alter table param add index(paramid, name);
 2004-01-16	V3.6-stable-20040116a	ME	SQL	update datasource_value set dsid=id;
@@ -158,13 +158,13 @@
 2004-01-16	V3.6-stable-20040218	RB	SQL	 alter table ds_obj_nodeversion add column auser int(11) not null; ## user who authorized ds_obj
 2004-01-16	V3.6-stable-20040218	RB	SQL	 update ds_obj set auser = 1 where auser = 0; ## existing datasources shall be displayed
 2004-01-16	V3.6-stable-20040218	RB	SQL	 update ds_obj_nodeversion set auser = 1 where auser = 0; ## existing datasources shall be displayed
-2004-02-23	V3.6-stable-20040226	HM	FEATURE url_image_clear=true ## this should be enabled at all systems 
-2004-02-23	V3.6-stable-20040226	HM	FEATURE url_page_clear=true ## this should be enabled at all systems 
-2004-02-23	V3.6-stable-20040226	HM	FEATURE url_file_clear=true ## this should be enabled at all systems 
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_image_clear=true ## this should be enabled at all systems
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_page_clear=true ## this should be enabled at all systems
+2004-02-23	V3.6-stable-20040226	HM	FEATURE url_file_clear=true ## this should be enabled at all systems
 2004-01-24	V3.6-stable-20040226	RB	SQL	alter table contentfile add column sizex int(11) not null; ## x dimension (width) of an image
 2004-01-24	V3.6-stable-20040226	ME	COMMENT	go watch SELECT count(id) FROM contentfile WHERE filetype LIKE 'image%' AND sizex = 0; during the next changelog (may last quite a while)
 2004-01-24	V3.6-stable-20040226	RB	SQL	alter table contentfile add column sizey int(11) not null; ## y dimension (height) of an image
-2004-01-24	V3.6-stable-20040227	RB	PHP	update_images.php ## updates image properties: width (sizex) and height (sizey)          
+2004-01-24	V3.6-stable-20040227	RB	PHP	update_images.php ## updates image properties: width (sizex) and height (sizey)
 2004-01-24	V3.6-stable-20040226	RB	SQL	alter table node add publish_fs int not null; ## bool: publish into the filesystem
 2004-01-24	V3.6-stable-20040226	RB	SQL	alter table node add publish_contentmap int not null; ## bool: publish contentmap
 2004-01-24	V3.6-stable-20040226	RB	SQL	update node set publish_fs = 1, publish_contentmap = 1 where publish_contentmap = 0; ## update existing data
@@ -200,7 +200,7 @@
 2004-04-08	V3.6-stable-20040511	LH	SQL	alter table node add utf8 int not null;
 2004-04-08	V3.6-stable-20040511	LH	COMMENT	update UTF8 feature comment in node.conf manually.
 #2004-04-26	V3.6-stable-20040511	SH	COMMENT	Feature republish_nodes now checks for xnl_functions in page to republish pages, the REPUBLISH_NODES variable is not used any longer. Please check if this feature is activated if xnl_navigation is in use on this server.
-2004-04-27	V3.5-stable-20040428	SH	FEATURE	republish_pages=true ## this feature replaces republish_nodes, which is by now depricated. You may disable this feature if you do not use xnl-navigations for performance gains. 
+2004-04-27	V3.5-stable-20040428	SH	FEATURE	republish_pages=true ## this feature replaces republish_nodes, which is by now depricated. You may disable this feature if you do not use xnl-navigations for performance gains.
 2004-05-18    V3.5-stable-20040518b   LH  SQL delete from objtranslatecache;
 2004-07-18	V3.6-stable-20040825	ME  SQL alter table contentfile add (dpix int not null, dpiy int not null); ## updates image properties: dpi(x) and dpi(y)
 2004-07-18	V3.6-stable-20040825	ME  PHP update_images_dpi.php ## updates image properties: dpi(x) and dpi(y)
@@ -262,7 +262,7 @@
 2005-12-09	V3.6-stable-20051223	CP  FEATURE live-br2nl=true ## replace breaks inserted by inline editor with nl's during edit via textbox
 2005-12-23	V3.6-stable-20051223b	CP	SQL alter table node add disable_publish tinyint(1) not null default 0;
 2006-01-12	V3.6-stable-20060223	LH	COMMENT give the serveradmin permissions to see the ETA on the startpage (Content.Admin permission bit)
-2006-02-27	V3.6-stable-20060227	CP	FEATURE dirt_walktree_threshold=false ## if this threshold is exceeded the output of dirt_walktree will be save in /Node/node/content/log/dirt_walktree.log for later reconstruction of long pubs 
+2006-02-27	V3.6-stable-20060227	CP	FEATURE dirt_walktree_threshold=false ## if this threshold is exceeded the output of dirt_walktree will be save in /Node/node/content/log/dirt_walktree.log for later reconstruction of long pubs
 2006-02-27	V3.6-stable-20060227	CP	FEATURE edit_mimetype=false ## allows a user to edit a file's mimetype (plaintext)
 2006-03-30	V3.6-stable-20060330	NOP	SQL alter table tagmap add column foreignlinkattribute varchar(255) not null default ''; ## allows to enter foreignlink attributes (type 7) into tagmap
 2006-03-31	V3.6-stable-20060401	HP	SQL alter table contentattribute add value_clob mediumtext; ## May fail if value_clob already exists. (such error can be ignored)
@@ -467,7 +467,7 @@
 2010-05-10	V4.1-stable-20100511	NOP	SQL	alter table construct add liveeditortagname varchar(255) default NULL; ## added column for configuration of the liveeditor tagname to be used for tags of specific constructs
 2010-06-17	V4.1-stable-20100715	FG	SQL	ALTER TABLE logcmd ADD (insert_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP); ## added column for more precise time to avoid the problem that the publisher "forgets" some files or folders
 2010-06-17	V4.1-stable-20100715	FG	SQL	UPDATE logcmd SET insert_timestamp = from_unixtime(timestamp); ## initialise the above column
-2010-09-29	CH-75	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN permission_information TINYINT NOT NULL DEFAULT 0; ## add column for automatically adding permission information into cr 
+2010-09-29	CH-75	NOP	SQL	ALTER TABLE contentrepository ADD COLUMN permission_information TINYINT NOT NULL DEFAULT 0; ## add column for automatically adding permission information into cr
 2010-10-20	CH-76	CP	SQL	 ALTER TABLE `node`  CHANGE COLUMN `editorversion` `editorversion` TINYINT(4) NULL DEFAULT '0' AFTER `contentrepository_id`; ## fixing import error
 2010-10-08	V4.1-stable-20101009	NOP	SQL	insert into ml (id,name,ext,contenttype) values (16,'HTM','htm','text/html');
 2010-11-04	V4.1-stable-20101105a	CP	SQL ALTER TABLE bundleimportobject ADD INDEX bundleimport_id (bundleimport_id);
@@ -556,7 +556,7 @@
 2013-03-25	CH-1348	NOP	SQL	ALTER TABLE publishqueue ADD INDEX (obj_type, obj_id, action, channel_id); ## Add index on publishqueue table
 2013-03-26	CH-1349	NOP	SQL	ALTER TABLE publishqueue ADD COLUMN delay TINYINT NOT NULL DEFAULT 0 AFTER publish_flag; ## Add column to delay publishing of objects
 2013-03-28	CH-1350	NOP	SQL	ALTER TABLE page ADD COLUMN online TINYINT NOT NULL DEFAULT 0 AFTER status; ## Add column to mark online pages
-2013-03-28	CH-1351	NOP	SQL	UPDATE page SET online = 1 WHERE status IN (1, 2); ## Mark pages with status 1 or 2 as online	
+2013-03-28	CH-1351	NOP	SQL	UPDATE page SET online = 1 WHERE status IN (1, 2); ## Mark pages with status 1 or 2 as online
 2013-03-28	CH-1352	NOP	SQL	UPDATE page SET online = 1 WHERE status IN (0, 4, 6) and online = 0 AND id IN (SELECT DISTINCT page_id FROM publish WHERE active = 1); ## Mark pages online, if they have status 0 (being edited) or 4 (queue) or 6 (publishat) and have an active entry in the publish table
 2012-04-12	CH-1355	NOP	SQL	INSERT INTO dirtqueue (timestamp, events) VALUES (unix_timestamp(), 524288); ## Add maintenance action to migrate dirted objects to publishqueue
 2013-05-22	CH-1364	NOP	SQL	CREATE FUNCTION createChannelsetId () RETURNS int BEGIN INSERT INTO channelset (id) VALUES (null)\; RETURN LAST_INSERT_ID()\; END; update page set channelset_id = createChannelsetId() where channelset_id = 0; update template set channelset_id = createChannelsetId() where channelset_id = 0; update contentfile set channelset_id = createChannelsetId() where channelset_id = 0; update folder set channelset_id = createChannelsetId() where channelset_id = 0; DROP FUNCTION createChannelsetId; ## create channelset_id values for all tables
@@ -566,7 +566,7 @@
 2013-07-03	CH-1372	NOP	SQL	CREATE TABLE node_pdate (node_id INT NOT NULL PRIMARY KEY, pdate INT NOT NULL DEFAULT 0, CONSTRAINT FOREIGN KEY (node_id) REFERENCES node (id) ON DELETE CASCADE ON UPDATE NO ACTION); ## Add table to store node pdate
 2013-07-03	CH-1373	NOP	SQL	INSERT INTO node_pdate (node_id, pdate) SELECT id, pdate FROM node; ## move pdates from node table to node_pdate table
 2013-07-03	CH-1374	NOP	SQL	ALTER TABLE node DROP COLUMN pdate; ## remove pdate column from table node
-2013-07-10	CH-1375	NOP	SQL	ALTER TABLE contentrepository MODIFY COLUMN datacheckresult LONGTEXT; 
+2013-07-10	CH-1375	NOP	SQL	ALTER TABLE contentrepository MODIFY COLUMN datacheckresult LONGTEXT;
 2013-07-10	CH-1376	NOP	SQL	ALTER TABLE contentrepository MODIFY COLUMN checkresult LONGTEXT;
 2013-07-19	CH-1377	NOP	SQL	ALTER TABLE page ADD INDEX (channelset_id, is_master); ## add index on page.channelset_id
 2013-07-19	CH-1378	NOP	SQL	ALTER TABLE template ADD INDEX (channelset_id, is_master); ## add index on template.channelset_id
@@ -612,7 +612,7 @@
 2015-01-09	CH-1435	NOP	SQL	ALTER TABLE page ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
 2015-01-09	CH-1436	NOP	SQL	ALTER TABLE folder ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
 2015-01-09	CH-1437	NOP	SQL	ALTER TABLE contentfile ADD COLUMN deleted INT NOT NULL DEFAULT 0, ADD COLUMN deletedby INT NOT NULL DEFAULT 0; ## Add columns for wastebin
-2015-06-17	CH-1451	NOP	SQL	UPDATE publish SET updateimagestore = TRUE; ## recheck all published pages for GenticsImageStore images 
+2015-06-17	CH-1451	NOP	SQL	UPDATE publish SET updateimagestore = TRUE; ## recheck all published pages for GenticsImageStore images
 2015-06-26	CH-1452	PK	SQL	ALTER TABLE page ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
 2015-06-26	CH-1453	PK	SQL	ALTER TABLE folder ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
 2015-06-26	CH-1454	PK	SQL	ALTER TABLE contentfile ADD COLUMN disinherit_default BOOLEAN NOT NULL DEFAULT 0; ## add default disinheritance flag
@@ -789,7 +789,7 @@
 2023-07-10  CH-1698 OG SQL ALTER TABLE type ADD COLUMN deprecated BOOLEAN NOT NULL DEFAULT 0;
 2023-07-31	CH-1699	SP	SQL ALTER TABLE contentrepository ADD COLUMN http2 TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of http usage per cr
 2023-08-03  CH-1700 NOP SQL ALTER TABLE contentrepository ADD COLUMN password_is_property BOOLEAN NOT NULL DEFAULT 0 AFTER password;
-2023-09-06	CH-1700 SP	SQL	CREATE TABLE meshpublish_imagestoretarget (node_id INT NOT NULL, entity_id INT NOT NULL, field_key VARCHAR(255) NOT NULL, entity_type INT NOT NULL, webrootpath VARCHAR(255) NOT NULL, imagestoretarget_id INT NOT NULL, PRIMARY KEY(node_id, entity_id, field_key, entity_type, imagestoretarget_id), FOREIGN KEY (node_id) REFERENCES node(id), FOREIGN KEY (imagestoretarget_id) REFERENCES imagestoretarget(id) ON UPDATE CASCADE ON DELETE CASCADE) # connects requested GenticsImageStore files to the Mesh published entries
+2023-09-06	CH-1705 SP	SQL	CREATE TABLE meshpublish_imagestoretarget (node_id INT NOT NULL, entity_id INT NOT NULL, field_key VARCHAR(255) NOT NULL, entity_type INT NOT NULL, webrootpath VARCHAR(255) NOT NULL, imagestoretarget_id INT NOT NULL, PRIMARY KEY(node_id, entity_id, field_key, entity_type, imagestoretarget_id), FOREIGN KEY (node_id) REFERENCES node(id), FOREIGN KEY (imagestoretarget_id) REFERENCES imagestoretarget(id) ON UPDATE CASCADE ON DELETE CASCADE) # connects requested GenticsImageStore files to the Mesh published entries
 2023-07-31	CH-1701	SP	SQL ALTER TABLE node ADD COLUMN pub_img_variants TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of image variants creation usage per node
 2023-10-10	CH-1702	SP	SQL ALTER TABLE contentrepository ADD COLUMN nofoldersindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN nofilesindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN nopagesindex TINYINT NOT NULL DEFAULT 0, ADD COLUMN noformsindex TINYINT NOT NULL DEFAULT 0; ## add columns for boolean flags of index exclusions for the various content types
 2023-10-10	CH-1703	SP	SQL ALTER TABLE tagmap ADD COLUMN no_index TINYINT NOT NULL DEFAULT 0; ## add column for boolean flag of omitting the entry from being indexed

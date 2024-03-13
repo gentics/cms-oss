@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+    PackageCheckCompletenessFilter,
     PackageCheckResult,
     PackageDependency,
     PackageDependencyEntity,
@@ -57,11 +58,11 @@ PackageCheckTrableLoaderOptions
             return this.api.devTools.getCheckResult(options.packageName)
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
-                        checkResult.items.map((packageDependency) =>
+                        checkResult.items.map(packageDependency =>
                             this.mapToBusinessObject(packageDependency),
                         ),
                     ),
-                    map(dependencies =>  dependencies.sort((a,b) => {
+                    map(dependencies => dependencies.sort((a,b) => {
                         return a.dependencyType > b.dependencyType ? 1  : -1;
                     })),
                 );
@@ -81,6 +82,7 @@ PackageCheckTrableLoaderOptions
         return this.api.devTools.check(options.packageName, {
             checkAll: options.checkAll ?? true,
             wait: options.wait ?? 5_000,
+            filter: PackageCheckCompletenessFilter.INCOMPLETE.toString(),
         }).pipe(
             switchMap((apiResponse)=> {
                 if (apiResponse.items) {
@@ -134,17 +136,14 @@ PackageCheckTrableLoaderOptions
             [BO_PERMISSIONS]: [],
         }
 
-
         if (this.isReferenceDependency(packageDependency)) {
             const reference = packageDependency as ReferenceDependency;
             packageEntity['isContained'] = (reference.isInPackage ?? false) || (reference.isInOtherPackage ?? false);
             packageEntity['foundInPackage'] = (packageEntity['isContained'] && !reference.foundInPackage) ? options.packageName : reference.foundInPackage;
         }
 
-
         return packageEntity;
     }
-
 
     private isReferenceDependency(packageEntity: PackageDependencyEntity): boolean {
         return 'isInPackage' in packageEntity || 'isInOtherPackage' in packageEntity

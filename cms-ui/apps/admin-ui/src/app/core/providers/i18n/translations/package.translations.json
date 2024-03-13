@@ -79,6 +79,10 @@
         "en": "No package check result is available yet.",
         "de": "Es ist noch kein Ergebnis der Konsistenz-Überpfüfung verfügbar."
     },
+    "consistency_check_ok" : {
+        "en": "The checked package is consistent",
+        "de": "Das überprüfte Paket ist konsistent"
+    },
     "consistency_check_no_result_button" : {
         "en": "Trigger check",
         "de": "Paket überprüfen"

@@ -374,11 +374,15 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		to.setAutoEnable(from.isAutoEnable());
 		to.setMayBeSubtag(from.isMayBeSubtag());
 		to.setMayContainSubtags(from.isMayContainsSubtags());
-		to.setEditOnInsert(from.isEditOnInsert());
+		if (from.getEditOnInsert() != null) {
+			to.setEditOnInsert(from.getEditOnInsert());
+		}
 		if (from.getEditorControlStyle() != null) {
 			to.setEditorControlStyle(from.getEditorControlStyle());
 		}
-		to.setEditorControlInside(from.isEditorControlsInside());
+		if (from.getEditorControlsInside() != null) {
+			to.setEditorControlInside(from.getEditorControlsInside());
+		}
 		to.setNewEditor(from.isNewEditor());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 

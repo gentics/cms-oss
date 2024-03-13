@@ -28,11 +28,11 @@ public class ConstructModel extends AbstractModel {
 
 	private boolean mayContainsSubtags;
 
-	private boolean editOnInsert;
+	private Boolean editOnInsert;
 
 	private EditorControlStyle editorControlStyle;
 
-	private boolean editorControlsInside;
+	private Boolean editorControlsInside;
 
 	private boolean autoEnable;
 
@@ -108,11 +108,11 @@ public class ConstructModel extends AbstractModel {
 		this.mayContainsSubtags = mayContainsSubtags;
 	}
 
-	public boolean isEditOnInsert() {
+	public Boolean getEditOnInsert() {
 		return editOnInsert;
 	}
 
-	public void setEditOnInsert(boolean editOnInsert) {
+	public void setEditOnInsert(Boolean editOnInsert) {
 		this.editOnInsert = editOnInsert;
 	}
 
@@ -124,11 +124,11 @@ public class ConstructModel extends AbstractModel {
 		this.editorControlStyle = editorControlStyle;
 	}
 
-	public boolean isEditorControlsInside() {
+	public Boolean getEditorControlsInside() {
 		return editorControlsInside;
 	}
 
-	public void setEditorControlsInside(boolean editorControlsInside) {
+	public void setEditorControlsInside(Boolean editorControlsInside) {
 		this.editorControlsInside = editorControlsInside;
 	}
 

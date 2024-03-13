@@ -27,11 +27,11 @@ import { PackageCheckOptions, PackageCheckResult, PackageListOptions, PackageLis
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { Observable, Subject, forkJoin, interval, of, throwError } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, takeUntil, tap } from 'rxjs/operators';
+import { ActivityManagerService } from '../activity-manager';
 import { BaseEntityHandlerService } from '../base-entity-handler/base-entity-handler';
+import { PackageCheckTrableLoaderOptions } from '../dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 import { ErrorHandler } from '../error-handler';
 import { I18nNotificationService } from '../i18n-notification';
-import { ActivityManagerService } from '../activity-manager';
-import { PackageCheckTrableLoaderOptions } from '../dev-tool-check-trable-loader/dev-tool-check-trable-loader.service';
 
 @Injectable()
 export class DevToolPackageHandlerService extends BaseEntityHandlerService

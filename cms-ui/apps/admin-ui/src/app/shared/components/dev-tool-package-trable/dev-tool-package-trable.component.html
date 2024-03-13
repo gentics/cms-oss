@@ -14,9 +14,15 @@
 </div> 
 
 
-<gtx-trable
-    class="entity-table"
+<div class="check-ok" *ngIf="rows?.length === 0">
+    <span id="package-is-consistent-result">{{ 'package.consistency_check_ok' | i18n }}</span>
+    <icon>check_circle</icon>
+</div>
 
+
+<gtx-trable
+    *ngIf="rows?.length > 0"
+    class="entity-table"
     [selectable]="selectable"
     [hideActions]="hideActions"
     [multiple]="multiple"

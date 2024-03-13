@@ -2,12 +2,11 @@
     *ngIf="isCheckResultAvailable else noResultAvailable" 
     [packageName]="packageName"
     [inlineExpansion]="true"
->
-</gtx-dev-tool-package-trable>
+/>
 
 <ng-template #noResultAvailable>
     <div>
-        <span id="no-result-text">{{ 'package.consistency_check_no_result'  | i18n   }}</span>
+        <span id="no-result-text">{{ 'package.consistency_check_no_result' | i18n }}</span>
 
         <gtx-button
             *ngIf="!hideActions"
@@ -18,7 +17,7 @@
             [disabled]="disabled || loading"
             (click)="handleLoadButtonClick(packageName)"
         >
-        {{ 'package.consistency_check_no_result_button'  | i18n   }}
+            {{ 'package.consistency_check_no_result_button'  | i18n   }}
         </gtx-button>
     </div>
 </ng-template>

@@ -22,10 +22,11 @@
     }
 
     &.icon-only {
-        padding-right: 0.5rem;
+        padding-right: 2.5rem;
 
         @media (max-width: $aloha-size-mobile-max) {
             width: 3.75rem;
+            padding-right: 0.25rem;
         }
     }
 }

@@ -14,8 +14,8 @@
 
     .link-label {
         white-space: nowrap;
-        border-top-left-radius: 2px;
-        border-bottom-left-radius: 2px;
+        border-top-right-radius: 0px;
+        border-bottom-right-radius: 0px;
         padding: 0.25rem 0.75rem;
         white-space: nowrap;
     }
@@ -23,8 +23,8 @@
     .link-opener {
         padding: 0.25rem 0;
         width: 22px;
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
 
         icon {
             height: 20px;

@@ -68,6 +68,14 @@
         &:last-child {
             border-bottom: none;
         }
+
+        &.active {
+            background: #cfdcfd;
+
+            &:hover {
+                background: #9eb5f0;
+            }
+        }
     }
 
     &.icons-only {
@@ -115,11 +123,13 @@
 
         .next-step-header {
             @include gtxCommonHeader;
+
+            // Should always be visible
+            .header-confirm-button {
+                display: block;
+            }
         }
 
-        &.with-confirm .next-step-header .header-confirm-button {
-            display: block;
-        }
 
         .next-step-content {
             overflow: auto;

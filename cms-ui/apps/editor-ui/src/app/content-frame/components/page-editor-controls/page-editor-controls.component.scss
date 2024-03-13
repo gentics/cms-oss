@@ -46,6 +46,10 @@
     display: none;
 }
 
+.gtx-mobile-menu-floater {
+    display: contents;
+}
+
 @media (max-width: $aloha-size-mobile-max) {
     :host {
         overflow: hidden;
@@ -57,8 +61,11 @@
         width: 100%;
         height: var(--gtx-menu-size);
         top: calc(var(--gtx-vvh) - var(--gtx-menu-size));
+        background: $gtx-color-off-white;
+        border-top: 2px solid $gtx-color-warning;
         right: 0;
         z-index: 100;
+        display: block;
     }
 
     .component-group {
@@ -72,8 +79,6 @@
     .gtx-mobile-menu {
         height: var(--gtx-menu-size);
         width: 100%;
-        border-top: 2px solid $gtx-color-warning;
-        background: $gtx-color-off-white;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;

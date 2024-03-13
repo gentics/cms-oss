@@ -15,13 +15,21 @@ export class AlohaInputRendererComponent extends BaseAlohaRendererComponent<Aloh
     @ViewChild('input')
     public inputRef: ElementRef<HTMLInputElement>;
 
-    public handleInputChange(event: Event): void {
-        if (!this.inputRef || !this.inputRef.nativeElement) {
+    public handleInputChange(force = false): void {
+        if (!force && (!this.inputRef || !this.inputRef.nativeElement)) {
             return;
         }
         const newValue = this.inputRef.nativeElement.value;
-        if (newValue !== this.value) {
+        if (force || (newValue !== this.value)) {
             this.triggerChange(newValue);
+        }
+    }
+
+    public handleKeyDown(event: KeyboardEvent): void {
+        if (event.key === 'Enter') {
+            // Force an update to the value before confirming it
+            this.handleInputChange(true);
+            this.manualConfirm.emit();
         }
     }
 

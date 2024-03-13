@@ -4,7 +4,8 @@
         type="text"
         [value]="value"
         [disabled]="disabled"
-        (change)="handleInputChange($event)"
+        (change)="handleInputChange()"
+        (keydown)="handleKeyDown($event)"
     />
     <label *ngIf="settings?.label">{{ settings?.label }}</label>
 </div>

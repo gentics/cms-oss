@@ -26,6 +26,8 @@ export interface SchemaField {
     label?: string;
     /** Name of the field. */
     name: string;
+    /** If the field is excluded from indexing. */
+    noIndex?: boolean;
     /** If the field is required. */
     required?: boolean;
     /** Type of the field. */

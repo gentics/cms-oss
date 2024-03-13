@@ -49,6 +49,7 @@ export class SchemaPropertiesComponent extends BasePropertiesComponent<EditableS
             ]),
             description: new FormControl(this.value?.description || ''),
             autoPurge: new FormControl(this.value?.autoPurge ?? false),
+            noIndex: new FormControl(this.value?.noIndex ?? false),
             container: new FormControl(this.value?.container ?? false),
             displayField: new FormControl(this.value?.displayField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),
             segmentField: new FormControl(this.value?.segmentField, createWhitelistValidator(() => this.form?.value?.fields?.map?.(field => field.name))),

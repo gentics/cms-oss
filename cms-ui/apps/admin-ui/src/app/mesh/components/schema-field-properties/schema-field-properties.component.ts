@@ -93,6 +93,7 @@ export class SchemaFieldPropertiesComponent extends BasePropertiesComponent<Sche
             ]),
             label: new FormControl(this.value?.label || ''),
             required: new FormControl(this.value?.required ?? false),
+            noIndex: new FormControl(this.value?.noIndex ?? false),
             allow: new FormControl(this.value?.allow || [], createWhitelistValidator(() => {
                 switch (this.effectiveType) {
                     case FieldType.NODE:

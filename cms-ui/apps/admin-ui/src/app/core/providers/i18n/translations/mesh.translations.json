@@ -272,6 +272,10 @@
         "de": "Elasticsearch",
         "en": "Elasticsearch"
     },
+    "field_noIndex": {
+        "de": "Kein Index",
+        "en": "No index"
+    },
     "schema_fields": {
         "de": "Felder",
         "en": "Fields"
@@ -299,6 +303,10 @@
     "schema_autoPurge": {
         "de": "Automatisches Bereinigen",
         "en": "Autopurge"
+    },
+    "schema_noIndex": {
+        "de": "Kein Index",
+        "en": "No index"
     },
     "schema_container": {
         "de": "Behälter",

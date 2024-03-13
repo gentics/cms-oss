@@ -16,6 +16,10 @@ export interface EditableMicroschemaProperties {
     /** Description of the microschema */
     description?: string;
     /**
+     * Flag which indicates whether the nodes of this version should be excluded from the indexing.
+     */
+    noIndex?: boolean;
+    /**
      * Additional search index configuration. This can be used to setup custom analyzers
      * and filters.
      */

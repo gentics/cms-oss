@@ -25,6 +25,14 @@
                 formControlName="elasticsearch"
             ></gtx-json-input>
         </div>
+
+        <div class="columns small-12">
+            <gtx-checkbox
+                class="columns small-6"
+                [label]="'mesh.schema_noIndex' | i18n"
+                formControlName="noIndex"
+            ></gtx-checkbox>
+        </div>
     </div>
 
     <div class="row">

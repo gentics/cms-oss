@@ -31,6 +31,10 @@ export interface EditableSchemaProperties {
      */
     autoPurge?: boolean;
     /**
+     * Flag which indicates whether the nodes of this version should be excluded from the indexing.
+     */
+    noIndex?: boolean;
+    /**
      * Flag which indicates whether nodes which use this schema store additional child
      * nodes.
      */

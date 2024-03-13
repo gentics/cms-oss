@@ -7,6 +7,7 @@ import com.gentics.contentnode.devtools.model.DefaultValueModel;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.factory.object.OverviewPartSetting;
 import com.gentics.contentnode.object.parttype.TextPartType;
+import com.gentics.contentnode.rest.model.EditorControlStyle;
 import com.gentics.contentnode.rest.model.OverviewSetting;
 
 /**
@@ -23,8 +24,14 @@ public class StagedReferencedConstruct extends AbstractStagedReferencedObject<Co
 
 	@Override
 	public void produceStagedHashComponents(Consumer<Object> consumer) throws NodeException {
+		ConstructModel stagedModel = Construct.NODE2DEVTOOL.apply(wrapped, new ConstructModel());
+
+		stagedModel.setEditOnInsert(null);
+		stagedModel.setEditorControlsInside(null);
+		stagedModel.setEditorControlStyle(null);
+
 		// model of the construct itself
-		consumer.accept(removeI18nData(Construct.NODE2DEVTOOL.apply(wrapped, new ConstructModel())));
+		consumer.accept(removeI18nData(stagedModel));
 
 		// part default values
 		for (Part part : wrapped.getParts()) {

@@ -84,6 +84,10 @@ export enum NodeFeature {
      */
     FORMS = 'forms',
 
+    /**
+     * If this feature is activated, uploaded images are automatically converted to WebP.
+     */
+    WEBP_CONVERSION = 'webp_conversion'
 }
 
 /**

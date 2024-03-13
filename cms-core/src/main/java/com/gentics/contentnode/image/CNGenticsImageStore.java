@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 
+import com.gentics.lib.image.WEBPEncoder;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.jcs.JCS;
@@ -135,6 +136,8 @@ public class CNGenticsImageStore extends GenticsImageStore {
 	private GenticsImageStoreResult imageStoreResult;
 
 	public final static String JPEG_QUALITY_CONF = "image_resizer_jpeg_quality";
+	public final static String WEBP_QUALITY_CONF = "image_resizer_webp_quality";
+	public final static String WEBP_LOSSLESS_CONF = "image_resizer_webp_lossless";
 
 	public CNGenticsImageStore(NodeConfig config) {
 		this(config, null);
@@ -144,9 +147,14 @@ public class CNGenticsImageStore extends GenticsImageStore {
 		this.config = config;
 		this.transaction = transaction;
 		this.storageDirectory = new File(ConfigurationValue.GIS_PATH.get());
-		// set the jpeg quality (if configured)
+		// Set image resizer properties (if configured).
 		Double jpegQuality = ObjectTransformer.getDouble(config.getDefaultPreferences().getProperty(JPEG_QUALITY_CONF), null);
+		Double webpQuality = ObjectTransformer.getDouble(config.getDefaultPreferences().getProperty(WEBP_QUALITY_CONF), null);
+		Boolean webpLossless = ObjectTransformer.getBoolean(config.getDefaultPreferences().getProperty(WEBP_LOSSLESS_CONF), null);
+
 		setJPEGQuality(jpegQuality);
+		setWebpQuality(webpQuality);
+		setWebpLossless(webpLossless);
 	}
 
 	/**
@@ -1467,7 +1475,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 
 	/**
 	 * Invokes the GIS and returns the resized image
-	 * 
+	 *
 	 * @param mode
 	 * @param width
 	 * @param height
@@ -1512,6 +1520,14 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			filterChainProperties.put("JPEG_QUALITY", jpegQuality);
 		}
 
+		if (webpQuality != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_QUALITY, webpQuality);
+		}
+
+		if (webpLossless != null) {
+			filterChainProperties.put(WEBPEncoder.WEBP_LOSSLESS, webpLossless);
+		}
+
 		if (!StringUtils.isEmpty(filePath)) {
 			filterChainProperties.put("filePath", filePath);
 		}
@@ -1545,7 +1561,7 @@ public class CNGenticsImageStore extends GenticsImageStore {
 			if (useOriginalIfResizeFails) {
 				logger.error(msg + " - using original image data.");
 				// An error happened, so read in the file and store it in an FileInformation.
-				// Note: this is done, so we don't store a FileInformation object in the cache which 
+				// Note: this is done, so we don't store a FileInformation object in the cache which
 				// contains only a reference to a file..
 				File file = new File(filePath);
 				byte[] bytes = new byte[(int) file.length()];

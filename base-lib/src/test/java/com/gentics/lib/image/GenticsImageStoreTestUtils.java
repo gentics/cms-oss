@@ -1,5 +1,7 @@
 package com.gentics.lib.image;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -34,7 +36,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imageFileStream
 	 * @return
 	 * @throws IOException
@@ -47,7 +49,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imageFileStream
 	 * @return
 	 * @throws IOException
@@ -60,7 +62,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Get Dimensions of a file. Returns -1, -1 if file could not be opend/found
-	 * 
+	 *
 	 * @param imagefile
 	 * @return
 	 */
@@ -111,7 +113,7 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 	/**
 	 * Remove files in directory. This method creates the directory if it does not exist.
-	 * 
+	 *
 	 * @param directory
 	 * @return
 	 */
@@ -187,6 +189,14 @@ public class GenticsImageStoreTestUtils extends GenticsImageStore {
 
 		logger.info("writing to: " + target);
 		this.writeImage(targetimageinfo, target);
+
+		File resizedFile = new File(target);
+
+		if (width > 0 && height > 0) {
+			assertThat(resizedFile.length())
+				.as("Result file size")
+				.isGreaterThan(0);
+		}
 
 		return true;
 

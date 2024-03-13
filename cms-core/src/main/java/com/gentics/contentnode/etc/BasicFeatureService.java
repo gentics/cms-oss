@@ -52,6 +52,7 @@ import static com.gentics.contentnode.etc.Feature.TAG_IMAGE_RESIZER;
 import static com.gentics.contentnode.etc.Feature.USERSNAP;
 import static com.gentics.contentnode.etc.Feature.VIEW_PERMS;
 import static com.gentics.contentnode.etc.Feature.WASTEBIN;
+import static com.gentics.contentnode.etc.Feature.WEBP_CONVERSION;
 
 import java.util.Arrays;
 import java.util.List;
@@ -74,7 +75,7 @@ public class BasicFeatureService implements FeatureService {
 			MANAGELINKURL, MANAGELINKURL_ONLYFORPUBLISH, DSFALLBACK, DS_EMPTY_CS,
 			GET_FILENAME_AS_PAGENAME, FILENAME_FORCETOLOWER, LIVEEDIT_TAG_PERCONSTRUCT, LIVE_URLS, LIVE_URLS_PER_NODE,
 			VIEW_PERMS, DS_FOLDER_PERM, DS_FOLDER_WORKFLOW, HTML_IMPORT, CHANNELSYNC, CONSTRUCT_CATEGORIES, USERSNAP,
-			OBJTAG_SYNC, HIDE_MANUAL, ASSET_MANAGEMENT, FOLDER_BASED_TEMPLATE_SELECTION);
+			OBJTAG_SYNC, HIDE_MANUAL, ASSET_MANAGEMENT, FOLDER_BASED_TEMPLATE_SELECTION, WEBP_CONVERSION);
 
 	@Override
 	public boolean isProvided(Feature feature) {

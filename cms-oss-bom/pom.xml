@@ -332,6 +332,11 @@
 				<version>${imageio.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>org.sejda.imageio</groupId>
+				<artifactId>webp-imageio</artifactId>
+				<version>${imageio.webp.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.tika</groupId>
 				<artifactId>tika-core</artifactId>
 				<version>${tika.version}</version>

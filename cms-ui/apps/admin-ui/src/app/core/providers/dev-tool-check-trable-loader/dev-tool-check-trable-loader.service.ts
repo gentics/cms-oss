@@ -58,10 +58,9 @@ PackageCheckTrableLoaderOptions
             return this.api.devTools.getCheckResult(options.packageName)
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
-                        checkResult.items
-                            .map(packageDependency =>
-                                this.mapToBusinessObject(packageDependency),
-                            ),
+                        checkResult.items.map(packageDependency =>
+                            this.mapToBusinessObject(packageDependency),
+                        ),
                     ),
                     map(dependencies => dependencies.sort((a,b) => {
                         return a.dependencyType > b.dependencyType ? 1  : -1;
@@ -94,10 +93,9 @@ PackageCheckTrableLoaderOptions
                 )
             }),
             map((checkResult: PackageCheckResult) =>
-                checkResult.items
-                    .map((packageDependency) =>
-                        this.mapToBusinessObject(packageDependency),
-                    ),
+                checkResult.items.map((packageDependency) =>
+                    this.mapToBusinessObject(packageDependency),
+                ),
             ),
             map(dependencies =>  dependencies.sort((a,b) => {
                 return a.dependencyType > b.dependencyType ? 1  : -1;

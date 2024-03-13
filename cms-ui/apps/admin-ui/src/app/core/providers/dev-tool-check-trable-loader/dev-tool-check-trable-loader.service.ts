@@ -136,13 +136,26 @@ PackageCheckTrableLoaderOptions
             [BO_PERMISSIONS]: [],
         }
 
-        if (this.isReferenceDependency(packageDependency)) {
+        if (!this.isReferenceDependency(packageDependency)) {
+            // row parent
+            packageEntity['isContained'] = !this.containsMissingReferences(packageEntity);
+        }
+        else {
+            // row child (=> expand row)
             const reference = packageDependency as ReferenceDependency;
             packageEntity['isContained'] = (reference.isInPackage ?? false) || (reference.isInOtherPackage ?? false);
             packageEntity['foundInPackage'] = (packageEntity['isContained'] && !reference.foundInPackage) ? options.packageName : reference.foundInPackage;
         }
 
         return packageEntity;
+    }
+
+    private containsMissingReferences(packageEntity: PackageDependencyEntityBO): boolean {
+        const packageDependency = packageEntity as PackageDependency;
+
+        return packageDependency.referenceDependencies.some(dependency =>
+            dependency.isInPackage === false
+                && dependency.isInOtherPackage === false)
     }
 
     private isReferenceDependency(packageEntity: PackageDependencyEntity): boolean {

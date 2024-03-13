@@ -223,6 +223,7 @@ public class PackageResourceImpl implements PackageResource {
 				}
 
 				dependencies = filterAndSortDependencyList(filter, dependencies);
+				consistencyCheckResult.setItems(dependencies);
 				JsonSerializer.jsonToFile(consistencyCheckResult, new File(getCheckResultFileName(synchronizer)));
 
 				CNI18nString resultMessage = new CNI18nString("devtools_package.action.check.result");

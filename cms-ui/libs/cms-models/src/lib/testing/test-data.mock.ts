@@ -11,13 +11,16 @@ import {
     Language,
     Node,
     Normalized,
+    ObjectTag,
     Page,
     Raw,
     TagPropertyType,
+    TagType,
     Template,
     User,
 } from '../models';
 import { GcmsNormalizationSchemas } from '../models/gcms-normalizer/schemas';
+import { EditableObjectTag } from '../tag-editor';
 
 const schemas = new GcmsNormalizationSchemas();
 
@@ -836,6 +839,50 @@ export function getExampleUserData({ id }: { id: number } = { id: 3 }): User<Raw
         id: id,
     };
 }
+
+export function getExampleObjectTag(data: Partial<ObjectTag> = {}): ObjectTag {
+    return {
+        constructId: 1,
+        active: false,
+        name: 'object.copyright',
+        displayName: 'Copyright',
+        description: 'Example Copyright',
+        readOnly: false,
+        inheritable: false,
+        required: false,
+        sortOrder: 10,
+        properties: {
+            text: {
+                partId: 1,
+                stringValue: '',
+                id: 4316,
+                type: TagPropertyType.STRING,
+            },
+        },
+        id: 1560,
+        type: 'OBJECTTAG',
+        ...data,
+    };
+}
+
+export function getExampleConstruct(data: Partial<TagType> = {}): TagType {
+    return {
+        id: 1337,
+        icon: 'stop.gif',
+        keyword: 'example',
+        parts: [],
+        ...data,
+    }
+}
+
+export function getExampleEditableObjectTag(data: Partial<EditableObjectTag> = {}): EditableObjectTag {
+    return {
+        ...getExampleObjectTag(),
+        tagType: getExampleConstruct(),
+        ...data,
+    }
+}
+
 
 export function getExampleUserDataNormalized({ id }: { id: number } = { id: 3 }): User<Normalized> {
     const rawUser = getExampleUserData({ id });

@@ -34,8 +34,8 @@ export class ImagePropertiesModalComponent extends BaseModal<void> implements On
     @Input()
     file: File;
 
-    @ViewChild(CombinedPropertiesEditorComponent)
-    private combinedPropertiesEditor: CombinedPropertiesEditorComponent;
+    @ViewChild(CombinedPropertiesEditorComponent, { static: true })
+    public combinedPropertiesEditor: CombinedPropertiesEditorComponent;
 
     /** The properties of the editor/form */
     properties: EditableProperties;

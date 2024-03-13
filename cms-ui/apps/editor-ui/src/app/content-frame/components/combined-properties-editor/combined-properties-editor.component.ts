@@ -59,6 +59,7 @@ import {
     ObjectTag,
     Page,
     Tag,
+    TagPropertyMap,
     Tags,
     Template,
     TemplateFolderListRequest,
@@ -827,22 +828,24 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         this.markObjectPropertiesAsModifiedInState(false, isValid && !isReadOnly);
 
         tagEditorHost.editTagLive(objProp, tagEditorContext, (tagProperties) => {
-            if (!tagProperties) {
-                this.markObjectPropertiesAsModifiedInState(true, false);
-                return;
-            }
-
-            this.editedObjectProperty.properties = tagProperties;
-            this.markObjectPropertiesAsModifiedInState(true, true);
-
-            (this.item as any).properties = merge((this.item as any).properties, this.editedObjectProperty.properties);
-            (this.item as any).tags = {
-                ... (this.item as any).tags,
-                [this.editedObjectProperty.name]: this.editedObjectProperty,
-            }
-
-            // this.item$.next(this.item as any);
+            this.handleObjectPropertyChange(tagProperties);
         });
+    }
+
+    public handleObjectPropertyChange(tagProperties: TagPropertyMap): void {
+        if (!tagProperties) {
+            this.markObjectPropertiesAsModifiedInState(true, false);
+            return;
+        }
+
+        this.editedObjectProperty.properties = tagProperties;
+        this.markObjectPropertiesAsModifiedInState(true, true);
+
+        (this.item as any).properties = merge((this.item as any).properties, this.editedObjectProperty.properties);
+        (this.item as any).tags = {
+            ... (this.item as any).tags,
+            [this.editedObjectProperty.name]: this.editedObjectProperty,
+        }
     }
 
     private checkIfReadOnly(objProp: ObjectTag): boolean {

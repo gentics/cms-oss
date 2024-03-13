@@ -2634,10 +2634,10 @@ export class FolderActionsService {
                         type: 'success',
                     });
 
-                    const showFileProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_FILE_PROPERTIES];
-                    // TODO: Remove once feature can be activated in admin-ui.
-                    // const showImageProperties = this.appState.now.features.nodeFeatures[nodeId][NodeFeature.UPLOAD_IMAGE_PROPERTIES];
-                    const showImageProperties = true;
+                    const features = this.appState.now.features.nodeFeatures[nodeId] || [];
+                    const showFileProperties = features.includes(NodeFeature.UPLOAD_FILE_PROPERTIES);
+                    const showImageProperties = features.includes(NodeFeature.UPLOAD_IMAGE_PROPERTIES);
+
                     if (showFileProperties || showImageProperties) {
                         this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
                     }
@@ -3537,7 +3537,7 @@ export class FolderActionsService {
         return itemsPerPage * (pageNumber - 1);
     }
 
-    private openImageModal(file: File, nodeId: number): Promise<void> {
+    public openImageModal(file: File, nodeId: number): Promise<void> {
         return new Promise((resolve, reject) => {
             let timer: number;
             let hasResolved = false;

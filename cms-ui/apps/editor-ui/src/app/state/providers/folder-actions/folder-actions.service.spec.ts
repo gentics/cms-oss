@@ -1,8 +1,9 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { FolderItemType, FolderItemTypePlural, folderItemTypes, Language } from '@gentics/cms-models';
+import { File as FileModel, FileUploadResponse, FolderItemType, FolderItemTypePlural, folderItemTypes, Language, NodeFeature } from '@gentics/cms-models';
+import { UploadResponse } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of, throwError } from 'rxjs';
-import { ModalService } from '@gentics/ui-core';
 import {
     getExampleFolderData,
     getExampleLanguageData,
@@ -33,6 +34,13 @@ const ACTIVE_LANGUAGE = {
     name: 'Unit Testian',
 };
 
+const TEST_UPLOAD_FILE = new File(['bar'], 'foo.txt', {
+    type: 'text/plain',
+});
+const TEST_UPLOAD_IMAGE = new File(['world'], 'hello.png', {
+    type: 'image/png',
+});
+
 class MockI18nNotification {
     show = jasmine.createSpy();
 }
@@ -41,6 +49,42 @@ class MockPermissionService {
     normalizeAPIResponse = jasmine.createSpy('normalizeAPIResponse');
 }
 class MockI18nService {}
+
+let uidCounter = 1;
+const uidCache: Record<string, any> = {};
+
+function fileToResponse(file: File): FileUploadResponse {
+    return {
+        success: true,
+        file: {
+            id: 123,
+            fileType: file.type,
+            fileSize: file.size,
+            name: file.name,
+        } as Partial<FileModel>,
+    } as any;
+}
+
+function fileToUploadResponse(file: File): UploadResponse {
+    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+    const uid = (uidCounter++) + '';
+    uidCache[uid] = {
+        file,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dimensions: Promise.resolve({ width: 1, height: 1 }),
+    };
+
+    return {
+        cancelled: false,
+        error: null,
+        name: file.name,
+        response: fileToResponse(file),
+        statusCode: 200,
+        uid,
+    }
+}
 
 class MockApi {
     folders = {
@@ -59,6 +103,17 @@ class MockApi {
         getItems: createSpyApiMethod('getItems', 'items'),
         searchItems: createSpyApiMethod('searchItems', 'items'),
         updateItem: createSpyApiMethod('updateItem', 'items'),
+        upload(
+            type: 'file' | 'image',
+            files: File[],
+            params: { nodeId: number; folderId: number },
+        ) {
+            return {
+                done$: of(files.map(fileToUploadResponse)),
+                progress$: of(100),
+                getFileByUid: (uid) => uidCache[uid],
+            }
+        },
     };
     publishQueue = {
         approvePageStatus: createSpyApiMethod('approvePageStatus', 'pages'),
@@ -562,12 +617,10 @@ describe('FolderActionsService', () => {
 
         });
 
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
         function getMethodName(type: FolderItemType): keyof FolderActionsService {
             return `get${type.charAt(0).toUpperCase() + type.slice(1)}s` as any;
         }
 
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
         function getItemsDelegate(type: FolderItemType): typeof FolderActionsService.prototype.getPages {
             return folderActions[getMethodName(type)].bind(folderActions);
         }
@@ -746,4 +799,110 @@ describe('FolderActionsService', () => {
             expect(api.folders.createFolder).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
         }));
     });
+
+    describe('openUploadModals()', () => {
+        it('should not attempt to open the modal without the feature active', fakeAsync(async () => {
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, 1).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(0);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(0);
+        }));
+
+        it('should open the modal because file-properties are enabled', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_FILE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(1);
+        }));
+
+        it('should open the modal because image-properties are enabled', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_IMAGE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(1);
+        }));
+
+        it('should open a modal for each file', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_FILE_PROPERTIES, NodeFeature.UPLOAD_IMAGE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(2);
+        }));
+    })
 });

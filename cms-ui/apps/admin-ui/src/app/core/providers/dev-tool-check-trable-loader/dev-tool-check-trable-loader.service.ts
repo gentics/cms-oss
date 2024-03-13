@@ -59,8 +59,6 @@ PackageCheckTrableLoaderOptions
                 .pipe(
                     map((checkResult: PackageCheckResult) =>
                         checkResult.items
-                            // .filter(dependency => dependency.referenceDependencies
-                            //     .some(reference=> !reference.isInPackage && !reference.isInOtherPackage))
                             .map(packageDependency =>
                                 this.mapToBusinessObject(packageDependency),
                             ),
@@ -97,8 +95,6 @@ PackageCheckTrableLoaderOptions
             }),
             map((checkResult: PackageCheckResult) =>
                 checkResult.items
-                    // .filter(dependency => dependency.referenceDependencies
-                    // .some(reference=> !reference.isInPackage && !reference.isInOtherPackage))
                     .map((packageDependency) =>
                         this.mapToBusinessObject(packageDependency),
                     ),

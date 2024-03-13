@@ -19,7 +19,11 @@ public class StagedReferencedObjectTagDefinition extends AbstractStagedReference
 
 	@Override
 	public void produceStagedHashComponents(Consumer<Object> consumer) throws NodeException {
-		consumer.accept(removeI18nData(ObjectTagDefinition.NODE2DEVTOOL_FEATURE_CHECK.apply(wrapped, new ObjectTagDefinitionModel(), false)));
+		ObjectTagDefinitionModel stagedModel = ObjectTagDefinition.NODE2DEVTOOL_FEATURE_CHECK.apply(wrapped, new ObjectTagDefinitionModel(), false);
+
+		stagedModel.setNodeIds(null);
+
+		consumer.accept(removeI18nData(stagedModel));
 	}
 
 	/**

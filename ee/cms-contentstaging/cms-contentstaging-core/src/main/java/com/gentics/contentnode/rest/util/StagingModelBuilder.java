@@ -818,6 +818,7 @@ public class StagingModelBuilder {
 		}
 
 		node.setHttps(stagedNode.isHttps());
+		node.setPublishImageVariants(stagedNode.isPublishImageVariants());
 
 		unwrap(() -> isSingleProperty(stagedNode.getMeshPreviewUrl())
 				.ifPresent(meshPreviewUrl -> wrap(() -> node.setMeshPreviewUrl(meshPreviewUrl))));
@@ -998,6 +999,7 @@ public class StagingModelBuilder {
 		node.setPublishContentMapPages(nodeNode.doPublishContentMapPages());
 		node.setPublishContentMapFiles(nodeNode.doPublishContentMapFiles());
 		node.setPublishContentMapFolders(nodeNode.doPublishContentMapFolders());
+		node.setPublishImageVariants(nodeNode.isPublishImageVariants());
 		node.setPageUrls(UrlRenderWay.fromValue(nodeNode.getUrlRenderWayPages()));
 		node.setFileUrls(UrlRenderWay.fromValue(nodeNode.getUrlRenderWayFiles()));
 		node.setOmitPageExtension(nodeNode.isOmitPageExtension());

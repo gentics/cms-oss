@@ -28,6 +28,7 @@ public class StagedNode extends StagingBase {
 	private String binaryPublishDir;
 	private boolean pubDirSegment;
 	private boolean https;
+	private boolean publishImageVariants;
 	private String hostname;
 	private boolean publishFs;
 	private boolean publishFsPages;
@@ -101,6 +102,22 @@ public class StagedNode extends StagingBase {
 	 */
 	public void setPubDirSegment(boolean pubDirSegment) {
 		this.pubDirSegment = pubDirSegment;
+	}
+
+	/**
+	 * True if image variants should be created on page/object property publish
+	 * @return true 
+	 */
+	public boolean isPublishImageVariants() {
+		return publishImageVariants;
+	}
+
+	/**
+	 * Set whether image variants should be created on page/object property publish
+	 * @param publishImageVariants
+	 */
+	public void setPublishImageVariants(boolean publishImageVariants) {
+		this.publishImageVariants = publishImageVariants;
 	}
 
 	/**

@@ -24,8 +24,18 @@
 
 .check-package-button {
     margin-left: 1rem;
+    margin-top: 0.1rem !important;
 }
 
 .no-result-text {
     font-size: 18px;
+}
+
+.check-ok {
+    margin-top: 1rem;
+    & icon {
+        font-size: 25px;
+        color: $gtx-color-success;
+        margin-left: 0.5rem;
+    }
 }

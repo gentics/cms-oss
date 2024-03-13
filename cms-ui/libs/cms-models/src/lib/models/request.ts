@@ -1510,9 +1510,9 @@ export interface PackageCheckFilter {
 }
 
 
-enum PackageCheckCompletenessFilter {
-    INCOMPLETE,
-    ALL
+export enum PackageCheckCompletenessFilter {
+    ALL = 'ALL',
+    INCOMPLETE = 'INCOMPLETE',
 }
 
 
@@ -1520,7 +1520,7 @@ enum PackageCheckCompletenessFilter {
 export interface PackageCheckOptions extends PackageSyncOptions {
     wait?: number;
     checkAll?: boolean;
-    filter?: PackageCheckFilter
+    filter?: PackageCheckFilter | string
 }
 
 

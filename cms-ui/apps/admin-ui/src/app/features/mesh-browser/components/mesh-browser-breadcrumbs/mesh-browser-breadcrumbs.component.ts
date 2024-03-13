@@ -48,7 +48,6 @@ export class MeshBrowserBreadcrumbComponent implements OnChanges {
             { nodeUuid: this.currentNodeUuid },
             this.currentBranchUuid,
         );
-        breadcrumbs.splice(0,1);
 
         this.breadcrumbEntries = [];
 

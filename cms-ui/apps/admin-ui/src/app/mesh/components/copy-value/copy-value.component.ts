@@ -48,7 +48,7 @@ export class CopyValueComponent extends BaseComponent {
     }
 
     private animateCopy(seconds: number): void {
-        this.icon = 'checked';
+        this.icon = 'check';
         this.changeDetector.markForCheck();
 
         setTimeout(() => {

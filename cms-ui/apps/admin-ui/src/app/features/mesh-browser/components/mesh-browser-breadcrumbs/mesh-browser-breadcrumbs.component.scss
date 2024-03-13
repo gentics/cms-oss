@@ -11,10 +11,10 @@
     color: $gtx-breadcrumbs-inactive-color; 
     
     &:not(:first-child):before{
-        content: "\e5cc ";
+        content: '\e5cc ';
         display: inline-block;
-        font-family: "Material Icons";
-        font-weight: normal;
+        font-family: 'Material Symbols Outlined';
+        font-weight: 400;
         font-style: normal;
         font-size: 17px;
         vertical-align: top;

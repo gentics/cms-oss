@@ -53,13 +53,6 @@ export class MeshBrowserSchemaListComponent implements OnInit, OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         this.noSchemaElements = true;
-
-        this.route.params.subscribe((params) => {
-            if (params.parent) {
-                this.currentNodeUuid = params.parent;
-            }
-        });
-
         let nodeUuid = this.currentNodeUuid;
 
         if (changes?.currentNodeUuid?.currentValue) {

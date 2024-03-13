@@ -12,7 +12,7 @@
             id: UNIQUE_ID,
             itemsPerPage: perPage,
             currentPage: page,
-            totalItems: schemaElements?.length
+            totalItems: totalCount,
         } index as index">
             <div *ngIf="!!element" [ngClass]="{'striped': index % 2 === 0}" class="schema-element">
                 <icon (click)="showDetails(element)" left>
@@ -34,7 +34,7 @@
         </div>
 
         <gtx-paging
-            *ngIf="schemaElements?.length > perPage"
+            *ngIf="totalCount > perPage"
             [id]="UNIQUE_ID"
             (pageChange)="changePage($event)"
         />

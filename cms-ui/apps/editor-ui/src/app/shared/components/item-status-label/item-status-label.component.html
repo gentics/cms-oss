@@ -79,18 +79,16 @@
     </gtx-dropdown-content>
 </gtx-dropdown-list>
 
-<div *ngIf="uiMode === UIMode.STAGING && item">
-    <div class="status-label" [class.included]="stagingMap?.[item.globalId]?.included">
-        <icon>{{ (stagingMap?.[item.globalId]?.included) ? 'check' : 'close' }}</icon>
-        {{ ((stagingMap?.[item.globalId]?.included) ? 'common.staging_status_included' : 'common.staging_status_excluded') | i18n }}
+<ng-template #stagingLabel let-included="included">
+    <div class="status-label" [class.included]="included">
+        <icon>{{ included ? 'check' : 'close' }}</icon>
+        {{ (included ? 'common.staging_status_included' : 'common.staging_status_excluded') | i18n }}
     </div>
-    <!-- <div
-        *ngIf="stagingMap?.[item.globalId]?.included"
-        class="recency-label"
-        [class.recent]="!!(stagingMap?.[item.globalId]?.recent)"
-        [class.old]="!(stagingMap?.[item.globalId]?.recent)"
-    >
-        <icon>{{ (stagingMap?.[item.globalId]?.recent) ? 'thumb_up' : 'watch_later' }}</icon>
-        {{ ((stagingMap?.[item.globalId]?.recent) ? 'common.staging_recency_recent' : 'common.staging_recency_old') | i18n }}
-    </div> -->
+</ng-template>
+
+<div *ngIf="uiMode === UIMode.STAGING && item">
+    <ng-container
+        [ngTemplateOutlet]="stagingLabel"
+        [ngTemplateOutletContext]="{ included: stagingMap?.[item.globalId]?.included }"
+    ></ng-container>
 </div>

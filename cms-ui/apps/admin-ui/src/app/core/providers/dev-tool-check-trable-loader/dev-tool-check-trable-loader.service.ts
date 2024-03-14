@@ -154,8 +154,7 @@ PackageCheckTrableLoaderOptions
         const packageDependency = packageEntity as PackageDependency;
 
         return packageDependency.referenceDependencies.some(dependency =>
-            dependency.isInPackage === false
-                && dependency.isInOtherPackage === false)
+            !dependency.isInPackage && !dependency.isInOtherPackage)
     }
 
     private isReferenceDependency(packageEntity: PackageDependencyEntity): boolean {

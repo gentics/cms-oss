@@ -386,12 +386,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- XML Utils -->
-		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
-		</dependency>
-
 		<!-- Mail Utils -->
 		<dependency>
 			<groupId>javax.mail</groupId>
@@ -669,6 +663,12 @@
 		<dependency>
 			<groupId>net.sourceforge.nekohtml</groupId>
 			<artifactId>nekohtml</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>xml-apis</groupId>
+					<artifactId>xml-apis</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>xalan</groupId>

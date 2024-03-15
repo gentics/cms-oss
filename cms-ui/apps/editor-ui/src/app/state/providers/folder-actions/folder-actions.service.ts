@@ -2663,7 +2663,7 @@ export class FolderActionsService {
         this.appState.dispatch(new SetUploadStatusAction(true));
 
         return forkJoin(files.map(fileToUpload => {
-            return this.client.file.upload(fileToUpload, { folderId, nodeId }).pipe(
+            return this.client.file.upload(fileToUpload, { folderId, nodeId }, fileToUpload.name).pipe(
                 map(res => ({
                     successfull: true,
                     file: fileToUpload,

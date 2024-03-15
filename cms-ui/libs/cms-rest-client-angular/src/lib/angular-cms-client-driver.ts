@@ -1,4 +1,4 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Response as GCMSResponse } from '@gentics/cms-models';
 import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse, RequestFailedError, validateResponseObject } from '@gentics/cms-rest-client';
@@ -24,10 +24,20 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
         body: null | string | FormData,
         bodyHandler: (body: string) => T,
     ): Observable<T> {
+        let q = new HttpParams();
+
+        Object.entries(request.params).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((v, i) => q = (i === 0 ? q.set(key, v) : q.append(key, v)));
+            } else {
+                q = q.set(key, value);
+            }
+        });
+
         return this.http.request(request.method, request.url, {
             body,
             headers: request.headers,
-            params: request.params,
+            params: q,
             observe: 'response',
             responseType: 'text',
         }).pipe(

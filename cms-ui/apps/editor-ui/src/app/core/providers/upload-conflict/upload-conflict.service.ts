@@ -78,7 +78,7 @@ export class UploadConflictService {
             };
         });
 
-        return this.client.folder.items(folderId, { type: 'file,image', nodeId, maxItems: -1 }).pipe(
+        return this.client.folder.items(folderId, { type: ['file', 'image'], nodeId, maxItems: -1 }).pipe(
             map(response => {
                 const fileObjects = response.items as FileModel[];
                 return fileObjects.filter(file => this.matchesNameAndType(files, file));

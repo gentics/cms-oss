@@ -125,7 +125,17 @@ export class GCMSFetchDriver implements GCMSClientDriver {
     ): GCMSRestClientResponse<T> {
         let fullUrl = request.url;
         if (request.params) {
-            const params = new URLSearchParams(request.params).toString();
+            const q = new URLSearchParams();
+
+            Object.entries(request.params).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach(v => q.append(key, v));
+                } else {
+                    q.append(key, value);
+                }
+            });
+
+            const params = q.toString();
             if (params) {
                 fullUrl += `?${params}`;
             }

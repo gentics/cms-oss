@@ -1,5 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { GcmsTestData } from '@gentics/cms-models';
+import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { NEVER, of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -180,8 +180,8 @@ describe('UserSettingsService', () => {
 
             const testServerStorage = {
                 uiLanguage: 'de',
-                recentItems: [ GcmsTestData.getExamplePageData() ],
-                favourites: [ GcmsTestData.getExamplePageData() ],
+                recentItems: [ getExamplePageData() ],
+                favourites: [ getExamplePageData() ],
             };
             serverStorage.getAll.and.returnValue(of(testServerStorage).pipe(first()));
             localStorage.getForUser.and.callFake((userId: number, key: string): any => {

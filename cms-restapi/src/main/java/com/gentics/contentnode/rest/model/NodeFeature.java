@@ -45,5 +45,14 @@ public enum NodeFeature {
 	/**
 	 * If this feature is activated, uploaded images are automatically converted to WebP.
 	 */
-	webp_conversion
+	webp_conversion,
+	/*
+	 * With this feature, the properties editor will immediately open upon uploading a new file.
+	 */
+	upload_file_properties,
+
+	/**
+	 * With this feature, the properties editor will immediately open upon uploading a new image.
+	 */
+	upload_image_properties
 }

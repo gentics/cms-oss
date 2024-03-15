@@ -146,8 +146,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
     }
 
@@ -167,9 +166,9 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
+
         if (this.itemType !== 'image' && this.selectionToUpload.fileCategory === 'image') {
             this.modalService.dialog({
                 title: this.i18nService.translate('tag_editor.not_allowed'),
@@ -177,8 +176,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                 buttons: [
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
-            })
-                .then(dialog => dialog.open());
+            }).then(dialog => dialog.open());
         }
 
         this.uploadPossible.emit(true);
@@ -194,14 +192,14 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     onUploadClick(): void {
         if (this.fileToUpload) {
-            this.simpleUploadHandler();
+            this.handleUploadClick();
         }
         if (this.selectionToUpload) {
-            this.assetUploadHandler();
+            this.handleAssetsUploadClick();
         }
     }
 
-    private simpleUploadHandler(): void {
+    private handleUploadClick(): void {
         const upload$ = this.uploadFileOrImage(this.fileToUpload, this.destinationFolder, this.removeUnsetProperties(this.fileProperties));
         if (upload$) {
             const sub = upload$.subscribe(uploadedItem => {
@@ -216,7 +214,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         }
     }
 
-    private assetUploadHandler(): void {
+    private handleAssetsUploadClick(): void {
         const fileCategory = this.selectionToUpload.fileCategory === 'image' ? 'image' : 'file';
         const payload: FileCreateRequest = {
             overwriteExisting: false,

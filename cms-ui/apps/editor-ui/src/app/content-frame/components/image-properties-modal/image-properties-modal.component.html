@@ -1,0 +1,27 @@
+<div class="modal-title">
+    <h5>{{ 'modal.image_properties_title' | i18n:{ fileName: file.name } }}</h5>
+</div>
+
+<div class="modal-content">
+    <div class="image-properties-wrapper">
+        <combined-properties-editor
+            [item]="file"
+            [isDisabled]="false"
+            [useRouter]="false"
+            [nodeId]="nodeId"
+        ></combined-properties-editor>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <gtx-button
+        type="secondary"
+        flat
+        (click)="cancelFn()"
+    >{{ 'common.cancel_button' | i18n }}</gtx-button>
+
+    <gtx-button
+        type="primary"
+        (click)="saveAndClose()"
+    >{{ 'modal.save_changes' | i18n }}</gtx-button>
+</div>

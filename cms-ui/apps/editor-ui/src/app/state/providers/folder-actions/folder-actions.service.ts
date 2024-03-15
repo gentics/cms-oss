@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
 import { UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
-import {
-    ApiError,
-    FileUploader,
-} from '@editor-ui/app/core/providers/api';
+import { ImagePropertiesModalComponent } from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
+import { ApiError } from '@editor-ui/app/core/providers/api';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { I18nNotification } from '@editor-ui/app/core/providers/i18n-notification/i18n-notification.service';
@@ -104,6 +102,7 @@ import {
     folderItemTypePlurals,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';
 import {
     Observable,
@@ -125,7 +124,6 @@ import {
     take,
     tap,
 } from 'rxjs/operators';
-import { RequestFailedError } from '@gentics/cms-rest-client';
 import {
     DisplayFields,
     GtxChipSearchProperties,
@@ -230,6 +228,7 @@ export class FolderActionsService {
         private navigationService: NavigationService,
         private queryAssemblerElasticSearch: QueryAssemblerElasticSearchService,
         private queryAssemblerGCMSSearchService: QueryAssemblerGCMSSearchService,
+        private modalService: ModalService,
     ) { }
 
     /**
@@ -2833,10 +2832,43 @@ export class FolderActionsService {
                         },
                         type: 'success',
                     });
+
+                    const features = this.appState.now.features.nodeFeatures[nodeId] || [];
+                    const showFileProperties = features.includes(NodeFeature.UPLOAD_FILE_PROPERTIES);
+                    const showImageProperties = features.includes(NodeFeature.UPLOAD_IMAGE_PROPERTIES);
+
+                    if (showFileProperties || showImageProperties) {
+                        this.openUploadModals(successfulUploads, nodeId, showFileProperties, showImageProperties);
+                    }
                 }
             });
 
         return observable;
+    }
+
+    async openUploadModals(successfulUploads: UploadResponse[], nodeId: number, showFileProperties: boolean, showImageProperties: boolean): Promise<void> {
+        for (const upload of successfulUploads) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                if (upload.response.file.fileType.startsWith('image/')) {
+                    // Image handling
+                    if (!showImageProperties) {
+                        continue;
+                    }
+                    const loaded = await this.client.image.get(upload.response.file.id, { nodeId: nodeId, construct: true }).toPromise();
+                    await this.openImageModal(loaded.image, nodeId);
+                } else {
+                    // File handlign
+                    if (!showFileProperties) {
+                        continue;
+                    }
+                    const loaded = await this.client.file.get(upload.response.file.id, { nodeId: nodeId, construct: true }).toPromise();
+                    await this.openImageModal(loaded.file, nodeId);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
     }
 
     /**
@@ -3723,5 +3755,22 @@ export class FolderActionsService {
         }
 
         return itemsPerPage * (pageNumber - 1);
+    }
+
+    public async openImageModal(file: FileOrImage, nodeId: number): Promise<void> {
+        const modal = await this.modalService.fromComponent(ImagePropertiesModalComponent, {}, {
+            nodeId: nodeId,
+            file: file,
+        });
+
+        try {
+            await modal.open();
+        } catch (err) {
+            // If it is an error caused by intentionally closing the modal, then we ignore it
+            if (err != null && err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                return;
+            }
+            throw err;
+        }
     }
 }

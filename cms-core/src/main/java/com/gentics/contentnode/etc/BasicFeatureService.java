@@ -49,6 +49,8 @@ import static com.gentics.contentnode.etc.Feature.RESUMABLE_PUBLISH_PROCESS;
 import static com.gentics.contentnode.etc.Feature.ROLES;
 import static com.gentics.contentnode.etc.Feature.SUSPEND_SCHEDULER;
 import static com.gentics.contentnode.etc.Feature.TAG_IMAGE_RESIZER;
+import static com.gentics.contentnode.etc.Feature.UPLOAD_FILE_PROPERTIES;
+import static com.gentics.contentnode.etc.Feature.UPLOAD_IMAGE_PROPERTIES;
 import static com.gentics.contentnode.etc.Feature.USERSNAP;
 import static com.gentics.contentnode.etc.Feature.VIEW_PERMS;
 import static com.gentics.contentnode.etc.Feature.WASTEBIN;
@@ -75,7 +77,8 @@ public class BasicFeatureService implements FeatureService {
 			MANAGELINKURL, MANAGELINKURL_ONLYFORPUBLISH, DSFALLBACK, DS_EMPTY_CS,
 			GET_FILENAME_AS_PAGENAME, FILENAME_FORCETOLOWER, LIVEEDIT_TAG_PERCONSTRUCT, LIVE_URLS, LIVE_URLS_PER_NODE,
 			VIEW_PERMS, DS_FOLDER_PERM, DS_FOLDER_WORKFLOW, HTML_IMPORT, CHANNELSYNC, CONSTRUCT_CATEGORIES, USERSNAP,
-			OBJTAG_SYNC, HIDE_MANUAL, ASSET_MANAGEMENT, FOLDER_BASED_TEMPLATE_SELECTION, WEBP_CONVERSION);
+			OBJTAG_SYNC, HIDE_MANUAL, ASSET_MANAGEMENT, FOLDER_BASED_TEMPLATE_SELECTION, WEBP_CONVERSION,
+			UPLOAD_FILE_PROPERTIES, UPLOAD_IMAGE_PROPERTIES);
 
 	@Override
 	public boolean isProvided(Feature feature) {

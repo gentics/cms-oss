@@ -36,6 +36,7 @@ import {
     EditorToolbarComponent,
     FilePreviewComponent,
     FormReportsListComponent,
+    ImagePropertiesModalComponent,
     LinkCheckerControlsComponent,
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
@@ -55,6 +56,7 @@ import {
     DynamicOverlayService,
     IFrameCollectionService,
 } from './providers';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 
 const COMPONENTS = [
     AlohaAttributeButtonRendererComponent,
@@ -91,6 +93,8 @@ const COMPONENTS = [
     NodePropertiesFormComponent,
     PageEditorControlsComponent,
     PageEditorTabsComponent,
+    ImagePropertiesModalComponent,
+
     PropertiesEditor,
     SimpleDeleteModalComponent,
     SymbolGridComponent,
@@ -130,6 +134,7 @@ const MODULE_INITIALIZER: Provider = {
         ColorSliderModule,
         ColorAlphaModule,
         RouterModule.forChild(contentFrameRoutes),
+        GenticsUICoreModule,
     ],
     exports: [],
     declarations: [...COMPONENTS, ...PIPES],

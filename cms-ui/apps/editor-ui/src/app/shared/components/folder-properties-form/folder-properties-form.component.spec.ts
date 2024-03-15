@@ -8,7 +8,6 @@ import {
     FolderListResponse,
     FolderPublishDirSanitizeResponse,
     FolderResponse,
-    GcmsTestData,
     Raw,
     ResponseCode,
 } from '@gentics/cms-models';
@@ -16,8 +15,7 @@ import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { Observable, of } from 'rxjs';
 import { componentTest, configureComponentTest } from '../../../../testing';
-import { emptyItemInfo } from '../../../common/models';
-import { EditableProperties } from '../../../content-frame/components/properties-editor/properties-editor.component';
+import { EditableProperties, emptyItemInfo } from '../../../common/models';
 import { Api } from '../../../core/providers/api/api.service';
 import { ApplicationStateService, SetFeatureAction } from '../../../state';
 import { MockAppState, TestApplicationState } from '../../../state/test-application-state.mock';
@@ -177,7 +175,7 @@ class MockApiService {
     };
 
     private folder: FolderResponse = {
-        folder: GcmsTestData.getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
+        folder: getExampleFolderData({ id: 1, userId: 3, publishDir: ACTIVE_FOLDER_PUBLISH_DIR}),
         messages: [],
         responseInfo: {
             responseCode: ResponseCode.OK,

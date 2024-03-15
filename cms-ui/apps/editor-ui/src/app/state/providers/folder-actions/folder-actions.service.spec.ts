@@ -1,15 +1,28 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { FolderItemType, FolderItemTypePlural, folderItemTypes, Language } from '@gentics/cms-models';
 import {
+    File as FileModel,
+    FileUploadResponse,
+    FolderItemType,
+    FolderItemTypePlural,
+    folderItemTypes,
+    Language,
+    NodeFeature,
+} from '@gentics/cms-models';
+import {
+    getExampleFileData,
     getExampleFolderData,
+    getExampleImageData,
     getExampleLanguageData,
     getExampleNodeDataNormalized,
     getExamplePageData,
     getExampleUserDataNormalized,
 } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
+import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
+import { UploadResponse } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { emptyItemInfo, GtxChipSearchSearchFilterMap, ItemsInfo, plural } from '../../../common/models';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { MockErrorHandler } from '../../../core/providers/error-handler/error-handler.mock';
@@ -32,6 +45,13 @@ const ACTIVE_LANGUAGE = {
     name: 'Unit Testian',
 };
 
+const TEST_UPLOAD_FILE = new File(['bar'], 'foo.txt', {
+    type: 'text/plain',
+});
+const TEST_UPLOAD_IMAGE = new File(['world'], 'hello.png', {
+    type: 'image/png',
+});
+
 class MockI18nNotification {
     show = jasmine.createSpy();
 }
@@ -41,42 +61,60 @@ class MockPermissionService {
 }
 class MockI18nService {}
 
-class MockClient {
-    folder = {
-        create: jasmine.createSpy('create').and.callFake((props: { name: string }) => {
-            if (props.name === 'existing') {
-                return throwError({ message: '' });
-            } else {
-                return of({ folder: getExampleFolderData() });
-            }
-        }),
-        folders: createSpyApiMethod('folders', 'folders'),
-        pages: createSpyApiMethod('pages', 'pages'),
-        files: createSpyApiMethod('files', 'files'),
-        images: createSpyApiMethod('images', 'files'),
-        items: createSpyApiMethod('items', 'items'),
-    };
-    page = {
-        update: createSpyApiMethod('update', 'items'),
-        workflowApprove: createSpyApiMethod('workflowApprove', 'pages'),
-    };
-    elasticSearch = {
-        search: createSpyApiMethod('search', 'items'),
-    };
+let uidCounter = 1;
+const uidCache: Record<string, any> = {};
+
+function fileToResponse(file: File): FileUploadResponse {
+    return {
+        success: true,
+        file: {
+            id: 123,
+            fileType: file.type,
+            fileSize: file.size,
+            name: file.name,
+        } as Partial<FileModel>,
+    } as any;
 }
 
-const createSpyApiMethod = (name: string, collectionKey: FolderItemTypePlural | 'items'): jasmine.Spy => jasmine.createSpy(name).and
-    .returnValue(of({
-        [collectionKey]: RESPONSE_ITEM_LIST,
+function fileToUploadResponse(file: File): UploadResponse {
+    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+    const uid = (uidCounter++) + '';
+    uidCache[uid] = {
+        file,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dimensions: Promise.resolve({ width: 1, height: 1 }),
+    };
+
+    return {
+        cancelled: false,
+        error: null,
+        name: file.name,
+        response: fileToResponse(file),
+        statusCode: 200,
+        uid,
+    }
+}
+
+class MockModalService {
+    fromComponent = () => Promise.resolve({
+        open: () => Promise.resolve(),
+    });
+}
+
+function fakeListResponse(key: FolderItemTypePlural | 'items'): Observable<any> {
+    return of({
+        [key]: RESPONSE_ITEM_LIST,
         hasMoreItems: false,
         numItems: RESPONSE_ITEM_LIST.length,
-    }),
-    );
+    });
+}
 
 describe('FolderActionsService', () => {
 
     let folderActions: FolderActionsService;
-    let client: MockClient;
+    let client: GCMSRestClientService;
     let permissions: MockPermissionService;
     let initialState: MockAppState;
     let state: TestApplicationState;
@@ -93,14 +131,15 @@ describe('FolderActionsService', () => {
                 { provide: PermissionService, useClass: MockPermissionService },
                 { provide: I18nService, useClass: MockI18nService },
                 { provide: NavigationService, useClass: MockNavigationService },
-                { provide: GCMSRestClientService, useClass: MockClient },
+                { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
                 QueryAssemblerGCMSSearchService,
                 QueryAssemblerElasticSearchService,
+                { provide: ModalService, useClass: MockModalService },
             ],
         });
 
         folderActions = TestBed.get(FolderActionsService);
-        client = TestBed.get(GCMSRestClientService);
+        client = TestBed.inject(GCMSRestClientService);
         permissions = TestBed.get(PermissionService);
         state = TestBed.get(ApplicationStateService);
 
@@ -121,6 +160,11 @@ describe('FolderActionsService', () => {
                     ],
                 },
             },
+            features: {
+                nodeFeatures: {
+                    [ACTIVE_NODE_ID]: [],
+                },
+            },
             entities: {
                 language: getExampleLanguageData(),
                 node: {
@@ -138,6 +182,38 @@ describe('FolderActionsService', () => {
         };
 
         state.mockState(initialState);
+
+        spyOn(client.folder, 'create').and.callFake((props: { name: string }) => {
+            if (props.name === 'existing') {
+                return throwError({ message: '' });
+            } else {
+                return of({ folder: getExampleFolderData() }) as any;
+            }
+        })
+        spyOn(client.folder, 'folders').and.returnValue(fakeListResponse('folders'));
+        spyOn(client.folder, 'pages').and.returnValue(fakeListResponse('pages'));
+        spyOn(client.folder, 'files').and.returnValue(fakeListResponse('files'))
+        spyOn(client.folder, 'images').and.returnValue(fakeListResponse('files'));
+        spyOn(client.folder, 'items').and.returnValue(fakeListResponse('items'))
+        spyOn(client.page, 'update').and.returnValue(fakeListResponse('items'));
+        spyOn(client.page, 'workflowApprove').and.returnValue(fakeListResponse('pages'));
+        spyOn(client.elasticSearch, 'search').and.returnValue(fakeListResponse('items'));
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        spyOn(client.file, 'upload').and.callFake((file) => of(fileToResponse(file as any)));
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        spyOn(client.file, 'uploadTo').and.callFake((_, file) => of(fileToResponse(file as any)));
+        spyOn(client.image, 'get').and.callFake((id) => of({
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            image: getExampleImageData({ id: id as any }),
+            responseInfo: null,
+            messages: [],
+        }));
+        spyOn(client.file, 'get').and.callFake((id) => of({
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            file: getExampleFileData({ id: id as any }),
+            responseInfo: null,
+            messages: [],
+        }));
     });
 
     describe('updateItem()', () => {
@@ -259,7 +335,7 @@ describe('FolderActionsService', () => {
         it('calls the correct api method and options according to state', fakeAsync(() => {
             folderActions.refreshList('page');
             tick();
-            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));
 
         it('calls the correct api method and options according to state for multiple languages', fakeAsync(() => {
@@ -270,13 +346,13 @@ describe('FolderActionsService', () => {
                 ...expectedOptions,
                 language: 'en',
             };
-            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsFirst);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsFirst as any);
 
             const expectedOptionsSecond = {
                 ...expectedOptions,
                 language: 'de',
             };
-            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsSecond);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptionsSecond as any);
         }));
 
     });
@@ -321,7 +397,7 @@ describe('FolderActionsService', () => {
                 langvars: true,
                 folderId: 42,
             };
-            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));
 
         it('adds nodeId, sortby and sortorder to the options and includes deleted items', fakeAsync(() => {
@@ -338,7 +414,7 @@ describe('FolderActionsService', () => {
                 langvars: true,
                 folderId: 42,
             };
-            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.pages).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));
 
         it('adds privilegeMap = true to folder requests', fakeAsync(() => {
@@ -353,7 +429,7 @@ describe('FolderActionsService', () => {
                 folderId: 42,
                 privilegeMap: true,
             };
-            expect(client.folder.folders).toHaveBeenCalledWith(PARENT_ID, expectedOptions);
+            expect(client.folder.folders).toHaveBeenCalledWith(PARENT_ID, expectedOptions as any);
         }));
 
         it('calls PermissionService.normalizeAPIResponse() on folder result', fakeAsync(() => {
@@ -485,7 +561,7 @@ describe('FolderActionsService', () => {
                         langvars: true,
                         folder: true,
                         folderId: 42,
-                    },
+                    } as any,
                 );
             }));
 
@@ -733,4 +809,110 @@ describe('FolderActionsService', () => {
             expect(client.folder.create).toHaveBeenCalledWith(mapCreateNewFolderModelToCreateFolderModel(folder));
         }));
     });
+
+    describe('openUploadModals()', () => {
+        it('should not attempt to open the modal without the feature active', fakeAsync(async () => {
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, 1).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(0);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(0);
+        }));
+
+        it('should open the modal because file-properties are enabled', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_FILE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(1);
+        }));
+
+        it('should open the modal because image-properties are enabled', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_IMAGE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(1);
+        }));
+
+        it('should open a modal for each file', fakeAsync(async () => {
+            state.mockState({
+                features: {
+                    nodeFeatures: {
+                        [ACTIVE_NODE_ID]: [NodeFeature.UPLOAD_FILE_PROPERTIES, NodeFeature.UPLOAD_IMAGE_PROPERTIES],
+                    },
+                },
+            });
+
+            spyOn(folderActions, 'openUploadModals').and.callThrough();
+            spyOn(folderActions, 'openImageModal').and.returnValue(Promise.resolve());
+
+            await folderActions.uploadAndReplace({
+                create: {
+                    files: [TEST_UPLOAD_FILE],
+                    images: [TEST_UPLOAD_IMAGE],
+                },
+                replace: {
+                    files: [],
+                    images: [],
+                },
+            }, 1, ACTIVE_NODE_ID).toPromise();
+            tick(100);
+
+            expect(folderActions.openUploadModals).toHaveBeenCalledTimes(1);
+            expect(folderActions.openImageModal).toHaveBeenCalledTimes(2);
+        }));
+    })
 });

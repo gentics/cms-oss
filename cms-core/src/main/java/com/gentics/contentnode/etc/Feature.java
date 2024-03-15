@@ -97,6 +97,8 @@ public enum Feature {
 	KEYCLOAK(false),
 	TAGTYPEMIGRATION(false),
 	WEBP_CONVERSION(true);
+	UPLOAD_FILE_PROPERTIES(true),
+	UPLOAD_IMAGE_PROPERTIES(true);
 
 	/**
 	 * Service loader for implementations of {@link FeatureService}

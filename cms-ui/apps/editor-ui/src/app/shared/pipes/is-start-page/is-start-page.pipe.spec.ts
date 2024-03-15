@@ -1,11 +1,11 @@
-import { Folder, GcmsTestData, Raw, Normalized, NormalizedEntityStore, Page, File, Image } from '@gentics/cms-models';
+import { File, Folder, Image, Normalized, NormalizedEntityStore, Page, Raw } from '@gentics/cms-models';
+import { getExampleEntityStore } from '@gentics/cms-models/testing/entity-store-data.mock';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
-
-import {IsStartPagePipe} from './is-start-page.pipe';
+import { IsStartPagePipe } from './is-start-page.pipe';
 
 describe('IsStartPagePipe', () => {
 
-    const mockEntities: NormalizedEntityStore = GcmsTestData.getExampleEntityStore();
+    const mockEntities: NormalizedEntityStore = getExampleEntityStore();
     const FOLDER_ID = 1;
     const PAGE_ID_OF_PAGE_WITH_LANGUAGE_VARIANTS = 3;
     const PAGE_ID_OF_PAGE_WITHOUT_LANGUAGE_VARIANTS = 37;

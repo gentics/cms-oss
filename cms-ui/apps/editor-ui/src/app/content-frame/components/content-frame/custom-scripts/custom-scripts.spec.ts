@@ -673,6 +673,7 @@ class FakeAlohaGlobal implements AlohaGlobal {
     };
 
     bind(): void { }
+    unbind(): void { }
 
     require(dependency: string): any;
     require(dependencies: string[], callback: (...dependencies: any[]) => any): void;

@@ -87,7 +87,17 @@ export enum NodeFeature {
     /**
      * If this feature is activated, uploaded images are automatically converted to WebP.
      */
-    WEBP_CONVERSION = 'webp_conversion'
+    WEBP_CONVERSION = 'webp_conversion',
+
+    /*
+     * If this feature is activated a modal dialog with the files properties is opened immediately after the upload.
+     */
+    UPLOAD_FILE_PROPERTIES = 'upload_file_properties',
+
+    /**
+     * If this feature is activated a modal dialog with the images properties is opened immediately after the upload.
+     */
+    UPLOAD_IMAGE_PROPERTIES = 'upload_image_properties',
 }
 
 /**

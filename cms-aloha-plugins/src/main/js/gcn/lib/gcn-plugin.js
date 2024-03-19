@@ -1,4 +1,10 @@
 /*global define: true, top: true, confirm: true */
+
+/**
+ * @typedef {object} TagFillOptions
+ * @property {boolean=} skipInsert If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
+ */
+
 /*!
  * Aloha Editor
  * Author & Copyright (c) 2011-2013 Gentics Software GmbH
@@ -148,7 +154,15 @@ define([
 		return OBJECT_PROPERTY_PREFIX.test(tag.prop('name'));
 	}
 
-	function openTagFill(tag, gcn) {
+	/**
+	 * Actually opens the tag-fill in either the new ui (GCMSUI API) or via a lightbox and the
+	 * old tag-fill from the backend.
+	 *
+	 * @param {*} tag The gcn-tag instance to edit
+	 * @param {*} gcn The GCN-Plugin instance
+	 * @param {TagFillOptions=} options The options for opening the tag-fill.
+	 */
+	function openTagFill(tag, gcn, options) {
 		var page = tag.parent();
 		var tagname = tag.prop("name");
 		getConstructById(
@@ -181,6 +195,11 @@ define([
 							}
 						}
 					});
+
+					if (options && options.skipInsert) {
+						return;
+					}
+
 					// we render that tag in edit mode by POSTing the modified data to the server,
 					// in order to render what is currently stored in the tag object, not in the DB
 					page.tag(tagname).edit(true, function (html, tag, data) {
@@ -1593,12 +1612,13 @@ define([
 	 * @param {number|string} pageId The id of page the tag belongs to.
 	 *                               Note that this page must already have
 	 *                               had its data fetched.
+	 * @param {TagFillOptions=} options The options for opening the tag-fill.
 	 */
-	openTagFill: function (tagId, pageId) {
+	openTagFill: function (tagId, pageId, options) {
 		var gcn = this;
 
 		Tags.getById(GCN.page(pageId), tagId, function (tag) {
-			openTagFill(tag, gcn);
+			openTagFill(tag, gcn, options);
 		});
 	},
 

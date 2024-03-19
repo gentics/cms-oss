@@ -208,8 +208,8 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 	public Response login(@PathParam("id") String id) throws NodeException {
 		ContentRepository cr = validate(id);
 
-		String username = substituteSingleProperty(cr.getUsername());
-		String password = cr.isPasswordProperty() ? substituteSingleProperty(cr.getPassword()) : cr.getPassword();
+		String username = cr.getEffectiveUsername();
+		String password = cr.getEffectivePassword();
 
 		if (StringUtils.isBlank(password)) {
 			throw new RestMappedException(I18NHelper.get("meshcr.apitoken.missing", cr.getName())).setMessageType(Message.Type.CRITICAL)
@@ -271,7 +271,7 @@ public class ContentRepositoryProxyResourceImpl implements ContentRepositoryProx
 	protected <T extends HttpRequestBase> Response forward(String id, String path, T method, Consumer<T> prepareHandler) throws NodeException {
 		ContentRepository cr = validate(id);
 
-		String crUrl = substituteSingleProperty(cr.getUrl());
+		String crUrl = cr.getEffectiveUrl();
 		Matcher urlMatcher = MeshPublisher.URL_PATTERN.matcher(crUrl);
 		if (!urlMatcher.matches()) {
 			throw new RestMappedException(I18NHelper.get("meshcr.invalid.url", crUrl, cr.getName())).setMessageType(Message.Type.CRITICAL)

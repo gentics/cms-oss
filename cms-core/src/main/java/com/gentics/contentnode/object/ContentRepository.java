@@ -1,5 +1,7 @@
 package com.gentics.contentnode.object;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.function.Predicate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -103,6 +106,7 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		cr.setCrType(nodeCR.getCrType());
 		cr.setDbType(nodeCR.getDbType());
 		cr.setUsername(nodeCR.getUsername());
+		cr.setUsernameProperty(nodeCR.getUsernameProperty());
 		if (nodeCR.isPasswordProperty()) {
 			cr.setPasswordType(ContentRepositoryModel.PasswordType.property);
 			cr.setPasswordProperty(nodeCR.getPassword());
@@ -112,12 +116,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 			cr.setPasswordType(ContentRepositoryModel.PasswordType.value);
 		}
 		cr.setUrl(nodeCR.getUrl());
+		cr.setUrlProperty(nodeCR.getUrlProperty());
 		cr.setHttp2(nodeCR.isHttp2());
 		cr.setNoFoldersIndex(nodeCR.isNoFoldersIndex());
 		cr.setNoFilesIndex(nodeCR.isNoFilesIndex());
 		cr.setNoPagesIndex(nodeCR.isNoPagesIndex());
 		cr.setNoFormsIndex(nodeCR.isNoFormsIndex());
 		cr.setBasepath(nodeCR.getBasepath());
+		cr.setBasepathProperty(nodeCR.getBasepathProperty());
 		cr.setInstantPublishing(nodeCR.isInstantPublishing());
 		cr.setPermissionInformation(nodeCR.isPermissionInformation());
 		cr.setPermissionProperty(nodeCR.getPermissionProperty());
@@ -164,6 +170,9 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		if (cr.getUsername() != null) {
 			nodeCR.setUsername(cr.getUsername());
 		}
+		if (cr.getUsernameProperty() != null) {
+			nodeCR.setUsernameProperty(cr.getUsernameProperty());
+		}
 		if (cr.getPasswordType() != null) {
 			switch(cr.getPasswordType()) {
 			case none:
@@ -202,8 +211,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 		if (cr.getUrl() != null) {
 			nodeCR.setUrl(cr.getUrl());
 		}
+		if (cr.getUrlProperty() != null) {
+			nodeCR.setUrlProperty(cr.getUrlProperty());
+		}
 		if (cr.getBasepath() != null) {
 			nodeCR.setBasepath(cr.getBasepath());
+		}
+		if (cr.getBasepathProperty() != null) {
+			nodeCR.setBasepathProperty(cr.getBasepathProperty());
 		}
 		if (cr.getInstantPublishing() != null) {
 			nodeCR.setInstantPublishing(cr.getInstantPublishing());
@@ -246,6 +261,26 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	public final static Function<ContentRepository, ContentRepositoryModel> TRANSFORM2REST = nodeCR -> {
 		return NODE2REST.apply(nodeCR, new ContentRepositoryModel());
 	};
+
+	/**
+	 * Predicate for validation of attributepath properties
+	 */
+	public final static Predicate<String> CR_ATTRIBUTEPATH_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_ATTRIBUTEPATH_");
+
+	/**
+	 * Predicate for validation of url properties
+	 */
+	public final static Predicate<String> CR_URL_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_URL_");
+
+	/**
+	 * Predicate for validation of username properties
+	 */
+	public final static Predicate<String> CR_USERNAME_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_USERNAME_");
+
+	/**
+	 * Predicate for validation of password properties
+	 */
+	public final static Predicate<String> CR_PASSWORD_FILTER = value -> org.apache.commons.lang3.StringUtils.startsWith(value, "CR_PASSWORD_");
 
 	/**
 	 * static map of resolvable properties
@@ -370,6 +405,36 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
+	 * Get the username property
+	 * @return username property
+	 */
+	@FieldGetter("username_property")
+	public abstract String getUsernameProperty();
+
+	/**
+	 * Set the username property
+	 * @param usernameProperty username property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("username_property")
+	public void setUsernameProperty(String usernameProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective username. This will do property substitution.
+	 * @return effective username
+	 */
+	public String getEffectiveUsername() {
+		String usernameProperty = getUsernameProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(usernameProperty)) {
+			return substituteSingleProperty(usernameProperty, CR_USERNAME_FILTER);
+		} else {
+			return getUsername();
+		}
+	}
+
+	/**
 	 * Get the password
 	 * @return password
 	 */
@@ -392,6 +457,14 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	@FieldSetter("password_is_property")
 	public void setPasswordProperty(boolean passwordProperty) throws ReadOnlyException {
 		failReadOnly();
+	}
+
+	/**
+	 * Get the effective password. This will do property substitution, if {@link #isPasswordProperty()} returns true.
+	 * @return effective password
+	 */
+	public String getEffectivePassword() {
+		return isPasswordProperty() ? substituteSingleProperty(getPassword(), CR_PASSWORD_FILTER) : getPassword();
 	}
 
 	/**
@@ -494,6 +567,36 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	@FieldSetter("url")
 	public void setUrl(String url) throws ReadOnlyException {
 		failReadOnly();
+	}
+
+	/**
+	 * Get the connection URL property
+	 * @return connection URL property
+	 */
+	@FieldGetter("url_property")
+	public abstract String getUrlProperty();
+
+	/**
+	 * Set the connection URL property
+	 * @param urlProperty connection URL property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("url_property")
+	public void setUrlProperty(String urlProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective connection URL. This will do property substitution.
+	 * @return effective connection URL
+	 */
+	public String getEffectiveUrl() {
+		String urlProperty = getUrlProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(urlProperty)) {
+			return substituteSingleProperty(urlProperty, CR_URL_FILTER);
+		} else {
+			return getUrl();
+		}
 	}
 
 	/**
@@ -613,6 +716,36 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	@FieldSetter("basepath")
 	public void setBasepath(String basepath) throws ReadOnlyException {
 		failReadOnly();
+	}
+
+	/**
+	 * Get the basepath property for attributes, that are stored in the filesystem
+	 * @return basepath property for filesystem attributes
+	 */
+	@FieldGetter("basepath_property")
+	public abstract String getBasepathProperty();
+
+	/**
+	 * Set the basepath property for attributes, that are stored in the filesystem
+	 * @param basepathProperty basepath property for filesystem attributes
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("basepath_property")
+	public void setBasepathProperty(String basepathProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * Get the effective basepath. This will do property substitution.
+	 * @return effective basepath
+	 */
+	public String getEffectiveBasepath() {
+		String basepathProperty = getBasepathProperty();
+		if (!org.apache.commons.lang3.StringUtils.isBlank(basepathProperty)) {
+			return substituteSingleProperty(basepathProperty, CR_ATTRIBUTEPATH_FILTER);
+		} else {
+			return getBasepath();
+		}
 	}
 
 	/**

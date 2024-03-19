@@ -15,7 +15,7 @@ public class MeshPortalPreviewPropertySubstitutionTest extends MeshPortalPreview
 	/**
 	 * Name of the system property
 	 */
-	public final static String SYSTEM_PROPERTY_NAME = "test.portal.preview.url";
+	public final static String SYSTEM_PROPERTY_NAME = "NODE_PREVIEWURL_TEST";
 
 	/**
 	 * REST Application used as "preview" portal

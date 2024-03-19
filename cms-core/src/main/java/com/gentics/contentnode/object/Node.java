@@ -5,11 +5,16 @@
  */
 package com.gentics.contentnode.object;
 
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -68,6 +73,16 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 		}
 		return ModelBuilder.getNode(node);
 	};
+
+	/**
+	 * Predicate for validation of previewurl properties
+	 */
+	public final static Predicate<String> NODE_PREVIEWURL_FILTER = value -> StringUtils.startsWith(value, "NODE_PREVIEWURL_");
+
+	/**
+	 * Predicate for validation of host properties
+	 */
+	public final static Predicate<String> NODE_HOST_FILTER = value -> StringUtils.startsWith(value, "NODE_HOST_");
 
 	/**
 	 * How URLs will be rendered in publish mode
@@ -256,6 +271,34 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	 */
 	@FieldSetter("host")
 	void setHostname(String hostname) throws ReadOnlyException;
+
+	/**
+	 * get the hostname property of this node.
+	 * @return the hostname property of the node.
+	 */
+	@FieldGetter("host_property")
+	String getHostnameProperty();
+
+	/**
+	 * Set the hostname property of this node
+	 * @param hostnameProperty hostname property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("host_property")
+	void setHostnameProperty(String hostnameProperty) throws ReadOnlyException;
+
+	/**
+	 * Get the effective hostname. This will do property substitution.
+	 * @return effective hostname
+	 */
+	default String getEffectiveHostname() {
+		String hostnameProperty = getHostnameProperty();
+		if (!StringUtils.isBlank(hostnameProperty)) {
+			return substituteSingleProperty(hostnameProperty, NODE_HOST_FILTER);
+		} else {
+			return getHostname();
+		}
+	}
 
 	/**
 	 * get the ftp remote hostname of this node, used for syncing.
@@ -796,6 +839,34 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	 */
 	@FieldSetter("mesh_preview_url")
 	void setMeshPreviewUrl(String url) throws ReadOnlyException;
+
+	/**
+	 * Get the mesh preview URL property
+	 * @return mesh preview URL property
+	 */
+	@FieldGetter("mesh_preview_url_property")
+	String getMeshPreviewUrlProperty();
+
+	/**
+	 * Set the mesh preview URL property
+	 * @param urlProperty mesh preview URL property
+	 * @throws ReadOnlyException
+	 */
+	@FieldSetter("mesh_preview_url_property")
+	void setMeshPreviewUrlProperty(String urlProperty) throws ReadOnlyException;
+
+	/**
+	 * Get the effective mesh preview URL. This will do property substitution.
+	 * @return effective mesh preview URL
+	 */
+	default String getEffectiveMeshPreviewUrl() {
+		String meshPreviewUrlProperty = getMeshPreviewUrlProperty();
+		if (!StringUtils.isBlank(meshPreviewUrlProperty)) {
+			return substituteSingleProperty(meshPreviewUrlProperty, NODE_PREVIEWURL_FILTER);
+		} else {
+			return getMeshPreviewUrl();
+		}
+	}
 
 	/**
 	 * Check whether insecure connections to the preview URL are allowed.

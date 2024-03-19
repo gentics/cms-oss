@@ -35,24 +35,44 @@
         "en": "Database type",
         "de": "Datenbanktyp"
     },
+    "usernameType": {
+        "en": "Define username",
+        "de": "Benutzernamen angeben"
+    },
+    "usernameType_value": {
+        "en": "Enter username directly",
+        "de": "Benutzernamen direkt eingeben"
+    },
+    "usernameType_property": {
+        "en": "Get username from property",
+        "de": "Benutzernamen aus Eigenschaft holen"
+    },
     "username": {
         "en": "Username",
-        "de": "Username"
+        "de": "Benutzername"
+    },
+    "usernameProperty": {
+        "en": "Username property",
+        "de": "Benutzername Eigenschaft"
+    },
+    "usernameProperty_pattern": {
+        "en": "Username property must be entered in format ${env:CR_USERNAME_...} or ${sys:CR_USERNAME_...}.",
+        "de": "Benutzername Eigenschaft muss im Format ${env:CR_USERNAME_...} oder ${sys:CR_USERNAME_...} angegeben werden."
     },
     "passwordType": {
-        "en": "Use Password",
+        "en": "Use password",
         "de": "Passwort verwenden"
     },
     "passwordType_none": {
-        "en": "No Password",
+        "en": "No password",
         "de": "Kein Passwort"
     },
     "passwordType_value": {
-        "en": "Enter Password directly",
+        "en": "Enter password directly",
         "de": "Passwort direkt eingeben"
     },
     "passwordType_property": {
-        "en": "Get Password from Property",
+        "en": "Get password from property",
         "de": "Passwort aus Eigenschaft holen"
     },
     "password": {
@@ -64,20 +84,60 @@
         "de": "Password bestätigen"
     },
     "passwordProperty": {
-        "en": "Password Property",
+        "en": "Password property",
         "de": "Passwort Eigenschaft"
     },
     "passwordProperty_pattern": {
-        "en": "Password property must be entered in format ${env:PROPERTY} or ${sys:PROPERTY}.",
-        "de": "Passwort Eigenschaft muss im Format ${env:PROPERTY} oder ${sys:PROPERTY} angegeben werden."
+        "en": "Password property must be entered in format ${env:CR_PASSWORD_...} or ${sys:CR_PASSWORD_...}.",
+        "de": "Passwort Eigenschaft muss im Format ${env:CR_PASSWORD_...} oder ${sys:CR_PASSWORD_...} angegeben werden."
+    },
+    "urlType": {
+        "en": "Define URL",
+        "de": "URL angeben"
+    },
+    "urlType_value": {
+        "en": "Enter URL directly",
+        "de": "URL direkt eingeben"
+    },
+    "urlType_property": {
+        "en": "Get URL from property",
+        "de": "URL aus Eigenschaft holen"
     },
     "url": {
         "en": "URL",
         "de": "URL"
     },
+    "urlProperty": {
+        "en": "URL property",
+        "de": "URL Eigenschaft"
+    },
+    "urlProperty_pattern": {
+        "en": "URL property must be entered in format ${env:CR_URL_...} or ${sys:CR_URL_...}.",
+        "de": "URL Eigenschaft muss im Format ${env:CR_URL_...} oder ${sys:CR_URL_...} angegeben werden."
+    },
+    "basepathType": {
+        "en": "Define basepath",
+        "de": "Basispfad angeben"
+    },
+    "basepathType_value": {
+        "en": "Enter basepath directly",
+        "de": "Basispfad direkt eingeben"
+    },
+    "basepathType_property": {
+        "en": "Get basepath from property",
+        "de": "Basispfad aus Eigenschaft holen"
+    },
     "basepath": {
         "en": "Basepath",
         "de": "Basispfad"
+    },
+    "basepathProperty": {
+        "en": "Basepath property",
+        "de": "Basispfad Eigenschaft"
+    },
+    "basepathProperty_pattern": {
+        "en": "Basepath property must be entered in format ${env:CR_ATTRIBUTEPATH_...} or ${sys:CR_ATTRIBUTEPATH_...}.",
+        "de": "Basispfad Eigenschaft muss im Format ${env:CR_ATTRIBUTEPATH_...} oder ${sys:CR_ATTRIBUTEPATH_...} angegeben werden."
     },
     "instantPublishing": {
         "en": "Instant Publishing",

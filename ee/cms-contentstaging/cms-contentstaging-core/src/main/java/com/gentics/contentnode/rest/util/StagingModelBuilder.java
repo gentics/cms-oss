@@ -1,9 +1,5 @@
 package com.gentics.contentnode.rest.util;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
-import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.isSingleProperty;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -816,12 +812,12 @@ public class StagingModelBuilder {
 			node.setHostname(stagedNode.getHostname());
 			node.setPublishDisabled(true);
 		}
+		node.setHostnameProperty(stagedNode.getHostnameProperty());
 
 		node.setHttps(stagedNode.isHttps());
 		node.setPublishImageVariants(stagedNode.isPublishImageVariants());
 
-		unwrap(() -> isSingleProperty(stagedNode.getMeshPreviewUrl())
-				.ifPresent(meshPreviewUrl -> wrap(() -> node.setMeshPreviewUrl(meshPreviewUrl))));
+		node.setMeshPreviewUrlProperty(stagedNode.getMeshPreviewUrlProperty());
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.PUB_DIR_SEGMENT)) {
 			node.setPubDirSegment(stagedNode.isPubDirSegment());
@@ -990,7 +986,11 @@ public class StagingModelBuilder {
 			node.setPubDirSegment(nodeNode.isPubDirSegment());
 		}
 		node.setHttps(nodeNode.isHttps());
-		node.setHostname(nodeNode.getHostname());
+		if (!org.apache.commons.lang3.StringUtils.isBlank(nodeNode.getHostnameProperty())) {
+			node.setHostnameProperty(nodeNode.getHostnameProperty());
+		} else {
+			node.setHostname(nodeNode.getHostname());
+		}
 		node.setPublishFs(nodeNode.doPublishFilesystem());
 		node.setPublishFsPages(nodeNode.doPublishFilesystemPages());
 		node.setPublishFsFiles(nodeNode.doPublishFilesystemFiles());
@@ -1014,7 +1014,7 @@ public class StagingModelBuilder {
 			node.setPackages(Synchronizer.getPackages(nodeNode));
 		}
 
-		isSingleProperty(nodeNode.getMeshPreviewUrl()).ifPresent(node::setMeshPreviewUrl);
+		node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 
 		return node;
 	}

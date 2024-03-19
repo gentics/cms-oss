@@ -44,6 +44,8 @@ lock_time: 600
 folder_startpage_objprop_name: "object.startpage"
 folder_startpage_objprop_per_node: ""
 aloha_settings:
+  sidebar:
+    disabled: true
   plugins:
     image:
       maxWidth: 1024
@@ -54,10 +56,6 @@ aloha_settings:
     link:
       objectTypeFilter:
         - "website"
-    gcn-linkbrowser:
-      objectTypeFilter:
-        - "website"
-        - "files"
     block:
       dragdrop: "true"
     list: {}
@@ -75,52 +73,24 @@ aloha_settings:
       - "formatless"
   toolbar:
     tabs:
-      - label: "tab.format.label"
+      - id: formatting
+      - id: insert
+      - id: view
+      - id: table
+      - id: 'gtx.constructs'
+        label: 'aloha.tab_gtx_constructs'
+        icon: web
+        showOn:
+          scope: 'gtx.gcmsui'
         components:
-          - - "bold"
-            - "strong"
-            - "italic"
-            - "emphasis"
-            - "underline"
-            - "\\n"
-            - "subscript"
-            - "superscript"
-            - "strikethrough"
-            - "code"
-            - "quote"
-          - - "formatLink"
-            - "formatAbbr"
-            - "formatNumeratedHeaders"
-            - "toggleDragDrop"
-            - "\\n"
-            - "toggleMetaView"
-            - "wailang"
-            - "toggleFormatlessPaste"
-            - "gcnSpellCheck"
-          - - "alignLeft"
-            - "alignCenter"
-            - "alignRight"
-            - "alignJustify"
-            - "\\n"
-            - "orderedListFormatSelector"
-            - "unorderedListFormatSelector"
-            - "definitionListFormatSelector"
-            - "\\n"
-            - "indentList"
-            - "outdentList"
-            - "colorPicker"
-      - label: "tab.insert.label"
+          - 'gtx.constructs'
+      - id: 'gtx.link-checker'
+        label: 'aloha.tab_gtx_link_checker'
+        icon: verified
+        showOn:
+          scope: 'gtx.gcmsui'
         components:
-          - - "gcnArena"
-      - label: "tab.link.label"
-        components:
-          - "editLink"
-          - "toggleAnchor"
-          - "editAnchor"
-          - "removeLink"
-          - "linkBrowser"
-          - "gcnLinkBrowser"
-          - "gcnFileUpload"
+          - 'gtx.link-checker'
 aloha_settings_node: ""
 magic_part_names:
   - "text"
@@ -142,7 +112,6 @@ aloha_plugins_global:
   - "common/paste"
   - "common/contenthandler"
   - "common/commands"
-  - "gcn/gcn-linkbrowser"
   - "gcn/gcn"
   - "common/dom-to-xhtml"
 aloha_plugins_node: []

@@ -1,5 +1,6 @@
 /* Always hide the toolbar - Everything is getting rendered via GCMSUI surface */
-.aloha.aloha-surface.aloha-toolbar {
+.aloha.aloha-surface.aloha-toolbar,
+.aloha-ui.aloha-sidebar-bar {
 	display: none !important;
 }
 

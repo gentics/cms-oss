@@ -96,7 +96,7 @@ public enum Feature {
 	CONTENT_STAGING(false, false, 0),
 	KEYCLOAK(false),
 	TAGTYPEMIGRATION(false),
-	WEBP_CONVERSION(true);
+	WEBP_CONVERSION(true),
 	UPLOAD_FILE_PROPERTIES(true),
 	UPLOAD_IMAGE_PROPERTIES(true);
 

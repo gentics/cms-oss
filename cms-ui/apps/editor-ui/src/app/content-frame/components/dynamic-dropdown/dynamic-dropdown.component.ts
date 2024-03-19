@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { RENDERING_CONTEXT_DROPDOWN } from '@editor-ui/app/common/models';
 import { DynamicDropdownConfiguration } from '@gentics/aloha-models';
 import { BaseComponent, ModalCloseError, ModalClosingReason } from '@gentics/ui-core';
 import { combineLatest } from 'rxjs';
@@ -16,6 +17,8 @@ type ErrorFn = (error?: any) => void;
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DynamicDropdownComponent<T> extends BaseComponent implements OnInit {
+
+    public readonly RENDERING_CONTEXT_DROPDOWN = RENDERING_CONTEXT_DROPDOWN;
 
     @Input()
     public configuration: DynamicDropdownConfiguration<T>;

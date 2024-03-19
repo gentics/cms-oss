@@ -2,6 +2,7 @@ export interface AlohaComponent {
     id: number;
     isInstance: boolean;
     type: string;
+    renderContext: 'dropdown' | 'modal' | null;
     visible: boolean;
     disabled: boolean;
     touched: boolean;

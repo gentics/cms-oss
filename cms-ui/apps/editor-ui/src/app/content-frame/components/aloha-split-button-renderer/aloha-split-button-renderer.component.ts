@@ -43,18 +43,22 @@ export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponen
 
     public handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
+        this.aloha.restoreSelection();
     }
 
     public handleSecondaryClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.secondaryClick?.();
+        this.aloha.restoreSelection();
     }
 
 }

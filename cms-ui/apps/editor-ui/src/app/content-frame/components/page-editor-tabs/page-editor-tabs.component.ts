@@ -103,5 +103,6 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
 
     public setActiveTab(tab: string): void {
         this.aloha.changeActivePageEditorTab(tab);
+        this.aloha.restoreSelection();
     }
 }

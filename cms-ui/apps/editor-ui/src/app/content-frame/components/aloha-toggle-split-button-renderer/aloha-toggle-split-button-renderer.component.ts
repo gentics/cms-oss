@@ -48,6 +48,7 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
 
     public handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
         this.triggerTouch();
@@ -60,14 +61,17 @@ export class AlohaToggleSplitButtonRendererComponent extends BaseAlohaRendererCo
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
+        this.aloha.restoreSelection();
     }
 
     public handleSecondaryClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.secondaryClick?.();
+        this.aloha.restoreSelection();
     }
 
     protected getFinalValue(): boolean {

@@ -10,6 +10,9 @@ export abstract class BaseAlohaRendererComponent<C extends AlohaComponent, T> ex
     public slot?: string;
 
     @Input()
+    public renderContext: string;
+
+    @Input()
     public settings?: C | Partial<C> | Record<string, any>;
 
     /**

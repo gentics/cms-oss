@@ -15,9 +15,9 @@ import {
     ScreenSize,
 } from '@gentics/aloha-models';
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
+import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
-import { isEqual } from 'lodash-es';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
@@ -329,6 +329,12 @@ export class AlohaIntegrationService {
 
     public setWindow(window: CNWindow): void {
         this.windowSub.next(window);
+    }
+
+    public restoreSelection(): void {
+        setTimeout(() => {
+            this.windowSub.value?.focus?.();
+        });
     }
 
     public registerComponent(slot: string, component: AlohaComponent): void {

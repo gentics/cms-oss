@@ -7,6 +7,7 @@
         <ng-container *ngFor="let ctl of (configuration.controls | gtxEntries)">
             <gtx-aloha-component-renderer
                 class="dynamic-control"
+                [renderContext]="RENDERING_CONTEXT_MODAL"
                 [type]="configuration.controls[ctl.key].type"
                 [settings]="configuration.controls[ctl.key].options"
                 [formControlName]="ctl.key"

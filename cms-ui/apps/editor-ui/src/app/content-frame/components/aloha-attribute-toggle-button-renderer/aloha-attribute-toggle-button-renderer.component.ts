@@ -30,6 +30,7 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
 
     public override handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -43,6 +44,7 @@ export class AlohaAttributeToggleButtonRendererComponent extends AlohaAttributeB
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
+        this.aloha.restoreSelection();
     }
 
 }

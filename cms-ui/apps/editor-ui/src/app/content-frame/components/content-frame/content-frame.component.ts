@@ -31,6 +31,7 @@ import {
     Raw,
     noItemPermissions,
 } from '@gentics/cms-models';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
 import { debounce as _debounce, isEqual } from 'lodash';
 import {
@@ -59,7 +60,6 @@ import {
 } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { parentFolderOfItem } from '../../../common/utils/parent-folder-of-item';
-import { Api } from '../../../core/providers/api/api.service';
 import { DecisionModalsService } from '../../../core/providers/decision-modals/decision-modals.service';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
@@ -124,6 +124,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      * Lodash debounce function used by the ContentFrame.
      * It is stored as a static property to allow overriding in unit tests.
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     static _debounce = _debounce;
 
     public readonly ITEM_PROPERTIES_TAB = ITEM_PROPERTIES_TAB;
@@ -186,6 +187,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     private alohaReady = false;
     private contentModifiedByExternalScript = false;
 
+    // eslint-disable-next-line no-underscore-dangle
     private cancelEditingDebounced: (item: Page | FileModel | Folder | Form | Image | Node) => void = ContentFrameComponent._debounce(
         (item: Page | FileModel | Folder | Image | Node) => {
             if (item && item.type === 'page') {
@@ -212,7 +214,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private notification: I18nNotification,
         private customScriptHostService: CustomScriptHostService,
         private customerScriptService: CustomerScriptService,
-        private api: Api,
+        private client: GCMSRestClientService,
         private tagEditorService: TagEditorService,
     ) { }
 
@@ -955,6 +957,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      * Takes the "detail" aux route params and uses these to call the correct editorActions method.
      */
     private updateEditorState(urlParams: EditorStateUrlParams): void {
+        // eslint-disable-next-line prefer-const
         let { itemId, nodeId, type, editMode } = urlParams;
         itemId = Number(itemId);
         nodeId = Number(nodeId);
@@ -1051,16 +1054,19 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                         type: 'success',
                         action: {
                             label: 'common.publish_button',
-                            onClick: () => this.publishPage(true),
+                            onClick: () => {
+                                this.publishPage(true);
+                            },
                         },
                     });
 
                     resolve(returnValue);
                 },
-                onfailure: (data: any, error: any) => {
+                onfailure: (_data: any, error: any) => {
                     this.appState.dispatch(new ListSavingErrorAction('page', error.errorMessage));
                     this.appState.dispatch(new SaveErrorAction(error.errorMessage));
                     this.errorHandler.catch(error, { notification: true });
+                    reject(error);
                 },
             });
         });
@@ -1074,7 +1080,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         const payload = this.entityResolver.denormalizeEntity('form', this.currentItem as Form<Normalized>);
         this.appState.dispatch(new StartSavingAction());
 
-        return this.api.forms.updateForm(id, payload).pipe(
+        return this.client.form.update(id, payload).pipe(
             tap(() => {
                 this.appState.dispatch(new SaveSuccessAction());
                 this.folderActions.refreshList('form');
@@ -1084,7 +1090,9 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
                     type: 'success',
                     action: {
                         label: 'common.publish_button',
-                        onClick: () => this.publishForm(true),
+                        onClick: () => {
+                            this.publishForm(true);
+                        },
                     },
                 });
             }),

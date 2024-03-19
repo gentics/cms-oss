@@ -64,11 +64,13 @@ export class AlohaContextButtonRendererComponent<T>
         };
         this.settings.closeContext = () => {
             this.closeAndClearContext();
+            this.aloha.restoreSelection();
         };
     }
 
     public handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -84,6 +86,7 @@ export class AlohaContextButtonRendererComponent<T>
         const context = typeof this.settings.context === 'function' ? this.settings.context() : this.settings.context;
 
         if (context == null) {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -94,6 +97,7 @@ export class AlohaContextButtonRendererComponent<T>
         } else if (this.settings.contextType === 'modal') {
             ctl = this.overlay.openDynamicModal(context);
         } else {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -104,18 +108,18 @@ export class AlohaContextButtonRendererComponent<T>
             this.settings.value = value;
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             this.settings?.contextResolve?.(value);
-            this.closeAndClearContext();
         }).catch(error => {
             if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
                 // This is a "notification" error which can be safely dismissed.
-                this.closeAndClearContext();
                 return;
             }
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             this.settings?.contextReject?.(error);
+        }).finally(() => {
             this.closeAndClearContext();
-        });
+            this.aloha.restoreSelection();
+        })
     }
 
     protected closeAndClearContext(): void {

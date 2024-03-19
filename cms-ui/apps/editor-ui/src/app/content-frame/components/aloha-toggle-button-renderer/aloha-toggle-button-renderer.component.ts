@@ -48,6 +48,7 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
 
     public handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -61,6 +62,7 @@ export class AlohaToggleButtonRendererComponent extends BaseAlohaRendererCompone
         this.settings.click?.();
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.onToggle?.(switched);
+        this.aloha.restoreSelection();
     }
 
     protected getFinalValue(): boolean {

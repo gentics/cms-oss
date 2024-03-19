@@ -72,6 +72,9 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
     public slot?: string;
 
     @Input()
+    public renderContext: string;
+
+    @Input()
     public component?: AlohaComponent;
 
     @Input()
@@ -195,6 +198,7 @@ export class AlohaComponentRendererComponent implements ControlValueAccessor, Af
             return;
         }
         this.instanceRef.instance.slot = this.slot;
+        this.instanceRef.instance.renderContext = this.renderContext ?? this.settings?.renderContext;
         this.instanceRef.instance.settings = this.component || this.settings;
         this.instanceRef.instance.disabled = this.disabled;
 

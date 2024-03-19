@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
+import { RENDERING_CONTEXT_MODAL } from '@editor-ui/app/common/models';
 import { DynamicFormModalConfiguration } from '@gentics/aloha-models';
 import { BaseModal, FormProperties } from '@gentics/ui-core';
 import { Subscription } from 'rxjs';
@@ -12,6 +13,8 @@ import { applyControl } from '../../utils';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DynamicFormModal<T> extends BaseModal<T> implements OnInit, OnDestroy {
+
+    public readonly RENDERING_CONTEXT_MODAL = RENDERING_CONTEXT_MODAL;
 
     @Input()
     public configuration: DynamicFormModalConfiguration<any>;

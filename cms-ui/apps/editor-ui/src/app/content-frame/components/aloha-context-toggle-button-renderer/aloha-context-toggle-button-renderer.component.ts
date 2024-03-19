@@ -30,6 +30,7 @@ export class AlohaContextToggleButtonRendererComponent<T> extends AlohaContextBu
 
     public override handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
 

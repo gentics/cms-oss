@@ -62,7 +62,7 @@ export class AlohaAttributeButtonRendererComponent
             this.changeDetector.markForCheck();
         };
         this.settings.setTargetElement = element => {
-            if (element == null || (element as JQuery).length === 0) {
+            if (element == null || (element ).length === 0) {
                 this.settings.targetElement = null;
             } else {
                 this.settings.targetElement = element;
@@ -77,18 +77,22 @@ export class AlohaAttributeButtonRendererComponent
 
     public handleClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         this.settings.click?.();
+        this.aloha.restoreSelection();
     }
 
     public handleSecondaryClick(): void {
         if (!this.settings) {
+            this.aloha.restoreSelection();
             return;
         }
 
         if (this.inputDropdown != null || this.settings.targetElement == null) {
+            this.aloha.restoreSelection();
             return;
         }
 
@@ -98,15 +102,21 @@ export class AlohaAttributeButtonRendererComponent
         this.overlay.openDynamicDropdown({
             type: 'input',
             initialValue: initialValue,
-        }, this.slot).then(ctl => {
-            this.inputDropdown = ctl;
-            return ctl.value;
-        }).then(value => {
-            this.inputDropdown = null;
-            this.triggerChange(value);
-        }).catch(err => {
-            this.inputDropdown = null;
-        });
+        }, this.slot)
+            .then(ctl => {
+                this.inputDropdown = ctl;
+                return ctl.value;
+            })
+            .then(value => {
+                this.inputDropdown = null;
+                this.triggerChange(value);
+            })
+            .catch(err => {
+                this.inputDropdown = null;
+            })
+            .finally(() => {
+                this.aloha.restoreSelection();
+            })
     }
 
     protected override onValueChange(): void {

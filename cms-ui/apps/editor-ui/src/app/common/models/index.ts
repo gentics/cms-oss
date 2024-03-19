@@ -27,6 +27,7 @@ export * from './node-settings-state';
 export * from './page-language-indicators-state';
 export * from './properties';
 export * from './publish-queue-state';
+export * from './rendering';
 export * from './tools-state';
 export * from './ui-state';
 export * from './usage-state';

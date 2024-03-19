@@ -130,7 +130,7 @@ describe('UploadConflictService', () => {
                 .then(() => {
                     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                     expect((spy.calls.argsFor(0) as any[])[1]).toEqual({
-                        type: 'file,image',
+                        type: ['file', 'image'],
                         nodeId: 1,
                         maxItems: -1,
                     });

@@ -55,6 +55,8 @@ define([
 	var GCN = window.GCN;
 	var gcnPlugin;
 
+	var INTERNAL_LINK_PATH = '/alohapage';
+
 	/**
 	 * When there are modified editables and one would click a link to
 	 * change the current page, it would complain about unsaved changes.
@@ -488,6 +490,23 @@ define([
 			// as modifications
 			Ephemera.classes('GENTICS_block');
 			Ephemera.classes('aloha-block-GCNBlock');
+
+			$(document).on('click', 'a', function(event) {
+				var link = $(this).attr('href');
+				try {
+					var parsed = new URL(link, window.location);
+					if (
+						parsed.host === window.location.host
+						&& parsed.pathname === INTERNAL_LINK_PATH
+					) {
+						return;
+					}
+				} catch (ignored) {}
+
+				// Cancel all other links
+				event.preventDefault();
+				return false;
+			});
 
 			GCNLinks.interjectLinkPlugin(LinkPlugin);
 

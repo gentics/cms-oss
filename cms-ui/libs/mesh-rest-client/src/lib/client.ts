@@ -31,7 +31,7 @@ export class MeshRestClient {
 
     constructor(
         public driver: MeshClientDriver,
-        public config: MeshRestClientConfig,
+        public config?: MeshRestClientConfig,
         public apiKey?: string,
     ) { }
 

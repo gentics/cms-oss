@@ -154,6 +154,7 @@ const SERVICES: Provider[] = [
 ];
 
 @NgModule({
+    id: 'admin-ui_mesh',
     declarations: DECLARATIONS,
     providers: [
         ...SERVICES,
@@ -164,7 +165,6 @@ const SERVICES: Provider[] = [
         FormsModule,
         ReactiveFormsModule,
         RouterModule.forChild([]),
-        MeshRestClientModule,
         SharedModule,
     ],
 })

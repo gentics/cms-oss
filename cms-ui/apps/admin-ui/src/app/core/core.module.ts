@@ -8,6 +8,7 @@ import {
     LoggingHelperService,
 } from '@admin-ui/core';
 import { KeycloakService } from '@admin-ui/login/providers/keycloak/keycloak.service';
+import { MeshModule } from '@admin-ui/mesh';
 import { SharedModule } from '@admin-ui/shared/shared.module';
 import { AppStateService, StateModule } from '@admin-ui/state';
 import { APP_INITIALIZER, ErrorHandler as NgErrorHandler, NgModule, Optional, SkipSelf } from '@angular/core';
@@ -16,6 +17,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CmsComponentsModule } from '@gentics/cms-components';
 import { GCMSRestClientModule, GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMS_API_BASE_URL, GCMS_API_ERROR_HANDLER, GCMS_API_SID, GcmsRestClientsAngularModule } from '@gentics/cms-rest-clients-angular';
+import { MeshRestClientModule } from '@gentics/mesh-rest-client-angular';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { HotkeyModule } from 'angular2-hotkeys';
@@ -237,12 +239,14 @@ const PROVIDERS: any[] = [
 ];
 
 @NgModule({
+    id: 'admin-ui_core',
     declarations: COMPONENTS,
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
         GcmsRestClientsAngularModule,
         GCMSRestClientModule,
+        MeshRestClientModule,
         GenticsUICoreModule,
         CmsComponentsModule,
         HotkeyModule.forRoot(),
@@ -252,10 +256,12 @@ const PROVIDERS: any[] = [
         LoggerModule.forRoot({ disableConsoleLogging: false, level: environment.production ? NgxLoggerLevel.ERROR : NgxLoggerLevel.DEBUG }),
         SharedModule,
         StateModule,
+        MeshModule,
     ],
     exports: [
         TranslateModule,
         SharedModule,
+        MeshModule,
         ...COMPONENTS,
     ],
     providers: PROVIDERS,

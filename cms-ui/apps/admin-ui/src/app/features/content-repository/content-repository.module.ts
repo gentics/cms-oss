@@ -1,4 +1,4 @@
-import { MeshModule } from '@admin-ui/mesh/mesh.module';
+import { MeshModule } from '@admin-ui/mesh';
 import { NgModule } from '@angular/core';
 import { RouterModule, provideRouter, withComponentInputBinding } from '@angular/router';
 import { SharedModule } from '../../shared/shared.module';
@@ -11,6 +11,7 @@ import {
 import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
 
 @NgModule({
+    id: 'admin-ui_content-repository',
     declarations: [
         ContentRepositoryEditorComponent,
         ContentRepositoryMasterComponent,

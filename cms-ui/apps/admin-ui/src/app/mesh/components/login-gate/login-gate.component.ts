@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ContentRepository, ContentRepositoryPasswordType, Response } from '@gentics/cms-models';
-import { GcmsApi } from '@gentics/cms-rest-clients-angular';
+import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { LoginRequest, User } from '@gentics/mesh-models';
 import { MeshAPIVersion, MeshClientConnection, RequestFailedError } from '@gentics/mesh-rest-client';
 import { MeshRestClientService } from '@gentics/mesh-rest-client-angular';
@@ -53,7 +53,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     constructor(
         protected changeDetector: ChangeDetectorRef,
         protected appState: AppStateService,
-        protected cmsClient: GcmsApi,
+        protected cmsClient: GCMSRestClientService,
         protected client: MeshRestClientService,
         protected notification: I18nNotificationService,
     ) { }
@@ -136,7 +136,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     loginWithContentRepository(): void {
-        this.performLogin(() => this.cmsClient.contentrepositories.loginToMeshInstance(this.repository.id).toPromise());
+        this.performLogin(() => this.cmsClient.contentRepository.loginToMeshInstance(this.repository.id).toPromise());
     }
 
     protected performLogin(handler: (value: LoginRequest) => Promise<any>): void {

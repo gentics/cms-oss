@@ -30,18 +30,22 @@ import { AngularMeshClientDriver } from './angular-mesh-client-driver';
 export class MeshRestClientService {
 
     private driver: AngularMeshClientDriver;
-    private config: MeshRestClientConfig;
     private client: MeshRestClient;
 
     constructor(
         http: HttpClient,
     ) {
         this.driver = new AngularMeshClientDriver(http);
+        this.client = new MeshRestClient(this.driver);
     }
 
     init(config: MeshRestClientConfig, apiKey?: string): void {
-        this.client = new MeshRestClient(this.driver, config, apiKey);
-        this.config = config;
+        this.client.config = config;
+        this.client.apiKey = apiKey;
+    }
+
+    configure(config: MeshRestClientConfig): void {
+        this.client.config = config;
     }
 
     isInitialized(): boolean {
@@ -49,7 +53,7 @@ export class MeshRestClientService {
     }
 
     getConfig(): MeshRestClientConfig {
-        return this.config;
+        return this.client.config;
     }
 
     public prepareRequest(

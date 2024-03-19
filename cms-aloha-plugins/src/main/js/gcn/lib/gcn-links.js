@@ -109,7 +109,7 @@ define('gcn/gcn-links', [
 				return null;
 			};
 
-			if ($(existingLink)) {
+			if (existingLink && $(existingLink)) {
 				context.initialValue = extractLinkTargetFromElement(context.initialValue, existingLink);
 			}
 

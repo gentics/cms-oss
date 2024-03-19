@@ -5,6 +5,7 @@ import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
 import { Construct, ConstructCategory } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
+import { getTagPartPropertyValue } from '../../../tag-editor/util/part-value';
 import { AlohaGlobal } from '../../models/content-frame';
 
 interface DisplayGroup {
@@ -147,7 +148,13 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
 
                 if (construct.openEditorOnInsert) {
                     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-unsafe-call
-                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent()._data);
+                    this.tagEditor.openTagEditor(tag._data, construct, tag.parent()._data).then(res => {
+                        // Save the updated tag data into the page
+                        Object.entries(res.tag.properties).forEach(([propName, propValue]) => {
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                            tag.part(propName, getTagPartPropertyValue(propValue));
+                        });
+                    });
                 }
             }, html);
         });

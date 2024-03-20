@@ -101,6 +101,12 @@
                     margin-left: 24px;
                 }
             }
+
+            /* This needs to be shown again */
+            .nav-wrapper .breadcrumb + .lastPart .breadcrumb:first-of-type::before {
+                display: inline-block;
+                content: '\e5cc';
+            }
         }
 
         &.isInherited {

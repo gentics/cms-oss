@@ -326,3 +326,12 @@ export interface AlohaScopeChangeEvent {
     activeScopes: string[];
     activeScopeList: string[];
 }
+
+export interface AlohaSetEditableActiveEvent {
+    editable: AlohaEditable | null;
+}
+
+export interface AlohaEditableActivatedEvent {
+    old?: AlohaEditable;
+    editable: AlohaEditable;
+}

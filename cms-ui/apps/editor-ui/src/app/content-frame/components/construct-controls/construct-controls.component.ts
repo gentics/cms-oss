@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { GCNAlohaPlugin, GCNTags } from '@gentics/cms-integration-api-models';
 import { Construct, ConstructCategory } from '@gentics/cms-models';
 import { DropdownListComponent, cancelEvent } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
+import { AlohaEditable } from '@gentics/aloha-models';
 import { getTagPartPropertyValue } from '../../../tag-editor/util/part-value';
 import { AlohaGlobal } from '../../models/content-frame';
 
@@ -26,7 +27,7 @@ const UNCATEGORIZED_LABEL = 'editor.construct_no_category';
     styleUrls: ['./construct-controls.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ConstructControlsComponent implements OnInit, OnChanges {
+export class ConstructControlsComponent implements OnChanges {
 
     public readonly FAVOURITES_ID = FAVOURITES_ID;
     public readonly FAVOURITES_LABEL = FAVOURITES_LABEL;
@@ -47,6 +48,9 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
 
     @Input()
     public alohaRef: AlohaGlobal;
+
+    @Input()
+    public editable: AlohaEditable;
 
     @Output()
     public favouritesChange = new EventEmitter<string[]>();
@@ -72,17 +76,9 @@ export class ConstructControlsComponent implements OnInit, OnChanges {
         protected tagEditor: TagEditorService,
     ) {}
 
-    public ngOnInit(): void {
-        this.updateAvailableConstructs();
-        this.updateFavouriteConstructs();
-        this.updateDisplayGroups();
-
-        // TODO: Aloha context change (activeEditable) needs to be observed and then constructs need to be checked again.
-    }
-
     public ngOnChanges(changes: SimpleChanges): void {
         let didChange = false;
-        if (changes.constructs && !changes.constructs.firstChange) {
+        if (changes.constructs || changes.categories) {
             this.updateAvailableConstructs();
             this.updateFavouriteConstructs();
             this.updateDisplayGroups();

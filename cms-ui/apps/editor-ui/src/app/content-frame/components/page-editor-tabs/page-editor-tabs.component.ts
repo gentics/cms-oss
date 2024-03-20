@@ -76,7 +76,7 @@ export class PageEditorTabsComponent implements OnInit, AfterViewInit, OnDestroy
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.activeEditor$.subscribe(activeEditor => {
+        this.subscriptions.push(this.aloha.editorTab$.subscribe(activeEditor => {
             this.activeTab = activeEditor;
             this.changeDetector.markForCheck();
         }))

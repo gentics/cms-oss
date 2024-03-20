@@ -28,4 +28,6 @@ link_checker_delete:
 link_checker_no_content:
     de: 'Keine defekten Links vorhanden'
     en: 'No broken Links detected'
-
+constructs_empty:
+    de: 'Keine TagTypen einsetzbar/verfügbar'
+    en: 'No Constructs insertable/available'

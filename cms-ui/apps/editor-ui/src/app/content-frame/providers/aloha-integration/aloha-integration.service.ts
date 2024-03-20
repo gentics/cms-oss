@@ -3,11 +3,13 @@ import {
     AlohaComponent,
     AlohaComponentSetting,
     AlohaCoreComponentNames,
+    AlohaEditable,
     AlohaFullComponentSetting,
     AlohaPubSub,
     AlohaRangeObject,
     AlohaScopeChangeEvent,
     AlohaScopes,
+    AlohaSetEditableActiveEvent,
     AlohaSettings,
     AlohaToolbarSizeSettings,
     AlohaToolbarTabsSettings,
@@ -164,8 +166,9 @@ export class AlohaIntegrationService {
     public pubSubRef$: Observable<AlohaPubSub>;
     public contextChange$: Observable<AlohaRangeObject>;
     public scopeChange$: Observable<AlohaScopeChangeEvent>;
+    public activeEditable$: Observable<AlohaEditable>;
 
-    protected activeEditorSub = new BehaviorSubject<string>(null);
+    protected editorTabSub = new BehaviorSubject<string>(null);
     protected activeSizeSub = new BehaviorSubject<ScreenSize>(ScreenSize.DESKTOP);
     protected componentsSub = new BehaviorSubject<Record<string, AlohaComponent>>({});
     protected windowSub = new BehaviorSubject<CNWindow>(null);
@@ -175,7 +178,7 @@ export class AlohaIntegrationService {
      * The currently selected/active editor in the page-controls.
      */
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public readonly activeEditor$ = this.activeEditorSub.asObservable();
+    public readonly editorTab$ = this.editorTabSub.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public readonly size$ = this.activeSizeSub.asObservable();
@@ -228,6 +231,10 @@ export class AlohaIntegrationService {
                 }
                 return normalizeToolbarSizeSettings(settings[size], components, scopesRef);
             }),
+        );
+
+        this.activeEditable$ = this.on<AlohaSetEditableActiveEvent>('aloha.editable.set-active').pipe(
+            map(event => event?.editable),
         );
     }
 
@@ -322,7 +329,7 @@ export class AlohaIntegrationService {
         }
 
         this.activeTab = id;
-        this.activeEditorSub.next(id);
+        this.editorTabSub.next(id);
 
         return true;
     }

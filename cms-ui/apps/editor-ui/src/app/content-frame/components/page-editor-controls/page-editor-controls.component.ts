@@ -12,12 +12,12 @@ import {
 } from '@angular/core';
 import { UserSettingsService } from '@editor-ui/app/core/providers/user-settings/user-settings.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
-import { AlohaComponent, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
+import { AlohaComponent, AlohaEditable, AlohaLinkChangeEvent, AlohaLinkInsertEvent, AlohaLinkRemoveEvent } from '@gentics/aloha-models';
 import { GCNAlohaPlugin, GCNLinkCheckerAlohaPluigin, GCNLinkCheckerPluginSettings } from '@gentics/cms-integration-api-models';
 import { ConstructCategory, ExternalLink, NodeFeature, TagType } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Subscription, combineLatest, forkJoin, merge, of } from 'rxjs';
-import { delay, filter, first, map, switchMap } from 'rxjs/operators';
+import { delay, filter, first, map, switchMap, tap } from 'rxjs/operators';
 import { AlohaGlobal } from '../../models/content-frame';
 import {
     AlohaIntegrationService,
@@ -97,6 +97,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
     public alohaRef: AlohaGlobal;
     public tagEditorOpen = false;
     public linkCheckerEnabled = false;
+    public editable: AlohaEditable | null = null;
 
     /*
      * Editor Elements which are handled/loaded in this component
@@ -125,8 +126,38 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
     public ngOnInit(): void {
         this.activeTab = this.aloha.activeTab;
 
-        this.subscriptions.push(this.client.construct.list().subscribe(res => {
-            this.constructs = res.items;
+        this.subscriptions.push(combineLatest([
+            this.client.construct.list(),
+            this.aloha.activeEditable$.pipe(
+                tap(editable => {
+                    this.editable = editable;
+                    this.changeDetector.markForCheck();
+                }),
+            ),
+            this.aloha.settings$,
+        ]).pipe(
+            map(([res, activeEditable, settings]) => {
+                const raw = res.items;
+
+                // No element selected, nothing to do
+                if (activeEditable?.obj?.[0] == null) {
+                    return raw;
+                }
+
+                const elem = activeEditable.obj[0];
+                const editables = settings.plugins?.gcn?.editables || {};
+                const whitelist = (Object.entries(editables).find(([selector]) => {
+                    return elem.matches(selector);
+                })?.[1] as any)?.tagtypeWhitelist;
+
+                if (!Array.isArray(whitelist)) {
+                    return raw;
+                }
+
+                return raw.filter(construct => whitelist.includes(construct.keyword));
+            }),
+        ).subscribe(constructs => {
+            this.constructs = constructs;
             this.changeDetector.markForCheck();
         }));
 
@@ -145,7 +176,7 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
             this.changeDetector.markForCheck();
         }));
 
-        this.subscriptions.push(this.aloha.activeEditor$.subscribe(activeTab => {
+        this.subscriptions.push(this.aloha.editorTab$.subscribe(activeTab => {
             this.activeTab = activeTab;
             this.changeDetector.markForCheck();
         }));

@@ -29,6 +29,7 @@
     .context-menu-header {
         @include gtxCommonHeader;
         transition: 200ms;
+        display: none;
 
         .header-confirm-button {
             display: block;
@@ -59,8 +60,8 @@
         }
     }
 
-    &.no-header .context-menu-header {
-        display: none;
+    &.with-confirm .context-menu-header {
+        display: flex;
     }
 
     .context-menu-content {
@@ -93,6 +94,7 @@
         max-height: calc(min(.4 * var(--gtx-vvh), 16rem));
 
         .context-menu-header {
+            display: flex;
             height: 60px;
         }
     }

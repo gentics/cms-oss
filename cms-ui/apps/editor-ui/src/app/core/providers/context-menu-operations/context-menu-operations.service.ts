@@ -45,9 +45,9 @@ import {
     Node,
     Normalized,
     Page,
-    Raw, RepositoryBrowserOptions,
+    Raw, RepositoryBrowserOptions, TagInContainer, Template,
 } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
+import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';
@@ -156,6 +156,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         folderId: number,
     ): Promise<any> {
         const featureLinkTemplatesNew = this.state.now.features.folder_based_template_selection;
+
         if (!featureLinkTemplatesNew) {
             const modal = await this.modalService.fromComponent(LinkTemplateModal, {
                 padding: true,
@@ -164,16 +165,29 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 nodeId,
                 folderId,
             });
-            await modal.open();
+            try {
+                await modal.open();
+            } catch (err) {
+                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                    throw err;
+                }
+            }
             return;
         }
 
-        const selectResult = await this.repositoryBrowserClient.openRepositoryBrowser({
-            allowedSelection: ['template'],
-            selectMultiple: true,
-            startNode: nodeId,
-            startFolder: folderId,
-        });
+        let selectResult: Template[];
+        try {
+            selectResult = await this.repositoryBrowserClient.openRepositoryBrowser({
+                allowedSelection: ['template'],
+                selectMultiple: true,
+                startNode: nodeId,
+                startFolder: folderId,
+            });
+        } catch (err) {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+        }
 
         if (!selectResult || !selectResult.length) {
             return;
@@ -196,10 +210,17 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 },
             ],
         });
-        const recursive: boolean = await dialog.open();
 
-        await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
-        await this.folderActions.getTemplates(folderId, true);
+        try {
+            const recursive: boolean = await dialog.open();
+
+            await this.templateActions.linkTemplatesToFolders(nodeId, selectResult.map(t => t.id), [folderId], recursive).toPromise();
+            await this.folderActions.getTemplates(folderId, true);
+        } catch (err) {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+        }
     }
 
     /**
@@ -465,6 +486,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                 // refresh folder content list to display new TimeManagement settings
                 this.folderActions.refreshList('page');
                 this.folderActions.refreshList('form');
+            })
+            .catch(err => {
+                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                    throw err;
+                }
             });
     }
 
@@ -562,7 +588,8 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
     listPageVersions(page: Page, activeNodeId: number): void {
         const options = { page, nodeId: activeNodeId };
         this.modalService.fromComponent(PageVersionsModal, null, options)
-            .then(modal => modal.open());
+            .then(modal => modal.open())
+            .catch(err => {});
     }
 
     localize(item: InheritableItem, activeNodeId: number): void {
@@ -694,7 +721,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
                         .then(success => success && this.navigationService.list(folder.nodeId, folder.id).navigate());
                 }
             })
-            .catch(this.errorHandler.catch);
+            .catch(err => {
+                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                    this.errorHandler.catch(err);
+                }
+            });
     }
 
     requestTranslation(pageId: number, nodeId: number): void {
@@ -711,7 +742,11 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             })
             .then(modal => modal.open())
             .then((request: InheritanceRequest) => this.folderActions.updateItemInheritance(item.type, item.id, request))
-            .catch(this.errorHandler.catch);
+            .catch(err => {
+                if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                    this.errorHandler.catch(err);
+                }
+            });
     }
 
     async synchronizeChannel(item: Folder | Page | FileModel | Image): Promise<void> {
@@ -719,7 +754,15 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
         let folderResponse: ChannelSyncRequest;
 
         const syncModal = await this.modalService.fromComponent(SynchronizeChannelModal, {}, { item, channel });
-        const syncResponse: ChannelSyncRequest = await syncModal.open();
+        let syncResponse: ChannelSyncRequest;
+        try {
+            syncResponse = await syncModal.open();
+        } catch (err) {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+            return;
+        }
 
         if (item.type === 'folder') {
             folderResponse = syncResponse;
@@ -734,7 +777,16 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             item,
             response: syncResponse,
         });
-        const depResponse: ItemsGroupedByChannelId = await depModal.open();
+        let depResponse: ItemsGroupedByChannelId;
+
+        try {
+            depResponse = await depModal.open();
+        } catch (err) {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+            return;
+        }
 
         try {
             await this.pushFolderToMaster(item.type, folderResponse).toPromise();

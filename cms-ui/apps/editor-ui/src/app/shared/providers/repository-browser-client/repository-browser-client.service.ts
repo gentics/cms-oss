@@ -7,7 +7,7 @@ import {
     RepositoryBrowserOptions,
     TagInContainer,
 } from '@gentics/cms-models';
-import { ModalService } from '@gentics/ui-core';
+import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
 import { RepositoryBrowser } from '../../components';
 
 @Injectable()
@@ -50,48 +50,43 @@ export class RepositoryBrowserClient {
      *
      * @returns A Promise, which resolves to `ItemInNode | TagInContainer` if `selectMultiple` is false and
      * to `(ItemInNode | TagInContainer)[]` if `selectMultiple` is true.
-     * If user clicks on the cancel button, the promise neither resolves nor rejects.
+     * If user clicks on the cancel button, the promise resolves with `null`.
      */
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
         options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: false }
-    ): Promise<R>;
+    ): Promise<R | null>;
     openRepositoryBrowser<T extends AllowedSelectionType, R = AllowedSelectionTypeMap[T]>(
         options: RepositoryBrowserOptions & { allowedSelection: T, selectMultiple: true }
-    ): Promise<R[]>;
+    ): Promise<R[] | null>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
         options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: false }
-    ): Promise<R>;
+    ): Promise<R | null>;
     openRepositoryBrowser<R = ItemInNode | TagInContainer>(
         options: RepositoryBrowserOptions & { allowedSelection: AllowedSelectionType[], selectMultiple: true }
-    ): Promise<R[]>;
-    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
-    async openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]> {
+    ): Promise<R[] | null>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[] | null>;
+    async openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[] | null> {
         await this.appState.dispatch(new IncreaseOverlayCountAction()).toPromise();
 
-        let didDecrease = false;
-        // Because of https://jira.gentics.com/browse/GUIC-224 we cannot use the promise to determine if the RepositoryBrowser
-        // was closed by clicking Cancel. To maintain compatibility with existing RepositoryBrowser usages and
-        // also because there is probably no other way right now, the promise only resolves if the user clicks OK.
-        // If the user clicks Cancel, nothing happens.
         const modal = await this.modalService.fromComponent(
             RepositoryBrowser,
             {
                 padding: true,
                 width: '1000px',
-                onClose: () => {
-                    this.appState.dispatch(new DecreaseOverlayCountAction());
-                    didDecrease = true;
-                },
             },
             { options },
         );
-        const selected: R | R[] = await modal.open();
-
-        if (!didDecrease) {
+        try {
+            const selected: R | R[] = await modal.open();
+            return selected;
+        } catch (err) {
+            if (!(err instanceof ModalCloseError) || err.reason === ModalClosingReason.ERROR) {
+                throw err;
+            }
+            return null;
+        } finally {
             this.appState.dispatch(new DecreaseOverlayCountAction());
         }
-
-        return selected;
     }
 
 }

@@ -174,9 +174,9 @@ public class NodeConfigTest {
 		});
 
 		if (specific) {
-			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script><script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,specific/specific\"></script>");
+			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n<script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,specific/specific\"></script>\n");
 		} else {
-			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script><script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,general/general\"></script>");
+			assertThat(renderedScripts).as("Aloha Scripts").isEqualTo("<script type=\"text/javascript\" src=\"/alohaeditor/gcmsui-scripts-launcher.js\"></script>\n<script src=\"/alohaeditor/TEST/lib/aloha.js\" data-aloha-plugins=\"gcn/gcn,general/general\"></script>\n");
 		}
 	}
 

@@ -63,6 +63,8 @@ export class ConstructControlsComponent implements OnChanges {
 
     /** Ids of all the constructs which were used for the previous grouping. Used for caching */
     protected previousConstructIds: number[] = [];
+    /** Ids of all the categories which were used for previous grouping. USed for caching */
+    protected previousCategories: number[] = [];
     /** Previous search term. Used for caching */
     protected previousHaystack = '';
 
@@ -169,26 +171,11 @@ export class ConstructControlsComponent implements OnChanges {
     }
 
     protected updateAvailableConstructs(): void {
-        let whitelist: string[] | null = this.gcnPlugin?.settings?.config?.tagtypeWhitelist;
-        const elem = this.alohaRef?.activeEditable?.obj?.get?.(0);
-
-        // Check for whitelists which are more specific
-        if (elem != null) {
-            const elementConfig = Object.entries(this.gcnPlugin?.settings?.editables || {})
-                .find(([query]) => elem.matches(query))?.[1];
-
-            if (elementConfig != null) {
-                whitelist = elementConfig?.tagtypeWhitelist ?? whitelist;
-            }
-        }
-
         this.availableConstructs = this.constructs
             // Only allow constructs which can actually be added
             .filter(construct => construct.visibleInMenu && construct.mayBeSubtag)
             // The "magiclink" construct (aloha-link) has to be removed all the time
             .filter(construct => this.gcnPlugin?.settings?.magiclinkconstruct !== construct.id)
-            // Then filter out all which aren't in the whitelist (if one is defined)
-            .filter(construct => whitelist == null || (whitelist.length !== 0 && whitelist.includes(construct.keyword)))
             // Sort them by name to be nicely displayed
             .sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -209,13 +196,19 @@ export class ConstructControlsComponent implements OnChanges {
     protected updateDisplayGroups(): void {
         const haystack = (this.filterText || '').toLocaleLowerCase();
         const newIds = this.availableConstructs.map(c => c.id);
+        const catIds = this.categories.map(c => c.id);
 
         // Nothing has changed in the constructs or in the term, so we don't need to rebuild the groups
-        if (isEqual(this.previousConstructIds, newIds) && this.previousHaystack === haystack) {
+        if (
+            isEqual(this.previousConstructIds, newIds)
+            && isEqual(this.previousCategories, catIds)
+            && this.previousHaystack === haystack
+        ) {
             return;
         }
 
         this.previousConstructIds = newIds;
+        this.previousCategories = catIds;
         this.previousHaystack = haystack;
 
         const constructMap: Record<number, Construct> = this.availableConstructs

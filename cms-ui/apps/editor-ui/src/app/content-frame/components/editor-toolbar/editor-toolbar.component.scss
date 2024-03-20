@@ -248,7 +248,8 @@
 @media (max-width: $aloha-size-tablet-max) {
 
     .toolbar-actions .item-status::ng-deep .label-wrapper,
-    .element-toolbar .save-button-label {
+    .element-toolbar .save-button-label,
+    .element-toolbar .edit-button-label {
         display: none;
     }
 

@@ -48,7 +48,8 @@
                 (click)="editItem()"
                 [title]="'editor.edit_tooltip' | i18n"
             >
-                <icon>edit</icon>
+                <icon left>edit</icon>
+                <span class="edit-button-label">{{ 'editor.edit_label' | i18n }}</span>
             </gtx-button>
 
             <gtx-button

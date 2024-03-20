@@ -288,6 +288,13 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	void setHostnameProperty(String hostnameProperty) throws ReadOnlyException;
 
 	/**
+	 * If a hostname property is set, resolve it now and set it as hostname.
+	 * If the hostname changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	void resolveHostnameProperty() throws ReadOnlyException;
+
+	/**
 	 * Get the effective hostname. This will do property substitution.
 	 * @return effective hostname
 	 */
@@ -854,6 +861,13 @@ public interface Node extends StageableNodeObject, Resolvable, NamedNodeObject {
 	 */
 	@FieldSetter("mesh_preview_url_property")
 	void setMeshPreviewUrlProperty(String urlProperty) throws ReadOnlyException;
+
+	/**
+	 * If a mesh preview URL property is set, resolve it now and set it as mesh preview URL.
+	 * If the mesh preview URL changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	void resolveMeshPreviewUrlProperty() throws ReadOnlyException;
 
 	/**
 	 * Get the effective mesh preview URL. This will do property substitution.

@@ -422,6 +422,15 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
+	 * If a username property is set, resolve it now and set it as username.
+	 * If the username changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveUsernameProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
 	 * Get the effective username. This will do property substitution.
 	 * @return effective username
 	 */
@@ -587,6 +596,15 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	}
 
 	/**
+	 * If a URL property is set, resolve it now and set it as URL.
+	 * If the URL changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveUrlProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
 	 * Get the effective connection URL. This will do property substitution.
 	 * @return effective connection URL
 	 */
@@ -732,6 +750,15 @@ public abstract class ContentRepository extends AbstractContentObject implements
 	 */
 	@FieldSetter("basepath_property")
 	public void setBasepathProperty(String basepathProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	/**
+	 * If a basepath property is set, resolve it now and set it as basepath.
+	 * If the basepath changes, the internal "modified" flag will be set
+	 * @throws ReadOnlyException
+	 */
+	public void resolveBasepathProperty() throws ReadOnlyException {
 		failReadOnly();
 	}
 

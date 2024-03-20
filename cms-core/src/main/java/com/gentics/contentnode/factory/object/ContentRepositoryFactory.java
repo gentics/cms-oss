@@ -50,6 +50,7 @@ import com.gentics.contentnode.factory.RefreshPermHandler;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -114,6 +115,32 @@ public class ContentRepositoryFactory extends AbstractFactory {
 	 */
 	public ContentRepositoryFactory() {
 		super();
+	}
+
+	@Override
+	public void initialize() throws NodeException {
+		super.initialize();
+
+		// get all existing CRs, which have a _property set
+		List<ContentRepository> crs = Trx.supply(t -> t.getObjects(ContentRepository.class, DBUtils.select(
+				"SELECT id FROM contentrepository WHERE username_property != '' OR url_property != '' OR basepath_property != ''",
+				DBUtils.IDLIST)));
+
+		// resolve the properties, because their value might have changed
+		for (ContentRepository cr : crs) {
+			try {
+				Trx.consume(update -> {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					update = t.getObject(update, true);
+					update.resolveBasepathProperty();
+					update.resolveUrlProperty();
+					update.resolveUsernameProperty();
+					update.save();
+				}, cr);
+			} catch (NodeException e) {
+				logger.error("Error while resolving properties set for cr " + I18NHelper.getName(cr));
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -1061,9 +1088,18 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			if (!StringUtils.isEqual(this.basepathProperty, basepathProperty)) {
 				this.basepathProperty = basepathProperty;
 				this.modified = true;
-				// if basepathProperty is not empty, resolve and set basepath also
-				if (!org.apache.commons.lang3.StringUtils.isBlank(this.basepathProperty)) {
-					this.basepath = substituteSingleProperty(this.basepathProperty, ContentRepository.CR_ATTRIBUTEPATH_FILTER);
+				resolveBasepathProperty();
+			}
+		}
+
+		@Override
+		public void resolveBasepathProperty() throws ReadOnlyException {
+			// if basepathProperty is not empty, resolve and set basepath also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.basepathProperty)) {
+				String resolvedBasepath = substituteSingleProperty(this.basepathProperty, ContentRepository.CR_ATTRIBUTEPATH_FILTER);
+				if (!StringUtils.isEqual(this.basepath, resolvedBasepath)) {
+					this.basepath = resolvedBasepath;
+					this.modified = true;
 				}
 			}
 		}
@@ -1099,9 +1135,18 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			if (!StringUtils.isEqual(this.usernameProperty, usernameProperty)) {
 				this.usernameProperty = usernameProperty;
 				this.modified = true;
-				// if usernameProperty is not empty, resolve and set username also
-				if (!org.apache.commons.lang3.StringUtils.isBlank(this.usernameProperty)) {
-					this.username = substituteSingleProperty(this.usernameProperty, ContentRepository.CR_USERNAME_FILTER);
+				resolveUsernameProperty();
+			}
+		}
+
+		@Override
+		public void resolveUsernameProperty() throws ReadOnlyException {
+			// if usernameProperty is not empty, resolve and set username also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.usernameProperty)) {
+				String resolvedUsername = substituteSingleProperty(this.usernameProperty, ContentRepository.CR_USERNAME_FILTER);
+				if (!StringUtils.isEqual(this.username, resolvedUsername)) {
+					this.username = resolvedUsername;
+					this.modified = true;
 				}
 			}
 		}
@@ -1136,9 +1181,18 @@ public class ContentRepositoryFactory extends AbstractFactory {
 			if (!StringUtils.isEqual(this.urlProperty, urlProperty)) {
 				this.urlProperty = urlProperty;
 				this.modified = true;
-				// if urlProperty is not empty, resolve and set url also
-				if (!org.apache.commons.lang3.StringUtils.isBlank(this.urlProperty)) {
-					this.url = substituteSingleProperty(this.urlProperty, ContentRepository.CR_URL_FILTER);
+				resolveUrlProperty();
+			}
+		}
+
+		@Override
+		public void resolveUrlProperty() throws ReadOnlyException {
+			// if urlProperty is not empty, resolve and set url also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.urlProperty)) {
+				String resolvedUrl = substituteSingleProperty(this.urlProperty, ContentRepository.CR_URL_FILTER);
+				if (!StringUtils.isEqual(this.url, resolvedUrl)) {
+					this.url = resolvedUrl;
+					this.modified = true;
 				}
 			}
 		}

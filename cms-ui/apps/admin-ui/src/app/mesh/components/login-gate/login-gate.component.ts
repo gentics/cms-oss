@@ -75,7 +75,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.repository && !changes.repository.firstChange) {
+        if (changes.repository && !changes.repository.firstChange && !this.loggedIn) {
             this.setupConnection();
         }
     }

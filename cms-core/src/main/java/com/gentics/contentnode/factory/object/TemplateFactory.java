@@ -1582,7 +1582,7 @@ public class TemplateFactory extends AbstractFactory {
 		template.eDate = new ContentNodeDate(t.getUnixTimestamp());
 
 		// normalize some data
-		template.name = ObjectTransformer.getString(template.name, "");
+		template.name = ObjectTransformer.getString(template.name, "").trim();
 		template.source = ObjectTransformer.getString(template.source, "");
 		template.description = ObjectTransformer.getString(template.description, "");
 

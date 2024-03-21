@@ -34,12 +34,19 @@
                     (branchChange)="branchChangeHandler($event)"
                 />
 
-                <gtx-mesh-browser-language-switcher
-                    [currentLanguage]="currentLanguage"
-                    [languages]="languages"
-                    (languageChange)="languageChangeHandler($event)"
-                />
+                <div class="language-wrapper">                
+                    <gtx-mesh-browser-language-activation
+                        (languageChanged)="projectLanguageChangeHandler()"
+                        [currentProject]="currentProject"
+                    />
 
+                    <gtx-mesh-browser-language-switcher
+                        [currentLanguage]="currentLanguage"
+                        [languages]="languages"
+                        (languageChange)="languageChangeHandler($event)"
+                    />
+                </div>
+                
                 <gtx-mesh-browser-breadcrumbs
                     [currentProject]="currentProject"
                     [currentBranchUuid]="currentBranchUuid"

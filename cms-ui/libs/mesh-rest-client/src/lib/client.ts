@@ -291,6 +291,9 @@ export class MeshRestClient {
 
     public language: MeshLanguageAPI = {
         list: (project) => this.executeJsonRequest(GET, `${project}/languages`),
+        listAll: () => this.executeJsonRequest(GET, 'languages'),
+        activate: (project, language) => this.executeJsonRequest(POST, `${project}/languages/${language}`),
+        deactivate: (project, language) => this.executeJsonRequest(DELETE, `${project}/languages/${language}`),
     } as const;
 
 }

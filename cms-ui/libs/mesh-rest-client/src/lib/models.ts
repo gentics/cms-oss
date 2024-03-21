@@ -303,4 +303,7 @@ export type MeshGraphQLAPI = (project: string, body: GraphQLRequest, params?: Gr
 
 export interface MeshLanguageAPI {
     list(project: string): Promise<ListResponse<Language>>;
+    listAll(): Promise<ListResponse<Language>>;
+    activate(project: string, language: string): Promise<ListResponse<Language>>;
+    deactivate(project: string, language: string): Promise<ListResponse<Language>>;
 }

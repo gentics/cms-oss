@@ -1,0 +1,34 @@
+@import "variables";
+
+
+.language-activation-wrapper {
+    float: left;
+}
+
+
+gtx-dropdown-content {
+    overflow-x: hidden;
+}
+
+
+::ng-deep .activation-actions {
+    & .btn {
+        margin-left: 1rem !important;
+        height: 29px !important;
+        line-height: 29px !important;
+        padding: 0 !important;
+    }
+
+}
+
+::ng-deep .input-filter {
+    & > input {
+        margin-top: 2px !important;
+        border-bottom: 1px solid $gtx-color-primary !important;
+        border-top: unset !important;
+        border-left: unset !important;
+        border-right: unset !important;
+        border-radius: unset !important;
+    }
+}
+

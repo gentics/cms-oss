@@ -1,0 +1,82 @@
+import { I18nNotificationService } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { MeshBrowserLoaderService } from '../../providers';
+
+
+@Component({
+    selector: 'gtx-mesh-browser-language-activation',
+    templateUrl: './mesh-browser-language-activation.component.html',
+    styleUrls: ['./mesh-browser-language-activation.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class MeshBrowserLanguageActivationComponent {
+
+    @Input()
+    public currentProject: string;
+
+    @Output()
+    public languageChanged: EventEmitter<void> = new EventEmitter();
+
+    public languages: string[];
+
+    public filteredLanguages: string[];
+
+    public currentLanguage: string;
+
+
+    constructor(
+        protected loader: MeshBrowserLoaderService,
+        protected changeDetector: ChangeDetectorRef,
+        protected notificationService: I18nNotificationService,
+    ) {
+        this.init();
+    }
+
+    private async init() {
+        this.languages = await this.loader.getAllLanguages()
+        this.filteredLanguages = this.languages;
+        this.changeDetector.markForCheck();
+    }
+
+    public languageChangeHandler(language: string): void {
+        this.currentLanguage = language
+    }
+
+    public filterLanguageHandler(filterLanguage: string): void {
+        this.filteredLanguages = this.languages.filter(language => language.includes(filterLanguage));
+    }
+
+    public async activateLanguageHandler(): Promise<void> {
+        const isActivated = await this.loader.activateProjectLanguage(this.currentProject, this.currentLanguage)
+
+        if (!isActivated) {
+            return;
+        }
+
+        this.notificationService.show({
+            type: 'success',
+            message: 'mesh.language_assigned_to_project',
+        })
+
+        this.currentLanguage = null;
+        this.languageChanged.emit();
+    }
+
+    public async deactivateLanguageHandler(): Promise<void> {
+        const isDeactivated = await this.loader.deactivateProjectLanguage(this.currentProject, this.currentLanguage)
+
+        if (!isDeactivated) {
+            return;
+        }
+
+        this.notificationService.show({
+            type: 'success',
+            message: 'mesh.language_unassigned_from_project',
+        })
+
+        this.currentLanguage = null;
+        this.languageChanged.emit();
+    }
+
+}
+

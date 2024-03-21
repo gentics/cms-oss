@@ -814,5 +814,21 @@
     "published_state_changed": {
         "en": "Last modified at",
         "de": "Geändert am"
+    },
+    "language_assigned_to_project": {
+        "en": "Language assigned to project",
+        "de": "Sprache wurde dem Projekt hinzugefügt"
+    },
+    "language_unassigned_from_project": {
+        "en": "Language unassigned from project",
+        "de": "Sprache wurde vom Projekt entfernt"
+    },
+    "language_activation": {
+        "en": "Activate language",
+        "de": "Sprache aktivieren"
+    },
+    "language_switch": {
+        "en": "Switch language",
+        "de": "Sprache wechseln"
     }
 }

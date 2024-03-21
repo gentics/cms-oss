@@ -1,11 +1,11 @@
 .dropdown-language {
-    float: right;
+    float: left;
+    clear: both;
     margin-right: 1rem;
     cursor: pointer;
 
     icon.collapse{
         position: relative;
         top: 5px;
-        margin-left: -5px;
     }
 }

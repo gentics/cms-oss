@@ -218,4 +218,9 @@ export class MeshBrowserMasterComponent
         );
         this.handleNavigation();
     }
+
+    public async projectLanguageChangeHandler(): Promise<void> {
+        await this.setLanguageDetails();
+        this.changeDetector.markForCheck()
+    }
 }

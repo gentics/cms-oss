@@ -4,6 +4,7 @@
     <gtx-dropdown-list class="dropdown-language">
         <gtx-dropdown-trigger>
             <a>
+                <span>{{ 'mesh.language_switch'  | i18n }}</span>
                 <icon *ngIf="languages?.length > 1" class="collapse">keyboard_arrow_down</icon> 
                 <span>{{ currentLanguage }}</span>
             </a>

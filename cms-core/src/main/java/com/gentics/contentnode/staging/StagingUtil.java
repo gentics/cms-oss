@@ -80,7 +80,7 @@ public class StagingUtil {
 			return null;
 		}
 
-		StagingStatusService service = StreamSupport.stream(loader.spliterator(), false).findFirst().orElse(null);
+		StagingStatusService service = StreamSupport.stream(loader.spliterator(), false).findAny().orElse(null);
 		if (service != null) {
 			return service.checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
 		} else {

@@ -1,4 +1,4 @@
-import { I18nNotificationService } from '@admin-ui/core';
+import { ErrorHandler, I18nNotificationService } from '@admin-ui/core';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { MeshBrowserLoaderService } from '../../providers';
 
@@ -33,6 +33,7 @@ export class MeshBrowserLanguageActivationComponent {
         protected loader: MeshBrowserLoaderService,
         protected changeDetector: ChangeDetectorRef,
         protected notificationService: I18nNotificationService,
+        protected errorHandler: ErrorHandler,
     ) {
         this.init();
     }
@@ -64,10 +65,7 @@ export class MeshBrowserLanguageActivationComponent {
             this.languageChanged.emit();
         }
         catch (error) {
-            this.notificationService.show({
-                type: 'alert',
-                message: error.message,
-            })
+            this.errorHandler.catch(error);
         }
     }
 
@@ -83,10 +81,7 @@ export class MeshBrowserLanguageActivationComponent {
             this.languageChanged.emit();
         }
         catch (error) {
-            this.notificationService.show({
-                type: 'alert',
-                message: error.message,
-            })
+            this.errorHandler.catch(error);
         }
     }
 

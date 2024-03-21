@@ -3416,36 +3416,40 @@ export class FolderActionsService {
      * Approve page actions queued which had been requested by users with insufficient permissions before.
      */
     async pageQueuedApprove(pages: Page[]): Promise<void> {
-        const requests: Promise<any>[] = [];
         const pageLanguages = pages.map(page => page.language);
 
-        pages.forEach((page) => {
+        const ids = pages.map((page) => {
             const queuedRequestForPublish = page.timeManagement.queuedPublish;
             const queuedRequestForTakeOffline = page.timeManagement.queuedOffline;
             if (queuedRequestForPublish || queuedRequestForTakeOffline) {
-                requests.push(this.client.page.workflowApprove(page.id).toPromise());
+                return page.id;
             }
-        });
+            return null;
+        }).filter(id => id != null);
 
-        return Promise.all(requests).then(() => {
-            if (requests) {
-                if (requests.length === 1) {
-                    this.notification.show({
-                        type: 'success',
-                        message: 'message.request_approved',
-                    });
-                } else {
-                    this.notification.show({
-                        type: 'success',
-                        message: 'message.requests_approved',
-                    });
-                }
+        if (ids.length === 0) {
+            return;
+        }
+
+        try {
+            await this.client.page.publishQueueApprove({ ids }).toPromise();
+
+            if (ids.length === 1) {
+                this.notification.show({
+                    type: 'success',
+                    message: 'message.request_approved',
+                });
+            } else {
+                this.notification.show({
+                    type: 'success',
+                    message: 'message.requests_approved',
+                });
             }
+
             return this.refreshList('page', pageLanguages);
-        })
-            .catch(error => {
-                this.errorHandler.catch(error, { notification: true });
-            });
+        } catch (error) {
+            this.errorHandler.catch(error, { notification: true });
+        }
     }
 
     /**

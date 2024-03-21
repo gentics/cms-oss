@@ -196,7 +196,7 @@ describe('FolderActionsService', () => {
         spyOn(client.folder, 'images').and.returnValue(fakeListResponse('files'));
         spyOn(client.folder, 'items').and.returnValue(fakeListResponse('items'))
         spyOn(client.page, 'update').and.returnValue(fakeListResponse('items'));
-        spyOn(client.page, 'workflowApprove').and.returnValue(fakeListResponse('pages'));
+        spyOn(client.page, 'publishQueueApprove').and.returnValue(fakeListResponse('pages'));
         spyOn(client.elasticSearch, 'search').and.returnValue(fakeListResponse('items'));
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         spyOn(client.file, 'upload').and.callFake((file) => of(fileToResponse(file as any)));
@@ -280,7 +280,7 @@ describe('FolderActionsService', () => {
             folderActions.pageQueuedApprove([examplePage]);
             tick();
 
-            expect(client.page.workflowApprove).toHaveBeenCalledWith(examplePage.id);
+            expect(client.page.publishQueueApprove).toHaveBeenCalledWith(examplePage.id);
         }));
 
         it('calls the correct api method with right parameters for pages with queuedOffline', () => {
@@ -295,7 +295,7 @@ describe('FolderActionsService', () => {
             };
 
             folderActions.pageQueuedApprove([examplePage]);
-            expect(client.page.workflowApprove).toHaveBeenCalledWith(examplePage.id);
+            expect(client.page.publishQueueApprove).toHaveBeenCalledWith(examplePage.id);
         });
     });
 

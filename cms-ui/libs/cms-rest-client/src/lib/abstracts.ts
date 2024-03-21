@@ -880,6 +880,7 @@ export interface AbstractPageAPI extends BasicAPI {
     publish: (id: number | string, body: PagePublishRequest, options?: PagePublishOptions) => Response;
     publishMultiple: (body: MultiPagePublishRequest, options?: PagePublishOptions) => Response;
     takeOffline: (id: number | string, body: PageOfflineRequest, options?: PageOfflineOptions) => Response;
+    publishQueueApprove: (body: IdSetRequest) => Response,
 
     listTags: (id: number | string, options?: PageTagListOptions) => PageTagListResponse;
     createTag: (id: number | string, body: ContentTagCreateRequest) => TagCreateResponse;
@@ -887,7 +888,7 @@ export interface AbstractPageAPI extends BasicAPI {
     restoreTag: (id: number | string, tagKeyword: string, options: TagRestoreOptions) => PageTagListResponse;
 
     workflowDecline: (id: number | string) => Response,
-    workflowApprove: (id: number | string) => Response,
+    workflowRevoke: (id: number | string) => Response,
 
     inheritanceStatus: (id: number | string, options?: InheritanceStatusOptions) => InheritanceResponse;
     multipleInheritanceStatus: (options: MultiInheritanceStatusOptions) => MultipleInheritanceResponse;

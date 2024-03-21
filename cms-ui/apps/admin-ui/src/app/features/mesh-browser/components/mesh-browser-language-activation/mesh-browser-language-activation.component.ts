@@ -53,35 +53,41 @@ export class MeshBrowserLanguageActivationComponent {
     }
 
     public async activateLanguageHandler(): Promise<void> {
-        const isActivated = await this.loader.activateProjectLanguage(this.currentProject, this.currentLanguage)
+        try {
+            await this.loader.activateProjectLanguage(this.currentProject, this.currentLanguage)
+            this.notificationService.show({
+                type: 'success',
+                message: 'mesh.language_assigned_to_project',
+            })
 
-        if (!isActivated) {
-            return;
+            this.currentLanguage = null;
+            this.languageChanged.emit();
         }
-
-        this.notificationService.show({
-            type: 'success',
-            message: 'mesh.language_assigned_to_project',
-        })
-
-        this.currentLanguage = null;
-        this.languageChanged.emit();
+        catch (error) {
+            this.notificationService.show({
+                type: 'alert',
+                message: error.message,
+            })
+        }
     }
 
     public async deactivateLanguageHandler(): Promise<void> {
-        const isDeactivated = await this.loader.deactivateProjectLanguage(this.currentProject, this.currentLanguage)
+        try {
+            await this.loader.deactivateProjectLanguage(this.currentProject, this.currentLanguage)
+            this.notificationService.show({
+                type: 'success',
+                message: 'mesh.language_unassigned_from_project',
+            })
 
-        if (!isDeactivated) {
-            return;
+            this.currentLanguage = null;
+            this.languageChanged.emit();
         }
-
-        this.notificationService.show({
-            type: 'success',
-            message: 'mesh.language_unassigned_from_project',
-        })
-
-        this.currentLanguage = null;
-        this.languageChanged.emit();
+        catch (error) {
+            this.notificationService.show({
+                type: 'alert',
+                message: error.message,
+            })
+        }
     }
 
     public resetFilter(): void {

@@ -214,25 +214,14 @@ export class MeshBrowserLoaderService {
         return response.data.map(language => language.languageTag)
     }
 
-
     public async activateProjectLanguage(project: string, language: string): Promise<boolean> {
-        try {
-            await this.meshClient.language.activate(project, language)
-            return true;
-        }
-        catch (error) {
-            return false;
-        }
+        await this.meshClient.language.activate(project, language)
+        return true;
     }
 
     public async deactivateProjectLanguage(project: string, language: string): Promise<boolean> {
-        try {
-            await this.meshClient.language.deactivate(project, language)
-            return true;
-        }
-        catch (error) {
-            return false;
-        }
+        await this.meshClient.language.deactivate(project, language)
+        return true;
     }
 
 }

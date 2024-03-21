@@ -42,7 +42,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
             this.requiresConfirm.emit(true);
         }
 
-        if (this.value == null) {
+        if (this.value == null && !this.settings.allowClear) {
             this.value = DEFAULT_COLOR;
         }
 
@@ -65,7 +65,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     }
 
     protected override onValueChange(): void {
-        if (this.value == null) {
+        if (this.value == null && !this.settings.allowClear) {
             this.value = DEFAULT_COLOR;
         }
 
@@ -77,7 +77,11 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     }
 
     public selectPaletteColor(color: string): void {
-        this.triggerChange(colorToRGBA(color));
+        if (color == null) {
+            this.triggerChange(null);
+        } else {
+            this.triggerChange(colorToRGBA(color));
+        }
     }
 
     protected updateAndNormalizeValue(): void {

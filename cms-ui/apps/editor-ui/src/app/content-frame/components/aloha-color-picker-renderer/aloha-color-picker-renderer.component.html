@@ -1,5 +1,12 @@
-<div class="palette-wrapper">
+<div *ngIf="normalizedPalette.length > 0 || settings?.allowClear" class="palette-wrapper">
     <div class="palette">
+        <button
+            *ngIf="settings?.allowClear"
+            class="palette-entry clear-entry"
+            [class.active]="!hexValue"
+            (click)="selectPaletteColor(null)"
+        ></button>
+
         <button
             *ngFor="let paletteColor of normalizedPalette"
             class="palette-entry"

@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import javax.servlet.DispatcherType;
 
@@ -46,6 +47,7 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlets.AlohaPageServlet;
 import com.gentics.contentnode.servlets.GenticsImageStoreServlet;
 import com.gentics.contentnode.servlets.JmxServlet;
+import com.gentics.contentnode.servlets.SelectedSymlinkAllowedResourceAliasChecker;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -123,8 +125,7 @@ public class OSSRunner {
 		// add GenticsImageStoreServlet
 		context.addServlet(GenticsImageStoreServlet.class, "/GenticsImageStore/*");
 
-		context.addServlet(getStaticFileServletForPath(ConfigurationValue.PACKAGES_PATH.get()),
-				"/packages/*");
+		context.addServlet(getStaticFileServletForPath(ConfigurationValue.PACKAGES_PATH.get()),	"/packages/*");
 
 		var rewriteHandler = createRewriteHandler();
 		rewriteHandler.setHandler(context);
@@ -136,6 +137,12 @@ public class OSSRunner {
 		errorHandler.addErrorPage(HttpStatus.NOT_FOUND_404, "/error/404.html");
 		errorHandler.addErrorPage(HttpStatus.INTERNAL_SERVER_ERROR_500, "/error/500.html");
 		context.setErrorHandler(errorHandler);
+
+		// Allow symlinks in the resource accessor. Keep in sync with the ones in createRewriteHandler().
+		context.addAliasCheck(
+				new SelectedSymlinkAllowedResourceAliasChecker(
+						context, 
+						Set.of("(.*)\\/packages\\/([^\\/]*)\\/files\\/(.*)", "(.*)\\/packages\\/([^\\/]*)\\/files-internal\\/(.*)")));
 
 		// create server
 		Server server = new Server(port);

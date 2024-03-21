@@ -1,5 +1,5 @@
 import { I18nNotificationService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { MeshBrowserLoaderService } from '../../providers';
 
 
@@ -13,6 +13,11 @@ export class MeshBrowserLanguageActivationComponent {
 
     @Input()
     public currentProject: string;
+
+    @Input()
+    public activatedLanguages: string[];
+
+    @ViewChild('inputFilter') inputFilter;
 
     @Output()
     public languageChanged: EventEmitter<void> = new EventEmitter();
@@ -34,6 +39,7 @@ export class MeshBrowserLanguageActivationComponent {
 
     private async init() {
         this.languages = await this.loader.getAllLanguages()
+        this.languages.sort((a, b) => a.localeCompare(b))
         this.filteredLanguages = this.languages;
         this.changeDetector.markForCheck();
     }
@@ -76,6 +82,17 @@ export class MeshBrowserLanguageActivationComponent {
 
         this.currentLanguage = null;
         this.languageChanged.emit();
+    }
+
+    public resetFilter(): void {
+        this.inputFilter.inputElement.nativeElement.value = '';
+        this.filteredLanguages = this.languages;
+
+        setTimeout(()=> {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+            this.inputFilter.inputElement.nativeElement.focus();
+        },10);
+        this.changeDetector.markForCheck();
     }
 
 }

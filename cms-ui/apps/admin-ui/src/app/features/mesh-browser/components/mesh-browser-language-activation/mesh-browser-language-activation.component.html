@@ -4,16 +4,15 @@
         <gtx-dropdown-list class="dropdown-language">
 
             <gtx-dropdown-trigger>
-                <a>
+                <a (click)="resetFilter()">
                     <span>{{ 'mesh.language_activation'  | i18n }}</span>
                     <icon *ngIf="languages?.length > 1" class="collapse">keyboard_arrow_down</icon> 
                     <span>{{ currentLanguage }}</span>
                 </a>
             </gtx-dropdown-trigger>
 
-
             <gtx-dropdown-content>
-                <gtx-input class="input-filter" autofocus="true" placeholder="Search" 
+                <gtx-input class="input-filter" #inputFilter autofocus="true" placeholder="Search" 
                     (click)="$event.stopPropagation();" 
                     (change)="filterLanguageHandler($event)" />
 
@@ -25,8 +24,12 @@
 
 
         <span *ngIf="currentLanguage" class="activation-actions">
-            <gtx-button (click)="activateLanguageHandler()">
+            <gtx-button type="success" *ngIf="!activatedLanguages.includes(currentLanguage)" (click)="activateLanguageHandler()">
                 <icon>check</icon>
+            </gtx-button>
+
+            <gtx-button type="alert" *ngIf="activatedLanguages.includes(currentLanguage)" (click)="deactivateLanguageHandler()">
+                <icon>close</icon>
             </gtx-button>
         </span>
     </div>

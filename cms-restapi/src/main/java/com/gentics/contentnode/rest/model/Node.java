@@ -186,10 +186,18 @@ public class Node extends ContentNodeItem implements Serializable {
 		this.host = host;
 	}
 
+	/**
+	 * Property containing the hostname. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return hostname property
+	 */
 	public String getHostProperty() {
 		return hostProperty;
 	}
 
+	/**
+	 * Set the hostname property
+	 * @param hostProperty hostname property
+	 */
 	public void setHostProperty(String hostProperty) {
 		this.hostProperty = hostProperty;
 	}

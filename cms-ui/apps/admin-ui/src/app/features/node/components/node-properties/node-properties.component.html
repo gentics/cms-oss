@@ -43,6 +43,14 @@
             <ng-container *ngIf="meshCrEnabled">
                 <div class="gtx-form-section-title">{{ 'node.title_portal_configuration' | i18n }}</div>
 
+                <gtx-select
+                    [label]="('node.mesh_preview_url_type' | i18n) + ' *'"
+                    formControlName="meshPreviewUrlType"
+                    [clearable]="false"
+                >
+                    <gtx-option *ngFor="let type of MESH_PREVIEWURL_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+                </gtx-select>
+
                 <gtx-input
                     type="text"
                     maxlength="255"
@@ -51,6 +59,23 @@
                     formControlName="meshPreviewUrl"
                 ></gtx-input>
 
+                <gtx-input
+                    *ngIf="fgProperties.get('meshPreviewUrlProperty').enabled"
+                    type="text"
+                    [required]="true"
+                    maxlength="255"
+                    [label]="('node.mesh_preview_url_property' | i18n)"
+                    [placeholder]="'node.mesh_preview_url_property' | i18n"
+                    formControlName="meshPreviewUrlProperty"
+                ></gtx-input>
+
+                <span
+                    *ngIf="fgProperties.get('meshPreviewUrlProperty')?.hasError('pattern')"
+                    class="container-validator-errors"
+                >
+                    {{ 'node.mesh_preview_url_property_pattern' | i18n }}
+                </span>
+ 
                 <gtx-checkbox
                     [label]="'node.allow_insecure_mesh_preview_url' | i18n"
                     formControlName="insecurePreviewUrl"
@@ -71,6 +96,14 @@
                 formControlName="https"
             ></gtx-checkbox>
 
+            <gtx-select
+                [label]="('node.hostnameType' | i18n) + ' *'"
+                formControlName="hostnameType"
+                [clearable]="false"
+            >
+                <gtx-option *ngFor="let type of HOSTNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+            </gtx-select>
+
             <gtx-input
                 type="text"
                 [required]="true"
@@ -80,6 +113,22 @@
                 formControlName="hostname"
             ></gtx-input>
 
+            <gtx-input
+                *ngIf="fgProperties.get('hostnameProperty').enabled"
+                type="text"
+                [required]="true"
+                maxlength="255"
+                [label]="('node.hostnameProperty' | i18n) + ' *'"
+                [placeholder]="'node.hostnameProperty' | i18n"
+                formControlName="hostnameProperty"
+            ></gtx-input>
+
+            <span
+               *ngIf="fgProperties.get('hostnameProperty')?.hasError('pattern')"
+                class="container-validator-errors"
+            >
+                {{ 'node.hostnameProperty_pattern' | i18n }}
+            </span>
 
             <div class="gtx-form-section-title">{{ 'node.title_content' | i18n }}</div>
 

@@ -39,6 +39,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	private Boolean https;
 	private Boolean publishImageVariants;
 	private String host;
+	private String hostProperty;
 	private Boolean utf8 = true;
 	private Boolean publishFs;
 	private Boolean publishFsPages;
@@ -61,6 +62,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	private Integer urlRenderWayPages;
 	private Integer urlRenderWayFiles;
 	private String meshPreviewUrl;
+	private String meshPreviewUrlProperty;
 	private Boolean insecurePreviewUrl;
 	private String meshProject;
 	private Boolean omitPageExtension;
@@ -182,6 +184,22 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setHost(String host) {
 		this.host = host;
+	}
+
+	/**
+	 * Property containing the hostname. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return hostname property
+	 */
+	public String getHostProperty() {
+		return hostProperty;
+	}
+
+	/**
+	 * Set the hostname property
+	 * @param hostProperty hostname property
+	 */
+	public void setHostProperty(String hostProperty) {
+		this.hostProperty = hostProperty;
 	}
 
 	/**
@@ -524,7 +542,7 @@ public class Node extends ContentNodeItem implements Serializable {
 	}
 
 	/**
-	 * Preview URL of Mesh Portal. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * Preview URL of Mesh Portal.
 	 * @return URL
 	 */
 	public String getMeshPreviewUrl() {
@@ -537,6 +555,22 @@ public class Node extends ContentNodeItem implements Serializable {
 	 */
 	public void setMeshPreviewUrl(String meshPreviewUrl) {
 		this.meshPreviewUrl = meshPreviewUrl;
+	}
+
+	/**
+	 * Property containing the preview URL. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return URL
+	 */
+	public String getMeshPreviewUrlProperty() {
+		return meshPreviewUrlProperty;
+	}
+
+	/**
+	 * Set the mesh preview URL property
+	 * @param meshPreviewUrlProperty
+	 */
+	public void setMeshPreviewUrlProperty(String meshPreviewUrlProperty) {
+		this.meshPreviewUrlProperty = meshPreviewUrlProperty;
 	}
 
 	/**

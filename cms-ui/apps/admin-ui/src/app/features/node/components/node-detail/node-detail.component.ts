@@ -44,6 +44,8 @@ import {
     Node,
     NodeFeature,
     NodeFeatureModel,
+    NodeHostnameType,
+    NodePreviewurlType,
     NodeSaveRequest,
     NormalizableEntityType,
     Normalized,
@@ -286,8 +288,10 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
                 id: this.currentEntity.id,
                 ...(nodeProperties.name && { name: nodeProperties.name }),
                 https: nodeProperties.https,
-                host: nodeProperties.hostname,
-                meshPreviewUrl: nodeProperties.meshPreviewUrl,
+                host: nodeProperties.hostnameType === NodeHostnameType.VALUE ? nodeProperties.hostname : '',
+                hostProperty: nodeProperties.hostnameType === NodeHostnameType.PROPERTY ? nodeProperties.hostnameProperty : '',
+                meshPreviewUrl: nodeProperties.meshPreviewUrlType === NodePreviewurlType.VALUE ? nodeProperties.meshPreviewUrl : '',
+                meshPreviewUrlProperty: nodeProperties.meshPreviewUrlType === NodePreviewurlType.PROPERTY ? nodeProperties.meshPreviewUrlProperty : '',
                 insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
                 pubDirSegment: nodeProperties.pubDirSegment,
                 publishImageVariants: nodeProperties.publishImageVariants,
@@ -302,6 +306,7 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             tap(updatedNode => {
                 this.setCurrentNode(updatedNode);
                 this.nodeLoader.reload();
+                this.fgProperties.patchValue(updatedNode);
                 this.changeDetectorRef.markForCheck();
             }),
             switchMap(() => this.folderOperations.get(this.currentEntity.folderId)),
@@ -506,6 +511,9 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
     private fgPropertiesUpdate(node: Node): void {
         if (!node) {
             this.fgProperties.reset();
+            this.patchFormGroup<NodePropertiesFormData>(this.fgProperties, {
+                hostnameType: NodeHostnameType.VALUE
+            });
             this.fgProperties.markAsPristine();
             return;
         }
@@ -514,8 +522,12 @@ export class NodeDetailComponent extends BaseDetailComponent<'node', NodeOperati
             name: node.name,
             inheritedFromId: node.inheritedFromId !== node.id ? node.inheritedFromId : null,
             https: node.https,
+            hostnameType: node.hostProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE,
             hostname: node.host,
+            hostnameProperty: node.hostProperty,
+            meshPreviewUrlType: node.meshPreviewUrlProperty ? NodePreviewurlType.PROPERTY : NodePreviewurlType.VALUE,
             meshPreviewUrl: node.meshPreviewUrl,
+            meshPreviewUrlProperty: node.meshPreviewUrlProperty,
             insecurePreviewUrl: node.insecurePreviewUrl,
             defaultFileFolderId: node.defaultFileFolderId || null,
             defaultImageFolderId: node.defaultImageFolderId || null,

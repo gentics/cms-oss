@@ -1967,6 +1967,7 @@ public class ModelBuilder {
 		}
 		node.setHttps(nodeNode.isHttps());
 		node.setHost(nodeNode.getHostname());
+		node.setHostProperty(nodeNode.getHostnameProperty());
 		node.setUtf8(nodeNode.isUtf8());
 		node.setPublishFs(nodeNode.doPublishFilesystem());
 		node.setPublishFsPages(nodeNode.doPublishFilesystemPages());
@@ -1988,6 +1989,7 @@ public class ModelBuilder {
 
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 			node.setMeshPreviewUrl(nodeNode.getMeshPreviewUrl());
+			node.setMeshPreviewUrlProperty(nodeNode.getMeshPreviewUrlProperty());
 			node.setInsecurePreviewUrl(nodeNode.isInsecurePreviewUrl());
 			node.setMeshProject(nodeNode.getMeshProject());
 			node.setPublishImageVariants(nodeNode.isPublishImageVariants());

@@ -24,6 +24,8 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected String username;
 
+	protected String usernameProperty;
+
 	protected String password;
 
 	protected String passwordProperty;
@@ -34,7 +36,11 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 
 	protected String url;
 
+	protected String urlProperty;
+
 	protected String basepath;
+
+	protected String basepathProperty;
 
 	protected Boolean instantPublishing;
 
@@ -145,7 +151,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Username for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * Username for accessing the ContentRepository.
 	 * @return username
 	 */
 	public String getUsername() {
@@ -158,6 +164,22 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 */
 	public void setUsername(String username) {
 		this.username = username;
+	}
+
+	/**
+	 * Username property for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return username property
+	 */
+	public String getUsernameProperty() {
+		return usernameProperty;
+	}
+
+	/**
+	 * Set the username property
+	 * @param usernameProperty username property
+	 */
+	public void setUsernameProperty(String usernameProperty) {
+		this.usernameProperty = usernameProperty;
 	}
 
 	/**
@@ -227,7 +249,7 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * URL for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * URL for accessing the ContentRepository.
 	 * @return url
 	 */
 	public String getUrl() {
@@ -243,7 +265,23 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	}
 
 	/**
-	 * Basepath for filesystem attributes. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * URL property for accessing the ContentRepository. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return url property
+	 */
+	public String getUrlProperty() {
+		return urlProperty;
+	}
+
+	/**
+	 * Set the URL property
+	 * @param urlProperty url property
+	 */
+	public void setUrlProperty(String urlProperty) {
+		this.urlProperty = urlProperty;
+	}
+
+	/**
+	 * Basepath for filesystem attributes.
 	 * @return basepath
 	 */
 	public String getBasepath() {
@@ -256,6 +294,22 @@ public class ContentRepositoryModel extends AbstractModel implements Serializabl
 	 */
 	public void setBasepath(String basepath) {
 		this.basepath = basepath;
+	}
+
+	/**
+	 * Basepath property for filesystem attributes. This can be set to a system property or environment variable in the format ${sys:property} or ${env:variable}.
+	 * @return basepath property
+	 */
+	public String getBasepathProperty() {
+		return basepathProperty;
+	}
+
+	/**
+	 * Set the basepath property
+	 * @param basepathProperty basepath property
+	 */
+	public void setBasepathProperty(String basepathProperty) {
+		this.basepathProperty = basepathProperty;
 	}
 
 	/**

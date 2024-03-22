@@ -19,6 +19,7 @@ export interface EditableNodeProps {
     fileSystemPageDir?: string;
     fileSystemPages?: boolean;
     host?: string;
+    hostnameProperty?: string;
     https?: boolean;
     nodeName?: string;
     urlRenderingFiles?: number;
@@ -66,6 +67,9 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
 
     /** Hostname for publishing into the Filesystem */
     host: string;
+
+    /** Property of the hostname for publishing into the Filesystem */
+    hostProperty: string;
 
     /** True if secure https is enabled for this node */
     https: boolean;
@@ -158,6 +162,9 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     /** Preview URL of Mesh Portal */
     meshPreviewUrl: string;
 
+    /** Preview URL property of Mesh Portal */
+    meshPreviewUrlProperty: string;
+
     /** Mesh Project, this node publishes into */
     meshProject: string;
 
@@ -178,4 +185,24 @@ export enum GtxNodePageLanguageCode {
     PATH = 'PATH',
     /** There will be no language code. */
     NONE = 'NONE',
+}
+
+/**
+ * Possible Nostname Type values
+ */
+export enum NodeHostnameType {
+    /** The hostname is set as value */
+    VALUE = 'value',
+    /** The hostname is set as property */
+    PROPERTY = 'property',
+}
+
+/**
+ * Possible PreviewUrl Type values
+ */
+export enum NodePreviewurlType {
+    /** The preview URL is set as value */
+    VALUE = 'value',
+    /** The preview URL is set as property */
+    PROPERTY = 'property',
 }

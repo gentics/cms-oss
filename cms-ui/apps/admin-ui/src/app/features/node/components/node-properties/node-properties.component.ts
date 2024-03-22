@@ -2,8 +2,8 @@ import { FormControlOnChangeFn, FormControlOnTouchedFn } from '@admin-ui/common'
 import { AppStateService } from '@admin-ui/state';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Feature, Node, Normalized } from '@gentics/cms-models';
-import { generateFormProvider } from '@gentics/ui-core';
+import { Feature, Node, NodeHostnameType, NodePreviewurlType, Normalized } from '@gentics/cms-models';
+import { generateFormProvider, setControlsEnabled } from '@gentics/ui-core';
 import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { EntityManagerService } from '../../../../core';
@@ -19,8 +19,12 @@ export interface NodePropertiesFormData {
     inheritedFromId?: number;
     description: string;
     https: boolean;
+    hostnameType: NodeHostnameType;
     hostname: string;
+    hostnameProperty: string;
+    meshPreviewUrlType: NodePreviewurlType;
     meshPreviewUrl: string;
+    meshPreviewUrlProperty: string;
     insecurePreviewUrl: boolean;
     defaultFileFolderId: number;
     defaultImageFolderId: number;
@@ -79,6 +83,30 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
 
     private subscriptions: Subscription[] = [];
 
+    /** selectable options for node input hostnameType */
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+        {
+            id: NodeHostnameType.VALUE,
+            label: 'node.hostnameType_value',
+        },
+        {
+            id: NodeHostnameType.PROPERTY,
+            label: 'node.hostnameType_property',
+        },
+    ];
+
+    /** selectable options for node input meshPreviewUrlType */
+    public readonly MESH_PREVIEWURL_TYPES: { id: NodePreviewurlType; label: string; }[] = [
+        {
+            id: NodePreviewurlType.VALUE,
+            label: 'node.mesh_preview_url_type_value',
+        },
+        {
+            id: NodePreviewurlType.PROPERTY,
+            label: 'node.mesh_preview_url_type_property',
+        },
+    ];
+
     constructor(
         private changeDetector: ChangeDetectorRef,
         private entityManager: EntityManagerService,
@@ -99,6 +127,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
         }));
 
         this.fgPropertiesInit();
+        this.updateHostnameComponents(true);
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -119,6 +148,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
             } else {
                 this.inheritedFromNode$ = null;
             }
+            this.updateHostnameComponents(true);
         } else {
             this.fgProperties.reset();
         }
@@ -133,6 +163,8 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
                 } else {
                     this.isChildNode = false;
                 }
+                this.updateHostnameComponents();
+                this.changeDetector.markForCheck();
                 return this.fgProperties.valid ? formData : null;
             }),
         ).subscribe(fn));
@@ -162,8 +194,12 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
             inheritedFromId: new UntypedFormControl(null),
             description: new UntypedFormControl(null),
             https: new UntypedFormControl(null),
+            hostnameType: new UntypedFormControl(null),
             hostname: new UntypedFormControl(null, [ Validators.required ]),
+            hostnameProperty: new UntypedFormControl(null, [ Validators.required, Validators.pattern(/^\$\{(env|sys):NODE_HOST_[^}]+\}$/) ]),
+            meshPreviewUrlType: new UntypedFormControl(null),
             meshPreviewUrl: new UntypedFormControl(null),
+            meshPreviewUrlProperty: new UntypedFormControl(null, [ Validators.pattern(/^\$\{(env|sys):NODE_PREVIEWURL_[^}]+\}$/) ]),
             insecurePreviewUrl: new UntypedFormControl(null),
             pubDirSegment: new UntypedFormControl(null),
             publishImageVariants: new UntypedFormControl(null),
@@ -175,4 +211,20 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
         });
     }
 
+    private updateHostnameComponents(emitEvent: boolean = false): void {
+        if (this.fgProperties.value.hostnameType === NodeHostnameType.VALUE) {
+            this.fgProperties.get('hostname').enable({emitEvent: emitEvent});
+            this.fgProperties.get('hostnameProperty').disable({emitEvent: emitEvent});
+        } else {
+            this.fgProperties.get('hostname').disable({emitEvent: emitEvent});
+            this.fgProperties.get('hostnameProperty').enable({emitEvent: emitEvent});
+        }
+        if (this.fgProperties.value.meshPreviewUrlType === NodePreviewurlType.VALUE) {
+            this.fgProperties.get('meshPreviewUrl').enable({emitEvent: emitEvent});
+            this.fgProperties.get('meshPreviewUrlProperty').disable({emitEvent: emitEvent});
+        } else {
+            this.fgProperties.get('meshPreviewUrl').disable({emitEvent: emitEvent});
+            this.fgProperties.get('meshPreviewUrlProperty').enable({emitEvent: emitEvent});
+        }
+    }
 }

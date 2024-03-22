@@ -6,6 +6,7 @@
 package com.gentics.contentnode.factory.object;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.when;
+import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.substituteSingleProperty;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -62,6 +63,7 @@ import com.gentics.contentnode.factory.PublishData;
 import com.gentics.contentnode.factory.RemovePermsTransactional;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
+import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.UniquifyHelper;
 import com.gentics.contentnode.factory.UniquifyHelper.SeparatorType;
 import com.gentics.contentnode.factory.Wastebin;
@@ -4772,6 +4774,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected String host;
 
+		@DataField("host_property")
+		@Updateable
+		protected String hostProperty;
+
 		@DataField("ftphost")
 		@Updateable
 		protected String ftpHost = "";
@@ -4882,6 +4888,10 @@ public class FolderFactory extends AbstractFactory {
 		@Updateable
 		protected String meshPreviewUrl;
 
+		@DataField("mesh_preview_url_property")
+		@Updateable
+		protected String meshPreviewUrlProperty;
+
 		@DataField("insecure_preview_url")
 		@Updateable
 		protected boolean insecurePreviewUrl;
@@ -4973,6 +4983,11 @@ public class FolderFactory extends AbstractFactory {
 
 		public String getHostname() {
 			return host;
+		}
+
+		@Override
+		public String getHostnameProperty() {
+			return hostProperty;
 		}
 
 		public String getFtpHostname() {
@@ -5245,6 +5260,15 @@ public class FolderFactory extends AbstractFactory {
 		public String getMeshPreviewUrl() {
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 				return meshPreviewUrl;
+			} else {
+				return "";
+			}
+		}
+
+		@Override
+		public String getMeshPreviewUrlProperty() {
+			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				return meshPreviewUrlProperty;
 			} else {
 				return "";
 			}
@@ -6227,6 +6251,27 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setHostnameProperty(String hostProperty) throws ReadOnlyException {
+			if (!StringUtils.isEqual(this.hostProperty, hostProperty)) {
+				this.hostProperty = hostProperty;
+				this.modified = true;
+				resolveHostnameProperty();
+			}
+		}
+
+		@Override
+		public void resolveHostnameProperty() throws ReadOnlyException {
+			// if hostProperty is not empty, resolve and set host also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.hostProperty)) {
+				String resolvedHost = substituteSingleProperty(this.hostProperty, Node.NODE_HOST_FILTER);
+				if (!StringUtils.isEqual(this.host, resolvedHost)) {
+					this.host = resolvedHost;
+					this.modified = true;
+				}
+			}
+		}
+
+		@Override
 		public void setPublishContentmap(boolean publishContentmap) throws ReadOnlyException {
 			if (this.publishContentmap != publishContentmap) {
 				this.publishContentmap        = publishContentmap;
@@ -6410,6 +6455,30 @@ public class FolderFactory extends AbstractFactory {
 		}
 
 		@Override
+		public void setMeshPreviewUrlProperty(String urlProperty) throws ReadOnlyException {
+			if (!NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
+				urlProperty = "";
+			}
+			if (!StringUtils.isEqual(this.meshPreviewUrlProperty, urlProperty)) {
+				this.meshPreviewUrlProperty = urlProperty;
+				this.modified = true;
+				resolveMeshPreviewUrlProperty();
+			}
+		}
+
+		@Override
+		public void resolveMeshPreviewUrlProperty() throws ReadOnlyException {
+			// if meshPreviewUrlProperty is not empty, resolve and set meshPreviewUrl also
+			if (!org.apache.commons.lang3.StringUtils.isBlank(this.meshPreviewUrlProperty)) {
+				String resolvedMeshPreviewUrl = substituteSingleProperty(this.meshPreviewUrlProperty, Node.NODE_PREVIEWURL_FILTER);
+				if (!StringUtils.isEqual(this.meshPreviewUrl, resolvedMeshPreviewUrl)) {
+					this.meshPreviewUrl = resolvedMeshPreviewUrl;
+					this.modified = true;
+				}
+			}
+		}
+
+		@Override
 		public void setInsecurePreviewUrl(boolean insecurePreviewUrl) {
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY) && this.insecurePreviewUrl != insecurePreviewUrl) {
 				this.insecurePreviewUrl = insecurePreviewUrl;
@@ -6473,6 +6542,8 @@ public class FolderFactory extends AbstractFactory {
 				defaultImageFolderId = ObjectTransformer.getInteger(defaultImageFolderId, 0);
 
 				meshPreviewUrl = ObjectTransformer.getString(meshPreviewUrl, "");
+				meshPreviewUrlProperty = ObjectTransformer.getString(meshPreviewUrlProperty, "");
+				hostProperty = ObjectTransformer.getString(hostProperty, "");
 
 				// when the node is a channel, check whether the master node publishes into a MCCR,
 				// and if so, set the same contentrepository to the channel
@@ -6744,6 +6815,31 @@ public class FolderFactory extends AbstractFactory {
 
 	public FolderFactory() {
 		super();
+	}
+
+	@Override
+	public void initialize() throws NodeException {
+		super.initialize();
+
+		// get all existing nodes, which have a _property set
+		List<Node> nodes = Trx.supply(t -> t.getObjects(Node.class, DBUtils.select(
+				"SELECT id FROM node WHERE host_property != '' OR mesh_preview_url_property != ''",
+				DBUtils.IDLIST)));
+
+		// resolve the properties, because their value might have changed
+		for (Node node : nodes) {
+			try {
+				Trx.consume(update -> {
+					Transaction t = TransactionManager.getCurrentTransaction();
+					update = t.getObject(update, true);
+					update.resolveHostnameProperty();
+					update.resolveMeshPreviewUrlProperty();
+					update.save();
+				}, node);
+			} catch (NodeException e) {
+				logger.error("Error while resolving properties set for node " + I18NHelper.getName(node));
+			}
+		}
 	}
 
 	/**

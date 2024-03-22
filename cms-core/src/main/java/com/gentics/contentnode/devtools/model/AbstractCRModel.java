@@ -1,10 +1,10 @@
 package com.gentics.contentnode.devtools.model;
 
-import static com.gentics.contentnode.rest.util.PropertySubstitutionUtil.isSingleProperty;
-
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel;
@@ -94,22 +94,20 @@ public abstract class AbstractCRModel extends ContentRepositoryModel {
 
 	@Override
 	public String getUrl() {
-		return isSingleProperty(super.getUrl()).orElse(null);
+		return null;
 	}
 
 	@Override
 	public void setUrl(String url) {
-		isSingleProperty(url).ifPresent(super::setUrl);
 	}
 
 	@Override
 	public String getUsername() {
-		return isSingleProperty(super.getUsername()).orElse(null);
+		return null;
 	}
 
 	@Override
 	public void setUsername(String username) {
-		isSingleProperty(username).ifPresent(super::setUsername);
 	}
 
 	/**
@@ -126,5 +124,14 @@ public abstract class AbstractCRModel extends ContentRepositoryModel {
 	 */
 	public void setEntries(List<TagmapEntryModel> entries) {
 		this.entries = entries;
+	}
+
+	@Override
+	public String getBasepath() {
+		if (!StringUtils.isBlank(basepathProperty)) {
+			return null;
+		} else {
+			return super.getBasepath();
+		}
 	}
 }

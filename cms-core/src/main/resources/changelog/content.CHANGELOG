@@ -797,3 +797,8 @@
 2024-02-07	CH-1706	PK  SQL ALTER TABLE construct ADD COLUMN edit_on_insert TINYINT NOT NULL DEFAULT 0; ## Add flag for opening tag editor on inserting a construct.
 2024-02-07	CH-1707	PK  SQL ALTER TABLE construct ADD COLUMN editor_control_style ENUM('ASIDE', 'ABOVE', 'CLICK') NOT NULL DEFAULT 'ASIDE'; ## Add style mode where the construct edit buttons should appear.
 2024-02-07	CH-1708	PK  SQL ALTER TABLE construct ADD COLUMN editor_control_inside TINYINT NOT NULL DEFAULT 0; ## Add flat whether editing controls should be inside or outside of the construct.
+2024-03-14  CH-1709 NOP SQL ALTER TABLE node ADD COLUMN host_property VARCHAR(255) NOT NULL DEFAULT '' AFTER host;
+2024-03-18  CH-1710 NOP SQL ALTER TABLE contentrepository ADD COLUMN username_property VARCHAR(255) NOT NULL DEFAULT '' AFTER username;
+2024-03-18  CH-1711 NOP SQL ALTER TABLE contentrepository ADD COLUMN url_property VARCHAR(255) NOT NULL DEFAULT '' AFTER url;
+2024-03-18  CH-1712 NOP SQL ALTER TABLE contentrepository ADD COLUMN basepath_property VARCHAR(255) NOT NULL DEFAULT '' AFTER basepath;
+2024-03-18  CH-1713 NOP SQL ALTER TABLE node ADD COLUMN mesh_preview_url_property VARCHAR(255) NOT NULL DEFAULT '' AFTER mesh_preview_url;

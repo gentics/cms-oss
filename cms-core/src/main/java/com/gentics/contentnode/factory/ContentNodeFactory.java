@@ -104,6 +104,8 @@ public class ContentNodeFactory {
 		factory.registerObjectFactory(new RegexFactory());
 		factory.registerObjectFactory(new RoleFactory());
 		factory.registerObjectFactory(new SchedulerFactory());
+
+		factory.initializeObjectFactories();
 	}
 
 	/**

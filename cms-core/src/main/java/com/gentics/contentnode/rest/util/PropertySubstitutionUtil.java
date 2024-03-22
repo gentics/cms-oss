@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookup;
 import org.apache.commons.text.lookup.StringLookupFactory;
 
 /**
@@ -16,9 +18,14 @@ import org.apache.commons.text.lookup.StringLookupFactory;
  */
 public final class PropertySubstitutionUtil {
 	/**
-	 * Pattern for a single property
+	 * Pattern for a single property, including prefix <code>${</code> and postfix <code>}</code>
 	 */
 	protected final static Pattern PROPERTY_PATTERN = Pattern.compile("\\$\\{\\w+:[^\\}]+\\}");
+
+	/**
+	 * Pattern for the name of a single property, (excluding prefix and postfix). There are two named capturing groups: <code>key</code> and <code>name</code>
+	 */
+	protected final static Pattern PROPERTY_NAME_PATTERN = Pattern.compile("(?<key>\\w+):(?<name>[^\\}]+)");
 
 	/**
 	 * Predicate that matches all strings
@@ -42,6 +49,20 @@ public final class PropertySubstitutionUtil {
 		System.setProperty(StringLookupFactory.DEFAULT_STRING_LOOKUPS_PROPERTY,
 				"BASE64_DECODER,BASE64_ENCODER,DATE,ENVIRONMENT,SYSTEM_PROPERTIES,URL_DECODER,URL_ENCODER");
 		return StringSubstitutor.createInterpolator();
+	}
+
+	/**
+	 * Get the string substitutor
+	 * @param variableNameFilter optional variable name filter
+	 * @return string substitutor
+	 */
+	public static StringSubstitutor getStringSubstitutor(Predicate<String> variableNameFilter) {
+		StringSubstitutor stringSubstitutor = getStringSubstitutor();
+
+		FilteredStringLookupWrapper lookupWrapper = new FilteredStringLookupWrapper(stringSubstitutor.getStringLookup(), variableNameFilter);
+		stringSubstitutor.setVariableResolver(lookupWrapper);
+
+		return stringSubstitutor;
 	}
 
 	/**
@@ -102,10 +123,11 @@ public final class PropertySubstitutionUtil {
 	/**
 	 * Substitute the property, if the value is only a single property (otherwise the value is returned unchanged)
 	 * @param value value
+	 * @param filter variable filter
 	 * @return value after optional property substitution
 	 */
-	public static String substituteSingleProperty(String value) {
-		return substitute(value, getStringSubstitutor(), PROPERTY_ONLY);
+	public static String substituteSingleProperty(String value, Predicate<String> filter) {
+		return substitute(value, getStringSubstitutor(filter), PROPERTY_ONLY);
 	}
 
 	/**
@@ -115,5 +137,47 @@ public final class PropertySubstitutionUtil {
 	 */
 	public static Optional<String> isSingleProperty(String value) {
 		return PROPERTY_ONLY.test(value) ? Optional.ofNullable(value) : Optional.empty();
+	}
+
+	/**
+	 * Wrapper implementation of {@link StringLookup} which will optionally filter the property before substitution. Properties, which do not pass the filter, will not be passed to {@link #wrappedLookup}.
+	 */
+	public static class FilteredStringLookupWrapper implements StringLookup {
+		/**
+		 * Wrapped lookup
+		 */
+		protected StringLookup wrappedLookup;
+
+		/**
+		 * Optional filter
+		 */
+		protected Predicate<String> filter;
+
+		/**
+		 * Create a wrapper instance
+		 * @param wrappedLookup wrapped lookup
+		 * @param filter optional filter (may be null)
+		 */
+		public FilteredStringLookupWrapper(StringLookup wrappedLookup, Predicate<String> filter) {
+			this.wrappedLookup = wrappedLookup;
+			this.filter = filter;
+		}
+
+		@Override
+		public String lookup(String key) {
+			if (filter != null) {
+				// the filter will get the property name, without the prefixing key (env:, sys:, ...)
+				String name = key;
+				Matcher matcher = PROPERTY_NAME_PATTERN.matcher(key);
+				if (matcher.matches()) {
+					name = matcher.group("name");
+				}
+				// if the name does not pass the filter, return null
+				if (!filter.test(name)) {
+					return null;
+				}
+			}
+			return wrappedLookup.lookup(key);
+		}
 	}
 }

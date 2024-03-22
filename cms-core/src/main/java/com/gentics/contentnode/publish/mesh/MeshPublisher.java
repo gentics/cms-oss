@@ -969,7 +969,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (cr.isProjectPerNode()) {
 			return getMeshName(node);
 		} else {
-			Matcher urlMatcher = URL_PATTERN.matcher(substituteSingleProperty(cr.getUrl()));
+			Matcher urlMatcher = URL_PATTERN.matcher(cr.getEffectiveUrl());
 			if (!urlMatcher.matches()) {
 				return null;
 			}
@@ -1079,7 +1079,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (cr.getCrType() != Type.mesh) {
 			throw new NodeException(String.format("Cannot connect to CR %s of type %s. Only type %s is supported.", cr.getName(), cr.getCrType(), Type.mesh));
 		}
-		Matcher urlMatcher = URL_PATTERN.matcher(substituteSingleProperty(cr.getUrl()));
+		Matcher urlMatcher = URL_PATTERN.matcher(cr.getEffectiveUrl());
 		if (!urlMatcher.matches()) {
 			throw new RestMappedException(I18NHelper.get("meshcr.invalid.url", cr.getUrl(), cr.getName())).setMessageType(Message.Type.CRITICAL)
 					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
@@ -1103,8 +1103,8 @@ public class MeshPublisher implements AutoCloseable {
 			port = Integer.parseInt(urlMatcher.group("port"));
 		}
 		schemaPrefix = urlMatcher.group("project");
-		String username = substituteSingleProperty(cr.getUsername());
-		String password = cr.isPasswordProperty() ? substituteSingleProperty(cr.getPassword()) : cr.getPassword();
+		String username = cr.getEffectiveUsername();
+		String password = cr.getEffectivePassword();
 
 		initMeshProjects();
 
@@ -2252,7 +2252,9 @@ public class MeshPublisher implements AutoCloseable {
 
 			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
 
-			Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
+			if (checkedNode != null) {
+				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
+			}
 
 			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
 			if (objectType == Form.TYPE_FORM) {

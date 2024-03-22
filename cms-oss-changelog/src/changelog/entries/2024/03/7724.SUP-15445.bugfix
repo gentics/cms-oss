@@ -1,0 +1,1 @@
+Fixes a display issue when viewing structure check results for Mesh content repositories. Certain errors during the check caused the result page to be empty.

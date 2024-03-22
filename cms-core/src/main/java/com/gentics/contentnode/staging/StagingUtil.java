@@ -2,10 +2,10 @@ package com.gentics.contentnode.staging;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -20,10 +20,6 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
  * Utility class, which acts as bridge to the optional content staging module
  */
 public class StagingUtil {
-	/**
-	 * Service loader for the {@link StagingStatusService}
-	 */
-	private final static ServiceLoader<StagingStatusService> loader = ServiceLoader.load(StagingStatusService.class);
 
 	/**
 	 * Check if the given node object is contained into the asked content package, and how recent its data is.
@@ -79,10 +75,9 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-
-		StagingStatusService service = StreamSupport.stream(loader.spliterator(), false).findAny().orElse(null);
-		if (service != null) {
-			return service.checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
+		Iterator<StagingStatusService> iterator = ServiceLoader.load(StagingStatusService.class).iterator();
+		if (iterator.hasNext()) {
+			return iterator.next().checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
 		} else {
 			return Collections.emptyMap();
 		}
@@ -102,10 +97,9 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-
-		StagingStatusService service = StreamSupport.stream(loader.spliterator(), false).findFirst().orElse(null);
-		if (service != null) {
-			return service.checkStagingStatus(stagingPackageName, ids, useVariants);
+		Iterator<StagingStatusService> iterator = ServiceLoader.load(StagingStatusService.class).iterator();
+		if (iterator.hasNext()) {
+			return iterator.next().checkStagingStatus(stagingPackageName, ids, useVariants);
 		} else {
 			return Collections.emptyMap();
 		}

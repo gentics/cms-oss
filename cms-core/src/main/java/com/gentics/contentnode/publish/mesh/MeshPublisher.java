@@ -4982,7 +4982,7 @@ public class MeshPublisher implements AutoCloseable {
 			completables
 					.add(client
 							.grantNodeRolePermissions(name, rootNodeUuid,
-									new ObjectPermissionGrantRequest().setReadPublished(roleReferences))
+									new ObjectPermissionGrantRequest().setReadPublished(roleReferences).setExclusive(true))
 							.toCompletable());
 
 			return Completable.merge(completables)

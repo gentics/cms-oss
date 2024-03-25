@@ -97,6 +97,7 @@ import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.ser
 import { CombinedPropertiesEditorComponent } from '../combined-properties-editor/combined-properties-editor.component';
 import { ConfirmApplyToSubitemsModalComponent } from '../confirm-apply-to-subitems-modal/confirm-apply-to-subitems-modal.component';
 import { ConfirmNavigationModal } from '../confirm-navigation-modal/confirm-navigation-modal.component';
+import { AlohaIntegrationService } from '../../providers';
 
 /**
  * To make the iframed contentnode pages better fit the look and feel of this app, we apply quite a lot of custom
@@ -162,6 +163,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     propertiesTab$: Observable<EditorTab>;
     openPropertiesTab: PropertiesTab;
     requesting: boolean;
+    alohaReady = false;
     currentItemPath = '';
     currentItem$: Observable<ItemNormalized | undefined>;
 
@@ -184,7 +186,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
     public itemPermissions: ItemPermissions = noItemPermissions;
     private subscriptions: Subscription[] = [];
     private masterFrameLoaded = false;
-    private alohaReady = false;
     private contentModifiedByExternalScript = false;
 
     // eslint-disable-next-line no-underscore-dangle
@@ -216,6 +217,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
         private customerScriptService: CustomerScriptService,
         private client: GCMSRestClientService,
         private tagEditorService: TagEditorService,
+        private aloha: AlohaIntegrationService,
     ) { }
 
     ngOnInit(): void {
@@ -318,6 +320,10 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             this.changeDetector.markForCheck();
         });
         this.subscriptions.push(requestingSubscription);
+        this.subscriptions.push(this.aloha.ready$.subscribe(ready => {
+            this.alohaReady = ready;
+            this.changeDetector.markForCheck();
+        }));
 
         this.iframeManager.onMasterFrameClosed(() => {
             this.cancelEditingDebounced(this.currentItem);
@@ -582,14 +588,6 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     setMasterFrameLoaded(val: boolean): void {
         this.masterFrameLoaded = val;
-    }
-
-    /**
-     * Used by the IFrameManager to signal that the "aloha-ready" event has fired in the master frame.
-     */
-    setAlohaReady(val: boolean): void {
-        this.alohaReady = val;
-        this.changeDetector.markForCheck();
     }
 
     /**
@@ -1210,7 +1208,7 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
             }
 
             if (this.currentItem !== item && !deepEqual(this.currentItem, item)) {
-                this.currentItem = item;
+                this.currentItem = structuredClone(item);
             }
         }
 

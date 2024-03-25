@@ -25,6 +25,7 @@ import {
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
+    LoadingSpinnerComponent,
     MenuToggleButtonComponent,
     ModalDialogComponent,
     OverlayHostComponent,
@@ -70,7 +71,17 @@ import {
     TooltipTriggerDirective,
 } from './directives';
 import { configFactory, ConfigService, CustomConfig, defaultConfig, optionsConfig, PredefinedConfig } from './module.config';
-import { ConcatPipe, IncludesPipe, MatchesMimeTypePipe, RangePipe, SortPipe, TableActionEnabledPipe, TableCellMapperPipe, TransformPipe, ValuePathPipe } from './pipes';
+import {
+    ConcatPipe,
+    IncludesPipe,
+    MatchesMimeTypePipe,
+    RangePipe,
+    SortPipe,
+    TableActionEnabledPipe,
+    TableCellMapperPipe,
+    TransformPipe,
+    ValuePathPipe,
+} from './pipes';
 import {
     DateTimePickerFormatProvider,
     DragStateTrackerFactoryService,
@@ -100,6 +111,7 @@ export const UI_CORE_COMPONENTS: Type<any>[] = [
     GroupedTabsComponent,
     InputComponent,
     JsonInputComponent,
+    LoadingSpinnerComponent,
     MenuToggleButtonComponent,
     ModalDialogComponent,
     OverlayHostComponent,

@@ -151,6 +151,18 @@ export interface GcmsUiBridge {
      */
     closeErrorClass: any;
 
+    /**
+     * Registers/Binds a component to the specified slot.
+     * Will override any component previously bound to it.
+     *
+     * @param slot The slot where the component should be registered as
+     * @param component The component definition
+     */
     registerComponent: (slot: string, component: AlohaComponent) => void;
+    /**
+     * Unregisters a component from the given slot.
+     *
+     * @param slot The slot which has been registered
+     */
     unregisterComponent: (slot: string) => void;
 }

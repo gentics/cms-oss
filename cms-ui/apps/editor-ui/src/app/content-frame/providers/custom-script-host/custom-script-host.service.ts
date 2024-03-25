@@ -106,13 +106,6 @@ export class CustomScriptHostService {
     /**
      * Set the value of contentModified and run change detection.
      */
-    setAlohaReady(val: boolean): void {
-        return this.contentFrame.setAlohaReady(val);
-    }
-
-    /**
-     * Set the value of contentModified and run change detection.
-     */
     setContentModified(modified: boolean): void {
         return this.contentFrame.setContentModified(modified, true);
     }

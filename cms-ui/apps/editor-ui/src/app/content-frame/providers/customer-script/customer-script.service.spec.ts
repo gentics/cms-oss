@@ -17,10 +17,10 @@ import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
 import { PreLoadScript } from '../../components/content-frame/custom-scripts/pre-load';
-import { CNParentWindow, CNWindow } from '../../models/content-frame';
+import { AlohaGlobal, CNParentWindow, CNWindow } from '../../models/content-frame';
 import { AlohaIntegrationService } from '../aloha-integration/aloha-integration.service';
+import { DynamicOverlayService } from '../dynamic-overlay/dynamic-overlay.service';
 import { CustomerScriptService } from './customer-script.service';
-import { DynamicOverlayService } from '..';
 
 let mockCustomerScript = ' module.exports = function(GCMSUI) {}; ';
 
@@ -391,6 +391,12 @@ class MockWindow {
         GCMSUI_childIFrameInit: (iFrameWindow, iFrameDocument) => null,
     };
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Aloha: Partial<AlohaGlobal> = {
+        settings: {
+
+        } as any,
+    };
     addEventListener(): void { }
     removeEventListener(): void { }
 }

@@ -19,7 +19,7 @@ import {
 import { GCNAlohaPlugin } from '@gentics/cms-integration-api-models';
 import { isEqual } from 'lodash-es';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, first, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { BaseAlohaRendererComponent } from '../../components/base-aloha-renderer/base-aloha-renderer.component';
 import { AlohaGlobal, CNWindow } from '../../models/content-frame';
 
@@ -159,6 +159,7 @@ export class AlohaIntegrationService {
     public reference$ = new BehaviorSubject<AlohaGlobal>(null);
     public settings$ = new BehaviorSubject<AlohaSettings>(null);
     public activeToolbarSettings$: Observable<NormalizedToolbarSizeSettings>;
+    public ready$ = new BehaviorSubject<boolean>(false);
 
     public gcnPlugin$: Observable<GCNAlohaPlugin>;
     public uiPlugin$: Observable<AlohaUiPlugin>;
@@ -210,27 +211,29 @@ export class AlohaIntegrationService {
 
         this.activeToolbarSettings$ = combineLatest([
             combineLatest([
-                this.uiPlugin$.pipe(
-                    map(plugin => plugin?.getToolbarSettings?.()),
-                ),
+                this.uiPlugin$,
                 this.settings$.asObservable(), // Also needs a reload when global settings change
             ]).pipe(
-                map(([toolbarSettings]) => toolbarSettings),
+                map(([plugin]) => plugin?.getToolbarSettings?.()),
                 distinctUntilChanged(isEqual),
             ),
             this.size$,
             this.components$,
             this.scopesRef$,
-            this.scopeChange$,
+            this.scopeChange$.pipe(
+                // Needs an initial value, otherwise this entire `combineLatest` does not emit a value,
+                // only when the user actualy performs a context-change.
+                startWith(null),
+            ),
             this.toolbarReloadSub.asObservable(),
         ]).pipe(
-            debounceTime(10),
             map(([settings, size, components, scopesRef]) => {
                 if (settings == null || size == null || settings[size] == null && scopesRef != null) {
                     return null;
                 }
                 return normalizeToolbarSizeSettings(settings[size], components, scopesRef);
             }),
+            debounceTime(10),
         );
 
         this.activeEditable$ = this.on<AlohaSetEditableActiveEvent>('aloha.editable.set-active').pipe(
@@ -238,13 +241,18 @@ export class AlohaIntegrationService {
         );
     }
 
-    public require<T = any>(resourceName: string): Observable<T> {
-        return this.reference$.asObservable().pipe(
-            distinctUntilChanged((a, b) => (a == null && b == null) || (a === b)),
-            map(ref => {
+    public require<T = any>(resourceName: string, skipReady = false): Observable<T> {
+        return combineLatest([
+            this.reference$.asObservable(),
+            this.ready$.asObservable(),
+        ]).pipe(
+            filter(([ref, ready]) => ref != null && (skipReady || ready)),
+            first(),
+            map(([ref]) => {
                 try {
                     return ref == null ? null : ref.require(resourceName);
                 } catch (err) {
+                    console.error('Could not require aloha resource:', resourceName);
                     return null;
                 }
             }),
@@ -317,6 +325,7 @@ export class AlohaIntegrationService {
     }
 
     public clearReferences(): void {
+        this.ready$.next(false);
         this.reference$.next(null);
         this.settings$.next(null);
         this.registeredComponents = {};

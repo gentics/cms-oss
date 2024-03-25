@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { AlohaEditable, AlohaRangeObject, AlohaSettings } from '@gentics/aloha-models';
-import { File as FileModel, Image as ImageModel, Page } from '@gentics/cms-models';
+import { Page } from '@gentics/cms-models';
 import { GCMSUI } from '../providers/customer-script/customer-script.service';
 
 /** Requests that can be sent via `Aloha.GCN.performRESTRequest()` */
@@ -78,9 +78,6 @@ export interface CNWindow extends CNParentWindow {
         performRESTRequest: GCNPerformRESTRequestFunction
     };
 
-    // Repository Browser
-    MiniBrowser?: MiniBrowser;
-
     /** Called inside the editor frame when a page is loading / being saved */
     progress?(myframe: any, doc: Document, url: string): void;
 
@@ -105,6 +102,7 @@ export interface AlohaGlobal {
         SelectionRange: typeof AlohaRangeObject;
         updateSelection(): void;
     };
+    ready(fn: () => void): void;
     isModified(): boolean;
     trigger(eventName: string, data: any): void;
     activeEditable?: AlohaEditable;
@@ -137,11 +135,6 @@ export interface GCNJSLib {
         onsuccess(returnValue: Page): void;
         onfailure(data: any, error: Error): void;
     }): void;
-}
-
-export interface MiniBrowser {
-    show(showType: string, fieldName: string): void;
-    submitForm(): void;
 }
 
 export interface LinkBrowser {
@@ -179,16 +172,6 @@ export interface LinkBrowserConfig {
     renditionFilter: string[];
     filter: Array<'language' | 'status' | 'inherited' | 'sizeX' | 'sizeY' | 'fileSize' | 'gisResizable'>;
     adaptPageSize: boolean;
-}
-
-/** Minimal interface of the gcn/gcnfileupload plugin */
-export interface FileUploadPlugin {
-    openModal(): void;
-    getDocument(data: FileModel | ImageModel, objecttype: string): any;
-}
-
-export interface GCNImagePlugin {
-    imageProperties: ImageModel;
 }
 
 /**

@@ -157,9 +157,9 @@ export class CustomerScriptService implements OnDestroy {
     /**
      * Create an instance of the GCMSUI object for use by customer scripts.
      */
-    createGCMSUIObject(scriptHost: CustomScriptHostService, window: CNWindow, document: CNIFrameDocument): GcmsUiBridge {
-        if (window.GCMSUI) {
-            return window.GCMSUI;
+    createGCMSUIObject(scriptHost: CustomScriptHostService, iFrameWindow: CNWindow, document: CNIFrameDocument): GcmsUiBridge {
+        if (iFrameWindow.GCMSUI) {
+            return iFrameWindow.GCMSUI;
         }
 
         let preLoadScriptExecuted = false;
@@ -167,13 +167,13 @@ export class CustomerScriptService implements OnDestroy {
 
         const executePreLoadScript = () => {
             if (!preLoadScriptExecuted) {
-                this.runPreLoadScript(window, document, scriptHost);
+                this.runPreLoadScript(iFrameWindow, document, scriptHost);
                 preLoadScriptExecuted = true;
             }
         };
         const executePostLoadScript = () => {
             if (!postLoadScriptExecuted) {
-                this.runPostLoadScript(window, document, scriptHost);
+                this.runPostLoadScript(iFrameWindow, document, scriptHost);
                 postLoadScriptExecuted = true;
             }
         };
@@ -200,10 +200,10 @@ export class CustomerScriptService implements OnDestroy {
             this.aloha.clearReferences();
             this.overlays.closeRemaining();
 
-            window.GCMSUI = null;
-            window.removeEventListener('unload', onUnload);
+            iFrameWindow.GCMSUI = null;
+            iFrameWindow.removeEventListener('unload', onUnload);
         };
-        window.addEventListener('unload', onUnload);
+        iFrameWindow.addEventListener('unload', onUnload);
 
         subscription = this.state.select(state => this.mapToPartialState(state)).pipe(
             distinctUntilChanged(deepEqual),
@@ -214,7 +214,7 @@ export class CustomerScriptService implements OnDestroy {
         });
 
         // Make sure that child IFrames also have access to the GCMSUI init method.
-        window.GCMSUI_childIFrameInit = (window.parent as CNParentWindow).GCMSUI_childIFrameInit;
+        iFrameWindow.GCMSUI_childIFrameInit = (iFrameWindow.parent as CNParentWindow).GCMSUI_childIFrameInit;
 
         const gcmsUi: GcmsUiBridge = {
             runPreLoadScript: executePreLoadScript,
@@ -265,8 +265,7 @@ export class CustomerScriptService implements OnDestroy {
             },
         };
 
-        window.GCMSUI = gcmsUi;
-        this.aloha.setWindow(window);
+        iFrameWindow.GCMSUI = gcmsUi;
         return gcmsUi;
     }
 

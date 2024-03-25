@@ -4,6 +4,10 @@
     max-width: 100%;
 }
 
+.container-validator-errors {
+    color: $gtx-color-alert;
+}
+
 .gtx-inheritance-info {
     color: $gcms-color-icon-inheritance;
     display: flex;

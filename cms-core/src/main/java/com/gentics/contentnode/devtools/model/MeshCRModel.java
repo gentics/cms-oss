@@ -59,4 +59,13 @@ public class MeshCRModel extends AbstractCRModel {
 	@Override
 	public void setBasepath(String basepath) {
 	}
+
+	@Override
+	public String getBasepathProperty() {
+		return null;
+	}
+
+	@Override
+	public void setBasepathProperty(String basepathProperty) {
+	}
 }

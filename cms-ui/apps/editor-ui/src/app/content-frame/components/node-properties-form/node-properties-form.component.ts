@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { ApplicationStateService, FolderActionsService, MarkObjectPropertiesAsModifiedAction } from '@editor-ui/app/state';
-import { EditableNodeProps, Folder, Node, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { EditableNodeProps, Folder, Node, NodeHostnameType, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
 import { Subscription } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
@@ -30,6 +30,18 @@ import { RepositoryBrowserClient } from '../../../shared/providers';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy {
+
+    /** selectable options for node input hostnameType */
+    public readonly HOSTNAME_TYPES: { id: NodeHostnameType; label: string; }[] = [
+        {
+            id: NodeHostnameType.VALUE,
+            label: 'editor.node_hostname_type_value',
+        },
+        {
+            id: NodeHostnameType.PROPERTY,
+            label: 'editor.node_hostname_type_property',
+        },
+    ];
 
     @Input()
     public properties: EditableNodeProps = {};
@@ -51,6 +63,7 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
     defaultImageFolder: Folder | undefined;
     masterNode: Node | undefined;
     linkInputs: boolean;
+    hostnameType: NodeHostnameType;
 
     get publishingDisabled(): boolean {
         return this.form.get('disablePublish').value;
@@ -62,6 +75,14 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
 
     get contentRepositoryDisabled(): boolean {
         return this.publishingDisabled || !this.form.get('contentRepository').value;
+    }
+
+    get hostnameDisabled(): boolean {
+        return this.hostnameType !== NodeHostnameType.VALUE;
+    }
+
+    get hostnamePropertyDisabled(): boolean {
+        return this.hostnameType !== NodeHostnameType.PROPERTY;
     }
 
     private subscriptions: Subscription[] = [];
@@ -79,6 +100,7 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
             nodeName: new UntypedFormControl(this.properties.nodeName || '', Validators.required),
             https: new UntypedFormControl(this.properties.https || false),
             host: new UntypedFormControl(this.properties.host || ''),
+            hostnameProperty: new UntypedFormControl(this.properties.hostnameProperty || '', [ Validators.pattern(/^\$\{(env|sys):NODE_HOST_[^}]+\}$/) ]),
             utf8: new UntypedFormControl(this.properties.utf8 || false),
             defaultFileFolderId: new UntypedFormControl(this.properties.defaultFileFolderId),
             defaultImageFolderId: new UntypedFormControl(this.properties.defaultImageFolderId),
@@ -95,6 +117,10 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
             urlRenderingPages: new UntypedFormControl(this.properties.urlRenderingPages || 0),
             urlRenderingFiles: new UntypedFormControl(this.properties.urlRenderingFiles || 0),
         });
+
+        if (this.properties) {
+            this.updateHostnameType(this.properties.hostnameProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
+        }
 
         this.subscriptions.push(this.form.valueChanges.subscribe(changes => {
             // notify state about entity properties validity -> relevant for `ContentFrame.modifiedObjectPropertyValid`
@@ -147,6 +173,20 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
 
     public ngOnDestroy(): void {
         this.subscriptions.forEach(s => s.unsubscribe());
+    }
+
+    public updateHostnameType(value: NodeHostnameType): void {
+        this.hostnameType = value;
+        if (this.hostnameType === NodeHostnameType.PROPERTY) {
+            // this.form.get('host').setValue('');
+            this.form.get('host').disable();
+            this.form.get('hostnameProperty').enable();
+        } else if (this.hostnameType === NodeHostnameType.VALUE) {
+            // this.form.get('hostnameProperty').setValue('');
+            this.form.get('host').enable();
+            this.form.get('hostnameProperty').disable();
+        }
+        this.form.updateValueAndValidity();
     }
 
     selectDefaultFolder(type: 'file' | 'image'): void {
@@ -205,10 +245,14 @@ export class NodePropertiesFormComponent implements OnInit, OnChanges, OnDestroy
             return;
         }
 
+        if (!this.hostnameType) {
+            this.updateHostnameType(properties.hostnameProperty ? NodeHostnameType.PROPERTY : NodeHostnameType.VALUE);
+        }
         this.form.setValue({
             nodeName: properties.nodeName,
             https: properties.https,
             host: properties.host,
+            hostnameProperty: properties.hostnameProperty,
             utf8: properties.utf8,
             defaultFileFolderId: properties.defaultFileFolderId,
             defaultImageFolderId: properties.defaultImageFolderId,

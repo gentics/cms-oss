@@ -421,9 +421,24 @@ node_default_file_upload_folder_label:
 node_default_image_upload_folder_label:
     en: Default image upload folder
     de: Standard Bild Upload Ordner
+node_hostname_type_label:
+    en: Define Hostname
+    de: Hostnamen angeben
+node_hostname_type_value:
+    en: Enter Hostname directly
+    de: Hostnamen direkt eingeben
+node_hostname_type_property:
+    en: Get Hostname from Property
+    de: Hostnamen aus Eigenschaft holen
 node_hostname_label:
     en: Hostname
     de: Hostname
+node_hostname_property_label:
+    en: Hostname property
+    de: Hostnamen Eigenschaft
+node_hostname_property_pattern:
+    en: Hostname property must be entered in format ${env:NODE_HOST_...} or ${sys:NODE_HOST...}.
+    de: Hostnamen Eigenschaft muss im Format ${env:NODE_HOST_...} oder ${sys:NODE_HOST_...} angegeben werden.
 node_no_selection:
     en: 'No node selected'
     de: 'Keinen Node ausgewählt'

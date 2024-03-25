@@ -136,7 +136,7 @@ export class LoginGateComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     loginWithContentRepository(): void {
-        this.performLogin(() => this.cmsClient.contentRepository.loginToMeshInstance(this.repository.id).toPromise());
+        this.performLogin(() => this.cmsClient.contentRepository.proxyLogin(this.repository.id).toPromise());
     }
 
     protected performLogin(handler: (value: LoginRequest) => Promise<any>): void {

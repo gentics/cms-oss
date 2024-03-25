@@ -53,7 +53,7 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>2.0.0-SNAPSHOT</alohaeditor.version>
+		<alohaeditor.version>ci-dev-test2-SNAPSHOT</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
 		<alohaeditor.date>27.06.2023</alohaeditor.date>

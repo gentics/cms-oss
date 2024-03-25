@@ -2252,7 +2252,9 @@ public class MeshPublisher implements AutoCloseable {
 
 			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
 
-			Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
+			if (checkedNode != null) {
+				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
+			}
 
 			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
 			if (objectType == Form.TYPE_FORM) {

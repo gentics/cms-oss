@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jetty.server.AllowedResourceAliasChecker;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.util.resource.Resource;
+
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
+import com.gentics.lib.log.NodeLogger;
 
 /**
  * An extension of {@link AllowedResourceAliasChecker} which will allow symlinks alias to arbitrary
@@ -16,7 +18,7 @@ import org.eclipse.jetty.util.log.Logger;
  */
 public class SelectedSymlinkAllowedResourceAliasChecker extends AllowedResourceAliasChecker
 {
-    private static final Logger LOG = Log.getLogger(SelectedSymlinkAllowedResourceAliasChecker.class);
+    private static final NodeLogger LOG = NodeConfigRuntimeConfiguration.runtimeLog;
 
     private final Set<Pattern> allowedPaths;
 
@@ -30,9 +32,17 @@ public class SelectedSymlinkAllowedResourceAliasChecker extends AllowedResourceA
 
     @Override
     protected boolean check(String pathInContext, Path path) {
+    	return checkPath(path.toString());
+    }
+
+    @Override
+    public boolean check(String pathInContext, Resource resource) {
+    	return checkPath(resource.toString());
+    }
+
+    protected boolean checkPath(String path) {
     	return allowedPaths.stream()
-    			.filter(pattern -> pattern.matcher(path.toString()).matches())
-    			.peek(pattern -> LOG.debug("Symlink {} allowed", path))
+    			.filter(pattern -> pattern.matcher(path).matches())
     			.findAny().isPresent();
     }
 }

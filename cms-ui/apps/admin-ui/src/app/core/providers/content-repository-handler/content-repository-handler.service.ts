@@ -26,7 +26,7 @@ import {
     EntityUpdateRequestParams,
     EntityUpdateResponseModel,
     applyPermissions,
-    discard
+    discard,
 } from '@admin-ui/common';
 import { Injectable } from '@angular/core';
 import { ContentRepositoryFragment, ContentRepositoryFragmentListOptions, Node, Raw } from '@gentics/cms-models';
@@ -570,5 +570,29 @@ export class ContentRepositoryHandlerService
                 message: 'shared.assign_contentRepository_to_crfragments_success',
             })),
         );
+    }
+
+    /**
+     * Normalize the given entity before storing sending it to the REST API
+     * @param entity entity to be normalized
+     * @returns normalized entity
+     */
+    public normalizeForREST(
+        entity: EditableEntityModels[EditableEntity.CONTENT_REPOSITORY],
+    ): EntityUpdateRequestModel<EditableEntity.CONTENT_REPOSITORY> {
+        if (typeof entity.elasticsearch === 'string') {
+            try {
+                entity.elasticsearch = JSON.parse(entity.elasticsearch as any);
+            } catch (err) {
+                entity.elasticsearch = null;
+            }
+        }
+
+        // Don't update the password if it's blank/just whitespace!
+        if (typeof entity.password === 'string' && entity.password.trim() === '') {
+            entity.password = null;
+        }
+
+        return entity;
     }
 }

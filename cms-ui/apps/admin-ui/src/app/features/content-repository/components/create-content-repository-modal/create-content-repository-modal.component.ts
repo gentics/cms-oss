@@ -37,7 +37,8 @@ export class CreateContentRepositoryModalComponent extends BaseModal<ContentRepo
     }
 
     private createEntity(): Promise<ContentRepositoryBO> {
-        return this.handler.createMapped(this.form.value).toPromise();
+        const normalized = (this.handler ).normalizeForREST(this.form.value);
+        return this.handler.createMapped(normalized as any).toPromise();
     }
 
 }

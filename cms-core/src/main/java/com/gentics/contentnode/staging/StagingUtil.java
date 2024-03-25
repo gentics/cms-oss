@@ -2,7 +2,6 @@ package com.gentics.contentnode.staging;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -20,6 +19,10 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
  * Utility class, which acts as bridge to the optional content staging module
  */
 public class StagingUtil {
+	/**
+	 * {@link StagingStatusService} service
+	 */
+	private final static StagingStatusService loader = ServiceLoader.load(StagingStatusService.class).iterator().next();
 
 	/**
 	 * Check if the given node object is contained into the asked content package, and how recent its data is.
@@ -54,7 +57,6 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-
 		return checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, false);
 	}
 
@@ -75,12 +77,7 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-		Iterator<StagingStatusService> iterator = ServiceLoader.load(StagingStatusService.class).iterator();
-		if (iterator.hasNext()) {
-			return iterator.next().checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
-		} else {
-			return Collections.emptyMap();
-		}
+		return loader.checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
 	}
 
 	/**
@@ -97,11 +94,6 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-		Iterator<StagingStatusService> iterator = ServiceLoader.load(StagingStatusService.class).iterator();
-		if (iterator.hasNext()) {
-			return iterator.next().checkStagingStatus(stagingPackageName, ids, useVariants);
-		} else {
-			return Collections.emptyMap();
-		}
+		return loader.checkStagingStatus(stagingPackageName, ids, useVariants);
 	}
 }

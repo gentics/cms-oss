@@ -280,7 +280,7 @@ describe('FolderActionsService', () => {
             folderActions.pageQueuedApprove([examplePage]);
             tick();
 
-            expect(client.page.publishQueueApprove).toHaveBeenCalledWith(examplePage.id);
+            expect(client.page.publishQueueApprove).toHaveBeenCalledWith({ ids: [examplePage.id] });
         }));
 
         it('calls the correct api method with right parameters for pages with queuedOffline', () => {
@@ -295,7 +295,7 @@ describe('FolderActionsService', () => {
             };
 
             folderActions.pageQueuedApprove([examplePage]);
-            expect(client.page.publishQueueApprove).toHaveBeenCalledWith(examplePage.id);
+            expect(client.page.publishQueueApprove).toHaveBeenCalledWith({ ids: [examplePage.id] });
         });
     });
 

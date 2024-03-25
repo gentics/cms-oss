@@ -76,20 +76,7 @@ export class ContentRepositoryEditorComponent extends BaseEntityEditorComponent<
     protected override finalizeEntityToUpdate(
         entity: EditableEntityModels[EditableEntity.CONTENT_REPOSITORY],
     ): EntityUpdateRequestModel<EditableEntity.CONTENT_REPOSITORY> {
-        if (typeof entity.elasticsearch === 'string') {
-            try {
-                entity.elasticsearch = JSON.parse(entity.elasticsearch as any);
-            } catch (err) {
-                entity.elasticsearch = null;
-            }
-        }
-
-        // Don't update the password if it's blank/just whitespace!
-        if (typeof entity.password === 'string' && entity.password.trim() === '') {
-            entity.password = null;
-        }
-
-        return entity;
+        return (this.handler as ContentRepositoryHandlerService).normalizeForREST(entity);
     }
 
     protected onEntityChange(): void {

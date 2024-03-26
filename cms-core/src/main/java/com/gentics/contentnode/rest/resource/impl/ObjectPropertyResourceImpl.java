@@ -5,7 +5,9 @@ import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParam
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -397,14 +399,17 @@ public class ObjectPropertyResourceImpl implements ObjectPropertyResource {
 			Set<Integer> ids = null;
 			ids = DBUtils.select("SELECT id FROM objprop_category", DBUtils.IDS);
 
-			ResolvableComparator<ObjectTagDefinitionCategory> sorter = ResolvableComparator.get(sorting, "id", "globalId", "name", "sortorder");
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("sortOrder", "sortorder");
+
+			ResolvableComparator<ObjectTagDefinitionCategory> sorter = ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "name", "sortorder", "sortOrder");
 			if (sorter != null) {
-				sorter.setNullsAsLast("sortorder");
+				sorter.setNullsAsLast("sortorder", "sortOrder");
 			}
 
 			ObjectPropertyCategoryListResponse response = ListBuilder.from(trx.getTransaction().getObjects(ObjectTagDefinitionCategory.class, ids), ObjectTagDefinitionCategory.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "sortorder"))
+					.filter(ResolvableFilter.get(filter, fieldMap, "id", "globalId", "name", "sortorder", "sortOrder"))
 					.sort(sorter)
 					.page(paging).to(new ObjectPropertyCategoryListResponse());
 

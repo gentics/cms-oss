@@ -47,7 +47,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 @Path("/construct")
 public interface ConstructResource {
 	/**
-	 * Get the list of constructs
+	 * Get the list of constructs.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -262,7 +276,19 @@ public interface ConstructResource {
 	GenericResponse deleteCategory(@PathParam("id") String constructCategoryId) throws Exception;
 
 	/**
-	 * List all construct categories
+	 * List all construct categories.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @return response with categories list
 	 * @throws Exception
 	 * @HTTP 200 The list is returned

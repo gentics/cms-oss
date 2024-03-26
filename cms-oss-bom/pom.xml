@@ -379,6 +379,11 @@
 				<version>${hsqldb.version}</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-text</artifactId>
+				<version>${commons-text.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 </project>

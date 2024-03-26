@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -174,7 +175,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 	@Path("/jobs")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	public JobsResponse jobs(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
-			@BeanParam SchedulerJobFilterParameterBean jobFilter) throws Exception {
+			@BeanParam SchedulerJobFilterParameterBean jobFilter) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			JobsResponse response = ListBuilder.from(DBUtils.select("SELECT jr.id, jr.starttime, jr.endtime, jr.returnvalue, j.name, j.id job_id, j.status FROM job j LEFT JOIN jobrun jr ON j.last_valid_jobrun_id = jr.id", rs -> {
 				List<ResolvableJobStatus> jobs = new ArrayList<>();
@@ -224,7 +225,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 	@Path("/task")
 	@RequiredPerm(type = PermHandler.TYPE_SCHEDULER_ADMIN, bit = PermHandler.PERM_VIEW)
 	public TaskListResponse listTasks(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
-			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 			List<SchedulerTask> tasks = t.getObjects(SchedulerTask.class, DBUtils.select("SELECT id FROM scheduler_task", DBUtils.IDS));
@@ -353,7 +354,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			@BeanParam PagingParameterBean paging,
 			@BeanParam PermsParameterBean perms,
 			@BeanParam EmbedParameterBean embed
-	) throws Exception {
+	) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 			Map<Integer, ScheduleModel> scheduleModels = DBUtils.select(SELECT_SCHEDULE_INFO, this::getAdditionalScheduleInfo);
@@ -532,7 +533,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			@BeanParam PagingParameterBean paging,
 			@BeanParam ExecutionFilterParameterBean executionFilterParameterBean,
 			@BeanParam EmbedParameterBean embed
-	) throws Exception {
+	) throws NodeException {
 		int scheduleId;
 
 		try {
@@ -787,7 +788,11 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			sql.append(getFromClause());
 			sql.append(getWhereClause());
 
-			ResolvableComparator<Resolvable> sorter = ResolvableComparator.get(sorting, "id", "starttime", "endtime", "duration", "result");
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("startTime", "starttime");
+			fieldMap.put("endTime", "endtime");
+
+			ResolvableComparator<Resolvable> sorter = ResolvableComparator.get(sorting, fieldMap, "id", "startTime", "starttime", "endTime", "endtime", "duration", "result");
 			sql.append(sorter.getOrderClause());
 
 			if (paging.pageSize > 0) {

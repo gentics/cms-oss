@@ -93,7 +93,19 @@ public interface GroupResource {
 			@BeanParam PermsParameterBean perms);
 
 	/**
-	 * List groups
+	 * List groups.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -120,7 +132,19 @@ public interface GroupResource {
 	GroupLoadResponse get(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * List subgroups of the given group
+	 * List subgroups of the given group.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param id local group ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -199,7 +223,23 @@ public interface GroupResource {
 	GroupLoadResponse update(@PathParam("id") String id, Group group) throws Exception;
 
 	/**
-	 * List users of given group
+	 * List users of given group.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>login</code></li>
+	 * <li><code>firstName</code></li>
+	 * <li><code>lastName</code></li>
+	 * <li><code>email</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>login</code></li>
+	 * <li><code>firstName</code></li>
+	 * <li><code>lastName</code></li>
+	 * <li><code>email</code></li>
+	 * </ul>
 	 * @param id local group ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters

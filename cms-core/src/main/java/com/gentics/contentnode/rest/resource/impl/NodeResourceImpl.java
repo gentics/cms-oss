@@ -1341,7 +1341,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.view);
 			LanguageList languageList = ListBuilder.from(node.getLanguages(), com.gentics.contentnode.object.ContentLanguage.TRANSFORM2REST)
-				.filter(ResolvableFilter.get(filter, "id", "name", "code"))
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "code"))
 				.page(paging)
 				.to(new LanguageList());
 
@@ -1355,7 +1355,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	@Path("/{id}/availableLanguages")
 	public LanguageList availableLanguages(@PathParam("id") String nodeId, @BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
 			@BeanParam PagingParameterBean paging)
-			throws Exception {
+			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			getNode(nodeId, ObjectPermission.view);
 
@@ -1842,7 +1842,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	@GET
 	@Path("/{nodeId}/constructs")
 	public PagedConstructListResponse getConstructs(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
-			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.view);
 
@@ -1861,8 +1861,8 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			return ListBuilder.from(constructs, Construct.TRANSFORM2REST)
 					.filter(PermFilter.get(ObjectPermission.view))
 					.filter(ResolvableFilter.get(filter, "keyword", "name", "description"))
-			.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "keyword", "name", "description"))
+					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "keyword", "name", "description"))
 					.page(paging).to(new PagedConstructListResponse());
 		}
 	}
@@ -1945,7 +1945,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 	@GET
 	@Path("/{nodeId}/objectproperties")
 	public PagedObjectPropertyListResponse getObjectProperties(@PathParam("nodeId") String nodeId, @BeanParam FilterParameterBean filter,
-			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Node node = getNode(nodeId, ObjectPermission.view);
 

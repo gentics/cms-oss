@@ -257,8 +257,20 @@ public interface FolderResource extends AuthenticatedResource {
 		@BeanParam WastebinParameterBean wastebinParams);
 
 	/**
-	 * Get the list of folders in this folder
-	 *
+	 * Get the list of folders in this folder.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>publishDir</code></li>
+	 * </ul>
 	 * @param inFolder Folder ID and recursive parameters
 	 * @param folderListParams further folder parameters
 	 * @param filter Search parameters

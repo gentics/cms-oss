@@ -165,7 +165,23 @@ public interface UserResource {
 	UserDataResponse getAllUserData();
 
 	/**
-	 * List users.
+	 * List users.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>login</code></li>
+	 * <li><code>firstName</code></li>
+	 * <li><code>lastName</code></li>
+	 * <li><code>email</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>login</code></li>
+	 * <li><code>firstName</code></li>
+	 * <li><code>lastName</code></li>
+	 * <li><code>email</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -230,7 +246,17 @@ public interface UserResource {
 	Response deactivate(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * List groups of given user
+	 * List groups of given user.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param id local user ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters

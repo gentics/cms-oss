@@ -512,9 +512,13 @@ public class UserResourceImpl implements UserResource {
 			List<SystemUser> users = new ArrayList<>();
 			recursiveAddUsers(users, user.getUserGroups());
 
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("firstName", "firstname");
+			fieldMap.put("lastName", "lastname");
+
 			UserList response = ListBuilder.from(users, SystemUser.TRANSFORM2REST)
-				.filter(ResolvableFilter.get(filter, "id", "globalId", "firstName", "lastName", "login", "email"))
-				.sort(ResolvableComparator.get(sorting, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.filter(ResolvableFilter.get(filter, fieldMap, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.sort(ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "firstName", "lastName", "login", "email"))
 				.embed(embed, "group", SystemUser.EMBED_GROUPS)
 				.page(paging)
 				.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
@@ -603,9 +607,9 @@ public class UserResourceImpl implements UserResource {
 			PermFilter.get(ObjectPermission.view).filter(groups);
 
 			GroupList response = ListBuilder.from(groups, UserGroup.TRANSFORM2REST)
-				.filter(ResolvableFilter.get(filter, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.filter(ResolvableFilter.get(filter, "id", "globalId", "name"))
 				.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.userassignment, ObjectPermission.setperm))
-				.sort(ResolvableComparator.get(sorting, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.sort(ResolvableComparator.get(sorting, "id", "globalId", "name"))
 				.page(paging)
 				.to(new GroupList());
 

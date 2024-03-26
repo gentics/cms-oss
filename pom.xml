@@ -85,6 +85,7 @@
 		<nekohtml.version>1.9.22</nekohtml.version>
 		<spring.version>5.7.10</spring.version>
 		<org.json.version>20230227</org.json.version>
+		<commons-text.version>1.11.0</commons-text.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.7</generic-testutils.version>

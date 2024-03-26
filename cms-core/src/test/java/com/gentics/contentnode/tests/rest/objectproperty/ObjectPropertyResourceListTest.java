@@ -42,7 +42,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
 /**
  * Sorting and filtering tests for {@link ObjectPropertyResource#list(SortParameterBean, FilterParameterBean, PagingParameterBean, ObjectPropertyParameterBean, EmbedParameterBean)}
  */
-@GCNFeature(set = {Feature.OBJTAG_SYNC, Feature.MULTICHANNELLING})
+@GCNFeature(set = {Feature.OBJTAG_SYNC})
 public class ObjectPropertyResourceListTest extends AbstractListSortAndFilterTest<ObjectProperty> {
 	private static List<Integer> TYPES = Arrays.asList(Folder.TYPE_FOLDER, Page.TYPE_PAGE, File.TYPE_FILE, ImageFile.TYPE_IMAGE, Template.TYPE_TEMPLATE);
 

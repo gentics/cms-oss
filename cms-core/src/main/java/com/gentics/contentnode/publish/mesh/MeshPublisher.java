@@ -3827,7 +3827,6 @@ public class MeshPublisher implements AutoCloseable {
 		List<RoleReference> roles = task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
 		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
 		request.setReadPublished(roles);
-		request.setRead(roles);
 		request.setExclusive(true);
 		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
 		return request;
@@ -4985,7 +4984,6 @@ public class MeshPublisher implements AutoCloseable {
 			completables.add(client.grantNodeRolePermissions(name, rootNodeUuid,
 							new ObjectPermissionGrantRequest()
 								.setReadPublished(roleReferences)
-								.setRead(roleReferences)
 								.setExclusive(true)
 								.setIgnore(Collections.singletonList(new RoleReference().setName("admin")))
 						).toCompletable());

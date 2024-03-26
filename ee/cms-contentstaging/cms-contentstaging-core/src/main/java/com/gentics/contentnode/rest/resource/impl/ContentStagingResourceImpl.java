@@ -243,10 +243,10 @@ public class ContentStagingResourceImpl implements ContentStagingResource {
 					}
 					switch (item) {
 					case "name":
-						comparators.push((a,b) -> ObjectUtils.compare(a.getName(), b.getName()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> ObjectUtils.compare(StringUtils.lowerCase(a.getName()), StringUtils.lowerCase(b.getName())) * (desc ? -1 : 1));
 						break;
 					case "description":
-						comparators.push((a,b) -> ObjectUtils.compare(a.getDescription(), b.getDescription()) * (desc ? -1 : 1));
+						comparators.push((a,b) -> ObjectUtils.compare(StringUtils.lowerCase(a.getDescription()), StringUtils.lowerCase(b.getDescription())) * (desc ? -1 : 1));
 						break;
 					case "nodes":
 						comparators.push((a,b) -> (a.getNodes() - b.getNodes()) * (desc ? -1 : 1));

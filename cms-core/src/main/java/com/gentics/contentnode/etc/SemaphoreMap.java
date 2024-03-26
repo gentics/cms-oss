@@ -3,7 +3,6 @@ package com.gentics.contentnode.etc;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +25,7 @@ public class SemaphoreMap <T> {
 	/**
 	 * Loader for {@link LockService} implementations
 	 */
-	protected static ServiceLoader<LockService> lockServiceLoader = ServiceLoader.load(LockService.class);
+	protected static ServiceLoaderUtil<LockService> lockServiceLoader = ServiceLoaderUtil.load(LockService.class);
 
 	/**
 	 * Map holding the semaphores

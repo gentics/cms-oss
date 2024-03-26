@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -50,6 +49,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
@@ -163,7 +163,7 @@ public class FileFactory extends AbstractFactory {
 	/**
 	 * Loader for {@link FileService}s
 	 */
-	protected final static ServiceLoader<FileService> fileFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<FileService> fileFactoryServiceLoader = ServiceLoaderUtil
 			.load(FileService.class);
 
 	/**

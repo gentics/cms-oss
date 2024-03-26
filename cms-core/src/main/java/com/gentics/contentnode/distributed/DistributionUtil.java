@@ -1,10 +1,11 @@
 package com.gentics.contentnode.distributed;
 
-import java.util.ServiceLoader;
 import java.util.concurrent.Callable;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.tuple.Pair;
+
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 
 /**
  * Utility class which helps in the task distribution
@@ -13,7 +14,7 @@ public class DistributionUtil {
 	/**
 	 * Service loader
 	 */
-	protected static ServiceLoader<TaskDistributionService> taskDistributionServiceLoader = ServiceLoader
+	protected static ServiceLoaderUtil<TaskDistributionService> taskDistributionServiceLoader = ServiceLoaderUtil
 			.load(TaskDistributionService.class);
 
 	/**

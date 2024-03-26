@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.stream.StreamSupport;
 import org.apache.commons.lang.StringUtils;
 
@@ -100,7 +99,7 @@ public enum Feature {
 	/**
 	 * Service loader for implementations of {@link FeatureService}
 	 */
-	private final static ServiceLoader<FeatureService> loader = ServiceLoader.load(FeatureService.class);
+	private final static ServiceLoaderUtil<FeatureService> loader = ServiceLoaderUtil.load(FeatureService.class);
 
 	/**<w
 	 * Flag to mark features, that can be activated/deactivated per node

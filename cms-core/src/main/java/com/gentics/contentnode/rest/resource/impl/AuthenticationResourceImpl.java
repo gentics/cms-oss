@@ -1,14 +1,7 @@
 package com.gentics.contentnode.rest.resource.impl;
 
-import com.gentics.contentnode.etc.LoginService;
-import com.gentics.contentnode.etc.PrefixService;
-import com.gentics.contentnode.etc.RandomPrefixService;
-import com.gentics.lib.etc.StringUtils;
 import java.util.Map;
 
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.stream.StreamSupport;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,10 +18,12 @@ import javax.ws.rs.core.HttpHeaders;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.etc.LoginService;
 import com.gentics.contentnode.etc.MaintenanceMode;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.NodeSetup;
 import com.gentics.contentnode.etc.NodeSetupValuePair;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.InvalidSessionIdException;
 import com.gentics.contentnode.factory.Session;
 import com.gentics.contentnode.factory.SessionToken;
@@ -93,7 +88,7 @@ public class AuthenticationResourceImpl extends AbstractContentNodeResource impl
 	/**
 	 * Service loader that finds implementations of the LoginService interface
 	 */
-	private final static ServiceLoader<LoginService> loginServiceLoader = ServiceLoader
+	private final static ServiceLoaderUtil<LoginService> loginServiceLoader = ServiceLoaderUtil
 			.load(LoginService.class);
 
 

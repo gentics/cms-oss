@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.object.StageableNodeObject;
 import com.gentics.contentnode.rest.model.response.StagingStatus;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -22,7 +22,7 @@ public class StagingUtil {
 	/**
 	 * {@link StagingStatusService} service
 	 */
-	private final static StagingStatusService loader = ServiceLoader.load(StagingStatusService.class).iterator().next();
+	private final static ServiceLoaderUtil<StagingStatusService> loader = ServiceLoaderUtil.load(StagingStatusService.class);
 
 	/**
 	 * Check if the given node object is contained into the asked content package, and how recent its data is.
@@ -77,7 +77,9 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-		return loader.checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants);
+		return loader.execForFirst(
+				service -> service.checkStagingStatus(nodeObjects, stagingPackageName, keyProvider, useVariants))
+				.orElse(Collections.emptyMap());
 	}
 
 	/**
@@ -94,6 +96,6 @@ public class StagingUtil {
 		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.CONTENT_STAGING) || StringUtils.isBlank(stagingPackageName)) {
 			return null;
 		}
-		return loader.checkStagingStatus(stagingPackageName, ids, useVariants);
+		return loader.execForFirst(service -> service.checkStagingStatus(stagingPackageName, ids, useVariants)).orElse(Collections.emptyMap());
 	}
 }

@@ -25,7 +25,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -49,6 +48,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.LangTrx;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -234,7 +234,7 @@ public class PageFactory extends AbstractFactory {
 	/**
 	 * Loader for {@link PageService}s
 	 */
-	protected final static ServiceLoader<PageService> pageFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<PageService> pageFactoryServiceLoader = ServiceLoaderUtil
 			.load(PageService.class);
 
 	/**

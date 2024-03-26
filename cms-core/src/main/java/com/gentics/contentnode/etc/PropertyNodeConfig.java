@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 
 import javax.sql.DataSource;
 
@@ -80,9 +79,9 @@ import com.gentics.lib.log.NodeLogger;
  */
 public class PropertyNodeConfig implements NodeConfig {
 	/**
-	 * ServiceLoader for available {@link LifecycleService}s
+	 * ServiceLoaderUtil for available {@link LifecycleService}s
 	 */
-	protected final static ServiceLoader<LifecycleService> lifecycleServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<LifecycleService> lifecycleServiceLoader = ServiceLoaderUtil
 			.load(LifecycleService.class);
 
 	private NodeLogger logger = NodeLogger.getNodeLogger(PropertyNodeConfig.class);

@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -31,6 +30,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.PropertyTrx;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
@@ -112,7 +112,7 @@ public class FormFactory extends AbstractFactory {
 	/**
 	 * Loader for {@link FormService}s
 	 */
-	protected final static ServiceLoader<FormService> formFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<FormService> formFactoryServiceLoader = ServiceLoaderUtil
 			.load(FormService.class);
 
 	static {

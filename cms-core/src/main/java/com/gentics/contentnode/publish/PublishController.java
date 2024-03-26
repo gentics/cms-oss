@@ -7,10 +7,10 @@ package com.gentics.contentnode.publish;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ServiceLoader;
 import java.util.concurrent.Callable;
 
 import com.gentics.contentnode.distributed.DistributionUtil;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.PublishData;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.lib.log.NodeLogger;
@@ -39,7 +39,7 @@ public class PublishController {
 	/**
 	 * Loader for instances of {@link InstantPublishService}
 	 */
-	protected static ServiceLoader<InstantPublishService> instantPublishServiceLoader = ServiceLoader
+	protected static ServiceLoaderUtil<InstantPublishService> instantPublishServiceLoader = ServiceLoaderUtil
 			.load(InstantPublishService.class);
 
 	/**

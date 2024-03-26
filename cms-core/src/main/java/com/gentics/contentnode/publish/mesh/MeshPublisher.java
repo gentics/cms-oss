@@ -138,6 +138,7 @@ import com.gentics.mesh.core.rest.branch.info.BranchInfoSchemaList;
 import com.gentics.mesh.core.rest.branch.info.BranchSchemaInfo;
 import com.gentics.mesh.core.rest.common.FieldTypes;
 import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
+import com.gentics.mesh.core.rest.common.ObjectPermissionRevokeRequest;
 import com.gentics.mesh.core.rest.common.RestModel;
 import com.gentics.mesh.core.rest.job.JobListResponse;
 import com.gentics.mesh.core.rest.job.JobStatus;
@@ -3823,8 +3824,10 @@ public class MeshPublisher implements AutoCloseable {
 	 * @return the request for updating the permissions
 	 */
 	protected ObjectPermissionGrantRequest createPermissionUpdateRequests(WriteTask task) {
+		List<RoleReference> roles = task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
 		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
-		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
+		request.setReadPublished(roles);
+		request.setRead(roles);
 		request.setExclusive(true);
 		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
 		return request;
@@ -4979,11 +4982,13 @@ public class MeshPublisher implements AutoCloseable {
 					.collect(Collectors.toList()));
 
 			// set read_published on the root node
-			completables
-					.add(client
-							.grantNodeRolePermissions(name, rootNodeUuid,
-									new ObjectPermissionGrantRequest().setReadPublished(roleReferences).setExclusive(true))
-							.toCompletable());
+			completables.add(client.grantNodeRolePermissions(name, rootNodeUuid,
+							new ObjectPermissionGrantRequest()
+								.setReadPublished(roleReferences)
+								.setRead(roleReferences)
+								.setExclusive(true)
+								.setIgnore(Collections.singletonList(new RoleReference().setName("admin")))
+						).toCompletable());
 
 			return Completable.merge(completables)
 				.andThen(Completable.fromAction(() -> rolesWithPermissions.addAll(missingPermissions)));

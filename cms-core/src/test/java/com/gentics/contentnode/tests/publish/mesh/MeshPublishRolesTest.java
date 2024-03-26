@@ -19,6 +19,23 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.updat
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
@@ -69,22 +86,6 @@ import com.gentics.mesh.core.rest.role.RoleResponse;
 import com.gentics.mesh.parameter.RolePermissionParameters;
 import com.gentics.mesh.parameter.client.RolePermissionParametersImpl;
 import com.gentics.mesh.rest.client.MeshRequest;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Test cases for setting permissions on roles
@@ -297,27 +298,27 @@ public class MeshPublishRolesTest {
 	 */
 	@Test
 	public void testProjectPermissionsAutoCreate() throws Exception {
-		MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true);
-
-		Trx.operate(() -> {
-			update(rolesDs, ds -> {
-				mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+		try (MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true)) {
+			Trx.operate(() -> {
+				update(rolesDs, ds -> {
+					mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				});
+				update(node.getFolder(), f -> {
+					setRoles(f, "role_auto");
+				});
 			});
-			update(node.getFolder(), f -> {
-				setRoles(f, "role_auto");
-			});
-		});
 
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "admin", "role_auto");
+			List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
+			Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
+			assertThat(optionalDefaultBranch).isPresent();
+			assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "admin", "role_auto");
 		}
-
-		assertProjectPermission(MESH_PROJECT_NAME, Permission.READ, "admin", "role_auto");
-		List<BranchResponse> branches = mesh.client().findBranches(MESH_PROJECT_NAME).blockingGet().getData();
-		Optional<BranchResponse> optionalDefaultBranch = branches.stream().filter(isDefaultBranch()).findFirst();
-		assertThat(optionalDefaultBranch).isPresent();
-		assertBranchPermission(MESH_PROJECT_NAME, optionalDefaultBranch.get().getUuid(), Permission.READ, "admin", "role_auto");
 	}
 	/**
 	 * Test permissions on root node
@@ -347,24 +348,24 @@ public class MeshPublishRolesTest {
 	 */
 	@Test
 	public void testProjectRootNodePermissionsAutoCreate() throws Exception {
-		MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true);
-
-		Trx.operate(() -> {
-			update(rolesDs, ds -> {
-				mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+		try (MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true)) {
+			Trx.operate(() -> {
+				update(rolesDs, ds -> {
+					mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				});
+				update(node.getFolder(), f -> {
+					setRoles(f, "role_auto");
+				});
 			});
-			update(node.getFolder(), f -> {
-				setRoles(f, "role_auto");
-			});
-		});
 
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
+			assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "admin", "role_auto");
 		}
-
-		String rootNodeUuid = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet().getRootNode().getUuid();
-		assertRoles(param -> mesh.client().findNodeByUuid(MESH_PROJECT_NAME, rootNodeUuid, param), Permission.READ_PUBLISHED, "admin", "role_auto");
 	}
 
 	/**
@@ -393,24 +394,24 @@ public class MeshPublishRolesTest {
 	 */
 	@Test
 	public void testFolderPermissionsAutoCreate() throws Exception {
-		MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true);
+		try (MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true)) {
+			Folder folder = Trx.supply(() -> {
+				update(rolesDs, ds -> {
+					mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				});
 
-		Folder folder = Trx.supply(() -> {
-			update(rolesDs, ds -> {
-				mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				return update(createFolder(node.getFolder(), "Folder"), f -> {
+					setRoles(f, "role_auto");
+				});
 			});
 
-			return update(createFolder(node.getFolder(), "Folder"), f -> {
-				setRoles(f, "role_auto");
-			});
-		});
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
 
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
+			assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_auto");
 		}
-
-		assertNodePermission(MESH_PROJECT_NAME, folder, Permission.READ_PUBLISHED, "admin", "role_auto");
 	}
 
 	/**
@@ -492,26 +493,26 @@ public class MeshPublishRolesTest {
 	 */
 	@Test
 	public void testPagePermissionsAutoCreate() throws Exception {
-		MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true);
+		try (MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true)) {
+			Folder folder = Trx.supply(() -> {
+				update(rolesDs, ds -> {
+					mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				});
 
-		Folder folder = Trx.supply(() -> {
-			update(rolesDs, ds -> {
-				mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				return update(createFolder(node.getFolder(), "Folder"), f -> {
+					setRoles(f, "role_auto");
+				});
 			});
 
-			return update(createFolder(node.getFolder(), "Folder"), f -> {
-				setRoles(f, "role_auto");
-			});
-		});
+			Page page = Trx.supply(() -> update(createPage(folder, template, "Page"), Page::publish));
 
-		Page page = Trx.supply(() -> update(createPage(folder, template, "Page"), Page::publish));
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
 
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
+			assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_auto");
 		}
-
-		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_auto");
 	}
 
 	/**
@@ -595,26 +596,26 @@ public class MeshPublishRolesTest {
 	 */
 	@Test
 	public void testFilePermissionsAutoCreate() throws Exception {
-		MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true);
+		try (MeshPublisher mp = new MeshPublisher(MiscUtils.load(ContentRepository.class, crId.toString()), true)) {
+			Folder folder = Trx.supply(() -> {
+				update(rolesDs, ds -> {
+					mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				});
 
-		Folder folder = Trx.supply(() -> {
-			update(rolesDs, ds -> {
-				mp.setRoles(Collections.singleton(rolesDs), Arrays.asList("role_auto"));
+				return update(createFolder(node.getFolder(), "Folder"), f -> {
+					setRoles(f, "role_auto");
+				});
 			});
 
-			return update(createFolder(node.getFolder(), "Folder"), f -> {
-				setRoles(f, "role_auto");
-			});
-		});
+			File file = Trx.supply(() -> createFile(folder, "file.txt", "File contents".getBytes()));
 
-		File file = Trx.supply(() -> createFile(folder, "file.txt", "File contents".getBytes()));
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
 
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
+			assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_auto");
 		}
-
-		assertNodePermission(MESH_PROJECT_NAME, file, Permission.READ_PUBLISHED, "admin", "role_auto");
 	}
 
 	/**
@@ -947,9 +948,7 @@ public class MeshPublishRolesTest {
 		for (RoleResponse role : rolesResponse.getData()) {
 			AbstractGenericRestResponse response = request.apply(new RolePermissionParametersImpl().setRoleUuid(role.getUuid())).blockingGet();
 
-			assertThat(response.getRolePerms().get(permission)).as(String.format("Flag for %s on %s", permission, role.getName()))
-					.isEqualTo(roleNames.contains(role.getName()));
-
+			assertThat(response.getRolePerms().get(permission)).as(String.format("Flag for %s on %s", permission, role.getName())).isEqualTo(roleNames.contains(role.getName()));
 			neededRoles.remove(role.getName());
 		}
 

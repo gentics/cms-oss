@@ -164,11 +164,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         body?: null | FormData,
         queryParams?: Record<string, any>,
     ): GCMSRestClientResponse<T> {
-        const headers: Record<string, string> = {
-            [HTTP_HEADER_CONTENT_TYPE]: CONTENT_TYPE_FORM,
-        };
-
-        const req = this.prepareRequest(method, path, queryParams, headers);
+        const req = this.prepareRequest(method, path, queryParams, {});
 
         return this.driver.performMappedRequest<T>(req, body);
     }
@@ -392,6 +388,8 @@ export class GCMSRestClient implements GCMSRootAPI {
             const data = new FormData();
             data.append('fileBinaryData', file);
             data.append('fileName', fileName);
+            data.append('folderId', options?.folderId.toString())
+            data.append('nodeId', options?.nodeId.toString())
             return this.executeMappedFormRequest(POST, '/file/create', data, options);
         },
         get: (id, options) => this.executeMappedJsonRequest(GET, `/file/load/${id}`, null, options),

@@ -57,15 +57,14 @@
                     <span class="icon-modified">*</span>
                 </div>
 
-                <div class="label-wrapper" *ngSwitchCase="DisplayLabel.LOCKED">
-                    <icon class="info">lock</icon>
-                </div>
-
                 <div class="label-wrapper" *ngSwitchCase="DisplayLabel.DELETED">
                     <span class="label-element">{{ 'common.status_deleted' | i18n }}</span>
                 </div>
             </ng-container>
 
+            <div class="label-wrapper" *ngIf="locked">
+                <icon class="info">lock</icon>
+            </div>
         </div>
     </gtx-dropdown-trigger>
 

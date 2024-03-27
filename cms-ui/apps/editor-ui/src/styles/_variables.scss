@@ -26,10 +26,10 @@ $gcms-icon-font-size: calc( #{$gcms-icon-size} - #{$gcms-icon-size} * 0.15 );
 
 // Aloha Size breakpoints
 $aloha-size-mobile-min: 0px;
-$aloha-size-mobile-max: 400px;
-$aloha-size-tablet-min: 401px;
-$aloha-size-tablet-max: 1024px;
-$aloha-size-desktop-min: 1025px;
+$aloha-size-mobile-max: 440px;
+$aloha-size-tablet-min: 441px;
+$aloha-size-tablet-max: 1025px;
+$aloha-size-desktop-min: 1026px;
 $aloha-size-desktop-max: 99999px;
 
 // ui-core component-specific overrides

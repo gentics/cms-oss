@@ -28,7 +28,7 @@ export class MobileMenu {
     public maxPages = 1;
     public pagedElements: Element[][] = [];
 
-    public threshHold = 400;
+    public threshHold = 440;
 
     private initialized = false;
     private resize: ResizeObserver | null = null;

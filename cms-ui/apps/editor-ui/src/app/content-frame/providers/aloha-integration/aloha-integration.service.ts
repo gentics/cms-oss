@@ -196,8 +196,8 @@ export class AlohaIntegrationService {
     constructor(zone: NgZone) {
         zone.runOutsideAngular(() => {
             // TODO: Define the breakpoints somewhere static
-            this.handleMedia('(max-width: 400px)', ScreenSize.MOBILE);
-            this.handleMedia('(min-width: 401px) and (max-width: 1024px)', ScreenSize.TABLET);
+            this.handleMedia('(max-width: 440px)', ScreenSize.MOBILE);
+            this.handleMedia('(min-width: 441px) and (max-width: 1024px)', ScreenSize.TABLET);
             this.handleMedia('(min-width: 1025px)', ScreenSize.DESKTOP);
         });
 

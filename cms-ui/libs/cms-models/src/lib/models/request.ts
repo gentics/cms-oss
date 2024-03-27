@@ -1048,11 +1048,12 @@ export interface FileCreateRequest {
 
 export interface FileUploadOptions {
     folderId: number;
-    nodeId?: number;
+    nodeId: number;
 }
 
 export interface FileReplaceOptions {
-    nodeId?: number;
+    folderId?: number;
+    nodeId: number;
 }
 
 /**
@@ -1323,7 +1324,7 @@ export interface CropResizeParameters {
 }
 
 /**
- *  This object is used in making a request to the`image/rotate` endpoint to perform a rotation on an image.
+ * This object is used in making a request to the`image/rotate` endpoint to perform a rotation on an image.
  */
 export interface RotateParameters {
     image: {

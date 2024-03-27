@@ -2799,12 +2799,12 @@ export class FolderActionsService {
         }
         if (sortedFiles.replace.images.length > 0) {
             const replaceImages = sortedFiles.replace.images.map(data =>
-                this.replaceFile('image', data.id, data.file, null, { nodeId }).pipe(map(res => [res])));
+                this.replaceFile('image', data.id, data.file, data.file.name, { nodeId, folderId }).pipe(map(res => [res])));
             completedObservables.push(...replaceImages);
         }
         if (sortedFiles.replace.files.length > 0) {
             const replaceFiles = sortedFiles.replace.files.map(data =>
-                this.replaceFile('file', data.id, data.file, null, { nodeId }).pipe(map(res => [res])));
+                this.replaceFile('file', data.id, data.file, data.file.name, { nodeId, folderId }).pipe(map(res => [res])));
             completedObservables.push(...replaceFiles);
         }
 

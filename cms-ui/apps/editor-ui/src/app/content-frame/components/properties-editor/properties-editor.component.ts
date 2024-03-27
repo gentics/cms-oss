@@ -203,6 +203,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                     fileSystemPageDir: item.publishDir,
                     fileSystemPages: item.publishFsPages,
                     host: item.host,
+                    hostnameProperty: item.hostProperty,
                     https: item.https,
                     nodeName: item.name,
                     urlRenderingFiles: item.urlRenderWayFiles,

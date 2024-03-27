@@ -89,7 +89,7 @@ public class RenderUtils {
 			Node masterNode = node.getMaster();
 			if (masterNode.doPublishContentmap()) {
 				ContentRepository cr = masterNode.getContentRepository();
-				String meshPreviewUrl = substituteSingleProperty(masterNode.getMeshPreviewUrl());
+				String meshPreviewUrl = masterNode.getEffectiveMeshPreviewUrl();
 
 				if (cr != null && cr.getCrType() == Type.mesh && !StringUtils.isEmpty(meshPreviewUrl)) {
 					String previewUrl = FilePublisher.getPath(false, true, meshPreviewUrl, node.getPublishDir(), ObjectTransformer.getString(page.getFolder().get("path"), null));

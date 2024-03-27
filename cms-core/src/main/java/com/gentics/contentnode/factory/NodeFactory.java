@@ -467,11 +467,18 @@ public class NodeFactory {
 				registerObjectFactory(dbTable.clazz(), factory);
 			}
 		}
+	}
 
-		try {
-			factory.initialize();
-		} catch (NodeException e) {
-			logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+	/**
+	 * Initialize all registered object factories
+	 */
+	public void initializeObjectFactories() {
+		for (ObjectFactory factory : factorySet) {
+			try {
+				factory.initialize();
+			} catch (NodeException e) {
+				logger.error(String.format("Error while initializing object factory %s", factory.getClass().getSimpleName()), e);
+			}
 		}
 	}
 

@@ -69,6 +69,36 @@ export enum ContentRepositoryPasswordType {
     PROPERTY = 'property',
 }
 
+/**
+ * Possible Username Type values
+ */
+export enum UsernameType {
+    /** The username is set as value */
+    VALUE = 'value',
+    /** The username is set as property */
+    PROPERTY = 'property',
+}
+
+/**
+ * Possible URL Type values
+ */
+export enum UrlType {
+    /** The URL is set as value */
+    VALUE = 'value',
+    /** The URL is set as property */
+    PROPERTY = 'property',
+}
+
+/**
+ * Possible basepath Type values
+ */
+export enum BasepathType {
+    /** The basepath is set as value */
+    VALUE = 'value',
+    /** The basepath is set as property */
+    PROPERTY = 'property',
+}
+
 /** @see https://www.gentics.com/Content.Node/guides/restapi/json_ContentRepositoryModel.html */
 export interface ContentRepositoryBase<T extends ModelType> {
     /** Global ID */
@@ -81,6 +111,8 @@ export interface ContentRepositoryBase<T extends ModelType> {
     dbType: string;
     /** Username for accessing the ContentRepository */
     username: string;
+    /** Username property for accessing the ContentRepository */
+    usernameProperty: string;
     /** Password for accessing the ContentRepository */
     password: string;
     /** Property, which will resolve to the password. */
@@ -89,8 +121,12 @@ export interface ContentRepositoryBase<T extends ModelType> {
     passwordType: ContentRepositoryPasswordType;
     /** URL for accessing the ContentRepository */
     url: string;
+    /** URL property for accessing the ContentRepository */
+    urlProperty: string;
     /** Basepath for filesystem attributes */
     basepath: string;
+    /** Basepath property for filesystem attributes */
+    basepathProperty: string;
     /** Flag for instant publishing */
     instantPublishing: boolean;
     /** Flag for publishing language information */

@@ -136,16 +136,6 @@
                         <icon left>date_range</icon> {{ 'editor.time_management_label' | i18n }}
                     </gtx-dropdown-item>
 
-                    <ng-container *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'">
-                        <gtx-dropdown-item
-                            class="focus-mode-button"
-                            (click)="setFocusMode(!editorState.focusMode)"
-                        >
-                            <icon left>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
-                            {{ ('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | i18n }}
-                        </gtx-dropdown-item>
-                    </ng-container>
-
                     <gtx-dropdown-item *ngIf="inQueue" (click)="approve()" class="success">
                         <icon left>playlist_add_check</icon> {{ 'editor.publish_queue_btn_approve' | i18n }}
                     </gtx-dropdown-item>
@@ -167,6 +157,18 @@
                     </gtx-dropdown-item>
                 </gtx-dropdown-content>
             </gtx-dropdown-list>
+
+            <ng-container *ngIf="currentItem?.type === 'page' || currentItem?.type === 'form'">
+                <gtx-button
+                    icon
+                    class="focus-mode-button"
+                    type="secondary"
+                    [title]="('editor.' + (editorState.focusMode ? 'disable' : 'enable') + '_focus_mode_label') | i18n"
+                    (click)="setFocusMode(!editorState.focusMode)"
+                >
+                    <icon>{{ ('fullscreen' + (editorState.focusMode ? '_exit' : '')) }}</icon>
+                </gtx-button>
+            </ng-container>
 
             <gtx-button
                 class="close-button"

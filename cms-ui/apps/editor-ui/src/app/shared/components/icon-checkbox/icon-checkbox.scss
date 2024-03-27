@@ -22,7 +22,7 @@
     }
 
     &.checked,
-    &:hover {
+    &:not(.disabled):hover {
         .item-checkbox {
             opacity: 1;
         }
@@ -40,7 +40,7 @@
 }
 
 .icon-checkbox-trigger {
-    &:hover :host .icon-checkbox-wrapper {
+    &:hover :host .icon-checkbox-wrapper:not(.disabled) {
         .item-checkbox {
             opacity: 1;
         }

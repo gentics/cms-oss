@@ -194,7 +194,7 @@ spec:
                         } else if (params.install) {
                             // Install
                             mvnGoal = "install"
-                            mvnArguments = " -am -pl 'cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DskipTests=true -Dskip.unit.tests"
+                            mvnArguments = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DskipTests=true -Dskip.unit.tests"
                         }
                     }
 

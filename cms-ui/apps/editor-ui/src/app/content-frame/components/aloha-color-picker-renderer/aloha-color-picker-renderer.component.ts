@@ -5,8 +5,14 @@ import { Color, ColorEvent, RGBA } from 'ngx-color';
 import { colorToHex, colorToRGBA, constrastColor } from '../../utils';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
 
-function toNormalizedColor(ngxColor: Color): NormalizedColor {
-    return [ngxColor.rgb.r, ngxColor.rgb.g, ngxColor.rgb.b, ngxColor.rgb.a];
+function toNormalizedColor(ngxColor: Color, allowAlpha: boolean): NormalizedColor {
+    const raw: NormalizedColor = [ngxColor.rgb.r, ngxColor.rgb.g, ngxColor.rgb.b, ngxColor.rgb.a];
+
+    if (!allowAlpha) {
+        raw[3] = 255;
+    }
+
+    return raw;
 }
 
 function toNGXColor(rgba: RGBAColor): RGBA {
@@ -73,7 +79,7 @@ export class AlohaColorPickerRendererComponent extends BaseAlohaRendererComponen
     }
 
     public handleColorChange(change: ColorEvent): void {
-        this.triggerChange(toNormalizedColor(change.color));
+        this.triggerChange(toNormalizedColor(change.color, this.settings?.allowTransparency));
     }
 
     public selectPaletteColor(color: string): void {

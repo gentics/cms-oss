@@ -204,7 +204,7 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.addContentRepositoryToPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.addObjectPropertyToPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'objectProperty.objectProperty_successfully_added_to_package',
@@ -222,7 +222,7 @@ export class ObjectPropertyHandlerService
         devtoolPackage: string,
         entityId: string | number,
     ): Observable<void> {
-        return this.api.devTools.removeContentRepositoryFromPackage(devtoolPackage, entityId).pipe(
+        return this.api.devTools.removeObjectPropertyFromPackage(devtoolPackage, entityId).pipe(
             tap(() => {
                 this.notification.show({
                     message: 'objectProperty.objectProperty_successfully_removed_from_package',

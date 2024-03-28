@@ -2729,7 +2729,7 @@ public class CnMapPublisher {
 		 */
 		public void process(ResultSet rs) throws SQLException {
 			// collect the attribute names for pages, files and folders here (we will need them
-			// when language or permssion information must be added)
+			// when language or permission information must be added)
 			List<String> pageAttributeNames = new Vector<String>();
 			List<String> folderAttributeNames = new Vector<String>();
 			List<String> fileAttributeNames = new Vector<String>();

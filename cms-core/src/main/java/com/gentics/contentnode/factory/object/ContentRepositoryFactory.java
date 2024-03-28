@@ -6,6 +6,8 @@ import static com.gentics.contentnode.perm.PermHandler.PERM_CONTENTREPOSITORY_UP
 import static com.gentics.contentnode.perm.PermHandler.PERM_VIEW;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -707,13 +709,22 @@ public class ContentRepositoryFactory extends AbstractFactory {
 					t.dirtObjectCache(ContentRepository.class, getId());
 					return true;
 				} catch (Exception e) {
-					l.error("Error while " + (repair ? "repairing" : "checking") + " the contentrepository", e);
+					StringWriter stackTrace = new StringWriter();
+
+					try (PrintWriter pw = new PrintWriter(stackTrace)) {
+						e.printStackTrace(pw);
+					}
+
+					String msg = "Error while " + (repair ? "repairing" : "checking") + " the contentrepository";
+
 					DBUtils.executeUpdate("UPDATE contentrepository SET checkstatus = ?, checkdate = ?, checkresult = ? WHERE id = ?", new Object[] {
 						ContentRepository.DATACHECK_STATUS_ERROR,
 						t.getUnixTimestamp(),
-						collector.getLog(),
+						msg + "\n" + stackTrace,
 						getId()
 					});
+
+					l.error(msg, e);
 					t.dirtObjectCache(ContentRepository.class, getId());
 					return false;
 				}
@@ -777,13 +788,22 @@ public class ContentRepositoryFactory extends AbstractFactory {
 					t.dirtObjectCache(ContentRepository.class, getId());
 					return true;
 				} catch (Exception e) {
-					l.error("Error while " + (repair ? "repairing" : "checking") + " the contentrepository", e);
+					StringWriter stackTrace = new StringWriter();
+
+					try (PrintWriter pw = new PrintWriter(stackTrace)) {
+						e.printStackTrace(pw);
+					}
+
+					String msg = "Error while " + (repair ? "repairing" : "checking") + " the contentrepository";
+
 					DBUtils.executeUpdate("UPDATE contentrepository SET checkstatus = ?, checkdate = ?, checkresult = ? WHERE id = ?", new Object[] {
 							ContentRepository.DATACHECK_STATUS_ERROR,
 							t.getUnixTimestamp(),
-							collector.getLog(),
+							msg + "\n" + stackTrace,
 							getId()
 					});
+
+					l.error(msg, e);
 					t.dirtObjectCache(ContentRepository.class, getId());
 					return false;
 				}
@@ -2388,7 +2408,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 	/**
 	 * Delete the given entry
-	 * @param factoryTagmapEntry entry
+	 * @param entry entry
 	 */
 	@SuppressWarnings("unchecked")
 	public void deleteEntry(FactoryTagmapEntry entry) throws NodeException {
@@ -2400,7 +2420,7 @@ public class ContentRepositoryFactory extends AbstractFactory {
 
 	/**
 	 * Delete the given contentrepository
-	 * @param factoryContentRepository contentrepository
+	 * @param cr contentrepository
 	 */
 	@SuppressWarnings("unchecked")
 	public void deleteCR(FactoryContentRepository cr) throws NodeException {

@@ -426,13 +426,19 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 						break;
 					}
 
+					Map<String, String> fieldMap = new HashMap<>();
+					fieldMap.put("niceUrl", "nice_url");
+					fieldMap.put("alternateUrls", "alternate_urls");
+					fieldMap.put("fileName", "filename");
+
 					ResolvableComparator<Page> comparator = ResolvableComparator.get(
 						sortingParams,
+						fieldMap,
 						// From AbstractContentObject
 						"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
 						// From AbstractPage
-						"seite", "page", "url", "template", "template_id", "ml_id", "name", "nice_url",
-						"alternate_urls", "filename", "description", "beschreibung", "priority", "folder_id",
+						"seite", "page", "url", "template", "template_id", "ml_id", "name", "nice_url", "niceUrl",
+						"alternate_urls", "alternateUrls", "filename", "fileName", "description", "beschreibung", "priority", "folder_id",
 						"node_id", "tags", "publishtimestamp", "veroeffentlichungsdatum", "creationtimestamp",
 						"erstellungstimestamp", "edittimestamp", "bearbeitungstimestamp", "editdate", "bearbeitungsdatum",
 						"expiredate", "expiretimestamp", "ordner", "folder", "node", "languageset", "ersteller",

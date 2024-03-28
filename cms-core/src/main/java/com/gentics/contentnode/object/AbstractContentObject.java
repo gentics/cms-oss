@@ -8,27 +8,21 @@ package com.gentics.contentnode.object;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.Vector;
-import java.util.stream.Collectors;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.InconsistentDataException;
-import com.gentics.contentnode.db.DBUtils;
-import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.exception.ReadOnlyException;
 import com.gentics.api.lib.resolving.Resolvable;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.events.Dependency;
 import com.gentics.contentnode.events.DependencyManager;
@@ -46,6 +40,7 @@ import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.Action;
 import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RenderableResolvable;
+import com.gentics.contentnode.rest.exceptions.InsufficientPrivilegesException;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 
@@ -82,7 +77,12 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 		resolvableProperties = new HashMap<String, Property>();
 		resolvableProperties.put("id", new Property(new String[] { "id"}) {
 			public Object get(AbstractContentObject object, String key) {
-				return object.id;
+				return object.getId();
+			}
+		});
+		resolvableProperties.put("globalId", new Property(null) {
+			public Object get(AbstractContentObject object, String key) {
+				return Optional.ofNullable(object.getGlobalId()).map(GlobalId::toString).orElse(null);
 			}
 		});
 		resolvableProperties.put("ttype", new Property(null) {

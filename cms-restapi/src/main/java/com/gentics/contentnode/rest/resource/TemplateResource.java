@@ -46,7 +46,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface TemplateResource {
 	/**
-	 * List templates assigned to the given list of nodes
+	 * List templates assigned to the given list of nodes.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>cdate</code></li>
+	 * <li><code>edate</code></li>
+	 * </ul>
 	 * @param nodeIds list of node IDs
 	 * @param filterParams filter parameters
 	 * @param sortingParams sorting parameters
@@ -117,7 +131,19 @@ public interface TemplateResource {
 	Response delete(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Get the folders to which the template is assigned
+	 * Get the folders to which the template is assigned.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param id template ID
 	 * @param sort sort parameters
 	 * @param filter filter parameters
@@ -131,7 +157,17 @@ public interface TemplateResource {
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
-	 * Get the nodes to which the template is assigned
+	 * Get the nodes to which the template is assigned.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param id template ID
 	 * @param sort sort parameters
 	 * @param filter filter parameters
@@ -262,7 +298,15 @@ public interface TemplateResource {
 
 	/**
 	 * Get the tag status for a template. The tag status will contain a list of all template tags, which are editable in pages together with the count of
-	 * pages in sync, out of sync, incompatible or missing
+	 * pages in sync, out of sync, incompatible or missing.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param id template ID
 	 * @param sort sort parameters
 	 * @param filter filter parameters

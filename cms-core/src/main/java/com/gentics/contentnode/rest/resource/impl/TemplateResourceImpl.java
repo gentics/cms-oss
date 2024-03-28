@@ -309,8 +309,8 @@ public class TemplateResourceImpl implements TemplateResource {
 					return templateInNode;
 				})
 				.perms(permFunction(perms, pair -> pair.getRight(), ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate", "pdate"))
-				.sort(comparator(sortingParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate", "pdate"))
+				.filter(filter(filterParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
+				.sort(comparator(sortingParams, this::getTemplateFieldOfParameter, "id", "name", "description", "inheritedFrom", "locked", "cdate", "edate"))
 				.page(pagingParams)
 				.to(new TemplateInNodeResponse());
 
@@ -524,7 +524,7 @@ public class TemplateResourceImpl implements TemplateResource {
 					return ModelBuilder.getFolder(f);
 				}
 			}).filter(ResolvableFilter.get(filter, "id", "name", "description"))
-					.sort(ResolvableComparator.get(sort, "id", "name", "cdate", "edate", "masterNode", "creator", "editor")).page(paging)
+					.sort(ResolvableComparator.get(sort, "id", "name", "description", "cdate", "edate", "masterNode", "creator", "editor")).page(paging)
 					.to(new PagedFolderListResponse());
 
 			trx.success();

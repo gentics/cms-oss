@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.factory.Trx;
@@ -59,15 +60,15 @@ public class ContentRepositoryFragmentResourceImpl implements ContentRepositoryF
 	@Override
 	@GET
 	public ContentRepositoryFragmentListResponse list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
-			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			trx.success();
 			Set<Integer> ids = DBUtils.select("SELECT id FROM cr_fragment", DBUtils.IDS);
 			return ListBuilder.from(trx.getTransaction().getObjects(CrFragment.class, ids), CrFragment::getModel)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "crType"))
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name"))
 					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "crType"))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name"))
 					.page(paging).to(new ContentRepositoryFragmentListResponse());
 		}
 	}
@@ -131,7 +132,7 @@ public class ContentRepositoryFragmentResourceImpl implements ContentRepositoryF
 	@GET
 	@Path("/{id}/entries")
 	public ContentRepositoryFragmentEntryListResponse listEntries(@PathParam("id") String id, @BeanParam FilterParameterBean filter,
-			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging) throws Exception {
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			CrFragment cr = MiscUtils.load(CrFragment.class, id);
 			trx.success();

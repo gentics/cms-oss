@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1422,14 +1423,18 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			// filter by optional search criteria
 			filterBySearch(folders, folderListParams.inherited, filterParams.query, editableParams, wastebinParams.wastebinSearch);
 
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("publishDir", "pub_dir");
+
 			// create a response with the folders
 			ResolvableComparator<com.gentics.contentnode.object.Folder> comparator = ResolvableComparator.get(
 				sortingParams,
+				fieldMap,
 				// From AbstractContentObject
 				"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
 				// From AbstractFolder
 				"ordner", "folder", "name", "description", "beschreibung", "mother", "node_id", "node", "parent",
-				"pub_dir", "path", "creator", "ersteller", "editor", "bearbeiter", "creationtimestamp",
+				"pub_dir", "publishDir", "path", "creator", "ersteller", "editor", "bearbeiter", "creationtimestamp",
 				"erstellungstimestamp", "editdate", "creationdate", "edittimestamp", "bearbeitungstimestamp",
 				"ismaster", "inherited");
 			Collection<Reference> fillRefs = new ArrayList<>();

@@ -21,7 +21,24 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface MarkupLanguageResource {
 	/**
-	 * Get a list of markup languages
+	 * Get a list of markup languages.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>extension</code></li>
+	 * <li><code>contentType</code></li>
+	 * <li><code>feature</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>extension</code></li>
+	 * <li><code>contentType</code></li>
+	 * <li><code>feature</code></li>
+	 * <li><code>excludeFromPublishing</code></li>
+	 * </ul>
 	 * @param sort sorting parameter bean
 	 * @param filter filter parameter bean
 	 * @param paging paging parameter bean

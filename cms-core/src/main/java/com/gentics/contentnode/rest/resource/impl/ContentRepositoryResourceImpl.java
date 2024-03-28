@@ -90,7 +90,7 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 	@Override
 	@GET
 	public ContentRepositoryListResponse list(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
-			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			trx.success();
 			Set<Integer> ids = DBUtils.select("SELECT id FROM contentrepository", DBUtils.IDS);
@@ -216,7 +216,7 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 	@GET
 	@Path("/{id}/entries")
 	public TagmapEntryListResponse listEntries(@PathParam("id") String id, @QueryParam("fragments") @DefaultValue("false") boolean fragments, @BeanParam FilterParameterBean filter,
-			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging) throws Exception {
+			@BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			ContentRepository cr = MiscUtils.load(ContentRepository.class, id);
 			trx.success();
@@ -333,7 +333,7 @@ public class ContentRepositoryResourceImpl implements ContentRepositoryResource 
 	@GET
 	@Path("/{id}/cr_fragments")
 	public ContentRepositoryFragmentListResponse listCrFragments(@PathParam("id") String id, @BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
-			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			ContentRepository cr = MiscUtils.load(ContentRepository.class, id);
 			trx.success();

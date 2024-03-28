@@ -138,7 +138,17 @@ public interface NodeResource {
 	GenericResponse delete(@PathParam("id") String nodeId, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
-	 * List nodes.
+	 * List nodes.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -156,8 +166,14 @@ public interface NodeResource {
 			@QueryParam("package") String stagingPackageName) throws Exception;
 
 	/**
-	 * Get list of languages in the node
-	 * 
+	 * Get list of languages in the node.
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>code</code></li>
+	 * </ul>
 	 * @param nodeId
 	 *            node id
 	 * @param filter filter parameters
@@ -173,8 +189,21 @@ public interface NodeResource {
 	LanguageList languages(@PathParam("id") String nodeId, @BeanParam FilterParameterBean filter, @BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
-	 * Get list of languages, which can be assigned to the node
-	 * 
+	 * Get list of languages, which can be assigned to the node.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>code</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>code</code></li>
+	 * </ul>
 	 * @param nodeId
 	 *            node id
 	 * @param filter filter parameters
@@ -331,7 +360,15 @@ public interface NodeResource {
 	LanguageListResponse languages(@PathParam("id") String nodeId) throws Exception;
 
 	/**
-	 * Get list of features activated for the node
+	 * Get list of features activated for the node.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param nodeId node ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -441,7 +478,17 @@ public interface NodeResource {
 	GenericResponse setFeatures(@PathParam("id") String nodeId, NodeFeatureRequest request) throws Exception;
 
 	/**
-	 * Get the templates assigned to this node
+	 * Get the templates assigned to this node.
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param nodeId Node ID (local or global)
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -504,7 +551,21 @@ public interface NodeResource {
 	GenericResponse removeTemplate(@PathParam("nodeId") String nodeId, @PathParam("templateId") String templateId) throws Exception;
 
 	/**
-	 * Get the constructs assigned to this node
+	 * Get the constructs assigned to this node.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param nodeId Node ID (local or global)
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -553,7 +614,19 @@ public interface NodeResource {
 	GenericResponse removeConstruct(@PathParam("nodeId") String nodeId, @PathParam("constructId") String constructId) throws Exception;
 
 	/**
-	 * Get the object properties assigned to this node
+	 * Get the object properties assigned to this node.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param nodeId Node ID (local or global)
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -619,7 +692,19 @@ public interface NodeResource {
 	NodeSettingsResponse settings(@PathParam("nodeId") String nodeId) throws Exception;
 
 	/**
-	 * Get list of available node features
+	 * Get list of available node features.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters

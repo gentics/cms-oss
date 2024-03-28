@@ -144,7 +144,17 @@ public interface AdminResource {
 	ActionLogEntryList getActionLog(@BeanParam PagingParameterBean paging, @BeanParam ActionLogParameterBean query) throws Exception;
 
 	/**
-	 * Get the object types, that are logged
+	 * Get the object types, that are logged.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>label</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>label</code></li>
+	 * </ul>
 	 * @param filter filter parameter
 	 * @param sorting sorting parameter
 	 * @param paging paging parameter
@@ -160,7 +170,17 @@ public interface AdminResource {
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
-	 * Get the actions, which are logged
+	 * Get the actions, which are logged.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>label</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>label</code></li>
+	 * </ul>
 	 * @param filter filter parameter
 	 * @param sorting sorting parameter
 	 * @param paging paging parameter

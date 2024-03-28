@@ -79,7 +79,7 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 			public Object get(AbstractTemplate tmpl, String key) {
 				return new ObjectTagResolvable(tmpl, false);
 			}
-		});       
+		});
 		resolvableProperties.put("node", new Property(null) {
 			public Object get(AbstractTemplate tmpl, String key) {
 				try {
@@ -89,7 +89,17 @@ public abstract class AbstractTemplate extends AbstractContentObject implements 
 					return null;
 				}
 			}
-		});       
+		});
+		resolvableProperties.put("cdate", new Property(null) {
+			public Object get(AbstractTemplate tmpl, String key) {
+				return tmpl.getCDate().getIntTimestamp();
+			}
+		});
+		resolvableProperties.put("edate", new Property(null) {
+			public Object get(AbstractTemplate tmpl, String key) {
+				return tmpl.getEDate().getIntTimestamp();
+			}
+		});
 	}
 
 	protected AbstractTemplate(Integer id, NodeObjectInfo info) {

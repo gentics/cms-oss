@@ -1,6 +1,8 @@
 package com.gentics.contentnode.rest.resource.impl;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -8,6 +10,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
@@ -35,9 +38,12 @@ public class MarkupLanguageResourceImpl implements MarkupLanguageResource {
 	@Override
 	@GET
 	public MarkupLanguageListResponse list(@BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter, @BeanParam PagingParameterBean paging)
-			throws Exception {
+			throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			List<MarkupLanguage> mls = trx.getTransaction().getObjects(MarkupLanguage.class, DBUtils.select("SELECT id FROM ml", DBUtils.IDS));
+
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("contentType", "contenttype");
 
 			MarkupLanguageListResponse response = ListBuilder.from(mls, MarkupLanguage.TRANSFORM2REST)
 					.filter(ml -> {
@@ -48,8 +54,8 @@ public class MarkupLanguageResourceImpl implements MarkupLanguageResource {
 							return true;
 						}
 					})
-					.filter(ResolvableFilter.get(filter, "id", "name", "extension", "contenttype", "feature"))
-					.sort(ResolvableComparator.get(sort, "id", "name", "extension", "contenttype", "feature", "excludeFromPublishing"))
+					.filter(ResolvableFilter.get(filter, fieldMap, "id", "name", "extension", "contentType", "contenttype", "feature"))
+					.sort(ResolvableComparator.get(sort, fieldMap, "id", "name", "extension", "contentType", "contenttype", "feature", "excludeFromPublishing"))
 					.page(paging)
 					.to(new MarkupLanguageListResponse());
 			trx.success();

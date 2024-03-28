@@ -66,7 +66,24 @@ public interface FileResource extends AuthenticatedResource {
 	public static final String META_DATA_BODY_PART_KEY_CUSTOM_PARAMETER_NAME = "databodypart";
 
 	/**
-	 * Get a list of files in the specified folder
+	 * Get a list of files in the specified folder.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * <li><code>fileSize</code></li>
+	 * <li><code>fileType</code></li>
+	 * </ul>
 	 * @param inFolder Folder ID and recursive parameters
 	 * @param fileListParams Further file parameters
 	 * @param filterParams Filter parameters

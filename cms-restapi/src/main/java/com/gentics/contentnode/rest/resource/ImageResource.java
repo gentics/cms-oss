@@ -48,8 +48,24 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 public interface ImageResource extends AuthenticatedResource {
 
 	/**
-	 * Get a list of images in the specified folder.
-	 *
+	 * Get a list of images in the specified folder.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * <li><code>fileSize</code></li>
+	 * <li><code>fileType</code></li>
+	 * </ul>
 	 * @param inFolder Folder ID and recursive parameters
 	 * @param fileListParams Further file parameters
 	 * @param filterParams Filter parameters

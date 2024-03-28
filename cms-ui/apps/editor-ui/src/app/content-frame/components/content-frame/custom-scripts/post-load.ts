@@ -4,14 +4,10 @@ import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
 import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
 
 export const OBJECT_PROPERTIES_CONTEXT_MENU_CLASS = 'custom-object-properties-context-menu-button';
 
 export const OBJECT_PROPERTIES_INFO_BUTTON_CLASS = 'custom-object-properties-info-button';
-
-const TAGFILL_FORM_SELECTOR = 'form[name="tagfill"]';
-const MULTIPAGE_FORM_SELECTOR = 'form[name="ds_sel"], form[name="dsdef"]';
 
 /**
  * This will execute in the context of the IFrame, when the code inside it calls the `GCMSUI.runPostLoadScript()` method.
@@ -28,7 +24,6 @@ export class PostLoadScript {
 
     private editablesChanged = false;
     private pageIsSavingFromSaveButton = false;
-    private objPropIsValid = true;
 
     constructor(
         private iFrameWindow: CNWindow,
@@ -45,18 +40,6 @@ export class PostLoadScript {
 
         // Depending on the frame type, do the right things
         switch (editFrameType) {
-            case 'tagfill':
-                // this.appendTypeIdToTagfillForm();
-                break;
-
-            case 'objectProperties':
-                // this.setObjPropValidStateAccordingToEditingStep();
-                // this.notifyWhenObjectPropertiesChange();
-                break;
-
-            case 'objectPropertiesNoValidation':
-                break;
-
             case 'editPage':
             case 'previewPage':
                 this.handleClickEventsOnLinks();
@@ -124,106 +107,6 @@ export class PostLoadScript {
             default:
                 // const unhandledCase: never = this.scriptHost.editMode;
         }
-    }
-
-    appendTypeIdToTagfillForm(): void {
-        const tagfillForm: HTMLFormElement = this.iFrameDocument.querySelector(TAGFILL_FORM_SELECTOR) ;
-        if (tagfillForm && tagfillForm.tagName === 'FORM') {
-            tagfillForm.action = appendTypeIdToUrl(this.scriptHost.currentItem, tagfillForm.action);
-        }
-    }
-
-    notifyWhenObjectPropertiesChange(): void {
-        this.notifyIfPageWasReloadedAfterModifying();
-
-        const form = this.iFrameDocument.querySelector(TAGFILL_FORM_SELECTOR) || this.iFrameDocument.querySelector(MULTIPAGE_FORM_SELECTOR);
-        if (form) {
-            const tagfillInputs: Array<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> =
-                Array.prototype.slice.call(form.querySelectorAll('input:not([type="hidden"]):not([type="image"]), textarea, select'));
-
-            for (const input of tagfillInputs) {
-                for (const eventName of ['input', 'change']) {
-                    input.addEventListener(eventName, () => this.scriptHost.setObjectPropertyModified(true, this.objPropIsValid));
-                }
-            }
-        }
-
-        this.scriptHost.onSaveObjectProperty(() => {
-            this.scriptHost.setObjectPropertyModified(false, true);
-            const isMultipageTagfill = this.isMultipageTagfill();
-
-            // Use factionapply to reload the form after save or factionnext for multipage forms
-            const action = !isMultipageTagfill ? 'factionapply' : 'factionnext';
-            if (this.submitTagfillForm(action)) {
-                // Return a promise which resolves after the changes were actually saved in the backend
-                return new Promise(resolve => {
-                    this.iFrameWindow.addEventListener('unload', () => {
-                        resolve({});
-                        // Since we have to use factionnext to save a multipage form, the page would be empty after saving.
-                        // Thus we navigate back to the last page after the save completes.
-                        if (isMultipageTagfill) {
-                            setTimeout(() => this.iFrameWindow.history.back());
-                        }
-                    });
-                });
-            } else {
-                return Promise.resolve();
-            }
-        });
-    }
-
-    /**
-     * Hack of the Year!
-     * ----------------
-     * (Michael Bromley @ 2016-08-11)
-     *
-     * It seems like the Content Node backend only saves changes to the object property if the "okay" button is
-     * clicked by a human (calling .click() on it programatically will not work).
-     * I have deduced that this is because the "okay" button is actually an `input[type="image"]`, and the
-     * backend is inspecting the .x & .y values (which denote where the image was clicked). When .click() is called
-     * programatically (or the form submitted programatically via .submit()), these values both === 0.
-     * When a human clicks the button, they are always some positive integer.
-     *
-     * So here I am simulating a human click by creating my own hidden form inputs which, when serialized in the
-     * POST request, will appear identical to the 2 values generated by the image input.
-     *
-     * Same applies to the "cancel" button.
-     *
-     * @returns true if the form is actually being submitted and false if no form was found to be submitted
-     */
-    submitTagfillForm(inputName: string, form?: HTMLFormElement): boolean {
-        if (!form) {
-            const formNames = ['tagfill', 'ds_sel', 'dsdef'];
-            const allForms = Array.from(this.iFrameDocument.querySelectorAll('form'));
-
-            for (const name of formNames) {
-                form = allForms.find(form => form.name === name);
-                if (form) {
-                    break;
-                }
-            }
-
-            // Occurs when the object properties are opened, but no specific object property is selected.
-            if (!form) {
-                return false;
-            }
-        }
-
-        for (const coord of ['x', 'y']) {
-            const fakeImageInput = this.iFrameDocument.createElement('input');
-            fakeImageInput.name = `${inputName}.${coord}`;
-            fakeImageInput.type = 'hidden';
-            fakeImageInput.value = '10';
-            form.appendChild(fakeImageInput);
-        }
-        form.submit();
-        return true;
-    }
-
-    notifyIfPageWasReloadedAfterModifying(): void {
-        const targetUrlSegment = 'faction=%C3%9Cbernehmen';
-        const alreadyModified = this.iFrameWindow.location.href.indexOf(targetUrlSegment) >= 0;
-        this.scriptHost.setObjectPropertyModified(alreadyModified, this.objPropIsValid);
     }
 
     /**
@@ -450,27 +333,6 @@ export class PostLoadScript {
         }
     }
 
-    isFormGeneratorTagfill(): boolean {
-        return this.iFrameDocument.querySelector('#fg-form') != null;
-    }
-
-    isMultipageTagfill(): boolean {
-        return this.iFrameDocument.querySelector(MULTIPAGE_FORM_SELECTOR) != null;
-    }
-
-    handleFormGeneratorSaveButton(customOkayButton: HTMLButtonElement): void {
-        customOkayButton.classList.add('disabled');
-        customOkayButton.disabled = true;
-
-        this.iFrameDocument.addEventListener('click', event => {
-            const target = event.target as HTMLElement;
-            if (isFormGeneratorSaveButton(target)) {
-                customOkayButton.classList.remove('disabled');
-                customOkayButton.removeAttribute('disabled');
-            }
-        });
-    }
-
     /**
      * Safely stringifies a Page object obtained from the Aloha.GCN plugin.
      * This Page object is aumented by the Aloha.GCN plugin and may contain
@@ -484,24 +346,6 @@ export class PostLoadScript {
         delete copy.languageVariants;
         return JSON.stringify(copy);
     }
-
-    /**
-     * Enables the save button for the object property if we are either not in a multipage tagfill
-     * or if we are on the last page of a multipage tagfill. Otherwise it disables the button.
-     */
-    private setObjPropValidStateAccordingToEditingStep(): void {
-        this.objPropIsValid = true;
-        if (this.isMultipageTagfill()) {
-            // If we are in a multipage tagfill and there is a "next" button, we know that we
-            // are not on the last page and thus saving should not be possible yet.
-            const nextButton = this.iFrameDocument.querySelector('.gcms-custom-tagfill-button.role-next');
-            if (nextButton) {
-                this.objPropIsValid =  false;
-            }
-        }
-        this.scriptHost.setObjectPropertyModified(false, this.objPropIsValid);
-    }
-
 }
 
 function isAnchorElement(element: any): element is HTMLAnchorElement {

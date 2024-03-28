@@ -70,7 +70,13 @@
     </div>
 
     <div class="frame-wrapper" [hidden]="editMode === 'editProperties' || currentItem?.type === 'form'">
-        <gtx-progress-bar class="frame-requesting" [active]="requesting"></gtx-progress-bar>
+        <gtx-progress-bar class="frame-requesting" [active]="requesting || (editMode === 'edit' && pageComparisonLanguage == null && !alohaReady)"></gtx-progress-bar>
+
+        <gtx-loading-spinner
+            [visible]="requesting || (editMode === 'edit' && pageComparisonLanguage == null && !alohaReady)"
+            [message]="'editor.edit_mode_loading' | i18n"
+            [longerMessage]="'editor.loading_takes_more_time' | i18n"
+        ></gtx-loading-spinner>
 
         <iframe
             #iframe

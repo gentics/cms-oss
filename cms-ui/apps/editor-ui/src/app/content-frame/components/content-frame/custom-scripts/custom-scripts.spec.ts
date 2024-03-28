@@ -315,7 +315,6 @@ class CustomScriptsTestFixture {
             this.window as any as CNWindow,
             this.document as any as CNIFrameDocument,
             this.scriptHost as any as CustomScriptHostService,
-            null,
         );
         script.run();
     }
@@ -674,6 +673,9 @@ class FakeAlohaGlobal implements AlohaGlobal {
 
     bind(): void { }
     unbind(): void { }
+    ready(fn: () => void): void {
+        fn?.();
+    }
 
     require(dependency: string): any;
     require(dependencies: string[], callback: (...dependencies: any[]) => any): void;

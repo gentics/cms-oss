@@ -216,7 +216,7 @@
                 <span *ngIf="editorState.oldVersion">
                     v{{ editorState.oldVersion.number }}
                     <icon class="comparison-icon">compare_arrows</icon>
-                    v{{ version.number }}
+                    v{{ editorState.version?.number }}
                 </span>
                 <span *ngIf="!editorState.oldVersion">v{{ editorState.version.number }}</span>
             </div>

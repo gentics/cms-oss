@@ -1,0 +1,125 @@
+@import "variables";
+
+$background-color: white;
+$spinner-color: $gtx-color-primary;
+
+.gtx-loading-overlay {
+    opacity: 1;
+    position: absolute;
+    z-index: 2;
+    background-color: white;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    min-height: 100%;
+    box-shadow: 0 0 5px 5px white;
+    transition: opacity 0.2s 0.2s, visibility 0s 0.2s;
+
+    &:not(.visible) {
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    &[hidden] {
+        display: none;
+
+        & > .gtx-loading-overlay-loader {
+            animation: none;
+        }
+    }
+
+    &.max-height {
+        height: 100%;
+    }
+}
+
+.gtx-loading-overlay-loader {
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+
+    color: $spinner-color;
+    font-size: 11px;
+    text-indent: -99999em;
+    width: 10em;
+    height: 10em;
+    box-shadow: inset 0 0 0 1em;
+    transform: translateZ(0);
+    will-change: transform;
+
+    &,
+    &:before,
+    &:after {
+        border-radius: 50%;
+        will-change: transform;
+    }
+
+    &:before,
+    &:after {
+        position: absolute;
+        content: '';
+        width: 5.2em;
+        height: 10.2em;
+        background: $background-color;
+        top: -0.1em;
+    }
+
+    &:before {
+        border-radius: 10.2em 0 0 10.2em;
+        left: -0.1em;
+        transform-origin: 5.2em 5.1em;
+        animation: gtxLoadingOverlaySpinnerAnimation 2s infinite ease 1.5s;
+    }
+
+    &:after {
+        border-radius: 0 10.2em 10.2em 0;
+        left: 5.1em;
+        transform-origin: 0px 5.1em;
+        animation: gtxLoadingOverlaySpinnerAnimation 2s infinite ease;
+    }
+}
+
+.gtx-loading-overlay-message {
+    display: none;
+
+    &.active {
+        display: block;
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        top: calc(50% - 6.5em);
+        opacity: 0;
+        transform: translateY(20px);
+
+        animation: gtxLoadingOverlayMessageFadeIn 1s forwards;
+        animation-delay: 0s;
+
+        small {
+            width: 100%;
+            display: block;
+            font-weight: 300;
+            font-size: 50%;
+            opacity: 0;
+            transform: translateY(20px);
+
+            animation: gtxLoadingOverlayMessageFadeIn 1s forwards;
+            animation-delay: 10s;
+        }
+    }
+
+    &.delayed {
+        animation-delay: 2s;
+    }
+}
+
+@keyframes gtxLoadingOverlaySpinnerAnimation {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes gtxLoadingOverlayMessageFadeIn {
+    100% { opacity: 1; transform: translateY(0); }
+}

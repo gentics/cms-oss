@@ -1,21 +1,13 @@
 /* eslint-disable no-underscore-dangle */
-import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers/aloha-integration/aloha-integration.service';
+import { AlohaIntegrationService } from '@editor-ui/app/content-frame/providers';
 import { Page } from '@gentics/cms-models';
 import { ALOHAPAGE_URL } from '../../../../common/utils/base-urls';
-import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNImagePlugin, GCNJsLibRequestOptions } from '../../../models/content-frame';
+import { CNIFrameDocument, CNWindow, DYNAMIC_FRAME, GCNJsLibRequestOptions } from '../../../models/content-frame';
 import { CustomScriptHostService } from '../../../providers/custom-script-host/custom-script-host.service';
-import { appendTypeIdToUrl } from '../../../utils/content-frame-helpers';
-
-// Force TypeScript to report errors when using the global window/document object
-let document: never;
-let window: never;
 
 export const OBJECT_PROPERTIES_CONTEXT_MENU_CLASS = 'custom-object-properties-context-menu-button';
 
 export const OBJECT_PROPERTIES_INFO_BUTTON_CLASS = 'custom-object-properties-info-button';
-
-const TAGFILL_FORM_SELECTOR = 'form[name="tagfill"]';
-const MULTIPAGE_FORM_SELECTOR = 'form[name="ds_sel"], form[name="dsdef"]';
 
 /**
  * This will execute in the context of the IFrame, when the code inside it calls the `GCMSUI.runPostLoadScript()` method.
@@ -31,41 +23,23 @@ const MULTIPAGE_FORM_SELECTOR = 'form[name="ds_sel"], form[name="dsdef"]';
 export class PostLoadScript {
 
     private editablesChanged = false;
-    private pageIsSaving = false;
     private pageIsSavingFromSaveButton = false;
-    private objPropIsValid = true;
 
     constructor(
-        private window: CNWindow,
-        private document: CNIFrameDocument,
+        private iFrameWindow: CNWindow,
+        private iFrameDocument: CNIFrameDocument,
         private scriptHost: CustomScriptHostService,
         private aloha: AlohaIntegrationService,
     ) { }
 
     run(): void {
-        this.setupAlohaHooks();
+        this.setupAlohaHooks(this.iFrameWindow);
 
         // Determine which type of editor frame is opened (previewing page, tagfill, ...)
         const editFrameType = this.determineEditFrameType();
 
         // Depending on the frame type, do the right things
         switch (editFrameType) {
-            case 'tagfill':
-                this.appendTypeIdToTagfillForm();
-                break;
-
-            case 'objectProperties':
-                this.setObjPropValidStateAccordingToEditingStep();
-                this.notifyWhenObjectPropertiesChange();
-                break;
-
-            case 'objectPropertiesNoValidation':
-                break;
-
-            case 'editImage':
-                this.handleImageEditingEvents();
-                break;
-
             case 'editPage':
             case 'previewPage':
                 this.handleClickEventsOnLinks();
@@ -76,37 +50,26 @@ export class PostLoadScript {
         this.scriptHost.runChangeDetection();
     }
 
-    private setupAlohaHooks(): void {
+    private setupAlohaHooks(iFrameWindow: CNWindow): void {
         if (!this.aloha) {
             return;
         }
 
-        this.aloha.reference$.next(this.window.Aloha);
-
-        let innerSettings = this.window.Aloha.settings;
-        this.aloha.settings$.next(innerSettings);
-
-
-        Object.defineProperty(this.window.Aloha, 'settings', {
-            configurable: true,
-            enumerable: true,
-            get: () => {
-                return innerSettings;
-            },
-            set: (newSettings) => {
-                innerSettings = newSettings;
-                this.aloha.settings$.next(innerSettings);
-            },
+        this.aloha.setWindow(iFrameWindow);
+        this.aloha.reference$.next(iFrameWindow.Aloha);
+        this.aloha.settings$.next(iFrameWindow.Aloha.settings);
+        iFrameWindow.Aloha.ready(() => {
+            this.aloha.ready$.next(true);
         });
 
-        this.window.addEventListener('unload', () => {
+        iFrameWindow.addEventListener('unload', () => {
             this.aloha.settings$.next(null);
             this.aloha.reference$.next(null);
         });
     }
 
     determineEditFrameType(): 'tagfill' | 'editPage' | 'editImage' | 'objectProperties' | 'objectPropertiesNoValidation' | 'previewPage' {
-        const frameElement = this.window.frameElement as HTMLElement;
+        const frameElement = this.iFrameWindow.frameElement as HTMLElement;
         const isDynamicFrame = frameElement && frameElement.dataset[DYNAMIC_FRAME] === 'true';
         const isValidationDisabled = frameElement && frameElement.dataset['disableValidation'] === 'true';
 
@@ -114,14 +77,14 @@ export class PostLoadScript {
             return 'tagfill';
         }
 
-        const objectPropertiesOkayButton = this.document.querySelector('input[type="image"][name="factionok"]');
+        const objectPropertiesOkayButton = this.iFrameDocument.querySelector('input[type="image"][name="factionok"]');
         if (objectPropertiesOkayButton) {
             return 'objectProperties';
         }
 
-        if (this.document && this.document.body &&
-            this.document.body.dataset['itemType'] === 'image' &&
-            this.document.body.dataset['editMode'] === 'edit') {
+        if (this.iFrameDocument && this.iFrameDocument.body &&
+            this.iFrameDocument.body.dataset['itemType'] === 'image' &&
+            this.iFrameDocument.body.dataset['editMode'] === 'edit') {
             return 'editImage';
         }
 
@@ -146,159 +109,6 @@ export class PostLoadScript {
         }
     }
 
-    appendTypeIdToTagfillForm(): void {
-        const tagfillForm: HTMLFormElement = this.document.querySelector(TAGFILL_FORM_SELECTOR) ;
-        if (tagfillForm && tagfillForm.tagName === 'FORM') {
-            tagfillForm.action = appendTypeIdToUrl(this.scriptHost.currentItem, tagfillForm.action);
-        }
-    }
-
-    notifyWhenObjectPropertiesChange(): void {
-        this.notifyIfPageWasReloadedAfterModifying();
-
-        const form = this.document.querySelector(TAGFILL_FORM_SELECTOR) || this.document.querySelector(MULTIPAGE_FORM_SELECTOR);
-        if (form) {
-            const tagfillInputs: Array<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> =
-                Array.prototype.slice.call(form.querySelectorAll('input:not([type="hidden"]):not([type="image"]), textarea, select'));
-
-            for (const input of tagfillInputs) {
-                for (const eventName of ['input', 'change']) {
-                    input.addEventListener(eventName, () => this.scriptHost.setObjectPropertyModified(true, this.objPropIsValid));
-                }
-            }
-        }
-
-        this.scriptHost.onSaveObjectProperty(() => {
-            this.scriptHost.setObjectPropertyModified(false, true);
-            const isMultipageTagfill = this.isMultipageTagfill();
-
-            // Use factionapply to reload the form after save or factionnext for multipage forms
-            const action = !isMultipageTagfill ? 'factionapply' : 'factionnext';
-            if (this.submitTagfillForm(action)) {
-                // Return a promise which resolves after the changes were actually saved in the backend
-                return new Promise(resolve => {
-                    this.window.addEventListener('unload', () => {
-                        resolve({});
-                        // Since we have to use factionnext to save a multipage form, the page would be empty after saving.
-                        // Thus we navigate back to the last page after the save completes.
-                        if (isMultipageTagfill) {
-                            setTimeout(() => this.window.history.back());
-                        }
-                    });
-                });
-            } else {
-                return Promise.resolve();
-            }
-        });
-    }
-
-    /**
-     * Hack of the Year!
-     * ----------------
-     * (Michael Bromley @ 2016-08-11)
-     *
-     * It seems like the Content Node backend only saves changes to the object property if the "okay" button is
-     * clicked by a human (calling .click() on it programatically will not work).
-     * I have deduced that this is because the "okay" button is actually an `input[type="image"]`, and the
-     * backend is inspecting the .x & .y values (which denote where the image was clicked). When .click() is called
-     * programatically (or the form submitted programatically via .submit()), these values both === 0.
-     * When a human clicks the button, they are always some positive integer.
-     *
-     * So here I am simulating a human click by creating my own hidden form inputs which, when serialized in the
-     * POST request, will appear identical to the 2 values generated by the image input.
-     *
-     * Same applies to the "cancel" button.
-     *
-     * @returns true if the form is actually being submitted and false if no form was found to be submitted
-     */
-    submitTagfillForm(inputName: string, form?: HTMLFormElement): boolean {
-        if (!form) {
-            const formNames = ['tagfill', 'ds_sel', 'dsdef'];
-            const allForms = Array.from(this.document.querySelectorAll('form'));
-
-            for (const name of formNames) {
-                form = allForms.find(form => form.name === name);
-                if (form) {
-                    break;
-                }
-            }
-
-            // Occurs when the object properties are opened, but no specific object property is selected.
-            if (!form) {
-                return false;
-            }
-        }
-
-        for (const coord of ['x', 'y']) {
-            const fakeImageInput = this.document.createElement('input');
-            fakeImageInput.name = `${inputName}.${coord}`;
-            fakeImageInput.type = 'hidden';
-            fakeImageInput.value = '10';
-            form.appendChild(fakeImageInput);
-        }
-        form.submit();
-        return true;
-    }
-
-    notifyIfPageWasReloadedAfterModifying(): void {
-        const targetUrlSegment = 'faction=%C3%9Cbernehmen';
-        const alreadyModified = this.window.location.href.indexOf(targetUrlSegment) >= 0;
-        this.scriptHost.setObjectPropertyModified(alreadyModified, this.objPropIsValid);
-    }
-
-    /** Bind to the crop & resize events and set up the ContentFrame to handle making a save request */
-    handleImageEditingEvents(): void {
-        if (!this.window.Aloha || !this.window.Aloha.require) {
-            return;
-        }
-
-        this.window.Aloha.require(['jquery', 'gcn-image/gcn-image-plugin'], ($: JQueryStatic, gcnImagePlugin: GCNImagePlugin) => {
-
-            $('body').on('aloha-image-resized aloha-image-cropped', () => {
-                this.scriptHost.setImageResizedOrCropped();
-            });
-
-            $('body').on('aloha-image-focalpoint', () => {
-                this.scriptHost.setContentModified(true);
-            });
-
-            $('body').on('aloha-image-reset', () => {
-                this.scriptHost.setContentModified(false);
-            });
-
-            this.scriptHost.onGetFocalPoint(() => {
-                const { fpX, fpY } = gcnImagePlugin.imageProperties;
-                return { fpX, fpY };
-            });
-
-            /** Build the parameters needed for a call to `image/resize`. */
-            this.scriptHost.onGetCropResizeParams(() => {
-                const image = gcnImagePlugin.imageProperties;
-                const info = image.info;
-                const fileExt = image.name.substr(image.name.lastIndexOf('.') + 1).toLowerCase();
-                const format: 'png' | 'jpg' = fileExt === 'jpg' || fileExt === 'jpeg' ? 'jpg' : 'png';
-
-                return {
-                    image: {
-                        id: image.id,
-                    },
-                    cropHeight: info.ch,
-                    cropWidth: info.cw,
-                    cropStartX: info.x,
-                    cropStartY: info.y,
-                    fpX: image.fpX,
-                    fpY: image.fpY,
-                    width: info.w,
-                    height: info.h,
-                    mode: 'cropandresize',
-                    resizeMode: 'force',
-                    targetFormat: format,
-                    copyFile: false,
-                };
-            });
-        });
-    }
-
     /**
      * Intercept any clicks on anchor links within the iframe. External links should open in a new window to prevent
      * the UI state getting messed up, and internal links to other pages should cause a regular navigation within the UI app.
@@ -306,21 +116,25 @@ export class PostLoadScript {
      * This only applies for the master frame, tagfill dialogs are allowed to handle links however they like.
      */
     handleClickEventsOnLinks(): void {
-        this.document.body.addEventListener('click', (e: MouseEvent) => {
+        this.iFrameDocument.body.addEventListener('click', (e: MouseEvent) => {
             if (e.defaultPrevented) { return; }
 
             const link = e.target;
-            if (isAnchorElement(link)) {
-                const url = link.getAttribute('href');
-                const internalLink = parseInternalLink(link);
+            if (!isAnchorElement(link)) {
+                return;
+            }
+            const url = link.getAttribute('href');
+            const internalLink = parseInternalLink(link);
 
-                if (internalLink) {
-                    this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.pageId);
-                    e.preventDefault();
-                } else if (this.scriptHost.editMode === 'preview' && url && !url.startsWith('#') && link.target !== '_blank') {
-                    this.window.open(url, '_blank');
-                    e.preventDefault();
-                }
+            if (internalLink) {
+                this.scriptHost.navigateToPagePreview(internalLink.nodeId, internalLink.pageId);
+                e.preventDefault();
+            } else if (this.scriptHost.editMode === 'preview' && url && !url.startsWith('#') && link.target !== '_blank') {
+                this.iFrameWindow.open(url, '_blank');
+                e.preventDefault();
+            } else {
+                // TODO: Show modal with link?
+                e.preventDefault();
             }
         }, true);
 
@@ -328,7 +142,7 @@ export class PostLoadScript {
          * Intercept mousedown events in order to correctly handle internal links when opening
          * in a new tab or a new window either with the middle mouse button or by ctrl + clicking.
          */
-        this.document.body.addEventListener('mousedown', (e: MouseEvent) => {
+        this.iFrameDocument.body.addEventListener('mousedown', (e: MouseEvent) => {
             if (e.defaultPrevented) { return; }
 
             const target = e.target;
@@ -343,7 +157,7 @@ export class PostLoadScript {
                     // We open the internal link in a new window and cause the entire UI app to load
                     // in that window, rather than just the linked page.
                     const newUrl = this.scriptHost.getInternalLinkUrlToPagePreview(internalLink.nodeId, internalLink.pageId);
-                    this.window.open(newUrl, '_blank');
+                    this.iFrameWindow.open(newUrl, '_blank');
                     e.preventDefault();
                 }
             }
@@ -357,7 +171,7 @@ export class PostLoadScript {
          * This is done by temporarily changing the href of the link when the context menu is opened, and then changing
          * it back once the link loses focus.
          */
-        this.document.body.addEventListener('contextmenu', (e: MouseEvent) => {
+        this.iFrameDocument.body.addEventListener('contextmenu', (e: MouseEvent) => {
             if (e.defaultPrevented) { return; }
 
             const target = e.target;
@@ -391,18 +205,18 @@ export class PostLoadScript {
      * fires immediately after loading the page in some cases. Therefore, we ignore the first event.
      */
     listenToAlohaEvents(): void {
-        if (!this.document || !this.document.body || !this.window.Aloha || typeof this.window.Aloha.bind !== 'function') {
+        if (!this.iFrameDocument || !this.iFrameDocument.body || !this.iFrameWindow.Aloha || typeof this.iFrameWindow.Aloha.bind !== 'function') {
             return;
         }
 
         const initialTime = new Date().getTime();
         let isFirstChangeEvent = true;
 
-        this.window.Aloha.bind('aloha-smart-content-changed', (event: Event) => {
+        this.iFrameWindow.Aloha.bind('aloha-smart-content-changed', (event: Event) => {
             const delay = event.timeStamp - initialTime;
 
             // Ignore the `smart-content-changed` fired when opening the page
-            if ((!isFirstChangeEvent || delay > 3000) && this.window.Aloha.isModified()) {
+            if ((!isFirstChangeEvent || delay > 3000) && this.iFrameWindow.Aloha.isModified()) {
                 this.editablesChanged = true;
                 this.scriptHost.setContentModified(true);
             }
@@ -415,8 +229,12 @@ export class PostLoadScript {
      * As a hack, we poll for the Aloha.isModified() state, until the content is marked modified.
      */
     periodicallyPollAlohaModified(): void {
-        this.window.setInterval(() => {
-            if (!this.scriptHost.contentFrame.contentModified && this.window.Aloha && this.window.Aloha.isModified && this.window.Aloha.isModified()) {
+        this.iFrameWindow.setInterval(() => {
+            if (!this.scriptHost.contentFrame.contentModified
+                && this.iFrameWindow.Aloha
+                && this.iFrameWindow.Aloha.isModified
+                && this.iFrameWindow.Aloha.isModified()
+            ) {
                 this.scriptHost.setContentModified(true);
             }
         }, 1000);
@@ -427,7 +245,7 @@ export class PostLoadScript {
         let checkIfPageWasModifiedWhenPageIsUpdated: () => void;
 
         const pollForGCNObject = () => {
-            if (this.window.Aloha && this.window.Aloha.GCN && this.window.Aloha.GCN.page) {
+            if (this.iFrameWindow.Aloha && this.iFrameWindow.Aloha.GCN && this.iFrameWindow.Aloha.GCN.page) {
                 checkIfPageWasModifiedWhenPageIsUpdated();
                 this.observeAllGCNJsLibAjaxRequests();
             } else {
@@ -436,7 +254,7 @@ export class PostLoadScript {
         };
 
         checkIfPageWasModifiedWhenPageIsUpdated = () => {
-            const GCN = this.window.Aloha.GCN;
+            const GCN = this.iFrameWindow.Aloha.GCN;
 
             let originalPageContents = GCN.page._data;
             let originalPageJSON = this.safelyStringifyAlohaPageObject(originalPageContents);
@@ -477,11 +295,11 @@ export class PostLoadScript {
 
     observeAllGCNJsLibAjaxRequests(): void {
         // eslint-disable-next-line @typescript-eslint/unbound-method
-        const originalAjax = this.window.Aloha.GCN.page._ajax;
+        const originalAjax = this.iFrameWindow.Aloha.GCN.page._ajax;
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
 
-        this.window.Aloha.GCN.page._ajax = function wrappedJslibAjax(requestOptions: GCNJsLibRequestOptions): void {
+        this.iFrameWindow.Aloha.GCN.page._ajax = function wrappedJslibAjax(requestOptions: GCNJsLibRequestOptions): void {
             self.beforeJsLibAjaxRequest(requestOptions);
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
@@ -500,10 +318,6 @@ export class PostLoadScript {
             // A page / tag / object property is about to be saved
             this.scriptHost.setContentModified(true);
         }
-
-        if (/\/rest\/page\/save/.test(requestOptions.url)) {
-            this.pageIsSaving = false;
-        }
     }
 
     afterJsLibAjaxRequest(data: any, requestOptions: GCNJsLibRequestOptions): void {
@@ -515,29 +329,8 @@ export class PostLoadScript {
         }
 
         if (/\/rest\/page\/save/.test(requestOptions.url)) {
-            this.pageIsSaving = this.pageIsSavingFromSaveButton = false;
+            this.pageIsSavingFromSaveButton = false;
         }
-    }
-
-    isFormGeneratorTagfill(): boolean {
-        return this.document.querySelector('#fg-form') != null;
-    }
-
-    isMultipageTagfill(): boolean {
-        return this.document.querySelector(MULTIPAGE_FORM_SELECTOR) != null;
-    }
-
-    handleFormGeneratorSaveButton(customOkayButton: HTMLButtonElement): void {
-        customOkayButton.classList.add('disabled');
-        customOkayButton.disabled = true;
-
-        this.document.addEventListener('click', event => {
-            const target = event.target as HTMLElement;
-            if (isFormGeneratorSaveButton(target)) {
-                customOkayButton.classList.remove('disabled');
-                customOkayButton.removeAttribute('disabled');
-            }
-        });
     }
 
     /**
@@ -553,27 +346,7 @@ export class PostLoadScript {
         delete copy.languageVariants;
         return JSON.stringify(copy);
     }
-
-    /**
-     * Enables the save button for the object property if we are either not in a multipage tagfill
-     * or if we are on the last page of a multipage tagfill. Otherwise it disables the button.
-     */
-    private setObjPropValidStateAccordingToEditingStep(): void {
-        this.objPropIsValid = true;
-        if (this.isMultipageTagfill()) {
-            // If we are in a multipage tagfill and there is a "next" button, we know that we
-            // are not on the last page and thus saving should not be possible yet.
-            const nextButton = this.document.querySelector('.gcms-custom-tagfill-button.role-next');
-            if (nextButton) {
-                this.objPropIsValid =  false;
-            }
-        }
-        this.scriptHost.setObjectPropertyModified(false, this.objPropIsValid);
-    }
-
 }
-
-function noop(): void { }
 
 function isAnchorElement(element: any): element is HTMLAnchorElement {
     return element && element.tagName === 'A';

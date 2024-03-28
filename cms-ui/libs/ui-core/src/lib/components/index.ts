@@ -20,9 +20,11 @@ export * from './file-picker/file-picker.component';
 export * from './grouped-tabs/grouped-tabs.component';
 export * from './input/input.component';
 export * from './json-input/json-input.component';
+export * from './loading-spinner/loading-spinner.component';
 export * from './menu-toggle-button/menu-toggle-button.component';
 export * from './modal-dialog/modal-dialog.component';
 export * from './overlay-host/overlay-host.component';
+export * from './paging/paging.component';
 export * from './progress-bar/progress-bar.component';
 export * from './radio-button/radio-button.component';
 export * from './range/range.component';
@@ -45,4 +47,3 @@ export * from './tooltip-content-wrapper/tooltip-content-wrapper.component';
 export * from './tooltip/tooltip.component';
 export * from './top-bar/top-bar.component';
 export * from './trable/trable.component';
-export * from './paging/paging.component'

@@ -491,23 +491,6 @@ define([
 			Ephemera.classes('GENTICS_block');
 			Ephemera.classes('aloha-block-GCNBlock');
 
-			$(document).on('click', 'a', function(event) {
-				var link = $(this).attr('href');
-				try {
-					var parsed = new URL(link, window.location);
-					if (
-						parsed.host === window.location.host
-						&& parsed.pathname === INTERNAL_LINK_PATH
-					) {
-						return;
-					}
-				} catch (ignored) {}
-
-				// Cancel all other links
-				event.preventDefault();
-				return false;
-			});
-
 			GCNLinks.interjectLinkPlugin(LinkPlugin);
 
 			// Set the proxy_prefix setting

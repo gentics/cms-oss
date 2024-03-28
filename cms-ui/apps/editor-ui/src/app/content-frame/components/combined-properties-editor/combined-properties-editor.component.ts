@@ -840,7 +840,7 @@ export class CombinedPropertiesEditorComponent implements OnInit, AfterViewInit,
         this.editedObjectProperty.properties = tagProperties;
         this.markObjectPropertiesAsModifiedInState(true, true);
 
-        (this.item as any).properties = merge((this.item as any).properties, this.editedObjectProperty.properties);
+        (this.item as any).properties = merge((this.item as any).properties || {}, this.editedObjectProperty.properties);
         (this.item as any).tags = {
             ... (this.item as any).tags,
             [this.editedObjectProperty.name]: this.editedObjectProperty,

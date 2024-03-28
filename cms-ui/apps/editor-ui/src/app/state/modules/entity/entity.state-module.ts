@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FolderPrivileges, RecursivePartial } from '@gentics/cms-models';
+import { FolderPrivileges } from '@gentics/cms-models';
 import { StateContext } from '@ngxs/store';
 import { iif, patch } from '@ngxs/store/operators';
 import { NormalizedSchema } from 'normalizr';
@@ -18,7 +18,6 @@ import {
     SetMessageEntitiesAction,
     UpdateEntitiesAction,
 } from './entity.actions';
-import { cloneDeep } from 'lodash-es';
 
 const INITIAL_ENTITIES_STATE: EntityState = {
     contentPackage: { },

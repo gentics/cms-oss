@@ -949,6 +949,12 @@ public class MeshPublishRolesTest {
 			AbstractGenericRestResponse response = request.apply(new RolePermissionParametersImpl().setRoleUuid(role.getUuid())).blockingGet();
 
 			assertThat(response.getRolePerms().get(permission)).as(String.format("Flag for %s on %s", permission, role.getName())).isEqualTo(roleNames.contains(role.getName()));
+			if (response.getRolePerms().get(permission) && !"admin".equals(role.getName())) {
+				// All the other permissions are reset.
+				response.getRolePerms().asMap().entrySet().stream().filter(p -> !permission.equals(p.getKey())).filter(p -> p.getValue()).findAny().ifPresent(p -> {
+					fail(String.format("The role `%s` should contain no perms other than `%s`, but has `%s`", role.getName(), permission.getName(), p.getKey().getName()));
+				});
+			}
 			neededRoles.remove(role.getName());
 		}
 

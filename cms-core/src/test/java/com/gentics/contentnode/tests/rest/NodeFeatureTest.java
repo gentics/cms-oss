@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -33,6 +32,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.FeatureService;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.exception.FeatureRequiredException;
 import com.gentics.contentnode.factory.FeatureClosure;
 import com.gentics.contentnode.factory.Trx;
@@ -62,7 +62,7 @@ public class NodeFeatureTest {
 	/**
 	 * Feature service loader
 	 */
-	public static ServiceLoader<FeatureService> featureServiceLoader = ServiceLoader.load(FeatureService.class);
+	public static ServiceLoaderUtil<FeatureService> featureServiceLoader = ServiceLoaderUtil.load(FeatureService.class);
 
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();

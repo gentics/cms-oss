@@ -19,7 +19,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -41,6 +40,7 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.MapPreferences;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -99,7 +99,7 @@ public class AlohaRenderer implements TemplateRenderer {
 	/**
 	 * Service loader for {@link AlohaPluginService}s
 	 */
-	private final static ServiceLoader<AlohaPluginService> alohaPluginServiceLoader = ServiceLoader
+	private final static ServiceLoaderUtil<AlohaPluginService> alohaPluginServiceLoader = ServiceLoaderUtil
 			.load(AlohaPluginService.class);
 
 	/**

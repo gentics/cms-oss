@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +46,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -108,7 +108,7 @@ public class SchedulerFactory extends AbstractFactory {
 	/**
 	 * Loader for the implementations of {@link InternalSchedulerTaskService}
 	 */
-	private final static ServiceLoader<InternalSchedulerTaskService> taskProviderLoader = ServiceLoader
+	private final static ServiceLoaderUtil<InternalSchedulerTaskService> taskProviderLoader = ServiceLoaderUtil
 			.load(InternalSchedulerTaskService.class);
 
 	/**

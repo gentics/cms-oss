@@ -17,7 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.gentics.api.lib.cache.PortalCache;
@@ -30,6 +29,7 @@ import com.gentics.contentnode.cache.CacheService;
 import com.gentics.contentnode.distributed.DistributionUtil;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.QueueEntry;
 import com.gentics.contentnode.factory.TransactionStatistics.Item;
 import com.gentics.contentnode.factory.object.AbstractFactory.FactoryDataField;
@@ -68,7 +68,7 @@ public class NodeFactory {
 	/**
 	 * Loader for instances of {@link CacheService}
 	 */
-	protected static ServiceLoader<CacheService> cacheServiceLoader = ServiceLoader.load(CacheService.class);
+	protected static ServiceLoaderUtil<CacheService> cacheServiceLoader = ServiceLoaderUtil.load(CacheService.class);
 
 	private Map<Class<? extends NodeObject>, ObjectFactory> factoryMap;
 

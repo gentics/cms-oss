@@ -2904,7 +2904,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected void debug(String message, Object...objects) {
 		if (renderResult != null) {
-			renderResult.debug(MeshPublisher.class, objects.length == 0 ? message : String.format(message, objects), null, null);
+			renderResult.debug(MeshPublisher.class, objects.length == 0 ? message : String.format(message, objects), null);
 		}
 	}
 
@@ -2914,7 +2914,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	protected void info(String message, Object...objects) {
 		if (renderResult != null) {
-			renderResult.info(MeshPublisher.class, objects.length == 0 ? message : String.format(message, objects), null, null);
+			renderResult.info(MeshPublisher.class, objects.length == 0 ? message : String.format(message, objects), null);
 		}
 	}
 
@@ -2925,7 +2925,7 @@ public class MeshPublisher implements AutoCloseable {
 	protected void error(String message, Object...objects) {
 		String logged = objects.length == 0 ? message : String.format(message, objects);
 		if (renderResult != null) {
-			renderResult.error(MeshPublisher.class, logged, null, null);
+			renderResult.error(MeshPublisher.class, logged);
 		}
 		if (publishInfo != null) {
 			publishInfo.addMessage(new DefaultNodeMessage(Level.ERROR, MeshPublisher.class, cr.getName() + ": " + logged));

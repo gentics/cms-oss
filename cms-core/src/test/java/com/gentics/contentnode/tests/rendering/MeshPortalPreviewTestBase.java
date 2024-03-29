@@ -155,7 +155,6 @@ public abstract class MeshPortalPreviewTestBase {
 
 		liveEditableConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("live");
 			c.setMayBeSubtag(false);
 			c.setMayContainSubtags(true);

@@ -868,7 +868,6 @@ export function getExampleObjectTag(data: Partial<ObjectTag> = {}): ObjectTag {
 export function getExampleConstruct(data: Partial<TagType> = {}): TagType {
     return {
         id: 1337,
-        icon: 'stop.gif',
         keyword: 'example',
         parts: [],
         ...data,

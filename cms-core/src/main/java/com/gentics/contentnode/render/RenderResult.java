@@ -19,7 +19,6 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.msg.DefaultNodeMessage;
 import com.gentics.contentnode.msg.NodeMessage;
-import com.gentics.contentnode.object.Icon;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -226,7 +225,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void info(String type, String message) {
-		log(Level.INFO, type, message, null, null);
+		log(Level.INFO, type, message, null);
 	}
 
 	/**
@@ -237,10 +236,9 @@ public class RenderResult {
 	 * @param type a classification of the message.
 	 * @param message a short message to log.
 	 * @param details some more details for the message.
-	 * @param icon an icon for the message.
 	 */
-	public void info(String type, String message, String details, Icon icon) {
-		log(Level.INFO, type, message, details, icon);
+	public void info(String type, String message, String details) {
+		log(Level.INFO, type, message, details);
 	}
 
 	/**
@@ -252,7 +250,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void info(Class<?> clazz, String message) throws NodeException {
-		log(Level.INFO, clazz, message, null, null);
+		log(Level.INFO, clazz, message, (String) null);
 	}
 
 	/**
@@ -265,8 +263,8 @@ public class RenderResult {
 	 * @param details some more details for the message.
 	 * @param icon an icon for the message.
 	 */
-	public void info(Class<?> clazz, String message, String details, Icon icon) {
-		log(Level.INFO, clazz, message, details, icon);
+	public void info(Class<?> clazz, String message, String details) {
+		log(Level.INFO, clazz, message, details);
 	}
 
 	/**
@@ -278,7 +276,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void debug(String type, String message) {
-		log(Level.DEBUG, type, message, null, null);
+		log(Level.DEBUG, type, message, null);
 	}
 
 	/**
@@ -289,10 +287,9 @@ public class RenderResult {
 	 * @param type a classification of the message.
 	 * @param message a short message to log.
 	 * @param details some more details to the message.
-	 * @param icon an icon for the message.
 	 */
-	public void debug(String type, String message, String details, Icon icon) {
-		log(Level.DEBUG, type, message, details, icon);
+	public void debug(String type, String message, String details) {
+		log(Level.DEBUG, type, message, details);
 	}
 
 	/**
@@ -304,7 +301,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void debug(Class<?> clazz, String message) {
-		log(Level.DEBUG, clazz, message, null, null);
+		log(Level.DEBUG, clazz, message, (String) null);
 	}
 
 	/**
@@ -315,10 +312,9 @@ public class RenderResult {
 	 * @param clazz a class for which this message should be logged.
 	 * @param message a short message to log.
 	 * @param details some more details of the message.
-	 * @param icon an icon for the message.
 	 */
-	public void debug(Class<?> clazz, String message, String details, Icon icon) {
-		log(Level.DEBUG, clazz, message, details, icon);
+	public void debug(Class<?> clazz, String message, String details) {
+		log(Level.DEBUG, clazz, message, details);
 	}
 
 	/**
@@ -330,7 +326,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void warn(String type, String message) {
-		log(Level.WARN, type, message, null, null);
+		log(Level.WARN, type, message, null);
 	}
 
 	/**
@@ -341,10 +337,9 @@ public class RenderResult {
 	 * @param type a classification of the message.
 	 * @param message a short message to log.
 	 * @param details some more details for the message.
-	 * @param icon an icon for the message.
 	 */
-	public void warn(String type, String message, String details, Icon icon) {
-		log(Level.WARN, type, message, details, icon);
+	public void warn(String type, String message, String details) {
+		log(Level.WARN, type, message, details);
 	}
 
 	/**
@@ -356,7 +351,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void warn(Class<?> clazz, String message) {
-		log(Level.WARN, clazz, message, null, null);
+		log(Level.WARN, clazz, message, (String) null);
 	}
 
 	/**
@@ -367,10 +362,9 @@ public class RenderResult {
 	 * @param clazz a class for which this message should be logged.
 	 * @param message a short message to log.
 	 * @param details some details for the messsage.
-	 * @param icon an icon for the message.
 	 */
-	public void warn(Class<?> clazz, String message, String details, Icon icon) {
-		log(Level.WARN, clazz, message, details, icon);
+	public void warn(Class<?> clazz, String message, String details) {
+		log(Level.WARN, clazz, message, details);
 	}
 
 	/**
@@ -382,7 +376,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void fatal(String type, String message) {
-		log(Level.FATAL, type, message, null, null);
+		log(Level.FATAL, type, message, null);
 	}
 
 	/**
@@ -393,10 +387,9 @@ public class RenderResult {
 	 * @param type a classification of the message.
 	 * @param message a short message to log.
 	 * @param details some more details for the message.
-	 * @param icon an icon for the message.
 	 */
-	public void fatal(String type, String message, String details, Icon icon) {
-		log(Level.FATAL, type, message, details, icon);
+	public void fatal(String type, String message, String details) {
+		log(Level.FATAL, type, message, details);
 	}
 
 	/**
@@ -408,7 +401,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void fatal(Class<?> clazz, String message) {
-		log(Level.FATAL, clazz, message, null, null);
+		log(Level.FATAL, clazz, message, (String) null);
 	}
 
 	/**
@@ -419,10 +412,9 @@ public class RenderResult {
 	 * @param clazz a class for which this message should be logged.
 	 * @param message a short message to log.
 	 * @param details some more details to the message.
-	 * @param icon an icon for the message.
 	 */
-	public void fatal(Class<?> clazz, String message, String details, Icon icon) {
-		log(Level.FATAL, clazz, message, details, icon);
+	public void fatal(Class<?> clazz, String message, String details) {
+		log(Level.FATAL, clazz, message, details);
 	}
 
 	/**
@@ -445,7 +437,7 @@ public class RenderResult {
 	 * @param message a short message to log.
 	 */
 	public void error(String type, String message) {
-		log(Level.ERROR, type, message, null, null);
+		log(Level.ERROR, type, message, null);
 	}
 
 	/**
@@ -456,10 +448,9 @@ public class RenderResult {
 	 * @param type a classification of the message.
 	 * @param message a short message to log.
 	 * @param details some more details for the message to log.
-	 * @param icon an icon for the message.
 	 */
-	public void error(String type, String message, String details, Icon icon) {
-		log(Level.ERROR, type, message, details, icon);
+	public void error(String type, String message, String details) {
+		log(Level.ERROR, type, message, details);
 	}
 
 	/**
@@ -483,7 +474,7 @@ public class RenderResult {
 	 * @param message a short message.
 	 */
 	public void error(Class<?> clazz, String message) {
-		log(Level.ERROR, clazz, message, null, null);
+		log(Level.ERROR, clazz, message, (String) null);
 	}
 
 	/**
@@ -494,10 +485,9 @@ public class RenderResult {
 	 * @param clazz the class for which this message should be logged.
 	 * @param message a short message to log.
 	 * @param details some more details for the message.
-	 * @param icon an icon for the message.
 	 */
-	public void error(Class<?> clazz, String message, String details, Icon icon) {
-		log(Level.ERROR, clazz, message, details, icon);
+	public void error(Class<?> clazz, String message, String details) {
+		log(Level.ERROR, clazz, message, details);
 	}
 
 	/**
@@ -543,13 +533,12 @@ public class RenderResult {
 	 * @param type message type
 	 * @param message message
 	 * @param details message details
-	 * @param icon icon
 	 */
-	private void log(Level level, String type, String message, String details, Icon icon) {
+	private void log(Level level, String type, String message, String details) {
 		if (level == Level.ERROR || level == Level.FATAL) {
 			returnCode = RETURNCODE_FAILED;
 		}
-		addMessage(new DefaultNodeMessage(level, type, enhanceMessage(level, message), details, icon), true);
+		addMessage(new DefaultNodeMessage(level, type, enhanceMessage(level, message), details), true);
 	}
 
 	/**
@@ -560,11 +549,11 @@ public class RenderResult {
 	 * @param details message details
 	 * @param icon icon
 	 */
-	private void log(Level level, Class<?> clazz, String message, String details, Icon icon) {
+	private void log(Level level, Class<?> clazz, String message, String details) {
 		if (level == Level.ERROR || level == Level.FATAL) {
 			returnCode = RETURNCODE_FAILED;
 		}
-		addMessage(new DefaultNodeMessage(level, clazz, enhanceMessage(level, message), details, icon), true);
+		addMessage(new DefaultNodeMessage(level, clazz, enhanceMessage(level, message), details), true);
 	}
 
 	/**

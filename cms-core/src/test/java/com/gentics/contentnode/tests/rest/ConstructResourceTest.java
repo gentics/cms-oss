@@ -1051,7 +1051,6 @@ public class ConstructResourceTest {
 	public void testCreateWithSelectPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -1086,7 +1085,6 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -1139,7 +1137,6 @@ public class ConstructResourceTest {
 	public void testCreateWithOverviewPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("overview");
-		create.setIcon("bla");
 		create.setName("Overview", "en");
 		Part overviewPart = new Part();
 		overviewPart.setTypeId(supply(() -> getPartTypeId(OverviewPartType.class)));
@@ -1178,7 +1175,6 @@ public class ConstructResourceTest {
 	public void testUpdateWithOverviewPart() throws NodeException {
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("overview");
-		create.setIcon("bla");
 		create.setName("Overview", "en");
 		Part overviewPart = new Part();
 		overviewPart.setTypeId(supply(() -> getPartTypeId(OverviewPartType.class)));
@@ -1235,7 +1231,6 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct create = new com.gentics.contentnode.rest.model.Construct();
 		create.setKeyword("select");
-		create.setIcon("bla");
 		create.setName("Select", "en");
 		Part selectPart = new Part();
 		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
@@ -1299,7 +1294,6 @@ public class ConstructResourceTest {
 		}
 		ConstructLoadResponse response = supply(user, () -> {
 			com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct()
-					.setIcon("icon")
 					.setName(MiscUtils.getRandomNameOfLength(10), "en")
 					.setKeyword(MiscUtils.getRandomNameOfLength(8));
 			return new ConstructResourceImpl().create(construct, Arrays.stream(nodes).map(Node::getId).collect(Collectors.toList()));

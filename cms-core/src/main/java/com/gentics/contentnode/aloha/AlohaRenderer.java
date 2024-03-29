@@ -423,10 +423,6 @@ public class AlohaRenderer implements TemplateRenderer {
 				// get the construct
 				Construct construct = tag.getConstruct();
 
-				// store the iconurl and icontitle
-				if (construct.getIcon() != null) {
-					cnBlock.put("iconurl", construct.getIcon().getURL());
-				}
 				try {
 					cnBlock.put("constructid", construct.getId().toString());
 				} catch (Exception e) {

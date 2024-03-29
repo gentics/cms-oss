@@ -1,7 +1,6 @@
 {
   "globalId" : "A547.70950",
   "keyword" : "gtxalohapagelink",
-  "icon" : "url.gif",
   "name" : {
     "de" : "Aloha Link",
     "en" : "Aloha Link"
@@ -14,7 +13,6 @@
   "mayContainsSubtags" : false,
   "editorControlStyle": "ASIDE",
   "autoEnable" : true,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.70956",
     "name" : {

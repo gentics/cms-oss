@@ -8,7 +8,7 @@
   },
   "constructId" : "A547.69478",
   "required" : false,
-  "inheritable" : true,
+  "inheritable" : false,
   "syncChannelset" : false,
   "category" : {
     "globalId" : "3D6C.789fbbae-4aee-11ed-9fbf-482ae36fb1c5",

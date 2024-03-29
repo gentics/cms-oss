@@ -84,7 +84,6 @@ public class VelocityNodeNotationTest {
 		vtlConstruct = supply(() -> create(Construct.class, c -> {
 			c.setKeyword("vtl");
 			c.setName("VTL", 1);
-			c.setIconName("icon.png");
 
 			// Velocity part
 			c.getParts().add(create(Part.class, p -> {
@@ -125,7 +124,6 @@ public class VelocityNodeNotationTest {
 		inlineEditableVtlConstruct = supply(() -> create(Construct.class, c -> {
 			c.setKeyword("vtl_inline");
 			c.setName("VTL Inline", 1);
-			c.setIconName("icon.png");
 
 			// Velocity part
 			c.getParts().add(create(Part.class, p -> {
@@ -149,7 +147,6 @@ public class VelocityNodeNotationTest {
 		inlineEditableConstruct = supply(() -> create(Construct.class, c -> {
 			c.setKeyword("inline");
 			c.setName("Inline", 1);
-			c.setIconName("icon.png");
 
 			// Inline editable part
 			c.getParts().add(create(Part.class, p -> {

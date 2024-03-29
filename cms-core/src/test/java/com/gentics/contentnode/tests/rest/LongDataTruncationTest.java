@@ -334,11 +334,9 @@ public class LongDataTruncationTest {
 
 		constructKeyword(() -> create(Construct.class, c -> {
 			c.setKeyword(LONG_NAME);
-			c.setIconName("icon");
 			c.getNodes().add(node);
 		}), () -> create(Construct.class, c -> {
 			c.setKeyword(SHORT_NAME);
-			c.setIconName("icon");
 			c.getNodes().add(node);
 		}), o -> update((Construct)o, c -> c.setKeyword(LONG_NAME)), o -> ((Construct)o).getKeyword(), SHORT_NAME, MAX_ALLOWED_KEYWORD, true),
 

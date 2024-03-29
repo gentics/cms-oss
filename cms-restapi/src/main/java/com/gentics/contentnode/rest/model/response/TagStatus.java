@@ -10,8 +10,6 @@ public class TagStatus {
 
 	protected String constructName;
 
-	protected String constructIcon;
-
 	protected int inSync;
 
 	protected int outOfSync;
@@ -42,14 +40,6 @@ public class TagStatus {
 	 */
 	public String getConstructName() {
 		return constructName;
-	}
-
-	/**
-	 * Construct icon
-	 * @return icon
-	 */
-	public String getConstructIcon() {
-		return constructIcon;
 	}
 
 	/**
@@ -111,16 +101,6 @@ public class TagStatus {
 	 */
 	public TagStatus setConstructName(String constructName) {
 		this.constructName = constructName;
-		return this;
-	}
-
-	/**
-	 * Set construct icon
-	 * @param constructIcon construct icon
-	 * @return fluent API
-	 */
-	public TagStatus setConstructIcon(String constructIcon) {
-		this.constructIcon = constructIcon;
 		return this;
 	}
 

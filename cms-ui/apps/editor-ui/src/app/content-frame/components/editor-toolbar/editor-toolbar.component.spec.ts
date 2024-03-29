@@ -26,7 +26,6 @@ import { getExampleFormDataNormalized, getExamplePageDataNormalized } from '@gen
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NEVER, Observable, of } from 'rxjs';
-import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { EditorToolbarComponent } from './editor-toolbar.component';
 
 const ITEM_ID = 1;
@@ -67,7 +66,6 @@ describe('EditorToolbarComponent', () => {
                 ItemIsLocalizedPipe,
                 MockOverrideSlotDirective,
                 ItemStatusLabelComponent,
-                TagTypeIconPipe,
                 EditorToolbarComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),
             ],

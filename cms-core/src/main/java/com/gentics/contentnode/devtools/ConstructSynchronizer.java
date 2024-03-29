@@ -255,7 +255,6 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 
 		// normalize and synchronize
 		model.setKeyword(folderName);
-		model.setIcon(ObjectTransformer.getString(model.getIcon(), ""));
 		transform(model, editable, false);
 
 		Map<GlobalId, MissingValueReference> missingReferences = new HashMap<>();
@@ -366,8 +365,6 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		if (from.getGlobalId() != null) {
 			to.setGlobalId(new GlobalId(from.getGlobalId()));
 		}
-		to.setHopeditHook(from.getHopeditHook());
-		to.setIconName(from.getIcon());
 		to.setKeyword(from.getKeyword());
 		to.setLiveEditorTagName(from.getLiveEditorTagName());
 		I18NHelper.forI18nMap(from.getName(), (translation, id) -> to.setName(translation, id));
@@ -383,7 +380,6 @@ public class ConstructSynchronizer extends AbstractSynchronizer<Construct, Const
 		if (from.getEditorControlsInside() != null) {
 			to.setEditorControlInside(from.getEditorControlsInside());
 		}
-		to.setNewEditor(from.isNewEditor());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		// transform parts

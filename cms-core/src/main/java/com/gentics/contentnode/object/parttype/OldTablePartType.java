@@ -198,14 +198,7 @@ public class OldTablePartType extends AbstractPartType {
 
 						if (cellTag != null) {
 							// edit mode
-							if ((editMode == RenderType.EM_EDIT) && cellTag.isEditable()) {
-								rendered.append(cellTag.getEditPrefix());
-								rendered.append(cellTag.getEditLink());
-								rendered.append(nbspRenderer.render(renderResult, cellTag.render(renderResult)));
-								rendered.append(cellTag.getEditPostfix());
-							} else {
-								rendered.append(nbspRenderer.render(renderResult, cellTag.render(renderResult)));
-							}
+							rendered.append(nbspRenderer.render(renderResult, cellTag.render(renderResult)));
 						}
 
 						if (r > 0) {

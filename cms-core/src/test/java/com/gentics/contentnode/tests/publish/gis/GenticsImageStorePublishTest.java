@@ -141,7 +141,6 @@ public class GenticsImageStorePublishTest {
 
 		gisConstruct = supply(() -> create(Construct.class, construct -> {
 			construct.setAutoEnable(true);
-			construct.setIconName("icon");
 			construct.setKeyword("gistag");
 			construct.setName("gistag", 1);
 			construct.getNodes().add(node);

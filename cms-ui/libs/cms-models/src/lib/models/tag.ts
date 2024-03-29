@@ -138,9 +138,6 @@ export interface TagTypeBase<T extends ModelType> {
     /** Description of th etag in multiple languages */
     descriptionI18n?: CmsI18nValue;
 
-    /** The icon of the TagType (use `TagTypeIconPipe` for displaying it in a template). */
-    icon: string;
-
     /** The list of TagParts of this TagType. */
     parts: TagPart[];
 
@@ -164,8 +161,6 @@ export interface TagTypeBase<T extends ModelType> {
     editor?: User;
     /** Last Edit Date of the construct */
     edate?: number;
-    /** Edit do */
-    editdo?: number;
     /** Category id of the construct */
     categoryId?: number;
     /** Category name of the construct */

@@ -126,35 +126,6 @@ public class ConstructSyncTest {
 	}
 
 	/**
-	 * Test sync of newEditor property
-	 * @throws NodeException
-	 */
-	@Test
-	public void testNewEditor() throws NodeException {
-		Synchronizer.disable();
-
-		Construct construct = supply(() -> create(Construct.class, created -> {
-			created.setAutoEnable(true);
-			created.setIconName("icon");
-			created.setKeyword("keyword");
-			created.setName("Name", 1);
-			created.setNewEditor(true);
-		}));
-		GlobalId globalId = supply(() -> construct.getGlobalId());
-
-		consume(c -> pack.synchronize(c, true), construct);
-
-		operate(() -> update(construct, Construct::delete));
-
-		operate(() -> assertThat(pack.syncAllFromFilesystem(Construct.class)).as("Number of synchronized constructs").isEqualTo(1));
-
-		operate(t -> {
-			Construct afterSync = t.getObject(Construct.class, globalId);
-			Assertions.assertThat(afterSync).as("Construct after sync").isNotNull().hasFieldOrPropertyWithValue("newEditor", true);
-		});
-	}
-
-	/**
 	 * Test sync of externalEditorUrl property
 	 * @throws NodeException
 	 */
@@ -164,7 +135,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 			created.setExternalEditorUrl("/external/url.html");
@@ -193,7 +163,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 			created.setEditOnInsert(true);
@@ -225,7 +194,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 			created.setEditorControlStyle(EditorControlStyle.CLICK);
@@ -257,7 +225,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 			created.setEditorControlInside(true);
@@ -289,7 +256,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 
@@ -324,7 +290,6 @@ public class ConstructSyncTest {
 
 		Construct construct = supply(() -> create(Construct.class, created -> {
 			created.setAutoEnable(true);
-			created.setIconName("icon");
 			created.setKeyword("keyword");
 			created.setName("Name", 1);
 

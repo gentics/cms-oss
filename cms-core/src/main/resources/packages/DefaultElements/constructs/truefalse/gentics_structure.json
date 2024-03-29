@@ -1,7 +1,6 @@
 {
   "globalId" : "A547.69744",
   "keyword" : "truefalse",
-  "icon" : "undef.gif",
   "name" : {
     "de" : "Wahr/Falsch",
     "en" : "True/False"
@@ -10,7 +9,6 @@
   "mayContainsSubtags" : false,
   "editorControlStyle": "ASIDE",
   "autoEnable" : false,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.69750",
     "name" : {

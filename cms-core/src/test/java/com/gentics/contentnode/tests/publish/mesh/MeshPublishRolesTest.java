@@ -157,7 +157,6 @@ public class MeshPublishRolesTest {
 
 		rolesConstruct = Trx.supply(() -> create(Construct.class, construct -> {
 			construct.setAutoEnable(true);
-			construct.setIconName("icon");
 			construct.setKeyword("roles");
 			construct.setName("roles", 1);
 			construct.getNodes().add(node);

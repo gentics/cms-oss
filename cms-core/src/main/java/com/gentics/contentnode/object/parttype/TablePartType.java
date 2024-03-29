@@ -5,14 +5,10 @@
  */
 package com.gentics.contentnode.object.parttype;
 
-import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -20,7 +16,6 @@ import com.gentics.api.lib.i18n.I18nString;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.Content;
-import com.gentics.contentnode.object.Icon;
 import com.gentics.contentnode.object.Part;
 import com.gentics.contentnode.object.Tag;
 import com.gentics.contentnode.object.TagContainer;
@@ -33,7 +28,6 @@ import com.gentics.contentnode.render.RenderType;
 import com.gentics.contentnode.render.RendererFactory;
 import com.gentics.contentnode.rest.model.Property;
 import com.gentics.contentnode.rest.model.Property.Type;
-import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 
@@ -71,8 +65,6 @@ public class TablePartType extends AbstractPartType {
 	private String tagName;
 
 	private static final String TD_PREFIX = "td.";
-
-	private static final Icon ICO_TAB_FORMAT = new Icon("content", "tab_format.gif", "");
 
 	/**
 	 * Create an instance of the parttype
@@ -197,53 +189,6 @@ public class TablePartType extends AbstractPartType {
 		// edit mode
 		int editMode = renderType.getEditMode();
 
-		if (editMode == RenderType.EM_EDIT) {
-			// create a lot of JS output
-			VelocityContext context = new VelocityContext();
-
-			context.put("name", tag.getName());
-			context.put("cols", new Integer(cols));
-			context.put("rows", new Integer(rows));
-			context.put("editcol", editCol);
-			// TODO what the heck is info0, info1, info2?
-			String infoText = getValueObject().getPart().getInfoText();
-
-			if (infoText == null) {
-				infoText = "";
-			}
-			String[] infoParts = infoText.split(";");
-
-			context.put("info0", Boolean.valueOf(infoParts.length > 0 && !StringUtils.isEmpty(infoParts[0]) && !"0".equals(infoParts[0])));
-			context.put("info1", Boolean.valueOf(infoParts.length > 1 && !StringUtils.isEmpty(infoParts[1]) && !"0".equals(infoParts[1])));
-			context.put("info2", Boolean.valueOf(infoParts.length > 2 && !StringUtils.isEmpty(infoParts[2]) && !"0".equals(infoParts[2])));
-			// put an i18n helper
-			context.put("i18n", new I18nWrapper());
-			// choose correct DO (depending on whether this is edit or realedit mode)
-			context.put("DO", editMode == RenderType.EM_EDIT ? "14002" : "14012");
-			context.put("mother_type", containerType);
-			context.put("tag_id", tag.getId());
-			context.put("STAG", renderType.getRenderUrl(null, null));
-			try {
-				Velocity.evaluate(context, JS, "tableparttype_" + Thread.currentThread().getName(),
-						new InputStreamReader(getClass().getResourceAsStream("javascript.vm"), "UTF-8"));
-                
-				// If there is already a parameter 'gentics.JS' we append it to the new value.
-				String[] oldJs = (String[]) result.getParameters().get("gentics.JS");
-
-				if (oldJs != null && oldJs.length > 0) {
-					JS.write(oldJs[0]);
-				}
-                
-				// TODO maybe we can use addParameter here, and output all 
-				// elements of the array in PHP ?
-				result.setParameter("gentics.JS", JS.toString());
-			} catch (Exception e) {
-				throw new NodeException("Error while rendering table in edit mode", e);
-			}
-
-			code.append("\n<form name=\"form_").append(tag.getName()).append("\">");
-		}
-
 		code.append("<table");
 		String additionalTags = "";
 
@@ -269,23 +214,6 @@ public class TablePartType extends AbstractPartType {
 		code.append(additionalTags);
 		code.append(LINE_SEPARATOR);
 
-		// edit mode
-		if (editMode == RenderType.EM_EDIT) {
-			code.append("<tr bgcolor=\"").append(editCol).append("\" id=\"").append(tag.getName()).append("_markhead\">\n");
-			// TODO editlink
-			String editLink = renderType.getRenderUrl(null, null).toString() + "&do=10008&id=" + tag.getId() + "&type=" + containerType + "&keepsid=1&t_table=1";
-
-			code.append("<td nowrap align=\"center\" valign=\"middle\" width=\"1%\"><a href=\"javascript:hopedit('").append(editLink).append("')\">").append(ICO_TAB_FORMAT.getHTML(0, null, null, null, null, null, null, null)).append(
-					"</a></td>");
-			for (int col = 1; col <= cols; col++) {
-				char c = (char) (64 + col);
-
-				code.append("<td align=\"center\" nowrap>\n<input type=checkbox onclick=\"mark_").append(tag.getName()).append("();\">").append(c).append(
-						"</td>\n");
-			}
-			code.append("</tr>\n");
-		}
-
 		int row;
 
 		for (row = 1; row <= rows; row++) {
@@ -308,12 +236,6 @@ public class TablePartType extends AbstractPartType {
 			code.append(">");
 			code.append(LINE_SEPARATOR);
 
-			// edit mode
-			if (editMode == RenderType.EM_EDIT) {
-				code.append("<td id=\"").append(tag.getName()).append("_mark").append(row).append("\" valign=\"middle\" align=\"right\" bgcolor=\"").append(editCol).append("\" nowrap>\n<input type=checkbox onClick=\"mark_").append(tag.getName()).append("();\">").append(row).append(
-						"&nbsp;</td>\n");
-			}
-
 			// store lenght of code before tag content is added
 			int lengthBefore;
 
@@ -334,11 +256,6 @@ public class TablePartType extends AbstractPartType {
 
 				StringBuffer cellCode = new StringBuffer();
 
-				// edit mode
-				if (editMode == RenderType.EM_EDIT) {
-					cellCode.append(" id=\"").append(tag.getName()).append("-").append(col).append("-").append(row).append("\"");
-				}
-
 				String cellhtml = "td";
 
 				if (appendProperties(renderType, result, cellCode, cellStyle, parts, TD_PREFIX) && row == 1) {
@@ -354,12 +271,7 @@ public class TablePartType extends AbstractPartType {
 				lengthBefore = code.length();
 				if (cellTag != null) {
 					// edit mode
-					if ((editMode == RenderType.EM_EDIT) && cellTag.isEditable()) {
-						code.append(cellTag.getEditPrefix());
-						code.append(cellTag.getEditLink());
-						code.append(cellTag.render(result));
-						code.append(cellTag.getEditPostfix());
-					} else if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
+					if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
 						AlohaRenderer alohaRenderer = (AlohaRenderer) RendererFactory.getRenderer(ContentRenderer.RENDERER_ALOHA);
 						code.append(alohaRenderer.block(cellTag.render(result), cellTag, result));
 					} else {
@@ -381,29 +293,8 @@ public class TablePartType extends AbstractPartType {
 			code.append(LINE_SEPARATOR);
 		}
 
-		// edit mode
-		if (editMode == RenderType.EM_EDIT) {
-			code.append("<tr><td id=\"").append(tag.getName()).append("_markfoot\" bgcolor=\"").append(editCol).append("\" nowrap colspan=").append(cols + 1).append(
-					">\n");
-			code.append("<select name=\"opt_").append(tag.getName()).append("\" onChange=\"return edit_").append(tag.getName()).append("(document.form_").append(tag.getName()).append(".opt_").append(tag.getName()).append(".options[document.form_").append(tag.getName()).append(".opt_").append(tag.getName()).append(
-					".selectedIndex].value);\">\n");
-			code.append("<option>-------------------------</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("<option>-</option>\n");
-			code.append("</select></td></tr>\n");
-		}
-
 		code.append("</table>");
 		code.append(LINE_SEPARATOR);
-
-		// edit mode
-		if (editMode == RenderType.EM_EDIT) {
-			code.append("</form>\n<script type=\"text/javascript\">\nclear_").append(tag.getName()).append("_opt();\n</script>\n");
-		}
 
 		return code.toString();
 	}

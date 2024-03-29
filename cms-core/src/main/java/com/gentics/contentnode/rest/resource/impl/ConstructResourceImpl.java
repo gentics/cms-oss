@@ -698,10 +698,6 @@ public class ConstructResourceImpl implements ConstructResource {
 		if (nodeIds == null || nodeIds.isEmpty()) {
 			throw new MissingFieldException("nodeId");
 		}
-		if (construct.getIcon() == null) {
-			throw new RestMappedException(I18NHelper.get("icon.required"))
-				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);
-		}
 		if (construct.getNameI18n() == null && construct.getName() == null) {
 			throw new RestMappedException(I18NHelper.get("name.i18n.required"))
 				.setMessageType(Type.CRITICAL).setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.BAD_REQUEST);

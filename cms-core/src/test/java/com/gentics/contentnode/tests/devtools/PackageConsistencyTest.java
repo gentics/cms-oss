@@ -155,7 +155,6 @@ public class PackageConsistencyTest {
 			c.setAutoEnable(true);
 			c.setKeyword("construct_with_ds");
 			c.setName("construct_with_ds", 1);
-			c.setIconName("icon");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setInfoInt(datasource.getId());

@@ -1223,7 +1223,6 @@ public class TagTypeMigrationTest {
 
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("bla");
 		construct.setKeyword(keyword);
 		construct.setName(keyword, 1);
 		construct.getNodes().add(node);

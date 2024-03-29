@@ -278,7 +278,7 @@ public class OverviewPartType extends AbstractPartType {
 			// when rendered in edit mode, set viewmode
 			int editMode = renderType.getInfo(renderType.getDepth() - 2).getEditMode();
 
-			if (editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
+			if (editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY) {
 				renderType.setEditMode(RenderType.EM_PREVIEW);
 			}
 			return overview.translate(result, objs, template);

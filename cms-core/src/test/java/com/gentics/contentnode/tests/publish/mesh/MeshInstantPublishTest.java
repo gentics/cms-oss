@@ -120,7 +120,6 @@ public class MeshInstantPublishTest {
 		// create construct using the new parttype
 		instantPublishingConstruct = Trx.supply(() -> create(Construct.class, construct -> {
 			construct.setAutoEnable(true);
-			construct.setIconName("icon");
 			construct.setKeyword("instant");
 			construct.setName("instant", 1);
 

@@ -265,7 +265,6 @@ public class SyncTest {
 					Construct construct = (Construct) o;
 					assertThat(construct).as("construct")
 						.hasKeyword("testconstruct")
-						.hasIcon("text.gif")
 						.hasName("de", "Test Tagtyp")
 						.hasName("en", "Test Tagtype")
 						.hasDescription("de", "Das ist der Test Tagtyp")

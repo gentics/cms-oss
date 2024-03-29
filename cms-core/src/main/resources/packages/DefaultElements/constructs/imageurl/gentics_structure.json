@@ -1,7 +1,6 @@
 {
   "globalId" : "A547.69940",
   "keyword" : "imageurl",
-  "icon" : "bild.gif",
   "name" : {
     "de" : "[URL] Bild",
     "en" : "[URL] Image"
@@ -10,7 +9,6 @@
   "mayContainsSubtags" : false,
   "editorControlStyle": "ASIDE",
   "autoEnable" : true,
-  "newEditor" : true,
   "parts" : [ {
     "globalId" : "A547.69946",
     "name" : {

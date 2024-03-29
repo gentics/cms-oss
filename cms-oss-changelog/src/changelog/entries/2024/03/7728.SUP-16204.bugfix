@@ -1,1 +1,1 @@
-Now the permissions, given to the Mesh project root node upon Mesh publishing, are limited to the selected READ_PUBLISHED permissions to the defined roles only, in the same manner as it is done for the published Pages, Files and other objects.
+Now all the permissions, excluding the legal READ_PUBLISHED, are forcefully removed from the objects upon Mesh publish.

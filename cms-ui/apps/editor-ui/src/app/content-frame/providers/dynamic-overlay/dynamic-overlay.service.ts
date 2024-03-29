@@ -37,9 +37,16 @@ export class DynamicOverlayService {
                 dialog?.instance?.cancelFn(new ModalCloseError(ModalClosingReason.API));
                 open = false;
             },
-            value: dialog.open().finally(() => {
-                open = false;
-            }),
+            value: dialog.open()
+                .catch(err => {
+                    if (err instanceof ModalCloseError && err.reason !== ModalClosingReason.ERROR) {
+                        return;
+                    }
+                    throw err;
+                })
+                .finally(() => {
+                    open = false;
+                }),
         };
 
         this.openOverlays.push(ctl);
@@ -83,6 +90,9 @@ export class DynamicOverlayService {
                 });
                 instance.registerErrorFn(error => {
                     closeDropdown();
+                    if (error instanceof ModalCloseError && error.reason !== ModalClosingReason.ERROR) {
+                        return;
+                    }
                     reject(error);
                 });
             }),

@@ -6,4 +6,7 @@ export interface AlohaSplitButtonComponent extends Omit<AlohaButtonComponent, 't
 
     secondaryLabel?: string;
     secondaryClick: () => void;
+    secondaryVisible: boolean;
+
+    setSecondaryVisible: (visible: boolean) => void;
 }

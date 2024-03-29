@@ -6,7 +6,7 @@
 
 <div
     class="gtx-context-menu"
-    [class.with-confirm]="configuration.resolveWithConfirmButton || controlNeedsConfirm"
+    [class.with-confirm]="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
     [class.no-header]="hideHeader"
 >
     <div class="context-menu-header">
@@ -20,7 +20,7 @@
         <div *ngIf="label" class="header-label">{{ label }}</div>
 
         <button
-            *ngIf="configuration.resolveWithConfirmButton || controlNeedsConfirm"
+            *ngIf="configuration?.resolveWithConfirmButton || controlNeedsConfirm"
             class="header-confirm-button"
             [disabled]="!control.valid"
             (click)="handleConfirmClick()"
@@ -32,8 +32,8 @@
     <div class="context-menu-content">
         <gtx-aloha-component-renderer
             [renderContext]="RENDERING_CONTEXT_DROPDOWN"
-            [type]="configuration.type"
-            [settings]="configuration.options"
+            [type]="configuration?.type"
+            [settings]="configuration?.options"
             [formControl]="control"
             (requiresConfirm)="updateNeedsConfirm($event)"
             (manualConfirm)="handleManualComponentConfirm()"

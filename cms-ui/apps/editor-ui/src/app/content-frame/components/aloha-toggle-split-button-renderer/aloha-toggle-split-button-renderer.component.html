@@ -18,6 +18,7 @@
         [class.always-secondary]="settings.alwaysSecondary"
     >
         <button
+            *ngIf="settings?.secondaryVisible"
             class="split-button-secondary"
             [disabled]="disabled"
             (click)="handleSecondaryClick()"

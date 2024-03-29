@@ -39,6 +39,10 @@ export class AlohaSplitButtonRendererComponent extends BaseAlohaRendererComponen
             this.settings.tooltip = tooltip;
             this.changeDetector.markForCheck();
         };
+        this.settings.setSecondaryVisible = visible => {
+            this.settings.secondaryVisible = visible;
+            this.changeDetector.markForCheck();
+        };
     }
 
     public handleClick(): void {

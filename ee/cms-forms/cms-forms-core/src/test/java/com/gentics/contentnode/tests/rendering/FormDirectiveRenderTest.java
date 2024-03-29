@@ -202,7 +202,6 @@ public class FormDirectiveRenderTest {
 
 		formConstruct = supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("form");
 			c.setName("form", 1);
 			c.getNodes().add(node);

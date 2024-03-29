@@ -78,7 +78,6 @@ public class VelocityRenderForeignObjectTest {
 			c.setAutoEnable(true);
 			c.setKeyword("velocity");
 			c.setName("Velocity", 1);
-			c.setIconName("icon");
 			List<Part> parts = c.getParts();
 			c.getNodes().add(master);
 

@@ -587,7 +587,6 @@ public class PageRenderSandboxTest {
 			constr.setKeyword("includer");
 			constr.setName("includer (de)", 1);
 			constr.setName("includer (en)", 2);
-			constr.setIconName("icon.png");
 			constr.getNodes().add(node);
 			{
 				Part vtl = t.createObject(Part.class);
@@ -644,7 +643,6 @@ public class PageRenderSandboxTest {
 			constr.setKeyword("includee");
 			constr.setName("includee (de)", 1);
 			constr.setName("includee (en)", 2);
-			constr.setIconName("icon.png");
 			constr.getNodes().add(node);
 			{
 				Part vtl = t.createObject(Part.class);
@@ -685,7 +683,6 @@ public class PageRenderSandboxTest {
 			constr.setKeyword("includee2");
 			constr.setName("includee2 (de)", 1);
 			constr.setName("includee2 (en)", 2);
-			constr.setIconName("icon.png");
 			constr.getNodes().add(node);
 			{
 				Part vtl = t.createObject(Part.class);

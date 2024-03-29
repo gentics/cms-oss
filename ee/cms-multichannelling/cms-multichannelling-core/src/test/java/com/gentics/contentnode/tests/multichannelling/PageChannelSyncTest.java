@@ -70,7 +70,6 @@ public class PageChannelSyncTest {
 		// create the evil construct
 		Construct construct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("construct");
 			c.setName("construct", 1);
 			c.getNodes().add(node);
@@ -144,7 +143,6 @@ public class PageChannelSyncTest {
 	public void testSynchronizeDifferentConstructs() throws NodeException {
 		Construct diffOldConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("diffold");
 			c.setName("diffold", 1);
 			c.getNodes().add(node);
@@ -162,7 +160,6 @@ public class PageChannelSyncTest {
 
 		Construct diffNewConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("diffnew");
 			c.setName("diffnew", 1);
 			c.getNodes().add(node);

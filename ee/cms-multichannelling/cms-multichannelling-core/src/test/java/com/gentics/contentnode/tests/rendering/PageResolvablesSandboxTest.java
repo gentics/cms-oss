@@ -83,7 +83,6 @@ public class PageResolvablesSandboxTest {
 		construct.setKeyword("constr");
 		construct.setName("Construct (de)", 1);
 		construct.setName("Construct (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 
 		Part velPart = t.createObject(Part.class);

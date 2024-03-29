@@ -873,7 +873,6 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		construct.setKeyword("testtag");
 		construct.setName("Test (de)", 1);
 		construct.setName("Test (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(masterNode);
 
 		Part htmlPart = t.createObject(Part.class);
@@ -978,7 +977,6 @@ public class PageChannelSandboxTest extends AbstractMultichannellingSandboxTest 
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(masterNode);
 		construct.getNodes().add(channelNode);
 		Part urlPart = t.createObject(Part.class);

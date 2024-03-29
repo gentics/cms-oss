@@ -107,7 +107,6 @@ public class ChannelSyncIndirectDependencyTest {
 
 		overviewConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("overview");
 			c.setName("overview", 1);
 			c.getNodes().add(channelMap.get(Channel.node));

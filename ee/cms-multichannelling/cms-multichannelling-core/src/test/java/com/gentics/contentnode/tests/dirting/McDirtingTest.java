@@ -57,7 +57,6 @@ public class McDirtingTest {
 			c.setKeyword("vtl");
 			c.setMlId(1);
 			c.setName("Velocity", 1);
-			c.setIconName("icon");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setEditable(0);

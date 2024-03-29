@@ -321,13 +321,11 @@ public class NodeStagingTest implements ContentStagingMethods {
 			return create(Construct.class, c -> {
 				c.setKeyword("first");
 				c.setName("First Construct", 1);
-				c.setIconName("icon.jpg");
 			}).build();
 		}, () -> {
 			return create(Construct.class, c -> {
 				c.setKeyword("second");
 				c.setName("Second Construct", 1);
-				c.setIconName("icon.jpg");
 			}).build();
 		}, c -> c.delete(true), Node::addConstruct, (n, c) -> {
 			assertThat(n).as("Staged Node")
@@ -346,7 +344,6 @@ public class NodeStagingTest implements ContentStagingMethods {
 		Construct construct = create(Construct.class, c -> {
 			c.setKeyword("construct");
 			c.setName("Construct", 1);
-			c.setIconName("icon.jpg");
 		}).build();
 		int constructId = execute(Construct::getId, construct);
 

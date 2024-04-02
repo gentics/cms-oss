@@ -261,7 +261,7 @@ export class ConstructDetailComponent
     /**
      * Requests changes of user by id to CMS
      */
-    async updateEntity(): Promise<void> {
+    async updateProperties(): Promise<void> {
         const payload: ConstructUpdateRequest = {
             nameI18n: this.fgProperties.value.nameI18n,
             descriptionI18n: this.fgProperties.value.descriptionI18n,
@@ -273,7 +273,6 @@ export class ConstructDetailComponent
             categoryId: this.fgProperties.value.categoryId,
             categorySortorder: this.fgProperties.value.categorySortorder,
             autoEnable: this.fgProperties.value.autoEnable,
-            parts: this.fgParts.value,
         };
 
         if (payload.categoryId == null) {
@@ -291,6 +290,10 @@ export class ConstructDetailComponent
             }),
             map(() => undefined),
         ).toPromise();
+    }
+
+    async updateEntity(): Promise<void> {
+        return this.activeFormTab.save();
     }
 
     /**
@@ -337,7 +340,7 @@ export class ConstructDetailComponent
             [ConstructDetailTabs.PROPERTIES]: {
                 isDirty: () => this.fgProperties.dirty,
                 isValid: () => this.fgProperties.valid,
-                save: (): Promise<void> => this.updateEntity(),
+                save: (): Promise<void> => this.updateProperties(),
                 reset: (): Promise<void> => Promise.resolve(this.initPropertiesForm()),
             },
             [ConstructDetailTabs.PARTS]: {

@@ -7,7 +7,7 @@
     visibility: hidden;
     opacity: 0.0;
     transition: 300ms opacity;
-    z-index: 50;
+    z-index: 999;
     display: inline-block;
     top: var(--trigger-y);
     left: var(--trigger-x);

@@ -79,9 +79,13 @@ import com.gentics.contentnode.testutils.mesh.MeshContext;
 import com.gentics.contentnode.testutils.mesh.MeshTestRule;
 import com.gentics.mesh.core.rest.branch.BranchResponse;
 import com.gentics.mesh.core.rest.common.AbstractGenericRestResponse;
+import com.gentics.mesh.core.rest.common.ObjectPermissionGrantRequest;
 import com.gentics.mesh.core.rest.common.Permission;
+import com.gentics.mesh.core.rest.node.NodeResponse;
+import com.gentics.mesh.core.rest.project.ProjectResponse;
 import com.gentics.mesh.core.rest.role.RoleCreateRequest;
 import com.gentics.mesh.core.rest.role.RoleListResponse;
+import com.gentics.mesh.core.rest.role.RoleReference;
 import com.gentics.mesh.core.rest.role.RoleResponse;
 import com.gentics.mesh.parameter.RolePermissionParameters;
 import com.gentics.mesh.parameter.client.RolePermissionParametersImpl;
@@ -486,6 +490,44 @@ public class MeshPublishRolesTest {
 		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
 	}
 
+	/**
+	 * Test permissions on page, when the project root node has additional permissions set
+	 * @throws Exception
+	 */
+	@Test
+	public void testPagePermissionsWithModifiedRootNodePermissions() throws Exception {
+		setAllRoles();
+
+		// run publish process (will create project and node for cms node)
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		// set "read" permission for role_a on project root node and cms node
+		ProjectResponse projectResponse = mesh.client().findProjectByName(MESH_PROJECT_NAME).blockingGet();
+		mesh.client().grantNodeRolePermissions(MESH_PROJECT_NAME, projectResponse.getRootNode().getUuid(),
+				new ObjectPermissionGrantRequest().setRead(Arrays.asList(new RoleReference().setName("role_a"))))
+				.blockingAwait();
+		for (NodeResponse nodeResponse : mesh.client().findNodeChildren(MESH_PROJECT_NAME, projectResponse.getRootNode().getUuid()).blockingGet().getData()) {
+			mesh.client().grantNodeRolePermissions(MESH_PROJECT_NAME,nodeResponse.getUuid(),
+					new ObjectPermissionGrantRequest().setRead(Arrays.asList(new RoleReference().setName("role_a"))))
+					.blockingAwait();
+		}
+
+		Folder folder = Trx.supply(() -> update(createFolder(node.getFolder(), "Folder"), f -> {
+			setRoles(f, "role_c", "role_a");
+		}));
+
+		Page page = Trx.supply(() -> update(createPage(folder, template, "Page"), Page::publish));
+
+		try (Trx trx = new Trx()) {
+			context.publish(false);
+			trx.success();
+		}
+
+		assertNodePermission(MESH_PROJECT_NAME, page, Permission.READ_PUBLISHED, "admin", "role_a", "role_c");
+	}
 
 	/**
 	 * Test permissions on page when role is not yet created on Mesh.

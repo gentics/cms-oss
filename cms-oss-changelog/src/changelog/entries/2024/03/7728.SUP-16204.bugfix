@@ -1,0 +1,1 @@
+Now all the permissions, excluding the legal READ_PUBLISHED, are forcefully removed from the objects upon Mesh publish.

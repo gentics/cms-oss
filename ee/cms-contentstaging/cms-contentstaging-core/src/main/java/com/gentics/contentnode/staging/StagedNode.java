@@ -30,6 +30,7 @@ public class StagedNode extends StagingBase {
 	private boolean https;
 	private boolean publishImageVariants;
 	private String hostname;
+	private String hostnameProperty;
 	private boolean publishFs;
 	private boolean publishFsPages;
 	private boolean publishFsFiles;
@@ -54,7 +55,7 @@ public class StagedNode extends StagingBase {
 
 	private Set<String> packages = new TreeSet<>();
 
-	private String meshPreviewUrl;
+	private String meshPreviewUrlProperty;
 
 	/**
 	 * Publish directory
@@ -150,6 +151,22 @@ public class StagedNode extends StagingBase {
 	 */
 	public void setHostname(String hostname) {
 		this.hostname = hostname;
+	}
+
+	/**
+	 * Hostname property of the node
+	 * @return hostname property
+	 */
+	public String getHostnameProperty() {
+		return hostnameProperty;
+	}
+
+	/**
+	 * Set the hostname property
+	 * @param hostnameProperty hostname property
+	 */
+	public void setHostnameProperty(String hostnameProperty) {
+		this.hostnameProperty = hostnameProperty;
 	}
 
 	/**
@@ -427,12 +444,12 @@ public class StagedNode extends StagingBase {
 		this.packages = packages;
 	}
 
-	public String getMeshPreviewUrl() {
-		return meshPreviewUrl;
+	public String getMeshPreviewUrlProperty() {
+		return meshPreviewUrlProperty;
 	}
 
-	public void setMeshPreviewUrl(String meshPreviewUrl) {
-		this.meshPreviewUrl = meshPreviewUrl;
+	public void setMeshPreviewUrlProperty(String meshPreviewUrlProperty) {
+		this.meshPreviewUrlProperty = meshPreviewUrlProperty;
 	}
 
 	@XmlTransient
@@ -460,6 +477,9 @@ public class StagedNode extends StagingBase {
 		this.constructIds = origin.constructIds;
 		this.objectPropertyIds = origin.objectPropertyIds;
 		this.packages = origin.packages;
+		this.hostname = origin.hostname;
+		this.hostnameProperty = origin.hostnameProperty;
+		this.meshPreviewUrlProperty = origin.meshPreviewUrlProperty;
 	}
 
 	@Override

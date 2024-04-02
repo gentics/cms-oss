@@ -296,4 +296,4 @@
 2023-03-21  CH-1688 NOP SQL DROP TABLE IF EXISTS bundleimport;
 2023-03-21  CH-1689 NOP SQL DROP TABLE IF EXISTS bundleimportconflict;
 2023-03-21  CH-1690 NOP SQL DROP TABLE IF EXISTS bundleimportobject;
-2023-03-21  CH-1717 SP  SQL DELETE FROM invokerqueue WHERE type NOT IN ('sleep', 'nodecopy', 'error');
+2024-03-29  CH-1717 SP  SQL DELETE FROM invokerqueue WHERE type NOT IN ('sleep', 'nodecopy', 'error');

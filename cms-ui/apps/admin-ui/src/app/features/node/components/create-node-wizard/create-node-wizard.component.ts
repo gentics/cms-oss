@@ -5,7 +5,7 @@ import { Wizard } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
-import { Language, Node, NodeCreateRequest, NodeFeatureModel, Raw } from '@gentics/cms-models';
+import { Language, Node, NodeCreateRequest, NodeFeatureModel, NodeHostnameType, NodePreviewurlType, Raw } from '@gentics/cms-models';
 import { Observable, of as observableOf, of } from 'rxjs';
 import { catchError, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { NodePropertiesFormData } from '..';
@@ -14,6 +14,8 @@ import { NodePropertiesComponent } from '../node-properties/node-properties.comp
 import { NodePublishingPropertiesFormData } from '../node-publishing-properties/node-publishing-properties.component';
 
 const FG_PROPERTIES_DEFAULT: Partial<NodePropertiesFormData> = {
+    hostnameType: NodeHostnameType.VALUE,
+    meshPreviewUrlType: NodePreviewurlType.VALUE,
 };
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
@@ -133,8 +135,10 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
             node: {
                 name: nodeProperties.name,
                 https: !!nodeProperties.https,
-                host: nodeProperties.hostname,
-                meshPreviewUrl: nodeProperties.meshPreviewUrl,
+                host: nodeProperties.hostnameType === NodeHostnameType.VALUE ? nodeProperties.hostname : null,
+                hostProperty: nodeProperties.hostnameType === NodeHostnameType.PROPERTY ? nodeProperties.hostnameProperty : '',
+                meshPreviewUrl: nodeProperties.meshPreviewUrlType === NodePreviewurlType.VALUE ? nodeProperties.meshPreviewUrl : null,
+                meshPreviewUrlProperty: nodeProperties.meshPreviewUrlType === NodePreviewurlType.PROPERTY ? nodeProperties.meshPreviewUrlProperty : '',
                 insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
                 disablePublish: !!publishingData.disableUpdates,
                 publishFs: !!publishingData.fileSystem,

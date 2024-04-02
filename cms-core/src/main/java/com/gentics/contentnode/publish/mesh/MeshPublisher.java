@@ -969,7 +969,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (cr.isProjectPerNode()) {
 			return getMeshName(node);
 		} else {
-			Matcher urlMatcher = URL_PATTERN.matcher(substituteSingleProperty(cr.getUrl()));
+			Matcher urlMatcher = URL_PATTERN.matcher(cr.getEffectiveUrl());
 			if (!urlMatcher.matches()) {
 				return null;
 			}
@@ -1079,7 +1079,7 @@ public class MeshPublisher implements AutoCloseable {
 		if (cr.getCrType() != Type.mesh) {
 			throw new NodeException(String.format("Cannot connect to CR %s of type %s. Only type %s is supported.", cr.getName(), cr.getCrType(), Type.mesh));
 		}
-		Matcher urlMatcher = URL_PATTERN.matcher(substituteSingleProperty(cr.getUrl()));
+		Matcher urlMatcher = URL_PATTERN.matcher(cr.getEffectiveUrl());
 		if (!urlMatcher.matches()) {
 			throw new RestMappedException(I18NHelper.get("meshcr.invalid.url", cr.getUrl(), cr.getName())).setMessageType(Message.Type.CRITICAL)
 					.setResponseCode(ResponseCode.INVALIDDATA).setStatus(Status.CONFLICT);
@@ -1103,8 +1103,8 @@ public class MeshPublisher implements AutoCloseable {
 			port = Integer.parseInt(urlMatcher.group("port"));
 		}
 		schemaPrefix = urlMatcher.group("project");
-		String username = substituteSingleProperty(cr.getUsername());
-		String password = cr.isPasswordProperty() ? substituteSingleProperty(cr.getPassword()) : cr.getPassword();
+		String username = cr.getEffectiveUsername();
+		String password = cr.getEffectivePassword();
 
 		initMeshProjects();
 

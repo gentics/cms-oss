@@ -18,7 +18,7 @@ import {
     Validators,
 } from '@angular/forms';
 import { BasePropertiesComponent, GtxJsonValidator } from '@gentics/cms-components';
-import { AnyModelType, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, Feature } from '@gentics/cms-models';
+import { AnyModelType, BasepathType, ContentRepository, ContentRepositoryPasswordType, ContentRepositoryType, Feature, UrlType, UsernameType } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider, setControlsEnabled, setControlsValidators } from '@gentics/ui-core';
 
 export enum ContentRepositoryPropertiesMode {
@@ -57,6 +57,14 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     public passwordRepeat = '';
     public meshCrEnabled = false;
 
+    public showBasepath = false;
+
+    public urlType: UrlType;
+
+    public basepathType: BasepathType;
+
+    public usernameType: UsernameType;
+
     /** selectable options for contentRepository input passwordType */
     public readonly PASSWORD_TYPES: { id: ContentRepositoryPasswordType; label: string; }[] = [
         {
@@ -70,6 +78,42 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         {
             id: ContentRepositoryPasswordType.PROPERTY,
             label: 'contentRepository.passwordType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input usernameType */
+    public readonly USERNAME_TYPES: { id: UsernameType; label: string; }[] = [
+        {
+            id: UsernameType.VALUE,
+            label: 'contentRepository.usernameType_value',
+        },
+        {
+            id: UsernameType.PROPERTY,
+            label: 'contentRepository.usernameType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input urlType */
+    public readonly URL_TYPES: { id: UrlType; label: string; }[] = [
+        {
+            id: UrlType.VALUE,
+            label: 'contentRepository.urlType_value',
+        },
+        {
+            id: UrlType.PROPERTY,
+            label: 'contentRepository.urlType_property',
+        },
+    ];
+
+    /** selectable options for contentRepository input basepathType */
+    public readonly BASEPATH_TYPES: { id: BasepathType; label: string; }[] = [
+        {
+            id: BasepathType.VALUE,
+            label: 'contentRepository.basepathType_value',
+        },
+        {
+            id: BasepathType.PROPERTY,
+            label: 'contentRepository.basepathType_property',
         },
     ];
 
@@ -132,6 +176,30 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         }
     }
 
+    public updateUrlType(value: UrlType): void {
+        this.urlType = value;
+        if (this.form) {
+            setControlsEnabled(this.form, ['url'], this.urlType === UrlType.VALUE, { emitEvent: false });
+            setControlsEnabled(this.form, ['urlProperty'], this.urlType === UrlType.PROPERTY, { emitEvent: false });
+        }
+    }
+
+    public updateBasepathType(value: BasepathType): void {
+        this.basepathType = value;
+        if (this.form) {
+            setControlsEnabled(this.form, ['basepath'], this.basepathType === BasepathType.VALUE, { emitEvent: false });
+            setControlsEnabled(this.form, ['basepathProperty'], this.basepathType === BasepathType.PROPERTY, { emitEvent: false });
+        }
+    }
+
+    public updateUsernameType(value: UsernameType): void {
+        this.usernameType = value;
+        if (this.form) {
+            setControlsEnabled(this.form, ['username'], this.usernameType === UsernameType.VALUE, { emitEvent: false });
+            setControlsEnabled(this.form, ['usernameProperty'], this.usernameType === UsernameType.PROPERTY, { emitEvent: false });
+        }
+    }
+
     protected updateCRTypes(): void {
         const types: CRDisplayType[] = [
             {
@@ -153,6 +221,7 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     protected createForm(): FormGroup<any> {
         return new UntypedFormGroup({
             basepath: new UntypedFormControl(this.value?.basepath || ''),
+            basepathProperty: new UntypedFormControl(this.value?.basepathProperty || '', Validators.pattern(/^\$\{(env|sys):CR_ATTRIBUTEPATH_[^}]+\}$/)),
             crType: new UntypedFormControl(this.value?.crType || null, Validators.required),
             dbType: new UntypedFormControl(this.value?.dbType || null, Validators.required),
             defaultPermission: new UntypedFormControl(this.value?.defaultPermission || ''),
@@ -163,13 +232,15 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
             name: new UntypedFormControl(this.value?.name || '', Validators.required),
             passwordType: new UntypedFormControl(this.value?.passwordType || ContentRepositoryPasswordType.NONE),
             password: new UntypedFormControl('', this.validatorPasswordsDontMatch),
-            passwordProperty: new UntypedFormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):[^}]+\}$/)),
+            passwordProperty: new UntypedFormControl(this.value?.passwordProperty || '', Validators.pattern(/^\$\{(env|sys):CR_PASSWORD_[^}]+\}$/)),
             permissionProperty: new UntypedFormControl(this.value?.permissionProperty || ''),
             permissionInformation: new UntypedFormControl(this.value?.permissionInformation ?? false),
             projectPerNode: new UntypedFormControl(this.value?.projectPerNode ?? false),
             version: new UntypedFormControl(this.value?.version || ''),
             url: new UntypedFormControl(this.value?.url || '', Validators.required),
+            urlProperty: new UntypedFormControl(this.value?.urlProperty || '', [ Validators.required, Validators.pattern(/^\$\{(env|sys):CR_URL_[^}]+\}$/) ]),
             username: new UntypedFormControl(this.value?.username || '', Validators.required),
+            usernameProperty: new UntypedFormControl(this.value?.usernameProperty || '', [ Validators.required, Validators.pattern(/^\$\{(env|sys):CR_USERNAME_[^}]+\}$/)]),
             http2: new UntypedFormControl(this.value?.http2 ?? false),
             noFoldersIndex: new UntypedFormControl(this.value?.noFoldersIndex ?? false),
             noFilesIndex: new UntypedFormControl(this.value?.noFilesIndex ?? false),
@@ -181,6 +252,16 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
     protected configureForm(value: ContentRepository<AnyModelType>, loud?: boolean): void {
         const options = { emitEvent: !!loud };
 
+        if (!this.urlType && this.value) {
+            this.urlType = this.value?.urlProperty ? UrlType.PROPERTY : UrlType.VALUE;
+        }
+        if (!this.usernameType && this.value) {
+            this.usernameType = this.value?.usernameProperty ? UsernameType.PROPERTY : UsernameType.VALUE;
+        }
+        if (!this.basepathType && this.value) {
+            this.basepathType = this.value?.basepathProperty ? BasepathType.PROPERTY : BasepathType.VALUE;
+        }
+
         setControlsEnabled(this.form, ['crType'], this.crType == null || this.mode !== ContentRepositoryPropertiesMode.UPDATE, options);
         setControlsEnabled(
             this.form,
@@ -191,7 +272,6 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         setControlsEnabled(this.form, ['passwordProperty'], value?.passwordType === ContentRepositoryPasswordType.PROPERTY ?? false, options);
 
         const dbControls =  [
-            'basepath',
             'dbType',
             'diffDelete',
             'languageInformation',
@@ -225,6 +305,17 @@ export class ContentRepositoryPropertiesComponent extends BasePropertiesComponen
         } else {
             setControlsValidators(this.form, ['username'], Validators.required);
         }
+
+        this.showBasepath = crType !== ContentRepositoryType.MESH;
+
+        setControlsEnabled(this.form, ['url'], this.urlType === UrlType.VALUE, options);
+        setControlsEnabled(this.form, ['urlProperty'], this.urlType === UrlType.PROPERTY, options);
+
+        setControlsEnabled(this.form, ['username'], this.usernameType === UsernameType.VALUE, options);
+        setControlsEnabled(this.form, ['usernameProperty'], this.usernameType === UsernameType.PROPERTY, options);
+
+        setControlsEnabled(this.form, ['basepath'], this.basepathType === BasepathType.VALUE, options);
+        setControlsEnabled(this.form, ['basepathProperty'], this.basepathType === BasepathType.PROPERTY, options);
     }
 
     protected assembleValue(value: ContentRepository): ContentRepository {

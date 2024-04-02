@@ -375,7 +375,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			ret = false;
 		}
 
-		if (ObjectTransformer.isEmpty(reqNode.getHost())) {
+		if (org.apache.commons.lang3.StringUtils.isAllBlank(reqNode.getHost(), reqNode.getHostProperty())) {
 			errors.add("no hostname");
 			msg = new CNI18nString("domne_oder_ip_adresse.zb_www.gentics.com");
 			response.addMessage(
@@ -898,6 +898,7 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 
 			newNode.setFolder(rootFolder);
 			newNode.setHostname(reqNode.getHost());
+			newNode.setHostnameProperty(reqNode.getHostProperty());
 
 			if (reqNode.isHttps() != null) {
 				newNode.setHttps(reqNode.isHttps());
@@ -982,6 +983,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 				if (reqNode.getMeshPreviewUrl() != null) {
 					newNode.setMeshPreviewUrl(reqNode.getMeshPreviewUrl());
+				}
+				if (reqNode.getMeshPreviewUrlProperty() != null) {
+					newNode.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
 				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
@@ -1082,6 +1086,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			}
 			if (!ObjectTransformer.isEmpty(reqNode.getHost())) {
 				node.setHostname(reqNode.getHost());
+			}
+			if (reqNode.getHostProperty() != null) {
+				node.setHostnameProperty(reqNode.getHostProperty());
 			}
 			if (reqNode.isHttps() != null) {
 				node.setHttps(reqNode.isHttps());
@@ -1233,6 +1240,10 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 			if (NodeConfigRuntimeConfiguration.isFeature(Feature.MESH_CONTENTREPOSITORY)) {
 				if (reqNode.getMeshPreviewUrl() != null) {
 					node.setMeshPreviewUrl(reqNode.getMeshPreviewUrl());
+				}
+
+				if (reqNode.getMeshPreviewUrlProperty() != null) {
+					node.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
 				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {

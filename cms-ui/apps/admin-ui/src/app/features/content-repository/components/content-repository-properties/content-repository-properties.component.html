@@ -1,7 +1,7 @@
 <form
     *ngIf="form"
     [formGroup]="form"
-    class="row small-12 medium-12"
+    class="gtx-form row small-12 medium-12"
 >
     <div class="input-container small-12 medium-6 columns">
 
@@ -29,13 +29,38 @@
             formControlName="dbType"
         ></gtx-input>
 
+        <div class="gtx-form-section-title">{{ 'contentRepository.url' | i18n }}</div>
+
+        <gtx-select
+            [label]="('contentRepository.urlType' | i18n) + ' *'"
+            [value]="urlType"
+            [clearable]="false"
+            (valueChange)="updateUrlType($event)"
+        >
+            <gtx-option *ngFor="let type of URL_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+
         <gtx-input
-            *ngIf="form.get('url').enabled"
             type="text"
             maxlength="255"
             [label]="('contentRepository.url' | i18n) + ' *'"
             formControlName="url"
         ></gtx-input>
+
+        <gtx-input
+            *ngIf="form.get('urlProperty').enabled"
+            type="text"
+            maxlength="255"
+            [label]="('contentRepository.urlProperty' | i18n) + ' *'"
+            formControlName="urlProperty"
+        ></gtx-input>
+
+        <span
+            *ngIf="form.get('urlProperty')?.hasError('pattern')"
+            class="container-validator-errors"
+        >
+            {{ 'contentRepository.urlProperty_pattern' | i18n }}
+        </span>
 
         <gtx-checkbox
             *ngIf="form.get('http2').enabled"
@@ -43,13 +68,40 @@
             [label]="'contentRepository.http2' | i18n"
         ></gtx-checkbox>
 
+        <div class="gtx-form-section-title">{{ 'shared.user_name' | i18n }}</div>
+
+        <gtx-select
+            [label]="('contentRepository.usernameType' | i18n) + ' *'"
+            [value]="usernameType"
+            [clearable]="false"
+            (valueChange)="updateUsernameType($event)"
+        >
+            <gtx-option *ngFor="let type of USERNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+
         <gtx-input
-            *ngIf="form.get('username').enabled"
             type="text"
             maxlength="255"
             [label]="('shared.user_name' | i18n)"
             formControlName="username"
         ></gtx-input>
+
+        <gtx-input
+            *ngIf="form.get('usernameProperty').enabled"
+            type="text"
+            maxlength="255"
+            [label]="('contentRepository.usernameProperty' | i18n) + ' *'"
+            formControlName="usernameProperty"
+        ></gtx-input>
+
+        <span
+            *ngIf="form.get('usernameProperty')?.hasError('pattern')"
+            class="container-validator-errors"
+        >
+            {{ 'contentRepository.usernameProperty_pattern' | i18n }}
+        </span>
+
+        <div class="gtx-form-section-title">{{ 'contentRepository.password' | i18n }}</div>
 
         <gtx-select
             *ngIf="form.get('passwordType').enabled"
@@ -130,13 +182,38 @@
 
     <div class="input-container small-12 medium-6 columns">
 
+        <gtx-select
+            *ngIf="showBasepath"
+            [label]="('contentRepository.basepathType' | i18n) + ' *'"
+            [value]="basepathType"
+            [clearable]="false"
+            (valueChange)="updateBasepathType($event)"
+        >
+            <gtx-option *ngFor="let type of BASEPATH_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+        </gtx-select>
+
         <gtx-input
-            *ngIf="form.get('basepath').enabled"
+            *ngIf="showBasepath"
             type="text"
             maxlength="255"
             [label]="'contentRepository.basepath' | i18n"
             formControlName="basepath"
         ></gtx-input>
+
+        <gtx-input
+            *ngIf="showBasepath && form.get('basepathProperty').enabled"
+            type="text"
+            maxlength="255"
+            [label]="('contentRepository.basepathProperty' | i18n) + ' *'"
+            formControlName="basepathProperty"
+        ></gtx-input>
+
+        <span
+            *ngIf="form.get('basepathProperty')?.hasError('pattern')"
+            class="container-validator-errors"
+        >
+            {{ 'contentRepository.basepathProperty_pattern' | i18n }}
+        </span>
 
         <gtx-checkbox
             *ngIf="form.get('instantPublishing').enabled"

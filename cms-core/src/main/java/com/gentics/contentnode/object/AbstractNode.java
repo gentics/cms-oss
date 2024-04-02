@@ -166,6 +166,16 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 	}
 
 	@Override
+	public void setHostnameProperty(String hostProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void resolveHostnameProperty() throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
 	public void setFtpHostname(String ftpHostname) throws ReadOnlyException {
 		failReadOnly();
 	}
@@ -406,6 +416,16 @@ public abstract class AbstractNode extends AbstractContentObject implements Node
 
 	@Override
 	public void setMeshPreviewUrl(String url) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void setMeshPreviewUrlProperty(String urlProperty) throws ReadOnlyException {
+		failReadOnly();
+	}
+
+	@Override
+	public void resolveMeshPreviewUrlProperty() throws ReadOnlyException {
 		failReadOnly();
 	}
 

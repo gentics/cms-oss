@@ -7,7 +7,30 @@
                     {{ 'editor.inherited_tooltip' | i18n:{ master: masterNode?.name } }}
                 </div>
         </div>
-        <gtx-input [label]="('editor.node_hostname_label' | i18n) + '*'" formControlName="host" [gtxDisabled]="disabled" required></gtx-input>
+    </div>
+    <div class="split-row">
+        <gtx-select
+            [label]="('editor.node_hostname_type_label' | i18n) + ' *'"
+            [value]="hostnameType"
+            [clearable]="false"
+            (valueChange)="updateHostnameType($event)"
+        >
+        <gtx-option *ngFor="let type of HOSTNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+    </gtx-select>
+    </div>
+    <div class="split-row">
+        <gtx-input [label]="('editor.node_hostname_label' | i18n) + '*'" formControlName="host" required></gtx-input>
+    </div>
+    <div class="split-row" *ngIf="!hostnamePropertyDisabled">
+        <gtx-input [label]="('editor.node_hostname_property_label' | i18n) + '*'" formControlName="hostnameProperty" required></gtx-input>
+    </div>
+    <div class="split-row">
+        <span
+               *ngIf="form?.get('hostnameProperty').hasError('pattern')"
+                class="container-validator-errors"
+            >
+                {{ 'editor.node_hostname_property_pattern' | i18n }}
+            </span>
     </div>
     <div class="split-row checkbox-row">
         <gtx-checkbox formControlName="utf8" label="utf8" [gtxDisabled]="disabled"></gtx-checkbox>

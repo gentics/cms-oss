@@ -984,6 +984,9 @@ public class NodeResourceImpl extends AbstractContentNodeResource implements Nod
 				if (reqNode.getMeshPreviewUrl() != null) {
 					newNode.setMeshPreviewUrl(reqNode.getMeshPreviewUrl());
 				}
+				if (reqNode.getMeshPreviewUrlProperty() != null) {
+					newNode.setMeshPreviewUrlProperty(reqNode.getMeshPreviewUrlProperty());
+				}
 
 				if (reqNode.getInsecurePreviewUrl() != null) {
 					newNode.setInsecurePreviewUrl(reqNode.getInsecurePreviewUrl());

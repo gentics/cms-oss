@@ -15,7 +15,7 @@ import { NodePublishingPropertiesFormData } from '../node-publishing-properties/
 
 const FG_PROPERTIES_DEFAULT: Partial<NodePropertiesFormData> = {
     hostnameType: NodeHostnameType.VALUE,
-    meshPreviewUrlType: NodePreviewurlType.VALUE
+    meshPreviewUrlType: NodePreviewurlType.VALUE,
 };
 
 const FG_PUBLISHING_DEFAULT: Partial<NodePublishingPropertiesFormData> = {
@@ -137,7 +137,8 @@ export class CreateNodeWizardComponent implements OnInit, AfterViewInit, Wizard<
                 https: !!nodeProperties.https,
                 host: nodeProperties.hostnameType === NodeHostnameType.VALUE ? nodeProperties.hostname : null,
                 hostProperty: nodeProperties.hostnameType === NodeHostnameType.PROPERTY ? nodeProperties.hostnameProperty : '',
-                meshPreviewUrl: nodeProperties.meshPreviewUrl,
+                meshPreviewUrl: nodeProperties.meshPreviewUrlType === NodePreviewurlType.VALUE ? nodeProperties.meshPreviewUrl : null,
+                meshPreviewUrlProperty: nodeProperties.meshPreviewUrlType === NodePreviewurlType.PROPERTY ? nodeProperties.meshPreviewUrlProperty : '',
                 insecurePreviewUrl: nodeProperties.insecurePreviewUrl,
                 disablePublish: !!publishingData.disableUpdates,
                 publishFs: !!publishingData.fileSystem,

@@ -273,6 +273,7 @@ export class ConstructDetailComponent
             categoryId: this.fgProperties.value.categoryId,
             categorySortorder: this.fgProperties.value.categorySortorder,
             autoEnable: this.fgProperties.value.autoEnable,
+            parts: this.fgParts.value,
         };
 
         if (payload.categoryId == null) {

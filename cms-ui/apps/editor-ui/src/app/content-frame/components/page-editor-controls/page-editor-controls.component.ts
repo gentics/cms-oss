@@ -30,16 +30,22 @@ import {
 } from '../../providers/aloha-integration/aloha-integration.service';
 import { MobileMenu } from '../../utils';
 
-const ALOHA_REPO = 'data-gentics-aloha-repository'
+const ATTR_ALOHA_REPO = 'data-gentics-aloha-repository'
+const ATTR_QUEUED_LINK_CHECK = 'gcmsui-queued-link-check';
+const DEFAULT_DELAY = 500;
+
+function isJQueryElement(elem: any): elem is JQuery {
+    return elem != null && typeof elem === 'object' && elem.length && typeof elem.attr === 'function';
+}
 
 function isInternalLink(element: HTMLElement | JQuery): boolean {
     if (element == null) {
         return false;
     }
     if (isJQueryElement(element)) {
-        return element.attr(ALOHA_REPO) != null;
+        return element.attr(ATTR_ALOHA_REPO) != null;
     }
-    return element.getAttribute(ALOHA_REPO) != null;
+    return element.getAttribute(ATTR_ALOHA_REPO) != null;
 }
 
 function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): string {
@@ -65,13 +71,6 @@ function normalizeURL(url: string, settings: GCNLinkCheckerPluginSettings): stri
 
     return url;
 }
-
-function isJQueryElement(elem: any): elem is JQuery {
-    return elem != null && typeof elem === 'object' && elem.length && typeof elem.attr === 'function';
-}
-
-const ATTR_QUEUED_LINK_CHECK = 'gcmsui-queued-link-check';
-const DEFAULT_DELAY = 500;
 
 @Component({
     selector: 'gtx-page-editor-controls',
@@ -235,6 +234,11 @@ export class PageEditorControlsComponent implements OnInit, AfterViewInit, OnDes
             }
 
             this.subscriptions.push(this.aloha.require('gcnlinkchecker/gcnlinkchecker-plugin').subscribe(plugin => {
+                if (plugin == null) {
+                    this.linkCheckerPlugin = null;
+                    return;
+                }
+
                 this.linkCheckerPlugin = plugin;
                 this.brokenLinkElements = this.linkCheckerPlugin.initializeBrokenLinks(this.initialBrokenLinks).slice();
                 this.brokenLinkCountChange.emit(this.linkCheckerPlugin.brokenLinks.length);

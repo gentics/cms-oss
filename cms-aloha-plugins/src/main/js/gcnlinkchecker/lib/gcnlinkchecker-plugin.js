@@ -73,6 +73,7 @@ define([
     'jquery',
     'aloha/core',
     'aloha/plugin',
+    'aloha/ephemera',
     'link/link-plugin',
     'gcn/gcn-plugin',
     'css!gcnlinkchecker/css/gcnlinkchecker.css'
@@ -80,6 +81,7 @@ define([
     $,
     Aloha,
     Plugin,
+    Ephemera,
     LinkPlugin,
     GCNPlugin
 ) {
@@ -92,6 +94,7 @@ define([
     var CLASS_INVALID_URL = 'aloha-gcnlinkchecker-invalid-url';
     var CLASS_LINK = 'aloha-link-text';
     var ATTR_TAG_ID = 'data-gcn-tagid';
+    var ATTR_QUEUED_LINK_CHECK = 'gcmsui-queued-link-check';
     var DEFAULT_SETTINGS = {
         defaultProtocol: 'http',
         livecheck: true,
@@ -133,6 +136,9 @@ define([
          * Initialize the plugin
          */
         init: function () {
+            Ephemera.classes(CLASS_LINK_CHECKER_ITEM, CLASS_CHECKED, CLASS_UNCHECKED, CLASS_VALID_URL, CLASS_INVALID_URL);
+            Ephemera.attributes(ATTR_QUEUED_LINK_CHECK);
+
             // in old UI - where GCMSUI is not defined, just run the plugin
             // in the new UI - do nothing in preview mode
             if (typeof GCMSUI === 'undefined' || (typeof GCMSUI.appState !== 'undefined' && GCMSUI.appState.editMode !== 'preview')) {

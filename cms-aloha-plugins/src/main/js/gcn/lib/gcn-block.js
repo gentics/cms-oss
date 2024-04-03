@@ -8,6 +8,7 @@
 define([
 	'aloha/core',
 	'jquery',
+	'aloha/ephemera',
 	'block/block',
 	'gcn/gcn-util',
 	'gcn/gcn-tags',
@@ -16,13 +17,40 @@ define([
 ], function (
 	Aloha,
 	$,
-	block,
+	Ephemera,
+	Block,
 	Util,
 	Tags,
 	Dialog,
 	i18n,
 ) {
 	'use strict';
+
+	var STYLE_BLOCK_CONTENT_HEIGHT = '--gtx-block-content-height';
+	var STYLE_BLOCK_CONTENT_WIDTH = '--gtx-block-content-width';
+	var STYLE_BLOCK_HANDLE_HEIGHT = '--gtx-block-handle-height';
+	var STYLE_BLOCK_HANDLE_WIDTH = '--gtx-block-handle-width';
+
+	Ephemera.ephemera().pruneFns.push(function(node) {
+		if (node.style) {
+			node.style.removeProperty(STYLE_BLOCK_CONTENT_HEIGHT);
+			node.style.removeProperty(STYLE_BLOCK_CONTENT_WIDTH);
+			node.style.removeProperty(STYLE_BLOCK_HANDLE_HEIGHT);
+			node.style.removeProperty(STYLE_BLOCK_HANDLE_WIDTH);
+
+			// If no inline-styles are applied, remove the entire attribute
+			if (node.style.length === 0) {
+				node.removeAttribute('style');
+			}
+		}
+		// Same goes for now empty class attributes
+		if (node.classList) {
+			if (node.classList.length === 0) {
+				node.removeAttribute('class');
+			}
+		}
+		return node;
+	});
 
 	/**
 	 * Get the page object with given Id stored in the plugin or
@@ -216,7 +244,7 @@ define([
 	 * @class
 	 * @extends AbstractBlock
 	 */
-	var GCNBlock = block.AbstractBlock.extend({
+	var GCNBlock = Block.AbstractBlock.extend({
 
 		/**
 		 * Initializes a GCN block.  If annotations on the block indicate that
@@ -365,12 +393,13 @@ define([
 			}, 0);
 
 			$block.prepend($blockHandleContainer);
+			Ephemera.markElement($blockHandleContainer);
 
 			function setSizeProperties() {
-				$block.css('--gtx-block-content-height', $block.height() + 'px');
-				$block.css('--gtx-block-content-width', $block.width() + 'px');
-				$block.css('--gtx-block-handle-height', $blockHandleContainer.height() + 'px');
-				$block.css('--gtx-block-handle-width', $blockHandleContainer.width() + 'px');
+				$block.css(STYLE_BLOCK_CONTENT_HEIGHT, $block.height() + 'px');
+				$block.css(STYLE_BLOCK_CONTENT_WIDTH, $block.width() + 'px');
+				$block.css(STYLE_BLOCK_HANDLE_HEIGHT, $blockHandleContainer.height() + 'px');
+				$block.css(STYLE_BLOCK_HANDLE_WIDTH, $blockHandleContainer.width() + 'px');
 			}
 			block._observer = new ResizeObserver(setSizeProperties);
 			block._observer.observe($block[0]);

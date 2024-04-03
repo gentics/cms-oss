@@ -14,6 +14,7 @@ define('gcn/gcn-links', [
 	'aloha',
 	'PubSub',
 	'aloha/pluginmanager',
+	'aloha/ephemera',
 	'util/dom-to-xhtml',
 	'i18n!gcn/nls/i18n',
 ], function (
@@ -22,6 +23,7 @@ define('gcn/gcn-links', [
 	Aloha,
 	PubSub,
 	PluginManager,
+	Ephemera,
 	DomToXhtml,
 	i18n
 ) {
@@ -50,6 +52,8 @@ define('gcn/gcn-links', [
 	var TYPE_PAGE = '10007';
 	var TYPE_FILE = '10008';
 	var TYPE_IMAGE = '10011';
+
+	Ephemera.attributes(ATTR_TAG_NAME, ATTR_OBJECT_ONLINE);
 
 	/**
 	 * Matches an absolute URI.

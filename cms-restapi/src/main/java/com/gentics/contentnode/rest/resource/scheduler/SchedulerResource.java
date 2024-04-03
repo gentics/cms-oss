@@ -99,7 +99,23 @@ public interface SchedulerResource {
 			@BeanParam SchedulerJobFilterParameterBean jobFilter) throws Exception;
 
 	/**
-	 * List scheduler tasks
+	 * List scheduler tasks.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>command</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>command</code></li>
+	 * <li><code>cdate</code></li>
+	 * <li><code>edate</code></li>
+	 * </ul>
 	 * @param filter filter parameter bean
 	 * @param sorting sorting parameter bean
 	 * @param paging paging parameter bean
@@ -162,7 +178,23 @@ public interface SchedulerResource {
 	GenericResponse deleteTask(@PathParam("id") String taskId) throws Exception;
 
 	/**
-	 * List scheduler schedules
+	 * List scheduler schedules.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>taskId</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>taskId</code></li>
+	 * <li><code>cdate</code></li>
+	 * <li><code>edate</code></li>
+	 * </ul>
 	 * @param filter filter parameter bean
 	 * @param sorting sorting parameter bean
 	 * @param paging paging parameter bean
@@ -248,8 +280,21 @@ public interface SchedulerResource {
 	GenericResponse executeSchedule(@PathParam("id") String scheduleId) throws Exception;
 
 	/**
-	 * List all executions of the given schedule which match the filters.
-	 *
+	 * List all executions of the given schedule which match the filters.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>scheduleId</code></li>
+	 * <li><code>log</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>startTime</code></li>
+	 * <li><code>endTime</code></li>
+	 * <li><code>duration</code></li>
+	 * <li><code>result</code></li>
+	 * </ul>
 	 * @param scheduleId schedule ID
 	 * @param filter filter parameter bean
 	 * @param sorting sorting parameter bean

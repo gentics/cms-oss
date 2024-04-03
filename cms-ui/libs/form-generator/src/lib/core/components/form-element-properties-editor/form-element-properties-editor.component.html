@@ -49,6 +49,7 @@
                     [requiredInCurrentLanguage]="property.required"
                     [language]="formEditorService.activeContentLanguageCode$ | async"
                     [multiple]="property.multiple"
+                    [clearable]="!property.required"
                     [availableLanguages]="formEditorService.formLanguages$ | async"
                 >
                     <gtx-option

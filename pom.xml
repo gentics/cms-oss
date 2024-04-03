@@ -5,7 +5,7 @@
 
 	<groupId>com.gentics</groupId>
 	<artifactId>cms-oss</artifactId>
-	<version>6.0.10-SNAPSHOT</version>
+	<version>6.0.21-SNAPSHOT</version>
 	<name>Gentics CMS OSS - Project Root</name>
 	<packaging>pom</packaging>
 	<description>This is the project root</description>
@@ -54,12 +54,12 @@
 
 	<properties>
 		<!-- Dynamic third party dependencies -->
-		<alohaeditor.version>1.5.0</alohaeditor.version>
+		<alohaeditor.version>1.5.1</alohaeditor.version>
 
 		<!-- dd.MM.YYYY -->
-		<alohaeditor.date>27.06.2023</alohaeditor.date>
+		<alohaeditor.date>03.04.2024</alohaeditor.date>
 		<!-- Dependency to Mesh Client Version. Tested Mesh Server Version is defined with com.gentics.contentnode.testutils.mesh.MeshContext.TESTED_MESH_VERSION -->
-		<mesh.version>2.0.4</mesh.version>
+		<mesh.version>2.0.14</mesh.version>
 		<mesh.forms.plugin.version>1.10.0</mesh.forms.plugin.version>
 
 		<!-- When updating the dependency to jersey, also update the dependencies to jetty and jackson accordingly -->
@@ -85,6 +85,7 @@
 		<nekohtml.version>1.9.22</nekohtml.version>
 		<spring.version>5.7.10</spring.version>
 		<org.json.version>20230227</org.json.version>
+		<commons-text.version>1.11.0</commons-text.version>
 
 		<!-- TODO: integrate generic-testutils -->
 		<generic-testutils.version>1.15.7</generic-testutils.version>

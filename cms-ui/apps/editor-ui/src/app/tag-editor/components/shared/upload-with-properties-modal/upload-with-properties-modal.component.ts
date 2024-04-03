@@ -1,7 +1,7 @@
 import { Component, Input, ViewChild } from '@angular/core';
-import { Folder } from '@gentics/cms-models';
+import { FileUpload, Folder } from '@gentics/cms-models';
 import { BaseModal, IModalDialog } from '@gentics/ui-core';
-import { FileUpload, UploadWithPropertiesComponent } from '../upload-with-properties/upload-with-properties.component';
+import { UploadWithPropertiesComponent } from '../upload-with-properties/upload-with-properties.component';
 
 /**
  * A modal for the user to upload a new image or file.
@@ -9,7 +9,7 @@ import { FileUpload, UploadWithPropertiesComponent } from '../upload-with-proper
 @Component({
     selector: 'upload-with-properties-modal',
     templateUrl: './upload-with-properties-modal.component.html',
-    styleUrls: ['./upload-with-properties-modal.component.scss']
+    styleUrls: ['./upload-with-properties-modal.component.scss'],
 })
 export class UploadWithPropertiesModalComponent extends BaseModal<FileUpload> implements IModalDialog {
 
@@ -34,7 +34,7 @@ export class UploadWithPropertiesModalComponent extends BaseModal<FileUpload> im
     @ViewChild(UploadWithPropertiesComponent, { static: true })
     uploadWithPropertiesComponent: UploadWithPropertiesComponent;
 
-    uploadPossible: boolean = false;
+    uploadPossible = false;
 
     onUploadPossible(uploadPossible: boolean): void {
         this.uploadPossible = uploadPossible;

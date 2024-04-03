@@ -227,6 +227,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		resolvableProperties.put("name", new NodeObjectProperty<>((o, key) -> o.getName().toString(), "name"));
 		resolvableProperties.put("description", new NodeObjectProperty<>((o, key) -> o.getDescription().toString(), "description"));
 		resolvableProperties.put("keyword", new NodeObjectProperty<>((o, key) -> o.getKeyword(), "keyword"));
+		resolvableProperties.put("category", new NodeObjectProperty<>((o, key) -> o.getConstructCategory(), "category"));
 	}
 
 	@Override
@@ -405,6 +406,13 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		tags.addAll(getObjectTags());
 		return tags;
 	}
+
+	/**
+	 * Check whether the construct is used
+	 * @return true, iff the construct is used
+	 * @throws NodeException
+	 */
+	public abstract boolean isUsed() throws NodeException;
 
 	public String getStackHashKey() {
 		return "construct:" + getHashKey();

@@ -1,0 +1,2 @@
+If removing a "publish at" or "offline at" time was denied due to insufficient permissions, the request still succeeded and no
+appropriate message was shown to the user. This has been fixed.

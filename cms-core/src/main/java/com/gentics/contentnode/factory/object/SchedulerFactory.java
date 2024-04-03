@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,6 +46,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
@@ -108,7 +108,7 @@ public class SchedulerFactory extends AbstractFactory {
 	/**
 	 * Loader for the implementations of {@link InternalSchedulerTaskService}
 	 */
-	private final static ServiceLoader<InternalSchedulerTaskService> taskProviderLoader = ServiceLoader
+	private final static ServiceLoaderUtil<InternalSchedulerTaskService> taskProviderLoader = ServiceLoaderUtil
 			.load(InternalSchedulerTaskService.class);
 
 	/**
@@ -1154,7 +1154,7 @@ public class SchedulerFactory extends AbstractFactory {
 				original = t.getObject(SchedulerTask.class, getId());
 			}
 
-			name = ObjectTransformer.getString(name, "");
+			name = ObjectTransformer.getString(name, "").trim();
 			description = ObjectTransformer.getString(description, "");
 
 			// make the name unique
@@ -1461,7 +1461,7 @@ public class SchedulerFactory extends AbstractFactory {
 						Boolean result = null;
 
 						while (rs.next() && (result == null || !result)) {
-							result = rs.getByte("result") == 0;
+							result = rs.getInt("result") == 0;
 						}
 
 						return result;
@@ -1484,7 +1484,7 @@ public class SchedulerFactory extends AbstractFactory {
 					return false;
 				}
 
-				return interval.isDue(execution.getStartTime(), timestamp);
+				return interval.isDue(scheduleData.getStartTimestamp(), execution.getStartTime(), timestamp, ZoneId.systemDefault());
 			case manual:
 				// schedule is only executed manually
 				return false;

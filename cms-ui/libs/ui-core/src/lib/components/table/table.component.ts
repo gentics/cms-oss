@@ -45,9 +45,12 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
     @Input()
     public perPage = 10;
 
-    /** The total amount of items/rows that exist. */
+    /**
+     * The total amount of items/rows that exist.
+     * May only be set if the table should not automatically paginate the rows.
+     */
     @Input()
-    public totalCount: number;
+    public totalCount: number | null = null;
 
     /** Event which emits when the page is changed. */
     @Output()
@@ -111,6 +114,13 @@ export class TableComponent<T> extends BaseTableComponent<T, TableRow<T>> implem
         }
 
         this.selectedChange.emit(copy);
+    }
+
+    public handlePageChange(toPage: number): void {
+        if (this.totalCount == null) {
+            this.page = toPage;
+        }
+        this.pageChange.emit(toPage)
     }
 
     protected recalculateAllSelected(): void {

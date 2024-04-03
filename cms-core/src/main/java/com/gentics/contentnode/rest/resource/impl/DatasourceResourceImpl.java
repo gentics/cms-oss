@@ -82,10 +82,14 @@ public class DatasourceResourceImpl implements DatasourceResource {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Set<Integer> ids = DBUtils.select("SELECT id FROM datasource WHERE name != ''", DBUtils.IDS);
 			trx.success();
+
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("type", "sourceType");
+
 			return ListBuilder.from(trx.getTransaction().getObjects(com.gentics.contentnode.object.Datasource.class, ids), com.gentics.contentnode.object.Datasource.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "type"))
-					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "type"))
+					.filter(ResolvableFilter.get(filter, fieldMap, "id", "globalId", "name", "type"))
+					.sort(ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "name", "type"))
 					.page(paging).to(new PagedDatasourceListResponse());
 		}
 	}
@@ -211,10 +215,13 @@ public class DatasourceResourceImpl implements DatasourceResource {
 					}, DBUtils.IDS);
 			List<Construct> constructs = trx.getTransaction().getObjects(Construct.class, constructIds);
 
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("category", "category.name");
+
 			ConstructList response = ListBuilder.from(constructs, Construct.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "keyword", "description", "category"))
-					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "keyword", "description", "category"))
+					.filter(ResolvableFilter.get(filter, fieldMap, "id", "globalId", "name", "keyword", "description", "category"))
+					.sort(ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "name", "keyword", "description", "category"))
 					.embed(embed, "category", com.gentics.contentnode.object.Construct.EMBED_CATEGORY)
 					.page(paging).to(new ConstructList());
 

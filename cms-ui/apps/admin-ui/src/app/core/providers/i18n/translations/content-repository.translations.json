@@ -19,6 +19,10 @@
         "en": "{{amountSelected}} of {{amountTotal}} ContentRepositories selected",
         "de": "{{amountSelected}} von {{amountTotal}} ContentRepositories ausgewählt"
     },
+    "info_selected_roles": {
+        "en": "{{amountSelected}} of {{amountTotal}} Roles selected",
+        "de": "{{amountSelected}} von {{amountTotal}} Rollen ausgewählt"
+    },
     "globalId": {
         "en": "Global Id",
         "de": "Globale Id"
@@ -94,6 +98,10 @@
     "version": {
         "en": "Implementation version",
         "de": "Implementierungsversion"
+    },
+    "synchronizeRoles": {
+        "en": "Synchronize Mesh Roles",
+        "de": "Mesh Rollen synchronisieren"
     },
     "checkDate": {
         "en": "Check Date",
@@ -190,5 +198,9 @@
     "result_entries_checked": {
         "en": "Tagmap entries of {{name}} checked",
         "de": "Tagmap-Einträge von {{name}} üperprüft"
+    },
+    "assign_mesh_roles_success": {
+        "en": "Mesh Roles have been successfully assign",
+        "de": "Mesh Rollen wurden erfolgreich zugewiesen"
     }
 }

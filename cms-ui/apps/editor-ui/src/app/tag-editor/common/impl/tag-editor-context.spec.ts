@@ -9,7 +9,7 @@ const SID = 7890;
 const VAR_CONTEXTS: VariableTagEditorContext[] = [
     { uiLanguage: 'de' },
     { uiLanguage: 'en' },
-    { uiLanguage: 'de' }
+    { uiLanguage: 'de' },
 ];
 
 const TAG = getExampleEditableTag();
@@ -53,7 +53,11 @@ describe('TagEditorContextImpl', () => {
         translator = getMockTagEditorTranslator();
         gcmsUiServices = {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
-            openImageEditor: jasmine.createSpy('openImageEditor')
+            openImageEditor: jasmine.createSpy('openImageEditor'),
+            openUploadModal: jasmine.createSpy('openUploadModal'),
+            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
+            restRequestGET: jasmine.createSpy('restRequestGET'),
+            restRequestPOST: jasmine.createSpy('restRequestPOST'),
         };
     });
 

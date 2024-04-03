@@ -256,7 +256,7 @@ public class ModelBuilder {
 		urlFactory.setAllowAutoDetection(false);
 		urlFactory.setLinkManagement(LinkManagement.OFF);
 
-		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, object, false, false)) {
+		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_ALOHA_READONLY, object, false, false, false)) {
 			return urlFactory.createRenderUrl(object.getObjectInfo().getObjectClass(), object.getId()).toString();
 		}
 	}
@@ -2489,9 +2489,10 @@ public class ModelBuilder {
 			}
 
 			// now we sort the list of entries
+			int sort = overview.getOrderWay() == Overview.ORDERWAY_DESC ? -1 : 1;
 			Collections.sort(entries, new Comparator<OverviewEntry>() {
 				public int compare(OverviewEntry o1, OverviewEntry o2) {
-					return o1.getObjectOrder() - o2.getObjectOrder();
+					return sort * (o1.getObjectOrder() - o2.getObjectOrder());
 				}
 			});
 		} else {
@@ -2571,9 +2572,10 @@ public class ModelBuilder {
 			}
 
 			// now we sort the list of entries
+			int sort = overview.getOrderWay() == Overview.ORDERWAY_DESC ? -1 : 1;
 			Collections.sort(entries, new Comparator<OverviewEntry>() {
 				public int compare(OverviewEntry o1, OverviewEntry o2) {
-					return o1.getObjectOrder() - o2.getObjectOrder();
+					return sort * (o1.getObjectOrder() - o2.getObjectOrder());
 				}
 			});
 		}

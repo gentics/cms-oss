@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.app.Velocity;
@@ -27,6 +26,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.PropertyNodeConfig;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.i18n.CNDictionary;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.jmx.SessionInfo;
@@ -61,9 +61,9 @@ public class NodeConfigRuntimeConfiguration {
 	private static Map<String, Object> overwriteConfig;
 
 	/**
-	 * ServiceLoader for the {@link ServletContextHandlerService}s
+	 * Loader for the {@link ServletContextHandlerService}s
 	 */
-	protected static ServiceLoader<ServletContextHandlerService> servletContextHandlerServiceLoader;
+	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
 
 	/**
 	 * Configuration instance
@@ -88,10 +88,10 @@ public class NodeConfigRuntimeConfiguration {
 	}
 
 	/**
-	 * Set the ServiceLoader for the {@link ServletContextHandlerService}
+	 * Set the Loader for the {@link ServletContextHandlerService}
 	 * @param loader loader
 	 */
-	public static void setServletContextHandlerServiceLoader(ServiceLoader<ServletContextHandlerService> loader) {
+	public static void setServletContextHandlerServiceLoader(ServiceLoaderUtil<ServletContextHandlerService> loader) {
 		servletContextHandlerServiceLoader = loader;
 	}
 

@@ -51,8 +51,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface PackageResource {
 	/**
-	 * List available packages
-	 *
+	 * List available packages.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>constructs</code></li>
+	 * <li><code>datasources</code></li>
+	 * <li><code>templates</code></li>
+	 * <li><code>objectProperties</code></li>
+	 * <li><code>crFragments</code></li>
+	 * <li><code>contentRepositories</code></li>
+	 * </ul>
 	 * @param filter  filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging  paging parameters
@@ -140,7 +153,19 @@ public interface PackageResource {
 	GenericResponse synchronizeFromFS(@PathParam("name") String name, @QueryParam("wait") @DefaultValue("0") long waitMs) throws Exception;
 
 	/**
-	 * Get the list of constructs assigned to the package
+	 * Get the list of constructs assigned to the package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -208,7 +233,17 @@ public interface PackageResource {
 	Response removeConstruct(@PathParam("name") String name, @PathParam("construct") String construct) throws Exception;
 
 	/**
-	 * Get the templates of a package
+	 * Get the templates of a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -274,7 +309,15 @@ public interface PackageResource {
 	Response removeTemplate(@PathParam("name") String name, @PathParam("template") String template) throws Exception;
 
 	/**
-	 * Get the datasources in a package
+	 * Get the datasources in a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -340,7 +383,23 @@ public interface PackageResource {
 	Response removeDatasource(@PathParam("name") String name, @PathParam("datasource") String datasource) throws Exception;
 
 	/**
-	 * Get the object properties in a package
+	 * Get the object properties in a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>keyword</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>type</code></li>
+	 * <li><code>required</code></li>
+	 * <li><code>inheritable</code></li>
+	 * <li><code>construct.name</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -408,7 +467,15 @@ public interface PackageResource {
 	Response removeObjectProperty(@PathParam("name") String name, @PathParam("objectproperty") String objectproperty) throws Exception;
 
 	/**
-	 * Get the ContentRepository Fragments in a package
+	 * Get the ContentRepository Fragments in a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -476,7 +543,17 @@ public interface PackageResource {
 	Response removeCrFragment(@PathParam("name") String name, @PathParam("cr_fragment") String crFragment) throws Exception;
 
 	/**
-	 * Get the ContentRepositories in a package
+	 * Get the ContentRepositories in a package.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>crType</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>crType</code></li>
+	 * </ul>
 	 * @param name Package name
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
@@ -544,7 +621,21 @@ public interface PackageResource {
 	Response removeContentRepository(@PathParam("name") String name, @PathParam("contentrepository") String contentrepository) throws Exception;
 
 	/**
-	 * List packages assigned to a node. It is not possible to get packages to channels
+	 * List packages assigned to a node. It is not possible to get packages to channels.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>constructs</code></li>
+	 * <li><code>datasources</code></li>
+	 * <li><code>templates</code></li>
+	 * <li><code>objectProperties</code></li>
+	 * <li><code>crFragments</code></li>
+	 * <li><code>contentRepositories</code></li>
+	 * </ul>
 	 * @param nodeId Node ID (either global or local)
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters

@@ -59,6 +59,27 @@ public class TemplateEditSandboxTest {
 	}
 
 	/**
+	 * Tests leading/trailing spaces removal.
+	 * @throws NodeException
+	 */
+	@Test
+	public void testLeadingTrailingSpace() throws NodeException {
+		final int mlId = 1;
+		final String name = "  leadingtrailing  ";
+		final String source = " Leading and trailing spaces ";
+
+		Template newTemplate = create(Template.class, tmpl -> {
+			tmpl.setFolderId(FOLDER_ID);
+			tmpl.setMlId(mlId);
+			tmpl.setName(name);
+			tmpl.setSource(source);
+		});
+	
+		assertEquals(newTemplate.getName(), "leadingtrailing");
+		assertEquals(newTemplate.getSource(), " Leading and trailing spaces ");
+	}
+
+	/**
 	 * Test creation of a new template
 	 * 
 	 * @throws Exception

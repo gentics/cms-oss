@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
@@ -217,8 +218,15 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					refs.add(Reference.FOLDER);
 				}
 
+				Map<String, String> fieldMap = new HashMap<>();
+				fieldMap.put("niceUrl", "nice_url");
+				fieldMap.put("alternateUrls", "alternate_urls");
+				fieldMap.put("fileSize", "size");
+				fieldMap.put("fileType", "type");
+
 				ResolvableComparator<File> comparator = ResolvableComparator.get(
 					sortingParams,
+					fieldMap,
 					// From AbstractContentObject
 					"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
 					// From ContentFile
@@ -227,7 +235,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					"extension", "creator", "ersteller", "editor", "bearbeiter", "createtimestamp",
 					"createtimstamp", "createdate", "edittimestamp", "editdate", "type", "object",
 					"url", "width", "sizex", "height", "sizey", "dpix", "dpiy", "dpi", "fpx", "fpy",
-					"gis_resisable", "ismaster", "inherited", "ice_url", "alternate_urls");
+					"gis_resisable", "ismaster", "inherited", "nice_url", "alternate_urls", "niceUrl", "alternateUrls", "fileSize", "fileType");
 				FileListResponse list = ListBuilder.from(files, file -> ModelBuilder.getFile(file, refs))
 					.sort(comparator)
 					.page(pagingParams)
@@ -519,7 +527,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					if (finalFileId == null) {
 						// Create a new file
 						return createFile(inputStream, false, request.getContentLength(), folderId,
-							nodeId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
+							nodeId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
 						return saveFile(inputStream, finalFileId, fileName, request.getContentType(), description, null, Collections.emptySet(), Collections.emptyMap());
@@ -657,7 +665,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				if (fileId == 0) {
 					// Create a new file
 					return createFile(fileDataInputStream, isImage, contentLength, folderId, nodeId, filename,
-							mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
+							mediaType, description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 				} else {
 					// Save data to an existing file
 					return saveFile(fileDataInputStream, fileId, filename, mediaType, description, null, Collections.emptySet(), Collections.emptyMap());
@@ -796,7 +804,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						if (finalFileId == 0) {
 							// Create a new file
 							return createFile(fileDataInputStream, false, 0, request.getFolderId(), request.getNodeId(), request.getName(),
-								null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+								null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
 							return saveFile(fileDataInputStream, finalFileId, request.getName(), null, request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
@@ -828,11 +836,13 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @param niceUrl The files nice URL.
 	 * @param alternateUrls The files alternate URLs.
 	 * @param properties Additional properties to be saved to the files object properties.
+	 * @param objectTags object tags to copy into the new file
 	 * @return
 	 * @throws NodeException
 	 */
 	private FileUploadResponse createFile(InputStream input, boolean isImage, long contentLength, int folderId, int nodeId, String fileName,
-			String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+			String mediaType, String description, String niceUrl, Set<String> alternateUrls, 
+			Map<String, String> properties, Map<String, ObjectTag> objectTags) throws NodeException {
 
 		Transaction t = getTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
@@ -872,7 +882,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		file.setFiletype(mediaType);
 		file.setFolderId(folderId);
 
-		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties);
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, objectTags);
 	}
 
 	/**
@@ -915,7 +925,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			throw new NodeException(msg, new Exception(i18nMessage.toString()));
 		}
 
-		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties);
+		return saveFileData(file, input, fileName, mediaType, description, niceUrl, alternateUrls, properties, Collections.emptyMap());
 	}
 
 	/**
@@ -930,7 +940,9 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @return A {@code FileUploadResponse} corresponding to the saved file.
 	 * @throws NodeException
 	 */
-	private FileUploadResponse saveFileData(File file, InputStream input, String fileName, String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+	private FileUploadResponse saveFileData(File file, InputStream input, String fileName, String mediaType, String description, 
+			String niceUrl, Set<String> alternateUrls, 
+			Map<String, String> properties, Map<String, ObjectTag> objectTags) throws NodeException {
 		Transaction t = getTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 
@@ -976,6 +988,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		// Load the file again
 		File loadedFile = getFile(file.getId().toString(), true);
 
+		copyObjectTags(loadedFile, objectTags);
 		setProperties(loadedFile, properties);
 		loadedFile.save();
 		t.commit(false);
@@ -1019,6 +1032,20 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 					break;
 				}
 			}
+		}
+	}
+	/**
+	 * Copy specified object tags into the object tags of the given file.
+	 *
+	 * @param file The file to copy the tags into.
+	 * @param tags The tags to copy into the files object properties.
+	 */
+	private void copyObjectTags(File file, Map<String, ObjectTag> tags) throws NodeException {
+		if (tags == null) {
+			return;
+		}
+		for (Entry<String, ObjectTag> property : tags.entrySet()) {
+			file.getObjectTags().put(property.getKey(), (ObjectTag) property.getValue().copy());
 		}
 	}
 
@@ -1110,7 +1137,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				file.getDescription(),
 				null,
 				Collections.emptySet(),
-				Collections.emptyMap());
+				Collections.emptyMap(),
+				file.getObjectTags());
 		}
 
 		File newFile;

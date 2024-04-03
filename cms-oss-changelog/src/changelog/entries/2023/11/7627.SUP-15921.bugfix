@@ -1,0 +1,1 @@
+Editor User Interface: When opened by a user without permission to see a single node, the button for opening the Administration Interface will now correcly open the Admin UI.

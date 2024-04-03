@@ -8,31 +8,18 @@ import {
     OnDestroy,
     OnInit,
     Output,
-    SimpleChange
+    SimpleChange,
 } from '@angular/core';
-import { EditableFileProps, FileCreateRequest, FileOrImage, Folder, Raw } from '@gentics/cms-models';
+import { EditableFileProps, FileCreateRequest, FileOrImage, FileUpload, Folder, Raw } from '@gentics/cms-models';
 import { UploadResponse } from '@gentics/cms-rest-clients-angular';
 import { IFileDropAreaOptions, ModalService } from '@gentics/ui-core';
-import { Observable, of, Subscription } from 'rxjs';
+import { Observable, Subscription, of } from 'rxjs';
 import { finalize, switchMap, tap } from 'rxjs/operators';
 import { I18nService } from '../../../../core/providers/i18n/i18n.service';
 import { UploadConflictService } from '../../../../core/providers/upload-conflict/upload-conflict.service';
 import { GtxExternalAssetManagementApiRootObject } from '../../../../shared/components/external-assets-modal/external-assets-modal.component';
 import { RepositoryBrowserClient } from '../../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { FolderActionsService } from '../../../../state';
-
-/**
- * Associates an uploaded file with its destination folder.
- */
-export interface FileUpload {
-
-    /** The folder that the file was uploaded to. */
-    destinationFolder: Folder;
-
-    /** The file that has been uploaded. */
-    file: FileOrImage<Raw>;
-
-}
 
 /**
  * Allows the user to upload a file or image and modify its editable properties right after the upload.
@@ -147,7 +134,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
             })
-            .then(dialog => dialog.open());
+                .then(dialog => dialog.open());
         }
     }
 
@@ -168,7 +155,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
             })
-            .then(dialog => dialog.open());
+                .then(dialog => dialog.open());
         }
         if (this.itemType !== 'image' && this.selectionToUpload.fileCategory === 'image') {
             this.modalService.dialog({
@@ -178,7 +165,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
                     { label: this.i18nService.translate('tag_editor.okay_button'), type: 'default', returnValue: true },
                 ],
             })
-            .then(dialog => dialog.open());
+                .then(dialog => dialog.open());
         }
 
         this.uploadPossible.emit(true);
@@ -194,14 +181,14 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     onUploadClick(): void {
         if (this.fileToUpload) {
-            this._onUploadClick();
+            this.handleFileToUpload();
         }
         if (this.selectionToUpload) {
-            this._onAssetUploadClick();
+            this.handleAssetUpload();
         }
     }
 
-    private _onUploadClick(): void {
+    private handleFileToUpload(): void {
         const upload$ = this.uploadFileOrImage(this.fileToUpload, this.destinationFolder, this.removeUnsetProperties(this.fileProperties));
         if (upload$) {
             const sub = upload$.subscribe(uploadedItem => {
@@ -216,7 +203,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
         }
     }
 
-    private _onAssetUploadClick(): void {
+    private handleAssetUpload(): void {
         const fileCategory = this.selectionToUpload.fileCategory === 'image' ? 'image' : 'file';
         const payload: FileCreateRequest = {
             overwriteExisting: false,
@@ -246,7 +233,7 @@ export class UploadWithPropertiesComponent implements OnInit, OnChanges, OnDestr
 
     private removeUnsetProperties(properties: EditableFileProps): EditableFileProps {
         const ret: EditableFileProps = {};
-        for (let key of (Object.keys(properties) as (keyof EditableFileProps)[])) {
+        for (const key of (Object.keys(properties) as (keyof EditableFileProps)[])) {
             const value = properties[key];
             if (value !== null && value !== undefined) {
                 ret[key as any] = value;

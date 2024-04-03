@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Vector;
 
 import org.apache.logging.log4j.Level;
@@ -16,6 +15,7 @@ import com.gentics.contentnode.devtools.ChangeWatchService;
 import com.gentics.contentnode.devtools.SynchronizableNodeObject;
 import com.gentics.contentnode.devtools.Synchronizer;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
@@ -122,7 +122,7 @@ public final class Events {
 	/**
 	 * Loader for {@link EventsService}s
 	 */
-	protected final static ServiceLoader<EventsService> eventsServiceLoader = ServiceLoader.load(EventsService.class);
+	protected final static ServiceLoaderUtil<EventsService> eventsServiceLoader = ServiceLoaderUtil.load(EventsService.class);
 
 	/**
 	 * Check whether the given mask contains the given event

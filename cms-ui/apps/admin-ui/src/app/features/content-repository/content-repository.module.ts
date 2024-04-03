@@ -6,6 +6,7 @@ import {
     ContentRepositoryMasterComponent,
     ContentRepositoryPropertiesComponent,
     CreateContentRepositoryModalComponent,
+    ManageContentRepositoryRolesModal,
 } from './components';
 import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
 import { CanActivateContentRepositoryGuard } from './providers';
@@ -16,6 +17,7 @@ import { CanActivateContentRepositoryGuard } from './providers';
         ContentRepositoryMasterComponent,
         ContentRepositoryPropertiesComponent,
         CreateContentRepositoryModalComponent,
+        ManageContentRepositoryRolesModal,
     ],
     providers: [
         CanActivateContentRepositoryGuard,

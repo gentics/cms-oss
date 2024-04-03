@@ -205,9 +205,6 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     },
                     typePermissions: [
                         {
-                            // There is not yet a dedicated permission for Elastic Search Index maintenance defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
                             type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
                             permissions: [
                                 GcmsPermission.READ,
@@ -228,10 +225,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     },
                     typePermissions: [
                         {
-                            // There is not yet a dedicated permission for Package Management defined in the backend, as you can see here:
-                            // tslint:disable-next-line: max-line-length
-                            // https://git.gentics.com/psc/contentnode/blob/hotfix-leonore/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
-                            type: AccessControlledType.SEARCH_INDEX_MAINTENANCE,
+                            type: AccessControlledType.DEVTOOL_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],
@@ -356,7 +350,7 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
                     childOutletsForBreadcrumbs: ['detail'],
                     typePermissions: [
                         {
-                            type: AccessControlledType.ADMIN,
+                            type: AccessControlledType.CONTENT_ADMIN,
                             permissions: [
                                 GcmsPermission.READ,
                             ],
@@ -472,6 +466,10 @@ const ADMIN_UI_ROUTES: GcmsAdminUiRoute[] = [
         canActivate: [AuthGuard],
         pathMatch: 'full',
         loadChildren: () => import('./login/login.module').then(m => m.LoginModule),
+    },
+    {
+        path: '**',
+        redirectTo: '/',
     },
 ];
 

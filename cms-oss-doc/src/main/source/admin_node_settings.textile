@@ -7,6 +7,9 @@ endprologue.
 h3. Setting and retrieving custom settings
 
 Node specific settings can be configured via the variable @node_settings@ using either the local ID or global ID or name of the node:
+
+NOTE: Configuration per local ID, global ID and name cannot be mixed. The CMS will first look for a configuration by global ID, if that is not found, by node name and if that is not found by local ID.
+
 <shell filename="conf/*.yml">
 node_settings:
   '3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f':

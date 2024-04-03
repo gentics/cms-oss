@@ -33,7 +33,7 @@ RUN adduser -D -u 1000 -G root -h /cms node && \
     mkdir /cms/libs   && chown 1000:0 /cms/libs  -R && chmod 770 /cms/libs && \
     mkdir /cms/content-packages   && chown 1000:0 /cms/content-packages  -R && chmod 770 /cms/content-packages && \
     mkdir /cms/scheduler-commands   && chown 1000:0 /cms/scheduler-commands  -R && chmod 770 /cms/scheduler-commands && \
-    apk add --no-cache bash rsync curl iputils busybox-extras tar nano
+    apk add --no-cache bash rsync curl iputils busybox-extras tar nano mariadb-client
 
 ADD --chown=1000:0 ./target/cms-oss-server*jar /cms/cms-oss-server.jar
 ADD --chown=1000:0 entrypoint.sh /cms/

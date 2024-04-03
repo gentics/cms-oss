@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -50,6 +49,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.NodeConfig;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.Events;
 import com.gentics.contentnode.events.TransactionalTriggerEvent;
@@ -68,6 +68,7 @@ import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.url.AlternateUrlsContainer;
 import com.gentics.contentnode.factory.url.ContentFileAlternateUrlsContainer;
+import com.gentics.contentnode.i18n.I18NHelper;
 import com.gentics.contentnode.io.FileManager;
 import com.gentics.contentnode.log.ActionLogger;
 import com.gentics.contentnode.object.ContentFile;
@@ -162,7 +163,7 @@ public class FileFactory extends AbstractFactory {
 	/**
 	 * Loader for {@link FileService}s
 	 */
-	protected final static ServiceLoader<FileService> fileFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<FileService> fileFactoryServiceLoader = ServiceLoaderUtil
 			.load(FileService.class);
 
 	/**
@@ -2167,7 +2168,7 @@ public class FileFactory extends AbstractFactory {
 					}
 					if (dim != null && imageSizeLimits != null && imageSizeLimits.length == 2) {
 						if (imageSizeLimits[0] < dim.x || imageSizeLimits[1] < dim.y) {
-							throw new NodeException(String.format("Image dimensions %s exceed the allowed limit %s", dim.toString(), Arrays.toString(imageSizeLimits)));
+							throw new NodeException(I18NHelper.get("image.exceeds.maxdimensions", Integer.toString(dim.x), Integer.toString(dim.y), Integer.toString(imageSizeLimits[0]), Integer.toString(imageSizeLimits[1])));
 						}
 					}
 				}
@@ -2377,7 +2378,6 @@ public class FileFactory extends AbstractFactory {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences nodePreferences = t.getNodeConfig().getDefaultPreferences();
 
-		@SuppressWarnings("unchecked")
 		Map<String, String> sanitizeCharacters = nodePreferences.getPropertyMap(
 				"sanitize_character");
 		String replacementChararacter = nodePreferences.getProperty(
@@ -2385,6 +2385,9 @@ public class FileFactory extends AbstractFactory {
 		String[] preservedCharacters = nodePreferences.getProperties(
 				"sanitize_allowed_characters");
 
+		if (!StringUtils.isEmpty(name)) {
+			name = name.trim();
+		}
 		return FileUtil.sanitizeName(
 				name, sanitizeCharacters, replacementChararacter, preservedCharacters);
 	}

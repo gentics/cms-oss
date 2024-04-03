@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -325,6 +326,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Default timeouts in seconds
 	 */
 	public final static int DEFAULT_TIMEOUT = 60;
+
+	/**
+	 * Threshold in ms for logging the wait time when putting an item to a queue
+	 */
+	public final static int QUEUE_WAIT_LOG_THRESHOLD_MS = 1000;
 
 	/**
 	 * Retry handler
@@ -2105,6 +2111,20 @@ public class MeshPublisher implements AutoCloseable {
 			checkedNode = project.node;
 		}
 
+		// when the checked node is null, the Mesh CR does not have "project per node" activated, so we need to check for all nodes, which are currently assigned to the Mesh CR
+		if (checkedNode == null && !cr.isProjectPerNode()) {
+			List<Node> nodes = cr.getNodes();
+			if (!CollectionUtils.isEmpty(nodes)) {
+				boolean consistent = true;
+				for (Node n : nodes) {
+					consistent &= checkObjectConsistency(project, branch, n, repair, publishProcess, meshUuidMap);
+				}
+				return consistent;
+			} else {
+				return true;
+			}
+		}
+
 		Set<Integer> types = new HashSet<>(schemaNames.keySet());
 		// also check forms, if the node is no channel and has the feature activated
 		if (checkedNode != null && !checkedNode.isChannel() && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, checkedNode)) {
@@ -2457,7 +2477,7 @@ public class MeshPublisher implements AutoCloseable {
 							Trx.operate(trx -> {
 								try (LangTrx lTrx = new LangTrx("en");
 										RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, form, controller.publishProcess,
-												controller.publishProcess)) {
+												controller.publishProcess, controller.publishProcess)) {
 
 									ObjectNode data = (ObjectNode) form.getData();
 									JsonNode downloadUrl = data == null ? null : data.get("downloadBaseUrl");
@@ -2555,7 +2575,7 @@ public class MeshPublisher implements AutoCloseable {
 				PublishCacheTrx pTrx = new PublishCacheTrx(controller.publishProcess);
 				PublishedNodeTrx pnTrx = TransactionManager.getCurrentTransaction().initPublishedNode(node);
 				RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, o.getObject(), handleDependencies,
-						storeDependencies)) {
+						storeDependencies, controller.publishProcess)) {
 			WriteTask task = new WriteTask();
 			// task.project is the current project of the node, not necessarily the desired project
 			task.project = meshObject != null ? meshObject.project : project;
@@ -2718,7 +2738,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = new HashMap<>(roleMapSingle.blockingGet());
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
 		}
 		return roleMap;
 	}
@@ -3662,10 +3682,14 @@ public class MeshPublisher implements AutoCloseable {
 		response = client.upsertNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
 				params);
 
+		AtomicLong start = new AtomicLong();
 		return ensureRoles(task.roles)
 			.andThen(
 				response.toSingle()
-					.doOnSubscribe(disp -> saveNodeCounter.incrementAndGet())
+					.doOnSubscribe(disp -> {
+						start.set(System.currentTimeMillis());
+						saveNodeCounter.incrementAndGet();
+					})
 					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
@@ -3678,8 +3702,9 @@ public class MeshPublisher implements AutoCloseable {
 					.doOnSuccess(node -> {
 						if (renderResult != null) {
 							try {
+								long duration = System.currentTimeMillis() - start.get();
 								renderResult.info(MeshPublisher.class,
-										String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
+										String.format("written %d.%d into {%s} for node %d in %d ms", task.objType, task.objId, cr.getName(), task.nodeId, duration));
 							} catch (NodeException e) {
 							}
 						}
@@ -3800,6 +3825,7 @@ public class MeshPublisher implements AutoCloseable {
 	protected ObjectPermissionGrantRequest createPermissionUpdateRequests(WriteTask task) {
 		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
 		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
+		request.setRead(Collections.emptyList());
 		request.setExclusive(true);
 		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
 		return request;
@@ -3833,14 +3859,12 @@ public class MeshPublisher implements AutoCloseable {
 			.filter(role -> !currentRolesMap.containsKey(role))
 			.doOnNext(role -> logger.debug("Creating missing role in Mesh: " + role))
 			.map(role -> new RoleCreateRequest().setName(role))
-			.flatMapCompletable(request -> client.createRole(request).toCompletable())
-			// Refresh the roles map.
-			.andThen(client.findRoles().toSingle())
-			.flatMapObservable(response -> Observable.fromIterable(response.getData()))
-			.filter(role -> !"admin".equals(role.getName()))
-			.toMap(RoleResponse::getName, RoleResponse::getUuid)
-			.doOnSuccess(loadedRolesMap -> roleMap = loadedRolesMap)
-			.ignoreElement();
+			.flatMapSingle(request -> client.createRole(request).toSingle())
+			.flatMapCompletable(role -> {
+				// put the created map into the roles map
+				currentRolesMap.put(role.getName(), role.getUuid());
+				return Completable.complete();
+			});
 	}
 
 	/**
@@ -4373,6 +4397,10 @@ public class MeshPublisher implements AutoCloseable {
 			if (projectResult != null && projectResult.isPresent()) {
 				ProjectResponse project = projectResult.get();
 
+				// read roles with read permission
+				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
+						.map(RoleReference::getName).collect(Collectors.toSet()));
+
 				String currentProjectName = project.getName();
 				rootNodeUuid = project.getRootNode().getUuid();
 				if (node != null) {
@@ -4875,6 +4903,13 @@ public class MeshPublisher implements AutoCloseable {
 
 			BranchResponse branch = client.createBranch(currentProjectName, create).blockingGet();
 
+			// set the permissions on the branch
+			if (!rolesWithPermissions.isEmpty()) {
+				List<RoleReference> roleReferences = rolesWithPermissions.stream()
+						.map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
+				client.grantBranchRolePermissions(currentProjectName, branch.getUuid(), new ObjectPermissionGrantRequest().setRead(roleReferences)).blockingAwait();
+			}
+
 			if (tagAsLatest) {
 				branch = client.addTagToBranch(currentProjectName, branch.getUuid(), latestTagUuid).blockingGet();
 				if (baseBranch != null) {
@@ -4945,11 +4980,10 @@ public class MeshPublisher implements AutoCloseable {
 					.collect(Collectors.toList()));
 
 			// set read_published on the root node
-			completables
-					.add(client
-							.grantNodeRolePermissions(name, rootNodeUuid,
-									new ObjectPermissionGrantRequest().setReadPublished(roleReferences))
-							.toCompletable());
+			completables.add(client.grantNodeRolePermissions(name, rootNodeUuid,
+							new ObjectPermissionGrantRequest()
+								.setReadPublished(roleReferences)
+						).toCompletable());
 
 			return Completable.merge(completables)
 				.andThen(Completable.fromAction(() -> rolesWithPermissions.addAll(missingPermissions)));

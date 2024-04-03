@@ -40,6 +40,11 @@ public class ObjectPropertyCategory implements Serializable {
 	private Map<String, String> nameI18n;
 
 	/**
+	 * Sort order
+	 */
+	private Integer sortOrder;
+
+	/**
 	 * Internal ID of the object property category
 	 * @return ID
 	 */
@@ -107,6 +112,24 @@ public class ObjectPropertyCategory implements Serializable {
 			this.nameI18n = new HashMap<>();
 		}
 		this.nameI18n.put(language, name);
+		return this;
+	}
+
+	/**
+	 * Sort order
+	 * @return sort order
+	 */
+	public Integer getSortOrder() {
+		return sortOrder;
+	}
+
+	/**
+	 * Set sort order
+	 * @param sortOrder sort order
+	 * @return sort order
+	 */
+	public ObjectPropertyCategory setSortOrder(Integer sortOrder) {
+		this.sortOrder = sortOrder;
 		return this;
 	}
 }

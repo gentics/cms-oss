@@ -122,7 +122,7 @@ public class SchedulingTest {
 			.as("Due schedules (no executions)")
 			.containsExactlyInAnyOrder(everyMinute, everyHour, everyDay, everyWeek, everyMonth);
 
-		addExecutions(allSchedules, now.minusWeeks(2), true);
+		addExecutions(allSchedules, now.minusWeeks(2), 1, true, true);
 
 		List<SchedulerSchedule> dueSchedules = getDueSchedules(now);
 
@@ -130,7 +130,7 @@ public class SchedulingTest {
 			.as("Due schedules (last execution: one month)")
 			.containsExactlyInAnyOrder(everyMinute, everyHour, everyDay, everyWeek);
 
-		addExecutions(allSchedules, now.minusWeeks(1), true);
+		addExecutions(allSchedules, now.minusWeeks(1), 1, true, true);
 
 		dueSchedules = getDueSchedules(now);
 
@@ -138,7 +138,7 @@ public class SchedulingTest {
 			.as("Due schedules (last execution: one week)")
 			.containsExactlyInAnyOrder(everyMinute, everyHour, everyDay);
 
-		addExecutions(allSchedules, now.minusDays(1), true);
+		addExecutions(allSchedules, now.minusDays(1), 1, true, true);
 
 		dueSchedules = getDueSchedules(now);
 
@@ -146,7 +146,7 @@ public class SchedulingTest {
 			.as("Due schedules (last execution: one day)")
 			.containsExactlyInAnyOrder(everyMinute, everyHour);
 
-		addExecutions(allSchedules, now.minusHours(1), true);
+		addExecutions(allSchedules, now.minusHours(1), 1, true, true);
 
 		dueSchedules = getDueSchedules(now);
 
@@ -154,7 +154,7 @@ public class SchedulingTest {
 			.as("Due schedules (last execution: one hour)")
 			.containsExactlyInAnyOrder(everyMinute);
 
-		addExecutions(allSchedules, now.minusMinutes(1), true);
+		addExecutions(allSchedules, now.minusMinutes(1), 1, true, true);
 
 		dueSchedules = getDueSchedules(now);
 
@@ -177,19 +177,19 @@ public class SchedulingTest {
 			.as("Due schedules (no executions)")
 			.containsExactly(everyMinute);
 
-		addExecutions(allSchedules, now.minusMinutes(3), true);
+		addExecutions(allSchedules, now.minusMinutes(3), 1, true, true);
 
 		assertThat(getDueSchedules(now))
 			.as("Due schedules (3 minutes)")
 			.containsExactly(everyMinute);
 
-		addExecutions(allSchedules, now.minusMinutes(2), true);
+		addExecutions(allSchedules, now.minusMinutes(2), 1, true, true);
 
 		assertThat(getDueSchedules(now))
 			.as("Due schedules (2 minutes)")
 			.isEmpty();
 
-		addExecutions(allSchedules, now.minusMinutes(1), true);
+		addExecutions(allSchedules, now.minusMinutes(1), 1, true, true);
 
 		assertThat(getDueSchedules(now))
 			.as("Due schedules (1 minute)")
@@ -729,7 +729,7 @@ public class SchedulingTest {
 	}
 
 	/**
-	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean)} which adds an
+	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean, boolean)} which adds an
 	 * execution with a duration of 1 second.
 	 *
 	 * @param schedule The schedule to add an execution for.
@@ -738,11 +738,11 @@ public class SchedulingTest {
 	 * @throws NodeException
 	 */
 	private void addExecutions(SchedulerSchedule schedule, OffsetDateTime startedAfter, boolean success) throws NodeException {
-		addExecutions(Collections.singleton(schedule), startedAfter, 1, success);
+		addExecutions(Collections.singleton(schedule), startedAfter, 1, success, false);
 	}
 
 	/**
-	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean)}.
+	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean, boolean)}.
 	 *
 	 * @param schedule The schedule to add an execution for.
 	 * @param startedAfter The timestamp <em>after</em> which the execution was started (1 second after).
@@ -751,11 +751,11 @@ public class SchedulingTest {
 	 * @throws NodeException
 	 */
 	private void addExecutions(SchedulerSchedule schedule, OffsetDateTime startedAfter, int duration, boolean success) throws NodeException {
-		addExecutions(Collections.singleton(schedule), startedAfter, duration, success);
+		addExecutions(Collections.singleton(schedule), startedAfter, duration, success, false);
 	}
 
 	/**
-	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean)} which adds an
+	 * Convenience overload for {@link #addExecutions(Collection, OffsetDateTime, int, boolean, boolean)} which adds an
 	 * execution with a duration of 1 second.
 	 *
 	 * @param schedules The schedules to add an execution for.
@@ -764,7 +764,7 @@ public class SchedulingTest {
 	 * @throws NodeException
 	 */
 	private void addExecutions(Collection<SchedulerSchedule> schedules, OffsetDateTime startedAfter, boolean success) throws NodeException {
-		addExecutions(schedules, startedAfter, 1, success);
+		addExecutions(schedules, startedAfter, 1, success, false);
 	}
 
 	/**
@@ -774,12 +774,25 @@ public class SchedulingTest {
 	 * @param startedAfter The timestamp <em>after</em> which the execution was started (1 second after).
 	 * @param duration The duration of the executions.
 	 * @param success Whether the created execution terminated successfully.
+	 * @param setStartTime Whether the start time should also be set
 	 * @throws NodeException
 	 */
-	private void addExecutions(Collection<SchedulerSchedule> schedules, OffsetDateTime startedAfter, int duration, boolean success) throws NodeException {
+	private void addExecutions(Collection<SchedulerSchedule> schedules, OffsetDateTime startedAfter, int duration, boolean success, boolean setStartTime) throws NodeException {
 		OffsetDateTime startTime = startedAfter.plusSeconds(1);
 
 		for (SchedulerSchedule schedule : schedules) {
+			if (setStartTime) {
+				Builder.update(schedule, c -> {
+					ScheduleData scheduleData = c.getScheduleData();
+					ScheduleData modifiedScheduleData = new ScheduleData()
+							.setEndTimestamp(scheduleData.getEndTimestamp())
+							.setFollow(scheduleData.getFollow())
+							.setInterval(scheduleData.getInterval())
+							.setStartTimestamp((int)startTime.toEpochSecond())
+							.setType(scheduleData.getType());
+					c.setScheduleData(modifiedScheduleData);
+				}).build();
+			}
 			int executionId = startExecution(schedule, startTime);
 
 			finishExecution(executionId, startTime.plusSeconds(duration), duration, success);

@@ -9,6 +9,8 @@ import {
     ConstructOperations,
     ConstructTableLoaderService,
     EditorTabTrackerService,
+    I18nService,
+    PackageOperations,
     ResolveBreadcrumbFn,
 } from '@admin-ui/core';
 import { BaseDetailComponent, ConstructDataService, LanguageDataService } from '@admin-ui/shared';
@@ -35,6 +37,8 @@ import {
     TagPartType,
     TagTypeBO,
 } from '@gentics/cms-models';
+import { ModalService } from '@gentics/ui-core';
+import { isEqual } from 'lodash-es';
 import { NGXLogger } from 'ngx-logger';
 import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { delay, map, publishReplay, refCount, repeat, takeUntil, tap } from 'rxjs/operators';
@@ -44,6 +48,29 @@ export enum ConstructDetailTabs {
     PROPERTIES = 'properties',
     PARTS = 'parts',
 }
+
+// List of TagPart entity keys to validate changes on filesystem
+const TAG_PART_VALIDATION_PROPERTIES: (keyof TagPart)[] = [
+    'globalId',
+    'nameI18n',
+    'keyword',
+    'markupLanguageId',
+    'partOrder',
+    'hidden',
+    'editable',
+    'liveEditable',
+    'mandatory',
+    'type',
+    'typeId',
+    'id',
+    'defaultProperty',
+    'hideInEditor',
+    'externalEditorUrl',
+    'options',
+    'overviewSettings',
+    'selectSettings',
+    'regex',
+];
 
 // *************************************************************************************************
 /**
@@ -113,6 +140,9 @@ export class ConstructDetailComponent
         private languageData: LanguageDataService,
         private editorTabTracker: EditorTabTrackerService,
         private tableLoader: ConstructTableLoaderService,
+        private devtools: PackageOperations,
+        private modals: ModalService,
+        private i18n: I18nService,
     ) {
         super(
             logger,
@@ -172,8 +202,60 @@ export class ConstructDetailComponent
         this.updateEntity();
     }
 
-    btnSavePartsOnClick(): void {
-        this.updateParts();
+    async btnSavePartsOnClick(): Promise<void> {
+        const syncRes = await this.devtools.getSyncState().toPromise();
+
+        if (!syncRes.enabled) {
+            this.updateParts();
+            return;
+        }
+
+        const currentState = await this.operations.get(this.currentEntity.id).toPromise();
+        const hasFSChanges = !isEqual(this.currentEntity.parts, currentState.parts);
+        const hasManualChanges = this.hasTagPartChanges(currentState.parts);
+
+        if (!hasFSChanges || !hasManualChanges) {
+            this.updateParts();
+            return;
+        }
+
+        const dialog = await this.modals.dialog({
+            title: this.i18n.instant('construct.tagpart_conflict_title', { entityName: this.currentEntity.keyword }),
+            body: this.i18n.instant('construct.tagpart_conflict_body'),
+            buttons: [
+                {
+                    label: this.i18n.instant('modal.discard_changes_button'),
+                    type: 'warning',
+                    returnValue: 'discard',
+                },
+                {
+                    label: this.i18n.instant('construct.overwrite_button'),
+                    type: 'alert',
+                    returnValue: 'override',
+                },
+                {
+                    label: this.i18n.instant('common.cancel_button'),
+                    type: 'secondary',
+                    returnValue: false,
+                },
+            ],
+        });
+        const res = await dialog.open();
+
+        switch (res) {
+            case 'override':
+                this.updateParts();
+                return;
+
+            case 'discard':
+                this.currentEntity = currentState;
+                this.initForms();
+                this.changeDetectorRef.markForCheck();
+                return;
+
+            default:
+                return;
+        }
     }
 
     /**
@@ -385,4 +467,23 @@ export class ConstructDetailComponent
 
         this.fgParts.markAsPristine();
     }
+
+    private hasTagPartChanges(parts: TagPart[]): boolean {
+        if (this.fgParts.value.length !== parts.length) {
+            return true;
+        }
+        for (let i = 0; i < this.fgParts.value.length; i++) {
+            for (const key of TAG_PART_VALIDATION_PROPERTIES) {
+                const savedTagPart = parts[i][key];
+                const formValue = this.fgParts.value[i][key];
+                if ((formValue && !savedTagPart) || (!formValue && savedTagPart)) {
+                    return true;
+                } else if (formValue && savedTagPart && !isEqual(formValue, savedTagPart)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 }

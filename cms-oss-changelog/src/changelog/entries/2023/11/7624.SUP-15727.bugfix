@@ -1,0 +1,3 @@
+The uniquess check for URLs did not consider the page publish directory of nodes/channels when
+checking nice URLs. This could result in duplicate URLs, which would cause subsequent errors.
+The check has been fixed. Possibly existing duplicate URLs have to be fixed manually in the CMS.

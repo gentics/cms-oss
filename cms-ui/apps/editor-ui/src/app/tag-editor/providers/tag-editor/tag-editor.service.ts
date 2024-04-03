@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
     AnyModelType,
     EditableTag,
@@ -14,8 +15,10 @@ import {
     TagEditorContext,
     TagType,
     Template,
-    VariableTagEditorContext
+    VariableTagEditorContext,
 } from '@gentics/cms-models';
+import { ApiBase } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -25,6 +28,7 @@ import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { ApplicationStateService } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
+import { UploadWithPropertiesModalComponent } from '../../components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
 
 /**
@@ -67,7 +71,9 @@ export class TagEditorService {
         private entityResolver: EntityResolver,
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: TranslateService,
-        private userAgentRef: UserAgentRef
+        private userAgentRef: UserAgentRef,
+        private modals: ModalService,
+        private apiBase: ApiBase,
     ) {}
 
     /**
@@ -91,7 +97,7 @@ export class TagEditorService {
             tagOwner: page,
             node: node,
             readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
-            tagOwnerFromIFrame: true
+            tagOwnerFromIFrame: true,
         });
 
         return this.tagEditorOverlayHost.openTagEditor(tagEditorContext.editedTag, tagEditorContext)
@@ -141,14 +147,32 @@ export class TagEditorService {
     createTagEditorContext(editTagInfo: EditTagInfo): TagEditorContext {
         let editableTag: EditableTag = {
             ...editTagInfo.tag,
-            tagType: editTagInfo.tagType
+            tagType: editTagInfo.tagType,
         };
 
         const gcmsUiServices: GcmsUiServices = {
             openRepositoryBrowser: (options: RepositoryBrowserOptions) =>
                 this.repositoryBrowserClient.openRepositoryBrowser(options),
             openImageEditor: (options: { nodeId: number, imageId: number }) =>
-                this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId })
+                this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId }),
+            openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
+                return this.modals.fromComponent(
+                    UploadWithPropertiesModalComponent,
+                    { padding: true, width: '1000px' },
+                    {
+                        itemType: uploadType,
+                        allowFolderSelection: allowFolderSelection ?? true,
+                        destinationFolder,
+                    },
+                ).then(dialog => dialog.open());
+            },
+            restRequestGET: (endpoint: string, params: any): Promise<object> =>
+                this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise(),
+            restRequestPOST: (endpoint: string, data: object, params?: object): Promise<object> =>
+                this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise(),
+            restRequestDELETE: (endpoint: string, params?: object): Promise<void | object> =>
+                this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise(),
+
         };
 
         let tagOwner = editTagInfo.tagOwner;
@@ -164,7 +188,7 @@ export class TagEditorService {
         const rawNode = this.entityResolver.denormalizeEntity('node', editTagInfo.node);
 
         const variableContext$: Observable<VariableTagEditorContext> = this.appState.select(state => ({
-            uiLanguage: state.ui.language
+            uiLanguage: state.ui.language,
         }));
         const sid = this.appState.now.auth.sid;
         const translator = new TranslatorImpl(this.translateService);
@@ -179,7 +203,7 @@ export class TagEditorService {
      */
     private createSafePageCopy<T extends ModelType>(page: Page<T>): Page<T> {
         const safePage = {
-            ...page
+            ...page,
         };
         delete safePage.pageVariants;
         delete safePage.languageVariants;

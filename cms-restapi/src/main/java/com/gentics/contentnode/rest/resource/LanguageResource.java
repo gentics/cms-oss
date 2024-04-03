@@ -30,7 +30,21 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 @Path("language")
 public interface LanguageResource {
 	/**
-	 * Load a list of languages
+	 * Load a list of languages.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>code</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>code</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters

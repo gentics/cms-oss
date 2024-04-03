@@ -56,9 +56,9 @@
                 formControlName="regex"
             >
                 <gtx-option
-                    *ngFor="let item of TagPartValidatorConfigs | values"
+                    *ngFor="let item of SORTED_VALIDATOR_CONFIGS"
                     [value]="item"
-                >{{ ('construct.' + item.name) | i18n }}</gtx-option>
+                >{{ item[TRANSLATED_NAME_PROP] }}</gtx-option>
             </gtx-select>
 
             <!-- overviewSettings -->

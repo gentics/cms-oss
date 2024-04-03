@@ -1084,6 +1084,10 @@ export class FolderActionsService {
 
         let fetchPromise: Promise<any>;
 
+        if (type === 'page') {
+            options.langvars = true;
+        }
+
         if (type === 'template') {
             fetchPromise = this.api.folders.getItem(itemId, type, options).toPromise();
         } else {
@@ -1104,11 +1108,6 @@ export class FolderActionsService {
                     (res.folder as Folder<Raw>).permissionsMap = perm.permissionsMap;
                     return res;
                 });
-        }
-
-        // Always fetch language variants
-        if (type === 'page') {
-            options.langvars = true;
         }
 
         try {

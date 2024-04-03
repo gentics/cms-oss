@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -44,6 +43,7 @@ import com.gentics.contentnode.etc.ContentNodeDate;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.events.DependencyManager;
 import com.gentics.contentnode.events.DependencyObject;
 import com.gentics.contentnode.events.Events;
@@ -192,13 +192,13 @@ public class FolderFactory extends AbstractFactory {
 	/**
 	 * Loader for {@link FolderService}s
 	 */
-	protected final static ServiceLoader<FolderService> folderFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<FolderService> folderFactoryServiceLoader = ServiceLoaderUtil
 			.load(FolderService.class);
 
 	/**
 	 * Loader for {@link NodeService}s
 	 */
-	protected final static ServiceLoader<NodeService> nodeFactoryServiceLoader = ServiceLoader
+	protected final static ServiceLoaderUtil<NodeService> nodeFactoryServiceLoader = ServiceLoaderUtil
 			.load(NodeService.class);
 
 	static {
@@ -3434,6 +3434,7 @@ public class FolderFactory extends AbstractFactory {
 
 			// Check & add numbers until the folder name is unique
 			if (!StringUtils.isEmpty(folder.name)) {
+				folder.name = folder.name.trim();
 				folder.name = folder.name.substring(0, Math.min(folder.name.length(), Folder.MAX_NAME_LENGTH));
 			}
 

@@ -5,6 +5,8 @@ import {
     EntityIdType,
     Folder,
     ModelType,
+    Node,
+    NodeListRequestOptions,
     Raw,
     Template,
     TemplateBO,
@@ -191,6 +193,13 @@ export class TemplateOperations
 
     unlinkFolders(templateId: EntityIdType, body: TemplateLinkRequestOptions): Observable<TemplateLinkResponse> {
         return this.api.template.unlinkTemplateFromFolders(templateId, body);
+    }
+
+    getLinkedNodes(templateId: EntityIdType, options?: NodeListRequestOptions): Observable<Node<Raw>[]> {
+        return this.api.template.getLinkedNodes(templateId, options).pipe(
+            map(res => res.items),
+            this.catchAndRethrowError(),
+        );
     }
 
     hasViewPermission(templateId: EntityIdType): Observable<boolean> {

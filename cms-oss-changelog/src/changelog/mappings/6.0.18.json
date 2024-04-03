@@ -1,0 +1,15 @@
+{
+  "version": "6.0.18",
+  "date": "21.02.2024",
+  "changeLogEntryFileNames": [
+    "7683.SUP-16316.bugfix",
+    "7687.SUP-16344.bugfix",
+    "7688.SUP-16356.bugfix",
+    "7689.SUP-16369.bugfix",
+    "7685.SUP-15659.bugfix"
+  ],
+  "genericProperties": {
+    "alohaeditor-date": "27.06.2023",
+    "alohaeditor-version": "1.5.0"
+  }
+}

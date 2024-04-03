@@ -1,7 +1,5 @@
 package com.gentics.contentnode.servlets;
 
-import com.gentics.contentnode.etc.PrefixService;
-import com.gentics.contentnode.etc.RandomPrefixService;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,10 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -25,6 +20,9 @@ import com.gentics.contentnode.dbcopy.Table;
 import com.gentics.contentnode.dbcopy.Tables;
 import com.gentics.contentnode.dbcopy.jaxb.JAXBtableType;
 import com.gentics.contentnode.etc.NodeConfig;
+import com.gentics.contentnode.etc.PrefixService;
+import com.gentics.contentnode.etc.RandomPrefixService;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
@@ -35,7 +33,6 @@ import com.gentics.lib.db.SimpleResultRow;
 import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.genericexceptions.UnavailableException;
 import com.gentics.lib.log.NodeLogger;
-import java.util.stream.StreamSupport;
 
 /**
 * this is a tool class which executes all checks necessary for the
@@ -43,7 +40,7 @@ import java.util.stream.StreamSupport;
 */
 public class UdateChecker {
 
-	private final static ServiceLoader<PrefixService> prefixServiceLoader = ServiceLoader
+	private final static ServiceLoaderUtil<PrefixService> prefixServiceLoader = ServiceLoaderUtil
 			.load(PrefixService.class);
 	private static NodeLogger logger = NodeLogger.getNodeLogger(UdateChecker.class);
 	private UdateChecker() {// do not instantiate me ..

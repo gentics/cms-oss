@@ -59,6 +59,7 @@ import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.BiConsumer;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.etc.ContentMap;
+import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.NodePreferences;
 import com.gentics.contentnode.etc.Supplier;
@@ -94,6 +95,7 @@ import com.gentics.contentnode.rest.model.PageLanguageCode;
 import com.gentics.contentnode.rest.model.perm.PermType;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
 import com.gentics.contentnode.rest.model.response.ResponseCode;
+import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.tests.rendering.ContentNodeTestContext;
 import com.gentics.contentnode.testutils.RESTAppContext;
 import com.gentics.contentnode.testutils.RESTAppContext.LoggedInClient;
@@ -466,7 +468,15 @@ public final class ContentNodeTestUtils {
 	 * @throws NodeException
 	 */
 	public static File assertPublishFS(File pubDir, Page page, Node node, boolean expected) throws NodeException {
-		return assertPublishFS(pubDir, false, page.getFilename(), page.getLanguage() != null ? page.getLanguage().getCode() : null, page.getFolder(), node, expected);
+		String languageCode = page.getLanguage() != null ? page.getLanguage().getCode() : null;
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
+			Set<String> urls = page.getNiceAndAlternateUrls();
+			for (String url : urls) {
+				assertPublishFS(pubDir, false, url, node, expected);
+			}
+		}
+
+		return assertPublishFS(pubDir, false, page.getFilename(), languageCode, page.getFolder(), node, expected);
 	}
 
 	/**
@@ -479,6 +489,12 @@ public final class ContentNodeTestUtils {
 	 * @throws NodeException
 	 */
 	public static File assertPublishFS(File pubDir, com.gentics.contentnode.object.File file, Node node, boolean expected) throws NodeException {
+		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
+			Set<String> urls = file.getNiceAndAlternateUrls();
+			for (String url : urls) {
+				assertPublishFS(pubDir, true, url, node, expected);
+			}
+		}
 		return assertPublishFS(pubDir, true, file.getFilename(), null, file.getFolder(), node, expected);
 	}
 
@@ -495,18 +511,16 @@ public final class ContentNodeTestUtils {
 	 * @throws NodeException
 	 */
 	public static File assertPublishFS(File pubDir, boolean binary, String fileName, String languageCode, Folder folder, Node node, boolean expected) throws NodeException {
-		File hostDir = new File(pubDir, node.getHostname());
-		File baseDir = null;
-		if (languageCode != null && node.getPageLanguageCode() == PageLanguageCode.PATH) {
-			baseDir = new File(hostDir, languageCode);
-		} else {
-			baseDir = hostDir;
-		}
+		File baseDir = new File(pubDir, node.getHostname());
 		File nodePubDir = StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) ? baseDir
 				: new File(baseDir,
 						binary && !StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository())
 								? node.getBinaryPublishDir()
 								: node.getPublishDir());
+
+		if (languageCode != null && node.getPageLanguageCode() == PageLanguageCode.PATH) {
+			nodePubDir = new File(nodePubDir, languageCode);
+		}
 
 		File folderPubDir = null;
 		if (node.isPubDirSegment()) {
@@ -524,6 +538,34 @@ public final class ContentNodeTestUtils {
 		}
 
 		File pageFile = new File(folderPubDir, fileName);
+
+		if (expected) {
+			assertTrue("Expecting " + pageFile + " to exist", pageFile.exists());
+		} else {
+			assertFalse("Expecting " + pageFile + " to not exist", pageFile.exists());
+		}
+		return pageFile;
+	}
+
+	/**
+	 * Assert that the file with given nice URL was published into the filesystem (or was not published)
+	 * @param pubDir base pub dir
+	 * @param binary true for files, false for pages
+	 * @param niceUrl nice URL
+	 * @param node node
+	 * @param expected true if the object is expected to be published, false if not
+	 * @return checked file
+	 * @throws NodeException
+	 */
+	public static File assertPublishFS(File pubDir, boolean binary, String niceUrl, Node node, boolean expected) throws NodeException {
+		File baseDir = new File(pubDir, node.getHostname());
+		File nodePubDir = StaticUrlFactory.ignoreNodePublishDir(node.getContentRepository()) ? baseDir
+				: new File(baseDir,
+						binary && !StaticUrlFactory.ignoreSeparateBinaryPublishDir(node.getContentRepository())
+								? node.getBinaryPublishDir()
+								: node.getPublishDir());
+
+		File pageFile = new File(nodePubDir, niceUrl);
 
 		if (expected) {
 			assertTrue("Expecting " + pageFile + " to exist", pageFile.exists());

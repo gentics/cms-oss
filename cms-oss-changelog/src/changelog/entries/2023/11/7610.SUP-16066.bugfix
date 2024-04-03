@@ -1,0 +1,3 @@
+If a schedule was set up to follow after another schedule, and the followed scheduled failed with
+an exit code bigger than 127, further scheduling failed with an internal error.
+This has been fixed.

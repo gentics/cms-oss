@@ -1,7 +1,5 @@
 package com.gentics.contentnode.rest.resource;
 
-import com.gentics.contentnode.rest.model.response.TagList;
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import java.util.List;
 
 import javax.ws.rs.BeanParam;
@@ -22,11 +20,14 @@ import com.gentics.contentnode.rest.model.request.TemplateCopyRequest;
 import com.gentics.contentnode.rest.model.request.TemplateCreateRequest;
 import com.gentics.contentnode.rest.model.request.TemplateSaveRequest;
 import com.gentics.contentnode.rest.model.response.GenericResponse;
+import com.gentics.contentnode.rest.model.response.NodeList;
 import com.gentics.contentnode.rest.model.response.PagedFolderListResponse;
+import com.gentics.contentnode.rest.model.response.TagList;
 import com.gentics.contentnode.rest.model.response.TagListResponse;
 import com.gentics.contentnode.rest.model.response.TagStatusResponse;
 import com.gentics.contentnode.rest.model.response.TemplateInNodeResponse;
 import com.gentics.contentnode.rest.model.response.TemplateLoadResponse;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PermsParameterBean;
@@ -45,7 +46,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface TemplateResource {
 	/**
-	 * List templates assigned to the given list of nodes
+	 * List templates assigned to the given list of nodes.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>cdate</code></li>
+	 * <li><code>edate</code></li>
+	 * </ul>
 	 * @param nodeIds list of node IDs
 	 * @param filterParams filter parameters
 	 * @param sortingParams sorting parameters
@@ -116,7 +131,19 @@ public interface TemplateResource {
 	Response delete(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Get the folders to which the template is assigned
+	 * Get the folders to which the template is assigned.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param id template ID
 	 * @param sort sort parameters
 	 * @param filter filter parameters
@@ -127,6 +154,30 @@ public interface TemplateResource {
 	@GET
 	@Path("/{id}/folders")
 	PagedFolderListResponse folders(@PathParam("id") String id, @BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter,
+			@BeanParam PagingParameterBean paging) throws Exception;
+
+	/**
+	 * Get the nodes to which the template is assigned.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * @param id template ID
+	 * @param sort sort parameters
+	 * @param filter filter parameters
+	 * @param paging paging parameters
+	 * @return response containing a list of nodes
+	 * @throws Exception
+	 */
+	@GET
+	@Path("/{id}/nodes")
+	NodeList nodes(@PathParam("id") String id, @BeanParam SortParameterBean sort, @BeanParam FilterParameterBean filter,
 			@BeanParam PagingParameterBean paging) throws Exception;
 
 	/**
@@ -247,7 +298,15 @@ public interface TemplateResource {
 
 	/**
 	 * Get the tag status for a template. The tag status will contain a list of all template tags, which are editable in pages together with the count of
-	 * pages in sync, out of sync, incompatible or missing
+	 * pages in sync, out of sync, incompatible or missing.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param id template ID
 	 * @param sort sort parameters
 	 * @param filter filter parameters

@@ -470,5 +470,9 @@
     "sort_construct_categories_title": {
         "en": "Sort construct categories",
         "de": "Tagtyp Kategorien sortieren"
+    },
+    "synchronize_content_repository_roles_title": {
+        "en": "Synchronize Mesh roles of \"{{crName}}\"",
+        "de": "Mesh Rollen von „{{crName}}“ synchronisieren"
     }
 }

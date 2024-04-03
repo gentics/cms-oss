@@ -497,6 +497,17 @@ public class PageEditSandboxTest {
 	}
 
 	/**
+	 * Tests leading/trailing spaces removal.
+	 * @throws Exception
+	 */
+	@Test
+	public void testLeadingTrailingSpace() throws Exception {
+		Page page = createAndSavePage("  leadingtrailing.html  ");
+
+		assertEquals("leadingtrailing.html", page.getFilename());
+	}
+
+	/**
 	 * Test create many pages with the same proposed filename
 	 * @throws Exception
 	 */

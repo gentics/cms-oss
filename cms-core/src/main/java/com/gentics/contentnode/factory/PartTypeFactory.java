@@ -53,10 +53,22 @@ public class PartTypeFactory {
 	 * @throws NodeException
 	 */
 	public boolean isValueless(int typeId) throws NodeException {
-		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId);
+		return isValueless(typeId, true);
+	}
+
+	/**
+	 * Check whether the part with given id is valueless or not
+	 * @param typeId type id
+	 * @param failIfPartTypeNotFound true if this should fail when the part type is not found, false to consider part with inexistent part types to be valueless
+	 * @return true when the parttype is valueless, false if not
+	 * @throws NodeException
+	 */
+	public boolean isValueless(int typeId, boolean failIfPartTypeNotFound) throws NodeException {
+		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId, failIfPartTypeNotFound);
 
 		// check if classname is set
-		if (null == partTypeInfo) {// TODO: error or just return null
+		if (null == partTypeInfo) {
+			return true;
 		} else {
 
 			// when the class implements ExtensiblePartType, we create a wrapper
@@ -64,11 +76,19 @@ public class PartTypeFactory {
 				return true;
 			}
 		}
-        
+
 		return false;
 	}
 
-	private PartTypeInfo getPartTypeInfo(int partTypeId) throws NodeException {
+	/**
+	 * Get the parttype info for the given part type ID.
+	 * @param partTypeId part type ID
+	 * @param failIfNotFound true if this should fail, if the part type is not found
+	 * @return part type instance or null, if not found and failIfNotFound is false
+	 * @throws NodeException
+	 */
+	private PartTypeInfo getPartTypeInfo(int partTypeId, boolean failIfNotFound) throws NodeException {
+
 		// see if its in the cache
 		PartTypeInfo partTypeInfo = partTypeInfoCache.get(partTypeId);
 
@@ -114,7 +134,11 @@ public class PartTypeFactory {
 				partTypeInfoCache.put(partTypeId, partTypeInfo);
 				return partTypeInfo;
 			} else {
-				return null;
+				if (failIfNotFound) {
+					throw new NodeException("No entry found in the database for partType " + partTypeId);
+				} else {
+					return null;
+				}
 			}
 		} catch (SQLException e) {
 			throw new NodeException("SQLException while loading javaclass for id " + partTypeId, e);
@@ -133,7 +157,7 @@ public class PartTypeFactory {
 	 */
 	public PartType getPartType(int typeId, Value value) throws NodeException {
         
-		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId);
+		PartTypeInfo partTypeInfo = getPartTypeInfo(typeId, true);
 
 		if (null == partTypeInfo) {
 			// TODO: error or just return null?
@@ -185,7 +209,7 @@ public class PartTypeFactory {
 			return false;
 		}
 
-		PartTypeInfo partTypeInfo = getPartTypeInfo(part.getPartTypeId());
+		PartTypeInfo partTypeInfo = getPartTypeInfo(part.getPartTypeId(), false);
 		if (partTypeInfo == null) {
 			return false;
 		}

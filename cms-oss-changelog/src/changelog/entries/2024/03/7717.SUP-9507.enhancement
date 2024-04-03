@@ -1,0 +1,2 @@
+The @openTagFill@ method in the GCNPlugin (@gcn/gcn-plugin@) now accepts additional options as parameter.
+Added support to skip the insert into/update of the DOM Element.

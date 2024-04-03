@@ -35,7 +35,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface DatasourceResource {
 	/**
-	 * List datasources
+	 * List datasources.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>type</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>type</code></li>
+	 * </ul>
 	 * @param sorting sort parameters
 	 * @param filter filter parameter
 	 * @param paging paging parameters
@@ -109,7 +123,25 @@ public interface DatasourceResource {
 	Response delete(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Get the constructs using the datasource
+	 * Get the constructs using the datasource.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>category</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>category</code></li>
+	 * </ul>
 	 * @param id datasource id
 	 * @param sorting sort parameters
 	 * @param filter filter parameter

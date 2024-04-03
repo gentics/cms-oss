@@ -1,0 +1,1 @@
+Editor User Interface: Autofocus of the searchbar has been fixed to only occur while not editing a object. Navigation in the list will properly reset the focus to the searchbar as well.

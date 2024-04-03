@@ -231,9 +231,9 @@ public class PackageResourceImpl implements PackageResource {
 
 			return ListBuilder.from(packageSynchronizer.getObjects(Construct.class), ConstructSynchronizer.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o.getObject()))
-					.filter(ResolvableFilter.get(filter, "keyword", "name", "packageName", "description"))
+					.filter(ResolvableFilter.get(filter, "keyword", "name", "description"))
 					.perms(permFunction(perms, PackageObject::getObject, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "keyword", "name", "packageName", "description"))
+					.sort(ResolvableComparator.get(sorting, "keyword", "name", "description"))
 					.embed(embed, "category", ConstructSynchronizer.EMBED_CATEGORY)
 					.page(paging).to(new PagedConstructInPackageListResponse());
 		}
@@ -465,9 +465,9 @@ public class PackageResourceImpl implements PackageResource {
 
 			return ListBuilder.from(packageSynchronizer.getObjects(ObjectTagDefinition.class), ObjectTagDefinitionSynchronizer.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o.getObject()))
-					.filter(ResolvableFilter.get(filter, "name", "packageName", "description", "keyword"))
+					.filter(ResolvableFilter.get(filter, "name", "description", "keyword"))
 					.perms(permFunction(perms, PackageObject::getObject, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "name", "packageName", "description", "keyword", "type", "required", "inheritable", "construct.name"))
+					.sort(ResolvableComparator.get(sorting, "name", "description", "keyword", "type", "required", "inheritable", "construct.name"))
 					.page(paging)
 					.embed(embed, "construct", ObjectTagDefinitionSynchronizer.EMBED_CONSTRUCT)
 					.embed(embed, "category", ObjectTagDefinitionSynchronizer.EMBED_CATEGORY)
@@ -543,9 +543,9 @@ public class PackageResourceImpl implements PackageResource {
 			trx.success();
 			return ListBuilder.from(packageSynchronizer.getObjects(CrFragment.class), ContentRepositoryFragmentSynchronizer.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o.getObject()))
-					.filter(ResolvableFilter.get(filter, "name", "crType", "packageName"))
+					.filter(ResolvableFilter.get(filter, "name"))
 					.perms(permFunction(perms, PackageObject::getObject, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "name", "crType", "packageName"))
+					.sort(ResolvableComparator.get(sorting, "name"))
 					.page(paging).to(new PagedContentRepositoryFragmentInPackageListResponse());
 		}
 	}
@@ -612,9 +612,9 @@ public class PackageResourceImpl implements PackageResource {
 			trx.success();
 			return ListBuilder.from(packageSynchronizer.getObjects(ContentRepository.class), ContentRepositorySynchronizer.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o.getObject()))
-					.filter(ResolvableFilter.get(filter, "name", "crType", "packageName"))
+					.filter(ResolvableFilter.get(filter, "name", "crType"))
 					.perms(permFunction(perms, PackageObject::getObject, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete))
-					.sort(ResolvableComparator.get(sorting, "name", "crType", "packageName"))
+					.sort(ResolvableComparator.get(sorting, "name", "crType"))
 					.page(paging).to(new PagedContentRepositoryInPackageListResponse());
 		}
 	}

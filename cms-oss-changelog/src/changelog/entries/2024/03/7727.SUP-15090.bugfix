@@ -1,0 +1,2 @@
+Some errors in sorting and filtering of result lists have been fixed in the REST API.
+Sorting and filtering abilities of REST API endpoints have been clarified in the documentation.

@@ -182,8 +182,15 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 					refs.add(Reference.FOLDER);
 				}
 
+				Map<String, String> fieldMap = new HashMap<>();
+				fieldMap.put("niceUrl", "nice_url");
+				fieldMap.put("alternateUrls", "alternate_urls");
+				fieldMap.put("fileSize", "size");
+				fieldMap.put("fileType", "type");
+
 				ResolvableComparator<File> comparator = ResolvableComparator.get(
 					sortingParams,
+					fieldMap,
 					// From AbstractContentObject
 					"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
 					// From ContentFile
@@ -192,7 +199,7 @@ public class ImageResourceImpl extends AuthenticatedContentNodeResource implemen
 					"extension", "creator", "ersteller", "editor", "bearbeiter", "createtimestamp",
 					"createtimstamp", "createdate", "edittimestamp", "editdate", "type", "object",
 					"url", "width", "sizex", "height", "sizey", "dpix", "dpiy", "dpi", "fpx", "fpy",
-					"gis_resisable", "ismaster", "inherited", "ice_url", "alternate_urls");
+					"gis_resisable", "ismaster", "inherited", "nice_url", "alternate_urls", "niceUrl", "alternateUrls", "fileSize", "fileType");
 
 				ImageListResponse response = ListBuilder.from(images, image -> ModelBuilder.getImage((ImageFile) image, refs))
 					.sort(comparator)

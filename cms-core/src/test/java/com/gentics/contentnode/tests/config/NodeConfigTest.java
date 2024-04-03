@@ -202,6 +202,27 @@ public class NodeConfigTest {
 	}
 
 	/**
+	 * Test node specific aloha settings
+	 * @throws NodeException
+	 */
+	@Test
+	public void testAlohaSettingsEditable() throws NodeException {
+		JsonNode settings = Trx.supply(systemUser, () -> {
+			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA, testPage, false, false)) {
+				AlohaRenderer alohaRenderer = new AlohaRenderer();
+				RenderResult result = new RenderResult();
+				return alohaRenderer.getAlohaSettings(testPage.getOwningNode(), result, rTTrx.get(), new ObjectMapper());
+			}
+		});
+
+		if (specific) {
+			assertThat(settings.get("test").toString()).as("Aloha settings").isEqualTo("\"specific\"");
+		} else {
+			assertThat(settings.get("test").toString()).as("Aloha settings").isEqualTo("\"general\"");
+		}
+	}
+
+	/**
 	 * Test node specific node settings
 	 * @throws Exception
 	 */

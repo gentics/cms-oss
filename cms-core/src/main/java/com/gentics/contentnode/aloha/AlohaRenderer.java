@@ -750,7 +750,7 @@ public class AlohaRenderer implements TemplateRenderer {
 			try {
 				// TODO handle if( !$FEATURE['construct_categories'] )
 				stmt = t.prepareStatement(
-						"SELECT cc.id AS category_id ,d.value AS name, c.id, c.icon, c.keyword, ccd.value AS category_name " + "FROM construct c "
+						"SELECT cc.id AS category_id ,d.value AS name, c.id, c.keyword, ccd.value AS category_name " + "FROM construct c "
 						+ "LEFT JOIN dicuser d " + "ON ( d.output_id = c.name_id AND d.language_id = ?) " + "LEFT JOIN construct_category cc "
 						+ "ON c.category_id = cc.id " + "LEFT JOIN dicuser ccd " + "ON ccd.output_id = cc.name_id AND ccd.language_id = ? "
 						+ "INNER JOIN construct_node cn " + "ON cn.construct_id = c.id " + "WHERE c.intext = 1 AND cn.node_id = ? " + "GROUP BY c.id "
@@ -794,7 +794,6 @@ public class AlohaRenderer implements TemplateRenderer {
 
 					construct.put("id", rs.getString("id"));
 					construct.put("name", rs.getString("name"));
-					construct.put("icon", rs.getString("icon"));
 					construct.put("keyword", rs.getString("keyword"));
 
 					categoryName = rs.getString("category_name");

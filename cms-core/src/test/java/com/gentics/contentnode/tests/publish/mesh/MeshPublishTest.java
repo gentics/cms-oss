@@ -630,85 +630,88 @@ public class MeshPublishTest {
 	public void testMoveContentsIntoOtherNode() throws Exception {
 		String otherMeshProjectName = "othertestproject";
 
+		// create other unattended node
 		Node otherNode = supply(() -> createNode("otherNode", "OtherNode", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
 		Integer otherCrId = createMeshCR(mesh, otherMeshProjectName);
 
-		TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(otherCrId), false, null, null, null);
-		assertResponseCodeOk(entriesResponse);
-		contentEntryId = entriesResponse.getItems().stream().filter(entry -> "content".equals(entry.getMapname())).findFirst()
-				.orElseThrow(() -> new Exception("Could not find tagmap 'content'")).getId();
+		try {
+			TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(otherCrId), false, null, null, null);
+			assertResponseCodeOk(entriesResponse);
 
-		Trx.operate(() -> update(otherNode, n -> {
-			n.setContentrepositoryId(otherCrId);
-		}));
+			Trx.operate(() -> update(otherNode, n -> {
+				n.setContentrepositoryId(otherCrId);
+			}));
 
-		Trx.operate(trx -> {
-			template.getNodes().add(otherNode);
-			trx.getObject(Construct.class, pageUrlConstructId).getNodes().add(otherNode);
-		});
-
-		// create folder1 containing a page
-		Folder folder1 = Trx.supply(() -> {
-			return create(Folder.class, f -> {
-				f.setMotherId(node.getFolder().getId());
-				f.setName("Testfolder 1");
-				f.setPublishDir("folder1");
+			Trx.operate(trx -> {
+				template.getNodes().add(otherNode);
+				trx.getObject(Construct.class, pageUrlConstructId).getNodes().add(otherNode);
 			});
-		});
 
-		Page page = Trx.supply(() -> {
-			return create(Page.class, p -> {
-				p.setTemplateId(template.getId());
-				p.setFolderId(folder1.getId());
-				p.setName("Page");
+			// create folder1 containing a page
+			Folder folder1 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(node.getFolder().getId());
+					f.setName("Testfolder 1");
+					f.setPublishDir("folder1");
+				});
 			});
-		});
-		Trx.consume(upd -> update(upd, Page::publish), page);
 
-		// create folder2 (empty)
-		Folder folder2 = Trx.supply(() -> {
-			return create(Folder.class, f -> {
-				f.setMotherId(otherNode.getFolder().getId());
-				f.setName("Testfolder 2");
-				f.setPublishDir("folder2");
+			Page page = Trx.supply(() -> {
+				return create(Page.class, p -> {
+					p.setTemplateId(template.getId());
+					p.setFolderId(folder1.getId());
+					p.setName("Page");
+				});
 			});
-		});
+			Trx.consume(upd -> update(upd, Page::publish), page);
 
-		// publish
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// assert
-		operate(() -> {
-			assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
-			assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
-			assertObject("Check page", mesh.client(), MESH_PROJECT_NAME, page, true, meshPage -> {
-				assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder1));
+			// create folder2 (empty)
+			Folder folder2 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(otherNode.getFolder().getId());
+					f.setName("Testfolder 2");
+					f.setPublishDir("folder2");
+				});
 			});
-		});
 
-		// move page to folder2
-		Trx.operate(() -> {
-			OpResult result = page.move(folder2, 0, true);
-			assertThat(result.isOK()).isTrue();
-		});
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
 
-		// publish
-		try (Trx trx = new Trx()) {
-			context.publish(false);
-			trx.success();
-		}
-
-		// assert
-		operate(() -> {
-			assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, false);
-			assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
-			assertObject("Check page", mesh.client(), otherMeshProjectName, page, true, meshPage -> {
-				assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder2));
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), MESH_PROJECT_NAME, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder1));
+				});
 			});
-		});
+
+			// move page to folder2
+			Trx.operate(() -> {
+				OpResult result = page.move(folder2, 0, true);
+				assertThat(result.isOK()).isTrue();
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), otherMeshProjectName, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder2));
+				});
+			});
+		} finally {
+			operate(() -> otherNode.delete(true));
+		}		
 	}
 
 	/**

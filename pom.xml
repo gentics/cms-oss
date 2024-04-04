@@ -102,6 +102,7 @@
 		<surefire.forkcount.mesh>4</surefire.forkcount.mesh>
 		<!-- Since we have some glitch tests, we rerun failing tests once -->
 		<surefire.rerunFailingTestsCount>1</surefire.rerunFailingTestsCount>
+		<surefire.skip>false</surefire.skip>
 	</properties>
 
 	<build>
@@ -292,6 +293,9 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.22.0</version>
+					<configuration>
+						<skip>${surefire.skip}</skip>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>

@@ -1,0 +1,1 @@
+When moving an object (Page, File etc) between the nodes, that point to the completely different Mesh CRs, the following publish process may fail with an item duplication error. This has been fixed.  

@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -701,6 +702,101 @@ public class ConstructResourceTest {
 		assertEquals(updated.getConstruct().getDescriptionI18n(), description);
 	}
 
+	@Test
+	public void whenUpdatingConstructPartsOnly_constructPropertiesShouldNotChange() throws NodeException {
+		final List nodeList = Collections.singletonList(execute(Node::getId, node1));
+
+		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
+		construct.setKeyword("testtag");
+		construct.setIcon("etc.gif");
+		construct.setName("Select", "en");
+
+		construct.setMayBeSubtag(true);
+		construct.setMayContainSubtags(true);
+		construct.setAutoEnable(true);
+		construct.setNewEditor(true);
+		construct.setVisibleInMenu(true);
+
+		List<Part> parts = this.createConstructParts();
+		construct.setParts(parts);
+		ConstructLoadResponse createdConstruct = new ConstructResourceImpl().create(construct, nodeList);
+		assertResponseOK(createdConstruct);
+		assertThat(createdConstruct.getConstruct()).as("Created construct").isNotNull();
+
+		// Update only parts
+		com.gentics.contentnode.rest.model.Construct updateConstruct = new com.gentics.contentnode.rest.model.Construct();
+		Part textPart = new Part();
+		textPart.setTypeId(supply(() -> getPartTypeId(ShortTextPartType.class)));
+		textPart.setName("input2");
+
+
+		List<Part> updatedParts = new ArrayList<>();
+		updatedParts.addAll(parts);
+		updatedParts.add(textPart);
+		updateConstruct.setParts(updatedParts);
+
+		final Integer constructId = createdConstruct.getConstruct().getId();
+		ConstructLoadResponse updateResponse = new ConstructResourceImpl().update(constructId.toString(), updateConstruct, nodeList);
+
+		// should not affect construct properties
+		assertResponseOK(updateResponse);
+		assertThat(updateResponse.getConstruct().getParts()).hasSize(3);
+		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
+		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
+		Assertions.assertThat(updateResponse.getConstruct().getNewEditor()).isTrue();
+		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
+	}
+
+	@Test
+	public void whenUpdatingConstructProperties_constructPartsShouldNotChange() throws NodeException {
+		final List nodeList = Collections.singletonList(execute(Node::getId, node1));
+
+		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
+		construct.setKeyword("testtag");
+		construct.setIcon("etc.gif");
+		construct.setName("Select", "en");
+
+		List<Part> parts = this.createConstructParts();
+		construct.setParts(parts);
+
+		ConstructLoadResponse createdConstruct = new ConstructResourceImpl().create(construct, nodeList);
+		assertResponseOK(createdConstruct);
+		assertThat(createdConstruct.getConstruct()).as("Created construct").isNotNull();
+
+		// Update only properties
+		com.gentics.contentnode.rest.model.Construct updateConstruct = new com.gentics.contentnode.rest.model.Construct();
+		updateConstruct.setMayBeSubtag(true);
+		updateConstruct.setMayContainSubtags(true);
+		updateConstruct.setAutoEnable(true);
+		updateConstruct.setNewEditor(true);
+		updateConstruct.setVisibleInMenu(true);
+
+		final Integer constructId = createdConstruct.getConstruct().getId();
+		ConstructLoadResponse updateResponse = new ConstructResourceImpl().update(constructId.toString(), updateConstruct, nodeList);
+
+		// should not affect parts
+		assertResponseOK(updateResponse);
+		assertThat(updateResponse.getConstruct().getParts()).hasSize(2);
+		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
+		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
+		Assertions.assertThat(updateResponse.getConstruct().getNewEditor()).isTrue();
+		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
+	}
+
+	private List<Part> createConstructParts() throws NodeException {
+		Part selectPart = new Part();
+		selectPart.setTypeId(supply(() -> getPartTypeId(SingleSelectPartType.class)));
+
+		SelectSetting setting = new SelectSetting();
+		selectPart.setSelectSettings(setting);
+
+		Part textPart = new Part();
+		textPart.setTypeId(supply(() -> getPartTypeId(ShortTextPartType.class)));
+		textPart.setName("input");
+		textPart.setMandatory(false);
+
+		return Arrays.asList(selectPart, textPart);
+	}
 	@Test
 	public void testUpdateReassign() throws NodeException {
 		ConstructLoadResponse response = createRandomConstruct(node1);

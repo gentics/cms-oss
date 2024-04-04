@@ -2412,6 +2412,21 @@ public class MiscUtils {
 	}
 
 	/**
+	 * Wrap the given consumer into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
+	 * @param throwingConsumer consumer that throws {@link NodeException}
+	 */
+	public static <R> java.util.function.Consumer<R> wrap(
+			Consumer<R> throwingConsumer) {
+		return value -> {
+			try {
+				throwingConsumer.accept(value);
+			} catch (NodeException exception) {
+				throw new RuntimeException(exception);
+			}
+		};
+	}
+
+	/**
 	 * Make a new object mapper, with LF newlines, non-nulls serialization, output indentation.
 	 * 
 	 * @return mapper instance

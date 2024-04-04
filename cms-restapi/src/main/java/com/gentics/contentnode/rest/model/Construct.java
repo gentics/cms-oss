@@ -1,10 +1,12 @@
 package com.gentics.contentnode.rest.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Optional;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -40,17 +42,17 @@ public class Construct implements Serializable {
 	/**
 	 * This construct may contain other tags
 	 */
-	private boolean mayContainSubtags;
+	private Boolean mayContainSubtags;
 
 	/**
 	 * This construct may be inserted into other tags
 	 */
-	private boolean mayBeSubtag;
+	private Boolean mayBeSubtag;
 
 	/**
 	 * Flag to mark, which construct shall be visible to the editor in the menu.
 	 */
-	private boolean visibleInMenu;
+	private Boolean visibleInMenu;
 
 	/**
 	 * Keyword
@@ -101,7 +103,7 @@ public class Construct implements Serializable {
 	/**
 	 * Flag for using new tag editor
 	 */
-	private boolean newEditor;
+	private Boolean newEditor;
 
 	/**
 	 * URL to the external editor
@@ -126,7 +128,7 @@ public class Construct implements Serializable {
 	/**
 	 * Auto-enable the construct after creation
 	 */
-	private boolean autoEnable;
+	private Boolean autoEnable;
 
 	/**
 	 * HTML tag, assigned to the editor wrapper of the instances of this construct, in edit mode
@@ -183,8 +185,18 @@ public class Construct implements Serializable {
 	 * 
 	 * @return True or false
 	 */
-	public boolean getMayBeSubtag() {
+	public Boolean getMayBeSubtag() {
 		return this.mayBeSubtag;
+	}
+
+	/**
+	 * Whether a tag of this construct may be inserted/nested in other tags
+	 *
+	 * @return Optional of flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getMayBeSubtagOptional() {
+		return Optional.ofNullable(this.mayBeSubtag);
 	}
 
 	/**
@@ -193,7 +205,7 @@ public class Construct implements Serializable {
 	 * @param value
 	 * @return fluent API
 	 */
-	public Construct setMayBeSubtag(boolean value) {
+	public Construct setMayBeSubtag(Boolean value) {
 		this.mayBeSubtag = value;
 		return this;
 	}
@@ -203,8 +215,18 @@ public class Construct implements Serializable {
 	 * 
 	 * @return
 	 */
-	public boolean getMayContainSubtags() {
+	public Boolean getMayContainSubtags() {
 		return this.mayContainSubtags;
+	}
+
+	/**
+	 * Whether this construct may contain other tags.
+	 *
+	 * @return Optional of mayContainSubtags flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getMayContainSubtagsOptional() {
+		return Optional.ofNullable(this.mayContainSubtags);
 	}
 
 	/**
@@ -213,7 +235,7 @@ public class Construct implements Serializable {
 	 * @param value
 	 * @return fluent API
 	 */
-	public Construct setMayContainSubtags(boolean value) {
+	public Construct setMayContainSubtags(Boolean value) {
 		this.mayContainSubtags = value;
 		return this;
 	}
@@ -435,8 +457,17 @@ public class Construct implements Serializable {
 	 * Flag for using the new Tag Editor
 	 * @return newEditor flag
 	 */
-	public boolean isNewEditor() {
+	public Boolean getNewEditor() {
 		return newEditor;
+	}
+
+	/**
+	 * Flag for using the new Tag Editor
+	 * @return Optional of newEditor flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getNewEditorOptional() {
+		return Optional.ofNullable(this.newEditor);
 	}
 
 	/**
@@ -444,7 +475,7 @@ public class Construct implements Serializable {
 	 * @param newEditor flag
 	 * @return fluent API
 	 */
-	public Construct setNewEditor(boolean newEditor) {
+	public Construct setNewEditor(Boolean newEditor) {
 		this.newEditor = newEditor;
 		return this;
 	}
@@ -489,7 +520,7 @@ public class Construct implements Serializable {
 	 * True if the construct shall be visible in the menu, false if not
 	 * @return true for visible constructs, false for hidden
 	 */
-	public boolean isVisibleInMenu() {
+	public Boolean getVisibleInMenu() {
 		return visibleInMenu;
 	}
 
@@ -498,7 +529,7 @@ public class Construct implements Serializable {
 	 * @param visibleInMenu true for visible, false for hidden
 	 * @return fluent API
 	 */
-	public Construct setVisibleInMenu(boolean visibleInMenu) {
+	public Construct setVisibleInMenu(Boolean visibleInMenu) {
 		this.visibleInMenu = visibleInMenu;
 		return this;
 	}
@@ -571,8 +602,17 @@ public class Construct implements Serializable {
 	 * Flag for automatically enabling new tags, which are created based on this construct
 	 * @return flag
 	 */
-	public boolean isAutoEnable() {
+	public Boolean getAutoEnable() {
 		return autoEnable;
+	}
+
+	/**
+	 * Flag for automatically enabling new tags, which are created based on this construct
+	 * @return Optional of flag
+	 */
+	@JsonIgnore
+	public Optional<Boolean> getAutoEnableOptional() {
+		return Optional.ofNullable(this.autoEnable);
 	}
 
 	/**
@@ -580,7 +620,7 @@ public class Construct implements Serializable {
 	 * @param autoEnable flag
 	 * @return fluent API
 	 */
-	public Construct setAutoEnable(boolean autoEnable) {
+	public Construct setAutoEnable(Boolean autoEnable) {
 		this.autoEnable = autoEnable;
 		return this;
 	}

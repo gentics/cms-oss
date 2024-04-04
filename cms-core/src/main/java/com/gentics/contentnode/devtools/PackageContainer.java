@@ -1,5 +1,8 @@
 package com.gentics.contentnode.devtools;
 
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -146,9 +149,9 @@ public abstract class PackageContainer<T extends PackageSynchronizer> {
 	public void addPackageSynchronizer(Path packageDir, Consumer<String> success) throws NodeException {
 		String name = packageDir.toFile().getName();
 		if (Synchronizer.allowedPackageName(name)) {
-			Synchronizer.unwrap(() -> packages.computeIfAbsent(packageDir, key -> {
+			unwrap(() -> packages.computeIfAbsent(packageDir, key -> {
 				Synchronizer.logger.debug(String.format("New package %s", name));
-				T packageSynchronizer = Synchronizer.wrap(() -> {
+				T packageSynchronizer = wrap(() -> {
 					try {
 						return clazz.getConstructor(Path.class).newInstance(packageDir);
 					} catch (Exception e) {

@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.object;
 
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.util.HashMap;
 import java.util.List;

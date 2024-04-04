@@ -261,7 +261,6 @@ public class RenderResult {
 	 * @param clazz a class for which this message should be logged for.
 	 * @param message a short message to log.
 	 * @param details some more details for the message.
-	 * @param icon an icon for the message.
 	 */
 	public void info(Class<?> clazz, String message, String details) {
 		log(Level.INFO, clazz, message, details);
@@ -547,7 +546,6 @@ public class RenderResult {
 	 * @param clazz logging class
 	 * @param message message
 	 * @param details message details
-	 * @param icon icon
 	 */
 	private void log(Level level, Class<?> clazz, String message, String details) {
 		if (level == Level.ERROR || level == Level.FATAL) {

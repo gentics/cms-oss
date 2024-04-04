@@ -2515,6 +2515,12 @@ public class PageFactory extends AbstractFactory {
 					List<ContentLanguage> targetNodeLanguages = target.getOwningNode().getLanguages();
 					pageLanguages.removeAll(targetNodeLanguages);
 
+					// when the page to move does not have a language, but the target node has languages, we let the page have the first
+					// language assigned to the node
+					if (targetLanguage == null && !targetNodeLanguages.isEmpty()) {
+						targetLanguage = targetNodeLanguages.get(0);
+					}
+
 					// special case: the page to move has exactly one language and the target node does not have languages at all
 					if (targetNodeLanguages.isEmpty() && pageLanguages.size() == 1) {
 						targetLanguage = null;

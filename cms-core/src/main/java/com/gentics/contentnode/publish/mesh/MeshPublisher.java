@@ -2133,18 +2133,20 @@ public class MeshPublisher implements AutoCloseable {
 		for (int objectType : types) {
 			Class<? extends NodeObject> clazz = t.getClass(objectType);
 
-			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
+			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE);
+			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
+			Map<String, Set<String>> toDelete = new HashMap<>();
 
 			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
 			if (objectType == Form.TYPE_FORM) {
-				List<Form> forms = t.getObjects(Form.class, map.keySet());
-				for (Form form : forms) {
+				List<Form> deleteOfflineForms = t.getObjects(Form.class, deleteOfflineMap.keySet());
+				for (Form form : deleteOfflineForms) {
 					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 						return false;
 					}
 
-					map.remove(form.getId());
+					deleteOfflineMap.remove(form.getId());
 					if (!cr.mustContain(form)) {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
@@ -2155,29 +2157,46 @@ public class MeshPublisher implements AutoCloseable {
 						}).blockingAwait();
 					}
 				}
-			}
-			Map<String, Set<String>> toDelete = new HashMap<>();
-			for (Map.Entry<Integer, Set<String>> entry : map.entrySet()) {
-				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
-					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
-					return false;
-				}
-
-				String meshUuid = null;
-				String meshLanguage = null;
-				if (entry.getValue() != null) {
-					for (String value : entry.getValue()) {
-						if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
-							meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
-						} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
-							meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
-						}
+				List<Form> removeForms = t.getObjects(Form.class, removeMap.keySet());
+				for (Form form : removeForms) {
+					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+						return false;
+					}
+					removeMap.remove(form.getId());
+					if (!cr.mustContain(form)) {
+						String meshUuid = getMeshUuid(form);
+						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
+							for (String lang : languages) {
+								remove(project, branch, objectType, meshUuid, lang);
+							}
+							return Completable.complete();
+						}).blockingAwait();
 					}
 				}
-				if (meshUuid != null) {
-					toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
-				}
 			}
+			if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+				logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+				return false;
+			}
+			Stream.of(deleteOfflineMap.entrySet().stream(), removeMap.entrySet().stream())
+					.flatMap(java.util.function.Function.identity())
+					.forEach(entry -> {
+						String meshUuid = null;
+						String meshLanguage = null;
+						if (entry.getValue() != null) {
+							for (String value : entry.getValue()) {
+								if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
+									meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
+								} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
+									meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
+								}
+							}
+						}
+						if (meshUuid != null) {
+							toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
+						}
+					});
 
 			// check whether we really want to delete the object in Mesh
 			try (ChannelTrx cTrx = new ChannelTrx(node)) {

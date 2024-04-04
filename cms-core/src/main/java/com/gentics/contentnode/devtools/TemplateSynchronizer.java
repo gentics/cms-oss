@@ -1,26 +1,8 @@
 package com.gentics.contentnode.devtools;
 
 import static com.gentics.contentnode.devtools.Synchronizer.fixSorting;
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.gentics.contentnode.object.Part;
-import org.apache.commons.io.FileUtils;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -40,6 +22,19 @@ import com.gentics.contentnode.object.TemplateTag;
 import com.gentics.contentnode.object.Value;
 import com.gentics.contentnode.rest.model.devtools.TemplateInPackage;
 import com.gentics.lib.util.FileUtil;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.text.Normalizer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Synchronizer implementation for templates

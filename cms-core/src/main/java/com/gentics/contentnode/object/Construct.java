@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.object;
 
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,10 +90,12 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		if (from.getCategoryId() != null) {
 			to.setConstructCategoryId(from.getCategoryId());
 		}
-		to.setAutoEnable(from.isAutoEnable());
-		to.setMayBeSubtag(from.getMayBeSubtag());
-		to.setMayContainSubtags(from.getMayContainSubtags());
-		to.setNewEditor(from.isNewEditor());
+		unwrap(()-> {
+			from.getNewEditorOptional().ifPresent(wrap(to::setNewEditor));
+			from.getAutoEnableOptional().ifPresent(wrap(to::setAutoEnable));
+			from.getMayContainSubtagsOptional().ifPresent(wrap(to::setMayContainSubtags));
+			from.getMayBeSubtagOptional().ifPresent(wrap(to::setMayBeSubtag));
+		});
 
 		if (from.getParts() != null) {
 			List<Part> parts = to.getParts();

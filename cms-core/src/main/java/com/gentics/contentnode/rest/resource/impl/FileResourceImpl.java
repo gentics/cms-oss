@@ -8,6 +8,56 @@ package com.gentics.contentnode.rest.resource.impl;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.BodyPart;
+import org.glassfish.jersey.media.multipart.BodyPartEntity;
+import org.glassfish.jersey.media.multipart.MultiPart;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.api.lib.i18n.I18nString;
@@ -21,7 +71,6 @@ import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionException;
 import com.gentics.contentnode.factory.TransactionLockManager;
 import com.gentics.contentnode.factory.TransactionManager;
-import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.Wastebin;
 import com.gentics.contentnode.factory.WastebinFilter;
 import com.gentics.contentnode.factory.object.DisinheritUtils;
@@ -98,54 +147,6 @@ import com.gentics.contentnode.validation.validator.ValidationResult;
 import com.gentics.lib.i18n.CNI18nString;
 import com.gentics.lib.log.NodeLogger;
 import com.gentics.lib.util.FileUtil;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.glassfish.jersey.media.multipart.BodyPart;
-import org.glassfish.jersey.media.multipart.BodyPartEntity;
-import org.glassfish.jersey.media.multipart.MultiPart;
-
-import javax.annotation.PostConstruct;
-import javax.imageio.ImageIO;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Resource for loading and manipulating Files in GCN
@@ -430,13 +431,21 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			// This also calls initialize()
 			authenticate(metaData);
 
+			Folder folder = null;
+			Node owningNode = null;
+
 			// Set the folderId from the query parameters
 			if (!StringUtils.isEmpty(folderId)) {
-				metaData.setFolderId(folderId);
-			} else if (metaData.hasProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY)) {
+				folder = MiscUtils.load(Folder.class, folderId);
+				metaData.setFolderId(Integer.toString(folder.getId()));
+			} else if (!metaData.hasProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY)) {
 				throw new NodeException(
 						"Needed parameter is missing. Folderid parameter {" + FileUploadMetaData.META_DATA_FOLDERID_KEY + "} is {" + folderId + "}");
+			} else {
+				folder = MiscUtils.load(Folder.class, metaData.getProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY));
 			}
+
+			owningNode = folder.getOwningNode();
 
 			if (!StringUtils.isEmpty(nodeId)) {
 				metaData.setNodeId(nodeId);
@@ -453,7 +462,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			String mimeType = FileUtil.getMimeTypeByExtension(metaData.getFilename());
 			boolean isImage = mimeType != null && mimeType.startsWith("image/");
 
-			metaData.setFilename(adjustFilename(isImage, metaData.getFilename(), metaData.getNodeId(), metaData.getFolderId()));
+			metaData.setFilename(adjustFilename(isImage, metaData.getFilename(), owningNode));
 			metaData.setDescription(ObjectTransformer.getString(description, ""));
 			metaData.setOverwrite(overwrite ? "true" : "false");
 
@@ -604,8 +613,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			}
 
 			// Check for mandatory fields
-			if ((fileId == 0 && !metaData.containsKey(FileUploadMetaData.META_DATA_FOLDERID_KEY))
-					|| metaData.getProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY).contentEquals("")) {
+			if (fileId == 0 && StringUtils.isBlank(metaData.getProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY))) {
 				throw new WebApplicationException(
 						new Exception("Could not find value for folderId parameter {" + FileUploadMetaData.META_DATA_FOLDERID_KEY + "}"));
 			}
@@ -632,10 +640,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 			// Load needed information from metaData
 			Integer nodeId = metaData.getNodeId();
-			Integer folderId = metaData.getFolderId();
-			String filename = adjustFilename(isImage, metaData.getFilename(), nodeId, folderId);
-
-			metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, filename);
 
 			String description = metaData.getDescription();
 			Object fileEntity = fileDataBodyPart.getEntity();
@@ -651,21 +655,29 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			boolean overwriteExisting = metaData.getOverwrite();
 
 			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
+				Folder folder = null;
+				Node owningNode = null;
+
+				if (fileId == 0) {
+					folder = MiscUtils.load(Folder.class, metaData.getProperty(FileUploadMetaData.META_DATA_FOLDERID_KEY));
+				} else {
+					File file = MiscUtils.load(File.class, Integer.toString(fileId));
+					folder = file.getFolder();
+				}
+				owningNode = folder.getOwningNode();
+
+				String filename = adjustFilename(isImage, metaData.getFilename(), owningNode);
+				metaData.put(FileUploadMetaData.META_DATA_FILE_NAME_KEY, filename);
+
 				if (overwriteExisting && fileId == 0) {
 					// If overwrite is enabled and a file with the same filename exists in the given folder,
 					// overwrite it
-					File file = findFileByName(folderId, FileFactory.sanitizeName(filename));
+					File file = findFileByName(folder.getId(), FileFactory.sanitizeName(filename));
 
 					// Only overwrite local or localized files
 					if (file != null && !file.isInherited()) {
 						fileId = file.getId();
 					}
-				}
-
-				Folder folder = t.getObject(Folder.class, folderId);
-
-				if (folder == null) {
-					throw new EntityNotFoundException("No folder with ID `" + folderId + "'");
 				}
 
 				// If webp conversion is enabled and this is an image, the input stream has to be converted to webp.
@@ -674,7 +686,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, mediaType, folder.getNode())) {
 					if (fileId == 0) {
 						// Create a new file
-						return createFile(in, folderId, nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						return createFile(in, folder.getId(), nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
 						return saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
@@ -727,7 +739,10 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
 			boolean isImage = mimeType != null && mimeType.startsWith("image/");
 
-			sentFilename = adjustFilename(isImage, sentFilename, metaData.getNodeId(), metaData.getFolderId());
+			Folder folder = MiscUtils.load(Folder.class, metaData.getProperty(META_DATA_FOLDERID_KEY));
+			Node owningNode = folder.getOwningNode();
+
+			sentFilename = adjustFilename(isImage, sentFilename, owningNode);
 			metaData.setFilename(sentFilename);
 
 			// Since we previously omitted the authentication for multipart requests we have to do it now
@@ -908,32 +923,6 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		}
 
 		return !Objects.equals(origName, request.getName());
-	}
-
-	/**
-	 * Set the extension of the given filename to ".webp" if it is an image and
-	 * {@link Feature#WEBP_CONVERSION} is enabled for the node.
-	 *
-	 * @param isImage Whether the file is an image.
-	 * @param filename The filename to adjust.
-	 * @param nodeId The node ID of the target file.
-	 * @param folderId the files parent folder ID.
-	 * @return The filename with the extension replaced by ".webp" if it is an
-	 * 		image and webp conversion is enabled, and the original
-	 * 		filename otherwise.
-	 */
-	private String adjustFilename(boolean isImage, String filename, Integer nodeId, Integer folderId) throws NodeException {
-		return Trx.supply(() -> {
-			try (ChannelTrx trx = new ChannelTrx(nodeId)) {
-				Folder folder = TransactionManager.getCurrentTransaction().getObject(Folder.class, folderId);
-
-				if (folder == null) {
-					throw new EntityNotFoundException("No folder with ID `" + folderId + "'");
-				}
-
-				return adjustFilename(isImage, filename, folder.getNode());
-			}
-		});
 	}
 
 	/**
@@ -1559,24 +1548,17 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		authenticate(metaData);
 
 		String sentFilename = metaData.getFilename();
-		String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
-		boolean isImage = mimeType != null && mimeType.startsWith("image/");
-
-		try {
-			sentFilename = adjustFilename(isImage, sentFilename, metaData.getNodeId(), metaData.getFolderId());
-		} catch (NodeException e) {
-			logger.error("Error while saving file " + id, e);
-			I18nString message = new CNI18nString("rest.general.error");
-
-			return new GenericResponse(
-				new Message(Message.Type.CRITICAL, message.toString()),
-				new ResponseInfo(ResponseCode.FAILURE, "Error while saving file " + id + ": " + e.getLocalizedMessage()));
-		}
-
-		metaData.setFilename(sentFilename);
 
 		if (!ObjectTransformer.isEmpty(sentFilename)) {
 			try {
+				String mimeType = FileUtil.getMimeTypeByExtension(sentFilename);
+				boolean isImage = mimeType != null && mimeType.startsWith("image/");
+
+				File file = MiscUtils.load(File.class, Integer.toString(id));
+				Node owningNode = file.getOwningNode();
+				sentFilename = adjustFilename(isImage, sentFilename, owningNode);
+				metaData.setFilename(sentFilename);
+
 				String lockKey = FileFactory.sanitizeName(sentFilename);
 				return executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, id));
 			} catch (NodeException e) {

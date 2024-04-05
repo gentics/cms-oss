@@ -82,11 +82,10 @@ public class FileUploadPermissionsTest {
 	@Test
 	public void testNoPermission() throws NodeException, ParseException, IOException {
 		doUploadTest(nodeWithoutPerm, uploadResponse -> {
-			I18nString i18nMessage = new CNI18nString("rest.file.upload.missing_perm_folder");
+			I18nString i18nMessage = new CNI18nString("folder.nopermission");
 			i18nMessage.setParameter("0", nodeWithoutPerm.getFolder().getId());
 
-			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.FAILURE,
-					"You don't have permission to create files in the folder with id " + nodeWithoutPerm.getFolder().getId() + ".",
+			ContentNodeRESTUtils.assertResponse(uploadResponse, ResponseCode.PERMISSION, i18nMessage.toString(),
 					new Message(Type.CRITICAL, i18nMessage.toString()));
 		});
 	}

@@ -474,6 +474,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			String lockKey = FileFactory.sanitizeName(filename);
 
 			return (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, 0));
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), false);
+		} catch (EntityNotFoundException e) {
+			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), false);
 		} catch (Exception e) {
 			NodeLogger.getNodeLogger(getClass()).error("Error while creating file.", e);
 
@@ -755,6 +760,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 			String lockKey = FileFactory.sanitizeName(sentFilename);
 
 			fileUploadResponse = (FileUploadResponse) executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, 0));
+		} catch (InsufficientPrivilegesException e) {
+			InsufficientPrivilegesMapper.log(e);
+			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()), false);
+		} catch (EntityNotFoundException e) {
+			return new FileUploadResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()), false);
 		} catch (Exception e) {
 			logger.error("Error while creating file " + sentFilename, e);
 			I18nString message = new CNI18nString("rest.general.error");
@@ -1561,6 +1571,11 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 
 				String lockKey = FileFactory.sanitizeName(sentFilename);
 				return executeLocked(fileNameLock, lockKey, () -> handleMultiPartRequest(multiPart, metaData, id));
+			} catch (InsufficientPrivilegesException e) {
+				InsufficientPrivilegesMapper.log(e);
+				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.PERMISSION, e.getMessage()));
+			} catch (EntityNotFoundException e) {
+				return new GenericResponse(new Message(Type.CRITICAL, e.getLocalizedMessage()), new ResponseInfo(ResponseCode.NOTFOUND, e.getMessage()));
 			} catch (NodeException e) {
 				logger.error("Error while saving file " + id, e);
 				I18nString message = new CNI18nString("rest.general.error");

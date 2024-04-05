@@ -1,5 +1,6 @@
 import { APP_INITIALIZER, NgModule, Provider } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { GenticsUICoreModule } from '@gentics/ui-core';
 import { ColorAlphaModule } from 'ngx-color/alpha';
 import { ColorSliderModule } from 'ngx-color/slider';
 import { EditorOverlayModule } from '../editor-overlay/editor-overlay.module';
@@ -19,6 +20,7 @@ import {
     AlohaInputRendererComponent,
     AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
+    AlohaSelectRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaSymbolGridRendererComponent,
     AlohaSymbolSearchGridRendererComponent,
@@ -56,7 +58,6 @@ import {
     DynamicOverlayService,
     IFrameCollectionService,
 } from './providers';
-import { GenticsUICoreModule } from '@gentics/ui-core';
 
 const COMPONENTS = [
     AlohaAttributeButtonRendererComponent,
@@ -72,12 +73,14 @@ const COMPONENTS = [
     AlohaInputRendererComponent,
     AlohaLinkTargetRendererComponent,
     AlohaSelectMenuRendererComponent,
+    AlohaSelectRendererComponent,
     AlohaSplitButtonRendererComponent,
     AlohaSymbolGridRendererComponent,
     AlohaSymbolSearchGridRendererComponent,
     AlohaTableSizeSelectRendererComponent,
     AlohaToggleButtonRendererComponent,
     AlohaToggleSplitButtonRendererComponent,
+
     CombinedPropertiesEditorComponent,
     ConfirmApplyToSubitemsModalComponent,
     ConfirmNavigationModal,

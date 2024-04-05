@@ -11,6 +11,7 @@ export * from './aloha-iframe-renderer/aloha-iframe-renderer.component';
 export * from './aloha-input-renderer/aloha-input-renderer.component';
 export * from './aloha-link-target-renderer/aloha-link-target-renderer.component';
 export * from './aloha-select-menu-renderer/aloha-select-menu-renderer.component';
+export * from './aloha-select-renderer/aloha-select-renderer.component';
 export * from './aloha-split-button-renderer/aloha-split-button-renderer.component';
 export * from './aloha-symbol-grid-renderer/aloha-symbol-grid-renderer.component';
 export * from './aloha-symbol-search-grid-renderer/aloha-symbol-search-grid-renderer.component';
@@ -38,4 +39,3 @@ export * from './simple-delete-modal/simple-delete-modal.component';
 export * from './symbol-grid/symbol-grid.component';
 export * from './table-size-input/table-size-input.component';
 export * from './table-size-select/table-size-select.component';
-

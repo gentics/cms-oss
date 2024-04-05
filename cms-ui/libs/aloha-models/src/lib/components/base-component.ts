@@ -48,6 +48,7 @@ export enum AlohaCoreComponentNames {
     IFRAME = 'iframe',
     INPUT = 'input',
     LINK_TARGET = 'link-target',
+    SELECT = 'select',
     SELECT_MENU = 'select-menu',
     SPLIT_BUTTON = 'split-button',
     SYMBOL_GRID = 'symbol-grid',

@@ -37,6 +37,7 @@ import { AlohaTableSizeSelectRendererComponent } from '../aloha-table-size-selec
 import { AlohaToggleButtonRendererComponent } from '../aloha-toggle-button-renderer/aloha-toggle-button-renderer.component';
 import { AlohaToggleSplitButtonRendererComponent } from '../aloha-toggle-split-button-renderer/aloha-toggle-split-button-renderer.component';
 import { BaseAlohaRendererComponent } from '../base-aloha-renderer/base-aloha-renderer.component';
+import { AlohaSelectRendererComponent } from '../aloha-select-renderer/aloha-select-renderer.component';
 
 const RENDER_COMPONENTS: Record<string, Type<BaseAlohaRendererComponent<any, any>>> = {
     [AlohaCoreComponentNames.ATTRIBUTE_BUTTON]: AlohaAttributeButtonRendererComponent,
@@ -50,6 +51,7 @@ const RENDER_COMPONENTS: Record<string, Type<BaseAlohaRendererComponent<any, any
     [AlohaCoreComponentNames.IFRAME]: AlohaIFrameRendererComponent,
     [AlohaCoreComponentNames.INPUT]: AlohaInputRendererComponent,
     [AlohaCoreComponentNames.LINK_TARGET]: AlohaLinkTargetRendererComponent,
+    [AlohaCoreComponentNames.SELECT]: AlohaSelectRendererComponent,
     [AlohaCoreComponentNames.SELECT_MENU]: AlohaSelectMenuRendererComponent,
     [AlohaCoreComponentNames.SPLIT_BUTTON]: AlohaSplitButtonRendererComponent,
     [AlohaCoreComponentNames.SYMBOL_GRID]: AlohaSymbolGridRendererComponent,

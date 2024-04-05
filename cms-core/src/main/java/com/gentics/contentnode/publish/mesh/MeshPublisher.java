@@ -2175,28 +2175,29 @@ public class MeshPublisher implements AutoCloseable {
 					}
 				}
 			}
-			if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
-				logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
-				return false;
+
+			Iterable<Map.Entry<Integer,Set<String>>> iterable = () -> Stream.of(deleteOfflineMap.entrySet().stream(), removeMap.entrySet().stream())
+					.flatMap(java.util.function.Function.identity()).iterator();
+			for (Entry<Integer, Set<String>> entry : iterable) {
+				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+					return false;
+				}
+				String meshUuid = null;
+				String meshLanguage = null;
+				if (entry.getValue() != null) {
+					for (String value : entry.getValue()) {
+						if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
+							meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
+						} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
+							meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
+						}
+					}
+				}
+				if (meshUuid != null) {
+					toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
+				}
 			}
-			Stream.of(deleteOfflineMap.entrySet().stream(), removeMap.entrySet().stream())
-					.flatMap(java.util.function.Function.identity())
-					.forEach(entry -> {
-						String meshUuid = null;
-						String meshLanguage = null;
-						if (entry.getValue() != null) {
-							for (String value : entry.getValue()) {
-								if (org.apache.commons.lang3.StringUtils.startsWith(value, "uuid:")) {
-									meshUuid = org.apache.commons.lang3.StringUtils.removeStart(value, "uuid:");
-								} else if (org.apache.commons.lang3.StringUtils.startsWith(value, "language:")) {
-									meshLanguage = org.apache.commons.lang3.StringUtils.removeStart(value, "language:");
-								}
-							}
-						}
-						if (meshUuid != null) {
-							toDelete.computeIfAbsent(meshUuid, k -> new HashSet<>()).add(meshLanguage);
-						}
-					});
 
 			// check whether we really want to delete the object in Mesh
 			try (ChannelTrx cTrx = new ChannelTrx(node)) {

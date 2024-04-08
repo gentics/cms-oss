@@ -8,6 +8,7 @@ import {
 import {
     EditMode,
     File,
+    FileOrImage,
     Folder,
     Form,
     GcmsUiLanguage,
@@ -20,6 +21,7 @@ import {
     Raw,
     RepositoryBrowserOptions,
     Tag,
+    TagEditorOptions,
     TagEditorResult,
     TagInContainer,
     TagType,
@@ -90,6 +92,12 @@ export interface GcmsUiBridge {
      * the documentation, e.g. `/folder/create`.
      */
     restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
+    /*
+     * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+     * the documentation, e.g. `/folder/create`.
+     */
+    restRequestDELETE: (endpoint: string, params?: object) => Promise<object | void>;
     /**
      * Client for interacting with all the GCMS APIs.
      */
@@ -118,7 +126,17 @@ export interface GcmsUiBridge {
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>, withDelete?: boolean) => Promise<TagEditorResult>;
+    openTagEditor: (tag: Tag, tagType: TagType, page: Page<Raw>, options?: TagEditorOptions) => Promise<TagEditorResult>;
+
+    /**
+     * Opens an the upload modal to allow the user to upload files/images to a specified folder.
+     *
+     * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
+     * @param destinationFolder The folder to where the file/image should be uploaded to.
+     * @param allowFolderSelection If the user should be allowed to change the destination folder.
+     * @returns A Promise for the uploaded file/image.
+     */
+    openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
 
     /**
      * Opens a modal with a dynamic form configuration.

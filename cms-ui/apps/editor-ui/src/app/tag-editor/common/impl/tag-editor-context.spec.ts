@@ -49,6 +49,10 @@ describe('TagEditorContextImpl', () => {
         gcmsUiServices = {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
             openImageEditor: jasmine.createSpy('openImageEditor'),
+            openUploadModal: jasmine.createSpy('openUploadModal'),
+            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
+            restRequestGET: jasmine.createSpy('restRequestGET'),
+            restRequestPOST: jasmine.createSpy('restRequestPOST'),
         };
     });
 

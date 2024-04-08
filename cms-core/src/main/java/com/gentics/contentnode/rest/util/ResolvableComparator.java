@@ -155,7 +155,7 @@ public class ResolvableComparator<T extends Resolvable> implements Comparator<T>
 
 		if (!paths.isEmpty()) {
 			orderByClause.append(" ORDER BY ");
-			orderByClause.append(paths.stream().map(sort -> sort.path + (sort.sortFactor > 0 ? " ASC" : " DESC"))
+			orderByClause.append(paths.stream().map(sort -> getPath(sort.path) + (sort.sortFactor > 0 ? " ASC" : " DESC"))
 					.collect(Collectors.joining(", ")));
 		}
 

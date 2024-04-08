@@ -29,7 +29,7 @@ h3. General settings
 You can enforce a max filesize for uplading files:
 
 <shell filename="conf/*.yml">
-max_filesize: "64MB"
+maxfilesize: "64MB"
 </shell>
 
 h4. JPG / CMYK

@@ -12,12 +12,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.File;
@@ -56,7 +56,7 @@ public class PermissionStore {
 	/**
 	 * Loader for instances of {@link PermissionStoreService}
 	 */
-	protected static ServiceLoader<PermissionStoreService> permissionStoreServiceLoader = ServiceLoader
+	protected static ServiceLoaderUtil<PermissionStoreService> permissionStoreServiceLoader = ServiceLoaderUtil
 			.load(PermissionStoreService.class);
 
 	/**

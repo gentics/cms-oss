@@ -38,7 +38,31 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface ObjectPropertyResource {
 	/**
-	 * List object properties
+	 * List object properties.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>keyword</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>type</code></li>
+	 * <li><code>required</code></li>
+	 * <li><code>inheritable</code></li>
+	 * <li><code>syncContentset</code></li>
+	 * <li><code>syncChannelset</code></li>
+	 * <li><code>syncVariants</code></li>
+	 * <li><code>construct.name</code></li>
+	 * <li><code>category.name</code></li>
+	 * </ul>
 	 * @param sorting sort parameters
 	 * @param filter filter parameter
 	 * @param paging paging parameters
@@ -195,7 +219,21 @@ public interface ObjectPropertyResource {
 	GenericResponse deleteCategory(@PathParam("id") String objectPropertyCategoryId) throws Exception;
 
 	/**
-	 * List all object property categories
+	 * List all object property categories.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>sortOrder</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>sortOrder</code></li>
+	 * </ul>
 	 * @return response with list
 	 * @throws Exception
 	 * @HTTP 200 The list is returned

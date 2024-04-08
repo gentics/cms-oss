@@ -1,0 +1,2 @@
+The update method @PUT /construct/{1}@ was overriding construct properties, even when only parts where updated.
+This impacts the rest model for the construct class as boolean fields are now non-primitives.

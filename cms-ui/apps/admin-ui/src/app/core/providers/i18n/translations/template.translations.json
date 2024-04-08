@@ -73,11 +73,11 @@
     },
     "assign_to_node_error": {
         "en": "An error occured while assigning the Template \"{{ templateName }}\" to \"{{ nodeName }}\"!\n{{ errorMessage }}",
-        "de": "Es ist ein Fehler bei der zuweisung der Vorlage „{{ templateName }}“ zu „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
+        "de": "Es ist ein Fehler bei der Zuweisung der Vorlage „{{ templateName }}“ zu „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
     },
     "unassign_from_node_error": {
         "en": "An error occured while un-assigning the Template \"{{ templateName }}\" from \"{{ nodeName }}\"!\n{{ errorMessage }}",
-        "de": "Es ist ein Fehler bei der entfernung der Vorlage „{{ templateName }}“ von „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
+        "de": "Es ist ein Fehler bei der Entfernung der Vorlage „{{ templateName }}“ von „{{ nodeName }}“ aufgetreten!\n{{ errorMessage }}"
     },
     "info_selected_templates": {
         "en": "{{amountSelected}} of {{amountTotal}} Templates selected",

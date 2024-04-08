@@ -22,6 +22,13 @@ export interface CustomEditor {
 
 }
 
+export interface TagEditorOptions {
+    /** If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well. */
+    skipInsert?: boolean;
+    /** If the tag-fill/user should be able to delete the tag in question. */
+    withDelete?: boolean;
+}
+
 export interface TagEditorResult {
     doDelete: boolean;
     tag: EditableTag;

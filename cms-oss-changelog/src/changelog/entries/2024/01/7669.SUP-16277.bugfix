@@ -1,0 +1,1 @@
+Overviews that contained objects, which were deleted caused NullPointerExceptions during publishing to a Mesh Content.Repository, which have been fixed.

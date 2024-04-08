@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.object;
 
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -91,10 +91,12 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		if (from.getCategoryId() != null) {
 			to.setConstructCategoryId(from.getCategoryId());
 		}
-		to.setAutoEnable(from.isAutoEnable());
-		to.setMayBeSubtag(from.getMayBeSubtag());
-		to.setMayContainSubtags(from.getMayContainSubtags());
-		to.setNewEditor(from.isNewEditor());
+		unwrap(()-> {
+			from.getNewEditorOptional().ifPresent(wrap(to::setNewEditor));
+			from.getAutoEnableOptional().ifPresent(wrap(to::setAutoEnable));
+			from.getMayContainSubtagsOptional().ifPresent(wrap(to::setMayContainSubtags));
+			from.getMayBeSubtagOptional().ifPresent(wrap(to::setMayBeSubtag));
+		});
 
 		if (from.getEditorControlStyle() != null) {
 			to.setEditorControlStyle(from.getEditorControlStyle());
@@ -241,6 +243,7 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		resolvableProperties.put("name", new NodeObjectProperty<>((o, key) -> o.getName().toString(), "name"));
 		resolvableProperties.put("description", new NodeObjectProperty<>((o, key) -> o.getDescription().toString(), "description"));
 		resolvableProperties.put("keyword", new NodeObjectProperty<>((o, key) -> o.getKeyword(), "keyword"));
+		resolvableProperties.put("category", new NodeObjectProperty<>((o, key) -> o.getConstructCategory(), "category"));
 	}
 
 	@Override
@@ -419,6 +422,13 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		tags.addAll(getObjectTags());
 		return tags;
 	}
+
+	/**
+	 * Check whether the construct is used
+	 * @return true, iff the construct is used
+	 * @throws NodeException
+	 */
+	public abstract boolean isUsed() throws NodeException;
 
 	public String getStackHashKey() {
 		return "construct:" + getHashKey();

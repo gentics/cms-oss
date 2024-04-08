@@ -5,7 +5,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import { ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { ContentRepository, GtxNodePageLanguageCode, IndexById, Normalized } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual as _isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, map, startWith, takeUntil } from 'rxjs/operators';
 
@@ -251,7 +251,7 @@ export class NodePublishingPropertiesComponent implements OnInit, OnChanges, OnD
 
         this.fgPublishing.valueChanges.pipe(
             startWith({}),
-            distinctUntilChanged(_isEqual),
+            distinctUntilChanged(isEqual),
             takeUntil(this.stopper.stopper$),
         ).subscribe(formData => this.onFormDataChange(formData));
     }

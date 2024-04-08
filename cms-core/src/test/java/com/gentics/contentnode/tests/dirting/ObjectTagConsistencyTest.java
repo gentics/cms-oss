@@ -1,27 +1,38 @@
 package com.gentics.contentnode.tests.dirting;
 
+import static com.gentics.contentnode.factory.Trx.operate;
+import static com.gentics.contentnode.factory.Trx.supply;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectTagDefinition;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.ObjectTag;
 import com.gentics.contentnode.object.ObjectTagDefinition;
+import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.parttype.HTMLPartType;
 import com.gentics.contentnode.rest.model.ObjectProperty;
-import com.gentics.contentnode.rest.model.response.FolderLoadResponse;
-import com.gentics.contentnode.rest.resource.impl.FolderResourceImpl;
 import com.gentics.contentnode.rest.resource.impl.ObjectPropertyResourceImpl;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils;
 import com.gentics.contentnode.testutils.DBTestContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import java.io.IOException;
-import static com.gentics.contentnode.factory.Trx.supply;
-import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createConstruct;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
-import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createObjectTagDefinition;
 
+/**
+ * Test cases for changing object property definitions
+ */
 public class ObjectTagConsistencyTest {
 
 	@ClassRule
@@ -29,62 +40,194 @@ public class ObjectTagConsistencyTest {
 
 	private static Node node;
 
+	private static int constructId;
+
+	private static int otherConstructId;
+
+	private static List<Integer> defaultObjectPropertyIds;
+
 	final String TAG_NAME = "copyright_tag";
 
-	@Before
-	public void setupOnce() throws NodeException, IOException {
-		testContext.startTransaction(1);
+	private ObjectTagDefinition tagDefinition;
+
+	private Folder folder1;
+
+	private Folder folder2;
+
+	@BeforeClass
+	public static void setupOnce() throws NodeException, IOException {
+		testContext.getContext().getTransaction().commit();
 		node = supply(() -> createNode());
+
+		constructId = supply(() -> createConstruct(node, HTMLPartType.class, "html", "html"));
+		otherConstructId = supply(() -> createConstruct(node, HTMLPartType.class, "otherhtml", "html"));
+
+		defaultObjectPropertyIds = supply(() -> DBUtils.select("SELECT id FROM objtag WHERE obj_id = 0", DBUtils.IDLIST));
+	}
+
+	@Before
+	public void setup() throws NodeException {
+		operate(t -> {
+			clear(node);
+
+			List<Integer> objectPropertyIds = new ArrayList<>(DBUtils.select("SELECT id FROM objtag WHERE obj_id = 0", DBUtils.IDLIST));
+			objectPropertyIds.removeAll(defaultObjectPropertyIds);
+
+			for (ObjectTagDefinition objectTagDefinition : t.getObjects(ObjectTagDefinition.class, objectPropertyIds)) {
+				objectTagDefinition.delete(true);
+			}
+		});
+
+		tagDefinition = supply(() -> createObjectTagDefinition(TAG_NAME, Folder.TYPE_FOLDER, constructId));
+		folder1 = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder1"));
+		folder2 = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder2"));
 	}
 
 	@Test
-	public void testFolderTagPropertiesShouldBeConsistentAfterUpdate() throws NodeException {
-		final int CONSTRUCT_ID = supply(() -> createConstruct(node, HTMLPartType.class, "html", "html"));
-		ObjectTagDefinition tagDefinition =  supply(() -> createObjectTagDefinition(TAG_NAME, Folder.TYPE_FOLDER, CONSTRUCT_ID));
+	public void testChangeRequired() throws NodeException {
+		ObjectTag objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		ObjectTag objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
 
-		Folder folder1 = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder1"));
-		Folder folder2 = supply(() -> ContentNodeTestDataUtils.createFolder(node.getFolder(), "Folder2"));
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
 
-		ObjectProperty changedObjectProperty = changeObjectTagDefinitionProperty(folder1.getObjectTag(TAG_NAME));
+		supply(() -> new ObjectPropertyResourceImpl().update(Integer.toString(tagDefinition.getId()), new ObjectProperty().setRequired(true)));
 
-		final String TAG_DEFINITION_ID = Integer.toString(tagDefinition.getObjectTag().getId());
-		supply(() -> new ObjectPropertyResourceImpl().update(TAG_DEFINITION_ID, changedObjectProperty));
+		objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
 
-		com.gentics.contentnode.rest.model.ObjectTag retrievedTagFolder1 = extractTagFromResponse(folder1);
-		com.gentics.contentnode.rest.model.ObjectTag retrievedTagFolder2 = extractTagFromResponse(folder2);
-
-		assertThat(retrievedTagFolder1.getRequired()).isTrue();
-		assertThat(retrievedTagFolder1.getInheritable()).isTrue();
-
-		assertThat(retrievedTagFolder2.getRequired()).isTrue();
-		assertThat(retrievedTagFolder2.getInheritable()).isTrue();
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", true)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", true)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
 	}
 
-	private com.gentics.contentnode.rest.model.ObjectTag extractTagFromResponse(Folder folder) throws NodeException {
-		FolderLoadResponse restFolder = supply(() -> new FolderResourceImpl().load(
-				folder.getId().toString(),
-				false,
-				false,
-				true,
-				node.getId(),
-				null
-		));
+	@Test
+	public void testChangeInheritable() throws NodeException {
+		ObjectTag objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		ObjectTag objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
 
-		return (com.gentics.contentnode.rest.model.ObjectTag) restFolder.getFolder()
-				.getTags()
-				.get(String.format("object.%s", TAG_NAME));
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+
+		supply(() -> new ObjectPropertyResourceImpl().update(Integer.toString(tagDefinition.getId()), new ObjectProperty().setInheritable(true)));
+
+		objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
+
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", true)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", true)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
 	}
 
-	private ObjectProperty changeObjectTagDefinitionProperty(ObjectTag objectTag) throws NodeException {
-		ObjectProperty objectProperty = new ObjectProperty();
-		objectProperty.setName(objectProperty.getName());
-		objectProperty.setRequired(true);
-		objectProperty.setInheritable(true);
-		objectProperty.setConstructId(objectTag.getConstructId());
-		objectProperty.setType(objectTag.getObjType());
+	@Test
+	public void testChangeConstructId() throws NodeException {
+		ObjectTag objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		ObjectTag objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
 
-		return objectProperty;
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+
+		supply(() -> new ObjectPropertyResourceImpl().update(Integer.toString(tagDefinition.getId()), new ObjectProperty().setConstructId(otherConstructId)));
+
+		objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
+
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", otherConstructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", otherConstructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
 	}
 
+	@Test
+	public void testTryChangeType() throws NodeException {
+		ObjectTag objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		ObjectTag objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
 
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+
+		supply(() -> new ObjectPropertyResourceImpl().update(Integer.toString(tagDefinition.getId()), new ObjectProperty().setType(Page.TYPE_PAGE)));
+
+		objectTag1 = supply(() -> folder1.getObjectTag(TAG_NAME));
+		objectTag2 = supply(() -> folder2.getObjectTag(TAG_NAME));
+
+		assertThat(objectTag1).as("Object Tag of Folder1")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+		assertThat(objectTag2).as("Object Tag of Folder2")
+			.isNotNull()
+			.hasFieldOrPropertyWithValue("required", false)
+			.hasFieldOrPropertyWithValue("inheritable", false)
+			.hasFieldOrPropertyWithValue("constructId", constructId)
+			.hasFieldOrPropertyWithValue("objType", Folder.TYPE_FOLDER);
+	}
 }

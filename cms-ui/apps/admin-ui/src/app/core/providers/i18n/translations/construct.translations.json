@@ -406,8 +406,8 @@
         "de": "Web Adresse"
     },
     "validator_name_foldername": {
-        "en": "The name did not validate. Please escape special characters like < and & with < and & respectively.",
-        "de": "Der Name konnte nicht validiert werden. Bitte ersetzen sie Zeichen wie < und & mit < und &."
+        "en": "Folder name",
+        "de": "Ordnername"
     },
     "validator_name_1148.filename": {
         "en": "Filename",
@@ -450,19 +450,19 @@
         "de": "Postleitzahl"
     },
     "validator_name_telefonfaxnummer": {
-        "en": "",
-        "de": "Telefon/Faxnummer:"
+        "en": "Phone/Faxnumber",
+        "de": "Telefon/Faxnummer"
     },
     "validator_name_preis_sn": {
         "en": "",
         "de": "Preis (SN)"
     },
     "validator_name_fileshare": {
-        "en": "",
-        "de": "gültiger Fileshare Pfad: zB: \\\\servername\\dir\\file.txt"
+        "en": "Fileshare",
+        "de": "Fileshare"
     },
     "validator_name_1173.node_tag": {
-        "en": "",
+        "en": "Node Tag",
         "de": "Node Tag"
     },
     "validator_name_reg_datetime": {
@@ -553,5 +553,17 @@
     "assign_to_category": {
         "en": "Assign Constructs to Category",
         "de": "Tagtypen zu Kategorie zuweisen"
+    },
+    "overwrite_button": {
+        "en": "Overwrite",
+        "de": "Überschreiben"
+    },
+    "tagpart_conflict_title": {
+        "en": "Edit Construct \"{{ keyword }}\"",
+        "de": "Tagtyp „{{ entityName }}“ bearbeiten"
+    },
+    "tagpart_conflict_body": {
+        "en": "Data on the file system has changed during the editing process.<br>Are you sure you want to overwrite these changes?",
+        "de": "Die Daten im Dateisystem wurden während des Bearbeitungsvorgangs geändert.<br>Sind Sie sicher, dass Sie diese Änderungen überschreiben wollen?"
     }
 }

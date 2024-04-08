@@ -4,15 +4,15 @@ import { EmbeddedToolsService } from '@editor-ui/app/embedded-tools/providers/em
 import { ApplicationStateService, ContentStagingActionsService } from '@editor-ui/app/state';
 import { AccessControlledType, EmbeddedTool, GcmsPermission } from '@gentics/cms-models';
 import { DropdownListComponent } from '@gentics/ui-core';
-import { isEqual } from'lodash-es'
-import { combineLatest, Observable, of, Subscription } from 'rxjs';
+import { isEqual } from 'lodash-es';
+import { Observable, Subscription, combineLatest, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, map, startWith, switchMap, tap } from 'rxjs/operators';
 import {
+    ADMIN_TOOL_KEY,
     ActionButton,
     ActionButtonGroup,
     ActionButtonIconType,
     ActionButtonType,
-    ADMIN_TOOL_KEY,
     PRODUCT_TOOL_KEYS,
 } from '../../../common/models/actions';
 import { I18nService } from '../../providers/i18n/i18n.service';

@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -504,6 +505,22 @@ public class ConstructFactory extends AbstractFactory {
 				t.closeResultSet(rs);
 				t.closeStatement(stmt);
 			}
+		}
+
+		@Override
+		public boolean isUsed() throws NodeException {
+			// for every type of tag, which just need to load one instance referencing this construct, in order to know
+			// whether the construct is used.
+			List<String> sqlQueries = Arrays.asList("SELECT id FROM templatetag WHERE construct_id = ? LIMIT 1",
+					"SELECT id FROM contenttag WHERE construct_id = ? LIMIT 1",
+					"SELECt id FROM objtag WHERE construct_id = ? LIMIT 1");
+
+			for (String query : sqlQueries) {
+				if (DBUtils.select(query, pst -> pst.setInt(1, getId()), DBUtils.firstInt("id")) > 0) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		/* (non-Javadoc)

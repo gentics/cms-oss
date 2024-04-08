@@ -172,7 +172,7 @@ public class MigrateScheduler extends InitJob {
 		});
 
 		Map<Integer, Integer> taskMigrationMap = new HashMap<>();
-		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false)) {
+		try (RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, null, false, false, false)) {
 			for (OldTask oldTask : oldTasks) {
 				// attach parameters
 				oldTask.attachParameters();
@@ -340,7 +340,7 @@ public class MigrateScheduler extends InitJob {
 
 		if (!oldTask.migrated && newTaskId != 0) {
 			// migrate permissions
-			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 160, ?, usergroup_id, perm FROM perm WHERE o_type = 37 and o_id = ?", newTaskId, oldTask.id); 
+			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 160, ?, usergroup_id, perm FROM perm WHERE o_type = 37 and o_id = ?", newTaskId, oldTask.id);
 		}
 
 		if (!oldTask.migrated) {
@@ -446,7 +446,7 @@ public class MigrateScheduler extends InitJob {
 			t.dirtObjectCache(SchedulerSchedule.class, newJobId);
 
 			// migrate permissions
-			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 161, ?, usergroup_id, perm FROM perm WHERE o_type = 39 and o_id = ?", newJobId, oldJob.id); 
+			DBUtils.update("INSERT IGNORE INTO perm (o_type, o_id, usergroup_id, perm) SELECT 161, ?, usergroup_id, perm FROM perm WHERE o_type = 39 and o_id = ?", newJobId, oldJob.id);
 		}
 		DBUtils.update("UPDATE job SET migrated = true WHERE id = ?", oldJob.id);
 

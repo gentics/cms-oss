@@ -70,8 +70,24 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 public interface PageResource extends AuthenticatedResource {
 
 	/**
-	 * Get a list of pages in the specified folder.
-	 *
+	 * Get a list of pages in the specified folder.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>fileName</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>fileName</code></li>
+	 * <li><code>niceUrl</code></li>
+	 * <li><code>alternateUrls</code></li>
+	 * </ul>
 	 * @param inFolder Folder ID and recursive parameters
 	 * @param pageListParams Further page parameters
 	 * @param filterParams Filter parameters

@@ -4,6 +4,7 @@ import static com.gentics.contentnode.factory.Trx.execute;
 import static com.gentics.contentnode.factory.Trx.operate;
 import static com.gentics.contentnode.factory.Trx.supply;
 import static com.gentics.contentnode.tests.assertj.GCNAssertions.assertThat;
+import static com.gentics.contentnode.tests.utils.Builder.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.assertResponseOK;
 import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageResource;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.clear;
@@ -12,7 +13,6 @@ import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.creat
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createTemplate;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,10 +25,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
-import com.gentics.contentnode.rest.model.request.page.PageCopyRequest;
-import com.gentics.contentnode.rest.model.request.page.TargetFolder;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
-import com.gentics.contentnode.rest.model.response.page.PageCopyResponse;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.testutils.DBTestContext;
 
@@ -126,32 +123,29 @@ public class PageDeleteTest {
 	 */
 	@Test
 	public void deleteLastVisibleLanguage() throws NodeException {
-		Page origGerman = supply(() -> createPage(threeLanguages.getFolder(), template, "German", null, getLanguage("de")));
-		supply(t -> {
-			PageLoadResponse response = getPageResource().translate(origGerman.getId(), "en", false, null);
-			return t.getObject(Page.class, response.getPage().getId());
-		});
-		supply(t -> {
-			PageLoadResponse response = getPageResource().translate(origGerman.getId(), "fr", false, null);
-			return t.getObject(Page.class, response.getPage().getId());
-		});
+		Page createdPage = create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(oneLanguage.getFolder().getId());
+			p.setLanguage(getLanguage("de"));
+		}).build();
+		create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(oneLanguage.getFolder().getId());
+			p.setContentsetId(createdPage.getContentsetId());
+			p.setLanguage(getLanguage("en"));
+		}).build();
+		create(Page.class, p -> {
+			p.setTemplateId(template.getId());
+			p.setFolderId(oneLanguage.getFolder().getId());
+			p.setContentsetId(createdPage.getContentsetId());
+			p.setLanguage(getLanguage("fr"));
+		}).build();
 
-		Integer targetId = supply(() -> {
-			PageCopyRequest request = new PageCopyRequest();
-			request.setCreateCopy(true);
-			request.setNodeId(threeLanguages.getId());
-			request.setSourcePageIds(Arrays.asList(origGerman.getId()));
-			request.setTargetFolders(Arrays.asList(new TargetFolder(oneLanguage.getFolder().getId(), null)));
-			PageCopyResponse response = getPageResource().copy(request, 0);
-			assertResponseOK(response);
-			List<com.gentics.contentnode.rest.model.Page> copies = response.getPages();
+		int pageId = createdPage.getId();
 
-			return copies.get(0).getId();
-		});
-
-		Page german = getLanguageVariant(targetId, "de");
-		Page english = getLanguageVariant(targetId, "en");
-		Page french = getLanguageVariant(targetId, "fr");
+		Page german = getLanguageVariant(pageId, "de");
+		Page english = getLanguageVariant(pageId, "en");
+		Page french = getLanguageVariant(pageId, "fr");
 
 		assertThat(german).as("German copy").isNotNull();
 		assertThat(english).as("English copy").isNotNull();

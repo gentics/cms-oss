@@ -1,4 +1,11 @@
 /*global define: true, top: true, confirm: true */
+
+/**
+ * @typedef {object} TagFillOptions
+ * @property {boolean=} skipInsert If it sohuld not update/insert the DOM element. Will skip the rendering request of the tag as well.
+ * @property {boolean=} withDelete If the tag-fill/user should be able to delete the tag in question.
+ */
+
 /*!
  * Aloha Editor
  * Author & Copyright (c) 2011-2013 Gentics Software GmbH
@@ -118,7 +125,7 @@ define([
 			var construct;
 			for (construct in constructs) {
 				if (constructs.hasOwnProperty(construct)
-						&& id === constructs[construct].id) {
+					&& id === constructs[construct].id) {
 					success(constructs[construct]);
 					return;
 				}
@@ -133,7 +140,15 @@ define([
 		return OBJECT_PROPERTY_PREFIX.test(tag.prop('name'));
 	}
 
-	function openTagFill(tag, gcn, withDelete) {
+	/**
+	 * Actually opens the tag-fill in either the new ui (GCMSUI API) or via a lightbox and the
+	 * old tag-fill from the backend.
+	 *
+	 * @param {*} tag The gcn-tag instance to edit
+	 * @param {*} gcn The GCN-Plugin instance
+	 * @param {TagFillOptions=} options The options for opening the tag-fill.
+	 */
+	function openTagFill(tag, gcn, options) {
 		var page = tag.parent();
 		var tagname = tag.prop("name");
 		getConstructById(
@@ -147,7 +162,7 @@ define([
 				// that will potentially re-rendered after closing the tagfill
 				page._updateEditableBlocks();
 
-				GCMSUI.openTagEditor(tag._data, construct, page._data, !!withDelete).then(function (result) {
+				GCMSUI.openTagEditor(tag._data, construct, page._data, options).then(function (result) {
 
 					if (result.doDelete) {
 						var $block = $('.aloha-block[id="GENTICS_BLOCK_' + tag._data.id + '"]');
@@ -172,13 +187,18 @@ define([
 								var newvalue = GCN.TagParts[newpart.type](newpart);
 								// special hack for parts of type "PAGE" for preserving the nodeId
 								if (newpart.type === "PAGE" && jQuery.type(newvalue) === 'number') {
-									tag.part(parts[i], {pageId: newvalue, nodeId: newpart.nodeId});
+									tag.part(parts[i], { pageId: newvalue, nodeId: newpart.nodeId });
 								} else {
 									tag.part(parts[i], newvalue);
 								}
 							}
 						}
 					});
+
+					if (options && options.skipInsert) {
+						return;
+					}
+
 					// we render that tag in edit mode by POSTing the modified data to the server,
 					// in order to render what is currently stored in the tag object, not in the DB
 					page.tag(tagname).edit(true, function (html, tag, data) {
@@ -186,7 +206,7 @@ define([
 							Tags.decorate(tag, data);
 						}, html);
 					});
-				}).catch(function() {});
+				}).catch(function () { });
 			},
 			function (msg) {
 				GCN.handleError(GCN.createError('COULD_NOT_OPEN_TAG', msg, gcn));
@@ -237,7 +257,7 @@ define([
 		 * @type {boolean} True if Aloha has been maximized in GCN.
 		 */
 		maximized: false,
-		
+
 		/**
 		 * @type {Aloha.Editable} The last active editable since we disable all
 		 *                        editables when a lightbox opens. We can use
@@ -315,7 +335,7 @@ define([
 				GCN.sub('error-encountered', plugin.settings.errorHandler);
 			} else {
 				GCN.sub('error-encountered', function (error) {
-					Aloha.Log.error(GCN,error.toString());
+					Aloha.Log.error(GCN, error.toString());
 				});
 			}
 			GCN.sub('tag.rendered-for-editing', function (msg) {
@@ -339,8 +359,8 @@ define([
 
 				for (i = 0; i < j; ++i) {
 					Dialog.alert({
-						title : 'Gentics Content.Node',
-						text  : messages[i].message
+						title: 'Gentics Content.Node',
+						text: messages[i].message
 					});
 				}
 			}
@@ -362,13 +382,13 @@ define([
 
 			if (Aloha.Log.isDebugEnabled()) {
 				var numEditables = this.settings.editablesNode ?
-				                 this.settings.editablesNode.length : 0;
+					this.settings.editablesNode.length : 0;
 
 				var numBlocks = this.settings.blocks ?
-				              this.settings.blocks.length : 0;
+					this.settings.blocks.length : 0;
 
 				var numTags = this.settings.tags ?
-				            this.settings.tags.length : 0;
+					this.settings.tags.length : 0;
 
 				Aloha.Log.debug(this,
 					'Loaded page with id { ' + this.settings.id + ' }.');
@@ -385,7 +405,7 @@ define([
 		 */
 		registerAlohaHandlers: function () {
 			var that = this;
-			
+
 			Aloha.bind('aloha-editable-activated', function (e, params) {
 				// if an editable is activated all block icons have to be
 
@@ -460,7 +480,7 @@ define([
 			}
 			return false;
 		},
-		
+
 		/**
 		 * Determine if we are operating in backend mode.  Backend mode means
 		 * that backend GCN facilities are available to use.
@@ -499,7 +519,7 @@ define([
 			} else {
 				GCN.settings.proxy_prefix = "";
 			}
-			
+
 			// Set rendermode (frontend/backend)
 			GCN.settings.linksRenderMode = this.settings.links || 'backend';
 
@@ -533,7 +553,7 @@ define([
 					// TODO Error handling
 					this.page = GCN.page(this.settings.id, {
 						update: false
-					}, function () {});
+					}, function () { });
 				}
 
 				if (this.settings.id && !Aloha.settings.readonly) {
@@ -553,7 +573,7 @@ define([
 			// because saving is done asynchronously, we cannot save the page before leaving the page,
 			// so we can just warn the editor
 			// we do not use jQuery here, because for some unknown reason this won't work in IE7 mode.
-			window.onbeforeunload = function() {
+			window.onbeforeunload = function () {
 				if (suppressNextUnsavedChangesDialog) {
 					suppressNextUnsavedChangesDialog = false;
 				} else {
@@ -562,7 +582,7 @@ define([
 					}
 				}
 			};
-			
+
 			// register the handler for copying tags
 			if (this.settings.copy_tags) {
 				ContentHandlerManager.register('gcn-tagcopy', TagCopyContentHandler);
@@ -617,7 +637,7 @@ define([
 				// master objects and inherited channel objects. It will always return the master object.
 				// We therefor need to modify the atposidx parameter and replace the node folder id.
 				var atposidx = folder.prop('atposidx');
-				atposidx = atposidx.replace(new RegExp("^-[0-9]+","g"),"-" + that.settings.nodeFolderId);
+				atposidx = atposidx.replace(new RegExp("^-[0-9]+", "g"), "-" + that.settings.nodeFolderId);
 				if (top && top.tree && top.tree.openFolder) {
 					top.tree.openFolder(
 						that.settings.folderId,
@@ -626,7 +646,7 @@ define([
 				}
 			});
 		},
-		
+
 		/**
 		 * Passes the magiclinkconstruct value, that was received from the
 		 * settings, on to the GCN JS API.  The magic link is the the
@@ -641,16 +661,16 @@ define([
 		 */
 		setMagicLinkOnGCNLib: function (constructs, magiclinkconstruct) {
 			var areIdAndKeywordMatched = constructs[GCN.settings.MAGIC_LINK] &&
-					constructs[GCN.settings.MAGIC_LINK].constructId ===
-						magiclinkconstruct;
+				constructs[GCN.settings.MAGIC_LINK].constructId ===
+				magiclinkconstruct;
 
 			if (!areIdAndKeywordMatched) {
 				var keyword;
 
 				for (keyword in constructs) {
 					if (constructs.hasOwnProperty(keyword) &&
-							constructs[keyword].constructId ===
-								magiclinkconstruct) {
+						constructs[keyword].constructId ===
+						magiclinkconstruct) {
 						GCN.settings.MAGIC_LINK = keyword;
 						break;
 					}
@@ -686,8 +706,8 @@ define([
 				typeof this.settings.id === 'undefined'
 			);
 			var source = hasPageIdSetting
-			           ? GCN.page(this.settings.id).node()
-					   : GCN.Admin;
+				? GCN.page(this.settings.id).node()
+				: GCN.Admin;
 			var that = this;
 			source.constructs(function (constructs) {
 				if (that.settings.magiclinkconstruct) {
@@ -777,7 +797,7 @@ define([
 							data.tags.push(block);
 						}
 						page.tag(tag.tagname)
-						    .edit('#' + tag.element, data, onRender);
+							.edit('#' + tag.element, data, onRender);
 					}
 				}
 				// A helper is added that searches each editable for editing-
@@ -814,7 +834,7 @@ define([
 			// Set editables unmodified after successful save.
 			for (i in Aloha.editables) {
 				if (Aloha.editables.hasOwnProperty(i) &&
-						Aloha.editables[i] instanceof Aloha.Editable) {
+					Aloha.editables[i] instanceof Aloha.Editable) {
 					Aloha.editables[i].setUnmodified();
 				}
 			}
@@ -861,7 +881,7 @@ define([
 					// Check whether the page was translated from another page.
 					Dialog.confirm({
 						title: 'Gentics Content.Node',
-						text : i18n.t('save.synctrans.confirm'),
+						text: i18n.t('save.synctrans.confirm'),
 						answer: function (answer) {
 							data.synctrans = answer;
 							plugin._savePage(data);
@@ -874,8 +894,8 @@ define([
 		},
 
 		/**
-	     * Finds and specially handles editables of meta attributes like
-	     * `page.name' to update the internal page object.
+		 * Finds and specially handles editables of meta attributes like
+		 * `page.name' to update the internal page object.
 		 *
 		 * @return {boolean} True if no error occured during this process.
 		 */
@@ -890,15 +910,15 @@ define([
 
 			for (i in editables) {
 				if (editables.hasOwnProperty(i) &&
-						editables[i] instanceof Aloha.Editable) {
+					editables[i] instanceof Aloha.Editable) {
 					editable = editables[i];
 					gcnEditable = this.findLoadedEditable(editable.getId());
 
 					if (gcnEditable && gcnEditable.metaproperty &&
-							gcnEditable.metaproperty.substring(0, 5) === 'page.') {
+						gcnEditable.metaproperty.substring(0, 5) === 'page.') {
 						prop = gcnEditable.metaproperty.substring(5);
 						var errorOccurred = false;
-						propValue = page.prop(prop, editable.getContents(), function(error) {
+						propValue = page.prop(prop, editable.getContents(), function (error) {
 							errorOccurred = true;
 							var errorMessage = "Property '" + prop + "' could not be saved."
 							if (error.code === 'ATTRIBUTE_CONSTRAINT_VIOLATION') {
@@ -906,8 +926,8 @@ define([
 							}
 
 							Dialog.alert({
-								title : 'Gentics Content.Node',
-								text  : errorMessage
+								title: 'Gentics Content.Node',
+								text: errorMessage
 							});
 							return false;
 						});
@@ -931,17 +951,17 @@ define([
 				data = {};
 			}
 
-			var showMessages  = !data.silent;
-			var onsuccess     = data.onsuccess;
-			var onfailure     = data.onfailure;
-			var unlock        = !!data.unlock;
-			var createVersion = typeof(data.createVersion) == "undefined" ? unlock : !!data.createVersion;
+			var showMessages = !data.silent;
+			var onsuccess = data.onsuccess;
+			var onfailure = data.onfailure;
+			var unlock = !!data.unlock;
+			var createVersion = typeof (data.createVersion) == "undefined" ? unlock : !!data.createVersion;
 
 			if (!onfailure) {
 				onfailure = function (data) {
 					Dialog.alert({
-						title : 'Gentics Content.Node',
-						text : i18n.t('restcall.savepage.error')
+						title: 'Gentics Content.Node',
+						text: i18n.t('restcall.savepage.error')
 					});
 				};
 			}
@@ -955,8 +975,8 @@ define([
 			// If the saving is done synchronously, we show a progress dialog.
 			if (!data.async) {
 				cancelSaveProgess = Dialog.progress({
-					title : 'Gentics Content.Node',
-					text  : i18n.t('save.progress')
+					title: 'Gentics Content.Node',
+					text: i18n.t('save.progress')
 				});
 			} else {
 				cancelSaveProgess = null;
@@ -981,7 +1001,7 @@ define([
 
 			this._callPageObjectHandlers(this.page);
 
-			this.page.save({unlock: unlock, createVersion: createVersion}, function (page) {
+			this.page.save({ unlock: unlock, createVersion: createVersion }, function (page) {
 				if (cancelSaveProgess) {
 					cancelSaveProgess();
 				}
@@ -991,8 +1011,8 @@ define([
 					var i;
 					for (i = 0; i < messages.length; ++i) {
 						Dialog.alert({
-							title : 'Gentics Content.Node',
-							text  : messages[i].message
+							title: 'Gentics Content.Node',
+							text: messages[i].message
 						});
 					}
 				}
@@ -1050,10 +1070,10 @@ define([
 			// GCN.node(nodeId).createFolder(data.onsuccess, data.onfailure);
 
 			if (typeof data.success === 'undefined') {
-				data.success = function () {};
+				data.success = function () { };
 			}
 			if (typeof data.failure === 'undefined') {
-				data.failure = function () {};
+				data.failure = function () { };
 			}
 
 			data.url = this.settings.stag_prefix + this.restUrl + '/folder/create/';
@@ -1108,17 +1128,17 @@ define([
 				}
 			}
 		},
-		
+
 		/**
 		 * Strips unwanted classes before saving (eg. aloha-block)
 		 * @param classes String that contains all the classes sperated by spaces
 		 * @return the sanitized classes string
 		 */
 		cleanBlockClasses: function (classes) {
-			
+
 			if (classes) {
 				return classes.replace(/aloha-block\s|aloha-block$|^aloha-block$/g, "");
-			} 
+			}
 			return classes;
 		},
 
@@ -1171,11 +1191,11 @@ define([
 			}
 
 			var ajaxSettings = {
-				type        : data.type,
-				dataType    : data.dataType || 'json',
-				timeout     : data.timeout || 60000,
-				contentType : data.contentType || 'application/json; charset=utf-8',
-				data        : JSON.stringify(data.body)
+				type: data.type,
+				dataType: data.dataType || 'json',
+				timeout: data.timeout || 60000,
+				contentType: data.contentType || 'application/json; charset=utf-8',
+				data: JSON.stringify(data.body)
 			};
 
 			ajaxSettings.url = data.url + '?sid=' + GCN.sid + '&time=' + (new Date()).getTime();
@@ -1191,11 +1211,11 @@ define([
 							for (i = 0; i < data.params[paramName].length; i++) {
 								paramVal = data.params[paramName][i];
 								ajaxSettings.url += '&' + paramName +
-								                    '=' + encodeURIComponent(paramVal);
+									'=' + encodeURIComponent(paramVal);
 							}
 						} else {
 							ajaxSettings.url += '&' + paramName +
-							                    '=' + encodeURIComponent(data.params[paramName]);
+								'=' + encodeURIComponent(data.params[paramName]);
 						}
 					}
 				}
@@ -1216,47 +1236,47 @@ define([
 			jQuery.ajax(ajaxSettings);
 		},
 
-	/**
-	 * Determines the editdo for a given tagid.
-	 * 
-	 * @param {number} tagid The id of the tag.
-	 * @param {function} success Callback, which will receive the editdo as
-	 *                           the first parameter.
-	 * @param {function} error Callback, which will receive the
-	 *                         errormessage as the first parameter.
-	 */
-	_getEditDo: function (tagid, success, error) {
-		var page = this.page;
-		Tags.getById(page, tagid, function (tag) {
-			getConstructById(
-				page,
-				tag.prop('constructId'),
-				function (construct) {
-					success(construct.editdo);
-				},
-				error
-			);
-		}, error);
-	},
+		/**
+		 * Determines the editdo for a given tagid.
+		 * 
+		 * @param {number} tagid The id of the tag.
+		 * @param {function} success Callback, which will receive the editdo as
+		 *                           the first parameter.
+		 * @param {function} error Callback, which will receive the
+		 *                         errormessage as the first parameter.
+		 */
+		_getEditDo: function (tagid, success, error) {
+			var page = this.page;
+			Tags.getById(page, tagid, function (tag) {
+				getConstructById(
+					page,
+					tag.prop('constructId'),
+					function (construct) {
+						success(construct.editdo);
+					},
+					error
+				);
+			}, error);
+		},
 
-	
-	/**
-	 * Saves the page and open the tagfill dialog for the given tag in a
-	 * new window.
-	 *
-	 * @param {number|string} tagId The id of the tag.
-	 * @param {number|string} pageId The id of page the tag belongs to.
-	 *                               Note that this page must already have
-	 *                               had its data fetched.
-	 * @param {boolean=} withDelete If the option to delete the tag should be given as well
-	 */
-	openTagFill: function (tagId, pageId, withDelete) {
-		var gcn = this;
 
-		Tags.getById(GCN.page(pageId), tagId, function (tag) {
-			openTagFill(tag, gcn, !!withDelete);
-		});
-	},
+		/**
+		 * Saves the page and open the tagfill dialog for the given tag in a
+		 * new window.
+		 *
+		 * @param {number|string} tagId The id of the tag.
+		 * @param {number|string} pageId The id of page the tag belongs to.
+		 *                               Note that this page must already have
+		 *                               had its data fetched.
+		 * @param {TagFillOptions=} options The options for opening the tag-fill.
+		 */
+		openTagFill: function (tagId, pageId, options) {
+			var gcn = this;
+
+			Tags.getById(GCN.page(pageId), tagId, function (tag) {
+				openTagFill(tag, gcn, options);
+			});
+		},
 
 		/**
 		 * Create a new tag in the page
@@ -1275,8 +1295,8 @@ define([
 			var plugin = this;
 			var selection = Aloha.Selection.getRangeObject();
 			var magicValue = (selection && selection.getText)
-			               ? selection.getText()
-			               : '';
+				? selection.getText()
+				: '';
 			if (typeof success !== 'function') {
 				success = function (html, tag, data, frontendEditing) {
 					plugin.handleBlock(data, true, function () {
@@ -1427,7 +1447,7 @@ define([
 				}
 
 				$handled.find('>.aloha-editicons:not(.aloha-editicons-hover)')
-				        .fadeIn('fast');
+					.fadeIn('fast');
 
 				Aloha.trigger('gcn-block-handled', $handled);
 
@@ -1463,19 +1483,19 @@ define([
 			var plugin = this;
 			var output = '';
 			jQuery.ajax({
-				url      : plugin.settings.renderBlockContentURL,
-				type     : 'POST',
-				timeout  : 10000,
-				data     : {content: content},
-				dataType : 'text',
-				async    : false,
-				success  : function (response) {
+				url: plugin.settings.renderBlockContentURL,
+				type: 'POST',
+				timeout: 10000,
+				data: { content: content },
+				dataType: 'text',
+				async: false,
+				success: function (response) {
 					if (callback) {
 						callback(response);
 					}
 					output = response;
 				},
-				error    : function (data) {
+				error: function (data) {
 					plugin.errorHandler('restcall.renderblock', data);
 					if (callback) {
 						callback('');
@@ -1492,7 +1512,7 @@ define([
 		startKeepalivePing: function () {
 			if (!Aloha.settings.readonly) {
 				var plugin = this;
-				window.setInterval(function() {
+				window.setInterval(function () {
 					var data = {
 						url: plugin.settings.stag_prefix + plugin.restUrl + '/page/save/' + plugin.settings.id,
 						body: {
@@ -1514,7 +1534,7 @@ define([
 		 */
 		previewForms: function ($element) {
 			var plugin = this;
-			$element.find('[data-gcn-formid]').each(function() {
+			$element.find('[data-gcn-formid]').each(function () {
 				var $elem = $(this);
 				var formId = $elem.attr('data-gcn-formid');
 				var formLanguage = $elem.attr('data-gcn-formlanguage');

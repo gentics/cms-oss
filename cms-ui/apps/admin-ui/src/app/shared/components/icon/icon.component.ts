@@ -119,7 +119,7 @@ export const ICON_DEFINITIONS: Record<GtxIcon, IconDefinition> = {
         matIconSecondary: null,
     },
     pagecontent: {
-        matIconPrimary: 'storage',
+        matIconPrimary: 'newspaper',
         matIconSecondary: null,
     },
     'user-management': {

@@ -2,8 +2,10 @@ import { animate, animateChild, query, style, transition, trigger } from '@angul
 import {
     ChangeDetectionStrategy,
     Component,
+    OnChanges,
+    OnDestroy,
     OnInit,
-    SimpleChange
+    SimpleChange,
 } from '@angular/core';
 import { ContextMenuOperationsService } from '@editor-ui/app/core/providers/context-menu-operations/context-menu-operations.service';
 import { IndexById, Language, Normalized, Page, Raw } from '@gentics/cms-models';
@@ -71,7 +73,7 @@ import { BaseLanguageIndicatorComponent } from '../base-language-indicator/base-
 })
 export class PageLanguageIndicatorComponent
     extends BaseLanguageIndicatorComponent<Page<Normalized>>
-    implements OnInit {
+    implements OnInit, OnChanges, OnDestroy {
 
     /** CONSTRUCTOR */
     constructor(
@@ -88,7 +90,7 @@ export class PageLanguageIndicatorComponent
 
         // get all translations available
         this.currentLanguage$ = this.item$.pipe(
-            map(page => this.nodeLanguages.filter(l => page && l.id === page.contentGroupId)[0])
+            map(page => this.nodeLanguages.filter(l => page && l.id === page.contentGroupId)[0]),
         );
 
         // get existing page translations
@@ -102,10 +104,6 @@ export class PageLanguageIndicatorComponent
     ngOnChanges(changes: { [K in keyof this]?: SimpleChange }): void {
         if (changes.item) {
             this.item$.next(this.item);
-        }
-
-        if (changes.displayStatusInfos) {
-            this.folderActions.setDisplayStatusIcons(this.displayStatusInfos);
         }
 
         // check for multiple languages available for current node
@@ -179,7 +177,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.stateDeleted(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -191,7 +189,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.statePublished(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -203,7 +201,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.stateModified(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -215,7 +213,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.stateInQueue(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -227,7 +225,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.statePlanned(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -239,7 +237,7 @@ export class PageLanguageIndicatorComponent
         return this.getPageLanguageVariantOfLanguage$(langCode).pipe(
             map(languageVariantOfLanguage => {
                 return PublishableStateUtil.stateInherited(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -254,7 +252,7 @@ export class PageLanguageIndicatorComponent
                     return false;
                 }
                 return PublishableStateUtil.stateLocalized(languageVariantOfLanguage);
-            })
+            }),
         );
     }
 
@@ -263,7 +261,7 @@ export class PageLanguageIndicatorComponent
      */
     isAvailable$(language: Language): Observable<boolean> {
         return this.itemLanguages$.pipe(
-            map(pageLanguages => -1 < pageLanguages.indexOf(language))
+            map(pageLanguages => -1 < pageLanguages.indexOf(language)),
         );
     }
 

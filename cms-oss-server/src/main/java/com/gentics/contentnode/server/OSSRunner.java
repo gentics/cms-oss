@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.ServiceLoader;
+import java.util.Set;
 
 import javax.servlet.DispatcherType;
 
@@ -42,6 +42,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import com.gentics.contentnode.aloha.AlohaRenderer;
 import com.gentics.contentnode.config.AutoScanFeature;
 import com.gentics.contentnode.config.PackageRewriteRule;
+import com.gentics.contentnode.etc.ServiceLoaderUtil;
 import com.gentics.contentnode.init.Initializer;
 import com.gentics.contentnode.rest.AcceptResponseServletFilter;
 import com.gentics.contentnode.rest.configuration.RESTApplication;
@@ -50,6 +51,7 @@ import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.servlets.AlohaPageServlet;
 import com.gentics.contentnode.servlets.GenticsImageStoreServlet;
 import com.gentics.contentnode.servlets.JmxServlet;
+import com.gentics.contentnode.servlets.SelectedSymlinkAllowedResourceAliasChecker;
 import com.gentics.lib.log.NodeLogger;
 
 /**
@@ -62,7 +64,7 @@ public class OSSRunner {
 	/**
 	 * Loader for implementations of {@link ServletContextHandlerService}
 	 */
-	protected static ServiceLoader<ServletContextHandlerService> servletContextHandlerServiceLoader;
+	protected static ServiceLoaderUtil<ServletContextHandlerService> servletContextHandlerServiceLoader;
 
 	/**
 	 * Main method
@@ -80,7 +82,7 @@ public class OSSRunner {
 	protected static void start() {
 		Initializer.get().init();
 		log = NodeLogger.getNodeLogger(OSSRunner.class);
-		servletContextHandlerServiceLoader = ServiceLoader.load(ServletContextHandlerService.class);
+		servletContextHandlerServiceLoader = ServiceLoaderUtil.load(ServletContextHandlerService.class);
 		// set the loader also to the NodeConfigRuntimeConfiguration, so that the services can be called when the configuration is reloaded
 		NodeConfigRuntimeConfiguration.setServletContextHandlerServiceLoader(servletContextHandlerServiceLoader);
 
@@ -128,8 +130,7 @@ public class OSSRunner {
 		// add GenticsImageStoreServlet
 		context.addServlet(GenticsImageStoreServlet.class, "/GenticsImageStore/*");
 
-		context.addServlet(getStaticFileServletForPath(ConfigurationValue.PACKAGES_PATH.get()),
-				"/packages/*");
+		context.addServlet(getStaticFileServletForPath(ConfigurationValue.PACKAGES_PATH.get()),	"/packages/*");
 
 		var rewriteHandler = createRewriteHandler();
 		rewriteHandler.setHandler(context);
@@ -145,6 +146,11 @@ public class OSSRunner {
 		// set the connection factory up
 		HttpConfiguration httpConfiguration = new HttpConfiguration();
 		HttpConnectionFactory httpConnectionFactory = new HttpConnectionFactory(httpConfiguration);
+		// Allow symlinks in the resource accessor. Keep in sync with the ones in createRewriteHandler().
+		context.addAliasCheck(
+				new SelectedSymlinkAllowedResourceAliasChecker(
+						context, 
+						Set.of("(.*)\\/packages\\/([^\\/]*)\\/files\\/(.*)", "(.*)\\/packages\\/([^\\/]*)\\/files-internal\\/(.*)")));
 
 		// create server
 		Server server = new Server();

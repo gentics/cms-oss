@@ -12,6 +12,7 @@ import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.etc.Operator;
 import com.gentics.contentnode.object.File;
 import com.gentics.contentnode.object.Folder;
+import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.Overview;
 import com.gentics.contentnode.object.OverviewEntry;
 import com.gentics.contentnode.object.Page;
@@ -122,13 +123,16 @@ public class MeshOverviewPublisher {
 		fieldList.add(ImmutablePair.of(name(MicronodeField.NODEIDS), nodeIds));
 
 		for (OverviewEntry entry : overview.getOverviewEntries()) {
-			String entryMeshUuid = MeshPublisher.getMeshUuid(entry.getObject());
-			Optional<MeshProject> optionalProject = publisher.getProject(entry.getObject());
-			if (optionalProject.isPresent() && publisher.existsInMesh(nodeId, optionalProject.get(), entry.getObject())) {
-				items.add(new NodeFieldListItemImpl().setUuid(entryMeshUuid));
-				nodeIds.add(entry.getNodeId());
-			} else {
-				postponeHandler.operate();
+			NodeObject entryObject = entry.getObject();
+			if (entryObject != null) {
+				String entryMeshUuid = MeshPublisher.getMeshUuid(entryObject);
+				Optional<MeshProject> optionalProject = publisher.getProject(entryObject);
+				if (optionalProject.isPresent() && publisher.existsInMesh(nodeId, optionalProject.get(), entryObject)) {
+					items.add(new NodeFieldListItemImpl().setUuid(entryMeshUuid));
+					nodeIds.add(entry.getNodeId());
+				} else {
+					postponeHandler.operate();
+				}
 			}
 		}
 

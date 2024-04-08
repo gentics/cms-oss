@@ -7,6 +7,7 @@ import {
     ContentRepositoryMasterComponent,
     ContentRepositoryPropertiesComponent,
     CreateContentRepositoryModalComponent,
+    ManageContentRepositoryRolesModal,
 } from './components';
 import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
 
@@ -17,6 +18,7 @@ import { CONTENT_REPOSIROTY_ROUTES } from './content-repository.routes';
         ContentRepositoryMasterComponent,
         ContentRepositoryPropertiesComponent,
         CreateContentRepositoryModalComponent,
+        ManageContentRepositoryRolesModal,
     ],
     providers: [
         provideRouter(CONTENT_REPOSIROTY_ROUTES, withComponentInputBinding()),

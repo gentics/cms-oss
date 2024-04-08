@@ -53,6 +53,9 @@ export class I18nSelectComponent implements ControlValueAccessor, Validator, OnI
     public multiple = false;
 
     @Input()
+    public clearable = false;
+
+    @Input()
     public availableLanguages: string[];
 
     @ContentChildren(SelectOptionDirective, { descendants: false }) selectOptions: QueryList<SelectOptionDirective>;

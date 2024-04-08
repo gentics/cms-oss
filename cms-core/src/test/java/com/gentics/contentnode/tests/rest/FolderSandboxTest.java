@@ -237,11 +237,11 @@ public class FolderSandboxTest {
 		assertFolders(
 			"Check folders",
 			Arrays.asList(
-				new ExpectedFolder(" h"),
 				new ExpectedFolder("0"),
 				new ExpectedFolder("Folder1"),
 				new ExpectedFolder("Folder2"),
 				new ExpectedFolder("Folder3"),
+				new ExpectedFolder("h"),
 				new ExpectedFolder("m"),
 				new ExpectedFolder("Ü"),
 				new ExpectedFolder("Z"),
@@ -265,11 +265,11 @@ public class FolderSandboxTest {
 		assertFolders(
 			"Check folders (legacy)",
 			Arrays.asList(
-				new ExpectedFolder(" h"),
 				new ExpectedFolder("0"),
 				new ExpectedFolder("Folder1"),
 				new ExpectedFolder("Folder2"),
 				new ExpectedFolder("Folder3"),
+				new ExpectedFolder("h"),
 				new ExpectedFolder("m"),
 				new ExpectedFolder("Ü"),
 				new ExpectedFolder("Z"),

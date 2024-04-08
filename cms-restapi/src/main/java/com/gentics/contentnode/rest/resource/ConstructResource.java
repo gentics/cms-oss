@@ -47,7 +47,21 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 @Path("/construct")
 public interface ConstructResource {
 	/**
-	 * Get the list of constructs
+	 * Get the list of constructs.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>keyword</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -194,7 +208,8 @@ public interface ConstructResource {
 	@Path("/{id}")
 	@StatusCodes({
 		@ResponseCode(code = 200, condition = "Construct {id} was deleted."),
-		@ResponseCode(code = 404, condition = "Construct {id} does not exist.")
+		@ResponseCode(code = 404, condition = "Construct {id} does not exist."),
+		@ResponseCode(code = 409, condition = "Construct {id} could not be deleted due to a conflict.")
 	})
 	GenericResponse delete(@PathParam("id") String id) throws Exception;
 
@@ -261,7 +276,19 @@ public interface ConstructResource {
 	GenericResponse deleteCategory(@PathParam("id") String constructCategoryId) throws Exception;
 
 	/**
-	 * List all construct categories
+	 * List all construct categories.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @return response with categories list
 	 * @throws Exception
 	 * @HTTP 200 The list is returned

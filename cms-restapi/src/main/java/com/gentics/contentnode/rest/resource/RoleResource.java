@@ -31,7 +31,19 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface RoleResource {
 	/**
-	 * Get list of roles
+	 * Get list of roles.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters

@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { File, Folder, Form, Image, Node, Page, Raw, Template } from '../models';
+import { File, FileOrImage, Folder, Form, Image, Node, Page, Raw, Template } from '../models';
 import { ItemInNode, RepositoryBrowserOptions, TagInContainer } from '../repository-browser';
 import { EditableTag } from './editable-tag';
 import { TagValidator } from './tag-validator';
@@ -90,6 +90,35 @@ export interface GcmsUiServices {
 
     /** Method for opening the Image Editor. */
     openImageEditor(options: { nodeId: number, imageId: number }): Promise<Image | void>;
+
+    /**
+     * Opens an the upload modal to allow the user to upload files/images to a specified folder.
+     *
+     * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
+     * @param destinationFolder The folder to where the file/image should be uploaded to.
+     * @param allowFolderSelection If the user should be allowed to change the destination folder.
+     * @returns A Promise for the uploaded file/image.
+     */
+    openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
+
+    /**
+     * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+     * the documentation, e.g. `/folder/create`.
+     */
+    restRequestGET: (endpoint: string, params?: object) => Promise<object>;
+    /**
+     * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
+     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+     * the documentation, e.g. `/folder/create`.
+     */
+    restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
+    /**
+     * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object (if present).
+     * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+     * the documentation, e.g. `/folder/create`.
+     */
+    restRequestDELETE: (endpoint: string, params?: object) => Promise<void | object>;
 
 }
 

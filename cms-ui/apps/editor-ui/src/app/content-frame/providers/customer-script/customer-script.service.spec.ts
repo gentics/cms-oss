@@ -12,7 +12,7 @@ import { TagEditorService } from '@editor-ui/app/tag-editor';
 import { EditMode, ItemInNode, Tag } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
-import { GenticsUICoreModule } from '@gentics/ui-core';
+import { GenticsUICoreModule, ModalService } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';
@@ -77,6 +77,7 @@ describe('CustomerScriptService', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandler },
                 { provide: RepositoryBrowserClient, useClass: MockRepositoryBrowserClientService },
                 { provide: GCMSRestClientService, useClass: GCMSTestRestClientService },
+                { provide: ModalService, useClass: MockModalService },
                 DynamicOverlayService,
             ],
         });
@@ -403,4 +404,10 @@ class MockWindow {
 
 class MockErrorHandler {
     catch(): void { }
+}
+
+class MockModalService {
+    fromComponent(): Promise<void> {
+        return Promise.resolve();
+    }
 }

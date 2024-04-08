@@ -1,0 +1,5 @@
+Scheduling tasks with intervals behaved differently than the old scheduler:
+While the old scheduler always calculated the intervals from the start time, the new scheduler
+calculated from the last execution. This is unexpected, because when for example a task should be executed (automatically) once a day at 3 AM,
+a manual execution of the task would break the start time (next automatic execution would be one day after the last manual exection, not necessarily at 3 AM the following day).
+The behaviour of the scheduler has now been changed to the behaviour of the old scheduler.

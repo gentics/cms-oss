@@ -91,6 +91,10 @@ public class StaticUrlFactory extends AbstractRenderUrlFactory {
 
 		List<String> segments = new ArrayList<>();
 
+		if (!ignoreNodePublishDir(cr)) {
+			segments.add(node.getPublishDir());
+		}
+
 		if (folder.getOwningNode().getPageLanguageCode() == PageLanguageCode.PATH) {
 			ContentLanguage language = page.getLanguage();
 			if (language != null) {
@@ -98,9 +102,6 @@ public class StaticUrlFactory extends AbstractRenderUrlFactory {
 			}
 		}
 
-		if (!ignoreNodePublishDir(cr)) {
-			segments.add(node.getPublishDir());
-		}
 		segments.add(folder.getPublishPath());
 
 		if (appendFileName) {

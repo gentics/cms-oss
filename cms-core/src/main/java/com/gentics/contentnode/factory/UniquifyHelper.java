@@ -11,6 +11,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.exception.NodeException;
@@ -62,7 +63,9 @@ public class UniquifyHelper {
 		if (value == null) {
 			value = "";
 		}
-
+		if (StringUtils.isNotEmpty(value)) {
+			value = value.trim();
+		}
 		if (type == null) {
 			type = SeparatorType.none;
 		}
@@ -264,7 +267,9 @@ public class UniquifyHelper {
 		if (type == null) {
 			type = UniquifyHelper.SeparatorType.none;
 		}
-
+		if (StringUtils.isNotEmpty(referenceValue)) {
+			referenceValue = referenceValue.trim();
+		}
 		@SuppressWarnings("unchecked")
 		Class<T> clazz = (Class<T>) object.getObjectInfo().getObjectClass();
 

@@ -30,6 +30,8 @@ h3. Per Node Plugin List
 
 It is also possible to configure the loaded plugins per node, using either the local ID or global ID or the name of the node. Note that this will override the plugin list defined in @aloha_plugins_global@, and can therefore also be used to disable a certain global plugin for a node by specifying a custom plugin list without the plugin to exclude.
 
+NOTE: Configuration per local ID, global ID and name cannot be mixed. The CMS will first look for a configuration by global ID, if that is not found, by node name and if that is not found by local ID.
+
 <javascript filename="conf/*.yml">
 # Define the Aloha Editor plugins list for Node with global ID 3D6C.bbcc391e-ae22-11e9-9f0d-00155df0382f
 aloha_plugins_node:

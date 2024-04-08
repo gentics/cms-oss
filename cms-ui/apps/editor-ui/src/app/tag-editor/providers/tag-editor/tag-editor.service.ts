@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { stripLeadingSlash } from '@editor-ui/app/common/utils/strip';
 import {
     AnyModelType,
     EditableTag,
@@ -12,11 +13,14 @@ import {
     RepositoryBrowserOptions,
     Tag,
     TagEditorContext,
+    TagEditorOptions,
     TagEditorResult,
     TagType,
     Template,
     VariableTagEditorContext,
 } from '@gentics/cms-models';
+import { ApiBase } from '@gentics/cms-rest-clients-angular';
+import { ModalService } from '@gentics/ui-core';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable } from 'rxjs';
 import { EntityResolver } from '../../../core/providers/entity-resolver/entity-resolver';
@@ -26,6 +30,7 @@ import { UserAgentRef } from '../../../shared/providers/user-agent-ref';
 import { ApplicationStateService, DecreaseOverlayCountAction, IncreaseOverlayCountAction, SetTagEditorOpenAction } from '../../../state';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
 import { TranslatorImpl } from '../../common/impl/translator-impl';
+import { UploadWithPropertiesModalComponent } from '../../components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
 import { TagEditorOverlayHostComponent } from '../../components/tag-editor-overlay-host/tag-editor-overlay-host.component';
 
 /**
@@ -41,7 +46,7 @@ export interface EditTagInfo {
     /** The TagType, of which the tag is an instance. */
     tagType: TagType;
 
-    /**  The page, folder, image, or file to which the tag belongs. */
+    /** The page, folder, image, or file to which the tag belongs. */
     tagOwner: Page<AnyModelType> | Folder<AnyModelType> | Image<AnyModelType> | File<AnyModelType> | Template<AnyModelType>;
 
     /** The node, from which the tagOwner has been opened. */
@@ -71,6 +76,8 @@ export class TagEditorService {
         private repositoryBrowserClient: RepositoryBrowserClient,
         private translateService: TranslateService,
         private userAgentRef: UserAgentRef,
+        private modals: ModalService,
+        private apiBase: ApiBase,
     ) {}
 
     /**
@@ -79,13 +86,13 @@ export class TagEditorService {
      * a custom tag editor is used.
      *
      * @param tag The tag to be edited - the property tag.tagType must be set.
-     * @param context The current context.
+     * @param tagType The tagtype of the tag
      * @param page The page in which the tag is being edited.
-     * @param withDelete If a delete option for the Tag should be provided.
+     * @param options The options for opening the Tag-Editor
      * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
      * and when the user clicks Cancel, rejects.
      */
-    async openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>, withDelete?: boolean): Promise<TagEditorResult> {
+    async openTagEditor(tag: Tag, tagType: TagType, page: Page<AnyModelType>, options?: TagEditorOptions): Promise<TagEditorResult> {
         // Since the ContentFrame uses the currentNode object when opening a page,
         // we can assume that the entity has already been loaded.
         const node = this.entityResolver.getNode(this.appState.now.editor.nodeId);
@@ -96,7 +103,7 @@ export class TagEditorService {
             tagOwner: page,
             node: node,
             readOnly: false, // openTagEditor() is called when a page is in edit mode, so the user has edit permissions.
-            withDelete,
+            withDelete: options?.withDelete ?? false,
             tagOwnerFromIFrame: true,
         });
 
@@ -164,6 +171,23 @@ export class TagEditorService {
                 this.repositoryBrowserClient.openRepositoryBrowser(options),
             openImageEditor: (options: { nodeId: number, imageId: number }) =>
                 this.editorOverlayService.editImage({ nodeId: options.nodeId, itemId: options.imageId }),
+            openUploadModal: (uploadType, destinationFolder, allowFolderSelection) => {
+                return this.modals.fromComponent(
+                    UploadWithPropertiesModalComponent,
+                    { padding: true, width: '1000px' },
+                    {
+                        itemType: uploadType,
+                        allowFolderSelection: allowFolderSelection ?? true,
+                        destinationFolder,
+                    },
+                ).then(dialog => dialog.open());
+            },
+            restRequestGET: (endpoint: string, params: any): Promise<object> =>
+                this.apiBase.get(stripLeadingSlash(endpoint), params).toPromise(),
+            restRequestPOST: (endpoint: string, data: object, params?: object): Promise<object> =>
+                this.apiBase.post(stripLeadingSlash(endpoint), data, params).toPromise(),
+            restRequestDELETE: (endpoint: string, params?: object): Promise<void | object> =>
+                this.apiBase.delete(stripLeadingSlash(endpoint), params).toPromise(),
         };
 
         let tagOwner = editTagInfo.tagOwner;

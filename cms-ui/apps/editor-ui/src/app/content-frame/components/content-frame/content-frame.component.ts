@@ -33,7 +33,7 @@ import {
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { FilePickerComponent, ModalService } from '@gentics/ui-core';
-import { debounce as _debounce, isEqual } from 'lodash';
+import { debounce as _debounce, isEqual } from 'lodash-es';
 import {
     BehaviorSubject,
     Observable,

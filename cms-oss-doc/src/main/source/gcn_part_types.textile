@@ -8,85 +8,21 @@ h3. Overview
 
 |_. Type Id |_. Type Name             |_. Description |
 |  1        | Text                    | Used for normal text (without HTML), which is entered using the tagfill dialog. Linebreaks will be transformed into &lt;br&gt; tags while rendering. |
-|  2        | -Text/HTML-             | Used for text containing HTML tags, which is entered using the tagfill dialog. Linebreaks will be transformed into &lt;br&gt; tags while rendering, unless they occur _within_ HTML tags or immediately follow an HTML tag. (deprecated) |
-|  3        | -HTML-                  | Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering. (deprecated) |
-|  4        | URL (page)              | The URL (page) part type provides an element to select a page within any accessible folder. |
-|  5        | -Tag (global)-          | (Deprecated) |
-|  6        | URL (image)             | Reference an image. |
-|  8        | URL (file)              | Reference a file. |
-|  9        | -Text (short)-          | Used for short text (no linebreaks), that does not contain HTML. The tagfill dialog will contain an input field. No conversion will be done while rendering. (deprecated) |
-| 10        | -Text/HTML (long)-      | Variant of the type @Text/HTML@ with a larger textarea in the tagfill dialog. (deprecated) |
-| 11        | -Tag (page)-            | Render a tag of another page. (deprecated) |
+|  4        | Page                    | The URL (page) part type provides an element to select a page within any accessible folder. |
+|  6        | Image                   | Reference an image. |
+|  8        | File                    | Reference a file. |
 | 13        | Overview                | The overview part type creates and overview which can be configured using a the provided wizard. **WARNING:** Cannot be used together with other tag parts that are set as editable. |
-| 15        | -List-                  | Users can enter values (newline separated), and can choose whether to render them as ordered or unordered list. (deprecated) |
-| 16        | -List (unordered)-      | Users can enter values (newline separated), which will be rendered as unordered list. (deprecated) |
-| 17        | -List (ordered)-        | Users can enter values (newline separated), which will be rendered as ordered list. (deprecated) |
-| 18        | -Select (image-height)- | (Deprecated) |
-| 19        | -Select (image-width)-  | (Deprecated) |
-| 20        | -Tag (template)-        | Render a tag of another template. (deprecated) |
-| 21        | HTML (long)             | Variant of @HTML@ with a larger textarea in the tagfill dialog. |
-| 22        | -File (localpath)-      | (Deprecated) |
-| 23        | -Table ext-             | (Deprecated) The __Table ext__ part type is deprecated and "cannot be used with Aloha Editor":aloha_migration.html. |
-| 24        | -Select (class)-        | (Deprecated) |
-| 25        | URL (folder)            | This part can be used to select a folder. |
-| 26        | -Java Editor-           | (Deprecated) |
-| 27        | -DHTML Editor-          | (Deprecated) |
+| 21        | HTML                    | Used for text containing HTML tags, which is entered using the tagfill dialog or Aloha Editor. No conversion will be done while rendering. |
+| 25        | Folder                  | This part can be used to select a folder. |
 | 29        | Select (single)         | This part type provides static datasources from which a user can pick a single value. |
 | 30        | Select (multiple)       | This part type provides static datasources from which a user can pick multiple values. |
 | 31        | Checkbox                | Part type for input of boolean value. |
 | 32        | Datasource              | With this part type, the user can define individual datasources in the tag. |
 | 33        | Velocity                | The velocity part type can be used to evaluate all previously generated text using the velocity markup parser. |
-| 34        | Breadcrumb            | This part type can be used to generate breadcrumbs. |
-| 35        | Navigation            | The navigation part type can be used to create a custom navigation using a velocity template. |
-| 36        | -HTML (custom form)-    | The custom form part type can be used to create custom form elements. (deprecated) |
-| 37        | -Text (custom form)-    | The custom form part type can be used to create custom form elements. (deprecated) |
-| 38        | -File (Upload)-         | The file upload part type is a URL (file) part type which has an additional file upload button. (deprecated) |
-| 39        | -Folder (Upload)-       | The folder upload part type is a URL (folder) part type which has an additional file upload button. (deprecated) |
 | 40        | Node                    | The node part is a drop-down menu with the nodes available to the user. |
-| 41        | -Form (Deprecated)-     | The Form part lets the user select a form from the Form Generator Custom Tool. **NOTE:** Parts of this type can only be used in the new Editor User Interface. (deprecated) |
-| 42        | CMS Form                | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
+| 42        | Form                    | The CMS Form part lets the user select a form from the CMS. See "Gentics CMS Forms":feature_forms.html for details. **NOTE:** Parts of this type can only be used in the new Editor User Interface. |
 
-NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part types @HTML@ or @HTML (long)@.
-
-h3. Custom Form Part Type
-
-WARNING: As of Version 5.36, the custom form part type has been deprecated and replaced with the "Custom TagProperty Editor":feature_new_tag_editor.html#custom-tagproperty-editor.
-
-The custom part type enables the implementer to create custom user interfaces that can be used by editors. The interface can be customized using javascript and stylesheets.
-
-The custom ui template will be defined within the field which contains the html code.
-
-*Available variables:*
-
-|_. Variable |_. Description |
-| &lt;nodefieldname&gt; | The name of the field |
-| &lt;nodevalue&gt; | The value of the html entity |
-| &lt;nodetextvalue&gt; | The original value |
-| &lt;nodename&gt; | The name of the tag part |
-| &lt;nodekeyword&gt; | The keyname of the tag part |
-| &lt;nodesid&gt; | The session id of the user |
-| &lt;nodeuserid&gt; | The user id of the user |
-| &lt;nodecontext&gt; | The context in which the tag fill dialog was opened. ("template", "content" für Seiten, "tagtype" oder "object") |
-| &lt;proxyprefix&gt; | The configured proxy prefix. This may be empty when using backend mode |
-| &lt;stagprefix&gt; | The configured stag prefix. (By default: '/.Node/') |
-
-NOTE: For technical reasons, the customform is currently not rendered in the context of its tagtype. That means that you can't directly access other parts in the same Tag without specifiying the tagname (e.g. in the page). However you can use Javascript to access other parts with their class name in the tagfill dialog dynamically.
-
-Additionally typical node properties can also be used when the feature 'customform_resolve_nodetags' was enabled
-(e.g. &lt;node TAGNAME&gt;)
-
-TIP: The option "inline editable" is without any effect.
-TIP: A guide which explains how to include CSS and JS libraries can be found "here":http://www.gentics.com/Content.Node/infoportal/cms/faq/Wie-kann-man-JS-Bibliotheken-und-CSS-in-einem-Custom-Form-T.php
-
-The demo cms project contains the following examples of the custom form tag part type:
-* TinyMCE-Editor: This Tag includes the TinyMCE WYSIWYG-Editor.
-* HTML Customform Example: This example contains just a custom form field.
-* Text Customform Example: The same example like "HTML Customform Example". In this case the "Text (custom form)" is used.
-* [Formular] limitierte Eingabe: An inputfield that can just accept a specified amount of characters.
-
-TIP: Special class names can be used to access the custom form elements. The name contains  "cnTagPart_PARTKEYWORD".
-Example: The inputfield of the part with the keyword __text__ has the class __cnTagPart_text__.
-For the part type "URL (page)" there will be a  "cnTagPart__PARTKEYWORD_internal" and a "cnTagPart__PARTKEYWORD_external" class set.
+NOTE: Inline editable parts - which are transformed to editables in Aloha Editor - should only use the part type @HTML@.
 
 h3. Velocity Part Type
 
@@ -115,142 +51,6 @@ Example:
 <shell>
 #if( $cms.page.object.myprop.toString() == "test" )
 </shell>
-
-h3. Breadcrumb Part Type
-
-* Parameter "startfolder"
-* Type: URL (folder)
-* Content: The start folder of the breadcrumb.
-
-* Parameter "template"
-* Type: HTML (long)
-* Content: The Velocity-Template of the navigation.
-
-* Parameter "disable_activepage"
-* Type: Checkbox
-* Content: False if the current page should be linked in the breadcrumb.
-
-* Parameter "tagname_hidden"
-* Type: Text (short)
-* Content: Name of the object property that is used to hide objects wihtin the navigation.
-
-* Parameter "disable_fallback"
-* Type: Datasource
-* Content:
-** 0 is used for language fallbacks to the default language,
-** 1 or. "yes" to end breadcrumb path if no page in the current language exists,
-** 2 or. "skip" to skip non exisiting pages in the current language.
-
-* Parameter "tagname_startpage"
-* Type: Text (short)
-* Content: Name of the object property that is used for the startpage of a folder.
-
-* Parameter "disable_hidden"
-* Type: Checkbox
-* Content: True when hidden objects should be displayed within the navigation.
-
-h4. Velocity Variables
-
-|_. VLT |_. Description |
-| $bc.path | An array that contains all folders for the breadcrumb navigation. |
-| $bc.disableactivepage | True, when the current page should not be linked. |
-| $nav in $bc.path | An navigation object within the breadcrumb |
-| $nav.level | The level of the navigation. (0 = start folder) |
-| $nav.object | The object that is contained within the navigation object |
-| $nav.object.object.objectproperty_name | Access to the object property 'objectproperty_name' of the given object |
-| $nav.name | I18n name of the navigation object |
-| $nav.startpage | The start page of this navigation object. The object is related to the active language. Please note that this property directly links to the page object within the navigation object. Pages that are offline will still provide an .url property. Add a check using $nav.startpage.online to verify that the page is online. |
-| $nav.hidden | True, when the navigation object should not be displayed within the navigation. |
-
-h4. Breadcrumb Example Implementation
-
-Tag Parts:
-|_. Part Type|_. Name|_. Keyword |_. Changeable|_. Required|_. Hidden|_. inline editable |
-| Breadcrumb | bc | bc | no | no | no | no |
-| HTML (long) | template | template | no | no | yes | no |
-| URL (folder) | startfolder | startfolder | no | no | yes | no |
-<shell filename="Example: breadcrumb">
-#*
-render all folder startpages in the path to our current location in an orderd list
-i.e.
-<ol>
-    <li><a href="_URL_TO_FIRST_FOLDER_STARTPAGE_">_NAME_OF_FIRST_FOLDER_STARTPAGE_</a></li>
-    <li><a href="_URL_TO_SECOMD_FOLDER_STARTPAGE_">_NAME_OF_SECOMD_FOLDER_STARTPAGE_</a></li>
-    <li>_NAME_OF_CURRENT_PAGE</li>
-</ol>
-*#
-<ol>#*
-    *##foreach($nav in $bc.path)#*
-        ## if not the current page
-        *##if( ! $nav.startpage.equals($cms.page) )#*
-            ## render a link to the startpages of the folders in the path
-            *#<li><a href="$!{nav.startpage.url}">$!{nav.object.name}</a></li>#*
-        *##else#*
-            ## to finish up render the pagename of the current page
-            *#<li class="active">$!{cms.page.name}</li>#*
-        *##end#*
-    *##end##
-</ol>##
-</shell>
-
-h3. Navigation Part Type
-
-
-An example can be found within the demo server folder "Demo-CMS-Projekt/Home/Navigation".
-
-* Parameter "startfolder"
-** Type: URL (folder)
-** Content: The startfolder of the navigation.
-
-* Parameter "template"
-** Type: HTML (long)
-** Content: The velocity template of the navigation.
-
-* Parameter "sortby"
-** Type: Text (short)
-** Content: Name of the object property which should be used to sort the elements. (e.g. object.name).
-
-* Parameter "sortorder"
-** Type: Datasource (ASC, DESC)
-** Content: Sortorder (ascending of descending)
-
-* Parameter "tagname_sort"
-** Type: Text (short)
-** Content: Name of the object property that is used to display a special sortorder. (Format: "sortorder;sortby")
-
-* Parameter "tagname_hidden"
-** Type: Text (short)
-** Content: Name of the object property that should be used to hide the navigation. By default the object property "navhidden" will be used.
-
-* Parameter "objects"
-** Type: Select (multiple)
-** Content: List of all objects that should be displayed within the navigation (Pages, Folders, Images, Files). By default you should use the following template for the multiselect datasource: @"<ds value>,"@
-
-* Parameter "disable_hidden"
-** Type: Checkbox
-** Content: True, if hidden objects should be displayed within the navigation. All hidden objects will not be shown by default. (See "tagname_hidden").
-
-* Parameter "sitemap"
-** Type: Checkbox
-** Content: True, if a sitemap should be displayed (All folders will be flapped open)
-
-h4. Velocity Variables
-
-|_. Variable |_. Description |
-| $nav.object | The current element of the navigation |
-| $nav.level | The level of the current object (0 = Start folder) |
-| $nav.hasItems() | True, if the navigation element contains subelements. |
-| $nav.open | True, if the element is flapped open. |
-| $nav.relativenr | Position  of the element relativ to the parent element |
-| $nav.relativecount | Count of all child element of the parent element. |
-| $nav.absolutenr | Absolute position of the element over all elements that have been displayed already. |
-| $nav.childrencount | Count of all child elements of this element. |
-| $nav.inpath | True, if this element is included within the path of the currently displayed page. |
-| $nav.currentpage | Wahr, falls dieses Element die aktuell angezeigte Seite ist |
-| $nav.subtree | Renders the subtree (all child elements) of this navigation element. |
-
-Please refere to the list of meta properties for examples and more detailed explanations.
-
 
 h3. Custom Part Type Implementations
 

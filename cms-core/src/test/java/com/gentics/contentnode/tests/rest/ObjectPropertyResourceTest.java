@@ -245,6 +245,30 @@ public class ObjectPropertyResourceTest {
 		assertThat(response.getObjectProperty().getKeyword()).as("Created object property keyword").isEqualTo(keyword);
 	}
 
+	@Test
+	@Expected(ex = RestMappedException.class, message = "Es gibt bereits eine Objekteigenschaft object.keyword.")
+	public void testCreateDuplicateKeyword() throws NodeException {
+		String keyword = "keyword";
+		supply(() -> {
+			ObjectProperty op = new ObjectProperty()
+				.setConstructId(constructId)
+				.setType(Folder.TYPE_FOLDER)
+				.setDescription(MiscUtils.getRandomNameOfLength(24))
+				.setName("Dummy name " + MiscUtils.getRandomNameOfLength(4))
+				.setKeyword(keyword);
+			return new ObjectPropertyResourceImpl().create(op);
+		});
+
+		supply(() -> {
+			ObjectProperty op = new ObjectProperty()
+				.setConstructId(constructId)
+				.setType(Folder.TYPE_FOLDER)
+				.setDescription(MiscUtils.getRandomNameOfLength(24))
+				.setName("Dummy name " + MiscUtils.getRandomNameOfLength(4))
+				.setKeyword(keyword);
+			return new ObjectPropertyResourceImpl().create(op);
+		});
+	}
 
 	@Test
 	public void testDelete() throws NodeException {
@@ -319,7 +343,7 @@ public class ObjectPropertyResourceTest {
 			op.setKeyword(MiscUtils.getRandomNameOfLength(8));
 		} while (op.getKeyword().equals(oldKw));
 		Integer id = op.getId();
-		String kw = op.getKeyword();
+		String kw = "object." + op.getKeyword();
 		Map<String, String> name = op.getNameI18n();
 		Map<String, String> description = op.getDescriptionI18n();
 
@@ -330,6 +354,35 @@ public class ObjectPropertyResourceTest {
 		assertEquals(updated.getObjectProperty().getNameI18n(), name);
 		assertEquals(updated.getObjectProperty().getKeyword(), kw);
 		assertEquals(updated.getObjectProperty().getDescriptionI18n(), description);
+	}
+
+	@Test
+	@Expected(ex = RestMappedException.class, message = "Es gibt bereits eine Objekteigenschaft object.duplicate.")
+	public void testUpdateDuplicateKeyword() throws NodeException {
+		String keyword = "keyword";
+		String duplicate = "duplicate";
+		ObjectPropertyLoadResponse objProp1 = supply(() -> {
+			ObjectProperty op = new ObjectProperty()
+				.setConstructId(constructId)
+				.setType(Folder.TYPE_FOLDER)
+				.setDescription(MiscUtils.getRandomNameOfLength(24))
+				.setName("Dummy name " + MiscUtils.getRandomNameOfLength(4))
+				.setKeyword(keyword);
+			return new ObjectPropertyResourceImpl().create(op);
+		});
+
+		ObjectPropertyLoadResponse objProp2 = supply(() -> {
+			ObjectProperty op = new ObjectProperty()
+				.setConstructId(constructId)
+				.setType(Folder.TYPE_FOLDER)
+				.setDescription(MiscUtils.getRandomNameOfLength(24))
+				.setName("Dummy name " + MiscUtils.getRandomNameOfLength(4))
+				.setKeyword(duplicate);
+			return new ObjectPropertyResourceImpl().create(op);
+		});
+
+		supply(() -> new ObjectPropertyResourceImpl().update(objProp1.getObjectProperty().getGlobalId(),
+				new ObjectProperty().setKeyword(objProp2.getObjectProperty().getKeyword())));
 	}
 
 	@Test

@@ -35,6 +35,7 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.Page;
 import com.gentics.contentnode.object.Template;
 import com.gentics.contentnode.rest.model.PageLanguageCode;
+import com.gentics.contentnode.tests.utils.Builder;
 import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.ContentNodeTestUtils;
 import com.gentics.contentnode.tests.utils.TestedType;
@@ -45,7 +46,7 @@ import com.gentics.contentnode.testutils.GCNFeature;
  * Test cases for publishing objects into the filesystem
  */
 @RunWith(value = Parameterized.class)
-@GCNFeature(set = { Feature.MULTITHREADED_PUBLISHING })
+@GCNFeature(set = { Feature.MULTITHREADED_PUBLISHING, Feature.NICE_URLS })
 public class FilesystemPublishTest {
 	@ClassRule
 	public static DBTestContext testContext = new DBTestContext();
@@ -317,6 +318,36 @@ public class FilesystemPublishTest {
 				editableFile.save();
 			}
 			testedObject = trx.getTransaction().getObject(testedObject);
+			trx.success();
+		}
+
+		// publish
+		try (Trx trx = new Trx()) {
+			getTestContext().publish(false);
+			trx.success();
+		}
+
+		// assert
+		try (Trx trx = new Trx()) {
+			ContentNodeTestUtils.assertPublishFS(getTestContext().getPubDir(), testedObject, node, true);
+			trx.success();
+		}
+	}
+
+	@Test
+	public void testNiceAndAlternateURLs() throws Exception {
+		try (Trx trx = new Trx()) {
+			if (testedObject instanceof Page) {
+				testedObject = Builder.update((Page)testedObject, p -> {
+					p.setNiceUrl("/nice/page");
+					p.setAlternateUrls("/alternate/page", "/another/alternate/page");
+				}).save().publish().build();
+			} else if (testedObject instanceof File) {
+				testedObject = Builder.update((File) testedObject, f -> {
+					f.setNiceUrl("/nice/file");
+					f.setAlternateUrls("/alternate/file", "/another/alternate/file");
+				}).save().build();
+			}
 			trx.success();
 		}
 

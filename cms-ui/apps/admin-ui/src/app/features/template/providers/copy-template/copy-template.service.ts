@@ -2,7 +2,6 @@ import { I18nService, TemplateOperations } from '@admin-ui/core';
 import { Injectable } from '@angular/core';
 import { Node, Raw, Tag, Template } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
-import { TemplatePropertiesMode } from '../../components/template-properties/template-properties.component';
 
 
 function cleanTags<T extends Tag>(tags: Record<string, T>): Record<string, T> {
@@ -20,9 +19,6 @@ function cleanTags<T extends Tag>(tags: Record<string, T>): Record<string, T> {
 
 @Injectable()
 export class CopyTemplateService {
-
-    public readonly TemplatePropertiesMode = TemplatePropertiesMode;
-
 
     constructor(
         protected operations: TemplateOperations,
@@ -52,6 +48,6 @@ export class CopyTemplateService {
     private generateCopyName(template: Template<Raw>): string {
         const suffix = this.i18n.instant('common.copy_suffix');
 
-        return template.name + ` ${suffix}`;
+        return `${template.name} ${suffix}`;
     }
 }

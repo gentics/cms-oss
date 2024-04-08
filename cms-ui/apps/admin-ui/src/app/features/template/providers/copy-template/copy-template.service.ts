@@ -33,7 +33,7 @@ export class CopyTemplateService {
     async createCopy(node: Node, templateToCopy: Template<Raw>): Promise<any> {
         const fullCopy: Template<Raw> = {
             ...templateToCopy,
-            name: this.generateCopyName(templateToCopy), // todo: check me
+            name: this.generateCopyName(templateToCopy),
             objectTags: cleanTags(templateToCopy.objectTags),
             templateTags: cleanTags(templateToCopy.templateTags),
         }

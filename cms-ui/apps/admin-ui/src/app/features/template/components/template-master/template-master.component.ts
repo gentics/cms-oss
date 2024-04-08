@@ -18,7 +18,7 @@ import { of } from 'rxjs';
 import { distinctUntilChanged, map, switchMap } from 'rxjs/operators';
 import { AssignTemplatesToFoldersModalComponent } from '../assign-templates-to-folders-modal/assign-templates-to-folders-modal.component';
 import { AssignTemplatesToNodesModalComponent } from '../assign-templates-to-nodes-modal/assign-templates-to-nodes-modal.component';
-import { CopyTemplateModal } from '../copy-template-modal/copy-template-modal.component';
+import { CopyTemplateService } from '../../providers/copy-template/copy-template.service';
 import { CreateTemplateModalComponent } from '../create-template-modal/create-template-modal.component';
 
 const NODE_ID_PARAM = 'nodeId';
@@ -54,6 +54,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         protected permissions: PermissionsService,
         protected templateTableLoader: TemplateTableLoaderService,
         protected errorHandler: ErrorHandler,
+        protected copyTemplateComponent: CopyTemplateService,
     ) {
         super(
             changeDetector,
@@ -151,7 +152,7 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
 
         switch (event.actionId) {
             case COPY_ACTION:
-                this.openCopyModal(event.item);
+                this.copyTemplate(event.item);
                 return;
 
             case LINK_TO_FOLDER_ACTION:
@@ -172,27 +173,20 @@ export class TemplateMasterComponent extends BaseTableMasterComponent<Template, 
         this.appState.dispatch(new FocusEditor());
     }
 
-    protected async openCopyModal(template: TemplateBO): Promise<void> {
+    protected async copyTemplate(template: TemplateBO): Promise<void> {
         let loadedTemplate: Template<Raw>;
 
         try {
-            const res = await this.api.template.getTemplate(template.id, {
+            const loadResponse = await this.api.template.getTemplate(template.id, {
                 nodeId: this.activeNode.id,
             }).toPromise();
-            loadedTemplate = res.template;
+            loadedTemplate = loadResponse.template;
         } catch (err) {
             this.errorHandler.notifyAndReturnErrorMessage(err);
             return;
         }
 
-        const dialog = await this.modalService.fromComponent(CopyTemplateModal, {
-            closeOnEscape: false,
-            closeOnOverlayClick: false,
-        }, {
-            template: loadedTemplate,
-            node: this.activeNode,
-        });
-        const created: Template<Raw> = await dialog.open();
+        const created = await this.copyTemplateComponent.createCopy(this.activeNode, loadedTemplate);
 
         if (created) {
             this.templateTableLoader.reload();

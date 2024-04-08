@@ -5,7 +5,7 @@ import { SharedModule } from '../../shared/shared.module';
 import {
     AssignTemplatesToFoldersModalComponent,
     AssignTemplatesToNodesModalComponent,
-    CopyTemplateModal,
+    CopyTemplateService,
     CreateTemplateModalComponent,
     CreateTemplateTagModalComponent,
     EditTemplateTagModalComponent,
@@ -30,7 +30,6 @@ import { TEMPLATE_ROUTES } from './template.routes';
     declarations: [
         AssignTemplatesToFoldersModalComponent,
         AssignTemplatesToNodesModalComponent,
-        CopyTemplateModal,
         CreateTemplateModalComponent,
         CreateTemplateTagModalComponent,
         EditTemplateTagModalComponent,
@@ -48,6 +47,7 @@ import { TEMPLATE_ROUTES } from './template.routes';
         CanActivateTemplateGuard,
         TemplateTagStatusTableLoaderService,
         TemplateTagTableLoaderService,
+        CopyTemplateService,
     ],
     imports: [
         SharedModule,

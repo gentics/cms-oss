@@ -388,8 +388,12 @@ export class GCMSRestClient implements GCMSRootAPI {
             const data = new FormData();
             data.append('fileBinaryData', file);
             data.append('fileName', fileName);
-            data.append('folderId', options.folderId.toString())
-            data.append('nodeId', options.nodeId.toString())
+            if (options.folderId) {
+                data.append('folderId', options.folderId.toString());
+            }
+            if (options.nodeId) {
+                data.append('nodeId', options.nodeId.toString());
+            }
             return this.executeMappedFormRequest(POST, '/file/create', data, options);
         },
         get: (id, options) => this.executeMappedJsonRequest(GET, `/file/load/${id}`, null, options),
@@ -398,9 +402,15 @@ export class GCMSRestClient implements GCMSRootAPI {
         uploadTo: (id, file, fileName, options) => {
             const data = new FormData();
             data.append('fileBinaryData', file);
-            data.append('fileName', fileName);
-            data.append('folderId', options.folderId.toString())
-            data.append('nodeId', options.nodeId.toString())
+            if (fileName) {
+                data.append('fileName', fileName);
+            }
+            if (options.folderId) {
+                data.append('folderId', options.folderId.toString());
+            }
+            if (options.nodeId) {
+                data.append('nodeId', options.nodeId.toString())
+            }
             return this.executeMappedFormRequest(POST, `/file/save/${id}`, data, options);
         },
         delete: (id) => this.executeMappedJsonRequest(POST, `/file/delete/${id}`),

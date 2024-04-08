@@ -540,7 +540,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				return (FileUploadResponse) executeLocked(fileNameLock, sanitizedFilename, () -> {
 					if (finalFileId == null) {
 						// Create a new file
-						return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						return createFile(inputStream, folderId, nodeId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
 						return saveFile(inputStream, finalFileId, sanitizedFilename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
@@ -681,7 +681,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 				try (InputStream in = getFileInputStream(isImage, fileDataInputStream, mediaType, folder.getNode())) {
 					if (fileId == 0) {
 						// Create a new file
-						return createFile(in, folderId, nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
+						return createFile(in, folderId, nodeId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap(), Collections.emptyMap());
 					} else {
 						// Save data to an existing file
 						return saveFile(in, fileId, filename, mediaType.get(), description, null, Collections.emptySet(), Collections.emptyMap());
@@ -805,7 +805,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 						if (finalFileId == 0) {
 							// Create a new file
 							return createFile(fileDataInputStream, request.getFolderId(), request.getNodeId(), request.getName(),
-								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
+								mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties(), Collections.emptyMap());
 						} else {
 							// Save data to an existing file
 							return saveFile(fileDataInputStream, finalFileId, request.getName(), mediaType.get(), request.getDescription(), request.getNiceURL(), request.getAlternateURLs(), request.getProperties());
@@ -993,7 +993,8 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 	 * @throws NodeException
 	 */
 	private FileUploadResponse createFile(InputStream input, int folderId, int nodeId, String fileName,
-			String mediaType, String description, String niceUrl, Set<String> alternateUrls, Map<String, String> properties) throws NodeException {
+			String mediaType, String description, String niceUrl, Set<String> alternateUrls,
+			Map<String, String> properties, Map<String, ObjectTag> objectTags) throws NodeException {
 
 		Transaction t = getTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
@@ -1213,7 +1214,7 @@ public class FileResourceImpl extends AuthenticatedContentNodeResource implement
 		if (tags == null) {
 			return;
 		}
-		for (Entry<String, ObjectTag> property : tags.entrySet()) {
+		for (Map.Entry<String, ObjectTag> property : tags.entrySet()) {
 			file.getObjectTags().put(property.getKey(), (ObjectTag) property.getValue().copy());
 		}
 	}

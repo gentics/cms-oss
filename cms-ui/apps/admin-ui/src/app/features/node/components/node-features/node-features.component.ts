@@ -9,7 +9,7 @@ import {
 import { AbstractControl, ControlValueAccessor, UntypedFormControl, UntypedFormGroup } from '@angular/forms';
 import { IndexByKey, NodeFeature, NodeFeatureModel } from '@gentics/cms-models';
 import { generateFormProvider } from '@gentics/ui-core';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Subject } from 'rxjs';
 import { map, takeUntil, takeWhile } from 'rxjs/operators';
 

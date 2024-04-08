@@ -1,6 +1,6 @@
 import { ContentRepositoryBO } from '@admin-ui/common';
-import { ContentRepositoryOperations, I18nService } from '@admin-ui/core';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, Input } from '@angular/core';
+import { ContentRepositoryHandlerService, I18nService } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { BaseModal, TableColumn, TableRow, TableSelectAllType } from '@gentics/ui-core';
 import { Subscription, combineLatest } from 'rxjs';
 
@@ -28,7 +28,7 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
 
     constructor(
         protected changeDetector: ChangeDetectorRef,
-        protected operations: ContentRepositoryOperations,
+        protected handler: ContentRepositoryHandlerService,
         protected i18n: I18nService,
     ) {
         super();
@@ -43,8 +43,8 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
             },
         ];
         this.subscriptions.push(combineLatest([
-            this.operations.getAvailableMeshRoles(this.contentRepository.id),
-            this.operations.getAssignedMeshRoles(this.contentRepository.id),
+            this.handler.getAvailableMeshRoles(this.contentRepository.id),
+            this.handler.getAssignedMeshRoles(this.contentRepository.id),
         ]).subscribe(([all, assigned]) => {
             this.rows = all.map(role => ({
                 id: role,
@@ -67,7 +67,7 @@ export class ManageContentRepositoryRolesModal extends BaseModal<string[]> imple
     updateAssignment(): void {
         this.working = true;
 
-        this.subscriptions.push(this.operations.assignMeshRoles(this.contentRepository.id, this.selected).subscribe(roles => {
+        this.subscriptions.push(this.handler.assignMeshRoles(this.contentRepository.id, this.selected).subscribe(roles => {
             this.closeFn(roles);
         }, () => {
             this.working = false;

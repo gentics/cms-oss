@@ -40,7 +40,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>${surefireArgLine}</argLine>
-					<skip>${skip.unit.tests}</skip>
 					<forkCount>${test.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
 					<!-- Don't execute more than one test per jvm fork! -->

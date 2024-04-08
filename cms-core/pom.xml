@@ -310,7 +310,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<jvm>${test.jvm.home}/bin/java</jvm>
-					<skipTests>${skip.unit.tests}</skipTests>
 					<forkCount>${surefire.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
 					<argLine>-Xms64m -Xmx256m ${surefireArgLine}</argLine>

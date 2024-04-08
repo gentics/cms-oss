@@ -46,33 +46,34 @@ public class RenderTypeTrx implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public static RenderTypeTrx publish(NodeObject object) throws NodeException {
-		return new RenderTypeTrx(RenderType.EM_PUBLISH, object, true, true);
+		return new RenderTypeTrx(RenderType.EM_PUBLISH, object, true, true, false);
 	}
 
 	/**
 	 * Set the rendertype to the given editmode. If editmode is
 	 * {@link RenderType#EM_PUBLISH}, the {@link StaticUrlFactory} will be set
 	 * (with linkway AUTO), otherwise the {@link DynamicUrlFactory}
-	 * 
+	 *
 	 * @param editMode edit mode
 	 * @throws NodeException
 	 */
 	public RenderTypeTrx(int editMode) throws NodeException {
-		this(editMode, null, true, true);
+		this(editMode, null, true, true, false);
 	}
 
 	/**
 	 * Set the rendertype to the given editmode. If editmode is
 	 * {@link RenderType#EM_PUBLISH}, the {@link StaticUrlFactory} will be set
 	 * (with linkway AUTO), otherwise the {@link DynamicUrlFactory}
-	 * 
+	 *
 	 * @param editMode edit mode
 	 * @param object rendered object
 	 * @param handleDependencies true if dependencies shall be handled (when publishing)
 	 * @param storeDependencies true if dependencies shall be stored (when publishing)
+	 * @param isPublishProcess true if the transaction is used during a publish process (and not during for example instant publishing)
 	 * @throws NodeException
 	 */
-	public RenderTypeTrx(int editMode, NodeObject object, boolean handleDependencies, boolean storeDependencies) throws NodeException {
+	public RenderTypeTrx(int editMode, NodeObject object, boolean handleDependencies, boolean storeDependencies, boolean isPublishProcess) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		NodePreferences prefs = t.getNodeConfig().getDefaultPreferences();
 
@@ -92,7 +93,7 @@ public class RenderTypeTrx implements AutoCloseable {
 		case RenderType.EM_PUBLISH:
 			renderType.setRenderUrlFactory(new StaticUrlFactory(RenderType.parseLinkWay(prefs.getProperty("contentnode.linkway")),
 					RenderType.parseLinkWay(prefs.getProperty("contentnode.linkway_file")), ""));
-			if (t.getPublishData() == null) {
+			if (isPublishProcess && t.getPublishData() == null) {
 				PublishData publishData = PublishController.getPublishData();
 				if (publishData != null) {
 					t.setPublishData(publishData);

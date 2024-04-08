@@ -14,6 +14,7 @@ import {
 import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { NgxsModule } from '@ngxs/store';
 import { cloneDeep } from 'lodash-es';
+import { NEVER, Observable } from 'rxjs';
 import { getExampleEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorContextImpl } from '../../common/impl/tag-editor-context-impl';
@@ -51,6 +52,8 @@ describe('TagEditorService', () => {
             repositoryBrowserClient as any,
             new MockTranslateService() as any,
             userAgentRef as any,
+            new MockModalService() as any,
+            new MockBaseApiService() as any,
         );
         tagEditorOverlayHost = <any> new MockTagEditorOverlayHost();
         tagEditorService.registerTagEditorOverlayHost(tagEditorOverlayHost);
@@ -339,3 +342,22 @@ class MockTranslateService { }
 class MockUserAgentRef {
     isIE11 = false;
 }
+
+class MockModalService {
+    fromComponent(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+class MockBaseApiService {
+    get(): Observable<never> {
+        return NEVER;
+    }
+    post(): Observable<never> {
+        return NEVER;
+    }
+    delete(): Observable<never> {
+        return NEVER;
+    }
+}
+

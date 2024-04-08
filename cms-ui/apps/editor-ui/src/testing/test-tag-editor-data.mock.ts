@@ -81,7 +81,7 @@ export interface MockObjectTagInfo {
  * the temporal dead zone - that is why we need to declare it with `var`.
  */
 // eslint-disable-next-line no-var
-var excludedProperties: Set<string> = new Set([ 'editable', 'hidden', 'hideInEditor', 'keyword', 'mandatory', 'type', 'typeId' ]);
+var excludedProperties: Set<string>;
 
 /** Gets the set of MockTagPropertyInfo properties that should not be copied to a TagProperty. */
 function getExludedProperties(): Set<string> {
@@ -267,6 +267,10 @@ export function getMockedTagEditorContext(
         contextInfo.gcmsUiServices = {
             openRepositoryBrowser: jasmine.createSpy('openRepositoryBrowser'),
             openImageEditor: jasmine.createSpy('openImageEditor'),
+            openUploadModal: jasmine.createSpy('openUploadModal'),
+            restRequestDELETE: jasmine.createSpy('restRequestDELETE'),
+            restRequestGET: jasmine.createSpy('restRequestGET'),
+            restRequestPOST: jasmine.createSpy('restRequestPOST'),
         };
     }
 

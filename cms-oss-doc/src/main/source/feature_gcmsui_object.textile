@@ -14,13 +14,13 @@ interface GCMSUI {
 /**
  * Executes the pre-load script in the context of the IFrame.
  * This method is called by the code inside the IFrame when the `DOMContentLoaded` event is fired.
-*/
+ */
 runPreLoadScript: () => void;
 
 /**
  * Executes the post-load script in the context of the IFrame.
  * This method is called by the code inside the IFrame when the `load` event is fired.
-*/
+ */
 runPostLoadScript: () => void;
 
 /**
@@ -28,12 +28,12 @@ runPostLoadScript: () => void;
  * Returns Promise which resolves to `ItemInNode | TagInContainer` if `selectMultiple` is false and
  * to `(ItemInNode | TagInContainer)[]` if `selectMultiple` is true.
  * The Promise resolves to null if user clicks on cancel button.
-*/
+ */
 openRepositoryBrowser: (options: RepositoryBrowserOptions) => Promise<(ItemInNode | TagInContainer) | (ItemInNode | TagInContainer)[]>;
 
 /**
  * The URL of the styles of the GCMS UI.
-*/
+ */
 gcmsUiStylesUrl: string;
 
 /** An object containing useful information about the current state of the UI */
@@ -54,20 +54,27 @@ paths: {
  * Makes a GET request to an endpoint of the GCMS REST API and returns the parsed JSON object.
  * The endpoint should not include the base URL of the REST API, but just the endpoint as per
  * the documentation, e.g. `/folder/create`.
-*/
+ */
 restRequestGET: (endpoint: string, params?: object) => Promise<object>;
 
 /**
  * Makes a POST request to an endpoint of the GCMS REST API and returns the parsed JSON object.
  * The endpoint should not include the base URL of the REST API, but just the endpoint as per
  * the documentation, e.g. `/folder/create`.
-*/
+ */
 restRequestPOST: (endpoint: string, data: object, params?: object) => Promise<object>;
+
+/**
+ * Makes a DELETE request to an endpoint of the GCMS REST API and returns the parsed JSON object (if present).
+ * The endpoint should not include the base URL of the REST API, but just the endpoint as per
+ * the documentation, e.g. `/folder/create`.
+ */
+restRequestDELETE: (endpoint: string, params?: object) => Promise<void | object>;
 
 /**
  * Tells the editor whether the page content has been modified. When set to `true`, the
  * "save" button will be enabled.
-*/
+ */
 setContentModified: (modified: boolean) => void;
 
 /**
@@ -75,7 +82,7 @@ setContentModified: (modified: boolean) => void;
  * @returns a promise, which will resolve to either the edited image
  * (this may be a copy of the original image as well) or to void if the
  * user canceled the edit or an error occurred.
-*/
+ */
 editImage: (nodeId: number, imageId: number) => Promise<Image | void>;
 
 callDebugTool: () => void;
@@ -89,8 +96,18 @@ callDebugTool: () => void;
  * @param context The current context.
  * @returns A promise, which when the user clicks OK, resolves and returns a copy of the edited tag
  * and when the user clicks Cancel, rejects.
-*/
+ */
 openTagEditor: (tag: Tag, tagType: TagType, page: Page) => Promise<Tag>;
+
+/**
+ * Opens an the upload modal to allow the user to upload files/images to a specified folder.
+ *
+ * @param uploadType The type the user should be allowed to upload. Either 'image' or 'file'.
+ * @param destinationFolder The folder to where the file/image should be uploaded to.
+ * @param allowFolderSelection If the user should be allowed to change the destination folder.
+ * @returns A Promise for the uploaded file/image.
+ */
+openUploadModal: (uploadType: 'image' | 'file', destinationFolder?: Folder, allowFolderSelection?: boolean) => Promise<FileOrImage>;
 }
 </shell>
 

@@ -696,13 +696,10 @@ public class TemplateFactory extends AbstractFactory {
 			} else {
 				Set<Node> assignedNodes = new HashSet<>();
 				Transaction t = TransactionManager.getCurrentTransaction();
-				List<Node> nodes = t.getObjects(Node.class,
-						DBUtils.select("select node.id from node, folder where node.folder_id = folder.id and folder.type_id = 10001", DBUtils.IDS));
-				for (Node node : nodes) {
-					if (node.getTemplates().contains(this)) {
-						assignedNodes.add(node);
-					}
-				}
+
+				Set<Integer> nodeIds = DBUtils.select("SELECT node_id id FROM template_node WHERE template_id = ?", ps -> ps.setInt(1, getId()), DBUtils.IDS);
+
+				assignedNodes.addAll(t.getObjects(Node.class, nodeIds));
 				return assignedNodes;
 			}
 		}
@@ -1585,7 +1582,7 @@ public class TemplateFactory extends AbstractFactory {
 		template.eDate = new ContentNodeDate(t.getUnixTimestamp());
 
 		// normalize some data
-		template.name = ObjectTransformer.getString(template.name, "");
+		template.name = ObjectTransformer.getString(template.name, "").trim();
 		template.source = ObjectTransformer.getString(template.source, "");
 		template.description = ObjectTransformer.getString(template.description, "");
 

@@ -8,6 +8,7 @@ import {
     EditableTag,
     FileOrImage,
     FileTagPartProperty,
+    FileUpload,
     Folder,
     Image,
     ImageTagPartProperty,
@@ -29,7 +30,6 @@ import { ModalService } from '@gentics/ui-core';
 import { Observable, Subscription, merge } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { UploadWithPropertiesModalComponent } from '../../shared/upload-with-properties-modal/upload-with-properties-modal.component';
-import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
 
 /**
  * Used to edit the following TagParts:
@@ -201,10 +201,10 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
     changeSelectedItem(newSelectedItem: ItemInNode<FileOrImage<Raw>>): void {
         const idProp: keyof (FileTagPartProperty & ImageTagPartProperty) = this.tagProperty.type === TagPropertyType.FILE ? 'fileId' : 'imageId';
         if (newSelectedItem) {
-            (<any> this.tagProperty)[idProp] = newSelectedItem.id;
+            (<any>this.tagProperty)[idProp] = newSelectedItem.id;
             this.tagProperty.nodeId = newSelectedItem.nodeId;
         } else {
-            (<any> this.tagProperty)[idProp] = 0;
+            (<any>this.tagProperty)[idProp] = 0;
             this.tagProperty.nodeId = 0;
         }
 
@@ -250,14 +250,15 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         )
             .then(modal => modal.open())
             .then((uploadedItem: FileUpload) => {
-                if (uploadedItem) {
-                    const itemWithNode: ItemInNode<FileOrImage<Raw>> = {
-                        ...uploadedItem.file,
-                        nodeId: uploadedItem.destinationFolder.nodeId,
-                    };
-                    this.changeSelectedItem(itemWithNode);
-                    this.changeDetector.markForCheck();
+                if (!uploadedItem) {
+                    return;
                 }
+                const itemWithNode: ItemInNode<FileOrImage<Raw>> = {
+                    ...uploadedItem.file,
+                    nodeId: uploadedItem.destinationFolder.nodeId,
+                };
+                this.changeSelectedItem(itemWithNode);
+                this.changeDetector.markForCheck();
             });
     }
 
@@ -267,11 +268,12 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         }
         this.editorOverlayService.editImage({ nodeId: nodeId, itemId: imageId })
             .then(newImage => {
-                if (newImage) {
-                    const imageWithNodeId: ItemInNode<Image<Raw>> = newImage as any;
-                    imageWithNodeId.nodeId = nodeId;
-                    this.changeSelectedItem(imageWithNodeId);
+                if (!newImage) {
+                    return;
                 }
+                const imageWithNodeId: ItemInNode<Image<Raw>> = newImage as any;
+                imageWithNodeId.nodeId = nodeId;
+                this.changeSelectedItem(imageWithNodeId);
             });
     }
 
@@ -282,7 +284,7 @@ export class FileOrImageUrlTagPropertyEditor implements TagPropertyEditor, OnIni
         if (newValue.type !== TagPropertyType.FILE && newValue.type !== TagPropertyType.IMAGE) {
             throw new TagEditorError(`TagPropertyType ${newValue.type} not supported by FileOrImageUrlTagPropertyEditor.`);
         }
-        this.tagProperty = newValue ;
+        this.tagProperty = newValue;
 
         let itemId: number;
         switch (this.tagProperty.type) {

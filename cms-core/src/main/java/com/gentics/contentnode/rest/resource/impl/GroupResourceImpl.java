@@ -399,9 +399,9 @@ public class GroupResourceImpl implements GroupResource {
 			recursiveAddGroups(groups, user.getUserGroups());
 
 			GroupList response = ListBuilder.from(groups, UserGroup.TRANSFORM2REST)
-				.filter(ResolvableFilter.get(filter, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "description"))
 				.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.setperm, ObjectPermission.userassignment))
-				.sort(ResolvableComparator.get(sorting, "id", "globalId", "firstName", "lastName", "login", "email"))
+				.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "description"))
 				.page(paging)
 				.to(new GroupList());
 
@@ -435,9 +435,9 @@ public class GroupResourceImpl implements GroupResource {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
 			GroupList response = ListBuilder.from(group.getChildGroups(), UserGroup.TRANSFORM2REST)
 					.filter(o -> PermFilter.get(ObjectPermission.view).matches(o))
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "firstName", "lastName", "login", "email"))
+					.filter(ResolvableFilter.get(filter, "id", "globalId", "name", "description"))
 					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit, ObjectPermission.delete, ObjectPermission.setperm, ObjectPermission.userassignment))
-					.sort(ResolvableComparator.get(sorting, "id", "globalId", "firstName", "lastName", "login", "email"))
+					.sort(ResolvableComparator.get(sorting, "id", "globalId", "name", "description"))
 					.page(paging)
 					.to(new GroupList());
 
@@ -563,13 +563,17 @@ public class GroupResourceImpl implements GroupResource {
 			UserGroup group = MiscUtils.load(UserGroup.class, id);
 			List<SystemUser> members = group.getMembers();
 
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("firstName", "firstname");
+			fieldMap.put("lastName", "lastname");
+
 			UserList response = ListBuilder.from(members, SystemUser.TRANSFORM2REST)
-					.filter(ResolvableFilter.get(filter, "id", "globalId", "firstName", "lastName", "login",
+					.filter(ResolvableFilter.get(filter, fieldMap, "id", "globalId", "firstName", "lastName", "login",
 							"email"))
 					.perms(permFunction(perms, ObjectPermission.view, ObjectPermission.edit,
 							ObjectPermission.delete))
 					.sort(
-							ResolvableComparator.get(sorting, "id", "globalId", "firstName", "lastName", "login",
+							ResolvableComparator.get(sorting, fieldMap, "id", "globalId", "firstName", "lastName", "login",
 									"email"))
 					.embed(embed, "group", SystemUser.EMBED_GROUPS)
 					.page(paging)

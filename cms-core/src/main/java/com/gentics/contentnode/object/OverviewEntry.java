@@ -28,7 +28,7 @@ public abstract class OverviewEntry extends AbstractContentObject {
 	public abstract Integer getObjectId();
 
 	/**
-	 * Get the selected object
+	 * Get the selected object or null if the object is not found
 	 * @return selected object
 	 * @throws NodeException
 	 */

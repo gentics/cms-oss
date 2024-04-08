@@ -25,9 +25,6 @@ export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> 
     public expandByDefault = true;
 
     @Input()
-    public displayStatusInfos: boolean;
-
-    @Input()
     public activeNodeId: number;
 
     @Input()
@@ -109,7 +106,12 @@ export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> 
         this.allItems$ = this.appState.select(state => state.entities[this.itemIdentifier]);
 
         // get display options from app state
-        this.displayStatusInfos$ = this.appState.select(state => state.folder.displayStatusIcons);
+        this.displayStatusInfos$ = combineLatest([
+            this.appState.select(state => state.folder.displayStatusIcons),
+            this.appState.select(state => state.ui.mode),
+        ]).pipe(
+            map(([enabled, uiMode]) => enabled || uiMode === UIMode.STAGING),
+        );
 
         this.expanded$ = this.appState.select(state => state.folder.displayAllLanguages);
 
@@ -138,10 +140,6 @@ export abstract class BaseLanguageIndicatorComponent<T extends Page<Normalized> 
     ngOnChanges(changes: { [K in keyof this]?: SimpleChange }): void {
         if (changes.item) {
             this.item$.next(this.item);
-        }
-
-        if (changes.displayStatusInfos) {
-            this.folderActions.setDisplayStatusIcons(this.displayStatusInfos);
         }
 
         // check for multiple languages available for current node

@@ -106,7 +106,7 @@ export class GroupTableComponent extends BaseEntityTableComponent<Group<Raw>, Gr
                     {
                         id: MOVE_SINGLE_GROUP_ACTION,
                         icon: 'subdirectory_arrow_right',
-                        label: this.i18n.instant('shared.create_new_sub_group_button'),
+                        label: this.i18n.instant('shared.move'),
                         enabled: canMove,
                         single: true,
                     },

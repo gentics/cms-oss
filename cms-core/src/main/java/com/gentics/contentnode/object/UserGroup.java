@@ -210,6 +210,23 @@ public abstract class UserGroup extends AbstractContentObject implements NamedNo
 	}
 
 	/**
+	 * retrieve a property of this object identified by key
+	 * @param key of the property to be returned
+	 */
+	public Object get(String key) {
+		Property prop = (Property) resolvableProperties.get(key);
+
+		if (prop != null) {
+			Object value = prop.get(this, key);
+
+			addDependency(key, value);
+			return value;
+		} else {
+			return super.get(key);
+		}
+	}
+
+	/**
 	 * Get group name
 	 * @return group name
 	 */

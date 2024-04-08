@@ -528,66 +528,6 @@ public class Synchronizer {
 	}
 
 	/**
-	 * Unwrap and re-throw any NodeException wrapped into a RuntimeException and thrown from the given operator
-	 * @param operator operator
-	 * @throws NodeException
-	 */
-	public static void unwrap(Operator operator) throws NodeException {
-		try {
-			operator.operate();
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof NodeException) {
-				throw (NodeException) e.getCause();
-			} else {
-				throw e;
-			}
-		}
-	}
-
-	/**
-	 * Unwrap and re-throw any NodeException wrapped into a RuntimeException and throws from the given supplier
-	 * @param supplier supplier
-	 * @return supplied value
-	 * @throws NodeException
-	 */
-	public static <R> R unwrap(Supplier<R> supplier) throws NodeException {
-		try {
-			return supplier.supply();
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof NodeException) {
-				throw (NodeException) e.getCause();
-			} else {
-				throw e;
-			}
-		}
-	}
-
-	/**
-	 * Wrap the given operator into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
-	 * @param operator operator
-	 */
-	public static void wrap(Operator operator) {
-		try {
-			operator.operate();
-		} catch (NodeException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * Wrap the given supplier into a try catch and rethrow any thrown NodeException wrapped into a RuntimeException
-	 * @param supplier supplier
-	 * @return supplied value
-	 */
-	public static <R> R wrap(Supplier<R> supplier) {
-		try {
-			return supplier.supply();
-		} catch (NodeException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
 	 * Get the current synchronizer status
 	 * @return current status
 	 */

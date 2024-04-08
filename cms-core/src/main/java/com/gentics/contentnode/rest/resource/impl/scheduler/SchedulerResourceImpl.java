@@ -6,12 +6,14 @@ import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 import static com.gentics.contentnode.rest.util.RequestParamHelper.embeddedParameterContainsAttribute;
 
-import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +35,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
@@ -47,6 +50,8 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.ContentNodeFactory;
 import com.gentics.contentnode.factory.Transaction;
+import com.gentics.contentnode.factory.TransactionException;
+import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
 import com.gentics.contentnode.factory.object.SchedulerFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
@@ -81,6 +86,7 @@ import com.gentics.contentnode.rest.model.scheduler.ScheduleStatus;
 import com.gentics.contentnode.rest.model.scheduler.TaskListResponse;
 import com.gentics.contentnode.rest.model.scheduler.TaskModel;
 import com.gentics.contentnode.rest.model.scheduler.TaskResponse;
+import com.gentics.contentnode.rest.resource.parameter.EmbedParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.ExecutionFilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.FilterParameterBean;
 import com.gentics.contentnode.rest.resource.parameter.PagingParameterBean;
@@ -169,7 +175,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 	@Path("/jobs")
 	@RequiredPerm(type = PermHandler.TYPE_ADMIN, bit = PermHandler.PERM_VIEW)
 	public JobsResponse jobs(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting, @BeanParam PagingParameterBean paging,
-			@BeanParam SchedulerJobFilterParameterBean jobFilter) throws Exception {
+			@BeanParam SchedulerJobFilterParameterBean jobFilter) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			JobsResponse response = ListBuilder.from(DBUtils.select("SELECT jr.id, jr.starttime, jr.endtime, jr.returnvalue, j.name, j.id job_id, j.status FROM job j LEFT JOIN jobrun jr ON j.last_valid_jobrun_id = jr.id", rs -> {
 				List<ResolvableJobStatus> jobs = new ArrayList<>();
@@ -219,7 +225,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 	@Path("/task")
 	@RequiredPerm(type = PermHandler.TYPE_SCHEDULER_ADMIN, bit = PermHandler.PERM_VIEW)
 	public TaskListResponse listTasks(@BeanParam FilterParameterBean filter, @BeanParam SortParameterBean sorting,
-			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws Exception {
+			@BeanParam PagingParameterBean paging, @BeanParam PermsParameterBean perms) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 			List<SchedulerTask> tasks = t.getObjects(SchedulerTask.class, DBUtils.select("SELECT id FROM scheduler_task", DBUtils.IDS));
@@ -348,7 +354,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			@BeanParam PagingParameterBean paging,
 			@BeanParam PermsParameterBean perms,
 			@BeanParam EmbedParameterBean embed
-	) throws Exception {
+	) throws NodeException {
 		try (Trx trx = ContentNodeHelper.trx()) {
 			Transaction t = trx.getTransaction();
 			Map<Integer, ScheduleModel> scheduleModels = DBUtils.select(SELECT_SCHEDULE_INFO, this::getAdditionalScheduleInfo);
@@ -527,7 +533,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			@BeanParam PagingParameterBean paging,
 			@BeanParam ExecutionFilterParameterBean executionFilterParameterBean,
 			@BeanParam EmbedParameterBean embed
-	) throws Exception {
+	) throws NodeException {
 		int scheduleId;
 
 		try {
@@ -577,6 +583,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			if (execution == null) {
 				throw new EntityNotFoundException("Execution not found", "scheduler_execution.notfound");
 			}
+
+			setDataForRunningExecution(execution);
 
 			ExecutionResponse response = new ExecutionResponse(execution, new ResponseInfo(ResponseCode.OK, "Execution loaded"));
 
@@ -692,6 +700,8 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				? ExecutionModel.fromDbResult("e.id", rs)
 				: null;
 
+			setDataForRunningExecution(execution);
+
 			ScheduleModel schedule = new ScheduleModel()
 				.setRuns(rs.getInt("runs"))
 				.setAverageTime(rs.getInt("average_time"))
@@ -701,6 +711,32 @@ public class SchedulerResourceImpl implements SchedulerResource {
 		}
 
 		return models;
+	}
+
+	/**
+	 * If the given execution is still running (does not have an end time), we probably can find the current log output
+	 * in a file. It that's the case, the current contents of the file will be read and set as "log" to the given model
+	 * @param execution execution
+	 * @return the execution
+	 */
+	protected static ExecutionModel setDataForRunningExecution(ExecutionModel execution) {
+		if (execution != null && execution.isRunning()) {
+			if (StringUtils.isEmpty(execution.getLog())) {
+				File out = SchedulerFactory.getExecutionStdout(execution.getId(), false);
+				if (out != null) {
+					try {
+						execution.setLog(FileUtils.readFileToString(out));
+					} catch (IOException e) {
+					}
+				}
+			}
+			try {
+				int current = TransactionManager.getCurrentTransaction().getUnixTimestamp();
+				execution.setDuration(current - execution.getStartTime());
+			} catch (TransactionException e) {
+			}
+		}
+		return execution;
 	}
 
 	/**
@@ -752,7 +788,11 @@ public class SchedulerResourceImpl implements SchedulerResource {
 			sql.append(getFromClause());
 			sql.append(getWhereClause());
 
-			ResolvableComparator<Resolvable> sorter = ResolvableComparator.get(sorting, "id", "starttime", "endtime", "duration", "result");
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("startTime", "starttime");
+			fieldMap.put("endTime", "endtime");
+
+			ResolvableComparator<Resolvable> sorter = ResolvableComparator.get(sorting, fieldMap, "id", "startTime", "starttime", "endTime", "endtime", "duration", "result");
 			sql.append(sorter.getOrderClause());
 
 			if (paging.pageSize > 0) {
@@ -763,7 +803,7 @@ public class SchedulerResourceImpl implements SchedulerResource {
 				List<ExecutionModel> executions = new ArrayList<>();
 
 				while (rs.next()) {
-						executions.add(ExecutionModel.fromDbResult(rs));
+					executions.add(setDataForRunningExecution(ExecutionModel.fromDbResult(rs)));
 				}
 
 				return executions;

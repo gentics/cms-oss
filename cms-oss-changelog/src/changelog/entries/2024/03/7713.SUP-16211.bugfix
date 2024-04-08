@@ -1,0 +1,1 @@
+Editor User Interface: Fix the deletion of form reports with invalid data (i.e.: containing null values)

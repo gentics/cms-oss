@@ -52,7 +52,7 @@
 
 <ng-template #resultRenderer let-value="value">
     <span class="gtx-table-cell-text">
-        {{ 'scheduler.execution_result_' + (value ? 'true' : 'false') | i18n }}
+        {{ 'scheduler.execution_result_' + (value == null ? 'running' : (value ? 'true' : 'false')) | i18n }}
     </span>
 </ng-template>
 

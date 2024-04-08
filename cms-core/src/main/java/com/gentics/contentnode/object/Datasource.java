@@ -5,8 +5,8 @@
  */
 package com.gentics.contentnode.object;
 
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -132,6 +132,7 @@ public abstract class Datasource extends AbstractContentObject implements Synchr
 	static {
 		resolvableProperties = new HashMap<String, NodeObjectProperty<Datasource>>();
 		resolvableProperties.put("name", new NodeObjectProperty<>((o, key) -> o.getName(), "name"));
+		resolvableProperties.put("sourceType", new NodeObjectProperty<>((o, key) -> DatasourceTypeModel.fromValue(o.getSourceTypeVal()), "sourceType"));
 	}
 
 	@Override

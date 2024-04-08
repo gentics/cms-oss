@@ -7,6 +7,7 @@ import { FolderActionsService } from '@editor-ui/app/state';
 import {
     EditableTag,
     FileOrImage,
+    FileUpload,
     Folder,
     FolderTagPartProperty,
     ItemInNode,
@@ -25,7 +26,6 @@ import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { Observable, merge, of } from 'rxjs';
 import { catchError, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { ExpansionButtonComponent } from '../../shared/expansion-button/expansion-button.component';
-import { FileUpload } from '../../shared/upload-with-properties/upload-with-properties.component';
 
 /**
  * Used to edit the UrlFolder and FolderUpload TagParts.

@@ -82,6 +82,7 @@ spec:
         string(name:       'singleTest',                defaultValue: "",    description: "Only this test will be run. Example: com.gentics.contentnode.tests.validation.validator.impl.AttributeValidatorTest")
         booleanParam(name: 'deploy',                    defaultValue: false, description: "Deploy the Maven artifacts, push the docker image and push GIT commits and tags")
         booleanParam(name: 'deployTesting',             defaultValue: false, description: "Like deploy, but only the server image will be built and deployed to a different repository")
+        booleanParam(name: 'install',                   defaultValue: false, description: "Install the Maven artifacts to the local repository (unless deploy or runReleaseBuild is true). If this is set, no tests will be executed (regardless of other settings).")
         booleanParam(name: 'runReleaseBuild',           defaultValue: false, description: "Do a release build including setting the release version, and adding GIT commits and a GIT tag (last two for releases only)")
         booleanParam(name: 'tagRelease',                defaultValue: true,  description: "Release: Whether to create a GIT tag")
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
@@ -197,6 +198,10 @@ spec:
                         if (params.deploy || params.deployTesting) {
                             // Deploy
                             mvnGoal = "deploy"
+                        } else if (params.install) {
+                            // Install
+                            mvnGoal = "install"
+                            mvnArguments = " -am -pl 'cms-oss-bom,cms-core,cms-oss-server' -Dskip.npm -Dui.skip.build -DskipTests=true -Dskip.unit.tests"
                         }
                     }
 
@@ -216,7 +221,7 @@ spec:
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
                         // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                         // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true"]) {
+                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
                             sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                                 " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                         }
@@ -444,13 +449,6 @@ spec:
                       ],
                       wait: false
             }
-        }
-    }
-
-    post {
-        always {
-            updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
-            notifyMattermostUsers()
         }
     }
 }

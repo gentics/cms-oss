@@ -44,7 +44,37 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface ContentRepositoryResource {
 	/**
-	 * List available ContentRepositories
+	 * List available ContentRepositories.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>crType</code></li>
+	 * <li><code>dbType</code></li>
+	 * <li><code>username</code></li>
+	 * <li><code>url</code></li>
+	 * <li><code>basepath</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>crType</code></li>
+	 * <li><code>dbType</code></li>
+	 * <li><code>username</code></li>
+	 * <li><code>url</code></li>
+	 * <li><code>basepath</code></li>
+	 * <li><code>instantPublishing</code></li>
+	 * <li><code>languageInformation</code></li>
+	 * <li><code>permissionInformation</code></li>
+	 * <li><code>diffDelete</code></li>
+	 * <li><code>checkDate</code></li>
+	 * <li><code>checkStatus</code></li>
+	 * <li><code>statusDate</code></li>
+	 * <li><code>dataStatus</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -187,7 +217,38 @@ public interface ContentRepositoryResource {
 	ContentRepositoryResponse copy(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Get the entries in the ContentRepository
+	 * Get the entries in the ContentRepository.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>tagname</code></li>
+	 * <li><code>mapname</code></li>
+	 * <li><code>foreignlinkAttribute</code></li>
+	 * <li><code>foreignlinkAttributeRule</code></li>
+	 * <li><code>category</code></li>
+	 * <li><code>fragmentName</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>tagname</code></li>
+	 * <li><code>mapname</code></li>
+	 * <li><code>object</code></li>
+	 * <li><code>attributeType</code></li>
+	 * <li><code>targetType</code></li>
+	 * <li><code>multivalue</code></li>
+	 * <li><code>optimized</code></li>
+	 * <li><code>filesystem</code></li>
+	 * <li><code>foreignlinkAttribute</code></li>
+	 * <li><code>foreignlinkAttributeRule</code></li>
+	 * <li><code>category</code></li>
+	 * <li><code>segmentfield</code></li>
+	 * <li><code>displayfield</code></li>
+	 * <li><code>urlfield</code></li>
+	 * <li><code>fragmentName</code></li>
+	 * </ul>
 	 * @param id internal or external ID
 	 * @param fragments true to include entries from assigned fragments, false (which is the default) to only list entries of the ContentRepository itself
 	 * @param filter filter parameters
@@ -281,7 +342,19 @@ public interface ContentRepositoryResource {
 	Response deleteEntry(@PathParam("id") String id, @PathParam("entryId") String entryId) throws Exception;
 
 	/**
-	 * Get the ContnetRepository Fragments assigned to the ContentRepository
+	 * Get the ContnetRepository Fragments assigned to the ContentRepository.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param id internal or external ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters

@@ -203,6 +203,18 @@ public class FolderEditSandboxTest {
 	}
 
 	/**
+	 * Tests leading/trailing spaces removal
+	 * @throws Exception
+	 */
+	@Test
+	public void testLeadingTrailingSpaces() throws Exception {
+		ResultSet folder = createAndSaveFolder("  leadingtrailing  ");
+		folder.first();
+
+		assertEquals("/leadingtrailing/", folder.getString("pub_dir"));
+	}
+
+	/**
 	 * Creates and saves a folder.
 	 * @param string
 	 * @return

@@ -37,7 +37,19 @@ import com.webcohesion.enunciate.metadata.rs.StatusCodes;
 })
 public interface ContentRepositoryFragmentResource {
 	/**
-	 * List available ContentRepository Fragments
+	 * List available ContentRepository Fragments.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>name</code></li>
+	 * </ul>
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters
 	 * @param paging paging parameters
@@ -108,7 +120,36 @@ public interface ContentRepositoryFragmentResource {
 	Response delete(@PathParam("id") String id) throws Exception;
 
 	/**
-	 * Get the entries in the ContentRepository Fragment
+	 * Get the entries in the ContentRepository Fragment.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>tagname</code></li>
+	 * <li><code>mapname</code></li>
+	 * <li><code>foreignlinkAttribute</code></li>
+	 * <li><code>foreignlinkAttributeRule</code></li>
+	 * <li><code>category</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>globalId</code></li>
+	 * <li><code>tagname</code></li>
+	 * <li><code>mapname</code></li>
+	 * <li><code>objType</code></li>
+	 * <li><code>attributeType</code></li>
+	 * <li><code>targetType</code></li>
+	 * <li><code>multivalue</code></li>
+	 * <li><code>optimized</code></li>
+	 * <li><code>filesystem</code></li>
+	 * <li><code>foreignlinkAttribute</code></li>
+	 * <li><code>foreignlinkAttributeRule</code></li>
+	 * <li><code>category</code></li>
+	 * <li><code>segmentfield</code></li>
+	 * <li><code>displayfield</code></li>
+	 * <li><code>urlfield</code></li>
+	 * </ul>
 	 * @param id internal or external ID
 	 * @param filter filter parameters
 	 * @param sorting sorting parameters

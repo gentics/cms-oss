@@ -5,11 +5,11 @@ import {
     ContentRepositoryFragmentListResponse,
     ContentRepositoryListOptions,
     ContentRepositoryListResponse,
+    ContentRepositoryListRolesResponse,
     ContentRepositoryResponse,
     ContentRepositoryUpdateRequest,
     ContentRepositoryUpdateResponse,
     EntityIdType,
-    Response,
     TagmapEntryCreateRequest,
     TagmapEntryCreateResponse,
     TagmapEntryListOptions,
@@ -222,9 +222,28 @@ export class ContentrespositoryApi {
         return this.apiBase.delete(`contentrepositories/${contentRepositoryId}/cr_fragments/${crFragmentId}`);
     }
 
+    /** MESH ACCESS ************************************************************************************ */
+
     loginToMeshInstance(
         contentRepositoryId: EntityIdType,
     ): Observable<LoginResponse> {
         return this.apiBase.post(`contentrepositories/${contentRepositoryId}/proxylogin`, null) as any;
+    }
+
+    getAvailableContentRepositoryRoles(contentRepositoryId: EntityIdType): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.get(`contentrepositories/${contentRepositoryId}/availableroles`);
+    }
+
+    getAssignedContentRepositoryRoles(contentRepositoryId: EntityIdType): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.get(`contentrepositories/${contentRepositoryId}/roles`);
+    }
+
+    updateAssignedContentRepositoryRoles(
+        contentRepositoryId: EntityIdType,
+        roles: string[],
+    ): Observable<ContentRepositoryListRolesResponse> {
+        return this.apiBase.post(`contentrepositories/${contentRepositoryId}/roles`, {
+            roles,
+        });
     }
 }

@@ -1,0 +1,2 @@
+Editor User Interface: In some cases the tag editor for overviews showed the order direction to be "descending" while it was
+actually "ascending". This has been fixed.

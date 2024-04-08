@@ -27,3 +27,11 @@ pre {
 .browse-button {
     height: 1.8rem;
 }
+
+::ng-deep gtx-select .clear-button {
+    & icon {
+        font-size: 18px !important;
+    }
+    
+    height: 1.8rem !important;
+}

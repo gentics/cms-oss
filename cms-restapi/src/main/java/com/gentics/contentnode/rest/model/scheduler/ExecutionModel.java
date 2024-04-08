@@ -104,7 +104,8 @@ public class ExecutionModel implements Serializable {
 			.setStartTime(rs.getInt("starttime"))
 			.setEndTime(rs.getInt("endtime"))
 			.setDuration(rs.getInt("duration"))
-			.setResult(rs.getInt("result") == 0)
+			// if the execution is still running, we do not set the result flag
+			.setResult(rs.getInt("endtime") > 0 ? rs.getInt("result") == 0 : null)
 			.setLog(rs.getString("log"));
 	}
 
@@ -278,6 +279,14 @@ public class ExecutionModel implements Serializable {
 	public ExecutionModel setLog(String log) {
 		this.log = log;
 		return this;
+	}
+
+	/**
+	 * Check whether the execution is still running
+	 * @return true if the execution is running
+	 */
+	public boolean isRunning() {
+		return endTime == null || endTime == 0;
 	}
 
 	@Override

@@ -9,9 +9,9 @@ import {
 } from '@admin-ui/core';
 import { ContextMenuService } from '@admin-ui/shared';
 import { AppStateService } from '@admin-ui/state';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, Output, OnChanges, EventEmitter } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AnyModelType, ContentRepository, NormalizableEntityTypesMap } from '@gentics/cms-models';
+import { AnyModelType, ContentRepository, ContentRepositoryType, NormalizableEntityTypesMap } from '@gentics/cms-models';
 import { ModalService, TableAction, TableActionClickEvent, TableColumn } from '@gentics/ui-core';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -30,6 +30,7 @@ const DATA_CHECK_ACTION = 'dataCheck';
 const DATA_REPAIR_ACTION = 'dataRepair';
 const STRUCTURE_CHECK_ACTION = 'structureCheck';
 const STRUCTURE_REPAIR_ACTION = 'structureRepair';
+const SYNCHRONIZE_ROLES_ACTION = 'synchronizeRoles';
 
 export interface OpenCRDetailEvent {
     item: ContentRepositoryBO,
@@ -51,6 +52,9 @@ export class ContentRepositoryTableComponent
 
     @Input()
     public linkDetails = false;
+
+    @Output()
+    public syncRoles = new EventEmitter<ContentRepositoryBO>();
 
     protected rawColumns: TableColumn<ContentRepositoryBO>[] = [
         {
@@ -151,6 +155,14 @@ export class ContentRepositoryTableComponent
                         label: this.i18n.instant('shared.assign_crfragments_to_contentrepositories'),
                     },
                     {
+                        id: SYNCHRONIZE_ROLES_ACTION,
+                        type: 'secondary',
+                        icon: 'sync',
+                        enabled: (cr) => cr != null && cr.crType === ContentRepositoryType.MESH && !!cr.permissionProperty,
+                        single: true,
+                        label: this.i18n.instant('contentRepository.synchronizeRoles'),
+                    },
+                    {
                         id: DATA_CHECK_ACTION,
                         type: 'secondary',
                         icon: 'find_in_page',
@@ -246,6 +258,10 @@ export class ContentRepositoryTableComponent
                 this.handler.repairStructure(event.item.id).toPromise().then(() => {
                     this.reload();
                 });
+                return;
+
+            case SYNCHRONIZE_ROLES_ACTION:
+                this.syncRoles.emit(event.item);
                 return;
         }
 

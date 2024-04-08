@@ -1,0 +1,1 @@
+Now every object disallows leading and trailing spaces in its name. Those will be removed on every object save.

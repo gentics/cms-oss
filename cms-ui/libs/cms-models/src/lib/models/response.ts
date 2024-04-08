@@ -676,7 +676,7 @@ export type ContentRepositoryCreateResponse = ContentRepositoryResponse;
  */
 export type ContentRepositoryUpdateResponse = ContentRepositoryResponse;
 
-export interface ContentRepositoryRolesListResponse extends Response {
+export interface ContentRepositoryListRolesResponse extends Response {
     roles: string[];
 }
 

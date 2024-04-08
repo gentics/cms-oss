@@ -40,6 +40,7 @@ public abstract class ObjectTagDefinitionCategory extends AbstractContentObject 
 		category.setGlobalId(nodeCategory.getGlobalId() != null ? nodeCategory.getGlobalId().toString() : null);
 		category.setName(nodeCategory.getName());
 		category.setNameI18n(I18NHelper.toI18nMap(nodeCategory.getNameI18n()));
+		category.setSortOrder(nodeCategory.getSortorder());
 
 		return category;
 	};

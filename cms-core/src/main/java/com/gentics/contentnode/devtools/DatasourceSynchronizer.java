@@ -1,8 +1,8 @@
 package com.gentics.contentnode.devtools;
 
 import static com.gentics.contentnode.devtools.Synchronizer.mapper;
-import static com.gentics.contentnode.devtools.Synchronizer.unwrap;
-import static com.gentics.contentnode.devtools.Synchronizer.wrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.unwrap;
+import static com.gentics.contentnode.rest.util.MiscUtils.wrap;
 
 import java.io.File;
 import java.io.IOException;

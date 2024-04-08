@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1422,14 +1423,18 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 			// filter by optional search criteria
 			filterBySearch(folders, folderListParams.inherited, filterParams.query, editableParams, wastebinParams.wastebinSearch);
 
+			Map<String, String> fieldMap = new HashMap<>();
+			fieldMap.put("publishDir", "pub_dir");
+
 			// create a response with the folders
 			ResolvableComparator<com.gentics.contentnode.object.Folder> comparator = ResolvableComparator.get(
 				sortingParams,
+				fieldMap,
 				// From AbstractContentObject
 				"id", "ttype", "ispage", "isfolder", "isfile", "isimage", "istag",
 				// From AbstractFolder
 				"ordner", "folder", "name", "description", "beschreibung", "mother", "node_id", "node", "parent",
-				"pub_dir", "path", "creator", "ersteller", "editor", "bearbeiter", "creationtimestamp",
+				"pub_dir", "publishDir", "path", "creator", "ersteller", "editor", "bearbeiter", "creationtimestamp",
 				"erstellungstimestamp", "editdate", "creationdate", "edittimestamp", "bearbeitungstimestamp",
 				"ismaster", "inherited");
 			Collection<Reference> fillRefs = new ArrayList<>();
@@ -3257,12 +3262,26 @@ public class FolderResourceImpl extends AuthenticatedContentNodeResource impleme
 	protected Message updatePublishDir(com.gentics.contentnode.object.Folder folder, String pubDir,
 			Map<String, String> pubDirI18n, boolean uniquenessCheck) throws NodeException {
 		boolean checkDuplicatePubDir = false;
-		if (!ObjectTransformer.isEmpty(pubDir)) {
+		if (pubDir != null) {
 			if (uniquenessCheck && !StringUtils.isEqual(folder.getPublishDir(), pubDir)) {
 				checkDuplicatePubDir = true;
 			}
 			folder.setPublishDir(pubDir);
+
+			// When pub dir segments is active, the segment is only allowed to
+			// be empty for the root folder of the node.
+			Node node = folder.getNode();
+			boolean pubDirSegmentRequired = node.isPubDirSegment() && !folder.equals(node.getFolder());
+
+			// setPublishDir will sanitize the name and remove slashes if pub
+			// dir segments is active. When the publish dir is empty afterward,
+			// the request contained an empty string or a '/' for the pub dir
+			// segment.
+			if (pubDirSegmentRequired && StringUtils.isEmpty(folder.getPublishDir())) {
+				return new Message(Message.Type.CRITICAL, new CNI18nString("error.pubdir.segment_missing").toString());
+			}
 		}
+
 		// set the updated translated publish directories
 		if (pubDirI18n != null) {
 			if (uniquenessCheck

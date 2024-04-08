@@ -30,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -206,9 +207,11 @@ import com.gentics.mesh.core.rest.tag.TagListUpdateRequest;
 import com.gentics.mesh.core.rest.tag.TagReference;
 import com.gentics.mesh.core.rest.tag.TagResponse;
 import com.gentics.mesh.parameter.GenericParameters;
+import com.gentics.mesh.parameter.NodeParameters;
 import com.gentics.mesh.parameter.VersioningParameters;
 import com.gentics.mesh.parameter.client.DeleteParametersImpl;
 import com.gentics.mesh.parameter.client.GenericParametersImpl;
+import com.gentics.mesh.parameter.client.NodeParametersImpl;
 import com.gentics.mesh.parameter.client.SchemaUpdateParametersImpl;
 import com.gentics.mesh.parameter.client.VersioningParametersImpl;
 import com.gentics.mesh.parameter.image.CropMode;
@@ -278,6 +281,11 @@ public class MeshPublisher implements AutoCloseable {
 	public final static String FILE_SCHEMA = "binary_content";
 
 	/**
+	 * Name of the schema for forms
+	 */
+	public final static String FORM_SCHEMA = "form";
+
+	/**
 	 * Name of the tag family used for the implementation version tags
 	 */
 	public final static String IMPLEMENTATION_VERSION_TAGFAMILY = "gcmsImplementationVersion";
@@ -334,6 +342,11 @@ public class MeshPublisher implements AutoCloseable {
 	 * Default timeouts in seconds
 	 */
 	public final static int DEFAULT_TIMEOUT = 60;
+
+	/**
+	 * Threshold in ms for logging the wait time when putting an item to a queue
+	 */
+	public final static int QUEUE_WAIT_LOG_THRESHOLD_MS = 1000;
 
 	/**
 	 * Retry handler
@@ -1048,7 +1061,7 @@ public class MeshPublisher implements AutoCloseable {
 	 * @param objType object type
 	 * @return normalized
 	 */
-	protected static int normalizeObjType(int objType) {
+	public static int normalizeObjType(int objType) {
 		if (objType == ImageFile.TYPE_IMAGE) {
 			return File.TYPE_FILE;
 		}
@@ -2242,6 +2255,20 @@ public class MeshPublisher implements AutoCloseable {
 			checkedNode = project.node;
 		}
 
+		// when the checked node is null, the Mesh CR does not have "project per node" activated, so we need to check for all nodes, which are currently assigned to the Mesh CR
+		if (checkedNode == null && !cr.isProjectPerNode()) {
+			List<Node> nodes = cr.getNodes();
+			if (!CollectionUtils.isEmpty(nodes)) {
+				boolean consistent = true;
+				for (Node n : nodes) {
+					consistent &= checkObjectConsistency(project, branch, n, repair, publishProcess, meshUuidMap);
+				}
+				return consistent;
+			} else {
+				return true;
+			}
+		}
+
 		Set<Integer> types = new HashSet<>(schemaNames.keySet());
 		// also check forms, if the node is no channel and has the feature activated
 		if (checkedNode != null && !checkedNode.isChannel() && NodeConfigRuntimeConfiguration.isFeature(Feature.FORMS, checkedNode)) {
@@ -2598,7 +2625,7 @@ public class MeshPublisher implements AutoCloseable {
 							Trx.operate(trx -> {
 								try (LangTrx lTrx = new LangTrx("en");
 										RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, form, controller.publishProcess,
-												controller.publishProcess)) {
+												controller.publishProcess, controller.publishProcess)) {
 
 									ObjectNode data = (ObjectNode) form.getData();
 									JsonNode downloadUrl = data == null ? null : data.get("downloadBaseUrl");
@@ -2695,7 +2722,7 @@ public class MeshPublisher implements AutoCloseable {
 				PublishCacheTrx pTrx = new PublishCacheTrx(controller.publishProcess);
 				PublishedNodeTrx pnTrx = TransactionManager.getCurrentTransaction().initPublishedNode(node);
 				RenderTypeTrx rTrx = new RenderTypeTrx(RenderType.EM_PUBLISH, o.getObject(), handleDependencies,
-						storeDependencies)) {
+						storeDependencies, controller.publishProcess)) {
 			WriteTask task = new WriteTask();
 			// task.project is the current project of the node, not necessarily the desired project
 			task.project = meshObject != null ? meshObject.project : project;
@@ -2858,7 +2885,7 @@ public class MeshPublisher implements AutoCloseable {
 	 */
 	public Map<String, String> getRoleMap() {
 		if (roleMap == null) {
-			roleMap = new HashMap<>(roleMapSingle.blockingGet());
+			roleMap = Collections.synchronizedMap(new HashMap<>(roleMapSingle.blockingGet()));
 		}
 		return roleMap;
 	}
@@ -3035,9 +3062,34 @@ public class MeshPublisher implements AutoCloseable {
 	public String getSchemaName(int objectType) {
 		switch (objectType) {
 		case Form.TYPE_FORM:
-			return "form";
+			return FORM_SCHEMA;
 		default:
 			return String.format("%s_%s", schemaPrefix, schemaNames.get(normalizeObjType(objectType)));
+		}
+	}
+
+	/**
+	 * Get the object type for the given schema name
+	 * @param schemaName schema name
+	 * @return optional object type, empty if the schema does not belong to a CMS object
+	 */
+	public Optional<Integer> getObjectType(String schemaName) {
+		if (org.apache.commons.lang3.StringUtils.equals(schemaName, FORM_SCHEMA)) {
+			return Optional.of(Form.TYPE_FORM);
+		}
+		if (!org.apache.commons.lang3.StringUtils.startsWith(schemaName, schemaPrefix + "_")) {
+			return Optional.empty();
+		}
+		String typeName = org.apache.commons.lang3.StringUtils.removeStart(schemaName, schemaPrefix + "_");
+		switch (typeName) {
+		case FOLDER_SCHEMA:
+			return Optional.of(Folder.TYPE_FOLDER);
+		case PAGE_SCHEMA:
+			return Optional.of(Page.TYPE_PAGE);
+		case FILE_SCHEMA:
+			return Optional.of(File.TYPE_FILE);
+		default:
+			return Optional.empty();
 		}
 	}
 
@@ -3557,6 +3609,46 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Do some reverse engineering to get the CMS object which was published to Mesh with the given UUID and language
+	 * @param project mesh project
+	 * @param nodeId node ID
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh language
+	 * @return optional pair of object type and NodeObject. The optional is empty, if the object in Mesh could not be found or was not published from
+	 * the CMS. Otherwise the pair will always contain the object type and also the NodeObject, if it could be found in the CMS
+	 * @throws NodeException
+	 */
+	public Optional<Pair<Integer, NodeObject>> getNodeObject(MeshProject project, int nodeId, String meshUuid, String meshLanguage) throws NodeException {
+		GenericParameters genParams = new GenericParametersImpl().setETag(false).setFields("uuid", "fields", "schema");
+		NodeParameters langParam = new NodeParametersImpl().setLanguages(meshLanguage);
+		NodeResponse conflict = client
+				.findNodeByUuid(project.name, meshUuid, project.enforceBranch(nodeId), genParams, langParam).toMaybe()
+				.onErrorComplete().blockingGet();
+		if (conflict != null) {
+			String schemaName = conflict.getSchema().getName();
+			Optional<Integer> optCmsId = Optional.ofNullable(conflict.getFields().getNumberField("cms_id"))
+					.flatMap(f -> Optional.ofNullable(f.getNumber())).map(Number::intValue);
+			Optional<Integer> optType = getObjectType(schemaName);
+			if (optType.isPresent() && optCmsId.isPresent()) {
+				int objType = optType.get();
+				int cmsId = optCmsId.get();
+
+				NodeObject object = null;
+				try (Trx trx = new Trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+					Transaction t = trx.getTransaction();
+					object = t.getObject(t.getClass(objType), cmsId);
+				}
+
+				return Optional.of(Pair.of(objType, object));
+			} else {
+				return Optional.empty();
+			}
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
 	 * Get the parent object of the given object.
 	 * Do not return the root folder, if the CR publishes into project per node
 	 * @param object object
@@ -3680,9 +3772,12 @@ public class MeshPublisher implements AutoCloseable {
 			completable.blockingAwait();
 		} catch (Throwable t) {
 			if (task.postponable && isRecoverable(t)) {
-				if (MeshPublishUtils.isNotFound(t)) {
+				if (MeshPublishUtils.isNotFound(t) || MeshPublishUtils.isBadRequestAfterMove(t)) {
 					// get parent folder
 					Folder parentFolder = Trx.supply(tx -> tx.getObject(Folder.class, task.folderId));
+					if (parentFolder == null) {
+						throw t;
+					}
 					Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 
 					// generate the write task for the parent folder
@@ -3706,12 +3801,28 @@ public class MeshPublisher implements AutoCloseable {
 							Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
 							NodeObject languageVariant = Trx.supply(() -> task.getLanguageVariant(conflictingLanguage));
 
-							if (!cr.mustContain(languageVariant)) {
+							if (!Trx.supply(() -> cr.mustContain(languageVariant))) {
 								// remove language variant
 								remove(task.project, node, task.objType, conflictingUuid, conflictingLanguage, false);
 								// repeat task
 								task.perform(false);
 								postpone = false;
+							}
+						} else {
+							// check whether the conflicting node should be removed
+							Optional<Pair<Integer, NodeObject>> optNodeObject = getNodeObject(task.project, task.nodeId, conflictingUuid, conflictingLanguage);
+							if (optNodeObject.isPresent()) {
+								Node node = Trx.supply(tx -> tx.getObject(Node.class, task.nodeId, false, false, true));
+
+								int objType = optNodeObject.get().getLeft();
+								NodeObject conflictingNodeObject = optNodeObject.get().getRight();
+								if (conflictingNodeObject == null || !Trx.supply(() -> cr.mustContain(conflictingNodeObject))) {
+									// remove the object from Mesh
+									remove(task.project, node, objType, conflictingUuid, conflictingLanguage, false);
+									// repeat task
+									task.perform(false);
+									postpone = false;
+								}
 							}
 						}
 					}
@@ -3763,10 +3874,14 @@ public class MeshPublisher implements AutoCloseable {
 		response = client.upsertNode(task.project.name, task.uuid, request, task.project.enforceBranch(task.nodeId),
 				params);
 
+		AtomicLong start = new AtomicLong();
 		return ensureRoles(task.roles)
 			.andThen(
 				response.toSingle()
-					.doOnSubscribe(disp -> saveNodeCounter.incrementAndGet())
+					.doOnSubscribe(disp -> {
+						start.set(System.currentTimeMillis());
+						saveNodeCounter.incrementAndGet();
+					})
 					.flatMap(node -> setRolePermissions(task, node))
 					.flatMap(node -> move(task, node))
 					.flatMap(node -> postSave(task, node))
@@ -3779,8 +3894,9 @@ public class MeshPublisher implements AutoCloseable {
 					.doOnSuccess(node -> {
 						if (renderResult != null) {
 							try {
+								long duration = System.currentTimeMillis() - start.get();
 								renderResult.info(MeshPublisher.class,
-										String.format("written %d.%d into {%s} for node %d", task.objType, task.objId, cr.getName(), task.nodeId));
+										String.format("written %d.%d into {%s} for node %d in %d ms", task.objType, task.objId, cr.getName(), task.nodeId, duration));
 							} catch (NodeException e) {
 							}
 						}
@@ -3901,6 +4017,7 @@ public class MeshPublisher implements AutoCloseable {
 	protected ObjectPermissionGrantRequest createPermissionUpdateRequests(WriteTask task) {
 		ObjectPermissionGrantRequest request = new ObjectPermissionGrantRequest();
 		request.setReadPublished(task.roles.stream().map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList()));
+		request.setRead(Collections.emptyList());
 		request.setExclusive(true);
 		request.setIgnore(Collections.singletonList(new RoleReference().setName("admin")));
 		return request;
@@ -3934,14 +4051,12 @@ public class MeshPublisher implements AutoCloseable {
 			.filter(role -> !currentRolesMap.containsKey(role))
 			.doOnNext(role -> logger.debug("Creating missing role in Mesh: " + role))
 			.map(role -> new RoleCreateRequest().setName(role))
-			.flatMapCompletable(request -> client.createRole(request).toCompletable())
-			// Refresh the roles map.
-			.andThen(client.findRoles().toSingle())
-			.flatMapObservable(response -> Observable.fromIterable(response.getData()))
-			.filter(role -> !"admin".equals(role.getName()))
-			.toMap(RoleResponse::getName, RoleResponse::getUuid)
-			.doOnSuccess(loadedRolesMap -> roleMap = loadedRolesMap)
-			.ignoreElement();
+			.flatMapSingle(request -> client.createRole(request).toSingle())
+			.flatMapCompletable(role -> {
+				// put the created map into the roles map
+				currentRolesMap.put(role.getName(), role.getUuid());
+				return Completable.complete();
+			});
 	}
 
 	/**
@@ -4494,6 +4609,10 @@ public class MeshPublisher implements AutoCloseable {
 			if (projectResult != null && projectResult.isPresent()) {
 				ProjectResponse project = projectResult.get();
 
+				// read roles with read permission
+				rolesWithPermissions.addAll(client.getProjectRolePermissions(project.getUuid()).blockingGet().getRead().stream()
+						.map(RoleReference::getName).collect(Collectors.toSet()));
+
 				String currentProjectName = project.getName();
 				rootNodeUuid = project.getRootNode().getUuid();
 				if (node != null) {
@@ -4996,6 +5115,13 @@ public class MeshPublisher implements AutoCloseable {
 
 			BranchResponse branch = client.createBranch(currentProjectName, create).blockingGet();
 
+			// set the permissions on the branch
+			if (!rolesWithPermissions.isEmpty()) {
+				List<RoleReference> roleReferences = rolesWithPermissions.stream()
+						.map(roleName -> new RoleReference().setName(roleName)).collect(Collectors.toList());
+				client.grantBranchRolePermissions(currentProjectName, branch.getUuid(), new ObjectPermissionGrantRequest().setRead(roleReferences)).blockingAwait();
+			}
+
 			if (tagAsLatest) {
 				branch = client.addTagToBranch(currentProjectName, branch.getUuid(), latestTagUuid).blockingGet();
 				if (baseBranch != null) {
@@ -5066,11 +5192,10 @@ public class MeshPublisher implements AutoCloseable {
 					.collect(Collectors.toList()));
 
 			// set read_published on the root node
-			completables
-					.add(client
-							.grantNodeRolePermissions(name, rootNodeUuid,
-									new ObjectPermissionGrantRequest().setReadPublished(roleReferences))
-							.toCompletable());
+			completables.add(client.grantNodeRolePermissions(name, rootNodeUuid,
+							new ObjectPermissionGrantRequest()
+								.setReadPublished(roleReferences)
+						).toCompletable());
 
 			return Completable.merge(completables)
 				.andThen(Completable.fromAction(() -> rolesWithPermissions.addAll(missingPermissions)));

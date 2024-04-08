@@ -1,0 +1,1 @@
+ 	Administration User Interface: Confirmation dialog is shown on TagPart editing, if devtool automatic synchronization is enabled and TagPart has changes in the file system during editing.

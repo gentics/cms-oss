@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.StringUtils;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -57,11 +57,11 @@ import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectWithAlternateUrls;
 import com.gentics.contentnode.object.Page;
+import com.gentics.contentnode.publish.FilePublisher;
 import com.gentics.contentnode.rest.util.MiscUtils;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.string.CNStringUtils;
 import com.gentics.lib.db.SQLExecutor;
-import com.gentics.lib.etc.StringUtils;
 import com.gentics.lib.log.NodeLogger;
 
 import io.reactivex.Flowable;
@@ -786,14 +786,14 @@ public class DisinheritUtils {
 	 * The object is identified by its channelSetId and the publish URL to check for with functions that extract the path and name portions of the URL
 	 *
 	 * @param checkObject checked object
-	 * @param path supplier for the path portion of the URL. The path must always begin and end with a slash
+	 * @param path function for the path portion of the URL for the given node. The path must always begin and end with a slash
 	 * @param name supplier for the name portion of the URL
 	 * @param potentialConflictingFolders set of folders that may contain conflicting objects
 	 * @param objectSegment visibility segment to check in
 	 * @return first conflicting object or null
 	 * @throws NodeException
 	 */
-	public static Disinheritable<?> getObjectUsingURL(Disinheritable<?> checkObject, Supplier<String> path,
+	public static Disinheritable<?> getObjectUsingURL(Disinheritable<?> checkObject, Function<Node, String> path,
 			Supplier<String> name, Set<Folder> potentialConflictingFolders, ChannelTreeSegment objectSegment) throws NodeException {
 		int channelSetId = checkObject.getChannelSetId();
 		Transaction t = TransactionManager.getCurrentTransaction();
@@ -804,7 +804,7 @@ public class DisinheritUtils {
 		Map<String, Set<Node>> publishedUrls = new HashMap<>();
 		for (Node node : objectSegment.getAllNodes()) {
 			try (ChannelTrx cTrx = new ChannelTrx(node)) {
-				String url = String.format("%s%s", path.supply(), filename);
+				String url = String.format("%s%s", path.apply(node), filename);
 				publishedUrls.computeIfAbsent(url, key -> new HashSet<>()).add(node);
 			}
 		}
@@ -911,9 +911,29 @@ public class DisinheritUtils {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			// now check for pages with nice URLs identical to folder.pub_dir + object.filename of this object
 
+			Map<String, Set<Node>> potentialPageNiceUrls = new HashMap<>();
+			Map<String, Set<Node>> potentialFileNiceUrls = new HashMap<>();
+			for (Map.Entry<String, Set<Node>> entry : publishedUrls.entrySet()) {
+				String fullUrl = entry.getKey();
+				Set<Node> nodes = entry.getValue();
+				for (Node n : nodes) {
+					String niceUrl = fullUrl;
+					if (!StringUtils.equals(n.getPublishDir(), "/")) {
+						niceUrl = StringUtils.removeStart(niceUrl, n.getPublishDir());
+					}
+					potentialPageNiceUrls.computeIfAbsent(niceUrl, key -> new HashSet<>()).add(n);
+
+					niceUrl = fullUrl;
+					if (!StringUtils.equals(n.getBinaryPublishDir(), "/")) {
+						niceUrl = StringUtils.removeStart(niceUrl, n.getBinaryPublishDir());
+					}
+					potentialFileNiceUrls.computeIfAbsent(niceUrl, key -> new HashSet<>()).add(n);
+				}
+			}
+
 			// select all pages that have possibly conflicting nice URLs or alternate URLs
 			String select = "SELECT DISTINCT page.id FROM page LEFT JOIN page_alt_url ON page.id = page_alt_url.page_id WHERE (page.nice_url = ? OR page_alt_url.url = ?) AND page.channelset_id != ? AND page.deleted = 0";
-			for (Map.Entry<String, Set<Node>> entry : publishedUrls.entrySet()) {
+			for (Map.Entry<String, Set<Node>> entry : potentialPageNiceUrls.entrySet()) {
 				List<Page> pages = t.getObjects(Page.class, DBUtils.select(select, ps -> {
 					ps.setString(1, entry.getKey());
 					ps.setString(2, entry.getKey());
@@ -932,7 +952,7 @@ public class DisinheritUtils {
 
 			// select all files that have possibly conflicting nice URLs or alternate URLs
 			select = "SELECT DISTINCT contentfile.id FROM contentfile LEFT JOIN contentfile_alt_url ON contentfile.id = contentfile_alt_url.contentfile_id WHERE (contentfile.nice_url = ? OR contentfile_alt_url.url = ?) AND contentfile.channelset_id != ? AND contentfile.deleted = 0";
-			for (Map.Entry<String, Set<Node>> entry : publishedUrls.entrySet()) {
+			for (Map.Entry<String, Set<Node>> entry : potentialFileNiceUrls.entrySet()) {
 				List<File> files = t.getObjects(File.class, DBUtils.select(select, ps -> {
 					ps.setString(1, entry.getKey());
 					ps.setString(2, entry.getKey());
@@ -952,7 +972,7 @@ public class DisinheritUtils {
 			// select pages in other versions that have possibly conflicting nice URLs or alternate URLs
 			select = "SELECT id FROM page_nodeversion WHERE nice_url = ?";
 			try (FeatureClosure noPublishCache = new FeatureClosure(Feature.PUBLISH_CACHE, false)) {
-				for (Map.Entry<String, Set<Node>> entry : publishedUrls.entrySet()) {
+				for (Map.Entry<String, Set<Node>> entry : potentialPageNiceUrls.entrySet()) {
 					Set<Integer> pageIds = new HashSet<>();
 					// select for nice_url
 					pageIds.addAll(DBUtils.select("SELECT DISTINCT id FROM page_nodeversion WHERE nice_url = ?", ps -> {
@@ -1024,7 +1044,7 @@ public class DisinheritUtils {
 	 * @throws NodeException
 	 */
 	public static Disinheritable<?> getObjectUsingFilename(Disinheritable<?> checkObject, Set<Folder> potentialConflictingFolders, ChannelTreeSegment overrideRestrictions) throws NodeException {
-		return getObjectUsingURL(checkObject, () -> {
+		return getObjectUsingURL(checkObject, node -> {
 			return checkObject.getFullPublishPath(true);
 		}, () -> checkObject.getFilename(), potentialConflictingFolders,
 				overrideRestrictions != null ? overrideRestrictions : new ChannelTreeSegment(checkObject, false));
@@ -1045,8 +1065,9 @@ public class DisinheritUtils {
 	 */
 	public static NodeObject getObjectUsingNiceURL(Disinheritable<?> object, String niceUrl, Set<Folder> potentialConflictingFolders, ChannelTreeSegment overrideRestrictions)
 			throws NodeException {
-		return getObjectUsingURL(object, () -> NodeObjectWithAlternateUrls.PATH.apply(niceUrl),
-				() -> NodeObjectWithAlternateUrls.NAME.apply(niceUrl), potentialConflictingFolders,
+		return getObjectUsingURL(object, node -> {
+			return NodeObjectWithAlternateUrls.PATH.apply(FilePublisher.getPath(true, false, node.getPublishDir(), niceUrl));
+		}, () -> NodeObjectWithAlternateUrls.NAME.apply(niceUrl), potentialConflictingFolders,
 				overrideRestrictions != null ? overrideRestrictions : new ChannelTreeSegment(object, false));
 	}
 
@@ -1112,10 +1133,28 @@ public class DisinheritUtils {
 		// prepare all different publish URLs of the object (in all channels, where it is inherited) together with the Set of nodes
 		// in which the publish URL is valid
 		Map<Pattern, Set<Node>> publishUrlsPatterns = new HashMap<>();
+		Map<String, Set<Node>> potentialPageNiceUrlPatterns = new HashMap<>();
+		Map<String, Set<Node>> potentialFileNiceUrlPatterns = new HashMap<>();
 		for (Node node : objectSegment.getAllNodes()) {
 			try (ChannelTrx cTrx = new ChannelTrx(node); HandleDependenciesTrx hTrx = new HandleDependenciesTrx(false)) {
 				Pattern urlPattern = Pattern.compile(String.format("%s%s", CNStringUtils.escapeRegex(checkObject.getFullPublishPath(true)), filenamePatternStr), Pattern.CASE_INSENSITIVE);
 				publishUrlsPatterns.computeIfAbsent(urlPattern, key -> new HashSet<>()).add(node);
+
+				// check nice URL pattern for pages
+				String niceUrlPattern = urlPattern.pattern();
+				String publishDir = node.getPublishDir();
+				if (!StringUtils.equals(publishDir, "/")) {
+					niceUrlPattern = StringUtils.removeStart(niceUrlPattern, CNStringUtils.escapeRegex(publishDir));
+				}
+				potentialPageNiceUrlPatterns.computeIfAbsent(niceUrlPattern, key -> new HashSet<>()).add(node);
+
+				// check nice URL pattern for files
+				niceUrlPattern = urlPattern.pattern();
+				String binaryPublishDir = node.getBinaryPublishDir();
+				if (!StringUtils.equals(binaryPublishDir, "/")) {
+					niceUrlPattern = StringUtils.removeStart(niceUrlPattern, CNStringUtils.escapeRegex(binaryPublishDir));
+				}
+				potentialFileNiceUrlPatterns.computeIfAbsent(niceUrlPattern, key -> new HashSet<>()).add(node);
 			}
 		}
 
@@ -1175,35 +1214,55 @@ public class DisinheritUtils {
 		if (NodeConfigRuntimeConfiguration.isFeature(Feature.NICE_URLS)) {
 			// now check for pages with nice URLs identical to folder.pub_dir + object.filename of this object
 
-			for (Map.Entry<Pattern, Set<Node>> entry : publishUrlsPatterns.entrySet()) {
+			// SQL queries to check for pages
+			List<String> pageChecks = Arrays.asList(
+					"SELECT nice_url url, id FROM page WHERE nice_url REGEXP ? AND channelset_id != ? AND deleted = 0",
+					"SELECT page_alt_url.url, page.id FROM page_alt_url, page WHERE page_alt_url.page_id = page.id AND page_alt_url.url REGEXP ? AND page.channelset_id != ? AND page.deleted = 0");
+			// SQL queries to check for files
+			List<String> fileChecks = Arrays.asList(
+					"SELECT nice_url url, id FROM contentfile WHERE nice_url REGEXP ? AND channelset_id != ? AND deleted = 0",
+					"SELECT contentfile_alt_url.url, contentfile.id FROM contentfile_alt_url, contentfile WHERE contentfile_alt_url.contentfile_id = contentfile.id AND contentfile_alt_url.url REGEXP ? AND contentfile.channelset_id != ? AND contentfile.deleted = 0");
+
+			// transform the resultset into a map of objectID -> set of URLs
+			HandleSelectResultSet<Map<Integer, Set<String>>> ret = rs -> {
+				Map<Integer, Set<String>> temp = new HashMap<>();
+				while (rs.next()) {
+					int pageId = rs.getInt("id");
+					String url = rs.getString("url");
+					temp.computeIfAbsent(pageId, key -> new HashSet<>()).add(url);
+				}
+				return temp;
+			};
+
+			// check pages
+			for (Map.Entry<String, Set<Node>> entry : potentialPageNiceUrlPatterns.entrySet()) {
+				String niceUrlPattern = entry.getKey();
 				Set<Node> nodes = entry.getValue();
 
 				// prepare the SQL statement by filling in the bind parameters
 				PrepareStatement prep = ps -> {
-					ps.setString(1, entry.getKey().pattern());
+					ps.setString(1, niceUrlPattern);
 					ps.setInt(2, checkObject.getChannelSetId());
 				};
 
-				// transform the resultset into a map of objectID -> set of URLs
-				HandleSelectResultSet<Map<Integer, Set<String>>> ret = rs -> {
-					Map<Integer, Set<String>> temp = new HashMap<>();
-					while (rs.next()) {
-						int pageId = rs.getInt("id");
-						String url = rs.getString("url");
-						temp.computeIfAbsent(pageId, key -> new HashSet<>()).add(url);
-					}
-					return temp;
+				for (String check : pageChecks) {
+					filenameSet.addAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, Page.class));
+				}
+			}
+
+			// check files
+			for (Map.Entry<String, Set<Node>> entry : potentialFileNiceUrlPatterns.entrySet()) {
+				String niceUrlPattern = entry.getKey();
+				Set<Node> nodes = entry.getValue();
+
+				// prepare the SQL statement by filling in the bind parameters
+				PrepareStatement prep = ps -> {
+					ps.setString(1, niceUrlPattern);
+					ps.setInt(2, checkObject.getChannelSetId());
 				};
 
-				// we will pages and files, each against nice URLs and alternate URLs
-				List<Pair<String, Class<? extends LocalizableNodeObject<? extends NodeObject>>>> checks = Arrays.asList(
-						Pair.of("SELECT nice_url url, id FROM page WHERE nice_url REGEXP ? AND channelset_id != ? AND deleted = 0", Page.class),
-						Pair.of("SELECT nice_url url, id FROM contentfile WHERE nice_url REGEXP ? AND channelset_id != ? AND deleted = 0", File.class),
-						Pair.of("SELECT page_alt_url.url, page.id FROM page_alt_url, page WHERE page_alt_url.page_id = page.id AND page_alt_url.url REGEXP ? AND page.channelset_id != ? AND page.deleted = 0", Page.class),
-						Pair.of("SELECT contentfile_alt_url.url, contentfile.id FROM contentfile_alt_url, contentfile WHERE contentfile_alt_url.contentfile_id = contentfile.id AND contentfile_alt_url.url REGEXP ? AND contentfile.channelset_id != ? AND contentfile.deleted = 0", File.class));
-
-				for (Pair<String, Class<? extends LocalizableNodeObject<? extends NodeObject>>> pair : checks) {
-					filenameSet.addAll(getFilenamesOfVisibleObjects(DBUtils.select(pair.getLeft(), prep, ret), nodes, pair.getRight()));
+				for (String check : fileChecks) {
+					filenameSet.addAll(getFilenamesOfVisibleObjects(DBUtils.select(check, prep, ret), nodes, File.class));
 				}
 			}
 		}
@@ -1324,8 +1383,7 @@ public class DisinheritUtils {
 			for (Node channel : targetSegment.getAllNodes()) {
 				List<Folder> testFolders = t.getObjects(Folder.class, fallbackLists.get(channel).getObjectIds(), false, false);
 				for (Folder testFolder : testFolders) {
-					if (FolderFactory.getPath(channel.getPublishDir(), testFolder.getPublishDir(), true).equalsIgnoreCase(niceUrlPath)
-							|| FolderFactory.getPath(channel.getBinaryPublishDir(), testFolder.getPublishDir(), true).equalsIgnoreCase(niceUrlPath)) {
+					if (FolderFactory.getPath("/", testFolder.getPublishDir(), true).equalsIgnoreCase(niceUrlPath)) {
 						result.add(testFolder);
 					}
 				}

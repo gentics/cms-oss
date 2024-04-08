@@ -797,11 +797,14 @@ export class RepositoryBrowserDataService implements OnDestroy, RepositoryBrowse
             }
 
             case 'form': {
-                const formListRequest: FormListOptions = {
-                    folderId: parentId,
-                    q: this.search$.value,
-                    recursive: true,
-                };
+                const formListRequest: FormListOptions = this.search$.value ?
+                    {
+                        folderId: parentId,
+                        q: this.search$.value,
+                        recursive: true,
+                    } : {
+                        folderId: parentId,
+                    };
                 return this.api.forms.getForms(formListRequest).pipe(
                     map(res => res.items),
                 );

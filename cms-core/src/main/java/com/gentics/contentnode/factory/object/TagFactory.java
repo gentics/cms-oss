@@ -1773,9 +1773,12 @@ public class TagFactory extends AbstractFactory {
 
 		boolean isNew = Tag.isEmptyId(tag.getId());
 
-		if (isNew) {
-			String tagName = tag.getName();
+		String tagName = tag.getName();
+		if (!StringUtils.isEmpty(tagName)) {
+			tagName = tagName.trim();
+		}
 
+		if (isNew) {
 			// for new contenttags, we need to check whether the tag comes from a templatetag
 			for (Page page : tag.getContent().getPages()) {
 				if (page.getTemplate().getTags().containsKey(tagName)) {
@@ -1786,7 +1789,7 @@ public class TagFactory extends AbstractFactory {
 
 			// insert a new record
 			List<Integer> keys = DBUtils.executeInsert(INSERT_CONTENTTAG_SQL, new Object[] {
-				tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tag.getName(), tag.template, ObjectTransformer.getString(tag.getGlobalId(), "")});
+				tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.template, ObjectTransformer.getString(tag.getGlobalId(), "")});
 
 			if (keys.size() == 1) {
 				// set the new page id
@@ -1797,7 +1800,7 @@ public class TagFactory extends AbstractFactory {
 			}
 		} else {
 			DBUtils.executeUpdate(UPDATE_CONTENTTAG_SQL, new Object[] {
-				tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tag.getName(), tag.getId()
+				tag.contentId, tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.getId()
 			});
 
 			// and dirt the cache for the updated object
@@ -1816,12 +1819,17 @@ public class TagFactory extends AbstractFactory {
 
 		boolean isNew = Tag.isEmptyId(tag.getId());
 
+		String tagName = tag.getName();
+		if (!StringUtils.isEmpty(tagName)) {
+			tagName = tagName.trim();
+		}
+
 		if (isNew) {
 			// insert a new record
 			// templategroup_id, template_id, construct_id, pub, enabled, name
 			List<Integer> keys = DBUtils.executeInsert(INSERT_TEMPLATETAG_SQL,
 					new Object[] {
-				tag.getTemplate().getTemplategroupId(), tag.templateId, tag.getConstruct().getId(), tag.isPublic ? 1 : 0, tag.getEnabledValue(), tag.getName(),
+				tag.getTemplate().getTemplategroupId(), tag.templateId, tag.getConstruct().getId(), tag.isPublic ? 1 : 0, tag.getEnabledValue(), tagName,
 				tag.getMandatory(), ObjectTransformer.getString(tag.getGlobalId(), "")
 			});
 
@@ -1834,7 +1842,7 @@ public class TagFactory extends AbstractFactory {
 			}
 		} else {
 			DBUtils.executeUpdate(UPDATE_TEMPLATETAG_SQL, new Object[] {
-				0, tag.templateId, tag.getConstruct().getId(), tag.isPublic ? 1 : 0, tag.getEnabledValue(), tag.getName(), tag.getMandatory(), tag.getId()
+				0, tag.templateId, tag.getConstruct().getId(), tag.isPublic ? 1 : 0, tag.getEnabledValue(), tagName, tag.getMandatory(), tag.getId()
 			});
 
 			// and dirt the cache for the updated object
@@ -1853,6 +1861,11 @@ public class TagFactory extends AbstractFactory {
 
 		boolean isNew = Tag.isEmptyId(tag.getId());
 
+		String tagName = tag.getName();
+		if (!StringUtils.isEmpty(tagName)) {
+			tagName = tagName.trim();
+		}
+
 		if (isNew) {
 			// make sure the containerId is not null
 			tag.containerId = ObjectTransformer.getInteger(tag.containerId, 0);
@@ -1864,7 +1877,7 @@ public class TagFactory extends AbstractFactory {
 			List<Integer> keys = DBUtils.executeInsert(INSERT_OBJECTTAG_SQL,
 					new Object[] {
 				tag.containerId, t.getTType(tag.containerClass), tag.getConstruct().getId(),
-				tag.getEnabledValue(), tag.getName(), tag.inTagId, tag.inheritable ? 1 : 0, tag.required ? 1 : 0,
+				tag.getEnabledValue(), tagName, tag.inTagId, tag.inheritable ? 1 : 0, tag.required ? 1 : 0,
 				ObjectTransformer.getString(tag.getGlobalId(), "")});
 
 			if (keys.size() == 1) {
@@ -1877,7 +1890,7 @@ public class TagFactory extends AbstractFactory {
 		} else {
 			DBUtils.executeUpdate(UPDATE_OBJECTTAG_SQL,
 					new Object[] {
-				tag.containerId, t.getTType(tag.containerClass), tag.getConstruct().getId(), tag.getEnabledValue(), tag.getName(), tag.inTagId, tag.inheritable ? 1 : 0,
+				tag.containerId, t.getTType(tag.containerClass), tag.getConstruct().getId(), tag.getEnabledValue(), tagName, tag.inTagId, tag.inheritable ? 1 : 0,
 				tag.required ? 1 : 0, tag.getId()
 			});
 

@@ -6,7 +6,7 @@
     <table>
         <tr>
             <td>{{ 'scheduler.execution_result' | i18n }}</td>
-            <td>{{ (execution.result ? 'scheduler.execution_result_true' : 'scheduler.execution_result_false') | i18n }}</td>
+            <td>{{ (execution.running ? 'scheduler.execution_result_running' : (execution.result ? 'scheduler.execution_result_true' : 'scheduler.execution_result_false')) | i18n }}</td>
         </tr>
         <tr>
             <td>{{ 'scheduler.execution_startTime' | i18n }}</td>

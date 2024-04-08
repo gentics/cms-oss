@@ -250,10 +250,20 @@ export class FormReportsListComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     public getFileHref(entryValue: any, entry: FormDataListEntry): string {
-        const field = Object.entries(entry.fields).find(([key, value]) => {
+        const fields = Object.entries(entry.fields).find(([key, value]) => {
+            if (!value) {
+                return false;
+            }
             return Object.values(value).includes(entryValue.fileName);
-        })[0];
-        return `${API_BASE_URL}/form/${this.form.id}/data/${entry.uuid}/binary/${field}?sid=${this.sid}`;
+        })
+
+        if (fields?.length && fields.length > 0) {
+            const field = fields[0];
+            return `${API_BASE_URL}/form/${this.form.id}/data/${entry.uuid}/binary/${field}?sid=${this.sid}`;
+        }
+
+        console.error('Could not resolve file href');
+        return '';
     }
 
     getReports(pageIndex: number): Observable<FormDataListResponse> {

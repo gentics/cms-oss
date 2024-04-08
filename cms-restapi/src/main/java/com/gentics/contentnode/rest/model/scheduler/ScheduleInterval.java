@@ -1,6 +1,11 @@
 package com.gentics.contentnode.rest.model.scheduler;
 
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -74,13 +79,15 @@ public class ScheduleInterval {
 	/**
 	 * Check if this interval is due for execution.
 	 *
+	 * @param startTimestamp start timestamp of the schedule
 	 * @param lastTimestamp The timestamp of the last execution.
 	 * @param timestamp The current timestamp.
+	 * @param zone time-zone
 	 * @return Whether the associated schedule should is due for execution based
 	 * 		on this interval.
 	 */
 	@JsonIgnore
-	public boolean isDue(int lastTimestamp, int timestamp) {
+	public boolean isDue(int startTimestamp, int lastTimestamp, int timestamp, ZoneId zone) {
 		if (unit == null || value <= 0) {
 			return false;
 		}
@@ -89,32 +96,42 @@ public class ScheduleInterval {
 			return true;
 		}
 
-		Calendar now = Calendar.getInstance();
-		now.setTimeInMillis(timestamp * 1000L);
+		ZonedDateTime start = ZonedDateTime.ofInstant(Instant.ofEpochSecond(startTimestamp), zone);
+		ZonedDateTime last = ZonedDateTime.ofInstant(Instant.ofEpochSecond(lastTimestamp), zone);
+		ZonedDateTime now = ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), zone);
 
-		Calendar next = Calendar.getInstance();
-		next.setTimeInMillis(lastTimestamp * 1000L);
-		switch (unit) {
+		TemporalUnit temporalUnit = null;
+		switch(unit) {
 		case day:
-			next.add(Calendar.DAY_OF_YEAR, value);
+			temporalUnit = ChronoUnit.DAYS;
 			break;
 		case hour:
-			next.add(Calendar.HOUR_OF_DAY, value);
+			temporalUnit = ChronoUnit.HOURS;
 			break;
 		case minute:
-			next.add(Calendar.MINUTE, value);
+			temporalUnit = ChronoUnit.MINUTES;
 			break;
 		case month:
-			next.add(Calendar.MONTH, value);
+			temporalUnit = ChronoUnit.MONTHS;
 			break;
 		case week:
-			next.add(Calendar.WEEK_OF_YEAR, value);
+			temporalUnit = ChronoUnit.WEEKS;
 			break;
 		default:
 			break;
 		}
 
-		return !next.after(now);
+		ZonedDateTime next = start;
+
+		// calculate the number of temporal units between the start and the last execution
+		long diff = start.until(last, temporalUnit);
+		AtomicLong factor = new AtomicLong(diff / value);
+
+		while (!next.isAfter(last)) {
+			next = start.plus(factor.getAndIncrement() * value, temporalUnit);
+		}
+
+		return !next.isAfter(now);
 	}
 
 	@Override
@@ -124,6 +141,15 @@ public class ScheduleInterval {
 			return (this.value == other.value) && (this.unit == other.unit);
 		} else {
 			return false;
+		}
+	}
+
+	@Override
+	public String toString() {
+		if (value == 1) {
+			return String.format("every %s", unit);
+		} else {
+			return String.format("every %d %ss", value, unit);
 		}
 	}
 }

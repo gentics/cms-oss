@@ -17,7 +17,7 @@
     <properties>
         <!-- Dynamic third party dependencies -->
         <frontend-maven-plugin.version>1.10.0</frontend-maven-plugin.version>
-        <nodejs.version>v16.16.0</nodejs.version>
+        <nodejs.version>v20.12.1</nodejs.version>
         <npm.workingDirectory></npm.workingDirectory>
 
         <!-- If the UI module is an application -->

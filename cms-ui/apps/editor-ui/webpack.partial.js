@@ -4,7 +4,7 @@ const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
 
 function getNextVersion() {
     const gitRevisionPlugin = new GitRevisionPlugin();
-    commitHash = gitRevisionPlugin.commithash();
+    const commitHash = gitRevisionPlugin.commithash();
     const dateString = new Date().toISOString().slice(0, 10);
     return `${dateString}+${commitHash}`;
 }

@@ -1,6 +1,7 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { GcmsTestData, LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
+import { LoginResponse, Raw, Response, ResponseCode, User, ValidateSidResponse } from '@gentics/cms-models';
+import { getExampleFolderData } from '@gentics/cms-models/testing';
 import { ApiError, GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { ActionType, ofActionDispatched } from '@ngxs/store';
 import { of as observableOf } from 'rxjs';
@@ -50,7 +51,7 @@ class MockEditorUiLocalStorage {
 }
 
 const SID = 1234;
-const MOCK_USER: User<Raw> = GcmsTestData.getExampleFolderData().editor;
+const MOCK_USER: User<Raw> = getExampleFolderData().editor;
 Object.freeze(MOCK_USER);
 const ERROR_MSG = 'Auth Error';
 

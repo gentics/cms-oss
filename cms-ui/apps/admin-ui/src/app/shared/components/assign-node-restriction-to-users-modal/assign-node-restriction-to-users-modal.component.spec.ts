@@ -14,10 +14,10 @@ import { Component, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { getExampleNodeData } from '@gentics/cms-models/testing';
 import { GenticsUICoreModule } from '@gentics/ui-core';
 import { NgxsModule } from '@ngxs/store';
 import { Observable, of } from 'rxjs';
-import { GcmsTestData } from '../../../../../../../libs/cms-models/src/lib/testing';
 import { componentTest } from '../../../../testing';
 import { createDelayedObservable } from '../../../../testing/utils/rxjs-utils';
 import { USER_ACTION_PERMISSIONS, USER_ACTION_PERMISSIONS_DEF } from '../../../common/user-action-permissions/user-action-permissions';
@@ -36,8 +36,8 @@ import { NodeTableComponent } from '../node-table/node-table.component';
 import { AssignNodeRestrictionsToUsersModalComponent } from './assign-node-restriction-to-users-modal.component';
 
 const MOCK_NODES = [
-    GcmsTestData.getExampleNodeData({ id: 1 }),
-    GcmsTestData.getExampleNodeData({ id: 2 }),
+    getExampleNodeData({ id: 1 }),
+    getExampleNodeData({ id: 2 }),
 ];
 
 const MOCK_USER_RESTRICTIONS = [

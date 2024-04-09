@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const GitRevisionPlugin = require('git-revision-webpack-plugin');
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin');
 
 function getNextVersion() {
     const gitRevisionPlugin = new GitRevisionPlugin();

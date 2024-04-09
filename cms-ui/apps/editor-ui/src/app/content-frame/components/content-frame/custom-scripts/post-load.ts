@@ -132,7 +132,10 @@ export class PostLoadScript {
             } else if (this.scriptHost.editMode === 'preview' && url && !url.startsWith('#') && link.target !== '_blank') {
                 this.iFrameWindow.open(url, '_blank');
                 e.preventDefault();
-            } else {
+            } else if (url.startsWith('#')) {
+                // Allow anchor links, as they are fine.
+                // no-op
+            } else if (link.target !== '_blank') {
                 // TODO: Show modal with link?
                 e.preventDefault();
             }
@@ -353,9 +356,16 @@ function isAnchorElement(element: any): element is HTMLAnchorElement {
 }
 
 /** Checks for an internal alohapage link and if found, parses that link to extract the pageId and nodeId */
-function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId: number; } | undefined {
+function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId: number; } | null {
     const href = anchor.getAttribute('href');
-    const isInternalLink = href && href.indexOf(ALOHAPAGE_URL) >= 0;
+    let parsed: URL;
+    try {
+        parsed = new URL(href, window.location as any);
+    } catch (err) {
+        return null;
+    }
+
+    const isInternalLink = parsed.pathname.startsWith(ALOHAPAGE_URL);
 
     // A link created by the GCN Links plugin has the following data attribute when in edit mode
     const isEditModeLink = !!anchor.dataset['gcnI18nConstructname'];
@@ -363,29 +373,19 @@ function parseInternalLink(anchor: HTMLAnchorElement): { nodeId: number; pageId:
     // UI elements which are only an anchor for keyboard focus purposes should not be handled
     const isPresentationalLink = anchor.getAttribute('role') === 'presentation';
 
-    if (isInternalLink && !isEditModeLink && !isPresentationalLink) {
-        const nodeIdMatches = /[?&]nodeid=(\d+)/.exec(href);
-        const nodeId = nodeIdMatches && +nodeIdMatches[1];
-        const pageIdMatches = /[?&]realid=(\d+)/.exec(href);
-        const pageId = nodeIdMatches && +pageIdMatches[1];
-
-        if (nodeId && pageId) {
-            return {
-                nodeId,
-                pageId,
-            };
-        }
+    if (!isInternalLink || isEditModeLink || isPresentationalLink) {
+        return null;
     }
-}
 
-function isFormGeneratorSaveButton(element: Element): boolean {
-    const selector = '#toolbar-button-save, #toolbar-button-save *';
-    if (element && element.matches) {
-        return element.matches(selector);
-    } else if (element && (<any> element).msMatchesSelector) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        return (<any> element).msMatchesSelector(selector);
-    } else {
-        return false;
+    const nodeId = parsed.searchParams.get('nodeid');
+    const pageId = parsed.searchParams.get('realid');
+
+    if (!nodeId || !pageId) {
+        return null;
     }
+
+    return {
+        nodeId: parseInt(nodeId, 10),
+        pageId: parseInt(pageId, 10),
+    };
 }

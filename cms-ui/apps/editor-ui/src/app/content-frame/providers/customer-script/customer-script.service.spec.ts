@@ -307,9 +307,9 @@ describe('CustomerScriptService', () => {
             spyOn(mockTagEditorService, 'openTagEditor').and.returnValue(expectedResult);
 
             const gcmsUi = customerScriptService.createGCMSUIObject(mockScriptHost, mockWindow, mockDocument);
-            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, false);
+            const actualResult = gcmsUi.openTagEditor(<any> mockTag, <any> mockTagType, <any> mockPage, { withDelete: false });
 
-            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage, false);
+            expect(mockTagEditorService.openTagEditor).toHaveBeenCalledWith(mockTag, mockTagType, mockPage, { withDelete: false });
             expect(actualResult).toBe(expectedResult);
         });
 

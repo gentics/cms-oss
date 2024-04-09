@@ -8,7 +8,6 @@ import {
     AccessControlledType,
     GcmsNormalizer,
     GcmsPermission,
-    GcmsTestData,
     Group,
     GroupCreateRequest,
     GroupPermissionsListOptions,
@@ -29,6 +28,7 @@ import {
     ResponseCode,
     User,
 } from '@gentics/cms-models';
+import { getExampleEntityStore, getExampleFolderData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { cloneDeep as _cloneDeep } from 'lodash-es';
 import { LoggerTestingModule } from 'ngx-logger/testing';
@@ -162,12 +162,12 @@ describe('GroupOperations', () => {
         addEntitySpy = spyOn(entityManager, 'addEntity').and.callThrough();
         addEntitiesSpy = spyOn(entityManager, 'addEntities').and.callThrough();
 
-        mockUserRaw = GcmsTestData.getExampleFolderData({ id: 1, userId: 1 }).editor;
+        mockUserRaw = getExampleFolderData({ id: 1, userId: 1 }).editor;
         mockGroups = createGroups(MOCKED_GROUPS_COUNT);
 
         appState.mockState({
             entity: {
-                group: GcmsTestData.getExampleEntityStore().group,
+                group: getExampleEntityStore().group,
             },
         });
     });

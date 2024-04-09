@@ -3649,6 +3649,46 @@ public class MeshPublisher implements AutoCloseable {
 	}
 
 	/**
+	 * Do some reverse engineering to get the CMS object which was published to Mesh with the given UUID and language
+	 * @param project mesh project
+	 * @param nodeId node ID
+	 * @param meshUuid mesh UUID
+	 * @param meshLanguage mesh language
+	 * @return optional pair of object type and NodeObject. The optional is empty, if the object in Mesh could not be found or was not published from
+	 * the CMS. Otherwise the pair will always contain the object type and also the NodeObject, if it could be found in the CMS
+	 * @throws NodeException
+	 */
+	public Optional<Pair<Integer, NodeObject>> getNodeObject(MeshProject project, int nodeId, String meshUuid, String meshLanguage) throws NodeException {
+		GenericParameters genParams = new GenericParametersImpl().setETag(false).setFields("uuid", "fields", "schema");
+		NodeParameters langParam = new NodeParametersImpl().setLanguages(meshLanguage);
+		NodeResponse conflict = client
+				.findNodeByUuid(project.name, meshUuid, project.enforceBranch(nodeId), genParams, langParam).toMaybe()
+				.onErrorComplete().blockingGet();
+		if (conflict != null) {
+			String schemaName = conflict.getSchema().getName();
+			Optional<Integer> optCmsId = Optional.ofNullable(conflict.getFields().getNumberField("cms_id"))
+					.flatMap(f -> Optional.ofNullable(f.getNumber())).map(Number::intValue);
+			Optional<Integer> optType = getObjectType(schemaName);
+			if (optType.isPresent() && optCmsId.isPresent()) {
+				int objType = optType.get();
+				int cmsId = optCmsId.get();
+
+				NodeObject object = null;
+				try (Trx trx = new Trx(); ChannelTrx cTrx = new ChannelTrx(nodeId)) {
+					Transaction t = trx.getTransaction();
+					object = t.getObject(t.getClass(objType), cmsId);
+				}
+
+				return Optional.of(Pair.of(objType, object));
+			} else {
+				return Optional.empty();
+			}
+		} else {
+			return Optional.empty();
+		}
+	}
+
+	/**
 	 * Get the parent object of the given object.
 	 * Do not return the root folder, if the CR publishes into project per node
 	 * @param object object

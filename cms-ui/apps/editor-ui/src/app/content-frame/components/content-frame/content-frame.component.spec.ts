@@ -747,7 +747,7 @@ describe('ContentFrame', () => {
             'is disabled when a non-form item is edited but neither aloha editor is ready nor master frame is loaded',
             componentTest(() => TestComponent, (fixture, instance) => {
                 openEditModeOfAPage(fixture, ITEM_ID);
-                instance.contentFrame.setAlohaReady(false);
+                instance.contentFrame.alohaReady = false;
                 instance.contentFrame.setMasterFrameLoaded(false);
                 const currentState = appState.now;
                 currentState.editor.contentModified = true;
@@ -762,7 +762,7 @@ describe('ContentFrame', () => {
 
         it('is enabled when a non-form item is edited despite it has not been modified yet', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
-            instance.contentFrame.setAlohaReady(true);
+            instance.contentFrame.alohaReady = true;
             instance.contentFrame.setMasterFrameLoaded(true);
             const currentState = appState.now;
             currentState.editor.contentModified = false;
@@ -777,7 +777,7 @@ describe('ContentFrame', () => {
 
         it('is disabled when a non-form item is edited but it is locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
-            instance.contentFrame.setAlohaReady(true);
+            instance.contentFrame.alohaReady = true;
             instance.contentFrame.setMasterFrameLoaded(true);
             const currentState = appState.now;
             currentState.editor.contentModified = true;
@@ -795,7 +795,7 @@ describe('ContentFrame', () => {
         it('is enabled when a non-form item is edited and aloha editor is ready as well as master frame is loaded'
              + ', content has been modified and it is not locked by another user', componentTest(() => TestComponent, (fixture, instance) => {
             openEditModeOfAPage(fixture, ITEM_ID);
-            instance.contentFrame.setAlohaReady(true);
+            instance.contentFrame.alohaReady = true;
             instance.contentFrame.setMasterFrameLoaded(true);
             const currentState = appState.now;
             currentState.editor.contentModified = true;

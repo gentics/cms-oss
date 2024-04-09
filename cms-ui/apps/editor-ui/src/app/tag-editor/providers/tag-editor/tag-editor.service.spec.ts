@@ -124,7 +124,7 @@ describe('TagEditorService', () => {
             tagType: expectedData.tagType,
         };
 
-        const editorResult = await tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner, false);
+        const editorResult = await tagEditorService.openTagEditor(data.tag, data.tagType, data.tagOwner, { withDelete: false });
 
         expect(createTagEditorContextSpy).toHaveBeenCalledWith(expectedData);
         expect(openTagEditorSpy).toHaveBeenCalled();

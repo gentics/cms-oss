@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { GcmsTestData } from '../../testing';
+import { getExampleEntityStore } from '../../testing';
 import { File, FileOrImage } from '../file';
 import { Folder } from '../folder';
 import { Group } from '../group';
@@ -9,14 +9,14 @@ import { Message } from '../message';
 import { Node } from '../node';
 import { Page } from '../page';
 import { Template, TemplateBO } from '../template';
+import { IS_NORMALIZED, IndexById, Normalized, Raw } from '../type-util';
 import { User } from '../user';
-import { IndexById, IS_NORMALIZED, Normalized, Raw } from '../type-util';
 import { GcmsNormalizer } from './gcms-normalizer';
 import { NormalizedEntityStore } from './gcms-normalizer-types';
 
 describe('GcmsNormalizer', () => {
 
-    const mockEntities: NormalizedEntityStore = GcmsTestData.getExampleEntityStore();
+    const mockEntities: NormalizedEntityStore = getExampleEntityStore();
 
     function replaceUser<T>(entity: T, key: keyof T): void {
         const userId: number = entity[key] as any;

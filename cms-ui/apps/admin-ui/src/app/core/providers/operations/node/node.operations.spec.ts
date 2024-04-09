@@ -4,7 +4,6 @@ import { TestAppState, assembleTestAppStateImports } from '@admin-ui/state/utils
 import { createDelayedError, createDelayedObservable, subscribeSafely } from '@admin-ui/testing';
 import { TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import {
-    GcmsTestData,
     Language,
     Node,
     NodeCopyRequest,
@@ -16,6 +15,7 @@ import {
     Raw,
     RecursivePartial,
 } from '@gentics/cms-models';
+import { getExampleNodeData } from '@gentics/cms-models/testing';
 import { GcmsApi } from '@gentics/cms-rest-clients-angular';
 import { of } from 'rxjs';
 import { first, takeUntil } from 'rxjs/operators';
@@ -99,8 +99,8 @@ describe('NodeOperations', () => {
 
         it('fetches nodes and adds them to the EntityState', fakeAsync(() => {
             const mockNodes = [
-                GcmsTestData.getExampleNodeData({ id: 1 }),
-                GcmsTestData.getExampleNodeData({ id: 2 }),
+                getExampleNodeData({ id: 1 }),
+                getExampleNodeData({ id: 2 }),
             ];
             api.node.getNodes.and.returnValue(
                 createDelayedObservable({ items: mockNodes }),
@@ -130,7 +130,7 @@ describe('NodeOperations', () => {
     describe('get()', () => {
 
         it('fetches a node and adds it to the EntityState', fakeAsync(() => {
-            const mockNode = GcmsTestData.getExampleNodeData({ id: NODE_ID });
+            const mockNode = getExampleNodeData({ id: NODE_ID });
             api.node.getNode.and.returnValue(
                 createDelayedObservable({ node: mockNode }),
             );
@@ -160,7 +160,7 @@ describe('NodeOperations', () => {
     describe('addNode()', () => {
 
         it('creates a node and adds it to the entity state', fakeAsync(() => {
-            const mockNode = GcmsTestData.getExampleNodeData({ id: NODE_ID });
+            const mockNode = getExampleNodeData({ id: NODE_ID });
             api.node.addNode.and.returnValue(
                 createDelayedObservable({ node: mockNode }),
             );
@@ -211,7 +211,7 @@ describe('NodeOperations', () => {
     describe('removeNode()', () => {
 
         it('deletes an existing node and removes it from the entity state', fakeAsync(() => {
-            const mockNode = GcmsTestData.getExampleNodeData({ id: NODE_ID });
+            const mockNode = getExampleNodeData({ id: NODE_ID });
             appState.mockState({
                 entity: {
                     node: {
@@ -253,7 +253,7 @@ describe('NodeOperations', () => {
     describe('copyNode()', () => {
 
         it('copies an existing node', fakeAsync(() => {
-            const mockNode = GcmsTestData.getExampleNodeData({ id: NODE_ID });
+            const mockNode = getExampleNodeData({ id: NODE_ID });
             api.node.copyNode.and.returnValue(of());
 
             let activitiesQueue: GtxActivityManagerActivity[];
@@ -287,7 +287,7 @@ describe('NodeOperations', () => {
     describe('update()', () => {
 
         it('updates a node and refetches it using get()', fakeAsync(() => {
-            const updatedNode = GcmsTestData.getExampleNodeData({ id: NODE_ID });
+            const updatedNode = getExampleNodeData({ id: NODE_ID });
             api.node.updateNode.and.returnValue(
                 createDelayedObservable(null),
             );

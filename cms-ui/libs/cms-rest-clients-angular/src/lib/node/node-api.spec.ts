@@ -7,13 +7,13 @@ import {
     NodeFeatureListRequestOptions,
     NodeRequestOptions,
     NodeSaveRequest,
-    TemplateListRequest,
     PagedConstructListRequestOptions,
+    TemplateListRequest,
 } from '@gentics/cms-models';
-import { GcmsTestData } from '@gentics/cms-models';
+import { getExampleNodeData } from '@gentics/cms-models/testing';
 import { MockApiBase } from '../util/api-base.mock';
-import { NodeApi } from './node-api';
 import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
+import { NodeApi } from './node-api';
 
 const NODE_ID = 1;
 
@@ -34,7 +34,7 @@ describe('NodeApi', () => {
 
     it('addNode() sends the correct PUT request', () => {
         const payload: NodeSaveRequest = {
-            node: GcmsTestData.getExampleNodeData(),
+            node: getExampleNodeData(),
         };
 
         nodeApi.addNode(payload);
@@ -87,7 +87,7 @@ describe('NodeApi', () => {
 
     it('updateNode() sends the correct POST request', () => {
         const payload: NodeSaveRequest = {
-            node: GcmsTestData.getExampleNodeData(),
+            node: getExampleNodeData(),
         };
 
         nodeApi.updateNode(NODE_ID, payload);

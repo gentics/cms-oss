@@ -8,7 +8,6 @@ import { Injectable } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
     GcmsNormalizer,
-    GcmsTestData,
     IS_NORMALIZED,
     NormalizableEntity,
     NormalizableEntityType,
@@ -19,6 +18,13 @@ import {
     Raw,
     User,
 } from '@gentics/cms-models';
+import {
+    getExampleEntityStore,
+    getExampleFolderData,
+    getExampleFolderDataNormalized,
+    getExamplePageData,
+    getExamplePageDataNormalized,
+} from '@gentics/cms-models/testing';
 import { cloneDeep } from 'lodash-es';
 import { Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -68,7 +74,7 @@ const NEW_FOLDER_ID = 4321;
 
 describe('EntityManagerService', () => {
 
-    const MOCK_ENTITIES = GcmsTestData.getExampleEntityStore();
+    const MOCK_ENTITIES = getExampleEntityStore();
     deepFreeze(MOCK_ENTITIES);
 
     let appState: TestAppState;
@@ -107,7 +113,7 @@ describe('EntityManagerService', () => {
 
         it('test data is set up correctly', () => {
             // Make sure that the entity IDs used for testing exist or don't exist in the test data as expected.
-            // This guards us against problems from changes to GcmsTestData.getExampleEntityStore().
+            // This guards us against problems from changes to getExampleEntityStore().
 
             expect(MOCK_ENTITIES.page[PAGE_A_ID]).toBeTruthy();
             expect(MOCK_ENTITIES.page[PAGE_B_ID]).toBeTruthy();
@@ -125,7 +131,7 @@ describe('EntityManagerService', () => {
 
             beforeEach(() => {
                 appState.mockState({
-                    entity: GcmsTestData.getExampleEntityStore(),
+                    entity: getExampleEntityStore(),
                 });
             });
 
@@ -209,7 +215,7 @@ describe('EntityManagerService', () => {
                 expect(emissionCount).toBe(1);
                 expect(page).toBe(undefined);
 
-                const newPage = GcmsTestData.getExamplePageDataNormalized({ id: NEW_PAGE_ID });
+                const newPage = getExamplePageDataNormalized({ id: NEW_PAGE_ID });
                 appState.dispatch(new AddEntities({
                     page: {
                         [NEW_PAGE_ID]: newPage,
@@ -252,7 +258,7 @@ describe('EntityManagerService', () => {
 
                 expect(emissionCount).toBe(1);
 
-                const newPage = GcmsTestData.getExamplePageDataNormalized({ id: NEW_PAGE_ID });
+                const newPage = getExamplePageDataNormalized({ id: NEW_PAGE_ID });
                 appState.dispatch(new AddEntities({
                     page: {
                         [NEW_PAGE_ID]: newPage,
@@ -294,7 +300,7 @@ describe('EntityManagerService', () => {
 
                 expect(emissionCount).toBe(1);
 
-                const newFolder = GcmsTestData.getExampleFolderDataNormalized({ id: NEW_FOLDER_ID });
+                const newFolder = getExampleFolderDataNormalized({ id: NEW_FOLDER_ID });
                 appState.dispatch(new AddEntities({
                     folder: {
                         [NEW_FOLDER_ID]: newFolder,
@@ -323,7 +329,7 @@ describe('EntityManagerService', () => {
             denormalizeSpy = spyOn(normalizer, 'denormalize').and.callThrough();
 
             appState.mockState({
-                entity: GcmsTestData.getExampleEntityStore(),
+                entity: getExampleEntityStore(),
             });
         });
 
@@ -350,7 +356,7 @@ describe('EntityManagerService', () => {
         function generateTestPages(count: number): EntityNormalizationPair<Page<Raw>> {
             const rawPages: Page<Raw>[] = new Array(count);
             for (let i = 0; i < count; ++i) {
-                rawPages[i] = GcmsTestData.getExamplePageData({ id: i + 1 });
+                rawPages[i] = getExamplePageData({ id: i + 1 });
             }
             const normalized = normalizer.normalize('page', rawPages).entities;
             return {
@@ -459,8 +465,8 @@ describe('EntityManagerService', () => {
             const firstNewEntityId = actualResult.length + 1;
             const secondNewEntityId = actualResult.length + 2;
             const newEntities = [
-                GcmsTestData.getExamplePageData({ id: firstNewEntityId, idVariant1: firstNewEntityId }),
-                GcmsTestData.getExamplePageData({ id: secondNewEntityId, idVariant1: secondNewEntityId }),
+                getExamplePageData({ id: firstNewEntityId, idVariant1: firstNewEntityId }),
+                getExamplePageData({ id: secondNewEntityId, idVariant1: secondNewEntityId }),
             ];
             entityManager.addEntities('page', newEntities);
             tick();
@@ -651,8 +657,8 @@ describe('EntityManagerService', () => {
         function generateTestPages(count: number): EntityNormalizationPair<Page<Raw>> {
             const rawPages: Page<Raw>[] = new Array(count);
             for (let i = 0; i < count; i += 2) {
-                rawPages[i] = GcmsTestData.getExamplePageData({ id: i + 1, idVariant1: i + 2 });
-                rawPages[i + 1] = GcmsTestData.getExamplePageData({ id: i + 2, idVariant1: i + 1 });
+                rawPages[i] = getExamplePageData({ id: i + 1, idVariant1: i + 2 });
+                rawPages[i + 1] = getExamplePageData({ id: i + 2, idVariant1: i + 1 });
             }
             const normalized = normalizer.normalize('page', rawPages).entities;
             return {
@@ -733,7 +739,7 @@ describe('EntityManagerService', () => {
 
             // Add a new entity.
             const newEntityId = actualResult.length + 1;
-            const newEntity = GcmsTestData.getExamplePageData({ id: newEntityId, idVariant1: newEntityId });
+            const newEntity = getExamplePageData({ id: newEntityId, idVariant1: newEntityId });
             newEntity.name = 'newEntity';
             entityManager.addEntity('page', newEntity);
             expectedNormalizedPages.push(normalizer.normalize('page', newEntity).result);
@@ -795,12 +801,12 @@ describe('EntityManagerService', () => {
                 userIdsSet.add(userId);
                 folderIds.push(folderId);
 
-                const page = GcmsTestData.getExamplePageData({
+                const page = getExamplePageData({
                     id: pageId,
                     userId,
                     idVariant1: variantId,
                 });
-                page.folder = GcmsTestData.getExampleFolderData({ id: pageId, userId });
+                page.folder = getExampleFolderData({ id: pageId, userId });
                 Object.freeze(page);
                 rawPages.push(page);
             }

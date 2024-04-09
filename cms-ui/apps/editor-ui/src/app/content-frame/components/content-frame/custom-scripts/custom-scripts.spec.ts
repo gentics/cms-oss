@@ -108,7 +108,7 @@ describe('custom scripts', () => {
             link.ctrlClick();
             link.shiftClick();
 
-            expect(fixture.eventPreventedByCustomScript).toBe(false);
+            expect(fixture.eventPreventedByCustomScript).toBe(true);
             expect(event.defaultPrevented).toBe(true);
             expect(fixture.window.open).not.toHaveBeenCalled();
             expect(fixture.scriptHost.navigateToPagePreview).not.toHaveBeenCalled();

@@ -1,7 +1,7 @@
-import { GcmsTestData } from '@gentics/cms-models';
+import { getExampleUserData } from '@gentics/cms-models/testing';
 import { UserFullNamePipe } from './user-full-name.pipe';
 
-const MOCK_USER = GcmsTestData.getExampleUserData();
+const MOCK_USER = getExampleUserData();
 const MOCK_USER_NAME = MOCK_USER.firstName + ' ' + MOCK_USER.lastName;
 
 class MockEntityResolver {

@@ -29,7 +29,7 @@ import {
     TagPartTypePropertyType,
     TagPartValidatorConfigs,
     TagPartValidatorId,
-    TagPropertyType,
+    TagPropertyType
 } from '@gentics/cms-models';
 import { generateFormProvider, generateValidatorProvider, setControlsEnabled } from '@gentics/ui-core';
 
@@ -358,9 +358,9 @@ export class ConstructPartPropertiesComponent
         const { globalId: _globalId, id: _id, keyword: _keyword, ...output } = formData;
 
         if (this.mode === ConstructPartPropertiesMode.UPDATE) {
-            (output as TagPartPropertiesFormData).globalId = this.value?.globalId;
-            (output as TagPartPropertiesFormData).id = this.value?.id;
-            (output as TagPartPropertiesFormData).keyword = this.value?.keyword;
+            (output as TagPartPropertiesFormData).globalId = this.value?.globalId ?? formData.globalId;
+            (output as TagPartPropertiesFormData).id = this.value?.id ?? formData.id;
+            (output as TagPartPropertiesFormData).keyword = this.value?.keyword ?? this.form.get('keyword').value;
             output.name = this.value?.name;
             output.type = this.value?.type;
         } else {

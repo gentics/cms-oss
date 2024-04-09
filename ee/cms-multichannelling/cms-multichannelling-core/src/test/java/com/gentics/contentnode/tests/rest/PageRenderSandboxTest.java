@@ -1209,10 +1209,10 @@ public class PageRenderSandboxTest {
 		Overview emptyOverview = overviewEn.getTags().get(tagname).getProperties().get(OVERVIEW_PART_NAME).getOverview();
 
 		// check if all relevant fields are not accidently initialized
-		assertEquals("Check if selectType is undefined", emptyOverview.getSelectType(), Overview.SelectType.UNDEFINED);
-		assertEquals("Check if orderBy is undefined", emptyOverview.getOrderBy(), Overview.OrderBy.UNDEFINED);
-		assertEquals("Check if orderDirection is undefined", emptyOverview.getOrderDirection(), Overview.OrderDirection.UNDEFINED);
-		assertEquals("Check if listType is undefined", emptyOverview.getListType(), Overview.ListType.UNDEFINED);
+		assertEquals("Check if selectType is undefined", Overview.SelectType.UNDEFINED, emptyOverview.getSelectType());
+		assertEquals("Check if orderBy is undefined", Overview.OrderBy.UNDEFINED, emptyOverview.getOrderBy());
+		assertEquals("Check if orderDirection is asc", Overview.OrderDirection.ASC, emptyOverview.getOrderDirection());
+		assertEquals("Check if listType is undefined", Overview.ListType.UNDEFINED, emptyOverview.getListType());
 		List<Integer> selectedItemIds = emptyOverview.getSelectedItemIds();
 		if (selectedItemIds != null) {
 			Assert.assertTrue("Check if no items are selected", selectedItemIds.isEmpty());

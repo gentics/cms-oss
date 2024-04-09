@@ -260,6 +260,14 @@ public class MCImageResourceImpl implements MCImageResource {
 			Transaction t = TransactionManager.getCurrentTransaction();
 			ImageFile image = t.getObject(ImageFile.class, id);
 
+			if (image == null) {
+				I18nString message = new CNI18nString("image.notfound");
+				message.setParameter("0", id.toString());
+				return new LocalizationsResponse(
+						new Message(Type.CRITICAL, message.toString()),
+						new ResponseInfo(ResponseCode.NOTFOUND, message.toString()));
+			}
+
 			if (!ObjectPermission.view.checkObject(image, image.getChannel())) {
 				String msg = new CNI18nString("image.nopermission").toString();
 

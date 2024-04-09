@@ -362,9 +362,11 @@ public class StagingModelBuilder {
 			for (OverviewEntry entry : overviewEntries) {
 				StagedNodeIdObjectId id = new StagedNodeIdObjectId();
 				NodeObject object = entry.getObject();
-				id.setObjectId(object.getGlobalId().toString());
-				id.setNodeId(entry.getNodeId() > 0 ? t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString() : null);
-				selectedObjects.add(id);
+				if (object != null) {
+					id.setObjectId(object.getGlobalId().toString());
+					id.setNodeId(entry.getNodeId() > 0 ? t.getObject(Node.class, entry.getNodeId()).getGlobalId().toString() : null);
+					selectedObjects.add(id);
+				}
 			}
 
 			// if the sortorder is DESC, we will reverse the order of the entries

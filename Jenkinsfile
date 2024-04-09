@@ -86,8 +86,9 @@ spec:
         booleanParam(name: 'releaseWithNewChangesOnly', defaultValue: true,  description: "Release: Abort the build if there are no new changes")
         booleanParam(name: 'mergeHotfixBranch',         defaultValue: true,  description: "Release: Whether to merge the corresponding hotfix branch first (release branches only)")
         booleanParam(name: 'runDockerBuild',            defaultValue: true,  description: "Whether to build the docker image (use deploy to push it also).")
-        string(name:       'forceVersion',              defaultValue: "",  description: "If not empty, the build/release will be done using this POM version")
-        string(name:       'sourceBranch',              defaultValue: "",  description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
+        string(name:       'forceVersion',              defaultValue: "",    description: "If not empty, the build/release will be done using this POM version")
+        string(name:       'sourceBranch',              defaultValue: "",    description: "Will only work if the job has */\${sourceBranch} as GIT branch defined")
+        string(name:       'cmsOssVersion',             defaultValue: "",    description: "Override CMS OSS version")
     }
 
     options {
@@ -138,6 +139,11 @@ spec:
                         } catch (Exception e) {
                             error 'Couldn\'t merge ref origin/' + branchToMerge + 'into ' + branchName
                         }
+                    }
+
+                    if (params.cmsOssVersion?.trim() && !params.runReleaseBuild) {
+                        echo "Setting CMS OSS version to " + params.cmsOssVersion.trim()
+                        mvnArguments += " -pl '!cms-changelog' -Dcms\\-oss.version=" + params.cmsOssVersion.trim()
                     }
 
                     if (version) {
@@ -222,7 +228,7 @@ spec:
                     withDockerRegistry([ credentialsId: "repo.gentics.com", url: "https://docker.apa-it.at/v2" ]) {
                         // NX_NON_NATIVE_HASHER temp fix for incompatible installations
                         // see: https://nx.dev/recipes/ci/troubleshoot-nx-install-issues
-                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true"]) {
+                        withEnv(["TESTMANAGER_HOSTNAME=" + testDbManagerHost, "TESTMANAGER_PORT=" + testDbManagerPort, "NX_NON_NATIVE_HASHER=true", "TESTCONTAINERS_RYUK_DISABLED=true"]) {
                             sh "mvn -B -Dstyle.color=always -U -Dskip.integration.tests " +
                                 " -fae -Dmaven.test.failure.ignore=true " + mvnArguments + " clean " + mvnGoal
                         }
@@ -384,10 +390,11 @@ spec:
         }
     }
 
+    /* TODO: Re-enable when HTTPS access to gitlab is restored. Due to infrastructure issues this is disabled temporarily.
     post {
         always {
             updateGitlabCommitCurrentBuildStatus name: 'Jenkins build'
-            notifyMattermostUsers()
         }
     }
+    */
 }

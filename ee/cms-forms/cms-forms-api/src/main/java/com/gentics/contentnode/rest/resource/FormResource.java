@@ -41,7 +41,19 @@ import com.gentics.contentnode.rest.resource.parameter.WastebinParameterBean;
 @Path("form")
 public interface FormResource {
 	/**
-	 * List forms
+	 * List forms.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>id</code></li>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
 	 * @param inFolder parameter bean
 	 * @param filter parameter bean
 	 * @param sorting parameter bean

@@ -32,8 +32,22 @@ import com.gentics.contentnode.rest.resource.parameter.SortParameterBean;
 @Path("/content")
 public interface ContentStagingResource {
 	/**
-	 * Get packages list.
-	 * 
+	 * Get packages list.<br>
+	 * The result can be filtered by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * </ul>
+	 * and sorted by
+	 * <ul>
+	 * <li><code>name</code></li>
+	 * <li><code>description</code></li>
+	 * <li><code>nodes</code></li>
+	 * <li><code>pages</code></li>
+	 * <li><code>folders</code></li>
+	 * <li><code>files</code></li>
+	 * <li><code>images</code></li>
+	 * </ul>
 	 * @param filterParams filter parameters
 	 * @param sortingParams sorting parameters
 	 * @param pagingParams paging parameters

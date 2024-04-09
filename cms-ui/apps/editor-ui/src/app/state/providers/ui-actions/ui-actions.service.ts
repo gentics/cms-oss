@@ -18,8 +18,8 @@ import {
 import { ApplicationStateService } from '../../providers';
 
 // This var is provided by the Webpack DefinePlugin and gets
-// swapped out for a hard-coded string at build-time. See webpack.config.js.
-declare let GCMS_VERSION: string;
+// swapped out for a hard-coded string at build-time. See webpack.partial.js.
+declare const GCMS_VERSION: string;
 
 @Injectable()
 export class UIActionsService {

@@ -17,10 +17,6 @@
         "build": {
           "builder": "@angular-builders/custom-webpack:browser",
           "options": {
-            "customWebpackConfig": {
-              "path": "apps/admin-ui/webpack.partial.js",
-              "replaceDuplicatePlugins": true
-            },
             "allowedCommonJsDependencies": [
               "@bevacqua/rome",
               "@gentics/ui-core",

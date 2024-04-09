@@ -126,7 +126,7 @@ define('gcn/gcn-links', [
 			if (!formData.url.isInternal) {
 				stripInternalLinkAttributesFromElement(link);
 			} else {
-				applyLinkTargetToElement(formData, linkElement);
+				applyLinkTargetToElement(formData, link);
 			}
 
 			plugin.hrefChange(link);

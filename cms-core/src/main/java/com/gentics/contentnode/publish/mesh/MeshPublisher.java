@@ -2305,7 +2305,13 @@ public class MeshPublisher implements AutoCloseable {
 		}
 		try {
 			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
-			if (meshLanguage != null) {
+			if (objectType == Form.TYPE_FORM) {
+				// forms are removed via the forms plugin
+				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid)).toCompletable()
+					.onErrorResumeNext(throwable -> {
+						return ifNotFound(throwable, () -> Completable.complete());
+					}).blockingAwait();
+			} else if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
 					client.deleteNode(project.name, meshUuid, meshLanguage, new DeleteParametersImpl().setRecursive(true), branch).toCompletable().onErrorResumeNext(throwable -> {
@@ -2316,12 +2322,6 @@ public class MeshPublisher implements AutoCloseable {
 						return ifNotFound(throwable, () -> Completable.complete());
 					}).blockingAwait();
 				}
-			} else if (objectType == Form.TYPE_FORM) {
-				// forms are removed via the forms plugin
-				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid))
-						.toCompletable().onErrorResumeNext(throwable -> {
-							return ifNotFound(throwable, () -> Completable.complete());
-						}).blockingAwait();
 			} else {
 				// delete the node
 				if (branch != null) {

@@ -549,7 +549,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInTemplate() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -576,7 +575,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInPage() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -599,7 +597,6 @@ public class ConstructResourceTest {
 	public void testDeleteUsedInObjectProperty() throws NodeException {
 		int constructId = Builder.create(Construct.class, c -> {
 			c.setKeyword("deleteme");
-			c.setIconName("icon.png");
 			c.setName("Lösch mich", 1);
 			c.setName("Delete Me", 2);
 		}).save().build().getId();
@@ -708,13 +705,11 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
 		construct.setKeyword("testtag");
-		construct.setIcon("etc.gif");
 		construct.setName("Select", "en");
 
 		construct.setMayBeSubtag(true);
 		construct.setMayContainSubtags(true);
 		construct.setAutoEnable(true);
-		construct.setNewEditor(true);
 		construct.setVisibleInMenu(true);
 
 		List<Part> parts = this.createConstructParts();
@@ -743,7 +738,6 @@ public class ConstructResourceTest {
 		assertThat(updateResponse.getConstruct().getParts()).hasSize(3);
 		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
 		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
-		Assertions.assertThat(updateResponse.getConstruct().getNewEditor()).isTrue();
 		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
 	}
 
@@ -753,7 +747,6 @@ public class ConstructResourceTest {
 
 		com.gentics.contentnode.rest.model.Construct construct = new com.gentics.contentnode.rest.model.Construct();
 		construct.setKeyword("testtag");
-		construct.setIcon("etc.gif");
 		construct.setName("Select", "en");
 
 		List<Part> parts = this.createConstructParts();
@@ -768,7 +761,6 @@ public class ConstructResourceTest {
 		updateConstruct.setMayBeSubtag(true);
 		updateConstruct.setMayContainSubtags(true);
 		updateConstruct.setAutoEnable(true);
-		updateConstruct.setNewEditor(true);
 		updateConstruct.setVisibleInMenu(true);
 
 		final Integer constructId = createdConstruct.getConstruct().getId();
@@ -779,7 +771,6 @@ public class ConstructResourceTest {
 		assertThat(updateResponse.getConstruct().getParts()).hasSize(2);
 		assertThat(updateResponse.getConstruct().getMayBeSubtag()).isTrue();
 		assertThat(updateResponse.getConstruct().getMayContainSubtags()).isTrue();
-		Assertions.assertThat(updateResponse.getConstruct().getNewEditor()).isTrue();
 		assertThat(updateResponse.getConstruct().getAutoEnable()).isTrue();
 	}
 

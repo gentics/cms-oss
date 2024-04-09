@@ -74,7 +74,6 @@ public class PackageResourceListNodePackagesTest extends AbstractListSortAndFilt
 		for (int i = 0; i < NUM_ITEMS; i++) {
 			constructs.add(Builder.create(Construct.class, c -> {
 				c.setAutoEnable(true);
-				c.setIconName("icon");
 				c.setKeyword(randomStringGenerator.generate(5, 10));
 				c.setName(randomStringGenerator.generate(5, 10), 1);
 				c.setName(randomStringGenerator.generate(5, 10), 2);

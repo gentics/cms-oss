@@ -208,7 +208,7 @@ public class NodeConfigTest {
 	@Test
 	public void testAlohaSettingsEditable() throws NodeException {
 		JsonNode settings = Trx.supply(systemUser, () -> {
-			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA, testPage, false, false)) {
+			try (RenderTypeTrx rTTrx = new RenderTypeTrx(RenderType.EM_ALOHA, testPage, false, false, false)) {
 				AlohaRenderer alohaRenderer = new AlohaRenderer();
 				RenderResult result = new RenderResult();
 				return alohaRenderer.getAlohaSettings(testPage.getOwningNode(), result, rTTrx.get(), new ObjectMapper());

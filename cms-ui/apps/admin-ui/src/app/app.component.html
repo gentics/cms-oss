@@ -13,6 +13,7 @@
     <div class="corner-actions">
 
         <gtx-button
+            *ngIf="(activitiesCount$ | async) > 0"
             class="corner-action"
             [class.animated]="activitiesPending$ | async"
             icon
@@ -24,6 +25,7 @@
         </gtx-button>
 
         <gtx-button
+            *ngIf="(unreadMessageCount$ | async) > 0"
             class="corner-action"
             icon
             type="secondary"

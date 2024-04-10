@@ -1,4 +1,4 @@
-import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, UsersnapSettings } from '@gentics/cms-models';
+import { EntityIdType, GcmsUiLanguage, GtxVersion, NormalizableEntityType, Update, UsersnapSettings } from '@gentics/cms-models';
 import { AppState } from '../app-state';
 import { ActionDeclaration } from '../utils/state-utils';
 import type { UIStateSettings } from './ui.state';
@@ -27,7 +27,7 @@ export class SetBackendLanguage {
 @ActionDeclaration(UI)
 export class SetCmsUpdates {
     static readonly type = 'SetCmsUpdates';
-    constructor(public available: string[]) {}
+    constructor(public available: Update[]) {}
 }
 
 @ActionDeclaration(UI)

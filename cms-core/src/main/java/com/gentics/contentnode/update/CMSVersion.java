@@ -142,6 +142,38 @@ public class CMSVersion implements Comparable<CMSVersion> {
 		return String.format("%d.%d", major, minor);
 	}
 
+	/**
+	 * Get major version number
+	 * @return major version
+	 */
+	public int getMajor() {
+		return major;
+	}
+
+	/**
+	 * Get minor version number
+	 * @return minor version
+	 */
+	public int getMinor() {
+		return minor;
+	}
+
+	/**
+	 * Get patch level
+	 * @return patch level
+	 */
+	public int getPatchLevel() {
+		return patchLevel;
+	}
+
+	/**
+	 * Check whether the version is a snapshot
+	 * @return true for snapshot version
+	 */
+	public boolean isSnapshot() {
+		return snapshot;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof CMSVersion) {

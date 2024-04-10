@@ -20,7 +20,7 @@ import { ApiBase } from '../base/api-base.service';
  * API methods related to the content repository resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ContentRepositoryFragmentResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ContentRepositoryFragmentResource.html
  */
 export class ContentrespositoryFragmentApi {
 

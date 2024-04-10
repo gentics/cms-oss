@@ -6,7 +6,7 @@ import { ApiBase } from '../base/api-base.service';
  * API methods related to the messaging resource.
  *
  * Docs for the endpoints used here can be found at:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_MessagingResource.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_MessagingResource.html
  */
 export class MessagingApi {
 

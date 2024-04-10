@@ -59,6 +59,7 @@ export class AdminOperations extends OperationsBase {
                 const version: GtxVersion = {
                     cmpVersion: response.cmpVersion,
                     version: response.version,
+                    variant: response.variant,
                     nodeInfo: response.nodeInfo,
                 };
                 this.appState.dispatch(new SetCmpVersion(version));

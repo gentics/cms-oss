@@ -36,7 +36,7 @@ import { stringifyEmbedOptions, stringifyPagingSortOptions } from '../util/sort-
  * API methods related to the devtools resource.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_PackageResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_PackageResource.html
  *
  */
 export class DevToolsApi {

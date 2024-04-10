@@ -97,7 +97,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to the folder resource.
  *
  * Docs for the endpoints used here can be found at:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_FolderResource.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_FolderResource.html
  */
 export class FolderApi {
     // private elasticFolderCache: ElasticFolderCache;

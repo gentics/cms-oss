@@ -62,7 +62,7 @@ export class NodePropertiesComponent implements OnInit, OnChanges, OnDestroy, Co
     /**
      * If global feature "pub_dir_segment" is activated, node will have this property.
      *
-     * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
+     * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
     @Input()
     public pubDirSegmentActivated: boolean;

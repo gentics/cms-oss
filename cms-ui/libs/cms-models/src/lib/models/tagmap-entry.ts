@@ -3,7 +3,7 @@ import { DefaultModelType, ModelType } from './type-util';
 
 export type TagmapEntryParentType = keyof Pick<NormalizableEntityTypesMap<DefaultModelType>, 'contentRepository' | 'contentRepositoryFragment'> ;
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_TagmapEntryModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_TagmapEntryModel.html */
 export interface TagmapEntryBase<T extends ModelType> {
     /** Global ID */
     globalId: string;

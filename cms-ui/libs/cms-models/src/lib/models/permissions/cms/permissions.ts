@@ -68,7 +68,7 @@ export enum AccessControlledType {
  * The privileges in `./privileges.ts` are derived from these permissions by the CMS
  * (a privilege is basically just an alias for a permission on a certain type/instance).
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_PermType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_PermType.html
  * @see https://git.gentics.com/psc/contentnode/blob/dev/contentnode-restapi/src/main/java/com/gentics/contentnode/rest/model/perm/PermType.java
  */
 export enum GcmsPermission {

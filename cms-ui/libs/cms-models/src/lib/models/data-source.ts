@@ -3,7 +3,7 @@ import { DefaultModelType, ModelType } from './type-util';
 /**
  * Possible DataSource types
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_DataSourceType.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_DataSourceType.html
  */
 export type DataSourceType =
     /** Static dataSource */
@@ -15,7 +15,7 @@ export type DataSourceType =
      */
     | 'SITEMINDER';
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_DataSource.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_DataSource.html */
 export interface DataSourceBase<T extends ModelType> {
     /** Global ID */
     globalId: string;

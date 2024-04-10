@@ -1,14 +1,14 @@
 /**
  * REST Model type of check link status for external Links
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_ExternalLinkStatus.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ExternalLinkStatus.html
  */
 export type ExternalLinkStatus = 'valid' | 'invalid' | 'unchecked';
 
 /**
  * Item in the history of validity checks for an external link
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_ExternalLinkCheckHistoryEntry.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ExternalLinkCheckHistoryEntry.html
  */
 export interface ExternalLinkCheckHistoryEntry {
     /** Timestamp of the check */
@@ -24,7 +24,7 @@ export interface ExternalLinkCheckHistoryEntry {
 /**
  * Represents an external link in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_ExternalLink.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ExternalLink.html
  */
 export interface ExternalLink {
     /** ID */

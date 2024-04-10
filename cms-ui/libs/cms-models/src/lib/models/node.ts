@@ -29,8 +29,8 @@ export interface EditableNodeProps {
 
 /**
  * A Node object as returned from the node/load/{id} endpoints:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_NodeResource.html#path__node_load_-id-.html
- * https://www.gentics.com/Content.Node/guides/restapi/json_Node.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_NodeResource.html#path__node_load_-id-.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Node.html
  */
 export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
 
@@ -150,7 +150,7 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
      * If global feature "pub_dir_segment" is activated, node will have this property.
      * Is enabled per node.
      *
-     * @see https://www.gentics.com/Content.Node/guides/feature_pub_dir_segment.html
+     * @see https://www.gentics.com/Content.Node/cmp8/guides/feature_pub_dir_segment.html
      */
     pubDirSegment?: boolean;
 

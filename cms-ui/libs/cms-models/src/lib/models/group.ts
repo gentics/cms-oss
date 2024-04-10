@@ -3,7 +3,7 @@ import { DefaultModelType, ModelType, Normalizable, NormalizableEntity, Raw } fr
 /**
  * Represents a user group in the CMS.
  *
- * https://www.gentics.com/Content.Node/guides/restapi/json_Group.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Group.html
  */
 export interface Group<T extends ModelType = DefaultModelType> extends NormalizableEntity<T> {
 

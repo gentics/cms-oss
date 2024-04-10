@@ -6,7 +6,7 @@ import { ApiBase } from '../base/api-base.service';
  * API methods related to admin.
  *
  * Docs for the endpoints used here can be found at:
- * http://www.gentics.com/Content.Node/guides/restapi/resource_AdminResource.html
+ * http://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_AdminResource.html
  */
 export class AdminApi {
 

@@ -1,6 +1,6 @@
 import { DefaultModelType, ModelType } from './type-util';
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_contentRepositoryFragmentModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_contentRepositoryFragmentModel.html */
 export interface ContentRepositoryFragmentBase<T extends ModelType> {
     /** Global ID */
     globalId: string;

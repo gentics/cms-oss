@@ -2,7 +2,7 @@ import { DefaultModelType, ModelType } from './type-util';
 
 /** Possible ContentRepository types
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Type.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Type.html
  */
 export enum ContentRepositoryType {
     /** Normal CR (SQL based, no multichannelling) */
@@ -15,7 +15,7 @@ export enum ContentRepositoryType {
 
 /** Model of the Elasticsearch specific configuration for Mesh CRs
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_CRElasticsearchModel.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_CRElasticsearchModel.html
  */
 export interface CRElasticsearchModel {
     page: any;
@@ -26,7 +26,7 @@ export interface CRElasticsearchModel {
 /**
  * Possible Check Status values
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Status.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Status.html
  */
 export type ContentRepositoryCheckStatus =
     /** Check was never done */
@@ -43,7 +43,7 @@ export type ContentRepositoryCheckStatus =
 /**
  * Possible Check Status values
  *
- * @see https://www.gentics.com/Content.Node/guides/restapi/json_Status.html
+ * @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_Status.html
  */
 export type ContentRepositoryDataStatus =
     /** Check was never done */
@@ -99,7 +99,7 @@ export enum BasepathType {
     PROPERTY = 'property',
 }
 
-/** @see https://www.gentics.com/Content.Node/guides/restapi/json_ContentRepositoryModel.html */
+/** @see https://www.gentics.com/Content.Node/cmp8/guides/restapi/json_ContentRepositoryModel.html */
 export interface ContentRepositoryBase<T extends ModelType> {
     /** Global ID */
     globalId: string;

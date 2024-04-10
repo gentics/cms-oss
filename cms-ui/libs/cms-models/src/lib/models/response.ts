@@ -745,6 +745,7 @@ export interface LoginResponse extends Response {
 export interface VersionResponse extends Response {
     cmpVersion: string;
     version: string;
+    variant: string;
     nodeInfo: { [key: string]: GtxVersionNodeInfo; };
 }
 

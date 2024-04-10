@@ -3262,7 +3262,7 @@ export class FolderActionsService {
         /**
          * This method was implemented in a support ticket. To keep changes at a minimum, it maps this action to the existing
          * publishPageAt method. However, it is meant to mimic the request
-         * https://gentics.com/Content.Node/guides/restapi/resource_PageResource.html#resource_PageResource_publish_POST.
+         * https://gentics.com/Content.Node/cmp8/guides/restapi/resource_PageResource.html#resource_PageResource_publish_POST.
          * In future, this action can be changed to make use of this request which will reduce the number of requests needed to 1.
          */
 

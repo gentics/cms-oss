@@ -2107,7 +2107,7 @@ export type TagmapEntryUpdateRequest = Partial<TagmapEntryCreateRequest>;
  * Update a link (optionally together with other occurrences) by replacing the URL with the given URL.
  * Additional query options for `linkChecker/pages/{pageId}/links/{id}`
  *
- * https://www.gentics.com/Content.Node/guides/restapi/resource_LinkCheckerResource.html#resource_LinkCheckerResource_updateLink_POST
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_LinkCheckerResource.html#resource_LinkCheckerResource_updateLink_POST
  */
 export interface UpdateExternalLinkRequestOptions {
     /** Wait timeout in milliseconds. */

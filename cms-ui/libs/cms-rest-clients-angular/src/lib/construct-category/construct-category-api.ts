@@ -17,7 +17,7 @@ import { stringifyPagingSortOptions } from '../util/sort-options/sort-options';
  * API methods related to ConstructCategoryCategories.
  *
  * Docs for the endpoints used here can be found at:
- * https://www.gentics.com/Content.Node/guides/restapi/resource_ConstructCategoryResource.html
+ * https://www.gentics.com/Content.Node/cmp8/guides/restapi/resource_ConstructCategoryResource.html
  */
 export class ConstructCategoryApi {
 

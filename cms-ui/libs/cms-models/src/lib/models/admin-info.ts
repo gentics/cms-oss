@@ -55,12 +55,18 @@ export interface PublishObjectsCount {
     remaining: number;
 }
 
+export interface Update {
+    version: string;
+
+    changelogUrl: string;
+}
+
 /**
  * Response from endpoint `/admin/updates`.
  */
 export interface UpdatesInfo extends Response {
     /* List of available updates */
-    available: string[];
+    available: Update[];
 }
 
 /**

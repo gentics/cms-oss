@@ -29,6 +29,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/build.txt</include>
+					<include>**/cms.build.properties</include>
 				</includes>
 			</resource>
 			<resource>
@@ -36,6 +37,7 @@
 				<filtering>false</filtering>
 				<excludes>
 					<exclude>**/build.txt</exclude>
+					<exclude>**/cms.build.properties</exclude>
 				</excludes>
 			</resource>
 		</resources>

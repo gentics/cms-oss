@@ -2147,7 +2147,7 @@ public class MeshPublisher implements AutoCloseable {
 					}
 
 					deleteOfflineMap.remove(form.getId());
-					if (!cr.mustContain(form)) {
+					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
 							for (String lang : languages) {
@@ -2164,7 +2164,7 @@ public class MeshPublisher implements AutoCloseable {
 						return false;
 					}
 					removeMap.remove(form.getId());
-					if (!cr.mustContain(form)) {
+					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
 							for (String lang : languages) {

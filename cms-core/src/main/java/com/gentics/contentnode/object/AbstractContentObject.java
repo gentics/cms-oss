@@ -360,6 +360,8 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 								PublishQueue.dirtObject(form, Action.REMOVE, oldNodeId);
 								PublishQueue.dirtObject(form, Action.MOVE, newNodeId);
 							}
+						} else if (this instanceof Form) {
+							PublishQueue.dirtObject(this, Action.MOVE, newNodeId);
 						}
 					}
 				}

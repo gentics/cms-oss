@@ -1075,7 +1075,15 @@ export class ContentFrameComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     private saveForm(): Promise<any> {
         const id = this.currentItem.id;
-        const payload = this.entityResolver.denormalizeEntity('form', this.currentItem as Form<Normalized>);
+        const currentForm = this.currentItem as Form<Normalized>;
+        const payload = {
+            name: currentForm.name,
+            description: currentForm.description,
+            successPageId: currentForm.successPageId,
+            successNodeId: currentForm.successNodeId,
+            languages: currentForm.languages,
+            data: currentForm.data,
+        };
         this.appState.dispatch(new StartSavingAction());
 
         return this.client.form.update(id, payload).pipe(

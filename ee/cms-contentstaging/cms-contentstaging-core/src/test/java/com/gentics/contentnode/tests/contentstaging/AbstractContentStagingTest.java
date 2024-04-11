@@ -152,7 +152,6 @@ abstract public class AbstractContentStagingTest<T extends StageableNodeObject> 
 		construct = create(Construct.class, c -> {
 			c.setName("Test Construct", 1);
 			c.setKeyword("testconstruct");
-			c.setIconName("bla.jpg");
 			c.setAutoEnable(true);
 
 			List<Part> parts = c.getParts();

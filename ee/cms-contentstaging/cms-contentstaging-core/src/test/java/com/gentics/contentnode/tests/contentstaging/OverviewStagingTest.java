@@ -42,7 +42,6 @@ public class OverviewStagingTest extends AbstractContentStagingTest<Page> {
 		overviewConstruct = create(Construct.class, c -> {
 			c.setName("Overview Construct", 1);
 			c.setKeyword("overviewconstruct");
-			c.setIconName("bla.jpg");
 			c.setAutoEnable(true);
 			List<Part> parts = c.getParts();
 			// overview

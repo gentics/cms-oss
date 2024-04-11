@@ -304,7 +304,6 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 			return create(Construct.class, c -> {
 				c.setKeyword("test_construct");
 				c.setName("Construct", 1);
-				c.setIconName("icon.jpg");
 				c.setAutoEnable(true);
 
 				c.getParts().add(create(Part.class, p -> {
@@ -354,7 +353,6 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 			return create(Construct.class, c -> {
 				c.setKeyword("test_construct");
 				c.setName("Construct", 1);
-				c.setIconName("icon.jpg");
 				c.setAutoEnable(true);
 
 				c.getParts().add(create(Part.class, p -> {
@@ -411,7 +409,6 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 			Construct construct = create(Construct.class, c -> {
 				c.setKeyword("test_construct");
 				c.setName("Construct", 1);
-				c.setIconName("icon.jpg");
 				c.setAutoEnable(true);
 
 				c.getParts().add(create(Part.class, p -> {
@@ -463,7 +460,6 @@ public class ContentStagingImplementationCheckTest implements ContentStagingMeth
 			return create(Construct.class, c -> {
 				c.setKeyword("test_construct");
 				c.setName("Construct", 1);
-				c.setIconName("icon.jpg");
 				c.setAutoEnable(true);
 			}).build();
 		}, construct -> {

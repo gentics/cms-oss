@@ -229,7 +229,6 @@ public class NodeSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 		Part urlPart = t.createObject(Part.class);
 
@@ -323,7 +322,6 @@ public class NodeSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 		Part urlPart = t.createObject(Part.class);
 

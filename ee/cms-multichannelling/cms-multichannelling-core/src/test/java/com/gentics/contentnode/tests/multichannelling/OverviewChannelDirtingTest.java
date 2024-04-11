@@ -54,7 +54,6 @@ public class OverviewChannelDirtingTest extends AbstractMultichannellingSandboxT
 		Construct overviewConstruct = t.createObject(Construct.class);
 		overviewConstruct.setName("OverviewConstruct", 1);
 		overviewConstruct.setName("OverviewConstruct", 2);
-		overviewConstruct.setIconName("blah");
 		overviewConstruct.setKeyword("dirtingoverview");
 		Part overviewPart = t.createObject(Part.class);
 		overviewPart.setPartTypeId(OverviewPartType.TYPE_ID);

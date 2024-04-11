@@ -4,8 +4,6 @@ import static com.gentics.contentnode.devtools.Synchronizer.mapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,7 +15,6 @@ import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gentics.api.lib.exception.NodeException;
-import com.gentics.contentnode.devtools.model.DefaultValueModel;
 import com.gentics.contentnode.etc.Consumer;
 import com.gentics.contentnode.object.NodeObject.GlobalId;
 import com.gentics.contentnode.rest.resource.impl.ContentStagingResourceImpl;
@@ -120,56 +117,4 @@ public interface StagedReferencedObject<T extends NodeObject> {
 	 * @throws NodeException
 	 */
 	void produceStagedHashComponents(Consumer<Object> consumer) throws NodeException;
-
-	/**
-	 * Get a "normalized" version of the given string for hashing. If the string is null, return an empty string. Otherwise replace all CRLF by LF
-	 * @param value value to "normalize" for hashing
-	 * @return "normalized" value
-	 */
-	default String getStringForHashing(String value) {
-		if (value == null) {
-			return "";
-		} else {
-			return StringUtils.replace(value, "\r\n", "\n");
-		}
-	}
-
-	/**
-	 * Get a "normalized" version of the given list of strings. See {@link #getStringForHashing(String)}.
-	 * @param values values to "normalize"
-	 * @return "normalized" values.
-	 */
-	default List<String> getStringsForHashing(List<String> values) {
-		if (values == null) {
-			return null;
-		} else {
-			return values.stream().map(this::getStringForHashing).collect(Collectors.toList());
-		}
-	}
-
-	/**
-	 * Normalize the string values in the model
-	 * @param model model
-	 * @return modified model
-	 */
-	default DefaultValueModel normalizeStrings(DefaultValueModel model) {
-		model.setStringValue(getStringForHashing(model.getStringValue()));
-		model.setStringValues(getStringsForHashing(model.getStringValues()));
-
-		// remove references to content objects (pages, images, files, templates, forms, nodes, tags)
-		model.setContentTagId(null);
-		model.setFileId(null);
-		model.setFolderId(null);
-		model.setImageId(null);
-		model.setNodeId(null);
-		model.setPageId(null);
-		model.setTemplateId(null);
-		model.setTemplateTagId(null);
-
-		if (model.getOverview() != null) {
-			model.getOverview().setSelection(null);
-		}
-
-		return model;
-	}
 }

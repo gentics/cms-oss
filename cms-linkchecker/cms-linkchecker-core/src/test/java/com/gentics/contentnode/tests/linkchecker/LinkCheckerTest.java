@@ -151,7 +151,6 @@ public class LinkCheckerTest {
 
 		magicLinkConstruct = supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword(AlohaRenderer.MAGICLINK_KEYWORD);
 			c.setName("Aloha Link", 1);
 			c.getParts().add(create(Part.class, p -> {

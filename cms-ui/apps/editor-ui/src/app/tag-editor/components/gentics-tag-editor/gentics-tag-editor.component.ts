@@ -17,6 +17,10 @@ import { cloneDeep, isEqual } from 'lodash-es';
 import { Subscription } from 'rxjs';
 import { ErrorHandler } from '../../../core/providers/error-handler/error-handler.service';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
+import {
+    ModalService,
+} from '@gentics/ui-core';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 
 /**
  * The GenticsTagEditor is the default TagEditor and uses the Gentics TagPropertyEditors
@@ -95,6 +99,8 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     constructor(
         private changeDetector: ChangeDetectorRef,
         private errorHandler: ErrorHandler,
+        private modalService: ModalService,
+        private i18n: I18nService,
     ) {}
 
     ngAfterViewInit(): void {
@@ -127,10 +133,26 @@ export class GenticsTagEditorComponent implements CompleteTagEditor, AfterViewIn
     }
 
     onDeleteClick(): void {
-        this.editResolve({
-            doDelete: true,
-            tag: this.originalTag,
-        });
+        this.modalService.dialog({
+            title: this.i18n.translate('modal.confirmation_tag_delete_title'),
+            body: this.i18n.translate('modal.delete_tag_confirm_singular'),
+            buttons: [
+                { label: this.i18n.translate('common.cancel_button'), type: 'secondary' as const, flat: true, returnValue: false, shouldReject: true },
+                { label: this.i18n.translate('common.delete_button'), type: 'alert' as const, returnValue: true },
+            ],
+        })
+            .then(modal => modal.open())
+            .then(shouldContinue => {
+                if (!shouldContinue) {
+                    return;
+                }
+
+                this.editResolve({
+                    doDelete: true,
+                    tag: this.originalTag,
+                });
+            });
+
     }
 
     onCancelClick(): void {

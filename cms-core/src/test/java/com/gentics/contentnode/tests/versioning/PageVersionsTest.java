@@ -48,7 +48,6 @@ public class PageVersionsTest {
 
 		construct = create(Construct.class, c -> {
 			c.setName("Test construct", 1);
-			c.setIconName("icon.jpg");
 			c.setKeyword("testconstruct");
 
 			List<Part> parts = c.getParts();

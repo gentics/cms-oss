@@ -56,7 +56,6 @@ import { TestApplicationState } from '../../../state/test-application-state.mock
 import { EditTagInfo, TagEditorHostComponent, TagEditorService } from '../../../tag-editor';
 import { IFrameWrapperComponent } from '../../../tag-editor/components/iframe-wrapper/iframe-wrapper.component';
 import { ObjectTagNamePipe } from '../../../tag-editor/pipes/object-tag-name/object-tag-name.pipe';
-import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { DescriptionTooltipComponent } from '../description-tooltip/description-tooltip.component';
 import { NodePropertiesFormComponent } from '../node-properties-form/node-properties-form.component';
@@ -141,7 +140,6 @@ describe('CombinedPropertiesEditorComponent', () => {
                 MockTagEditorOverlayHost,
                 NodePropertiesFormComponent,
                 ObjectTagNamePipe,
-                TagTypeIconPipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize'),
             ],

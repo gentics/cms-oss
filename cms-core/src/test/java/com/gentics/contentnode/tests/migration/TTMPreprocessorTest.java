@@ -102,7 +102,6 @@ public class TTMPreprocessorTest {
 		node = Trx.supply(() -> createNode());
 		fromConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setKeyword("from");
-			c.setIconName("icon.png");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setKeyname("text");
@@ -113,7 +112,6 @@ public class TTMPreprocessorTest {
 
 		toConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setKeyword("to");
-			c.setIconName("icon.png");
 
 			c.getParts().add(create(Part.class, p -> {
 				p.setKeyname("text");

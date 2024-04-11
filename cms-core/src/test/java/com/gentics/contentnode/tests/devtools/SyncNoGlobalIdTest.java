@@ -66,7 +66,6 @@ public class SyncNoGlobalIdTest {
 
 		operate(() -> create(Construct.class, construct -> {
 			construct.setAutoEnable(true);
-			construct.setIconName("icon");
 			construct.setKeyword("construct");
 			construct.setName("Construct", 1);
 			construct.setGlobalId(new GlobalId(CONSTRUCT_UUID));

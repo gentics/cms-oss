@@ -202,15 +202,12 @@ public abstract class TagPartType extends AbstractPartType {
 
 			int editMode = renderType.getInfo(renderType.getDepth() - 2).getEditMode();
 
-			if (editMode == RenderType.EM_EDIT) {
-				renderType.setEditMode(RenderType.EM_PREVIEW);
-			}
 			if (editMode == RenderType.EM_ALOHA) {
 				renderType.setEditMode(RenderType.EM_ALOHA_READONLY);
 			}
-            
+
 			String source = linkedTag.render(result);
-    
+
 			// as a tag is rendered completely on its own, render it with the main
 			// default-renderer
 			TemplateRenderer renderer = RendererFactory.getRenderer(renderType.getInfo(0).getDefaultRenderer());
@@ -228,7 +225,7 @@ public abstract class TagPartType extends AbstractPartType {
 			if (container != null) {
 				renderType.pop(container);
 			}
-            
+
 			if (renderType.doHandleDependencies()) {
 				if (!DependencyManager.DIRECT_DEPENDENCIES) {
 					renderType.popDependentObject();

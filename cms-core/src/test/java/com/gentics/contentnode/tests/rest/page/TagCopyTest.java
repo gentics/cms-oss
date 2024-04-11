@@ -100,7 +100,6 @@ public class TagCopyTest {
 
 		innerConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("inner");
 			c.setName("Inner", 1);
 
@@ -116,7 +115,6 @@ public class TagCopyTest {
 
 		outerConstruct = Trx.supply(() -> create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("outer");
 			c.setName("Outer", 1);
 
@@ -141,7 +139,6 @@ public class TagCopyTest {
 
 		overviewConstruct = Builder.create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("icon");
 			c.setKeyword("overview");
 			c.setName("Overview", 1);
 

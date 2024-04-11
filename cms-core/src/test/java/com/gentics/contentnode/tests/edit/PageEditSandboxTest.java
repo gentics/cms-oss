@@ -1114,7 +1114,6 @@ public class PageEditSandboxTest {
 
 		// Create a text Construct
 		Construct textConstruct = t.createObject(Construct.class);
-		textConstruct.setIconName("blargh.ico");
 		textConstruct.setKeyword("textConstruct");
 		textConstruct.setName("textConstruct", 1);
 		Part textPart = t.createObject(Part.class);

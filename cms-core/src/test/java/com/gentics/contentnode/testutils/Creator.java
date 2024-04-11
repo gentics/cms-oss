@@ -369,7 +369,6 @@ public class Creator {
 	public static Construct createConstruct(String keyword, String iconName, String name, List<Part> parts) throws NodeException {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct result = t.createObject(Construct.class);
-		result.setIconName(iconName);
 		result.setKeyword(keyword);
 		result.setName(name, 1);
 		if (parts != null) {

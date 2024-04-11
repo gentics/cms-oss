@@ -275,7 +275,6 @@ public class RenderUtils {
 			return "publish";
 		case RenderType.EM_LIVEPREVIEW:
 			return "live";
-		case RenderType.EM_EDIT:
 		case RenderType.EM_ALOHA:
 			return "edit";
 		case RenderType.EM_PREVIEW:

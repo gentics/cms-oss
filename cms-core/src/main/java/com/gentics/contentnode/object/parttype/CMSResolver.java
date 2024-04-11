@@ -378,7 +378,7 @@ public class CMSResolver implements Resolvable {
 		public boolean getEdit() throws NodeException {
 			int editMode = getEditMode();
 
-			return editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA;
+			return editMode == RenderType.EM_ALOHA;
 		}
 
 		/**

@@ -33,7 +33,7 @@ import { map, switchMap } from 'rxjs/operators';
 
 export type ConstructPropertiesFormData = Omit<
 TagTypeBase<Raw>,
-'name' | 'description' | 'globalId' | 'parts' | 'creator' | 'cdate' | 'editor' | 'edata' | 'editdo'
+'name' | 'description' | 'globalId' | 'parts' | 'creator' | 'cdate' | 'editor' | 'edata'
 > & {
     nodeIds?: number[];
 }
@@ -43,31 +43,6 @@ export enum ConstructPropertiesMode {
     UPDATE = 'update',
     COPY = 'copy',
 }
-
-/* eslint-disable @typescript-eslint/naming-convention */
-const CONSTRUCT_ICONS = {
-    ETC: 'etc.gif',
-    STOP: 'stop.gif',
-    TAB_EDIT: 'tab_edit.gif',
-    FILE: 'datei.gif',
-    FILE2: 'file.gif',
-    TEXT: 'text.gif',
-    TEXT_ITALIC: 'textit.gif',
-    TEXT_BOLD: 'textbold.gif',
-    IMAGE: 'bild.gif',
-    IMAGE2: 'img.gif',
-    LINK: 'link.gif',
-    DATA_SOURCE: 'ds.gif',
-    ORDERED_LIST: 'olist.gif',
-    TABLE: 'table.gif',
-    UNORDERED_LIST: 'uliste.gif',
-    TAG: 'tag.gif',
-    UNDEFINED: 'undef.gif',
-    META: 'meta.gif',
-    LANGUAGES: 'languages.gif',
-    URL: 'url.gif',
-}
-/* eslint-enable @typescript-eslint/naming-convention */
 
 /**
  * Defines the data editable by the `ConstructPropertiesComponent`.
@@ -90,7 +65,6 @@ export class ConstructPropertiesComponent
     implements AfterViewInit, OnChanges, OnInit {
 
     public readonly ConstructPropertiesMode = ConstructPropertiesMode;
-    public readonly CONSTRUCT_ICONS = CONSTRUCT_ICONS;
     public readonly EditorControlStyle = EditorControlStyle;
 
     @Input()
@@ -160,7 +134,6 @@ export class ConstructPropertiesComponent
             keyword: new FormControl<string>(null, Validators.required),
             nameI18n: new FormControl<CmsI18nValue>({}, this.createNameValidator()),
             descriptionI18n: new FormControl<CmsI18nValue>({}),
-            icon: new FormControl<string>('', Validators.required),
             nodeIds: new FormControl<number[]>([], Validators.required),
             externalEditorUrl: new FormControl<string>(''),
             mayBeSubtag: new FormControl<boolean>(false),
@@ -217,7 +190,6 @@ export class ConstructPropertiesComponent
             nameI18n: this.value?.nameI18n ?? {},
             descriptionI18n: this.value?.descriptionI18n ?? {},
             keyword: this.value?.keyword || null,
-            icon: this.value?.icon || null,
             nodeIds: this.value?.nodeIds || [],
             externalEditorUrl: this.value?.externalEditorUrl || '',
             mayBeSubtag: this.value?.mayBeSubtag || false,

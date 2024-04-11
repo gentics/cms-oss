@@ -350,32 +350,14 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 
 			renderType.push(this);
 			int editMode = renderType.getEditMode();
-            
+
 			try {
-				// this is done before the value itself is rendered just to
-				// be compatible with old php code
-				boolean partEditable = (editMode == RenderType.EM_EDIT && getPart().isInlineEditable()
-						&& type.isLiveEditorCapable() && ContentNodeHelper.isSupereditEnabled() && container instanceof Tag && ((Tag) container).isEditable());
-                
 				// If we are in aloha mode and have an inline editable part we add the aloha id 
 				// to the renderResult so that AlohaRenderer can render the editables
 				boolean partAlohaEditable = (editMode == RenderType.EM_ALOHA && getPart().isInlineEditable() && type.isLiveEditorCapable()
 						&& container instanceof Tag && ((Tag) container).isEditable()); 
-               
-				if (partEditable) {
-					Tag containerTag = (Tag) container;
 
-					// add the part to the renderResult
-					if (!renderResult.getParameters().containsKey(containerTag.getName())) {
-						// add the construct id first, then the partorder
-						renderResult.addParameters(containerTag.getName(), new String[] {
-							containerTag.getConstruct().getId().toString(), Integer.toString(getPart().getPartOrder())});
-					} else {
-						renderResult.addParameter(containerTag.getName(), Integer.toString(getPart().getPartOrder()));
-					}
-				}
-
-				if (container instanceof Tag && !((Tag) container).isEnabled() && !partEditable && !forceOutput) {
+				if (container instanceof Tag && !((Tag) container).isEnabled() && !forceOutput) {
 					code = "";
 					doNotFixEmptyCode = true;
 				} else {
@@ -388,40 +370,10 @@ public abstract class Value extends AbstractContentObject implements GCNRenderab
 					code = "";
 				} else {
 					TemplateRenderer renderer = RendererFactory.getRenderer(renderType.getDefaultRenderer());
-
-					// when the part is inline editable, we have to prepare the
-					// IE code (replace blanks after nested tags with &nbsp;).
-					// we have to do it now, because, after rendering, there
-					// will be no more <node tags in the code!
-					if (partEditable) {
-						code = LiveEditorHelper.prepareIECode(code);
-					}
 					code = renderer.render(renderResult, code);
 				}
 
-				// TODO when edited in inline editmode, we need to surround
-				// the part by some html
-				if (partEditable) {
-					Tag containerTag = (Tag) container;
-
-					// prepare the code itself
-					if (StringUtils.isEmpty(code) && !doNotFixEmptyCode) {
-						code = "&nbsp;&nbsp;";
-					}
-					// Note: in the original (php) code, the call to
-					// LiveEditorHelper.prepareIECode() was done right here.
-					// this has been moved to before rendering the part, since
-					// after rendering, there would be no <node tags left in the
-					// code
-					String liveTag = LiveEditorHelper.getLiveeditWrapperTagName(containerTag);
-
-					code = "<" + liveTag + " class=\"lock\" onpaste=\"if (window.event){window.event.returnValue=false;}\" "
-							+ "onbeforepaste=\"DivOnBeforePaste(this);\" " + "onkeyup=\"return DivHandleKey(this,event)\" "
-							+ "onkeypress=\"return !isDivHandledKey(event);\" " + "onkeydown=\"return !isDivHandledKey(event);\" contenteditable=false " + "id=\"p_"
-							+ containerTag.getName() + "_" + getPart().getPartOrder() + "\" onclick=\"hide_context_menus(); return true;\" "
-							+ "ondblclick=\"cn3_edit('" + containerTag.getName() + "','" + getPart().getPartOrder() + "');\" "
-							+ "oncontextmenu=\"return displayMenu(this, true, event);\">" + code + "</" + liveTag + ">";
-				} else if (partAlohaEditable) {
+				if (partAlohaEditable) {
 					// Part is editable in aloha .. we surround it with <gtxEditable>
 					code = "<gtxEditable " + this.getId() + ">" + code + "</gtxEditable " + this.getId() + ">";
 				}

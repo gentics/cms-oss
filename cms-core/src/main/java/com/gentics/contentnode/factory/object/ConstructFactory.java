@@ -49,7 +49,6 @@ import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ConstructCategory;
 import com.gentics.contentnode.object.ContentTag;
 import com.gentics.contentnode.object.EditableValueList;
-import com.gentics.contentnode.object.Icon;
 import com.gentics.contentnode.object.Node;
 import com.gentics.contentnode.object.NodeObject;
 import com.gentics.contentnode.object.NodeObjectInfo;
@@ -129,27 +128,14 @@ public class ConstructFactory extends AbstractFactory {
 		@Updateable
 		protected String keyword;
 
-		protected Icon icon;
-
-		@DataField("icon")
-		@Updateable
-		protected String iconName;
 		protected I18nString description;
 
 		@DataField("description_id")
 		protected int descriptionId;
 
-		@DataField("hopedithook")
-		@Updateable
-		protected String hopeditHook;
-
 		@DataField("liveeditortagname")
 		@Updateable
 		protected String liveEditorTagName;
-
-		@DataField("new_editor")
-		@Updateable
-		protected boolean newEditor;
 
 		@DataField("external_editor_url")
 		@Updateable
@@ -218,7 +204,6 @@ public class ConstructFactory extends AbstractFactory {
 				List<Integer> partIds, List<Integer> valueIds) throws NodeException {
 			super(id, info);
 			setDataMap(this, dataMap);
-			this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
 			this.name = new CNI18nString(Integer.toString(nameId));
 			this.description = new CNI18nString(Integer.toString(descriptionId));
 			this.partIds = partIds != null ? new Vector<Integer>(partIds) : null;
@@ -249,15 +234,6 @@ public class ConstructFactory extends AbstractFactory {
 
 		public String getKeyword() {
 			return keyword;
-		}
-
-		public Icon getIcon() {
-			return icon;
-		}
-
-		@Override
-		public String getIconName() {
-			return iconName;
 		}
 
 		public I18nString getDescription() {
@@ -539,20 +515,11 @@ public class ConstructFactory extends AbstractFactory {
 			}
 		}
 
-		public String getHopeditHook() {
-			return hopeditHook;
-		}
-
 		/* (non-Javadoc)
 		 * @see com.gentics.contentnode.object.Construct#getLiveEditorTagName()
 		 */
 		public String getLiveEditorTagName() {
 			return liveEditorTagName;
-		}
-
-		@Override
-		public boolean isNewEditor() throws NodeException {
-			return newEditor;
 		}
 
 		@Override
@@ -864,31 +831,6 @@ public class ConstructFactory extends AbstractFactory {
 		}
 
 		@Override
-		public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.hopeditHook, hopeditHook)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': hopeditHook changed from '%s' to '%s'", this,
-							this.hopeditHook, hopeditHook));
-				}
-				this.hopeditHook = hopeditHook;
-				this.modified = true;
-			}
-		}
-
-		@Override
-		public void setIconName(String iconName) throws ReadOnlyException {
-			if (!StringUtils.isEqual(this.iconName, iconName)) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': iconName changed from '%s' to '%s'", this,
-							this.iconName, iconName));
-				}
-				this.iconName = iconName;
-				this.icon = StringUtils.isEmpty(iconName) ? null : new Icon("content", "constr/" + iconName, "");
-				this.modified = true;
-			}
-		}
-
-		@Override
 		public void setKeyword(String keyword) throws ReadOnlyException {
 			if (!StringUtils.isEqual(this.keyword, keyword)) {
 				if (logger.isDebugEnabled()) {
@@ -908,18 +850,6 @@ public class ConstructFactory extends AbstractFactory {
 							this.liveEditorTagName, liveEditorTagName));
 				}
 				this.liveEditorTagName = liveEditorTagName;
-				this.modified = true;
-			}
-		}
-
-		@Override
-		public void setNewEditor(boolean newEditor) throws ReadOnlyException {
-			if (this.newEditor != newEditor) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("Change in '%s': newEditor changed from '%b' to '%b'", this,
-							this.newEditor, newEditor));
-				}
-				this.newEditor = newEditor;
 				this.modified = true;
 			}
 		}

@@ -19,7 +19,6 @@ export * from './gcms-normalizer/gcms-normalizer';
 export * from './gcms-normalizer/gcms-normalizer-types';
 export * from './group';
 export * from './i18n-language';
-export * from './icons';
 export * from './image';
 export * from './item';
 export * from './language';

@@ -113,7 +113,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 		Part urlPart = t.createObject(Part.class);
 
@@ -284,7 +283,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("construct");
 		construct.setName("Construct (de)", 1);
 		construct.setName("Construct (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 
 		Part textPart = t.createObject(Part.class);
@@ -378,7 +376,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 
 		Part htmlPart = t.createObject(Part.class);
@@ -461,7 +458,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 
 		Part htmlPart = t.createObject(Part.class);
@@ -566,7 +562,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("link");
 		construct.setName("Link (de)", 1);
 		construct.setName("Link (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 		Part urlPart = t.createObject(Part.class);
 
@@ -650,7 +645,6 @@ public class DirtingSandboxTest {
 		construct.setKeyword("ov");
 		construct.setName("blargh", 1);
 		construct.setName("blargh", 2);
-		construct.setIconName("blargh");
 		construct.getNodes().add(n);
 		construct.setAutoEnable(true);
 

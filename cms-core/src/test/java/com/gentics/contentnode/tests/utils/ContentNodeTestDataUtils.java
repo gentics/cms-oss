@@ -167,7 +167,6 @@ public class ContentNodeTestDataUtils {
 
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("icon");
 		construct.setKeyword(constructKeyword);
 		construct.setName(constructKeyword, 1);
 		if (node != null) {
@@ -267,7 +266,6 @@ public class ContentNodeTestDataUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("icon");
 		construct.setKeyword(constructKeyword);
 		construct.setName(constructKeyword, 1);
 		if (node != null) {
@@ -309,7 +307,6 @@ public class ContentNodeTestDataUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("icon");
 		construct.setKeyword(constructKeyword);
 		construct.setName(constructKeyword, 1);
 		construct.getNodes().add(node);
@@ -366,7 +363,6 @@ public class ContentNodeTestDataUtils {
 		Transaction t = TransactionManager.getCurrentTransaction();
 		Construct construct = t.createObject(Construct.class);
 		construct.setAutoEnable(true);
-		construct.setIconName("icon");
 		construct.setKeyword(constructKeyword);
 		construct.setName(constructKeyword, 1);
 		construct.getNodes().add(node);
@@ -880,7 +876,6 @@ public class ContentNodeTestDataUtils {
 		construct.setKeyword("constr");
 		construct.setName("Construct (de)", 1);
 		construct.setName("Construct (en)", 2);
-		construct.setIconName("icon.png");
 		construct.getNodes().add(node);
 
 		Part velPart = t.createObject(Part.class);

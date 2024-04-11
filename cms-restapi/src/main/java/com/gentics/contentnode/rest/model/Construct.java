@@ -35,11 +35,6 @@ public class Construct implements Serializable {
 	private String name;
 
 	/**
-	 * Icon of the construct
-	 */
-	private String icon;
-
-	/**
 	 * This construct may contain other tags
 	 */
 	private Boolean mayContainSubtags;
@@ -75,12 +70,6 @@ public class Construct implements Serializable {
 	private ConstructCategory category;
 
 	/**
-	 * Edit do (this is the do, that has to be used for filling tags based on this construct the old PHP way). Either 10008 (tag_fill.php)
-	 * for "normal" constructs or 17001 (ds_sel.php) if the construct contains an overview part
-	 */
-	Integer editdo;
-
-	/**
 	 * Creator of the folder
 	 */
 	private User creator;
@@ -99,11 +88,6 @@ public class Construct implements Serializable {
 	 * Date when the folder was modified the last time
 	 */
 	private int edate;
-
-	/**
-	 * Flag for using new tag editor
-	 */
-	private Boolean newEditor;
 
 	/**
 	 * URL to the external editor
@@ -136,11 +120,6 @@ public class Construct implements Serializable {
 	private String liveEditorTagName;
 
 	/**
-	 * The javascript "hopedit" hook which, if available, should replace the "hopedit" call.
-	 */
-	private String hopeditHook;
-
-	/**
 	 * Whether to open the tag editor immediately after inserting the construct.
 	 */
 	private boolean openEditorOnInsert;
@@ -171,17 +150,6 @@ public class Construct implements Serializable {
 	 */
 	public Construct setKeyword(String keyword) {
 		this.keyword = keyword;
-		return this;
-	}
-
-	/**
-	 * Sets the icon for this construct
-	 *
-	 * @param icon
-	 * @return fluent API
-	 */
-	public Construct setIcon(String icon) {
-		this.icon = icon;
 		return this;
 	}
 
@@ -345,15 +313,6 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Icon of this construct
-	 *
-	 * @return
-	 */
-	public String getIcon() {
-		return this.icon;
-	}
-
-	/**
 	 * Creator of the construct
 	 *
 	 * @return the creator
@@ -428,27 +387,6 @@ public class Construct implements Serializable {
 	}
 
 	/**
-	 * Edit do
-	 *
-	 * @return edit do
-	 */
-	public Integer getEditdo() {
-		return editdo;
-	}
-
-	/**
-	 * Set the edit do
-	 *
-	 * @param editdo
-	 *            edit do
-	 * @return fluent API
-	 */
-	public Construct setEditdo(Integer editdo) {
-		this.editdo = editdo;
-		return this;
-	}
-
-	/**
 	 * Category of the construct
 	 *
 	 * @return category
@@ -466,33 +404,6 @@ public class Construct implements Serializable {
 	 */
 	public Construct setCategory(ConstructCategory category) {
 		this.category = category;
-		return this;
-	}
-
-	/**
-	 * Flag for using the new Tag Editor
-	 * @return newEditor flag
-	 */
-	public Boolean getNewEditor() {
-		return newEditor;
-	}
-
-	/**
-	 * Flag for using the new Tag Editor
-	 * @return Optional of newEditor flag
-	 */
-	@JsonIgnore
-	public Optional<Boolean> getNewEditorOptional() {
-		return Optional.ofNullable(this.newEditor);
-	}
-
-	/**
-	 * Set the flag for new Tag Editor
-	 * @param newEditor flag
-	 * @return fluent API
-	 */
-	public Construct setNewEditor(Boolean newEditor) {
-		this.newEditor = newEditor;
 		return this;
 	}
 
@@ -656,25 +567,6 @@ public class Construct implements Serializable {
 	 */
 	public Construct setLiveEditorTagName(String liveEditorTagName) {
 		this.liveEditorTagName = liveEditorTagName;
-		return this;
-	}
-
-	/**
-	 * Javascript "hopedit" hook which, if available
-	 * should replace the "hopedit" call.
-	 * @return hopedit hook
-	 */
-	public String getHopeditHook() {
-		return hopeditHook;
-	}
-
-	/**
-	 * Set the hopedit hook
-	 * @param hopeditHook hook
-	 * @return fluent API
-	 */
-	public Construct setHopeditHook(String hopeditHook) {
-		this.hopeditHook = hopeditHook;
 		return this;
 	}
 

@@ -1,4 +1,3 @@
-export * from './construct-icon-normalizer/construct-icon-normalizer.pipe';
 export * from './duration/duration.pipe';
 export * from './entries/entries.pipe';
 export * from './filter/filter.pipe';

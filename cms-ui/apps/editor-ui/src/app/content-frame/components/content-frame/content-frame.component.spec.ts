@@ -48,7 +48,6 @@ import { BreadcrumbsService } from '../../../shared/providers/breadcrumbs.servic
 import { ApplicationStateService, EditorActionsService, FolderActionsService } from '../../../state';
 import { TestApplicationState } from '../../../state/test-application-state.mock';
 import { TagEditorService } from '../../../tag-editor';
-import { TagTypeIconPipe } from '../../pipes/tag-type-icon/tag-type-icon.pipe';
 import { CustomScriptHostService } from '../../providers/custom-script-host/custom-script-host.service';
 import { CustomerScriptService } from '../../providers/customer-script/customer-script.service';
 import { IFrameManager } from '../../providers/iframe-manager/iframe-manager.service';
@@ -501,7 +500,6 @@ describe('ContentFrame', () => {
                 MockTagEditorOverlayHost,
                 NodePropertiesFormComponent,
                 ItemStatusLabelComponent,
-                TagTypeIconPipe,
                 TestComponent,
                 mockPipes('i18n', 'i18nDate', 'filesize', 'replaceEscapedCharacters'),
             ],

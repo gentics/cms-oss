@@ -51,7 +51,6 @@ import {
 } from './components';
 import { contentFrameRoutes } from './content-frame.routes';
 import { ContentFrameGuard } from './guards';
-import { TagTypeIconPipe } from './pipes';
 import {
     AlohaIntegrationService,
     CustomerScriptService,
@@ -105,10 +104,6 @@ const COMPONENTS = [
     TableSizeSelectComponent,
 ];
 
-const PIPES = [
-    TagTypeIconPipe,
-];
-
 const PROVIDERS = [
     AlohaIntegrationService,
     CustomerScriptService,
@@ -140,7 +135,7 @@ const MODULE_INITIALIZER: Provider = {
         GenticsUICoreModule,
     ],
     exports: [],
-    declarations: [...COMPONENTS, ...PIPES],
+    declarations: [...COMPONENTS],
     providers: [...PROVIDERS, ...GUARDS, MODULE_INITIALIZER],
 })
 export class ContentFrameModule {}

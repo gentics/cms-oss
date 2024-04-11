@@ -71,7 +71,6 @@ public class RenderOverviewPreviewTest {
 
 		overviewConstruct = Builder.create(Construct.class, c -> {
 			c.setAutoEnable(true);
-			c.setIconName("");
 			c.setKeyword("overview");
 			c.setMayBeSubtag(true);
 			c.setName("Overview", 1);

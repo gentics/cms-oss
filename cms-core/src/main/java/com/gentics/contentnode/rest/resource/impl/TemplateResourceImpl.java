@@ -228,7 +228,6 @@ public class TemplateResourceImpl implements TemplateResource {
 			String tagName = tag.getName();
 			int constructId = tag.getConstructId();
 			String constructName = tag.getConstruct().getName().toString();
-			String constructIcon = tag.getConstruct().getIconName();
 
 			Map<Integer, AtomicInteger> pagesOutOfSync = getPagesOutOfSync(templateId, tagName, constructId);
 			int outOfSync = pagesOutOfSync.values().stream().mapToInt(AtomicInteger::get).sum();
@@ -242,7 +241,7 @@ public class TemplateResourceImpl implements TemplateResource {
 				}
 			}
 
-			return new TagStatus().setName(tagName).setConstructId(constructId).setConstructName(constructName).setConstructIcon(constructIcon)
+			return new TagStatus().setName(tagName).setConstructId(constructId).setConstructName(constructName)
 					.setInSync(getPagesInSync(templateId, tagName, constructId)).setMissing(getPagesMissing(templateId, tagName)).setOutOfSync(outOfSync)
 					.setIncompatible(incompatible);
 		}).filter(ResolvableFilter.get(filter, "name")).sort(ResolvableComparator.get(sort, "name")).page(paging).to(new TagStatusResponse());

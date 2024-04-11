@@ -73,7 +73,7 @@ public class DynamicUrlFactory extends AbstractRenderUrlFactory {
 				extension = page.getTemplate().getMarkupLanguage().getExtension();
 			}
 			String realViewMode = "newview";
-			if ((editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY || editMode == RenderType.EM_EDIT
+			if ((editMode == RenderType.EM_ALOHA || editMode == RenderType.EM_ALOHA_READONLY
 					|| editMode == RenderType.EM_PREVIEW)
 					&& !"css".equalsIgnoreCase(extension)
 					&& !"js".equalsIgnoreCase(extension)) {

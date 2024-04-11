@@ -73,12 +73,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		} else if (from.getName() != null) {
 			to.setName(from.getName(), 1);
 		}
-		if (from.getHopeditHook() != null) {
-			to.setHopeditHook(from.getHopeditHook());
-		}
-		if (from.getIcon() != null) {
-			to.setIconName(from.getIcon());
-		}
 		if (from.getKeyword() != null) {
 			to.setKeyword(from.getKeyword());
 		}
@@ -92,7 +86,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 			to.setConstructCategoryId(from.getCategoryId());
 		}
 		unwrap(()-> {
-			from.getNewEditorOptional().ifPresent(wrap(to::setNewEditor));
 			from.getAutoEnableOptional().ifPresent(wrap(to::setAutoEnable));
 			from.getMayContainSubtagsOptional().ifPresent(wrap(to::setMayContainSubtags));
 			from.getMayBeSubtagOptional().ifPresent(wrap(to::setMayBeSubtag));
@@ -146,8 +139,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setDescriptionI18n(I18NHelper.toI18nMap(from.getDescription()));
 		to.setNameI18n(I18NHelper.toI18nMap(from.getName()));
 		to.setKeyword(from.getKeyword());
-		to.setIcon(from.getIconName());
-		to.setEditdo(from.containsOverviewPart() ? 17001 : 10008);
 		to.setCreator(ModelBuilder.getUser(from.getCreator()));
 		to.setCdate(from.getCDate().getIntTimestamp());
 		to.setEditor(ModelBuilder.getUser(from.getEditor()));
@@ -158,7 +149,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setOpenEditorOnInsert(from.editOnInsert());
 		to.setEditorControlStyle(from.editorControlStyle());
 		to.setEditorControlsInside(from.editorControlInside());
-		to.setNewEditor(from.isNewEditor());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 		ConstructCategory category = from.getConstructCategory();
 
@@ -195,8 +185,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	public final static BiFunction<Construct, ConstructModel, ConstructModel> NODE2DEVTOOL = (from, to) -> {
 		to.setDescription(I18NHelper.toI18nMap(from.getDescription()));
 		to.setGlobalId(from.getGlobalId().toString());
-		to.setHopeditHook(from.getHopeditHook());
-		to.setIcon(from.getIconName());
 		to.setKeyword(from.getKeyword());
 		to.setLiveEditorTagName(from.getLiveEditorTagName());
 		to.setMayBeSubtag(from.mayBeSubtag());
@@ -206,7 +194,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		to.setEditorControlsInside(from.editorControlInside());
 		to.setAutoEnable(from.isAutoEnable());
 		to.setName(I18NHelper.toI18nMap(from.getName()));
-		to.setNewEditor(from.isNewEditor());
 		to.setExternalEditorUrl(from.getExternalEditorUrl());
 
 		unwrap(() -> {
@@ -304,29 +291,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 */
 	@FieldSetter("keyword")
 	public void setKeyword(String keyword) throws ReadOnlyException {
-		failReadOnly();
-	}
-
-	/**
-	 * get an icon of the construct.
-	 * @return the icon for this construct.
-	 */
-	public abstract Icon getIcon();
-
-	/**
-	 * Get the icon name
-	 * @return icon name
-	 */
-	@FieldGetter("icon")
-	public abstract String getIconName();
-
-	/**
-	 * Set icon name
-	 * @param iconName icon name
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("icon")
-	public void setIconName(String iconName) throws ReadOnlyException {
 		failReadOnly();
 	}
 
@@ -494,23 +458,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 		return false;
 	}
 
-	/**
-	 * returns the javascript "hopedit" hook which, if available
-	 * should replace the 'hopedit' call.
-	 */
-	@FieldGetter("hopedithook")
-	public abstract String getHopeditHook();
-
-	/**
-	 * Set the hopedit hook
-	 * @param hopeditHook hopedit hook
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("hopedithook")
-	public void setHopeditHook(String hopeditHook) throws ReadOnlyException {
-		failReadOnly();
-	}
-
 	/* (non-Javadoc)
 	 * @see com.gentics.contentnode.object.ValueContainer#resolvePartsWithShortCuts()
 	 */
@@ -533,24 +480,6 @@ public abstract class Construct extends ValueContainer implements Synchronizable
 	 */
 	@FieldSetter("liveeditortagname")
 	public void setLiveEditorTagName(String liveEditorTagName) throws ReadOnlyException {
-		failReadOnly();
-	}
-
-	/**
-	 * Check whether tags generated from this construct shall be edited with the new tag editor
-	 * @return newEditor flag
-	 * @throws NodeException
-	 */
-	@FieldGetter("new_editor")
-	public abstract boolean isNewEditor() throws NodeException;
-
-	/**
-	 * Set the newEditor flag
-	 * @param newEditor flag
-	 * @throws ReadOnlyException
-	 */
-	@FieldSetter("new_editor")
-	public void setNewEditor(boolean newEditor) throws ReadOnlyException {
 		failReadOnly();
 	}
 

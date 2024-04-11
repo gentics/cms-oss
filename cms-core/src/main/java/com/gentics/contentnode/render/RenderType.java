@@ -68,11 +68,6 @@ public class RenderType implements RenderInfo {
 	public final static int EM_LIVEPREVIEW = 5;
 
 	/**
-	 * edit mode for edit-mode
-	 */
-	public final static int EM_EDIT = 4;
-
-	/**
 	 * edit mode for Aloha
 	 */
 	public final static int EM_ALOHA = 8;
@@ -283,9 +278,6 @@ public class RenderType implements RenderInfo {
 		if ("portal".equals(editMode)) {
 			return EM_PORTAL;
 		}
-		if ("edit".equals(editMode)) {
-			return EM_EDIT;
-		}
 		if ("live".equals(editMode)) {
 			return EM_LIVEPREVIEW;
 		}
@@ -313,9 +305,6 @@ public class RenderType implements RenderInfo {
 
 		case EM_PORTAL:
 			return "portal";
-
-		case EM_EDIT:
-			return "edit";
 
 		case EM_ALOHA:
 			return "aloha";
@@ -354,10 +343,6 @@ public class RenderType implements RenderInfo {
 		case EM_PREVIEW:
 		case EM_LIVEPREVIEW:
 			renderType = new RenderType(editMode, true, false, renderer, null, versionTimestamp);
-			break;
-
-		case EM_EDIT:
-			renderType = new RenderType(editMode, false, false, renderer, null, versionTimestamp);
 			break;
 
 		case EM_PORTAL:

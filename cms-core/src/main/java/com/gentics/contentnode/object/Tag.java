@@ -459,19 +459,12 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 		boolean modifiedEditMode = false;
 
 		// TODO when the tag's main object is not the rendered root object, we disable editmode now
-		if (isEditable() && (editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA)) {
+		if (isEditable() && (editMode == RenderType.EM_ALOHA)) {
 			TagContainer container = getContainer();
 			StackResolvable rootObject = renderType.getRenderedRootObject();
 
 			if (rootObject instanceof TagContainer && !(tagContainersEqual(container, (TagContainer) rootObject))) {
-				if (editMode == RenderType.EM_EDIT) {
-					if (logger.isDebugEnabled()) {
-						logger.debug(
-								"rendering {" + this + "} in preview mode, since the tag container {" + container + "} is not rootObject {" + rootObject + "}.");
-					}
-					editMode = RenderType.EM_PREVIEW;
-					modifiedEditMode = true;
-				} else if (editMode == RenderType.EM_ALOHA) {
+				if (editMode == RenderType.EM_ALOHA) {
 					editMode = RenderType.EM_ALOHA_READONLY;
 					modifiedEditMode = true;
 					if (logger.isDebugEnabled()) {
@@ -481,8 +474,8 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 				}
 			}
 		}
-        
-		if (editMode == RenderType.EM_EDIT || editMode == RenderType.EM_ALOHA) {
+
+		if (editMode == RenderType.EM_ALOHA) {
 			// edit mode
 			if (!isEnabled() && !isUnclicked()) {
 				// do not render anything (neither code nor div) when already
@@ -641,65 +634,17 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 		StringBuffer js = new StringBuffer();
 		StringBuffer add = new StringBuffer();
-		String hopeditHook = getConstruct().getHopeditHook();
 		StringBuffer hopedit = new StringBuffer();
-        
-		if (!StringUtils.isEmpty(hopeditHook) && TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature("restapi")) {
-			// Very poor algorithm to get a unique name.. since it's enough 
-			// that it is unique for the current page render.
-			String uniqueName = "hopeditHook" + (uniqueCounter++);
-			StackResolvable rootObject = TransactionManager.getCurrentTransaction().getRenderType().getRenderedRootObject();
-			int objType = 0;
-			String objId = "";
 
-			if (rootObject instanceof Page) {
-				objType = Page.TYPE_PAGE;
-				objId = ((Page) rootObject).getId().toString();
-			} else if (rootObject instanceof Template) {
-				objType = Template.TYPE_TEMPLATE;
-				objId = ((Template) rootObject).getId().toString();
-			}
-			ret.append("<script language=\"JavaScript\">function ").append(uniqueName).append("(obj_type, tag_id, obj_id) {").append(hopeditHook).append(
-					"}</script>");
-			// TODO if function returns false, call hopedit ?
-			hopedit.append(uniqueName).append('(').append(objType).append(',').append(getId()).append(',').append(objId).append(");void(0);");
-		} else {
-			hopedit.append("hopedit('").append(url).append("');");
-		}
-        
-		if (!isInlineEditable() || !ContentNodeHelper.isSupereditEnabled()) {
-			// no liveeditor
-			js.append(hopedit);
-		} else {
-			// liveeditor
-			js.append("cn3_edit('").append(getName()).append("','');");
-			add.append(" ondblclick=\"").append(hopedit).append("\" ");
-		}
+		hopedit.append("hopedit('").append(url).append("');");
+
+		js.append(hopedit);
 
 		ret.append("<a href=\"javascript:").append(js).append("\" onmouseover=\"self.status='").append(getName());
 		ret.append(" (").append(StringUtils.escapeXML(getConstruct().getName().toString())).append(")");
 		ret.append("'; return true;\" onmouseout=\"self.status=''; return true;\" ").append(add).append(">");
-		Icon icon = getConstruct().getIcon();
 
-		if (icon != null) {
-			String cssclass = null;
-
-			if (TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature("display_tag_enable_status")) {
-				if (!isEnabled()) {
-					cssclass = "gentics_icon_invisible";
-				}
-			}
-			if (TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature("display_tag_valid_status")) {
-                                
-				for (Value value : getValues()) {
-					if (value.getPartType().isMandatoryAndNotFilledIn()) {
-						cssclass = "gentics_icon_invisible";
-						break;
-					}
-				}
-			}
-			ret.append(icon.getHTML(0, getName() + " (" + getConstruct().getName() + ")", null, null, null, null, null, cssclass));
-		} else if (getConstruct().getName() != null) {
+		if (getConstruct().getName() != null) {
 			ret.append(getName() + "(" + StringUtils.escapeXML(getConstruct().getName().toString()) + ")");
 		} else {
 			ret.append(getName());
@@ -717,15 +662,10 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 
 		// adapt when inline editable
 		prefix.append("<" + LiveEditorHelper.getLiveeditWrapperTagName(this) + " contenteditable=false id=t_").append(getName()).append(" class=\"lock\" ");
-		if (isInlineEditable() && ContentNodeHelper.isSupereditEnabled()) {
-			prefix.append("ondblclick=\"cn3_edit('").append(getName()).append(
-					"','');\" onclick=\"hide_context_menus(); return true;\" oncontextmenu=\"return displayMenu(this, false, event);\" ");
-		} else {
-			// If the element is not live editable stop the bubbling of events.
-			// This is necessary to disable javascript functions for not inline editable elements embedded in editable ones. (eg. context menu) 
-			prefix.append("oncontextmenu=\"stopBubble(event);\" ").append("onbeforepaste=\"stopBubble(event);\" ").append("onkeypress=\"stopBubble(event);\" ").append("onpaste=\"stopBubble(event);\" ").append("onkeydown=\"stopBubble(event);\" ").append("ondblclick=\"stopBubble(event);\" ").append("onkeyup=\"stopBubble(event);\" ").append(
-					"onclick=\"stopBubble(event);\" ");
-		}
+		// If the element is not live editable stop the bubbling of events.
+		// This is necessary to disable javascript functions for not inline editable elements embedded in editable ones. (eg. context menu) 
+		prefix.append("oncontextmenu=\"stopBubble(event);\" ").append("onbeforepaste=\"stopBubble(event);\" ").append("onkeypress=\"stopBubble(event);\" ").append("onpaste=\"stopBubble(event);\" ").append("onkeydown=\"stopBubble(event);\" ").append("ondblclick=\"stopBubble(event);\" ").append("onkeyup=\"stopBubble(event);\" ").append(
+				"onclick=\"stopBubble(event);\" ");
 		prefix.append(">");
     
 		return prefix.toString();      
@@ -740,16 +680,7 @@ public abstract class Tag extends ValueContainer implements ParserTag, NamedNode
 		postfix.append("</" + LiveEditorHelper.getLiveeditWrapperTagName(this) + ">");
 		return postfix.toString();
 	}
-    
-	/**
-	 * Helper method to quickly determine whether the liveeditor (aka superedit) is turned on
-	 * @return true when liveeditor is on, false if not
-	 * @throws NodeException
-	 */
-	protected boolean isLiveEditor() throws NodeException {
-		return TransactionManager.getCurrentTransaction().getRenderType().getPreferences().getFeature("superedit_page_270211");
-	}
-    
+
 	/**
 	 * Check whether the tag contains an _EDITABLE_ overview part or not
 	 * @return if at least one part is an overview, false if not

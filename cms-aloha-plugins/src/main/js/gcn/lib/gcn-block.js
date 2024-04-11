@@ -416,7 +416,7 @@ define([
 				Aloha.GCN.openTagFill(
 					$block.attr('data-gcn-tagid'),
 					$block.attr('data-gcn-pageid'),
-					true
+					{ withDelete: canBeDeleted}
 				);
 
 				// Aloha Blocks sets the

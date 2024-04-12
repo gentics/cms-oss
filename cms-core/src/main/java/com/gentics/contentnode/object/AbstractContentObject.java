@@ -316,15 +316,20 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 			return;
 		}
 		// when the event is MOVE, the property might contain the node, the object was moved FROM
-		if (Events.isEvent(eventMask, Events.MOVE) && !ObjectTransformer.isEmpty(property) && this instanceof LocalizableNodeObject<?>) {
+		if (Events.isEvent(eventMask, Events.MOVE) && !ObjectTransformer.isEmpty(property) && (this instanceof LocalizableNodeObject<?> || this instanceof Form)) {
 			// get the node id
 			int oldNodeId = ObjectTransformer.getInt(property[0], 0);
 
 			if (oldNodeId > 0) {
 				// get the current node id of the object
-				Node newNode = ((LocalizableNodeObject<?>) this).getChannel();
-				if (newNode == null) {
-					newNode = ((LocalizableNodeObject<?>) this).getOwningNode();
+				Node newNode;
+				if (this instanceof Form) {
+					newNode = ((Form) this).getOwningNode();
+				} else {
+					newNode = ((LocalizableNodeObject<?>) this).getChannel();
+					if (newNode == null) {
+						newNode = ((LocalizableNodeObject<?>) this).getOwningNode();
+					}
 				}
 
 				if (newNode != null) {
@@ -349,6 +354,14 @@ public abstract class AbstractContentObject implements NodeObject, Resolvable {
 								PublishQueue.dirtObject(file, Action.REMOVE, oldNodeId);
 								PublishQueue.dirtObject(file, Action.MOVE, newNodeId);
 							}
+
+							for (Form form : folder.getForms(null)) {
+								// form was removed from old node and moved to new node
+								PublishQueue.dirtObject(form, Action.REMOVE, oldNodeId);
+								PublishQueue.dirtObject(form, Action.MOVE, newNodeId);
+							}
+						} else if (this instanceof Form) {
+							PublishQueue.dirtObject(this, Action.MOVE, newNodeId);
 						}
 					}
 				}

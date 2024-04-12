@@ -74,7 +74,7 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
             startWith(null),
             switchMap(() => this.schedulerOps.status()),
         ).subscribe(res => {
-            this.publisherStatus = res.status.toUpperCase() as any;
+            this.publisherStatus = res.status;
             this.changeDetector.markForCheck();
         }));
     }

@@ -80,6 +80,7 @@ export interface FormQueuedActionRequestClear {
 export interface FormVersion {
 
     /** Version number */
+    // eslint-disable-next-line id-blacklist
     number: string;
 
     /** Version timestamp */
@@ -119,32 +120,6 @@ export interface FormTranslationStatus {
         version: string;
     };
 
-}
-
-/**
- * The user-editable properties of a Form object.
- */
-export interface EditableFormProps {
-    name?: string;
-    description?: string;
-    email?: string;
-    successPageId?: number;
-    successNodeId?: number;
-    mailsource_pageid?: number;
-    mailsource_nodeid?: number;
-    successurl_i18n?: CmsFormElementI18nValue<string>;
-
-    /**
-     * @deprecated old property, interpret as if all languages of successurl_i18n were set to this value
-     */
-    successurl?: string;
-
-    mailsubject_i18n?: CmsFormElementI18nValue<string>;
-    mailtemp_i18n?: CmsFormElementI18nValue<string>;
-    elements?: CmsFormElement[];
-    languages?: string[];
-    templateContext?: string;
-    type?: CmsFormType;
 }
 
 /**
@@ -247,6 +222,13 @@ export interface FormBO<T extends ModelType = DefaultModelType> extends FormBase
     /** Inner form data */
     data: CmsFormDataBO;
 }
+
+/**
+ * The user-editable properties of a Form object.
+ */
+export type EditableFormProps = Partial<Pick<Form, 'name' | 'description' | 'languages' | 'successNodeId' | 'successPageId'>> & {
+    data?: Partial<CmsFormData>;
+};
 
 
 /**

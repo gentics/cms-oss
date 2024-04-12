@@ -8,20 +8,22 @@
             [autofocus]="mode === 'create'"
         ></gtx-input>
 
-        <gtx-select
-            [label]="('editor.item_type_label' | i18n) + '*'"
-            formControlName="type"
-            [gtxDisabled]="disabled"
-            required
-            [multiple]="false"
-        >
-            <gtx-option
-                *ngFor="let formType of formTypes"
-                [value]="formType"
+        <ng-container formGroupName="data">
+            <gtx-select
+                [label]="('editor.item_type_label' | i18n) + '*'"
+                formControlName="type"
+                [gtxDisabled]="disabled"
+                required
+                [multiple]="false"
             >
-                {{ 'gtxFormGenerator.form_type_' + (formType | lowercase) | i18n }}
-            </gtx-option>
-        </gtx-select>
+                <gtx-option
+                    *ngFor="let formType of CMS_FORM_TYPES"
+                    [value]="formType"
+                >
+                    {{ 'gtxFormGenerator.form_type_' + (formType | lowercase) | i18n }}
+                </gtx-option>
+            </gtx-select>
+        </ng-container>
 
         <gtx-input
             [label]="'editor.item_description_label' | i18n"
@@ -29,36 +31,38 @@
             [gtxDisabled]="disabled"
         ></gtx-input>
 
-        <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
-            <gtx-select
-                [label]="('editor.item_template_context_label' | i18n) + '*'"
-                formControlName="templateContext"
-                [gtxDisabled]="disabled"
-                [multiple]="false"
-                [required]="true"
-            >
-                <gtx-option
-                    *ngFor="let option of formPropertiesConfiguration.template_context_options"
-                    [value]="option.key"
+        <ng-container formGroupName="data">
+            <ng-container *ngIf="formPropertiesConfiguration.template_context_options; else noTemplateContextOptions">
+                <gtx-select
+                    [label]="('editor.item_template_context_label' | i18n) + '*'"
+                    formControlName="templateContext"
+                    [gtxDisabled]="disabled"
+                    [multiple]="false"
+                    [required]="true"
                 >
-                    {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
-                </gtx-option>
-            </gtx-select>
-        </ng-container>
+                    <gtx-option
+                        *ngFor="let option of formPropertiesConfiguration.template_context_options"
+                        [value]="option.key"
+                    >
+                        {{ option.value_i18n_ui | i18nfg$:'ui' | async }}
+                    </gtx-option>
+                </gtx-select>
+            </ng-container>
 
-        <ng-template #noTemplateContextOptions>
+            <ng-template #noTemplateContextOptions>
+                <gtx-input
+                    [label]="'editor.item_template_context_label' | i18n"
+                    formControlName="templateContext"
+                    [gtxDisabled]="disabled"
+                ></gtx-input>
+            </ng-template>
+
             <gtx-input
-                [label]="'editor.item_template_context_label' | i18n"
-                formControlName="templateContext"
+                [label]="'editor.item_email_label' | i18n"
+                formControlName="email"
                 [gtxDisabled]="disabled"
             ></gtx-input>
-        </ng-template>
-
-        <gtx-input
-            [label]="'editor.item_email_label' | i18n"
-            formControlName="email"
-            [gtxDisabled]="disabled"
-        ></gtx-input>
+        </ng-container>
 
         <gtx-input
             class="hidden-input"
@@ -74,19 +78,22 @@
             [gtxDisabled]="disabled"
         ></gtx-input>
 
-        <gtx-input
-            class="hidden-input"
-            type="number"
-            formControlName="mailsource_pageid"
-            [gtxDisabled]="disabled"
-        ></gtx-input>
+        <ng-container formGroupName="data">
+            <gtx-input
+                class="hidden-input"
+                type="number"
+                formControlName="mailsource_pageid"
+                [gtxDisabled]="disabled"
+            ></gtx-input>
 
-        <gtx-input
-            class="hidden-input"
-            type="number"
-            formControlName="mailsource_nodeid"
-            [gtxDisabled]="disabled"
-        ></gtx-input>
+            <gtx-input
+                class="hidden-input"
+                type="number"
+                formControlName="mailsource_nodeid"
+                [gtxDisabled]="disabled"
+            ></gtx-input>
+        </ng-container>
+
 
         <gtx-select
             *ngIf="isMultiLang"
@@ -104,7 +111,7 @@
             </gtx-option>
         </gtx-select>
 
-        <ng-container *ngIf="showDetailProperties">
+        <ng-container *ngIf="showDetailProperties" formGroupName="data">
 
             <h3
                 *ngIf="languages?.length > 1"
@@ -120,7 +127,10 @@
             ></gtx-i18n-input>
 
             <ng-container *ngIf="formPropertiesConfiguration.admin_mail_options; else noAdminMailOptions">
-                <gtx-radio-group formControlName="useEmailPageTemplate">
+                <gtx-radio-group
+                    [value]="useEmailPageTemplate"
+                    (valueChange)="updateEmailTemplate($event)"
+                >
                     <gtx-radio-button
                         [label]="'editor.item_localized_mail_custom' | i18n"
                         [disabled]="disabled"
@@ -163,7 +173,6 @@
                         <gtx-i18n-select
                             [language]="activeFormLanguageCode$ | async"
                             [availableLanguages]="properties.languages"
-                            [disabled]="disabled || !!useEmailPageTemplate"
                             (change)="setEmailTemplateOption($event)"
                             formControlName="mailtemp_i18n"
                         >
@@ -191,13 +200,16 @@
 
         <hr/>
 
-        <ng-container gtx-radio-group formControlName="useInternalSuccessPage">
+        <ng-container
+            gtx-radio-group
+            [value]="useInternalSuccessPage"
+            (valueChange)="updateInternalSuccessPage($event)"
+        >
             <gtx-radio-button
                 [label]="'editor.internal_page' | i18n"
                 [disabled]="disabled"
                 [value]="true"
-                (change)="setRadioState('useInternalSuccessPage', true)">
-            </gtx-radio-button>
+            ></gtx-radio-button>
 
             <div
                 class="confirmation-page-setting"
@@ -223,11 +235,11 @@
                 [label]="'editor.external_url' | i18n"
                 [disabled]="disabled"
                 [value]="false"
-                (change)="setRadioState('useInternalSuccessPage', false)">
-            </gtx-radio-button>
+            ></gtx-radio-button>
 
             <div
                 class="confirmation-page-setting"
+                formGroupName="data"
                 [ngClass]="{
                     'confirmation-page-setting--active': !useInternalSuccessPage,
                     'confirmation-page-setting--inactive': !!useInternalSuccessPage

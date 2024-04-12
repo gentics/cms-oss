@@ -5,6 +5,33 @@ import static com.gentics.contentnode.rest.util.MiscUtils.checkBodyWithFunction;
 import static com.gentics.contentnode.rest.util.MiscUtils.load;
 import static com.gentics.contentnode.rest.util.MiscUtils.require;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.db.DBUtils;
@@ -15,6 +42,8 @@ import com.gentics.contentnode.etc.ContentNodeHelper;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.etc.Function;
 import com.gentics.contentnode.etc.TriFunction;
+import com.gentics.contentnode.events.Events;
+import com.gentics.contentnode.events.TransactionalTriggerEvent;
 import com.gentics.contentnode.exception.RestMappedException;
 import com.gentics.contentnode.factory.AnyChannelTrx;
 import com.gentics.contentnode.factory.Transaction;
@@ -71,31 +100,6 @@ import com.gentics.contentnode.rest.util.PermFilter;
 import com.gentics.contentnode.rest.util.ResolvableComparator;
 import com.gentics.contentnode.runtime.NodeConfigRuntimeConfiguration;
 import com.gentics.contentnode.staging.StagingUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Resource implementation for forms
@@ -621,6 +625,11 @@ public class FormResourceImpl extends AbstractContentNodeResource implements For
 
 			FormResponse response = new FormResponse(TRANSFORM2REST.apply(form.reload()),
 					ResponseInfo.ok("Successfully moved form"));
+
+			if (!Objects.equals(sourceNode, targetNode)) {
+				String[] oldNodeProps = new String[] {Integer.toString(sourceNode.getId())};
+				t.addTransactional(new TransactionalTriggerEvent(Form.class, form.getId(), oldNodeProps, Events.MOVE));
+			}
 
 			trx.success();
 			return response;

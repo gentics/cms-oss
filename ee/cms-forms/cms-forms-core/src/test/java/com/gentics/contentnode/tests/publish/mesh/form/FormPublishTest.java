@@ -11,17 +11,21 @@ import static com.gentics.contentnode.tests.utils.ContentNodeRESTUtils.getPageRe
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.create;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createChannel;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createFolder;
+import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createNode;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.createPage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getLanguage;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.getPartType;
 import static com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.update;
 import static com.gentics.contentnode.tests.utils.FormRESTUtils.getFormResource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,10 +35,14 @@ import org.junit.experimental.categories.Category;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gentics.api.lib.exception.NodeException;
+import com.gentics.contentnode.db.DBUtils;
 import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.exception.RestMappedException;
+import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Construct;
+import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.Folder;
 import com.gentics.contentnode.object.Form;
@@ -45,10 +53,13 @@ import com.gentics.contentnode.publish.mesh.FormsPluginStatusResponse;
 import com.gentics.contentnode.publish.mesh.MeshPublisher;
 import com.gentics.contentnode.rest.model.ContentRepositoryModel.Status;
 import com.gentics.contentnode.rest.model.form.FormModel;
+import com.gentics.contentnode.rest.model.form.FormResponse;
 import com.gentics.contentnode.rest.model.response.ContentRepositoryResponse;
 import com.gentics.contentnode.rest.model.response.PageLoadResponse;
+import com.gentics.contentnode.rest.model.response.ResponseCode;
 import com.gentics.contentnode.tests.category.MeshTest;
 import com.gentics.contentnode.tests.utils.ContentNodeRESTUtils;
+import com.gentics.contentnode.tests.utils.ContentNodeTestDataUtils.PublishTarget;
 import com.gentics.contentnode.tests.utils.Expected;
 import com.gentics.contentnode.tests.utils.TestedType;
 import com.gentics.contentnode.testutils.GCNFeature;
@@ -60,7 +71,6 @@ import com.gentics.contentnode.testutils.GCNFeature;
 @GCNFeature(set = { Feature.FORMS, Feature.MESH_CONTENTREPOSITORY, Feature.MULTICHANNELLING, Feature.WASTEBIN, Feature.DISABLE_INSTANT_DELETE })
 @Category(MeshTest.class)
 public class FormPublishTest extends AbstractFormPublishTest {
-
 	/**
 	 * Test whether the forms plugin is activated for the project
 	 * @throws Exception
@@ -77,6 +87,88 @@ public class FormPublishTest extends AbstractFormPublishTest {
 		FormsPluginStatusResponse response = mesh.client().get("/Node/plugins/forms/active", FormsPluginStatusResponse.class)
 				.blockingGet();
 		assertThat(response.getActive()).as("Activation status").isTrue();
+	}
+
+	/**
+	 * Test moving contents from a folder and then deleting that folder
+	 * @throws Exception
+	 */
+	@Test
+	public void testMoveContentsIntoOtherNode() throws Exception {
+		// create other unattended node
+		Node otherNode1 = Trx.supply(() -> {
+			Map<String, ContentLanguage> languages = Trx.supply(() -> {
+				Transaction t = TransactionManager.getCurrentTransaction();
+				return t.getObjects(ContentLanguage.class, DBUtils.select("SELECT id FROM contentgroup", DBUtils.IDS)).stream()
+						.collect(Collectors.toMap(ContentLanguage::getCode, Function.identity()));
+			});
+			Node node = createNode("otherNode", "OtherNode", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en"));
+			node.activateFeature(Feature.FORMS);
+			return node;
+		});
+
+		try {
+			Node otherNode = update(otherNode1, n -> {
+				n.setContentrepositoryId(crId);
+				n.activateFeature(Feature.FORMS);
+			});
+
+			Trx.operate(trx -> {
+				template.getNodes().add(otherNode);
+				formConstruct.getNodes().add(otherNode);
+				trx.getObject(Construct.class, vtlConstructId).getNodes().add(otherNode);
+			});
+
+			Form form = supply(() -> create(Form.class, f -> {
+				f.setName("Test Form");
+				f.setLanguages(Arrays.asList("de", "en"));
+				f.setFolderId(node.getFolder().getId());
+
+				try {
+					f.setData(mapper.readValue(getClass().getResource("form_data.json"), ObjectNode.class));
+				} catch (IOException e) {
+					throw new NodeException(e);
+				}
+			}));
+			consume(Form::publish, form);
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			for (String language : Arrays.asList("de", "en")) {
+				operate(() -> assertObject("", mesh.client(), MeshPublisher.getMeshProjectName(node), null, form, language,
+						true, response -> {
+							assertThat(response.getProject().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(node));
+						}));
+			}
+
+			// move form to other node
+			Form sameFormOtherNode = supply(trx -> {
+				FormResponse result = getFormResource().move(form.getGlobalId().toString(), otherNode.getFolder().getGlobalId().toString());
+				assertThat(result.getResponseInfo().getResponseCode()).isEqualTo(ResponseCode.OK);
+				return trx.getObject(Form.class, form.getId());
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			for (String language : Arrays.asList("de", "en")) {
+				operate(() -> assertObject("", mesh.client(), "OtherNode", null, sameFormOtherNode, language,
+						true, response -> {
+							assertThat(response.getProject().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(otherNode));
+						}));
+			}
+		} finally {
+			operate(() -> otherNode1.delete(true));
+		}
 	}
 
 	/**

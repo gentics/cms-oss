@@ -125,14 +125,15 @@ export class MasonryGridComponent implements AfterContentInit, OnDestroy, AfterC
     }
 
     private triggerLayoutWhenItemSizeChanges(): void {
-        const changeSub = this.items.changes.subscribe((items) => {
+        const changeSub = this.items.changes.subscribe((items: MasonryItemDirective[]) => {
             this.itemOutputSubscriptions.unsubscribe();
             this.itemOutputSubscriptions = new Subscription();
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             items.forEach((item) => {
-                this.itemOutputSubscriptions.add(item.heightChange.subscribe(() => {
+                this.itemOutputSubscriptions.add(item.sizeChange.subscribe(() => {
                     this.anyItemChangedInSize = true;
+                    this.triggerLayout();
                 }));
             });
         });

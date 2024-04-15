@@ -689,7 +689,10 @@ export class FolderContentsComponent implements OnInit, OnDestroy {
     }
 
     uploadFiles(files: File[]): void {
-        this.uploadConflictService.uploadFilesWithConflictsCheck(files, this.activeNodeId, this.currentFolderId);
+        this.subscriptions.push(this.uploadConflictService
+            .uploadFilesWithConflictsCheck(files, this.activeNodeId, this.currentFolderId)
+            .subscribe(),
+        );
     }
 
     goToBaseFolder(): void {

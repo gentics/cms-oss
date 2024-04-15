@@ -183,3 +183,6 @@ export interface ContentRepositoryBO<T extends ModelType = DefaultModelType> ext
     /** Internal ID of the object property definition */
     id: string;
 }
+
+export type EditableContentRepositoryProperties = Omit<ContentRepository,
+'id' | 'globalId' | 'checkDate' | 'checkStatus' | 'checkResult' | 'statusDate' | 'dataStatus' | 'dataCheckResult'>;

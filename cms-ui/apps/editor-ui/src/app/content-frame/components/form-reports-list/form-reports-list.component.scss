@@ -23,6 +23,7 @@ $gtx-form-report-table-border-color: #ddd;
         margin: 0 1rem;
         gap: 0.5rem 0.25rem;
         flex-direction: row;
+        flex-wrap: wrap;
 
         .download-button,
         .generate-button {

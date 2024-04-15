@@ -134,7 +134,10 @@ describe('FormPropertiesForm', () => {
 
         it('useEmailPageTemplate should only be true if mailsource_pageid is set',
             componentTest(() => FormPropertiesFormComponent, (fixture, instance) => {
-                instance.properties.mailtemp_i18n = undefined;
+                if (instance.properties.data == null) {
+                    instance.properties.data = {};
+                }
+                instance.properties.data.mailtemp_i18n = undefined;
                 spyOn(instance, 'initSelectedItemHelper').and.returnValue(new MockSelectedItemHelper() as any);
                 spyOn(instance, 'trackDisplayValue').and.returnValue(of('page'));
 
@@ -147,9 +150,9 @@ describe('FormPropertiesForm', () => {
                         instance.setEmailTemplatePage(selectedTemplatePage);
                     });
                 tick();
-                expect(instance.formGroup.get('useEmailPageTemplate').value).toBeTruthy();
+                expect(instance.useEmailPageTemplate).toBeTruthy();
 
-                instance.properties.mailtemp_i18n = null;
+                instance.properties.data.mailtemp_i18n = null;
 
                 callRepositoryBrowser(TEST_PAGE_WITH_NO_VALUES);
                 repositoryBrowserClient.openRepositoryBrowser(options)
@@ -159,7 +162,7 @@ describe('FormPropertiesForm', () => {
                 tick();
                 fixture.detectChanges();
 
-                expect(instance.formGroup.get('useEmailPageTemplate').value).toBeFalsy();
+                expect(instance.useEmailPageTemplate).toBeFalsy();
                 flush();
             }),
         );
@@ -176,7 +179,7 @@ describe('FormPropertiesForm', () => {
                         instance.setEmailTemplatePage(selectedTemplatePage);
                     });
                 tick();
-                expect(instance.formGroup.get('mailsource_pageid').value).toBe(111);
+                expect(instance.dataGroup.controls.mailsource_pageid.value).toBe(111);
             }),
         );
     })

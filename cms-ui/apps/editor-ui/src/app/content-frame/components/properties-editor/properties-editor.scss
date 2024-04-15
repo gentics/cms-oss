@@ -2,8 +2,6 @@
 
 :host {
     display: block;
-    // A width $small-screen is just not enough to fit the custom edited date label on one line in German.
-    max-width: $small-screen + 20px;
     padding: 24px;
 }
 

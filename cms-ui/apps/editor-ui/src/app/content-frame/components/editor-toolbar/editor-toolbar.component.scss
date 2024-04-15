@@ -68,6 +68,7 @@
         display: flex;
         font-size: 14px;
         max-height: 2rem;
+        overflow: hidden;
 
         gtx-breadcrumbs {
             line-height: 1rem;
@@ -93,6 +94,7 @@
 
                         .lastPart {
                             margin: auto 0;
+                            word-break: keep-all;
                         }
                     }
 
@@ -246,6 +248,9 @@
 }
 
 @media (max-width: $aloha-size-tablet-max) {
+    .editor-toolbar .element-toolbar.regular {
+        padding-left: 0;
+    }
 
     .toolbar-actions .item-status::ng-deep .label-wrapper,
     .element-toolbar .save-button-label,
@@ -260,6 +265,10 @@
 
     .element-toolbar .save-button-icon {
         margin-right: 0;
+    }
+
+    .element-toolbar .breadcrumb-info gtx-breadcrumbs::ng-deep .multiline .inner-wrapper {
+        margin-left: 0;
     }
 }
 

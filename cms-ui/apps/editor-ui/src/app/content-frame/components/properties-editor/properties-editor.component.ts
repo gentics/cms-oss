@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { AfterViewInit, ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange } from '@angular/core';
 import { EditableProperties } from '@editor-ui/app/common/models';
 import {
+    CmsFormData,
     EditableFileProps,
     EditableFolderProps,
-    EditableFormProps,
     EditableNodeProps,
     EditablePageProps,
     FileOrImage,
@@ -137,7 +138,7 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                 } as EditableFolderProps;
 
             case 'form':{
-                let dataProperties: Partial<EditableFormProps> = {};
+                let dataProperties: Partial<CmsFormData> = {};
                 if ((item as Form).data) {
                     dataProperties = {
                         email: (item as Form).data.email,
@@ -159,8 +160,8 @@ export class PropertiesEditor implements OnInit, OnChanges, AfterViewInit {
                     languages: (item as Form).languages,
                     successPageId: (item as Form).successPageId,
                     successNodeId: (item as Form).successNodeId,
-                    ...dataProperties,
-                } as EditableFormProps;
+                    data: dataProperties,
+                };
             }
 
             case 'page':

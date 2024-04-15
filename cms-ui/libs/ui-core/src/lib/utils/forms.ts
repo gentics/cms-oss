@@ -1,14 +1,14 @@
-import { AbstractControl, UntypedFormGroup, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, UntypedFormGroup, ValidatorFn } from '@angular/forms';
 import { JSON_VALUE_INVALID } from '../common';
 
-export function setControlsEnabled(
-    group: UntypedFormGroup,
-    controls: string[],
+export function setControlsEnabled<T = any>(
+    group: FormGroup<FormProperties<T>>,
+    controls: (keyof T)[],
     enabled: boolean,
     options?: { emitEvent?: boolean, onlySelf?: boolean },
 ): void {
     for (const ctlName of controls) {
-        const ctl = group.get(ctlName);
+        const ctl = group.get(ctlName as any);
         if (ctl == null) {
             continue;
         }

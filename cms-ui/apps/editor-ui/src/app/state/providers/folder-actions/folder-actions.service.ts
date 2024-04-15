@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core';
 import { UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
@@ -1628,22 +1629,12 @@ export class FolderActionsService {
             description: properties.description,
             successPageId: properties.successPageId,
             successNodeId: properties.successNodeId,
-            data: {
-                email: properties.email,
-                successurl_i18n: properties.successurl_i18n, /* old successurl value is removed upon saving form !properties! */
-                mailsubject_i18n: properties.mailsubject_i18n,
-                mailtemp_i18n: properties.mailtemp_i18n,
-                mailsource_pageid: properties.mailsource_pageid,
-                mailsource_nodeid: properties.mailsource_nodeid,
-                templateContext: properties.templateContext,
-                type: properties.type,
-                elements: properties.elements,
-            },
+            data: properties.data,
         };
         return this.updateItem(
             'form',
             formId,
-            formProps,
+            formProps as any,
             {},
             postUpdateBehavior,
         );

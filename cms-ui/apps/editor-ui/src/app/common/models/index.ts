@@ -1,5 +1,5 @@
 import { GcmsNormalizationSchemas } from '@gentics/cms-models/models/gcms-normalizer/schemas';
-import { RequestFailedError } from '@gentics/cms-rest-client';
+import { GCMSRestClientRequestError } from '@gentics/cms-rest-client';
 import { FileCreateRequest, FileUploadResponse, Image, File as CMSFile } from '@gentics/cms-models';
 
 export * from './actions';
@@ -59,7 +59,7 @@ export interface UploadResponse {
     request?: FileCreateRequest;
     /** If it was successfull. */
     successfull: boolean;
-    error?: RequestFailedError;
+    error?: GCMSRestClientRequestError;
     response?: FileUploadResponse;
     item?: CMSFile | Image;
 }

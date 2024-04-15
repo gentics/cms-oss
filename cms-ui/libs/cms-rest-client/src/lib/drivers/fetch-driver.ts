@@ -1,5 +1,5 @@
 import { Response as GCMSResponse } from '@gentics/cms-models';
-import { RequestFailedError } from '../errors';
+import { GCMSRestClientRequestError } from '../errors';
 import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse } from '../models';
 import { validateResponseObject } from '../utils';
 
@@ -19,7 +19,7 @@ async function parseErrorFromAPI<T>(request: GCMSRestClientRequest, res: Respons
         bodyError = err;
     }
 
-    throw new RequestFailedError(
+    throw new GCMSRestClientRequestError(
         `Request "${request.method} ${request.url}" responded with error code ${res.status}: "${res.statusText}"`,
         request,
         res.status,

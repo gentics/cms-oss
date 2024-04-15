@@ -451,7 +451,7 @@ export class GCMSRestClient implements GCMSRootAPI {
         list: (options) => this.executeMappedJsonRequest(GET, '/folder', null, options),
         create: (body) => this.executeMappedJsonRequest(POST, '/folder/create', body),
         get: (id, options) => this.executeMappedJsonRequest(GET, `/folder/load/${id}`, null, options),
-        getMultiple: (body) => this.executeMappedJsonRequest(GET, '/folder/load', body),
+        getMultiple: (body) => this.executeMappedJsonRequest(POST, '/folder/load', body),
         update: (id, body) => this.executeMappedJsonRequest(POST, `/folder/save/${id}`, body),
         delete: (id, options) => this.executeMappedJsonRequest(POST, `/folder/delete/${id}`, options),
 

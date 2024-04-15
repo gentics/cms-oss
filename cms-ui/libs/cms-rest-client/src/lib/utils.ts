@@ -1,5 +1,5 @@
 import { EmbedListOptions, PagingSortOption, Response, ResponseCode } from '@gentics/cms-models';
-import { RequestFailedError } from './errors';
+import { GCMSRestClientRequestError } from './errors';
 import { GCMSRestClientRequest } from './models';
 
 export function toRelativePath(path: string): string {
@@ -91,7 +91,7 @@ export function validateResponseObject(request: GCMSRestClientRequest, response:
     }
 
     if (response.responseInfo.responseCode !== 'OK') {
-        throw new RequestFailedError(
+        throw new GCMSRestClientRequestError(
             response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
             request,
             codeToHttpCode[response.responseInfo.responseCode],

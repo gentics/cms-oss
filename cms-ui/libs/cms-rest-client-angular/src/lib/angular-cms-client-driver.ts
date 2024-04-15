@@ -1,7 +1,7 @@
 import {HttpClient, HttpErrorResponse, HttpHeaders, HttpParams} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Response as GCMSResponse } from '@gentics/cms-models';
-import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse, RequestFailedError, validateResponseObject } from '@gentics/cms-rest-client';
+import { GCMSClientDriver, GCMSRestClientRequest, GCMSRestClientResponse, GCMSRestClientRequestError, validateResponseObject } from '@gentics/cms-rest-client';
 import { Observable, OperatorFunction, Subscription, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { NGGCMSRestClientResponse } from './models';
@@ -108,7 +108,7 @@ export class AngularGCMSClientDriver implements GCMSClientDriver {
             }
 
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-            return throwError(new RequestFailedError(
+            return throwError(new GCMSRestClientRequestError(
                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                 `Request "${request.method} ${request.url}" responded with error code ${err.status}: "${err.statusText}"`,
                 request,

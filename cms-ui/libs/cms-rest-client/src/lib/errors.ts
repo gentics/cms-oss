@@ -1,7 +1,7 @@
 import { Response } from '@gentics/cms-models';
 import { GCMSRestClientRequest } from './models';
 
-export class RequestFailedError extends Error {
+export class GCMSRestClientRequestError extends Error {
 
     constructor(
         message: string,

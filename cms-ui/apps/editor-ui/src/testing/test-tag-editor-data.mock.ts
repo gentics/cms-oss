@@ -111,7 +111,6 @@ export function mockEditableTag<T extends TagPartProperty>(tagPropInfos: MockTag
         id: typeof tagTypeInfo.id === 'number' ? tagTypeInfo.id : 4711,
         keyword: tagTypeInfo.keyword || 'test_tagtype',
         name: tagTypeInfo.name || 'Test Tag',
-        icon: tagTypeInfo.icon || 'tag.gif',
         parts: [],
     };
 

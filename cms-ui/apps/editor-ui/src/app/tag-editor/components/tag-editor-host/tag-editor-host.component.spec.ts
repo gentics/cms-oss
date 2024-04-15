@@ -20,6 +20,7 @@ import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-edi
 import { IFrameWrapperComponent } from '../iframe-wrapper/iframe-wrapper.component';
 import { TagPropertyEditorHostComponent } from '../tag-property-editor-host/tag-property-editor-host.component';
 import { TagEditorHostComponent } from './tag-editor-host.component';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 
 describe('TagEditorHostComponent', () => {
 
@@ -31,6 +32,7 @@ describe('TagEditorHostComponent', () => {
                 IFrameStylesService,
                 UserAgentRef,
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 CustomTagEditorHostComponent,
@@ -363,4 +365,10 @@ class TestComponent {
 
 class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
+}
+
+class MockI18nService implements Partial<I18nService> {
+    translate(key: string | string[], params?: any): string {
+        return key as string;
+    }
 }

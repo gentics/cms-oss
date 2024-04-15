@@ -2,7 +2,7 @@ import { Component, ComponentRef, ViewChild } from '@angular/core';
 import { TestBed, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
+import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import {
@@ -50,6 +50,7 @@ describe('GenticsTagEditorComponent', () => {
                 { provide: ErrorHandler, useClass: MockErrorHandlerService },
                 { provide: TagEditorService, useClass: MockTagEditorService },
                 { provide: ApplicationStateService, useClass: TestApplicationState },
+                { provide: I18nService, useClass: MockI18nService },
             ],
             declarations: [
                 GenticsTagEditorComponent,
@@ -1133,4 +1134,10 @@ class MockTagEditorService {
 
 class MockErrorHandlerService {
     catch(error: Error, options?: { notification: boolean }): void { }
+}
+
+class MockI18nService implements Partial<I18nService> {
+    translate(key: string | string[], params?: any): string {
+        return key as string;
+    }
 }

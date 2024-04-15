@@ -54,8 +54,8 @@ export class ProjectPropertiesComponent extends BasePropertiesComponent<Editable
     }
 
     protected updateFormModeControls(): void {
-        setControlsEnabled(
-            this.form,
+        setControlsEnabled<ProjectCreateRequest>(
+            this.form as any,
             ['schema', 'hostname', 'pathPrefix', 'ssl'],
             this.mode === ProjectPropertiesMode.CREATE,
             { emitEvent: false },

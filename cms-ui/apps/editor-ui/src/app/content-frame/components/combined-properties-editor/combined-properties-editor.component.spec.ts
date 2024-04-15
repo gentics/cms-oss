@@ -272,7 +272,7 @@ describe('CombinedPropertiesEditorComponent', () => {
                 expect((tabs[0].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.general_properties_label');
                 expect((tabs[1].nativeElement as HTMLElement).innerText.toLowerCase()).toEqual('editor.tag_list_label');
                 // 'code' and 'info' in this is the material icon name which is being rendered before.
-                const expectedTabLabels = mockObjPropsSorted.map(tag => `codeinfo${tag.displayName}`);
+                const expectedTabLabels = mockObjPropsSorted.map(tag => `info${tag.displayName}`);
                 const actualTabLabels = tabs.slice(2).map(tab => tab.nativeElement.textContent.toLowerCase().trim());
                 expect(actualTabLabels).toEqual(expectedTabLabels);
             }),

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
-import { RecentItem } from '@editor-ui/app/common/models';
-import { Favourite, GcmsUiLanguage, ItemType, SortField } from '@gentics/cms-models';
-import { cloneDeep, flatten, isEqual, merge } from 'lodash-es';
-import { Observable, combineLatest, forkJoin } from 'rxjs';
+import { RecentItem, plural } from '@editor-ui/app/common/models';
+import { Favourite, GcmsUiLanguage, ItemInNode, ItemType, SortField } from '@gentics/cms-models';
+import { isEqual, merge } from 'lodash-es';
+import { Observable, forkJoin } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { deepEqual } from '../../../common/utils/deep-equal';
 import { environment as ENVIRONMENT_TOKEN } from '../../../development/development-tools';
@@ -570,7 +570,7 @@ export class UserSettingsService {
             });
         });
 
-        const existingList$ = combineLatest(itemRequests).toPromise();
+        const existingList$ = forkJoin(itemRequests).toPromise();
 
         /* Filter the original favourites list by nodeId and id then return as a Promise */
         return existingList$.then(checkItems => {
@@ -578,50 +578,39 @@ export class UserSettingsService {
                 return [];
             }
 
-            const existingItems = flatten(
-                checkItems.map((item: any) =>
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-                    item.map((existingItem: any) => {
-                        // when existing item is a root folder, API returns type as 'channel', change it to 'folder'
-                        return {
-                            ...existingItem,
-                            ...(existingItem.type === 'channel' && {
-                                type: 'folder',
-                            }),
-                        }
-                    }).map((existingItem: any) => {
-                        // Load existing items as an entity to the appstate
-                        this.appState.dispatch(new ItemFetchingSuccessAction(existingItem.type, existingItem));
+            const existingItems = checkItems.flatMap((item: ItemInNode[]) =>
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+                item.map((existingItem: any) => {
+                    if ((existingItem).type === 'channel') {
+                        existingItem.type = 'folder';
+                    }
 
-                        return {
-                            // Get actual nodeId if its a master, channel or localized version
-                            nodeId: !existingItem.channelId ?
-                                // eslint-disable-next-line no-underscore-dangle
-                                (existingItem.inherited ? existingItem._checkedNodeId : existingItem.masterNodeId) :
-                                existingItem.channelId,
-                            type: existingItem.type,
-                            id: existingItem.id,
-                            // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/naming-convention
-                            _checkedNodeId: existingItem._checkedNodeId,
-                        };
-                    }),
-                ),
+                    // Load existing items as an entity to the appstate
+                    this.appState.dispatch(new ItemFetchingSuccessAction(plural[existingItem.type], existingItem));
+
+                    return {
+                        // Get actual nodeId if its a master, channel or localized version
+                        nodeId: !existingItem.channelId ?
+                            // eslint-disable-next-line no-underscore-dangle
+                            (existingItem.inherited ? existingItem._checkedNodeId : existingItem.masterNodeId) :
+                            existingItem.channelId,
+                        type: existingItem.type,
+                        id: existingItem.id,
+                    };
+                }),
             );
 
             /* Clone the original favourites list and filter existing items
              * also follow moved items if data returned by the CMS with new nodeId */
-            const filteredItems = cloneDeep(items).filter((fav) => {
+            const filteredItems = structuredClone(items).filter((fav) => {
                 const existingItem = existingItems.find((item: any) => {
                     // For an item to match, its ID, type, and nodeId have to match
                     // that of the favorite. However, a node's root folder is returned by the CMS as
                     // type 'node', so we have to account for that exception.
                     return item.id === fav.id && (
-                        item.type === fav.type || (
-                            item.type === 'node'
-                            && fav.type === 'folder'
-                        )
-                    // eslint-disable-next-line no-underscore-dangle
-                    ) && item._checkedNodeId === fav.nodeId;
+                        item.type === fav.type
+                        || (item.type === 'node' && fav.type === 'folder')
+                    ) && item.nodeId === fav.nodeId;
                 });
 
                 if (existingItem) {

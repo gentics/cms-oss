@@ -350,7 +350,7 @@ tag-editor-overlay-host.active {
 
         .properties-tabs {
             flex: 0 0 auto;
-            width: 100%;
+            min-width: 100%;
             padding-right: 1.5rem;
         }
     }

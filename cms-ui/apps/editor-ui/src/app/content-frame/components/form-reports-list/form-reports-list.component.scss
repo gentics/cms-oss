@@ -12,12 +12,17 @@ $gtx-form-report-table-border-color: #ddd;
 
 .download-buttons {
     display: flex;
+    flex-direction: row;
     flex: 0 1 auto;
     margin: 1rem 0;
     justify-content: space-between;
+    gap: 0.5rem 0.25rem;
 
     .download-group {
+        display: flex;
         margin: 0 1rem;
+        gap: 0.5rem 0.25rem;
+        flex-direction: row;
 
         .download-button,
         .generate-button {
@@ -187,4 +192,16 @@ table.data-table {
 .form-editor-error {
     padding-left: 24px;
     padding-top: 32px;
+}
+
+@media (max-width: $aloha-size-tablet-max) {
+    .download-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: $aloha-size-mobile-max) {
+    .download-buttons .download-group {
+        flex-direction: column;
+    }
 }

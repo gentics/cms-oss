@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkChannelSyncPerm;
 import static com.gentics.contentnode.rest.util.MiscUtils.checkDeletePermSome;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 import static com.gentics.contentnode.rest.util.MiscUtils.getNode;
 import static com.gentics.contentnode.rest.util.MiscUtils.getTemplate;
 
@@ -12,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -105,14 +105,12 @@ public class MCTemplateResourceImpl implements MCTemplateResource {
 				I18nString message = new CNI18nString("template.nopermission");
 				throw new InsufficientPrivilegesException(message.toString(), null, null, Template.TYPE_TEMPLATE, request.getMasterId(), PermType.channelsync);
 			}
-			PushToMasterJob job = new PushToMasterJob();
-			job.addParameter(PushToMasterJob.PARAM_CLASS, Template.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>();
-			idList.add(id);
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			GenericResponse response = executeJob(job, request.getForegroundTime());
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Template.class)
+					.setId(id)
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
+			GenericResponse response = job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 			trx.success();
 			return response;
 		}
@@ -127,13 +125,12 @@ public class MCTemplateResourceImpl implements MCTemplateResource {
 				I18nString message = new CNI18nString("template.nopermission");
 				throw new InsufficientPrivilegesException(message.toString(), null, null, Template.TYPE_TEMPLATE, request.getMasterId(), PermType.channelsync);
 			}
-			PushToMasterJob job = new PushToMasterJob();
-			job.addParameter(PushToMasterJob.PARAM_CLASS, Template.class);
-			LinkedList<Integer> idList = new LinkedList<Integer>(request.getIds());
-			job.addParameter(PushToMasterJob.PARAM_IDS, idList);
-			job.addParameter(PushToMasterJob.PARAM_MASTER, request.getMasterId());
-			job.addParameter(PushToMasterJob.PARAM_CHANNEL, request.getChannelId());
-			GenericResponse response =  executeJob(job, request.getForegroundTime());
+			PushToMasterJob job = new PushToMasterJob()
+					.setClazz(Template.class)
+					.setIds(request.getIds())
+					.setMasterId(request.getMasterId())
+					.setChannelId(request.getChannelId());
+			GenericResponse response =  job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 			trx.success();
 			return response;
 		}
@@ -192,13 +189,12 @@ public class MCTemplateResourceImpl implements MCTemplateResource {
 				throw new InsufficientPrivilegesException(message.toString(), null, null, Template.TYPE_TEMPLATE, 0, PermType.channelsync);
 			}
 
-			UnlocalizeJob job = new UnlocalizeJob();
+			UnlocalizeJob job = new UnlocalizeJob()
+					.setClazz(Template.class)
+					.setIds(idList)
+					.setChannelId(channelId);
 
-			job.addParameter(UnlocalizeJob.PARAM_CLASS, Template.class);
-			job.addParameter(UnlocalizeJob.PARAM_IDS, idList);
-			job.addParameter(UnlocalizeJob.PARAM_CHANNEL, channelId);
-
-			GenericResponse response = executeJob(job, request.getForegroundTime());
+			GenericResponse response = job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 			trx.success();
 			return response;
 		}

@@ -1,6 +1,7 @@
 import { AdminUIModuleRoutes, PUBLISH_PROCESS_REFRESH_INTERVAL } from '@admin-ui/common';
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
-import { PublishInfo } from '@gentics/cms-models';
+import { ScheduleOperations } from '@admin-ui/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { PublishInfo, SchedulerStatus } from '@gentics/cms-models';
 import { isEqual } from 'lodash';
 import { BehaviorSubject, Subscription, timer } from 'rxjs';
 import { distinctUntilChanged, filter, startWith, switchMap } from 'rxjs/operators';
@@ -12,6 +13,7 @@ import { SidebarItemComponent } from '../sidebar-item/sidebar-item.component';
     selector: 'gtx-widget-publishing-process',
     templateUrl: './widget-publishing-process.component.html',
     styleUrls: ['./widget-publishing-process.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WidgetPublishingProcessComponent extends SidebarItemComponent implements OnInit, OnChanges, OnDestroy {
 
@@ -28,16 +30,19 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
     @Input()
     public lifeSyncIntervall: number;
 
-    public info$ = new BehaviorSubject<PublishInfo>(null);
-    public hasFailedJobs$ = new BehaviorSubject<boolean>(true);
+    public info: PublishInfo = null;
+    public hasFailedJobs = true;
+    public publisherStatus: SchedulerStatus = null;
 
     private syncIntervall$ = new BehaviorSubject<number>(PUBLISH_PROCESS_REFRESH_INTERVAL);
 
     private subscriptions: Subscription[] = [];
 
     constructor(
+        protected changeDetector: ChangeDetectorRef,
         protected i18n: I18nService,
         protected adminOps: AdminOperations,
+        protected schedulerOps: ScheduleOperations,
     ) {
         super(i18n);
     }
@@ -53,14 +58,24 @@ export class WidgetPublishingProcessComponent extends SidebarItemComponent imple
             startWith(null),
             switchMap(() => this.adminOps.getPublishInfo()),
         ).subscribe(info => {
-            this.info$.next(info);
+            this.info = info;
+            this.changeDetector.markForCheck();
         }));
 
         this.subscriptions.push(intervall$.pipe(
             startWith(0),
             switchMap(() => this.adminOps.getJobs({failed: true})),
         ).subscribe(info => {
-            this.hasFailedJobs$.next(info.items.length > 0);
+            this.hasFailedJobs = info.items.length > 0;
+            this.changeDetector.markForCheck();
+        }));
+
+        this.subscriptions.push(intervall$.pipe(
+            startWith(null),
+            switchMap(() => this.schedulerOps.status()),
+        ).subscribe(res => {
+            this.publisherStatus = res.status;
+            this.changeDetector.markForCheck();
         }));
     }
 

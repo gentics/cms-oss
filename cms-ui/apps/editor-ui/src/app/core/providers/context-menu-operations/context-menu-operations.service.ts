@@ -642,7 +642,7 @@ export class ContextMenuOperationsService extends InitializableServiceBase {
             await this.folderActions.copyPagesToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId);
         } else if (itemType === 'form') {
             const itemIds = items.map(item => item.id);
-            await this.folderActions.copyFormsToFolder(itemIds, activeNodeId, targetFolder.id, targetFolder.nodeId);
+            await this.folderActions.copyFormsToFolder(itemIds, activeNodeId, targetFolder.id);
         } else if (itemType === 'file' || itemType === 'image') {
             const files = items as FileModel[];
             await this.folderActions.copyFilesToFolder(files, activeNodeId, targetFolder.id, targetFolder.nodeId);

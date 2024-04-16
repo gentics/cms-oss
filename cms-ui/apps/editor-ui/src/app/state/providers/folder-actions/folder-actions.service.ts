@@ -2436,7 +2436,7 @@ export class FolderActionsService {
     /**
      * Copy forms to a folder in the same or a different node.
      */
-    copyFormsToFolder(ids: number[], sourceNodeId: number, targetFolderId: number, targetNodeId: number): Promise<boolean> {
+    copyFormsToFolder(ids: number[], sourceNodeId: number, targetFolderId: number): Promise<boolean> {
         if (!ids.length) { return; }
 
         this.appState.dispatch(new StartListSavingAction('form'));
@@ -2560,7 +2560,7 @@ export class FolderActionsService {
         await this.appState.dispatch(new StartListSavingAction(type)).toPromise();
 
         try {
-            const req: MultiObjectMoveRequest = { ids, folderId: targetFolderId, nodeId: targetFolderId };
+            const req: MultiObjectMoveRequest = { ids, folderId: targetFolderId, nodeId: targetNodeId };
 
             switch (type) {
                 case 'file':

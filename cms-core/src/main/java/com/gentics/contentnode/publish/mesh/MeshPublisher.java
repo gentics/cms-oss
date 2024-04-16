@@ -1060,6 +1060,12 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr, boolean connect) throws NodeException {
+		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.ATTRIBUTE_DIRTING)) {
+			throw new NodeException(
+					String.format("Publishing to mesh requires feature %s to be activated, but feature %s is inactive.",
+							Feature.ATTRIBUTE_DIRTING.name(), Feature.ATTRIBUTE_DIRTING.name()));
+		}
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		micronodePublisher = new MeshMicronodePublisher(this);
 		renderResult = t.getRenderResult();

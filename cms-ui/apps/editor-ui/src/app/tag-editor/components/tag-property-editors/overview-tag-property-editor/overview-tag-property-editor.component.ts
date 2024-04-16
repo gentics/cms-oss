@@ -4,6 +4,7 @@ import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { ApplicationStateService } from '@editor-ui/app/state';
+import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     File,
@@ -21,14 +22,9 @@ import {
     OverviewTagPartProperty,
     Page,
     Raw,
-    RepositoryBrowserOptions,
     SelectType,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';

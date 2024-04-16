@@ -2,6 +2,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, flush, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
+import { TagChangedFn, TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditMode,
     EditableObjectTag, Feature, File,
@@ -18,8 +19,6 @@ import {
     Raw,
     StringTagPartProperty,
     Tag,
-    TagChangedFn,
-    TagEditorContext,
     TagPartType,
     TagPropertyType,
     Tags,

@@ -1,4 +1,4 @@
-import {ObjectTag, Tag, TagType} from '../models';
+import { ObjectTag, Tag, TagType } from './tag';
 
 /** Additional information required when editing a `Tag`. */
 export interface TagEditInfo {

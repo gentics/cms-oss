@@ -1,11 +1,11 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { WindowRef } from '@gentics/cms-components';
+import { ExposableEmbeddedToolAPI } from '@gentics/cms-integration-api-models';
 import { Subscription } from 'rxjs';
 import { EmbeddedToolsService } from '../embedded-tools/embedded-tools.service';
 import { ExposedUIAPI } from '../exposed-ui-api/exposed-ui-api.service';
 import { ToolMessagingChannel } from '../tool-messaging-channel/tool-messaging-channel.class';
 import { ToolMessagingChannelFactory } from '../tool-messaging-channel/tool-messaging-channel.factory';
-import { CallableEmbeddedToolAPI } from './callable-embedded-tool-api';
 
 const CONNECT_MESSAGE = 'gcms-tool-api';
 
@@ -63,7 +63,7 @@ export class ToolApiChannelService implements OnDestroy {
         return windowSubscription;
     }
 
-    getApi(toolKey: string): CallableEmbeddedToolAPI | undefined {
+    getApi(toolKey: string): ExposableEmbeddedToolAPI | undefined {
         const channel = this.toolChannels.get(toolKey);
         return channel && channel.remoteApi;
     }

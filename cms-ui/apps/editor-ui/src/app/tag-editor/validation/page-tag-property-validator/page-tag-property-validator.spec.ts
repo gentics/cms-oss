@@ -1,4 +1,5 @@
-import { EditableTag, PageTagPartProperty, TagPartType, TagPropertyType, ValidationResult } from '@gentics/cms-models';
+import { ValidationResult } from '@gentics/cms-integration-api-models';
+import { EditableTag, PageTagPartProperty, TagPartType, TagPropertyType } from '@gentics/cms-models';
 import { mockEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { PageTagPropertyValidator } from './page-tag-property-validator';
 
@@ -21,38 +22,38 @@ describe('PageTagPropertyValidator', () => {
         const tag = mockEditableTag<PageTagPartProperty>([
             {
                 type: TagPropertyType.PAGE,
-                typeId: TagPartType.UrlPage
+                typeId: TagPartType.UrlPage,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                pageId: null
+                pageId: null,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                pageId: 0
+                pageId: 0,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                nodeId: 1234
+                nodeId: 1234,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                stringValue: null
+                stringValue: null,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                stringValue: ''
-            }
+                stringValue: '',
+            },
         ]);
 
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: true
+            success: true,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });
@@ -62,43 +63,43 @@ describe('PageTagPropertyValidator', () => {
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
                 pageId: null,
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
                 pageId: 0,
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
                 nodeId: 1234,
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
                 stringValue: null,
-                mandatory: true
+                mandatory: true,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
                 stringValue: '',
-                mandatory: true
-            }
+                mandatory: true,
+            },
         ]);
 
         const expectedResult: ValidationResult = {
             isSet: false,
-            success: false
+            success: false,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });
@@ -108,18 +109,18 @@ describe('PageTagPropertyValidator', () => {
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                pageId: 1234
+                pageId: 1234,
             },
             {
                 type: TagPropertyType.PAGE,
                 typeId: TagPartType.UrlPage,
-                stringValue: 'https://www.gentics.com'
-            }
+                stringValue: 'https://www.gentics.com',
+            },
         ]);
 
         const expectedResult: ValidationResult = {
             isSet: true,
-            success: true
+            success: true,
         };
         assertResultsForAllTagProperties(tag, expectedResult);
     });

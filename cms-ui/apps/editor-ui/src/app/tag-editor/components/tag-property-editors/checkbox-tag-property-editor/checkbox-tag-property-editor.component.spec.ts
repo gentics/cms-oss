@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     BooleanTagPartProperty,
     EditableTag,
-    TagEditorContext,
     TagPart,
     TagPartType,
     TagPropertyMap,

@@ -1,3 +1,4 @@
+import { ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     DataSourceTagPartProperty,
     EditableTag,
@@ -14,7 +15,6 @@ import {
     TagPartType,
     TagPropertyType,
     TemplateTagTagPartProperty,
-    ValidationResult
 } from '@gentics/cms-models';
 import { getExampleEditableTag, mockEditableTag } from '../../../../testing/test-tag-editor-data.mock';
 import { GenericTagPropertyValidator } from './generic-tag-property-validator';
@@ -40,7 +40,7 @@ describe('GenericTagPropertyValidator', () => {
             tagProperty = tag.properties[tagPart.keyword] as StringTagPartProperty;
             expectedResult = {
                 isSet: true,
-                success: true
+                success: true,
             };
         });
 
@@ -103,11 +103,11 @@ describe('GenericTagPropertyValidator', () => {
         beforeEach(() => {
             expectedResultIsSet = {
                 isSet: true,
-                success: true
+                success: true,
             };
             expectedResultNotSet = {
                 isSet: false,
-                success: true
+                success: true,
             };
         });
 
@@ -122,13 +122,13 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<PageTagTagPartProperty>([{
                 type: TagPropertyType.PAGETAG,
                 typeId: TagPartType.TagPage,
-                mandatory: true
+                mandatory: true,
             }]);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword];
             expect(tagValidator.validate(tagProperty, tagPart)).toEqual({
                 isSet: false,
-                success: false
+                success: false,
             });
         });
 
@@ -138,7 +138,7 @@ describe('GenericTagPropertyValidator', () => {
                 typeId: TagPartType.TagPage,
                 mandatory: true,
                 pageId: 1234,
-                contentTagId: 4711
+                contentTagId: 4711,
             }]);
             const tagPart = tag.tagType.parts[0];
             const tagProperty = tag.properties[tagPart.keyword];
@@ -149,18 +149,18 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<DataSourceTagPartProperty>([
                 {
                     type: TagPropertyType.DATASOURCE,
-                    typeId: TagPartType.DataSource
+                    typeId: TagPartType.DataSource,
                 },
                 {
                     type: TagPropertyType.DATASOURCE,
                     typeId: TagPartType.DataSource,
-                    options: null
+                    options: null,
                 },
                 {
                     type: TagPropertyType.DATASOURCE,
                     typeId: TagPartType.DataSource,
-                    options: []
-                }
+                    options: [],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -171,17 +171,17 @@ describe('GenericTagPropertyValidator', () => {
                     type: TagPropertyType.DATASOURCE,
                     typeId: TagPartType.DataSource,
                     options: [
-                        { id: 0, key: 'key0', value: 'value0' }
-                    ]
+                        { id: 0, key: 'key0', value: 'value0' },
+                    ],
                 },
                 {
                     type: TagPropertyType.DATASOURCE,
                     typeId: TagPartType.DataSource,
                     options: [
                         { id: 0, key: 'key0', value: 'value0' },
-                        { id: 1, key: 'key1', value: 'value1' }
-                    ]
-                }
+                        { id: 1, key: 'key1', value: 'value1' },
+                    ],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -190,7 +190,7 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<SelectTagPartProperty>([
                 {
                     type: TagPropertyType.SELECT,
-                    typeId: TagPartType.SelectSingle
+                    typeId: TagPartType.SelectSingle,
                 },
                 {
                     type: TagPropertyType.SELECT,
@@ -199,14 +199,14 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
+                            value: '2',
                         }],
-                    selectedOptions: null
+                    selectedOptions: null,
                 },
                 {
                     type: TagPropertyType.SELECT,
@@ -215,15 +215,15 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
+                            value: '2',
                         }],
-                    selectedOptions: []
-                }
+                    selectedOptions: [],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -232,7 +232,7 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<SelectTagPartProperty>([
                 {
                     type: TagPropertyType.MULTISELECT,
-                    typeId: TagPartType.SelectMultiple
+                    typeId: TagPartType.SelectMultiple,
                 },
                 {
                     type: TagPropertyType.MULTISELECT,
@@ -241,14 +241,14 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
+                            value: '2',
                         }],
-                    selectedOptions: null
+                    selectedOptions: null,
                 },
                 {
                     type: TagPropertyType.MULTISELECT,
@@ -257,15 +257,15 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
+                            value: '2',
                         }],
-                    selectedOptions: []
-                }
+                    selectedOptions: [],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -279,22 +279,22 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
-                        }
+                            value: '2',
+                        },
                     ],
                     selectedOptions: [
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
-                        }
-                    ]
-                }
+                            value: '1',
+                        },
+                    ],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -308,27 +308,27 @@ describe('GenericTagPropertyValidator', () => {
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
-                        }
+                            value: '2',
+                        },
                     ],
                     selectedOptions: [
                         {
                             id: 1,
                             key: '1',
-                            value: '1'
+                            value: '1',
                         },
                         {
                             id: 2,
                             key: '2',
-                            value: '2'
-                        }
-                    ]
-                }
+                            value: '2',
+                        },
+                    ],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -337,23 +337,23 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<FileTagPartProperty>([
                 {
                     type: TagPropertyType.FILE,
-                    typeId: TagPartType.UrlFile
+                    typeId: TagPartType.UrlFile,
                 },
                 {
                     type: TagPropertyType.FILE,
                     typeId: TagPartType.UrlFile,
-                    fileId: null
+                    fileId: null,
                 },
                 {
                     type: TagPropertyType.FILE,
                     typeId: TagPartType.UrlFile,
-                    fileId: 0
+                    fileId: 0,
                 },
                 {
                     type: TagPropertyType.FILE,
                     typeId: TagPartType.UrlFile,
-                    nodeId: 1234
-                }
+                    nodeId: 1234,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -363,14 +363,14 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.FILE,
                     typeId: TagPartType.UrlFile,
-                    fileId: 1234
+                    fileId: 1234,
                 },
                 {
                     type: TagPropertyType.FILE,
                     typeId: TagPartType.UrlFile,
                     fileId: 1234,
-                    nodeId: 4711
-                }
+                    nodeId: 4711,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -379,23 +379,23 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<FolderTagPartProperty>([
                 {
                     type: TagPropertyType.FOLDER,
-                    typeId: TagPartType.UrlFolder
+                    typeId: TagPartType.UrlFolder,
                 },
                 {
                     type: TagPropertyType.FOLDER,
                     typeId: TagPartType.UrlFolder,
-                    folderId: null
+                    folderId: null,
                 },
                 {
                     type: TagPropertyType.FOLDER,
                     typeId: TagPartType.UrlFolder,
-                    folderId: 0
+                    folderId: 0,
                 },
                 {
                     type: TagPropertyType.FOLDER,
                     typeId: TagPartType.UrlFolder,
-                    nodeId: 1234
-                }
+                    nodeId: 1234,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -405,14 +405,14 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.FOLDER,
                     typeId: TagPartType.UrlFolder,
-                    folderId: 1234
+                    folderId: 1234,
                 },
                 {
                     type: TagPropertyType.FOLDER,
                     typeId: TagPartType.UrlFolder,
                     folderId: 1234,
-                    nodeId: 4711
-                }
+                    nodeId: 4711,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -422,13 +422,13 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.NODE,
                     typeId: TagPartType.Node,
-                    nodeId: null
+                    nodeId: null,
                 },
                 {
                     type: TagPropertyType.NODE,
                     typeId: TagPartType.Node,
-                    nodeId: 0
-                }
+                    nodeId: 0,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -438,18 +438,18 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.NODE,
                     typeId: TagPartType.Node,
-                    nodeId: 1
+                    nodeId: 1,
                 },
                 {
                     type: TagPropertyType.NODE,
                     typeId: TagPartType.Node,
-                    nodeId: 2
+                    nodeId: 2,
                 },
                 {
                     type: TagPropertyType.NODE,
                     typeId: TagPartType.Node,
-                    nodeId: 3
-                }
+                    nodeId: 3,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -458,23 +458,23 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<ImageTagPartProperty>([
                 {
                     type: TagPropertyType.IMAGE,
-                    typeId: TagPartType.UrlImage
+                    typeId: TagPartType.UrlImage,
                 },
                 {
                     type: TagPropertyType.IMAGE,
                     typeId: TagPartType.UrlImage,
-                    imageId: null
+                    imageId: null,
                 },
                 {
                     type: TagPropertyType.IMAGE,
                     typeId: TagPartType.UrlImage,
-                    imageId: 0
+                    imageId: 0,
                 },
                 {
                     type: TagPropertyType.IMAGE,
                     typeId: TagPartType.UrlImage,
-                    nodeId: 4711
-                }
+                    nodeId: 4711,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -484,14 +484,14 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.IMAGE,
                     typeId: TagPartType.UrlImage,
-                    imageId: 1234
+                    imageId: 1234,
                 },
                 {
                     type: TagPropertyType.IMAGE,
                     typeId: TagPartType.UrlImage,
                     imageId: 1234,
-                    nodeId: 4711
-                }
+                    nodeId: 4711,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -500,25 +500,25 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<ListTagPartProperty>([
                 {
                     type: TagPropertyType.LIST,
-                    typeId: TagPartType.List
-                },
-                {
-                    type: TagPropertyType.LIST,
                     typeId: TagPartType.List,
-                    booleanValue: true
                 },
                 {
                     type: TagPropertyType.LIST,
                     typeId: TagPartType.List,
                     booleanValue: true,
-                    stringValues: null
                 },
                 {
                     type: TagPropertyType.LIST,
                     typeId: TagPartType.List,
                     booleanValue: true,
-                    stringValues: []
-                }
+                    stringValues: null,
+                },
+                {
+                    type: TagPropertyType.LIST,
+                    typeId: TagPartType.List,
+                    booleanValue: true,
+                    stringValues: [],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -529,14 +529,14 @@ describe('GenericTagPropertyValidator', () => {
                     type: TagPropertyType.LIST,
                     typeId: TagPartType.List,
                     booleanValue: false,
-                    stringValues: [ 'item0' ]
+                    stringValues: [ 'item0' ],
                 },
                 {
                     type: TagPropertyType.LIST,
                     typeId: TagPartType.List,
                     booleanValue: true,
-                    stringValues: [ 'item0', 'item1' ]
-                }
+                    stringValues: [ 'item0', 'item1' ],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -545,32 +545,32 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<OrderedUnorderedListTagPartProperty>([
                 {
                     type: TagPropertyType.ORDEREDLIST,
-                    typeId: TagPartType.ListOrdered
+                    typeId: TagPartType.ListOrdered,
                 },
                 {
                     type: TagPropertyType.ORDEREDLIST,
                     typeId: TagPartType.ListOrdered,
-                    stringValues: null
+                    stringValues: null,
                 },
                 {
                     type: TagPropertyType.ORDEREDLIST,
                     typeId: TagPartType.ListOrdered,
-                    stringValues: []
-                },
-                {
-                    type: TagPropertyType.UNORDEREDLIST,
-                    typeId: TagPartType.ListUnordered
+                    stringValues: [],
                 },
                 {
                     type: TagPropertyType.UNORDEREDLIST,
                     typeId: TagPartType.ListUnordered,
-                    stringValues: null
                 },
                 {
                     type: TagPropertyType.UNORDEREDLIST,
                     typeId: TagPartType.ListUnordered,
-                    stringValues: []
-                }
+                    stringValues: null,
+                },
+                {
+                    type: TagPropertyType.UNORDEREDLIST,
+                    typeId: TagPartType.ListUnordered,
+                    stringValues: [],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -580,13 +580,13 @@ describe('GenericTagPropertyValidator', () => {
                 {
                     type: TagPropertyType.ORDEREDLIST,
                     typeId: TagPartType.ListOrdered,
-                    stringValues: [ 'item0' ]
+                    stringValues: [ 'item0' ],
                 },
                 {
                     type: TagPropertyType.UNORDEREDLIST,
                     typeId: TagPartType.ListUnordered,
-                    stringValues: [ 'item0' ]
-                }
+                    stringValues: [ 'item0' ],
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -595,30 +595,30 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<PageTagTagPartProperty>([
                 {
                     type: TagPropertyType.PAGETAG,
-                    typeId: TagPartType.TagPage
+                    typeId: TagPartType.TagPage,
                 },
                 {
                     type: TagPropertyType.PAGETAG,
                     typeId: TagPartType.TagPage,
                     pageId: null,
-                    contentTagId: null
+                    contentTagId: null,
                 },
                 {
                     type: TagPropertyType.PAGETAG,
                     typeId: TagPartType.TagPage,
-                    contentTagId: 4711
+                    contentTagId: 4711,
                 },
                 {
                     type: TagPropertyType.PAGETAG,
                     typeId: TagPartType.TagPage,
-                    pageId: 1234
+                    pageId: 1234,
                 },
                 {
                     type: TagPropertyType.PAGETAG,
                     typeId: TagPartType.TagPage,
                     pageId: 0,
-                    contentTagId: 0
-                }
+                    contentTagId: 0,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -628,7 +628,7 @@ describe('GenericTagPropertyValidator', () => {
                 type: TagPropertyType.PAGETAG,
                 typeId: TagPartType.TagPage,
                 pageId: 1234,
-                contentTagId: 4711
+                contentTagId: 4711,
             }]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });
@@ -637,30 +637,30 @@ describe('GenericTagPropertyValidator', () => {
             const tag = mockEditableTag<TemplateTagTagPartProperty>([
                 {
                     type: TagPropertyType.TEMPLATETAG,
-                    typeId: TagPartType.TagTemplate
+                    typeId: TagPartType.TagTemplate,
                 },
                 {
                     type: TagPropertyType.TEMPLATETAG,
                     typeId: TagPartType.TagTemplate,
                     templateId: null,
-                    templateTagId: null
+                    templateTagId: null,
                 },
                 {
                     type: TagPropertyType.TEMPLATETAG,
                     typeId: TagPartType.TagTemplate,
-                    templateTagId: 4711
+                    templateTagId: 4711,
                 },
                 {
                     type: TagPropertyType.TEMPLATETAG,
                     typeId: TagPartType.TagTemplate,
-                    templateId: 1234
+                    templateId: 1234,
                 },
                 {
                     type: TagPropertyType.TEMPLATETAG,
                     typeId: TagPartType.TagTemplate,
                     templateId: 0,
-                    templateTagId: 0
-                }
+                    templateTagId: 0,
+                },
             ]);
             assertResultsForAllTagProperties(tag, expectedResultNotSet);
         });
@@ -670,7 +670,7 @@ describe('GenericTagPropertyValidator', () => {
                 type: TagPropertyType.TEMPLATETAG,
                 typeId: TagPartType.TagTemplate,
                 templateId: 1234,
-                templateTagId: 4711
+                templateTagId: 4711,
             }]);
             assertResultsForAllTagProperties(tag, expectedResultIsSet);
         });

@@ -23,6 +23,7 @@ import {
     WastebinActionsService,
 } from '@editor-ui/app/state';
 import { InitializableServiceBase } from '@gentics/cms-components';
+import { ModalCloseError, ModalClosingReason, RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     ChannelSyncRequest,
     CmsFormData,
@@ -45,9 +46,10 @@ import {
     Node,
     Normalized,
     Page,
-    Raw, RepositoryBrowserOptions, TagInContainer, Template,
+    Raw,
+    Template,
 } from '@gentics/cms-models';
-import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
+import { ModalService } from '@gentics/ui-core';
 import { isEqual } from 'lodash-es';
 import { Observable, combineLatest, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, mergeMap, take, takeUntil, tap } from 'rxjs/operators';

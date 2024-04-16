@@ -2,6 +2,18 @@
 
 This mono repo contains all the user interfaces and libraries interacting with the CMS.
 
+## Package repository settings
+
+Authenticate:
+```bash
+npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
+```
+
+Setup @gentics scope to the APA IT repository:
+```bash
+npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
+```
+
 ## Quick start
 
 -   [Editor UI a.k.a Gentics CMS UI Readme](apps/editor-ui/README.md)
@@ -63,33 +75,6 @@ This repository using the Nx library together with Angular CLI. Therefore applic
 
 Custom TypeScript types are placed in the `typings` folder and can be included as other types with `tsconfig.json` files on package level or globally.
 
-```
-contentnode/contentnode-ui
-+-- apps
-+--- admin-ui
-+--- admin-ui-e2e
-+--- editor-ui
-+--- editor-ui-e2e
-+--- ct-link-checker
-+--- ct-link-checker-e2e
-+--- image-editor-demo
-+--- ui-core-docs
-+-- ci
-+-- libs
-+--- cms-components
-+--- cms-models
-+--- cms-rest-clients-angular
-+--- form-generator
-+--- image-editor
-+--- ui-core
-+-- typings
-+-- nx.json
-+-- angular.json
-+-- package.json
-+-- tsconfig.json
-+-- README.md
-```
-
 ### Manage dependencies
 
 There is only a single `package.json` file which contains all packages dependencies. This means if a package needs a new dependency it needs to be added to the root `package.json`.
@@ -136,6 +121,14 @@ nx g @nx/angular:lib <lib-name> --unit-test-runner=karma --style=scss
 
 **Readme**: [apps/admin-ui/README.md](apps/admin-ui/README.md)
 
+### Custom Tool: Link Checker
+
+**Name:** ct-link-checker
+
+**Type:** Application
+
+**Readme**: [apps/ct-link-checker/README.md](apps/ct-link-checker/README.md)
+
 ### CMS Models
 
 **Name:** cms-models
@@ -158,40 +151,44 @@ To maintain compatibility with legacy code, the default `ModelType` for [normali
 
 **Readme**: [libs/cms-rest-clients-angular/README.md](libs/cms-rest-clients-angular/README.md)
 
-### CMS Admin Rest Clients
+Deprecated implementation of the CMS Rest Client. Use the `cms-rest-client`/`cms-rest-client-angular` libraries instead.
 
-**Name:** cms-admin-rest-clients-angular
+### CMS Rest Client
+
+**Name:** cms-rest-client
 
 **Type:** Library
 
-**Readme**: [libs/cms-admin-rest-clients-angular/README.md](libs/cms-admin-rest-clients-angular/README.md)
+**Readme**: [libs/cms-rest-client/README.md](libs/cms-rest-client/README.md)
 
-### Custom Tool: Link Checker
+General purpose CMS Rest Client for TypeScript/JavaScript.
 
-**Name:** ct-link-checker
+### CMS Rest Client Angular
 
-**Type:** Application
+**Name:** cms-rest-client-angular
 
-**Readme**: [apps/ct-link-checker/README.md](apps/ct-link-checker/README.md)
+**Type:** Library
+
+**Readme**: [libs/cms-rest-client-angular/README.md](libs/cms-rest-client-angular/README.md)
+
+Angular wrapper of the CMS Rest Client to work with it easier in angular projects.
+
+### UI Core
+
+**Name**: ui-core
+
+**Type**: Library
+
+**Readme**: [libs/ui-core/README.md](libs/ui-core/README.md)
+
+Previously as [standalone project](https://github.com/gentics/gentics-ui-core/) available, now integrated in the Monorepo.
+Provides general purpose ui components to create custom applications.
 
 ## Coding Style
 
--   Make sure that your code editor adheres to the [.editorconfig](./.editorconfig) file. For many editors there are extensions for automatically importing that file (for Visual Studio Code use [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)).
--   Always use relative paths for TypeScript import statements (in Visual Studio Code you can use the setting `"typescript.preferences.importModuleSpecifier": "relative"`).
-
-## Package repository settings
-
-Authenticate:
-
-```bash
-npm adduser --registry=https://repo.apa-it.at/artifactory/api/npm/gtx-npm/ --always-auth
-```
-
-Setup @gentics scope to the APA IT repository:
-
-```bash
-npm config set @gentics:registry https://repo.apa-it.at/artifactory/api/npm/gtx-npm/
-```
+-   Follow the rules defined by the [ESLint](https://eslint.org/) configuration where applicable.
+-   Always use relative paths for TypeScript import statements if it's within the same project (in Visual Studio Code you can use the setting `"typescript.preferences.importModuleSpecifier": "relative"`).
+    If it's from another package/library in this monorepo, simply refer to it with the official package name, i.E. `@gentics/cms-models`.
 
 ## Git & Release Workflow
 

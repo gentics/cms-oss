@@ -1,4 +1,4 @@
-import { ExposableEmbeddedToolAPI } from '../../../../../embedded-tools-api/exposable-embedded-tool-api';
+import { ExposableEmbeddedToolAPI } from '@gentics/cms-integration-api-models';
 import { Subscription } from 'rxjs';
 
 export interface TabbedTool {

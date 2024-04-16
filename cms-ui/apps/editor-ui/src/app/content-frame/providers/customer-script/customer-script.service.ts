@@ -15,18 +15,23 @@ import { TagEditorService } from '@editor-ui/app/tag-editor';
 import {
     UploadWithPropertiesModalComponent,
 } from '@editor-ui/app/tag-editor/components/shared/upload-with-properties-modal/upload-with-properties-modal.component';
-import { ExposedPartialState, GcmsUiBridge, StateChangedHandler } from '@gentics/cms-integration-api-models';
+import {
+    ExposedPartialState,
+    GcmsUiBridge,
+    ModalCloseError,
+    RepositoryBrowserOptions,
+    StateChangedHandler,
+    TagEditorOptions,
+} from '@gentics/cms-integration-api-models';
 import {
     ItemInNode,
     Page,
     Raw,
-    RepositoryBrowserOptions,
     Tag,
-    TagEditorOptions,
     TagType,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalCloseError, ModalService } from '@gentics/ui-core';
+import { ModalService } from '@gentics/ui-core';
 import { Subscription, of } from 'rxjs';
 import { catchError, distinctUntilChanged, map } from 'rxjs/operators';
 import { PostLoadScript } from '../../components/content-frame/custom-scripts/post-load';

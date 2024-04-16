@@ -1,9 +1,6 @@
 /* eslint-disable no-underscore-dangle */
-import {
-    Injectable,
-    OnDestroy,
-} from '@angular/core';
-import { RepositoryBrowserDataServiceAPI } from '@editor-ui/app/common/models';
+import { Injectable, OnDestroy } from '@angular/core';
+import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
 import { isLiveUrl } from '@editor-ui/app/common/utils/is-live-url';
 import { Api } from '@editor-ui/app/core/providers/api/api.service';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
@@ -33,7 +30,6 @@ import {
     PageResponse,
     Raw,
     RepoItem,
-    RepositoryBrowserDataServiceOptions,
     RepositoryBrowserSorting,
     SearchPagesOptions,
     SortField,

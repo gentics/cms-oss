@@ -14,6 +14,7 @@ import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { componentTest, configureComponentTest } from '@editor-ui/testing';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
     AllowedSelectionType,
@@ -25,7 +26,6 @@ import {
     Normalized,
     Page,
     RepoItem,
-    RepositoryBrowserOptions,
     RepositoryBrowserSorting,
     ResponseCode,
     Template,

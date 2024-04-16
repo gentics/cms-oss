@@ -1,5 +1,5 @@
 import { getExampleEditableTag, getMockTagEditorTranslator } from '@editor-ui/testing/test-tag-editor-data.mock';
-import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-models';
+import { GcmsUiServices, TagEditorContext, Translator, VariableTagEditorContext } from '@gentics/cms-integration-api-models';
 import { getExampleNodeData, getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { TagEditorContextImpl } from './tag-editor-context-impl';

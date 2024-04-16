@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { RepositoryBrowserOptions } from '@gentics/cms-models';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { RepositoryBrowserClient } from '../../../shared/providers/repository-browser-client/repository-browser-client.service';
 import { SelectedItemHelper } from '../../../shared/util/selected-item-helper/selected-item-helper';

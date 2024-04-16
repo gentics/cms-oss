@@ -1,3 +1,4 @@
+import { TagPropertyValidator, ValidationResult } from '@gentics/cms-integration-api-models';
 import {
     ListType,
     OrderBy,
@@ -8,8 +9,6 @@ import {
     SelectType,
     TagPart,
     TagPartProperty,
-    TagPropertyValidator,
-    ValidationResult
 } from '@gentics/cms-models';
 
 /**

@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { Type } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { LinkTemplateModal, MultiDeleteResult } from '@editor-ui/app/shared/components';
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { PostUpdateBehavior, TemplateActionsService } from '@editor-ui/app/state';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelectionType,
     AllowedSelectionTypeMap,
@@ -21,20 +23,18 @@ import {
     ItemTypeMap,
     Page,
     Raw,
-    RepositoryBrowserOptions,
     TagInContainer,
 } from '@gentics/cms-models';
-import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialogComponent, ModalService } from '@gentics/ui-core';
-import { NgxsModule } from '@ngxs/store';
-import { cloneDeep } from 'lodash-es';
-import { Observable, of } from 'rxjs';
-import { Type } from '@angular/core';
 import {
     getExampleFolderData,
     getExampleFolderDataNormalized,
     getExampleNodeDataNormalized,
     getExampleTemplateData,
 } from '@gentics/cms-models/testing/test-data.mock';
+import { IDialogConfig, IModalDialog, IModalInstance, IModalOptions, ModalDialogComponent, ModalService } from '@gentics/ui-core';
+import { NgxsModule } from '@ngxs/store';
+import { cloneDeep } from 'lodash-es';
+import { Observable, of } from 'rxjs';
 import { LinkTemplateService } from '../../../shared/providers/link-template/link-template.service';
 import { ApplicationStateService, FolderActionsService, STATE_MODULES, WastebinActionsService } from '../../../state';
 import { ContentStagingActionsService, UsageActionsService } from '../../../state/index';

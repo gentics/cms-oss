@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, Output, SimpleChanges } from '@angular/core';
-import { EntityType, TagEditorChange, TagEditorChangeMessage } from '@gentics/cms-models';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges } from '@angular/core';
 import { WindowRef } from '@gentics/cms-components';
+import { TagEditorChange, TagEditorChangeMessage } from '@gentics/cms-integration-api-models';
+import { EntityType } from '@gentics/cms-models';
 import { environment } from '../../../../environments/environment';
 
 interface TagEditorURL {
@@ -14,9 +15,9 @@ interface TagEditorURL {
     selector: 'gtx-tag-editor-wrapper',
     templateUrl: './tag-editor-wrapper.component.html',
     styleUrls: ['./tag-editor-wrapper.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TagEditorWrapperComponent implements OnDestroy {
+export class TagEditorWrapperComponent implements OnDestroy, OnChanges {
 
     @Input()
     public baseUrl: URL;
@@ -51,7 +52,7 @@ export class TagEditorWrapperComponent implements OnDestroy {
         private windowRef: WindowRef,
     ) { }
 
-    ngOnChanges(changes: SimpleChanges) {
+    ngOnChanges(changes: SimpleChanges): void {
         if (changes.nodeId || changes.entityType || changes.entityId || changes.tagName) {
             this.updateURLs({
                 nodeId: this.nodeId,
@@ -66,13 +67,13 @@ export class TagEditorWrapperComponent implements OnDestroy {
         this.clearMessageFunction();
     }
 
-    iframeLoaded(iframe: HTMLIFrameElement) {
+    iframeLoaded(iframe: HTMLIFrameElement): void {
         this.iframe = iframe;
         this.clearMessageFunction();
         this.registerMessageFunction();
     }
 
-    registerMessageFunction() {
+    registerMessageFunction(): void {
         try {
             this.windowRef.nativeWindow.addEventListener('message', this.msgFn, false);
         } catch (e) {
@@ -80,7 +81,7 @@ export class TagEditorWrapperComponent implements OnDestroy {
         }
     }
 
-    clearMessageFunction() {
+    clearMessageFunction(): void {
         try {
             this.windowRef.nativeWindow.removeEventListener('message', this.msgFn, false);
         } catch (e) {
@@ -88,13 +89,13 @@ export class TagEditorWrapperComponent implements OnDestroy {
         }
     }
 
-    verifyBaseUrl() {
+    verifyBaseUrl(): void {
         if (this.baseUrl == null) {
             this.baseUrl = new URL(this.windowRef.nativeWindow.location.toString());
         }
     }
 
-    updateURLs(settings: TagEditorURL) {
+    updateURLs(settings: TagEditorURL): void {
         this.verifyBaseUrl();
         const tmpUrl = this.baseUrl;
 
@@ -108,7 +109,7 @@ export class TagEditorWrapperComponent implements OnDestroy {
         this.tagEditorUrl = tmpUrl.toString() + `?title=${this.withTitle ? 'true' : 'false'}&transparent=${this.transparent ? 'true' : 'false'}`;
     }
 
-    messageHandler(event: MessageEvent<TagEditorChangeMessage>) {
+    messageHandler(event: MessageEvent<TagEditorChangeMessage>): void {
         const tmpUrl = this.baseUrl;
         // Ignore invalid messages
         if (event.origin !== tmpUrl.origin

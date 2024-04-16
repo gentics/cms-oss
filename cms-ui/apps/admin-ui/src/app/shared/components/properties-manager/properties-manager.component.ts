@@ -12,7 +12,8 @@ import {
     SimpleChanges,
     TemplateRef,
 } from '@angular/core';
-import { Feature, Tag, TagEditorChange } from '@gentics/cms-models';
+import { TagEditorChange } from '@gentics/cms-integration-api-models';
+import { Feature, Tag } from '@gentics/cms-models';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 

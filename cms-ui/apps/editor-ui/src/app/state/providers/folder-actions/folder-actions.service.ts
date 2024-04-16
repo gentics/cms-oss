@@ -15,6 +15,7 @@ import {
     QueryAssemblerElasticSearchService,
     QueryAssemblerGCMSSearchService,
 } from '@editor-ui/app/shared/providers/query-assembler';
+import { ModalCloseError, ModalClosingReason } from '@gentics/cms-integration-api-models';
 import {
     AccessControlledType,
     AnyModelType,
@@ -102,7 +103,7 @@ import {
     folderItemTypePlurals,
 } from '@gentics/cms-models';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
-import { ModalCloseError, ModalClosingReason, ModalService } from '@gentics/ui-core';
+import { ModalService } from '@gentics/ui-core';
 import { normalize, schema } from 'normalizr';
 import {
     Observable,

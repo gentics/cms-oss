@@ -7,7 +7,8 @@ import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
 import { ApplicationStateService } from '@editor-ui/app/state';
 import { TestApplicationState } from '@editor-ui/app/state/test-application-state.mock';
 import { mockPipes } from '@editor-ui/testing/mock-pipe';
-import { ItemInNode, Language, Page, Raw, RepositoryBrowserOptions } from '@gentics/cms-models';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
+import { ItemInNode, Language, Page, Raw } from '@gentics/cms-models';
 import { getExamplePageData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';
 import { GCMSTestRestClientService } from '@gentics/cms-rest-client-angular/testing';
@@ -193,7 +194,7 @@ describe('FormPropertiesForm', () => {
             [languages]="languages"
         ></form-properties-form>
     `,
-    })
+})
 class TestComponent {
     @ViewChild('propertiesForm', { static: true })
     propertiesForm: FormPropertiesFormComponent;

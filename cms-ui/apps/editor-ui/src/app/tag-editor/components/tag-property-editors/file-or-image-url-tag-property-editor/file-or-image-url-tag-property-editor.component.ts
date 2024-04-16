@@ -4,6 +4,7 @@ import { EditorOverlayService } from '@editor-ui/app/editor-overlay/providers/ed
 import { RepositoryBrowserClient } from '@editor-ui/app/shared/providers';
 import { SelectedItemHelper } from '@editor-ui/app/shared/util/selected-item-helper/selected-item-helper';
 import { ApplicationStateService } from '@editor-ui/app/state/index';
+import { RepositoryBrowserOptions, TagEditorContext, TagEditorError, TagPropertiesChangedFn, TagPropertyEditor } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     FileOrImage,
@@ -15,13 +16,8 @@ import {
     ItemInNode,
     Page,
     Raw,
-    RepositoryBrowserOptions,
-    TagEditorContext,
-    TagEditorError,
     TagPart,
     TagPartProperty,
-    TagPropertiesChangedFn,
-    TagPropertyEditor,
     TagPropertyMap,
     TagPropertyType,
 } from '@gentics/cms-models';

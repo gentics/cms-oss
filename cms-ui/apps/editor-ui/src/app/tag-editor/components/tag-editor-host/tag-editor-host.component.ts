@@ -9,7 +9,8 @@ import {
     ViewChild,
     ViewContainerRef,
 } from '@angular/core';
-import { CompleteTagEditor, EditableTag, TagChangedFn, TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-models';
+import { CompleteTagEditor, TagChangedFn, TagEditorContext, TagEditorError, TagEditorResult } from '@gentics/cms-integration-api-models';
+import { EditableTag } from '@gentics/cms-models';
 import { cloneDeep } from 'lodash-es';
 import { CustomTagEditorHostComponent } from '../custom-tag-editor-host/custom-tag-editor-host.component';
 import { GenticsTagEditorComponent } from '../gentics-tag-editor/gentics-tag-editor.component';

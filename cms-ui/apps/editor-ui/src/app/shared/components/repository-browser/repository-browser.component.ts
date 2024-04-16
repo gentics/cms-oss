@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Inject, Input, OnDestroy, OnInit } from '@angular/core';
-import { RepositoryBrowserDataServiceAPI } from '@editor-ui/app/common/models';
+import { RepositoryBrowserDataServiceAPI, RepositoryBrowserDataServiceOptions } from '@editor-ui/app/common/models';
 import { ApplicationStateService, SetListDisplayFieldsAction } from '@editor-ui/app/state';
+import { RepositoryBrowserOptions } from '@gentics/cms-integration-api-models';
 import {
     AllowedSelection,
     AllowedSelectionType,
@@ -14,8 +15,6 @@ import {
     Page,
     Raw,
     RepoItem,
-    RepositoryBrowserDataServiceOptions,
-    RepositoryBrowserOptions,
     RepositoryBrowserSorting,
     Template,
 } from '@gentics/cms-models';
@@ -356,25 +355,9 @@ function normalizeAllowedSelectionType(allowedTypes: AllowedSelection | AllowedS
 }
 
 function normalizeDataServiceOptions(repoOptions: RepositoryBrowserOptions): RepositoryBrowserDataServiceOptions {
-    const {
-        onlyInCurrentNode,
-        contentLanguage,
-        requiredPermissions,
-        selectMultiple,
-        startFolder,
-        startNode,
-        includeMlId,
-    } = repoOptions;
-
     const result: RepositoryBrowserDataServiceOptions = {
+        ...repoOptions,
         allowedSelection: normalizeAllowedSelectionType(repoOptions.allowedSelection),
-        contentLanguage,
-        onlyInCurrentNode,
-        requiredPermissions,
-        selectMultiple,
-        startFolder,
-        startNode,
-        includeMlId,
     };
     return result;
 }

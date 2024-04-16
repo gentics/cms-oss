@@ -8,6 +8,7 @@
     "@angular/forms": "15.2.5",
     "@gentics/cms-components": "^6.1.0-SNAPSHOT",
     "@gentics/cms-models": "^6.1.0-SNAPSHOT",
+    "@gentics/cms-integration-api-models": "^6.1.0-SNAPSHOT",
     "lodash-es": "^4.17.15",
     "rxjs": "^6.6.3",
     "uuid": "^9.0.0"

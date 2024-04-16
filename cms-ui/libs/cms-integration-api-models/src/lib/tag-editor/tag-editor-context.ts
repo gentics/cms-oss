@@ -1,8 +1,19 @@
+import {
+    EditableTag,
+    File,
+    FileOrImage,
+    Folder,
+    Form,
+    Image,
+    ItemInNode,
+    Node,
+    Page,
+    Raw,
+    SerializableRepositoryBrowserOptions,
+    TagInContainer,
+    Template,
+} from '@gentics/cms-models';
 import { Observable } from 'rxjs';
-
-import { File, FileOrImage, Folder, Form, Image, Node, Page, Raw, Template } from '../models';
-import { ItemInNode, RepositoryBrowserOptions, TagInContainer } from '../repository-browser';
-import { EditableTag } from './editable-tag';
 import { TagValidator } from './tag-validator';
 
 /** Describes the current context, in which a TagEditor is operating. */
@@ -86,7 +97,7 @@ export interface VariableTagEditorContext {
 export interface GcmsUiServices {
 
     /** Method for opening the Repository Browser. */
-    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: RepositoryBrowserOptions): Promise<R | R[]>;
+    openRepositoryBrowser<R = ItemInNode | TagInContainer>(options: SerializableRepositoryBrowserOptions): Promise<R | R[]>;
 
     /** Method for opening the Image Editor. */
     openImageEditor(options: { nodeId: number, imageId: number }): Promise<Image | void>;

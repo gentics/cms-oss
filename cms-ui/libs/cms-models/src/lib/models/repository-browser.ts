@@ -1,19 +1,14 @@
-import { Observable } from 'rxjs';
-import {
-    File,
-    Folder,
-    Form,
-    Image,
-    Item,
-    MarkupLanguageType,
-    Node,
-    Page,
-    Raw,
-    SortField,
-    Tag,
-    Template,
-} from '../models';
-
+import { Form } from './cms-form';
+import { File } from './file';
+import { Folder } from './folder';
+import { Image } from './image';
+import { Item } from './item';
+import { Page } from './page';
+import { SortField } from './request';
+import { Tag } from './tag';
+import { MarkupLanguageType } from './tag-part-types';
+import { Template } from './template';
+import { Raw } from './type-util';
 
 /** Represents an item in a node, as returned by the RepositoryBrowser. */
 export type ItemInNode<T extends Item<Raw> = Item<Raw>> = T & {
@@ -24,12 +19,9 @@ export type ItemInNode<T extends Item<Raw> = Item<Raw>> = T & {
 /** Represents an Tag inside a container, as returned by the RepositoryBrowser. */
 export type TagInContainer<T extends Page<Raw> | Template<Raw> = Page<Raw> | Template<Raw>> = Tag & {
     /** The parent container (reference added by the RepositoryBrowser). */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     __parent__: T;
 };
-
-export type AllowedItemSelectionType = 'page' | 'folder' | 'form' | 'image' | 'file' | 'template';
-export type AllowedTagSelectionType = 'contenttag' | 'templatetag';
-export type AllowedSelectionType = AllowedItemSelectionType | AllowedTagSelectionType;
 
 export type RepoItem = Folder<Raw> | Form<Raw> | Page<Raw> | File<Raw> | Image<Raw> | Template<Raw> | Tag;
 
@@ -55,19 +47,11 @@ export interface RepositoryBrowserSorting {
     templatetag: { field: SortField; order: 'asc' | 'desc'; };
 }
 
-export interface RepositoryBrowserDataServiceOptions {
-    allowedSelection: AllowedSelection;
-    contentLanguage?: string;
-    onlyInCurrentNode?: boolean;
-    selectMultiple: boolean;
-    startNode?: number;
-    startFolder?: number;
-    includeMlId?: MarkupLanguageType[];
-    /** Function that can be passed in to checks for permissions on an item */
-    requiredPermissions?(selected: ItemInNode[], parent: Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>, node: Node<Raw>): Observable<boolean>;
-}
+export type AllowedItemSelectionType = 'page' | 'folder' | 'form' | 'image' | 'file' | 'template';
+export type AllowedTagSelectionType = 'contenttag' | 'templatetag';
+export type AllowedSelectionType = AllowedItemSelectionType | AllowedTagSelectionType;
 
-export interface RepositoryBrowserOptions {
+export interface SerializableRepositoryBrowserOptions {
     allowedSelection: AllowedSelectionType | AllowedSelectionType[];
     contentLanguage?: string;
     onlyInCurrentNode?: boolean;
@@ -77,13 +61,6 @@ export interface RepositoryBrowserOptions {
     submitLabel?: string;
     title?: string;
     includeMlId?: MarkupLanguageType[];
-    /** Function that can be passed in to checks for permissions on an item */
-    requiredPermissions?(
-        selected: ItemInNode[],
-        parent: Folder<Raw> | Page<Raw> | Template<Raw> | Node<Raw>,
-        node: Node<Raw>,
-        currentContentLanguage?: string,
-    ): Observable<boolean>;
 }
 
 export interface AllowedSelectionTypeMap {

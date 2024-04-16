@@ -3,14 +3,14 @@ import { ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { BrowseBoxComponent } from '@gentics/cms-components';
+import { TagEditorContext } from '@gentics/cms-integration-api-models';
 import {
     EditableTag,
     FolderResponse,
     FolderTagPartProperty,
-    TagEditorContext,
     TagPart,
     TagPartType,
-    TagPropertyType
+    TagPropertyType,
 } from '@gentics/cms-models';
 import { getExampleFolderData } from '@gentics/cms-models/testing/test-data.mock';
 import { GCMSRestClientService } from '@gentics/cms-rest-client-angular';

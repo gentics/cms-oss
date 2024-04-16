@@ -1,5 +1,5 @@
-import {TagPartProperty, TagPropertyMap} from '../models';
-import {MultiValidationResult, ValidationResult} from './tag-property-validator';
+import { TagPartProperty, TagPropertyMap } from '@gentics/cms-models';
+import { MultiValidationResult, ValidationResult } from './tag-property-validator';
 
 /**
  * Collects the results from validating all editable properties of a tag.

@@ -18,7 +18,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.quartz.JobExecutionException;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.factory.Transaction;
@@ -139,7 +138,7 @@ public class MultiObjectLoadTestBase {
 		t.commit(false);
 	}
 
-	public MultiObjectLoadTestBase(TestPermission permission, boolean forUpdate) throws NodeException, JobExecutionException {
+	public MultiObjectLoadTestBase(TestPermission permission, boolean forUpdate) throws NodeException {
 		this.permission = permission;
 		this.forUpdate = forUpdate;
 		

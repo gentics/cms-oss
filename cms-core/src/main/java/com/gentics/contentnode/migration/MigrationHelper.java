@@ -16,9 +16,6 @@ import org.apache.logging.log4j.core.appender.FileAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.Scheduler;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;
@@ -40,6 +37,7 @@ import com.gentics.contentnode.rest.exceptions.EntityNotFoundException;
 import com.gentics.contentnode.rest.model.migration.MigrationPartMapping;
 import com.gentics.contentnode.rest.model.migration.TagTypeMigrationMapping;
 import com.gentics.contentnode.rest.resource.impl.PageResourceImpl;
+import com.gentics.contentnode.rest.util.Operator;
 import com.gentics.contentnode.runtime.ConfigurationValue;
 import com.gentics.lib.db.IntegerColumnRetriever;
 import com.gentics.lib.i18n.CNI18nString;
@@ -116,28 +114,10 @@ public class MigrationHelper {
 	 * 
 	 * @return true if tag type migration is being performed, false otherwise
 	 */
-	@SuppressWarnings("unchecked")
-	public static boolean isTagTypeMigrationExecuting(Transaction t) {
-
-		Scheduler scheduler;
-
-		try {
-			scheduler = t.getNodeConfig().getPersistentScheduler();
-
-			// Check if any of the current jobs are of type TagTypeMigrationJob
-			List<JobExecutionContext> currentJobs = scheduler.getCurrentlyExecutingJobs();
-
-			for (JobExecutionContext jobContext : currentJobs) {
-				Job jobInstance = jobContext.getJobInstance();
-
-				if (jobInstance instanceof AbstractMigrationJob) {
-					return true;
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Error while checking if a tag type migration is in process", e);
-		}
-		return false;
+	public static boolean isTagTypeMigrationExecuting() {
+		return Operator.getCurrentlyRunningJobs().stream()
+				.filter(restCallable -> restCallable.getWrapped() instanceof AbstractMigrationJob).findAny()
+				.isPresent();
 	}
 
 	/**

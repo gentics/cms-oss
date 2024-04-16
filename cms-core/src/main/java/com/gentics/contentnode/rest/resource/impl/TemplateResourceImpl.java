@@ -2,7 +2,6 @@ package com.gentics.contentnode.rest.resource.impl;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.checkFields;
 import static com.gentics.contentnode.rest.util.MiscUtils.comparator;
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 import static com.gentics.contentnode.rest.util.MiscUtils.filter;
 import static com.gentics.contentnode.rest.util.MiscUtils.getFolder;
 import static com.gentics.contentnode.rest.util.MiscUtils.getNode;
@@ -456,7 +455,7 @@ public class TemplateResourceImpl implements TemplateResource {
 
 			TemplateSaveJob job = new TemplateSaveJob(restTemplate, request.getDelete(), request.isUnlock(), request.isSyncPages(), request.getSync(),
 					request.isForceSync());
-			GenericResponse response = executeJob(job, null, false);
+			GenericResponse response = job.execute();
 			trx.success();
 			return response;
 		}

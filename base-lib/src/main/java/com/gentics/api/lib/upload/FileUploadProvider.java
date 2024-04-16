@@ -12,8 +12,6 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-
 import org.apache.commons.fileupload.FileUploadException;
 
 import com.gentics.lib.upload.FileUploadProviderImpl;

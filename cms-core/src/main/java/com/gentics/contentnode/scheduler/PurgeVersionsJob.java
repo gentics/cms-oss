@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.logging.log4j.core.layout.PatternLayout;
-import org.quartz.JobExecutionException;
 
 import com.gentics.api.lib.etc.ObjectTransformer;
 import com.gentics.api.lib.exception.NodeException;

@@ -38,6 +38,8 @@ import java.nio.charset.Charset;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+
 import javax.xml.bind.JAXBException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -310,7 +312,7 @@ public class Initializer {
 			if (startFixPageVersions.booleanValue()) {
 				FixPageVersionsJob job = new FixPageVersionsJob();
 
-				job.execute(0);
+				job.execute(-1, TimeUnit.SECONDS);
 				DBUtils.executeUpdate("DELETE FROM nodesetup WHERE name = ?", new Object[] { FixPageVersionsJob.NODESETUP });
 			}
 		} catch (NodeException e) {

@@ -5,7 +5,6 @@
  */
 package com.gentics.contentnode.rest.resource.impl;
 
-import static com.gentics.contentnode.rest.util.MiscUtils.executeJob;
 import static com.gentics.contentnode.rest.util.MiscUtils.getMatchingSystemUsers;
 import static com.gentics.contentnode.rest.util.MiscUtils.getRequestedContentLanguage;
 import static com.gentics.contentnode.rest.util.MiscUtils.getUrlDuplicationMessage;
@@ -30,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BeanParam;
@@ -81,7 +81,6 @@ import com.gentics.contentnode.factory.object.PageFactory;
 import com.gentics.contentnode.factory.url.DynamicUrlFactory;
 import com.gentics.contentnode.factory.url.StaticUrlFactory;
 import com.gentics.contentnode.i18n.I18NHelper;
-import com.gentics.contentnode.job.AbstractUserActionJob;
 import com.gentics.contentnode.job.MultiPagePublishJob;
 import com.gentics.contentnode.messaging.MessageSender;
 import com.gentics.contentnode.msg.NodeMessage;
@@ -1258,18 +1257,18 @@ public class PageResourceImpl extends AuthenticatedContentNodeResource implement
 	@POST
 	@Path("/publish")
 	public GenericResponse publish(@QueryParam("nodeId") Integer nodeId, MultiPagePublishRequest request) {
-		AbstractUserActionJob job = new MultiPagePublishJob();
 		LinkedList<String> ids = new LinkedList<String>();
 		ids.addAll(request.getIds());
-		job.addParameter(MultiPagePublishJob.PARAM_IDS, ids);
-		job.addParameter(MultiPagePublishJob.PARAM_ISALLLANG, request.isAlllang());
-		job.addParameter(MultiPagePublishJob.PARAM_AT, request.getAt());
-		job.addParameter(MultiPagePublishJob.PARAM_MESSAGE, request.getMessage());
-		job.addParameter(MultiPagePublishJob.PARAM_KEEPPUBLISHAT, request.isKeepPublishAt());
-		job.addParameter(MultiPagePublishJob.PARAM_KEEP_VERSION, request.isKeepVersion());
-		job.addParameter(MultiPagePublishJob.PARAM_NODEID, nodeId);
+		MultiPagePublishJob job = new MultiPagePublishJob()
+				.setIds(ids)
+				.setAlllang(request.isAlllang())
+				.setAt(request.getAt())
+				.setMessage(request.getMessage())
+				.setKeepPublishAt(request.isKeepPublishAt())
+				.setKeepVersion(request.isKeepVersion())
+				.setNodeId(nodeId);
 		try {
-			return executeJob(job, request.getForegroundTime());
+			return job.execute(request.getForegroundTime(), TimeUnit.SECONDS);
 		} catch (NodeException e) {
 			return new GenericResponse(new Message(Type.CRITICAL, e
 					.getLocalizedMessage()), new ResponseInfo(

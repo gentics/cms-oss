@@ -525,6 +525,30 @@ NOTE: These are examples - you can and should adapt these configurations to your
                     }
                 },
                 {
+                    "name": "description",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Description",
+                        "de": "Beschreibung"
+                    },
+                    "description_i18n_ui": {
+                        "en": "The description of the upload element.",
+                        "de": "Die Beschreibung des Upload-Elements."
+                    }
+                },
+                {
+                    "name": "tooltip",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Tooltip",
+                        "de": "Tooltip"
+                    },
+                    "description_i18n_ui": {
+                        "en": "The tooltip of the upload element.",
+                        "de": "Der Tooltip des Upload-Elements."
+                    }
+                },
+                {
                     "name": "max_filesize",
                     "type": "NUMBER",
                     "label_i18n_ui": {
@@ -585,6 +609,31 @@ NOTE: These are examples - you can and should adapt these configurations to your
                     "description_i18n_ui": {
                         "en": "Placeholder for this input field.",
                         "de": "Platzhalter für dieses Eingabefeld."
+                    }
+                },
+                {
+                    "name": "description",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Description",
+                        "de": "Beschreibung"
+                    },
+                    "description_i18n_ui": {
+                        "en": "The description of the user mail element.",
+                        "de": "Die Beschreibung des Benutzer-E-Mail-Elements."
+                    }
+
+                },
+                {
+                    "name": "tooltip",
+                    "type": "STRING",
+                    "label_i18n_ui": {
+                        "en": "Tooltip",
+                        "de": "Tooltip"
+                    },
+                    "description_i18n_ui": {
+                        "en": "The tooltip of the user mail element.",
+                        "de": "Der Tooltip des Benutzer-E-Mail-Elements."
                     }
                 },
                 {

@@ -92,7 +92,7 @@ export function validateResponseObject(request: GCMSRestClientRequest, response:
 
     if (response.responseInfo.responseCode !== 'OK') {
         throw new GCMSRestClientRequestError(
-            response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
+            response?.messages[0]?.message || response.responseInfo.responseMessage || `Request "${request.method} ${request.url}" responded with an Error-Response.`,
             request,
             codeToHttpCode[response.responseInfo.responseCode],
             null,

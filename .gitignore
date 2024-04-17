@@ -5,6 +5,7 @@ target/
 .factorypath
 .classpath
 .factorypath
+.run/
 **/.directory
 CSV
 gentics.log*

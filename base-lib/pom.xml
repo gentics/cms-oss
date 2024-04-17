@@ -33,7 +33,6 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<argLine>${surefireArgLine} -Xms256m -Xmx1024m</argLine>
-					<skip>${skip.unit.tests}</skip>
 					<forkCount>${test.forkcount}</forkCount>
 					<reuseForks>false</reuseForks>
 					<forkedProcessTimeoutInSeconds>0</forkedProcessTimeoutInSeconds>

@@ -1084,6 +1084,12 @@ public class MeshPublisher implements AutoCloseable {
 	 * @throws NodeException
 	 */
 	public MeshPublisher(ContentRepository cr, boolean connect) throws NodeException {
+		if (!NodeConfigRuntimeConfiguration.isFeature(Feature.ATTRIBUTE_DIRTING)) {
+			throw new NodeException(
+					String.format("Publishing to mesh requires feature %s to be activated, but feature %s is inactive.",
+							Feature.ATTRIBUTE_DIRTING.name(), Feature.ATTRIBUTE_DIRTING.name()));
+		}
+
 		Transaction t = TransactionManager.getCurrentTransaction();
 		micronodePublisher = new MeshMicronodePublisher(this);
 		renderResult = t.getRenderResult();
@@ -2277,23 +2283,26 @@ public class MeshPublisher implements AutoCloseable {
 		for (int objectType : types) {
 			Class<? extends NodeObject> clazz = t.getClass(objectType);
 
-			Map<Integer, Set<String>> map = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.REMOVE, Action.OFFLINE);
+			Map<Integer, Set<String>> deleteOfflineMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.DELETE, Action.OFFLINE);
+			Map<Integer, Set<String>> removeMap = PublishQueue.getObjectIdsWithAttributes(clazz, true, checkedNode, Action.REMOVE);
+			Map<String, Set<String>> toDelete = new HashMap<>();
 
 			if (checkedNode != null) {
-				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, map.keySet()), checkedNode.getId());
+				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, deleteOfflineMap.keySet()), checkedNode.getId());
+				Trx.consume(nodeId -> CNGenticsImageStore.removeFromMeshPublish(nodeId, objectType, removeMap.keySet()), checkedNode.getId());
 			}
 
 			// for forms, check which ones still exist in the CMS but are offline and take them offline in Mesh (instead of deleting)
 			if (objectType == Form.TYPE_FORM) {
-				List<Form> forms = t.getObjects(Form.class, map.keySet());
-				for (Form form : forms) {
+				List<Form> deleteOfflineForms = t.getObjects(Form.class, deleteOfflineMap.keySet());
+				for (Form form : deleteOfflineForms) {
 					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 						return false;
 					}
 
-					map.remove(form.getId());
-					if (!cr.mustContain(form)) {
+					deleteOfflineMap.remove(form.getId());
+					if (!cr.mustContain(form, checkedNode)) {
 						String meshUuid = getMeshUuid(form);
 						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
 							for (String lang : languages) {
@@ -2303,14 +2312,32 @@ public class MeshPublisher implements AutoCloseable {
 						}).blockingAwait();
 					}
 				}
+				List<Form> removeForms = t.getObjects(Form.class, removeMap.keySet());
+				for (Form form : removeForms) {
+					if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
+						logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
+						return false;
+					}
+					removeMap.remove(form.getId());
+					if (!cr.mustContain(form, checkedNode)) {
+						String meshUuid = getMeshUuid(form);
+						getExistingFormLanguages(project, meshUuid).flatMapCompletable(languages -> {
+							for (String lang : languages) {
+								remove(project, branch, objectType, meshUuid, lang);
+							}
+							return Completable.complete();
+						}).blockingAwait();
+					}
+				}
 			}
-			Map<String, Set<String>> toDelete = new HashMap<>();
-			for (Map.Entry<Integer, Set<String>> entry : map.entrySet()) {
+
+			Iterable<Map.Entry<Integer,Set<String>>> iterable = () -> Stream.of(deleteOfflineMap.entrySet().stream(), removeMap.entrySet().stream())
+					.flatMap(java.util.function.Function.identity()).iterator();
+			for (Entry<Integer, Set<String>> entry : iterable) {
 				if (controller.publishProcess && (PublishController.getState() != PublishController.State.running)) {
 					logger.debug(String.format("Stop checking offline objects, because publisher state is %s", PublishController.getState()));
 					return false;
 				}
-
 				String meshUuid = null;
 				String meshLanguage = null;
 				if (entry.getValue() != null) {
@@ -2433,7 +2460,13 @@ public class MeshPublisher implements AutoCloseable {
 		}
 		try {
 			logger.debug(String.format("Start removing %d.%s", objectType, meshUuid));
-			if (meshLanguage != null) {
+			if (objectType == Form.TYPE_FORM) {
+				// forms are removed via the forms plugin
+				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid)).toCompletable()
+					.onErrorResumeNext(throwable -> {
+						return ifNotFound(throwable, () -> Completable.complete());
+					}).blockingAwait();
+			} else if (meshLanguage != null) {
 				// delete the language version
 				if (branch != null) {
 					client.deleteNode(project.name, meshUuid, meshLanguage, new DeleteParametersImpl().setRecursive(true), branch).toCompletable().onErrorResumeNext(throwable -> {
@@ -2444,12 +2477,6 @@ public class MeshPublisher implements AutoCloseable {
 						return ifNotFound(throwable, () -> Completable.complete());
 					}).blockingAwait();
 				}
-			} else if (objectType == Form.TYPE_FORM) {
-				// forms are removed via the forms plugin
-				client.deleteEmpty(String.format("/%s/plugins/forms/forms/%s", encodeSegment(project.name), meshUuid))
-						.toCompletable().onErrorResumeNext(throwable -> {
-							return ifNotFound(throwable, () -> Completable.complete());
-						}).blockingAwait();
 			} else {
 				// delete the node
 				if (branch != null) {

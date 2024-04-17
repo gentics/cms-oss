@@ -978,8 +978,9 @@ public class PublishQueue {
 			}
 
 			if (attributes.length == 0 && REMOVING_ACTIONS.contains(action)) {
-				// TODO comment
-				if (MeshPublisher.supportsAlternativeLanguages(object)) {
+				// when objects are deleted or taken offline, we need to know, which language the object had, in order to remove the correct language variant from mesh.
+				// exception: when the object was REMOVEd (means: moved to another node), we want to remove all language variants from mesh.
+				if (MeshPublisher.supportsAlternativeLanguages(object) || action == Action.REMOVE) {
 					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object) };
 				} else {
 					attributes = new String[] { "uuid:" + MeshPublisher.getMeshUuid(object),

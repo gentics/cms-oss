@@ -1,0 +1,1 @@
+The publish process will now check for required features and fail, if one of the required features is not activated.

@@ -1,25 +1,19 @@
 package com.gentics.contentnode.publish.mesh;
 
-import static com.gentics.contentnode.publish.mesh.MeshPublishUtils.ifNotFound;
 import static com.gentics.mesh.util.URIUtils.encodeSegment;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import com.gentics.api.lib.exception.NodeException;
 import com.gentics.contentnode.jmx.MBeanRegistry;
 import com.gentics.contentnode.object.Form;
 import com.gentics.contentnode.publish.PublishQueue;
 import com.gentics.contentnode.publish.PublishQueue.PublishAction;
-import com.gentics.mesh.parameter.client.GenericParametersImpl;
 
 import io.reactivex.Completable;
-import io.reactivex.Single;
 import io.vertx.core.json.JsonObject;
 
 /**

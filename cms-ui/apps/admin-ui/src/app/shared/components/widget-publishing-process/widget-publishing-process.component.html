@@ -2,12 +2,13 @@
     <h2 class="gtx-widget-title">{{ 'widget.task_publishing_process_title' | i18n }}</h2>
 </div>
 
-<ng-container *ngIf="info$ | async; let info">
+<ng-container *ngIf="info">
     <gtx-progress-bar [active]="info.running" [progress]="(info.progress / 100)"></gtx-progress-bar>
-    <div class="row">
+
+    <div *ngIf="publisherStatus" class="row">
         <div class="title">
-            {{ 'widget.publishing_process_publish_status' | i18n }}
-            <div><b>{{ info.phase }}</b></div>
+            {{ 'scheduler.status' | i18n }}:
+            <div><b>{{ ('scheduler.status_' + publisherStatus) | i18n }}</b></div>
         </div>
     </div>
 
@@ -67,7 +68,7 @@
     <div class="row">
         <div class="title">{{ 'widget.publishing_process_last_status' | i18n }}</div>
 
-        <div *ngIf="hasFailedJobs$ | async; else processStatusHealthyContent">
+        <div *ngIf="hasFailedJobs; else processStatusHealthyContent">
             <span class="warning">{{ 'widget.publishing_process_status_failed' | i18n }}</span> -
             <a [routerLink]="['/' + AdminUIModuleRoutes.CONTENT_REPOSITORIES]">{{ 'widget.publishing_process_see_logs' | i18n }}</a>
         </div>

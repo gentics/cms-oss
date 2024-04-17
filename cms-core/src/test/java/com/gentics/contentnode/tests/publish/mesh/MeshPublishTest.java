@@ -39,6 +39,7 @@ import com.gentics.contentnode.etc.Feature;
 import com.gentics.contentnode.factory.Transaction;
 import com.gentics.contentnode.factory.TransactionManager;
 import com.gentics.contentnode.factory.Trx;
+import com.gentics.contentnode.object.Construct;
 import com.gentics.contentnode.object.ContentLanguage;
 import com.gentics.contentnode.object.ContentRepository;
 import com.gentics.contentnode.object.File;
@@ -98,6 +99,8 @@ public class MeshPublishTest {
 
 	private static Integer contentEntryId;
 
+	private static Integer pageUrlConstructId;
+
 	private static Template template;
 
 	private static Map<String, ContentLanguage> languages;
@@ -136,7 +139,7 @@ public class MeshPublishTest {
 
 		template = Trx.supply(() -> createTemplate(node.getFolder(), "Template"));
 
-		Integer pageUrlConstructId = Trx.supply(() -> createConstruct(node, PageURLPartType.class, "pageurl", "url"));
+		pageUrlConstructId = Trx.supply(() -> createConstruct(node, PageURLPartType.class, "pageurl", "url"));
 		Trx.operate(() -> createObjectPropertyDefinition(Folder.TYPE_FOLDER, pageUrlConstructId, "Startpage", "startpage"));
 	}
 
@@ -627,6 +630,98 @@ public class MeshPublishTest {
 		assertObject("Check otherpage", mesh.client(), MESH_PROJECT_NAME, otherpage, true, meshPage -> {
 			assertThat(meshPage.getFields().getStringField("filename").getString()).isEqualTo("page.html");
 		});
+	}
+
+	/**
+	 * Test moving contents from a folder and then deleting that folder
+	 * @throws Exception
+	 */
+	@Test
+	public void testMoveContentsIntoOtherNode() throws Exception {
+		String otherMeshProjectName = "othertestproject";
+
+		// create other unattended node
+		Node otherNode = supply(() -> createNode("otherNode", "OtherNode", PublishTarget.CONTENTREPOSITORY, languages.get("de"), languages.get("en")));
+		Integer otherCrId = createMeshCR(mesh, otherMeshProjectName);
+
+		try {
+			TagmapEntryListResponse entriesResponse = crResource.listEntries(Integer.toString(otherCrId), false, null, null, null);
+			assertResponseCodeOk(entriesResponse);
+
+			Trx.operate(() -> update(otherNode, n -> {
+				n.setContentrepositoryId(otherCrId);
+			}));
+
+			Trx.operate(trx -> {
+				template.getNodes().add(otherNode);
+				trx.getObject(Construct.class, pageUrlConstructId).getNodes().add(otherNode);
+			});
+
+			// create folder1 containing a page
+			Folder folder1 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(node.getFolder().getId());
+					f.setName("Testfolder 1");
+					f.setPublishDir("folder1");
+				});
+			});
+
+			Page page = Trx.supply(() -> {
+				return create(Page.class, p -> {
+					p.setTemplateId(template.getId());
+					p.setFolderId(folder1.getId());
+					p.setName("Page");
+				});
+			});
+			Trx.consume(upd -> update(upd, Page::publish), page);
+
+			// create folder2 (empty)
+			Folder folder2 = Trx.supply(() -> {
+				return create(Folder.class, f -> {
+					f.setMotherId(otherNode.getFolder().getId());
+					f.setName("Testfolder 2");
+					f.setPublishDir("folder2");
+				});
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), MESH_PROJECT_NAME, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder1));
+				});
+			});
+
+			// move page to folder2
+			Trx.operate(() -> {
+				OpResult result = page.move(folder2, 0, true);
+				assertThat(result.isOK()).isTrue();
+			});
+
+			// publish
+			try (Trx trx = new Trx()) {
+				context.publish(false);
+				trx.success();
+			}
+
+			// assert
+			operate(() -> {
+				assertObject("Check folder 1", mesh.client(), MESH_PROJECT_NAME, folder1, true);
+				assertObject("Check folder 2", mesh.client(), otherMeshProjectName, folder2, true);
+				assertObject("Check page", mesh.client(), otherMeshProjectName, page, true, meshPage -> {
+					assertThat(meshPage.getParentNode().getUuid()).as("Parent node Uuid").isEqualTo(MeshPublisher.getMeshUuid(folder2));
+				});
+			});
+		} finally {
+			operate(() -> otherNode.delete(true));
+		}		
 	}
 
 	/**

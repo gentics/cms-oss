@@ -2,6 +2,7 @@ package com.gentics.contentnode.rest.resource.impl.devtools;
 
 import static com.gentics.contentnode.rest.util.MiscUtils.permFunction;
 
+import com.gentics.contentnode.exception.RestMappedException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1009,7 +1010,8 @@ public class PackageResourceImpl implements PackageResource {
 		}
 
 		if (!allowChannels && node.isChannel()) {
-			throw new EntityNotFoundException(I18NHelper.get("rest.node.notfound", nodeId));
+			throw new RestMappedException(I18NHelper.get("devtools.action.not_allowed_for_channels"))
+					.setStatus(Response.Status.METHOD_NOT_ALLOWED);
 		}
 
 		// TODO check permissions

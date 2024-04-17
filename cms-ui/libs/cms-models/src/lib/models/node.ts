@@ -2,32 +2,6 @@ import { Item } from './item';
 import { DefaultModelType, ModelType } from './type-util';
 
 /**
- * These are the user-editable properties of a Node object.
- * Property names map to the Node interface properties, but have been changed in some cases to be more descriptive.
- */
-export interface EditableNodeProps {
-    contentRepository?: boolean;
-    contentRepositoryFiles?: boolean;
-    contentRepositoryFolders?: boolean;
-    contentRepositoryPages?: boolean;
-    defaultFileFolderId?: number;
-    defaultImageFolderId?: number;
-    disablePublish?: boolean;
-    fileSystem?: boolean;
-    fileSystemBinaryDir?: string;
-    fileSystemFiles?: boolean;
-    fileSystemPageDir?: string;
-    fileSystemPages?: boolean;
-    host?: string;
-    hostnameProperty?: string;
-    https?: boolean;
-    nodeName?: string;
-    urlRenderingFiles?: number;
-    urlRenderingPages?: number;
-    utf8?: boolean;
-}
-
-/**
  * A Node object as returned from the node/load/{id} endpoints:
  * http://www.gentics.com/Content.Node/guides/restapi/resource_NodeResource.html#path__node_load_-id-.html
  * https://www.gentics.com/Content.Node/guides/restapi/json_Node.html
@@ -175,10 +149,10 @@ export interface Node<T extends ModelType = DefaultModelType> extends Item<T> {
     omitPageExtension: boolean;
 
     /** Language code modes */
-    pageLanguageCode: GtxNodePageLanguageCode;
+    pageLanguageCode: NodePageLanguageCode;
 }
 
-export enum GtxNodePageLanguageCode {
+export enum NodePageLanguageCode {
     /** The language code will be in the filename. */
     FILENAME = 'FILENAME',
     /** The language code will be at the beginning of the path. */
@@ -197,6 +171,8 @@ export enum NodeHostnameType {
     PROPERTY = 'property',
 }
 
+export const NODE_HOSTNAME_PROPERTY_PREFIX = 'NODE_HOST';
+
 /**
  * Possible PreviewUrl Type values
  */
@@ -206,3 +182,5 @@ export enum NodePreviewurlType {
     /** The preview URL is set as property */
     PROPERTY = 'property',
 }
+
+export const NODE_PREVIEW_URL_PROPERTY_PREFIX = 'NODE_PREVIEWURL';

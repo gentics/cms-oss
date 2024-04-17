@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { Injectable } from '@angular/core';
-import { UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
+import { EditableNodeProps, UploadResponse, folderSchema, pageSchema } from '@editor-ui/app/common/models';
 import { getDefaultNode } from '@editor-ui/app/common/utils/get-default-node';
 import { ImagePropertiesModalComponent } from '@editor-ui/app/content-frame/components/image-properties-modal/image-properties-modal.component';
 import { ApiError } from '@editor-ui/app/core/providers/api';
@@ -27,7 +27,6 @@ import {
     EditableFolderProps,
     EditableFormProps,
     EditableImageProps,
-    EditableNodeProps,
     EditablePageProps,
     ElasticSearchQuery,
     ElasticSearchQueryResponse,
@@ -1732,28 +1731,7 @@ export class FolderActionsService {
     }
 
     updateNodeProperties(nodeId: number, properties: EditableNodeProps): Promise<Node<Raw> | void> {
-        const nodeProps = {
-            binaryPublishDir: properties.fileSystemBinaryDir,
-            defaultFileFolderId: properties.defaultFileFolderId,
-            defaultImageFolderId: properties.defaultImageFolderId,
-            disablePublish: properties.disablePublish,
-            host: properties.host || '',
-            hostProperty: properties.hostnameProperty || '',
-            https: properties.https,
-            name: properties.nodeName,
-            publishContentMap: properties.contentRepository,
-            publishContentMapFiles: properties.contentRepositoryFiles,
-            publishContentMapFolders: properties.contentRepositoryFolders,
-            publishContentMapPages: properties.contentRepositoryPages,
-            publishDir: properties.fileSystemPageDir,
-            publishFs: properties.fileSystem,
-            publishFsFiles: properties.fileSystemFiles,
-            publishFsPages: properties.fileSystemPages,
-            urlRenderWayFiles: properties.urlRenderingFiles,
-            urlRenderWayPages: properties.urlRenderingPages,
-            utf8: properties.utf8,
-        };
-        return this.updateItem('node', nodeId, nodeProps)
+        return this.updateItem('node', nodeId, properties)
             .then(node => {
                 if (!node || !node.folderId) {
                     throw new Error(`No update response data of Node with ID ${nodeId} returned by REST API.`);

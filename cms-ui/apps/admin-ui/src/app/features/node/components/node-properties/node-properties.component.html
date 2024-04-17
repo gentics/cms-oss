@@ -1,4 +1,4 @@
-<form *ngIf="fgProperties" [formGroup]="fgProperties" class="gtx-form">
+<form *ngIf="form" [formGroup]="form" class="gtx-form">
     <div class="row">
 
         <div class="input-container small-12 medium-6 columns">
@@ -7,34 +7,36 @@
             <gtx-input
                 type="text"
                 [required]="true"
-                maxlength="50"
                 [label]="('node.node_name' | i18n) + ' *'"
                 [placeholder]="'node.node_name' | i18n"
                 formControlName="name"
             ></gtx-input>
 
             <ng-container *ngIf="multiChannelingEnabled">
-                <ng-container *ngIf="allowChangingInheritedFrom; else inheritedFromNotChangeable">
+                <ng-container *ngIf="mode === NodePropertiesMode.CREATE; else inheritedFromNotChangeable">
                     <gtx-select
                         [label]="'node.derives_from' | i18n:{ master: '' }"
-                        formControlName="inheritedFromId"
                         [clearable]="true"
+                        [placeholder]=""
+                        formControlName="inheritedFromId"
                     >
-                        <gtx-option *ngFor="let node of (nodes$ | async)" [value]="node.id">{{ node.name }}</gtx-option>
+                        <gtx-option
+                            *ngFor="let node of nodes"
+                            [value]="node.id"
+                        >{{ node.name }}</gtx-option>
                     </gtx-select>
                 </ng-container>
 
                 <ng-template #inheritedFromNotChangeable>
-                    <div *ngIf="inheritedFromNode$" class="gtx-inheritance-info" [class.visible]="inheritedFromNode$">
+                    <div *ngIf="value?.inheritedFromId && value.id !== value?.inheritedFromId && value?.masterName" class="gtx-inheritance-info">
                         <icon>input</icon>
-                        {{ 'node.derives_from' | i18n:{ master: (inheritedFromNode$ | async)?.name } }}
+                        {{ 'node.derives_from' | i18n:{ master: value?.masterName } }}
                     </div>
                 </ng-template>
             </ng-container>
 
             <gtx-textarea
                 [required]="false"
-                maxlength="200"
                 [label]="'shared.description' | i18n"
                 [placeholder]="'shared.description' | i18n"
                 formControlName="description"
@@ -45,37 +47,40 @@
 
                 <gtx-select
                     [label]="('node.mesh_preview_url_type' | i18n) + ' *'"
-                    formControlName="meshPreviewUrlType"
+                    [value]="previewType"
                     [clearable]="false"
+                    (valueChange)="updatePreviewType($event)"
                 >
-                    <gtx-option *ngFor="let type of MESH_PREVIEWURL_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+                    <gtx-option
+                        *ngFor="let type of MESH_PREVIEWURL_TYPES"
+                        [value]="type.id"
+                    >{{ type.label | i18n }}</gtx-option>
                 </gtx-select>
 
                 <gtx-input
                     type="text"
-                    maxlength="255"
                     [label]="('node.mesh_preview_url' | i18n)"
                     [placeholder]="'node.mesh_preview_url' | i18n"
                     formControlName="meshPreviewUrl"
                 ></gtx-input>
 
-                <gtx-input
-                    *ngIf="fgProperties.get('meshPreviewUrlProperty').enabled"
-                    type="text"
-                    [required]="true"
-                    maxlength="255"
-                    [label]="('node.mesh_preview_url_property' | i18n)"
-                    [placeholder]="'node.mesh_preview_url_property' | i18n"
-                    formControlName="meshPreviewUrlProperty"
-                ></gtx-input>
+                <ng-container *ngIf="form?.controls?.meshPreviewUrlProperty?.enabled">
+                    <gtx-input
+                        type="text"
+                        [required]="true"
+                        [label]="('node.mesh_preview_url_property' | i18n)"
+                        [placeholder]="'node.mesh_preview_url_property' | i18n"
+                        formControlName="meshPreviewUrlProperty"
+                    ></gtx-input>
 
-                <span
-                    *ngIf="fgProperties.get('meshPreviewUrlProperty')?.hasError('pattern')"
-                    class="container-validator-errors"
-                >
-                    {{ 'node.mesh_preview_url_property_pattern' | i18n }}
-                </span>
- 
+                    <span
+                        *ngIf="form?.controls?.meshPreviewUrlProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]"
+                        class="container-validator-errors"
+                    >
+                        {{ 'node.mesh_preview_url_property_pattern' | i18n }}
+                    </span>
+                </ng-container>
+
                 <gtx-checkbox
                     [label]="'node.allow_insecure_mesh_preview_url' | i18n"
                     formControlName="insecurePreviewUrl"
@@ -98,37 +103,40 @@
 
             <gtx-select
                 [label]="('node.hostnameType' | i18n) + ' *'"
-                formControlName="hostnameType"
+                [value]="hostType"
                 [clearable]="false"
+                (valueChange)="updateHostType($event)"
             >
-                <gtx-option *ngFor="let type of HOSTNAME_TYPES" [value]="type.id">{{ type.label | i18n }}</gtx-option>
+                <gtx-option
+                    *ngFor="let type of HOSTNAME_TYPES"
+                    [value]="type.id"
+                >{{ type.label | i18n }}</gtx-option>
             </gtx-select>
 
             <gtx-input
                 type="text"
                 [required]="true"
-                maxlength="255"
                 [label]="('node.hostname' | i18n) + ' *'"
                 [placeholder]="'node.hostname' | i18n"
-                formControlName="hostname"
+                formControlName="host"
             ></gtx-input>
 
-            <gtx-input
-                *ngIf="fgProperties.get('hostnameProperty').enabled"
-                type="text"
-                [required]="true"
-                maxlength="255"
-                [label]="('node.hostnameProperty' | i18n) + ' *'"
-                [placeholder]="'node.hostnameProperty' | i18n"
-                formControlName="hostnameProperty"
-            ></gtx-input>
+            <ng-container *ngIf="form?.controls?.hostProperty?.enabled">
+                <gtx-input
+                    type="text"
+                    [required]="true"
+                    [label]="('node.hostnameProperty' | i18n) + ' *'"
+                    [placeholder]="'node.hostnameProperty' | i18n"
+                    formControlName="hostProperty"
+                ></gtx-input>
 
-            <span
-               *ngIf="fgProperties.get('hostnameProperty')?.hasError('pattern')"
-                class="container-validator-errors"
-            >
-                {{ 'node.hostnameProperty_pattern' | i18n }}
-            </span>
+                <span
+                   *ngIf="form?.controls?.hostProperty?.errors?.[VALIDATOR_REGEX_ERROR_PROPERTY]"
+                    class="container-validator-errors"
+                >
+                    {{ 'node.hostnameProperty_pattern' | i18n }}
+                </span>
+            </ng-container>
 
             <div class="gtx-form-section-title">{{ 'node.title_content' | i18n }}</div>
 
@@ -140,7 +148,7 @@
                 ></gtx-checkbox>
             </div>
 
-            <ng-container *ngIf="allowEditingDefaultUploadFolders">
+            <ng-container *ngIf="mode !== NodePropertiesMode.CREATE">
                 <gtx-input
                     [label]="'node.default_file_folder' | i18n"
                     formControlName="defaultFileFolderId"

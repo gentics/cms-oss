@@ -13,7 +13,7 @@ import {
     ViewChild,
     ViewChildren,
 } from '@angular/core';
-import { EditableProperties, ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
+import { EditableNodeProps, EditableProperties, ITEM_PROPERTIES_TAB, ITEM_REPORTS_TAB, ITEM_TAG_LIST_TAB, PropertiesTab } from '@editor-ui/app/common/models';
 import { EntityResolver } from '@editor-ui/app/core/providers/entity-resolver/entity-resolver';
 import { ErrorHandler } from '@editor-ui/app/core/providers/error-handler/error-handler.service';
 import { I18nService } from '@editor-ui/app/core/providers/i18n/i18n.service';
@@ -43,7 +43,8 @@ import {
     EditableFolderProps,
     EditableFormProps,
     EditableImageProps,
-    EditableNodeProps, EditableObjectTag, EditablePageProps,
+    EditableObjectTag,
+    EditablePageProps,
     EditableTag,
     Folder,
     FolderItemOrTemplateType,
